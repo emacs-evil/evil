@@ -10,6 +10,15 @@
 (require 'ert)
 (require 'evil)
 
+;; ERT bug: The explainer function for `equal' hangs when passed
+;; a keymap with a char-table. The bug can be reproduced with:
+;;
+;;     (should (equal (make-keymap) (make-keymap)))
+;;
+;; This should be forwarded to Christian Ohler. For the time being,
+;; we remove the explainer.
+(put 'equal 'ert-explainer nil)
+
 (defvar evil-tests-run t
   "Run Evil tests.")
 
