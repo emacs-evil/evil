@@ -22,6 +22,10 @@ Elements have the form (MODE . KEYMAP), with the first keymaps
 having higher priority.")
 (make-variable-buffer-local 'evil-mode-map-alist)
 
+(defconst evil-suppress-map (make-keymap)
+  "Full keymap disabling default bindings to self-insert-command.")
+(suppress-keymap evil-suppress-map)
+
 (defconst evil-version "0.1"
   "The current version of Evil")
 

@@ -209,6 +209,10 @@ Then follows one or more optional keywords:
 :entry-hook LIST        Hooks run when changing to STATE.
 :exit-hook LIST         Hooks run when changing from STATE.
 :enable LIST            List of other states and modes enabled by STATE.
+:suppress-keymap FLAG   If FLAG is non-nil, makes
+                        evil-suppress-map the parent of the
+                        global map of STATE effectively disabling
+                        bindings to self-insert-command.
 
 Following the keywords is optional code to be executed each time
 the state is enabled or disabled.
@@ -238,7 +242,7 @@ The basic keymap of this state will then be
         (entry-hook (intern (format "evil-%s-state-entry-hook" state)))
         (exit-hook (intern (format "evil-%s-state-exit-hook" state)))
         cursor-value enable entry-hook-value exit-hook-value keyword
-        message-value tag-value)
+        message-value tag-value suppress-keymap)
     ;; collect keywords
     (while (keywordp (car-safe body))
       (setq keyword (pop body))
@@ -255,6 +259,8 @@ The basic keymap of this state will then be
         (setq exit-hook-value (pop body)))
        ((eq keyword :enable)
         (setq enable (pop body)))
+       ((eq keyword :suppress-keymap)
+        (setq suppress-keymap (pop body)))
        (t
         (pop body))))
 
@@ -308,6 +314,8 @@ bindings to be activated whenever KEYMAP and %s state are active."
                      (eq evil-state ',state))
         :enable ',enable)
 
+       ,@(when suppress-keymap
+           `((set-keymap-parent ,keymap evil-suppress-map)))
        (evil-add-to-alist 'mode-map-alist
                               ',local-mode ,local-keymap
                               ',mode ,keymap)
@@ -353,7 +361,8 @@ bindings to be activated whenever KEYMAP and %s state are active."
 
 (evil-define-state vi
   "Command state, AKA \"Normal\" state."
-  :tag "<V>")
+  :tag "<V>"
+  :suppress-keymap t)
 
 (evil-define-state emacs
   "Emacs state."
