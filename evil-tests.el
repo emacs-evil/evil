@@ -142,6 +142,26 @@ buffer.\n"))
     (evil-test-local-mode-disabled)
     (evil-test-change-state 'vi)))
 
+(ert-deftest evil-test-emacs-state-suppress-keymap ()
+  "`self-insert-command' works in emacs-state"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (evil-emacs-state 1)
+    (goto-char (point-min))
+    (execute-kbd-macro "abc")
+    (should (string= "abc" (buffer-substring (point-min) (+ 3 (point-min)))))))
+
+(ert-deftest evil-test-vi-state-suppress-keymap ()
+  "No `self-insert-command' in vi-state"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (evil-vi-state 1)
+    (goto-char (point-min))
+    (should-error (execute-kbd-macro "abc"))
+    (should (string= ";; " (buffer-substring (point-min) (+ 3 (point-min)))))))
+
 (when evil-tests-run
   (ert-run-tests-batch '(tag evil)))
 
