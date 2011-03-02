@@ -13,6 +13,26 @@
 (defvar evil-tests-run t
   "Run Evil tests.")
 
+(defmacro evil-test-buffer (&rest body)
+  "Execute BODY in a temporary buffer.
+The buffer contains the familiar *scratch* message."
+  (declare (indent defun)
+           (debug t))
+  `(let ((kill-ring kill-ring)
+         (kill-ring-yank-pointer kill-ring-yank-pointer)
+         x-select-enable-clipboard
+         message-log-max)
+     (with-temp-buffer
+       (save-window-excursion
+         (switch-to-buffer-other-window (current-buffer))
+         (buffer-enable-undo)
+         (save-excursion
+           (insert ";; This buffer is for notes you don't want to save, \
+and for Lisp evaluation.\n;; If you want to create a file, visit \
+that file with C-x C-f,\n;; then enter the text in that file's own \
+buffer.\n"))
+         ,@body))))
+
 (defun evil-test-local-mode-enabled ()
   "Verify that `evil-local-mode' is enabled properly"
   (ert-info ("Set the mode variable to t")
@@ -100,24 +120,27 @@
 (ert-deftest evil-test-exit-vi-state ()
   "Enter vi state and then disable all states"
   :tags '(evil)
-  (evil-test-change-state 'vi)
-  (evil-vi-state -1)
-  (evil-test-no-states))
+  (with-temp-buffer
+    (evil-test-change-state 'vi)
+    (evil-vi-state -1)
+    (evil-test-no-states)))
 
 (ert-deftest evil-test-change-states ()
   "Change between vi state and emacs state"
   :tags '(evil)
-  (evil-test-change-state 'vi)
-  (evil-test-change-state 'emacs)
-  (evil-test-change-state 'vi)
-  (evil-test-change-state 'emacs))
+  (with-temp-buffer
+    (evil-test-change-state 'vi)
+    (evil-test-change-state 'emacs)
+    (evil-test-change-state 'vi)
+    (evil-test-change-state 'emacs)))
 
 (ert-deftest evil-test-enter-vi-state-disabled ()
   "Enter vi state even if `evil-local-mode' is disabled"
   :tags '(evil)
-  (evil-local-mode -1)
-  (evil-test-local-mode-disabled)
-  (evil-test-change-state 'vi))
+  (with-temp-buffer
+    (evil-local-mode -1)
+    (evil-test-local-mode-disabled)
+    (evil-test-change-state 'vi)))
 
 (when evil-tests-run
   (ert-run-tests-batch '(tag evil)))
