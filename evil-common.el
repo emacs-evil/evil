@@ -110,3 +110,5 @@ That is, the message is not logged in the *Messages* buffer.
     (apply 'message string args)))
 
 (provide 'evil-common)
+
+;;; evil-common.el ends here

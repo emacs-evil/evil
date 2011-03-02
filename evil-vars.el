@@ -30,3 +30,5 @@ having higher priority.")
   (message "Evil version %s" evil-version))
 
 (provide 'evil-vars)
+
+;;; evil-vars.el ends here

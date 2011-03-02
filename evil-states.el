@@ -363,3 +363,5 @@ bindings to be activated whenever KEYMAP and %s state are active."
 (define-key evil-emacs-state-map "\C-z" 'evil-vi-state)
 
 (provide 'evil-states)
+
+;;; evil-states.el ends here
