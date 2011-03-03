@@ -14,8 +14,8 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.0 r9654"
-   sodipodi:docname="evil.svg"
-   inkscape:export-filename="/home/vegard/evil.png"
+   sodipodi:docname="evil2.svg"
+   inkscape:export-filename="/home/vegard/evil2.png"
    inkscape:export-xdpi="150"
    inkscape:export-ydpi="150">
   <defs
@@ -27,9 +27,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.2069466"
-     inkscape:cx="173.13654"
-     inkscape:cy="12.652914"
+     inkscape:zoom="2.6872957"
+     inkscape:cx="101.78384"
+     inkscape:cy="32.865788"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -84,17 +84,6 @@
            id="tspan2989">E</tspan><tspan
            style="fill:#333333"
            id="tspan2995">VIL</tspan></tspan></text>
-    <g
-       style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-       id="text2997"
-       transform="matrix(0.89694705,0.44213798,-0.44213798,0.89694705,260.2961,-122.4502)">
-      <path
-         d="m 144.8919,272.13985 c 0.57684,-0.24621 1.4908,-0.78829 1.94103,-1.23149 0.46429,-0.46428 0.81251,-0.98134 1.04466,-1.55116 0.23214,-0.5698 0.33721,-0.99165 0.33722,-1.62479 0.0155,-0.43449 -0.28674,-1.22826 -0.57298,-1.8313 -0.26496,-0.55821 -0.52007,-1.02571 -0.52007,-1.02571 l -1.99277,2.29588 0.22983,-5.91917 5.5976,0.45081 -2.34283,1.96492 c 0,0 0.49752,1.04212 0.73633,1.68916 0.23881,0.64704 0.58739,1.34614 0.66973,2.19566 0.0366,0.62546 -0.16181,1.70241 -0.4854,2.4903 -0.33767,0.79493 -0.81956,1.50544 -1.44564,2.13152 -0.59093,0.58389 -1.53465,1.17717 -2.35067,1.54297"
-         style="fill:#333333"
-         id="path3002"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="ccscsccccczcccc" />
-    </g>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
@@ -106,5 +95,23 @@
          id="tspan3013"
          x="309.28571"
          y="111.6479" /></text>
+    <rect
+       style="fill:#ffffff"
+       id="rect2992"
+       width="8.8558693"
+       height="12.194967"
+       x="79.848"
+       y="14.807962"
+       transform="translate(165.00893,164.53963)" />
+    <g
+       transform="matrix(0.67915373,0,0,0.67915373,185.18675,165.77557)"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#333333;fill-opacity:1;stroke:none;font-family:Sans"
+       id="text2992">
+      <path
+         d="m 91.122002,44.403397 c 1.067687,-0.455723 2.018207,-1.093743 2.851562,-1.914063 0.859352,-0.859366 1.503882,-1.816396 1.933594,-2.871094 0.429663,-1.054675 0.644506,-2.167955 0.644531,-3.339843 -2.5e-5,-1.210922 -0.214868,-2.343733 -0.644531,-3.398438 -0.442732,-1.054668 -1.093773,-2.011699 -1.953125,-2.871094 l -3.325891,4.11511 -0.720015,-10.441037 11.570223,0.946864 -5.18057,3.035312 c 1.171849,1.171897 2.063775,2.487 2.675781,3.945313 0.59893,1.458351 0.898409,3.014339 0.898438,4.667969 -2.9e-5,1.614596 -0.299508,3.151053 -0.898438,4.609375 -0.625027,1.471362 -1.516953,2.786465 -2.675781,3.945312 -1.093774,1.080734 -2.395856,1.95964 -3.90625,2.636719"
+         id="path2997"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="ccccccccccccccc" />
+    </g>
   </g>
 </svg>
