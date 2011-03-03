@@ -362,14 +362,47 @@ bindings to be activated whenever KEYMAP and %s state are active."
 (evil-define-state normal
   "Normal state, AKA \"Command\" state."
   :tag "<N>"
-  :suppress-keymap t)
+  :suppress-keymap t
+  (if evil-state
+      (evil-setup-normal-repeat)
+    (evil-teardown-normal-repeat)))
 
 (evil-define-state emacs
   "Emacs state."
   :tag "<E>")
 
-(define-key evil-normal-state-map "\C-z" 'evil-emacs-state)
+(evil-define-state insert
+  "Insert state."
+  :tag "<I>"
+  (if evil-state
+      (evil-setup-insert-repeat)
+    (evil-teardown-insert-repeat)
+    (unless (bolp) (backward-char))))
+
+
 (define-key evil-emacs-state-map "\C-z" 'evil-normal-state)
+
+(define-key evil-normal-state-map "\C-z" 'evil-emacs-state)
+(define-key evil-normal-state-map "i" 'evil-insert-before)
+(define-key evil-normal-state-map "x" 'delete-char)
+(define-key evil-normal-state-map "r" 'evil-replace-char)
+
+(define-key evil-insert-state-map [escape] 'evil-normal-state)
+
+;; TODO: the following commands are very preliminary just for testing.
+(defun evil-insert-before (count)
+  "Switches to insert-state just before point.
+The insertion will be repeated `count' times."
+  (interactive "p")
+  (evil-insert-state 1))
+
+(defun evil-replace-char (char &optional count)
+  (interactive (list (read-char)
+                     (prefix-numeric-value current-prefix-arg)))
+  (setq count (or count 1))
+  (delete-char count)
+  (insert-char char count)
+  (backward-char))
 
 (provide 'evil-states)
 

@@ -1,4 +1,4 @@
-;;;; Settings and variables
+;;; Settings and variables
 
 (defvar evil-state nil
   "The current Evil state.
@@ -25,6 +25,15 @@ having higher priority.")
 (defconst evil-suppress-map (make-keymap)
   "Full keymap disabling default bindings to self-insert-command.")
 (suppress-keymap evil-suppress-map)
+
+(defvar evil-repeat-info nil
+  "A list if repeat-informations to repeat the last command.")
+
+(defvar evil-repeating-command nil
+  "This variable is non-nil if a command is currently being repeated.")
+
+(defvar evil-insert-repeat-info nil
+  "Repeat information accumulated during insert mode.")
 
 (defconst evil-version "0.1"
   "The current version of Evil")

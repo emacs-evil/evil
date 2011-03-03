@@ -178,6 +178,62 @@ of `self-insert-command' from Normal state"
   :tags '(evil)
   (evil-test-suppress-keymap 'operator))
 
+(ert-deftest evil-test-normal-repeat-info-simple-command ()
+  "Save key-sequence after simple editing command in vi-state"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (execute-kbd-macro "x")
+    (should (equal evil-repeat-info "x"))
+    (execute-kbd-macro "3x")
+    (should (equal evil-repeat-info "3x"))))
+
+(ert-deftest evil-test-normal-repeat-info-char-command ()
+  "Save key-sequence after editing command with character in vi-state"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (execute-kbd-macro "r5")
+    (should (equal evil-repeat-info "r5"))
+    (execute-kbd-macro "3rX")
+    (should (equal evil-repeat-info "3rX"))))
+
+(ert-deftest evil-test-insert-repeat-info ()
+  "Save key-sequence after insertion mode"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (execute-kbd-macro (vconcat "iABC" [escape]))
+    (should (equal (vconcat evil-repeat-info)
+                   (vconcat "iABC" [escape])))))
+
+(ert-deftest evil-test-cmd-replace-char ()
+  "Calling `evil-replace-char' should replace characters."
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (point-min))
+    (execute-kbd-macro "r5")
+    (should (string= "5; This"
+                     (buffer-substring (point-min) (+ 7 (point-min)))))
+    (should (= (point) (point-min)))
+    (execute-kbd-macro "3rX")
+    (should (string= "XXXThis"
+                     (buffer-substring (point-min) (+ 7 (point-min)))))
+    (should (= (point) (+ (point-min) 2)))))
+
+(ert-deftest evil-test-insert-before ()
+  "Test insertion of text before point"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (should (and (looking-at "This") (looking-back ";; ")))
+    (execute-kbd-macro (vconcat "ievil rulz " [escape]))
+    (should (string= ";; evil rulz This" (buffer-substring 1 18)))
+    (should (= (point) 13))))
+
+
 (when evil-tests-run
   (ert-run-tests-batch '(tag evil)))
 
