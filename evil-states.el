@@ -4,22 +4,22 @@
 ;; with the macro `evil-define-state'.
 ;;
 ;; A state consists of a universal keymap (like
-;; `evil-vi-state-map' for vi state) and a buffer-local keymap for
-;; overriding the former (like `evil-vi-state-local-map').
+;; `evil-normal-state-map' for Normal state) and a buffer-local keymap for
+;; overriding the former (like `evil-normal-state-local-map').
 ;; Sandwiched between these keymaps may be so-called auxiliary
 ;; keymaps, which contain state bindings assigned to an Emacs mode
 ;; (minor or major): more on that below.
 ;;
 ;; A state may "inherit" keymaps from another state. For example,
-;; Visual state will enable vi state's keymaps in addition to its own.
+;; Visual state will enable Normal state's keymaps in addition to its own.
 ;; The keymap order then becomes:
 ;;
 ;;     <visual-local-map>
 ;;     <visual auxiliary maps>
 ;;     <visual-universal-map>
-;;     <vi-local-map>
-;;     <vi auxiliary maps>
-;;     <vi-universal-map>
+;;     <normal-local-map>
+;;     <normal auxiliary maps>
+;;     <normal-universal-map>
 ;;
 ;; Since the activation of auxiliary maps depends on the current
 ;; buffer and its modes, states are necessarily buffer-local.
@@ -31,8 +31,8 @@
 ;; containing those bindings will be active. In a buffer where
 ;; foo-mode is not enabled, it will not be.
 ;;
-;; Hence, state bindings may be grouped into Emacs modes. This is
-;; useful for writing extensions.
+;; Why go to this trouble? Because it allows state bindings to be
+;; grouped into Emacs modes. This is useful for writing extensions.
 ;;
 ;; All state keymaps are listed in `evil-mode-map-alist', which is
 ;; then listed in `emulation-mode-map-alist'. This gives state keymaps
@@ -60,13 +60,13 @@ To enable Evil globally, do (evil-mode 1)."
    (evil-local-mode
     (setq emulation-mode-map-alists
           (evil-concat-lists '(evil-mode-map-alist)
-                                 emulation-mode-map-alists))
+                             emulation-mode-map-alists))
     (evil-refresh-local-maps)
     (unless (memq 'evil-modeline-tag global-mode-string)
       (setq global-mode-string
             (append '(" " evil-modeline-tag " ")
                     global-mode-string)))
-    (evil-vi-state))
+    (evil-normal-state))
    (t
     (when evil-state
       (funcall (evil-state-func) -1)))))
@@ -109,7 +109,7 @@ current buffer only.")
       (cond
        ((evil-state-p entry)
         (unless (memq entry excluded)
-          (dolist (mode (evil-state-modes entry excluded))
+          (dolist (mode (evil-state-keymaps entry excluded))
             (add-to-list 'result mode t))))
        (t
         (add-to-list 'result entry t))))))
@@ -169,7 +169,7 @@ Its order reflects the state in the current buffer."
       (setq evil-mode-map-alist
             (copy-sequence evil-mode-map-alist))
       (evil-add-to-alist 'evil-mode-map-alist mode
-                             (symbol-value map)))))
+                         (symbol-value map)))))
 
 (defun evil-set-cursor (specs)
   "Change the cursor's apperance according to SPECS.
@@ -317,8 +317,8 @@ bindings to be activated whenever KEYMAP and %s state are active."
        ,@(when suppress-keymap
            `((set-keymap-parent ,keymap evil-suppress-map)))
        (evil-add-to-alist 'mode-map-alist
-                              ',local-mode ,local-keymap
-                              ',mode ,keymap)
+                          ',local-mode ,local-keymap
+                          ',mode ,keymap)
 
        (setq-default evil-mode-map-alist mode-map-alist)
 
@@ -357,19 +357,19 @@ bindings to be activated whenever KEYMAP and %s state are active."
 
        ',state)))
 
-;; Define vi (command) state
+;; Define states
 
-(evil-define-state vi
-  "Command state, AKA \"Normal\" state."
-  :tag "<V>"
+(evil-define-state normal
+  "Normal state, AKA \"Command\" state."
+  :tag "<N>"
   :suppress-keymap t)
 
 (evil-define-state emacs
   "Emacs state."
   :tag "<E>")
 
-(define-key evil-vi-state-map "\C-z" 'evil-emacs-state)
-(define-key evil-emacs-state-map "\C-z" 'evil-vi-state)
+(define-key evil-normal-state-map "\C-z" 'evil-emacs-state)
+(define-key evil-emacs-state-map "\C-z" 'evil-normal-state)
 
 (provide 'evil-states)
 

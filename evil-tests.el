@@ -15,8 +15,8 @@
 ;;
 ;;     (should (equal (make-keymap) (make-keymap)))
 ;;
-;; This should be forwarded to Christian Ohler. For the time being,
-;; we remove the explainer.
+;; TODO (Vegard): This should be forwarded to Christian Ohler.
+;; For the time being, we remove the explainer.
 (put 'equal 'ert-explainer nil)
 
 (defvar evil-tests-run t
@@ -31,15 +31,16 @@ The buffer contains the familiar *scratch* message."
          (kill-ring-yank-pointer kill-ring-yank-pointer)
          x-select-enable-clipboard
          message-log-max)
-     (with-temp-buffer
-       (save-window-excursion
+     (save-window-excursion
+       (with-temp-buffer
          (switch-to-buffer-other-window (current-buffer))
          (buffer-enable-undo)
-         (save-excursion
-           (insert ";; This buffer is for notes you don't want to save, \
+         (evil-local-mode 1)
+         (insert ";; This buffer is for notes you don't want to save, \
 and for Lisp evaluation.\n;; If you want to create a file, visit \
 that file with C-x C-f,\n;; then enter the text in that file's own \
-buffer.\n"))
+buffer.\n")
+         (goto-char (point-min))
          ,@body))))
 
 (defun evil-test-local-mode-enabled ()
@@ -53,15 +54,15 @@ buffer.\n"))
   (ert-info ("Create a buffer-local value for `evil-mode-map-alist'")
     (should (assq 'evil-mode-map-alist (buffer-local-variables))))
   (ert-info ("Initialize buffer-local keymaps")
-    (should (assq 'evil-vi-state-local-map (buffer-local-variables)))
-    (should (keymapp evil-vi-state-local-map))
+    (should (assq 'evil-normal-state-local-map (buffer-local-variables)))
+    (should (keymapp evil-normal-state-local-map))
     (should (assq 'evil-emacs-state-local-map (buffer-local-variables)))
     (should (keymapp evil-emacs-state-local-map)))
   (ert-info ("Refresh buffer-local entries in `evil-mode-map-alist'")
-    (should (rassq evil-vi-state-local-map evil-mode-map-alist))
+    (should (rassq evil-normal-state-local-map evil-mode-map-alist))
     (should (rassq evil-emacs-state-local-map evil-mode-map-alist)))
   (ert-info ("Don't add buffer-local entries to the default value")
-    (should-not (rassq evil-vi-state-local-map
+    (should-not (rassq evil-normal-state-local-map
                        (default-value 'evil-mode-map-alist)))
     (should-not (rassq evil-emacs-state-local-map
                        (default-value 'evil-mode-map-alist)))))
@@ -126,50 +127,56 @@ buffer.\n"))
     (ert-info ("Refresh modeline tag")
       (should (equal evil-modeline-tag tag)))))
 
-(ert-deftest evil-test-exit-vi-state ()
-  "Enter vi state and then disable all states"
+(ert-deftest evil-test-exit-normal-state ()
+  "Enter Normal state and then disable all states"
   :tags '(evil)
   (with-temp-buffer
-    (evil-test-change-state 'vi)
-    (evil-vi-state -1)
+    (evil-test-change-state 'normal)
+    (evil-normal-state -1)
     (evil-test-no-states)))
 
 (ert-deftest evil-test-change-states ()
-  "Change between vi state and emacs state"
+  "Change between Normal state, Emacs state and Operator-Pending state"
   :tags '(evil)
   (with-temp-buffer
-    (evil-test-change-state 'vi)
+    (evil-test-change-state 'normal)
     (evil-test-change-state 'emacs)
-    (evil-test-change-state 'vi)
+    (evil-test-change-state 'normal)
+    (evil-test-change-state 'operator)
+    (evil-test-change-state 'normal)
     (evil-test-change-state 'emacs)))
 
-(ert-deftest evil-test-enter-vi-state-disabled ()
-  "Enter vi state even if `evil-local-mode' is disabled"
+(ert-deftest evil-test-enter-normal-state-disabled ()
+  "Enter Normal state even if `evil-local-mode' is disabled"
   :tags '(evil)
   (with-temp-buffer
     (evil-local-mode -1)
     (evil-test-local-mode-disabled)
-    (evil-test-change-state 'vi)))
+    (evil-test-change-state 'normal)))
+
+(defun evil-test-suppress-keymap (state)
+  "Verify that `self-insert-command' is suppressed in STATE"
+  (evil-test-buffer
+    (evil-test-change-state state)
+    (should-error (execute-kbd-macro "abc"))
+    (should (string= ";; " (buffer-substring
+                            (point-min) (+ (point-min) 3))))))
 
 (ert-deftest evil-test-emacs-state-suppress-keymap ()
   "`self-insert-command' works in emacs-state"
   :tags '(evil)
-  (evil-test-buffer
-    (evil-local-mode 1)
-    (evil-emacs-state 1)
-    (goto-char (point-min))
-    (execute-kbd-macro "abc")
-    (should (string= "abc" (buffer-substring (point-min) (+ 3 (point-min)))))))
+  (should-error (evil-test-suppress-keymap 'emacs)))
 
-(ert-deftest evil-test-vi-state-suppress-keymap ()
-  "No `self-insert-command' in vi-state"
+(ert-deftest evil-test-normal-state-suppress-keymap ()
+  "No `self-insert-command' in normal-state"
   :tags '(evil)
-  (evil-test-buffer
-    (evil-local-mode 1)
-    (evil-vi-state 1)
-    (goto-char (point-min))
-    (should-error (execute-kbd-macro "abc"))
-    (should (string= ";; " (buffer-substring (point-min) (+ 3 (point-min)))))))
+  (evil-test-suppress-keymap 'normal))
+
+(ert-deftest evil-test-operator-state-suppress-keymap ()
+  "Operator-Pending state should inherit suppression
+of `self-insert-command' from Normal state"
+  :tags '(evil)
+  (evil-test-suppress-keymap 'operator))
 
 (when evil-tests-run
   (ert-run-tests-batch '(tag evil)))

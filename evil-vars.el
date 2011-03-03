@@ -3,7 +3,7 @@
 (defvar evil-state nil
   "The current Evil state.
 To change the state, use `evil-change-state'
-or call the state function (e.g., `evil-vi-state').")
+or call the state function (e.g., `evil-normal-state').")
 (make-variable-buffer-local 'evil-state)
 
 (defvar evil-modeline-tag nil
