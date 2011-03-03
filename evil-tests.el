@@ -178,34 +178,43 @@ of `self-insert-command' from Normal state"
   :tags '(evil)
   (evil-test-suppress-keymap 'operator))
 
+(defun evil-test-repeat-info (keys &optional recorded)
+  "Executes a sequence of keys and verifies that `evil-repeat-info' records them correctly.
+`keys' is the sequence of keys to execute
+`recorded' is the expected sequence of recorded events, if nil `keys' is used"
+  (execute-kbd-macro keys)
+  (should (equal (vconcat evil-repeat-info)
+                 (vconcat (or recorded keys)))))
+
 (ert-deftest evil-test-normal-repeat-info-simple-command ()
   "Save key-sequence after simple editing command in vi-state"
   :tags '(evil)
   (evil-test-buffer
-    (evil-local-mode 1)
-    (execute-kbd-macro "x")
-    (should (equal evil-repeat-info "x"))
-    (execute-kbd-macro "3x")
-    (should (equal evil-repeat-info "3x"))))
+    (evil-test-change-state 'normal)
+    (ert-info ("Call simple command without count")
+      (evil-test-repeat-info "x"))
+    (ert-info ("Call simple command with count 3")
+      (evil-test-repeat-info "3x"))))
 
 (ert-deftest evil-test-normal-repeat-info-char-command ()
   "Save key-sequence after editing command with character in vi-state"
   :tags '(evil)
   (evil-test-buffer
-    (evil-local-mode 1)
-    (execute-kbd-macro "r5")
-    (should (equal evil-repeat-info "r5"))
-    (execute-kbd-macro "3rX")
-    (should (equal evil-repeat-info "3rX"))))
+    (evil-test-change-state 'normal)
+    (ert-info ("Call command with character argument without count")
+      (evil-test-repeat-info "r5"))
+    (ert-info ("Call command with character argument with count 12")
+      (evil-test-repeat-info "12rX"))))
 
 (ert-deftest evil-test-insert-repeat-info ()
   "Save key-sequence after insertion mode"
   :tags '(evil)
   (evil-test-buffer
-    (evil-local-mode 1)
-    (execute-kbd-macro (vconcat "iABC" [escape]))
-    (should (equal (vconcat evil-repeat-info)
-                   (vconcat "iABC" [escape])))))
+    (evil-test-change-state 'normal)
+    (ert-info ("Insert text without count")
+      (evil-test-repeat-info (vconcat "iABC" [escape])))
+    (ert-info ("Insert text with count 42")
+      (evil-test-repeat-info (vconcat "42iABC" [escape])))))
 
 (ert-deftest evil-test-cmd-replace-char ()
   "Calling `evil-replace-char' should replace characters."
