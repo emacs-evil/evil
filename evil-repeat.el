@@ -52,6 +52,10 @@ variable `evil-insert-repeat-info'."
   "Initializes recording of repeat-information in insert-state."
   ;(add-hook 'pre-command-hook 'evil-insert-pre-repeat nil t)
   ;(add-hook 'after-change-functions 'evil-insert-change-repeat nil t)
+
+  ;; Note that this will automatically add the key-sequence
+  ;; that just activated insert-mode to `evil-insert-repeat-info',
+  ;; because this post-command-hook is run for the current command.
   (add-hook 'post-command-hook 'evil-insert-post-repeat nil t)
   (setq evil-insert-repeat-info nil))
 
@@ -66,9 +70,8 @@ insert-mode."
   ;; do not forget to add the command that finished insert-mode, usually
   ;; [escape]
   (setq evil-repeat-info
-        (apply #'vconcat ;evil-repeat-info
-               (reverse (cons (this-command-keys)
-                              evil-insert-repeat-info)))))
+        (apply #'vconcat (reverse (cons (this-command-keys)
+                                        evil-insert-repeat-info)))))
 
 (provide 'evil-repeat)
 
