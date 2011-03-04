@@ -43,6 +43,9 @@ having higher priority.")
 (defvar evil-repeat-count nil
   "The explicit count when repeating a command.")
 
+(defvar evil-insert-count nil
+  "The explicit count passed to an command starting insert mode.")
+
 (defconst evil-version "0.1"
   "The current version of Evil")
 

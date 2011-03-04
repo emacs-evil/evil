@@ -378,9 +378,18 @@ bindings to be activated whenever KEYMAP and %s state are active."
   "Insert state."
   :tag "<I>"
   (if evil-state
-      (evil-setup-insert-repeat)
-    (evil-teardown-insert-repeat)
-    (unless (bolp) (backward-char))))
+      (evil-setup-insert-repeat)))
+
+
+(defun evil-exit-insert-state ()
+  "This function is called to exit insert-state switching back to normal-state.
+This handles the repeat-count of the insert command."
+  (interactive)
+  (evil-teardown-insert-repeat)
+  (dotimes (i (1- evil-insert-count))
+    (evil-execute-repeat-info evil-insert-repeat-info))
+  (evil-normal-state)
+  (unless (bolp) (backward-char)))
 
 
 (define-key evil-emacs-state-map "\C-z" 'evil-normal-state)
@@ -391,13 +400,14 @@ bindings to be activated whenever KEYMAP and %s state are active."
 (define-key evil-normal-state-map "r" 'evil-replace-char)
 (define-key evil-normal-state-map "." 'evil-repeat)
 
-(define-key evil-insert-state-map [escape] 'evil-normal-state)
+(define-key evil-insert-state-map [escape] 'evil-exit-insert-state)
 
 ;; TODO: the following commands are very preliminary just for testing.
 (defun evil-insert-before (count)
   "Switches to insert-state just before point.
 The insertion will be repeated `count' times."
   (interactive "p")
+  (setq evil-insert-count count)
   (evil-insert-state 1))
 
 (defun evil-replace-char (char &optional count)

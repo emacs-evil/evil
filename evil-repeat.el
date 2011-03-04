@@ -50,7 +50,7 @@ variable `evil-insert-repeat-info'."
     (if evil-repeat-info
 	(push (this-command-keys) evil-insert-repeat-info)
       ;; the first time this is the command that started insert mode
-      (setq evil-repeat-info (this-command-keys)))))
+      (setq evil-repeat-info (list (this-command-keys))))))
 
 (defun evil-setup-insert-repeat ()
   "Initializes recording of repeat-information in insert-state."
@@ -76,12 +76,11 @@ insert-mode."
   ;; [escape]
   (setq evil-insert-repeat-info
 	(evil-normalize-repeat-info
-	 (reverse (cons (this-command-keys)
-			evil-insert-repeat-info))))
+	 (reverse evil-insert-repeat-info)))
   (setq evil-repeat-info
-	(cons evil-repeat-info
-	      evil-insert-repeat-info)))
-
+	(append evil-repeat-info
+		evil-insert-repeat-info
+		(list (this-command-keys)))))
 
 (defun evil-normalize-repeat-info (repeat-info)
   "Concatenates consecutive arrays in the repeat-info to a single

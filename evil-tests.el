@@ -293,10 +293,6 @@ unchanged test-buffer in normal-state."
 (ert-deftest evil-test-repeat ()
   "Repeat several editing commands."
   :tags '(evil)
-  (ert-info ("Repeat insert")
-    (evil-test-editing-clean (vconcat "iABC" [escape] "..")
-  			     "ABABAB°CCC;; This"))
-
   (ert-info ("Repeat replace")
     (evil-test-editing-clean (vconcat "rX" [right right] ".")
   			     "\\`X;°XThis"))
@@ -329,6 +325,35 @@ unchanged test-buffer in normal-state."
     (evil-test-editing  (vconcat "ievil rulz " [escape])
                         "\\`;; evil rulz° This")))
 
+(ert-deftest evil-test-insert-before-with-count ()
+  "Test insertion of text before point with repeat count"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (should (and (looking-at "This") (looking-back ";; ")))
+    (evil-test-editing  (vconcat "2ievil rulz " [escape])
+                        "\\`;; evil rulz evil rulz° This")))
+
+(ert-deftest evil-test-repeat-insert-before ()
+  "Test repeating of insert-before command."
+  :tags '(evil)
+  (ert-info ("Repeat insert")
+    (evil-test-editing-clean (vconcat "iABC" [escape] "..")
+  			     "ABABAB°CCC;; This"))
+
+  (ert-info ("Repeat insert with count")
+    (evil-test-editing-clean (vconcat "2iABC" [escape] "..")
+  			     "ABCABABCABABCAB°CCC;; This"))
+
+  (ert-info ("Repeat insert with repeat count")
+    (evil-test-editing-clean (vconcat "iABC" [escape] "11.")
+  			     "ABABCABCABCABCABCABCABCABCABCABCAB°CC;; This"))
+
+  (ert-info ("Repeat insert with count with repeat with count")
+    (evil-test-editing-clean
+     (vconcat "10iABC" [escape] "11.")
+     "ABCABCABCABCABCABCABCABCABCABABCABCABCABCABCABCABCABCABCABCAB°CC;; This")))
 
 (when evil-tests-run
   (evil-tests-run))
