@@ -111,4 +111,13 @@ That is, the message is not logged in the *Messages* buffer.
 
 (provide 'evil-common)
 
+;;; Highlighting
+
+(when (fboundp 'font-lock-add-keywords)
+  (font-lock-add-keywords
+   'emacs-lisp-mode
+   '(("(\\(evil-define-[-[:word:]]+\\)\\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
+      (1 font-lock-keyword-face)
+      (2 font-lock-function-name-face nil t)))))
+
 ;;; evil-common.el ends here
