@@ -1,0 +1,98 @@
+\input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename evil.info
+@include version.texi
+@settitle Evil-mode manual
+@c %**end of header
+@include macros.texi
+
+@copying
+This manual is for evil-mode
+(version @value{VERSION} from @value{UPDATED}),
+an emulation mode for @vim{}-like keybindings for Emacs.
+
+Copyright @copyright{} 2011 @authors{}.
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3
+or any later version published by the Free Software Foundation;
+with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+A copy of the license is included in the section entitled "GNU
+Free Documentation License".
+@end quotation
+@end copying
+
+@dircategory Emacs
+@direntry
+* @evil{}: (evil-mode). An emulation mode for @vim{}-like key-bindings
+  in Emacs.
+@end direntry
+
+@titlepage
+@title @evil{}
+@subtitle An emulation mode for @vim{}-like key-bindings for Emacs.
+@author @authors{}
+@page
+@insertcopying
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top, Overview, (dir), (dir)
+@top @evil{}
+
+This is the reference manual to @evil{}, an Emacs extension to
+emulate @vim{}-like key-bindings in Emacs.
+@end ifnottex
+
+@menu
+* Overview::                    An overview over the features of @evil{}.
+* Using evil-mode::             
+* Extending evil-mode::         
+* Internal Structure::          
+* Index::                       Complete index.
+
+Appendices
+* GNU Free Documentation License::  
+@end menu
+
+@node Overview, Using evil-mode, Top, Top
+@chapter Overview of @evil{}
+
+@Evil{} is an emulation mode for @vim{}-like key-bindings in Emacs.
+@vim{} is the other famous editor in the *nix world (beside Emacs) which
+is very powerful and widely used, see @uref{http://www.vim.org} for more
+information about @vim{}. @Evil{} tries to provide the typical
+feeling of writing in @vim{} to Emacs while preserving the extensibility
+of Emacs, so the user can choose the best of both worlds.
+
+
+@node Using evil-mode, Extending evil-mode, Overview, Top
+@chapter Using @evil{}
+
+
+@node Extending evil-mode, Internal Structure, Using evil-mode, Top
+@chapter Extending @evil{} with new commands.
+
+
+@node Internal Structure, Index, Extending evil-mode, Top
+@chapter Internal structure of @evil{}
+
+@node Index, GNU Free Documentation License, Internal Structure, Top
+@unnumbered Index
+
+
+@node GNU Free Documentation License,  , Index, Top
+@appendix GNU Free Documentation License
+@include fdl-1.3.texi
+
+@bye
+
+
+
+@c Local Variables: 
+@c mode: texinfo
+@c TeX-master: t
+@c End: 
