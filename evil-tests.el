@@ -12,15 +12,6 @@
 (require 'ert)
 (require 'evil)
 
-;; ERT bug: The explainer function for `equal' hangs when passed
-;; a keymap with a char-table. The bug can be reproduced with:
-;;
-;;     (should (equal (make-keymap) (make-keymap)))
-;;
-;; TODO (Vegard): This should be forwarded to Christian Ohler.
-;; For the time being, we remove the explainer.
-(put 'equal 'ert-explainer nil)
-
 (defvar evil-tests-run nil
   "Run Evil tests.")
 
@@ -44,7 +35,7 @@ and `evil-local-mode' is enabled."
          (switch-to-buffer-other-window (current-buffer))
          (buffer-enable-undo)
          (evil-local-mode 1)
-         (insert ";; This buffer is for notes you don't want to save, \ ;
+         (insert ";; This buffer is for notes you don't want to save, \
 and for Lisp evaluation.\n;; If you want to create a file, visit \
 that file with C-x C-f,\n;; then enter the text in that file's own \
 buffer.\n")
