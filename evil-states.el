@@ -395,6 +395,7 @@ This handles the repeat-count of the insert command."
 (define-key evil-emacs-state-map "\C-z" 'evil-normal-state)
 
 (define-key evil-normal-state-map "\C-z" 'evil-emacs-state)
+(define-key evil-normal-state-map "a" 'evil-insert-after)
 (define-key evil-normal-state-map "i" 'evil-insert-before)
 (define-key evil-normal-state-map "x" 'delete-char)
 (define-key evil-normal-state-map "r" 'evil-replace-char)
@@ -403,12 +404,25 @@ This handles the repeat-count of the insert command."
 (define-key evil-insert-state-map [escape] 'evil-exit-insert-state)
 
 ;; TODO: the following commands are very preliminary just for testing.
+(defun evil-insert-newline-before ()
+  (beginning-of-line)
+  (newline)
+  (forward-line -1)
+  (back-to-indentation))
+  
 (defun evil-insert-before (count)
   "Switches to insert-state just before point.
 The insertion will be repeated `count' times."
   (interactive "p")
   (setq evil-insert-count count)
   (evil-insert-state 1))
+
+(defun evil-insert-after (count)
+  "Switches to insert-state just after point.
+The insertion will be repeated `count' times."
+  (interactive "p")
+  (unless (eolp) (forward-char))
+  (evil-insert-before count))
 
 (defun evil-replace-char (char &optional count)
   (interactive (list (read-char)

@@ -157,13 +157,14 @@ buffer.\n")
   "Verify that `self-insert-command' is suppressed in STATE"
   (evil-test-buffer
     (evil-test-change-state state)
-    (should (eq (key-binding "a") 'undefined))
-    (should (eq (key-binding "b") 'undefined))
-    (should (eq (key-binding "c") 'undefined))
+    ;; TODO: this must be done better
+    (should (eq (key-binding "y") 'undefined))
+    (should (eq (key-binding "u") 'undefined))
+    (should (eq (key-binding "e") 'undefined))
     (ert-info ("Don't insert text")
       ;; may or may not signal an error, depending on batch mode
       (condition-case nil
-          (execute-kbd-macro "abc")
+          (execute-kbd-macro "yue")
         (error nil))
       (should (string= (buffer-substring 1 4) ";; ")))))
 
@@ -354,6 +355,45 @@ unchanged test-buffer in normal-state."
     (evil-test-editing-clean
      (vconcat "10iABC" [escape] "11.")
      "ABCABCABCABCABCABCABCABCABCABABCABCABCABCABCABCABCABCABCABCAB°CC;; This")))
+
+(ert-deftest evil-test-insert-after ()
+  "Test insertion of text after point"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (should (and (looking-at "This") (looking-back ";; ")))
+    (evil-test-editing  (vconcat "aevil rulz " [escape])
+                        "\\`;; Tevil rulz° his")))
+
+(ert-deftest evil-test-insert-after-with-count ()
+  "Test insertion of text after point with repeat count"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (evil-test-editing  (vconcat "2aevil rulz " [escape])
+                        "\\`;; Tevil rulz evil rulz° his")))
+
+(ert-deftest evil-test-repeat-insert-after ()
+  "Test repeating of insert-after command."
+  :tags '(evil)
+  (ert-info ("Repeat insert")
+    (evil-test-editing-clean (vconcat "aABC" [escape] "..")
+  			     ";ABCABCAB°C; This"))
+
+  (ert-info ("Repeat insert with count")
+    (evil-test-editing-clean (vconcat "2aABC" [escape] "..")
+  			     ";ABCABCABCABCABCAB°C; This"))
+
+  (ert-info ("Repeat insert with repeat count")
+    (evil-test-editing-clean (vconcat "aABC" [escape] "11.")
+  			     ";ABCABCABCABCABCABCABCABCABCABCABCAB°C; This"))
+
+  (ert-info ("Repeat insert with count with repeat with count")
+    (evil-test-editing-clean
+     (vconcat "10aABC" [escape] "11.")
+     ";ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB°C; This")))
 
 (when evil-tests-run
   (evil-tests-run))
