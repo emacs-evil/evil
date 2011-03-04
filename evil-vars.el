@@ -35,6 +35,11 @@ having higher priority.")
 (defvar evil-insert-repeat-info nil
   "Repeat information accumulated during insert mode.")
 
+(defvar evil-command-modified-buffer nil
+  "Non-nil if the current command modified the buffer, i.e., it
+  is an editing command. This variable is used to detect editing
+  command for repeation.")
+
 (defconst evil-version "0.1"
   "The current version of Evil")
 

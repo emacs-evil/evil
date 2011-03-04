@@ -46,6 +46,7 @@
 
 (require 'evil-vars)
 (require 'evil-common)
+(require 'evil-repeat)
 
 (defun evil-enable ()
   "Enable Evil in the current buffer, if appropriate.

@@ -5,20 +5,20 @@
 (defun evil-normal-pre-repeat ()
   "Called from `pre-command-hook' in vi-state. Initializes
 recording of repeat-information for the current command."
-  (setq evil-command-changed-buffer nil))
+  (setq evil-command-modified-buffer nil))
 
 (defun evil-normal-change-repeat (beg end len)
   "Called from `after-change-functions' in vi-state. Records that
 the current command is an editing command, i.e., it modified the
 buffer."
-  (setq evil-command-changed-buffer t))
+  (setq evil-command-modified-buffer t))
 
 (defun evil-normal-post-repeat ()
   "Called from `post-command-hook' in vi-state. Finishes
 recording of repeat-information and eventually stores it in the
 global variable `evil-repeat-info' if the command is repeatable."
   (when (and (functionp this-command)
-             evil-command-changed-buffer)
+             evil-command-modified-buffer)
     (setq evil-repeat-info (this-command-keys))))
 
 (defun evil-setup-normal-repeat ()
