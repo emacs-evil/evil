@@ -40,6 +40,9 @@ having higher priority.")
   is an editing command. This variable is used to detect editing
   command for repeation.")
 
+(defvar evil-repeat-count nil
+  "The explicit count when repeating a command.")
+
 (defconst evil-version "0.1"
   "The current version of Evil")
 

@@ -74,26 +74,33 @@ insert-mode."
                                         evil-insert-repeat-info)))))
 
 
-;; TODO: The count argument for repeat is tricky especially for
-;;       key-sequences. We will probably have to either parse the
-;;       key-sequence for count arguments or do some magic with
-;;       rebinding `digit-argument' and friends. The first approach
-;;       seems to be the cleaner way but it is difficult to realize
-;;       which numbers in the key-sequence have to be replaced,
-;;       because they may belong to another keyboard-macro or belong
-;;       to commands in insert-state, ... The second approach is
-;;       probably easier to get done right, but it must be sensitive
-;;       to the current state (only the count of normal-state and
-;;       op-pending-state must be changed) and has to modify
-;;       `prefix-arg'. Is a pre-command-hook the right place?
+(defun evil-replace-command-prefix-arg ()
+  "Replaces the replace-count by `evil-repeat-count'.
+Called from a pre-command-hook during repeation."
+  (unless (memq this-command '(digit-argument negative-argument))
+    (remove-hook 'pre-command-hook 'evil-replace-command-prefix-arg)
+    (setq prefix-arg evil-repeat-count)))
+
+
+;; TODO: repeating will not work for operator because we do not have
+;;       operator-pending-state, yet. In this case a non-nil value of
+;;       evil-repeat-count must be used as count for the motion.
+(defun evil-execute-repeat-info (count repeat-info)
+  "Repeat the repeat-information `repeat-info' with the count of
+the first command replaced by `count'. The count is replaced if
+and only if `count' is non-nil."
+  (let ((evil-repeating-command t))
+    (if count
+	(let ((evil-repeat-count count))
+	  (add-hook 'pre-command-hook 'evil-replace-command-prefix-arg)
+	  (execute-kbd-macro repeat-info)
+	  (remove-hook 'pre-command-hook 'evil-replace-command-prefix-arg))
+      (execute-kbd-macro repeat-info))))
+  
 (defun evil-repeat (count)
   "Repeat the last editing command with count replaced by `count'."
   (interactive "P")
-  (let ((evil-repeating-command t))
-    (if count
-        (error "`count' for repeat not yet supported.")
-      (execute-kbd-macro evil-repeat-info))))
-
+  (evil-execute-repeat-info count evil-repeat-info))
 
 (provide 'evil-repeat)
 
