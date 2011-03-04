@@ -249,6 +249,19 @@ unchanged test-buffer in normal-state."
     (evil-test-change-state 'normal)
     (evil-test-editing keys expected point-char)))
 
+
+(ert-deftest evil-test-repeat ()
+  "Repeat several editing commands."
+  :tags '(evil)
+  (ert-info ("Repeat insert")
+    (evil-test-editing-clean (vconcat "iABC" [escape] "..") "ABABAB°CCC;; This"))
+
+  (ert-info ("Repeat replace")
+    (evil-test-editing-clean (vconcat "rX" [escape right right] ".") "\\`X;°XThis"))
+
+  (ert-info ("Repeat replace with count")
+    (evil-test-editing-clean (vconcat "2rX" [escape right right] ".") "\\`XX X°Xis ")))
+
 (ert-deftest evil-test-cmd-replace-char ()
   "Calling `evil-replace-char' should replace characters."
   :tags '(evil)

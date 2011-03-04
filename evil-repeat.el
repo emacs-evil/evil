@@ -73,6 +73,28 @@ insert-mode."
         (apply #'vconcat (reverse (cons (this-command-keys)
                                         evil-insert-repeat-info)))))
 
+
+;; TODO: The count argument for repeat is tricky especially for
+;;       key-sequences. We will probably have to either parse the
+;;       key-sequence for count arguments or do some magic with
+;;       rebinding `digit-argument' and friends. The first approach
+;;       seems to be the cleaner way but it is difficult to realize
+;;       which numbers in the key-sequence have to be replaced,
+;;       because they may belong to another keyboard-macro or belong
+;;       to commands in insert-state, ... The second approach is
+;;       probably easier to get done right, but it must be sensitive
+;;       to the current state (only the count of normal-state and
+;;       op-pending-state must be changed) and has to modify
+;;       `prefix-arg'. Is a pre-command-hook the right place?
+(defun evil-repeat (count)
+  "Repeat the last editing command with count replaced by `count'."
+  (interactive "P")
+  (let ((evil-repeating-command t))
+    (if count
+        (error "`count' for repeat not yet supported.")
+      (execute-kbd-macro evil-repeat-info))))
+
+
 (provide 'evil-repeat)
 
 ;;; evil-repeat.el ends here

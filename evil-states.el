@@ -386,6 +386,7 @@ bindings to be activated whenever KEYMAP and %s state are active."
 (define-key evil-normal-state-map "i" 'evil-insert-before)
 (define-key evil-normal-state-map "x" 'delete-char)
 (define-key evil-normal-state-map "r" 'evil-replace-char)
+(define-key evil-normal-state-map "." 'evil-repeat)
 
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
 
