@@ -216,20 +216,44 @@ of `self-insert-command' from Normal state"
     (ert-info ("Insert text with count 42")
       (evil-test-repeat-info (vconcat "42iABC" [escape])))))
 
+(defun evil-test-editing (keys expected &optional point-char)
+  "Execute key-sequence `keys' and verify if the text around point matches
+`expected' afterwards.
+`keys' is a sequence of events to be passed to `execute-kbd-macro'
+`expected' is a regexp with a special character marking (point)'s position
+`point-char' is the special character marking (point)'s position, defaulted to °
+If, e.g., expected is \"ABC°def\" this means the expected text before point is
+\"ABC\" and the expected text after point is \"def\". "
+  (setq point-char (regexp-quote (char-to-string (or point-char ?°))))
+  (string-match point-char expected)
+  (unless (match-beginning 0)
+    (error "No cursor specified in expected string: %s" expected))
+  (let ((before (substring expected 0 (match-beginning 0)))
+        (after (substring expected (match-end 0))))
+    (execute-kbd-macro keys)
+    (ert-info ((format "Text before point is %s"
+                       (buffer-substring (max (point-min)
+                                              (- (point) (length before)))
+                                         (point))))
+      (should (looking-back before)))
+    (ert-info ((format "Text after point is %s"
+                       (buffer-substring (point)
+                                         (min (point-max)
+                                              (+ (point) (length after))))))
+      (should (looking-at after)))))
+
+(defun evil-test-editing-clean (keys expected &optional point-char)
+  "The same as `evil-test-editing' but starts with a new
+unchanged test-buffer in normal-state."
+  (evil-test-buffer
+    (evil-test-change-state 'normal)
+    (evil-test-editing keys expected point-char)))
+
 (ert-deftest evil-test-cmd-replace-char ()
   "Calling `evil-replace-char' should replace characters."
   :tags '(evil)
-  (evil-test-buffer
-    (evil-local-mode 1)
-    (goto-char (point-min))
-    (execute-kbd-macro "r5")
-    (should (string= "5; This"
-                     (buffer-substring (point-min) (+ 7 (point-min)))))
-    (should (= (point) (point-min)))
-    (execute-kbd-macro "3rX")
-    (should (string= "XXXThis"
-                     (buffer-substring (point-min) (+ 7 (point-min)))))
-    (should (= (point) (+ (point-min) 2)))))
+  (evil-test-editing-clean "r5" "\\`°5; This")
+  (evil-test-editing-clean "3rX" "\\`XX°XThis"))
 
 (ert-deftest evil-test-insert-before ()
   "Test insertion of text before point"
@@ -238,9 +262,8 @@ of `self-insert-command' from Normal state"
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
     (should (and (looking-at "This") (looking-back ";; ")))
-    (execute-kbd-macro (vconcat "ievil rulz " [escape]))
-    (should (string= ";; evil rulz This" (buffer-substring 1 18)))
-    (should (= (point) 13))))
+    (evil-test-editing  (vconcat "ievil rulz " [escape])
+                        "\\`;; evil rulz° This")))
 
 
 (when evil-tests-run
