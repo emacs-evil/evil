@@ -46,6 +46,10 @@ having higher priority.")
 (defvar evil-insert-count nil
   "The explicit count passed to an command starting insert mode.")
 
+(defvar evil-insert-lines nil
+  "Non-nil if the current insertion command is a line-insertion
+command o or O.")
+
 (defconst evil-version "0.1"
   "The current version of Evil")
 

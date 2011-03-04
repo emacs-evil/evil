@@ -394,6 +394,83 @@ unchanged test-buffer in normal-state."
      (vconcat "10aABC" [escape] "11.")
      ";ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB°C; This")))
 
+(ert-deftest evil-test-insert-above ()
+  "Test insertion of text above point"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (forward-line)
+    (evil-test-editing  (vconcat "Oabc\ndef" [escape])
+                        "evaluation.\nabc\nde°f\n;; If you")))
+
+(ert-deftest evil-test-insert-above-with-count ()
+  "Test insertion of text above point with repeat count"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (forward-line)
+    (evil-test-editing  (vconcat "2Oevil\nrulz" [escape])
+                        "evaluation.\nevil\nrulz\nevil\nrul°z\n;; If you")))
+
+(ert-deftest evil-test-repeat-insert-above ()
+  "Test repeating of insert-above command."
+  :tags '(evil)
+  (ert-info ("Repeat insert")
+    (evil-test-editing-clean (vconcat "Oevil\nrulz" [escape] "..")
+  			     "\\`evil\nevil\nevil\nrul°z\nrulz\nrulz\n;; This"))
+
+  (ert-info ("Repeat insert with count")
+    (evil-test-editing-clean
+     (vconcat "2Oevil\nrulz" [escape] "..")
+     "\\`evil\nrulz\nevil\nevil\nrulz\nevil\nevil\nrulz\nevil\nrul°z\nrulz\nrulz\n;; This"))
+
+  (ert-info ("Repeat insert with repeat count")
+    (evil-test-editing-clean (vconcat "Oevil\nrulz" [escape] "2.")
+			     "evil\nevil\nrulz\nevil\nrul°z\nrulz\n;; This"))
+
+  (ert-info ("Repeat insert with count with repeat with count")
+    (evil-test-editing-clean
+     (vconcat "2Oevil\nrulz" [escape] "3.")
+     "\\`evil\nrulz\nevil\nevil\nrulz\nevil\nrulz\nevil\nrul°z\nrulz\n;; This")))
+
+(ert-deftest evil-test-insert-below ()
+  "Test insertion of text below point"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (evil-test-editing  (vconcat "oabc\ndef" [escape])
+                        "evaluation.\nabc\nde°f\n;; If you")))
+
+(ert-deftest evil-test-insert-below-with-count ()
+  "Test insertion of text below point with repeat count"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (evil-test-editing  (vconcat "2oevil\nrulz" [escape])
+                        "evaluation.\nevil\nrulz\nevil\nrul°z\n;; If you")))
+
+(ert-deftest evil-test-repeat-insert-below ()
+  "Test repeating of insert-below command."
+  :tags '(evil)
+  (ert-info ("Repeat insert")
+    (evil-test-editing-clean (vconcat "oevil\nrulz" [escape] "..")
+			     "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you"))
+
+  (ert-info ("Repeat insert with count")
+    (evil-test-editing-clean
+     (vconcat "2oevil\nrulz" [escape] "..")
+     "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you"))
+
+  (ert-info ("Repeat insert with repeat count")
+    (evil-test-editing-clean
+     (vconcat "oevil\nrulz" [escape] "2.")
+     "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you"))
+
+  (ert-info ("Repeat insert with count with repeat with count")
+    (evil-test-editing-clean
+     (vconcat "2oevil\nrulz" [escape] "3.")
+     "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you")))
+
 (when evil-tests-run
   (evil-tests-run))
 

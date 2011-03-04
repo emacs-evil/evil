@@ -24,6 +24,7 @@ global variable `evil-repeat-info' if the command is repeatable."
 
 (defun evil-setup-normal-repeat ()
   "Initializes recording of repeat-information in vi-state."
+  (setq evil-command-modified-buffer nil)
   (add-hook 'pre-command-hook 'evil-normal-pre-repeat nil t)
   (add-hook 'after-change-functions 'evil-normal-change-repeat nil t)
   (add-hook 'post-command-hook 'evil-normal-post-repeat nil t))
