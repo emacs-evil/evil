@@ -266,8 +266,7 @@ expected sequence of recorded events, if nil `keys' is used"
 If, e.g., expected is \"ABC°def\" this means the expected text before point is
 \"ABC\" and the expected text after point is \"def\". "
   (setq point-char (regexp-quote (char-to-string (or point-char ?°))))
-  (string-match point-char expected)
-  (unless (match-beginning 0)
+  (unless (string-match point-char expected)
     (error "No cursor specified in expected string: %s" expected))
   (let ((before (substring expected 0 (match-beginning 0)))
         (after (substring expected (match-end 0))))
