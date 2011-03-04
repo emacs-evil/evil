@@ -19,7 +19,8 @@ recording of repeat-information and eventually stores it in the
 global variable `evil-repeat-info' if the command is repeatable."
   (when (and (functionp this-command)
              evil-command-modified-buffer)
-    (setq evil-repeat-info (this-command-keys))))
+    (setq evil-repeat-info
+	  (evil-normalize-repeat-info (list (this-command-keys))))))
 
 (defun evil-setup-normal-repeat ()
   "Initializes recording of repeat-information in vi-state."
@@ -46,7 +47,10 @@ recording of repeat-information and appends it to the global
 variable `evil-insert-repeat-info'."
   (when (functionp this-command)
     ;; we ignore keyboard-macros
-    (push (this-command-keys) evil-insert-repeat-info)))
+    (if evil-repeat-info
+	(push (this-command-keys) evil-insert-repeat-info)
+      ;; the first time this is the command that started insert mode
+      (setq evil-repeat-info (this-command-keys)))))
 
 (defun evil-setup-insert-repeat ()
   "Initializes recording of repeat-information in insert-state."
@@ -57,7 +61,8 @@ variable `evil-insert-repeat-info'."
   ;; that just activated insert-mode to `evil-insert-repeat-info',
   ;; because this post-command-hook is run for the current command.
   (add-hook 'post-command-hook 'evil-insert-post-repeat nil t)
-  (setq evil-insert-repeat-info nil))
+  (setq evil-insert-repeat-info nil
+	evil-repeat-info nil))
 
 (defun evil-teardown-insert-repeat ()
   "Stops recording of repeat-information in insert-state. The
@@ -69,9 +74,40 @@ insert-mode."
   (remove-hook 'post-command-hook 'evil-insert-post-repeat t)
   ;; do not forget to add the command that finished insert-mode, usually
   ;; [escape]
+  (setq evil-insert-repeat-info
+	(evil-normalize-repeat-info
+	 (reverse (cons (this-command-keys)
+			evil-insert-repeat-info))))
   (setq evil-repeat-info
-        (apply #'vconcat (reverse (cons (this-command-keys)
-                                        evil-insert-repeat-info)))))
+	(cons evil-repeat-info
+	      evil-insert-repeat-info)))
+
+
+(defun evil-normalize-repeat-info (repeat-info)
+  "Concatenates consecutive arrays in the repeat-info to a single
+array."
+  (let* ((result (cons nil nil))
+	 (result-last result)
+	 cur
+	 cur-last)
+    (dolist (rep repeat-info)
+      (if (arrayp rep)
+	  (if cur
+	      (progn
+		(setcdr cur-last (cons rep nil))
+		(setq cur-last (cdr cur-last)))
+	    (setq cur (cons rep nil))
+	    (setq cur-last cur))
+	(when cur
+	  (setcdr result-last (cons (apply #'vconcat cur) nil))
+	  (setq result-last (cdr result-last))
+	  (setq cur nil))
+	(setcdr result-last (cons rep nil))
+	(setq result-last (cdr result-last))))
+    (when cur
+      (setcdr result-last (cons (apply #'vconcat cur) nil)))
+    (cdr result)))
+	
 
 
 (defun evil-replace-command-prefix-arg ()
@@ -82,10 +118,19 @@ Called from a pre-command-hook during repeation."
     (setq prefix-arg evil-repeat-count)))
 
 
+(defun evil-execute-repeat-info (repeat-info)
+  "Executes a repeat-information `repeat-info'."
+  (dolist (rep repeat-info)
+    (cond
+     ((arrayp rep) (execute-kbd-macro rep))
+     ((functionp rep) (funcall rep))
+     (t (error "Unexpected repeat-info: %S" rep)))))
+  
+  
 ;; TODO: repeating will not work for operator because we do not have
 ;;       operator-pending-state, yet. In this case a non-nil value of
 ;;       evil-repeat-count must be used as count for the motion.
-(defun evil-execute-repeat-info (count repeat-info)
+(defun evil-execute-repeat-info-with-count (count repeat-info)
   "Repeat the repeat-information `repeat-info' with the count of
 the first command replaced by `count'. The count is replaced if
 and only if `count' is non-nil."
@@ -93,14 +138,14 @@ and only if `count' is non-nil."
     (if count
 	(let ((evil-repeat-count count))
 	  (add-hook 'pre-command-hook 'evil-replace-command-prefix-arg)
-	  (execute-kbd-macro repeat-info)
+	  (evil-execute-repeat-info repeat-info)
 	  (remove-hook 'pre-command-hook 'evil-replace-command-prefix-arg))
-      (execute-kbd-macro repeat-info))))
+      (evil-execute-repeat-info repeat-info))))
   
 (defun evil-repeat (count)
   "Repeat the last editing command with count replaced by `count'."
   (interactive "P")
-  (evil-execute-repeat-info count evil-repeat-info))
+  (evil-execute-repeat-info-with-count count evil-repeat-info))
 
 (provide 'evil-repeat)
 

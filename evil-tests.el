@@ -183,13 +183,48 @@ of `self-insert-command' from Normal state"
   :tags '(evil)
   (evil-test-suppress-keymap 'operator))
 
+(ert-deftest evil-test-normalize-repeat-info ()
+  "Verify normalize-repeat-info"
+  (ert-info ("Single array")
+    (should (equal (evil-normalize-repeat-info
+		    '("abc"))
+		   '([?a ?b ?c]))))
+  (ert-info ("Single symbol")
+    (should (equal (evil-normalize-repeat-info
+		    '(SYM))
+		   '(SYM))))
+  (ert-info ("Arrays only")
+    (should (equal (evil-normalize-repeat-info
+		    '("abc" [XX YY] "def"))
+		   '([?a ?b ?c XX YY ?d ?e ?f]))))
+  (ert-info ("Several symbols")
+    (should (equal (evil-normalize-repeat-info
+		    '(BEG MID END))
+		   '(BEG MID END))))
+  (ert-info ("Arrays with symbol at the beginning")
+    (should (equal (evil-normalize-repeat-info
+		    '(BEG "abc" [XX YY] "def"))
+		   '(BEG [?a ?b ?c XX YY ?d ?e ?f]))))
+  (ert-info ("Arrays with symbol at the end")
+    (should (equal (evil-normalize-repeat-info
+		    '("abc" [XX YY] "def" END))
+		   '([?a ?b ?c XX YY ?d ?e ?f] END))))
+  (ert-info ("Arrays with symbol in the middle")
+    (should (equal (evil-normalize-repeat-info
+		    '("abc" [XX YY] MID "def" ))
+		   '([?a ?b ?c XX YY] MID [?d ?e ?f]))))
+  (ert-info ("Concatenate arrays with several symbols")
+    (should (equal (evil-normalize-repeat-info
+		    '(BEG "abc" [XX YY] MID "def" END))
+		   '(BEG [?a ?b ?c XX YY] MID [?d ?e ?f] END)))))
+
 (defun evil-test-repeat-info (keys &optional recorded)
   "Executes a sequence of keys and verifies that `evil-repeat-info' records them correctly.
-`keys' is the sequence of keys to execute
-`recorded' is the expected sequence of recorded events, if nil `keys' is used"
+`keys' is the sequence of keys to execute `recorded' is the
+expected sequence of recorded events, if nil `keys' is used"
   (execute-kbd-macro keys)
-  (should (equal (vconcat evil-repeat-info)
-                 (vconcat (or recorded keys)))))
+  (should (equal (evil-normalize-repeat-info evil-repeat-info)
+		 (list (vconcat (or recorded keys))))))
 
 (ert-deftest evil-test-normal-repeat-info-simple-command ()
   "Save key-sequence after simple editing command in vi-state"
