@@ -15,10 +15,11 @@
 (defvar evil-tests-run nil
   "Run Evil tests.")
 
-(defun evil-tests-run ()
+(defun evil-tests-run (&optional arg)
   "Run Evil tests."
-  (interactive)
-  (ert-run-tests-batch '(tag evil)))
+  (interactive '(t))
+  (if arg (ert-run-tests-interactively '(tag evil))
+    (ert-run-tests-batch '(tag evil))))
 
 (defmacro evil-test-buffer (&rest body)
   "Execute BODY in a temporary buffer.
@@ -184,6 +185,23 @@ of `self-insert-command' from Normal state"
   :tags '(evil)
   (evil-test-suppress-keymap 'operator))
 
+(ert-deftest evil-test-operator-state-shortcut-keymap ()
+  "Enable shortcut keymap in Operator-Pending state"
+  :tags '(evil)
+  (evil-test-buffer
+    (ert-info ("Enable `evil-operator-shortcut-mode' in
+Operator-Pending state")
+      (evil-test-change-state 'operator)
+      (should (memq evil-operator-shortcut-map
+                    (evil-state-keymaps 'operator)))
+      (should (keymapp evil-operator-shortcut-map)))
+      (should evil-operator-shortcut-mode)
+    (ert-info ("Disable `evil-operator-shortcut-mode'
+outside Operator-Pending state")
+      (evil-test-change-state 'normal)
+      (should-not evil-operator-shortcut-mode))))
+      
+      
 (ert-deftest evil-test-normalize-repeat-info ()
   "Verify normalize-repeat-info"
   (ert-info ("Single array")
