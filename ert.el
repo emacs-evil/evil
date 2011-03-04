@@ -1,11 +1,11 @@
 ;;; ert.el --- Emacs Lisp Regression Testing
 
-;; Copyright (C) 2007, 2008, 2010 Free Software Foundation, Inc.
+;; Copyright (C) 2007-2008, 2010-2011 Free Software Foundation, Inc.
 
-;; Author: Christian M. Ohler
+;; Author: Christian Ohler <ohler@gnu.org>
 ;; Keywords: lisp, tools
 
-;; This file is NOT part of GNU Emacs.
+;; This file is part of GNU Emacs.
 
 ;; This program is free software: you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -219,7 +219,7 @@ Emacs bug 6581 at URL `http://debbugs.gnu.org/cgi/bugreport.cgi?bug=6581'."
   ;; This implementation is inefficient.  Rather than making it
   ;; efficient, let's hope bug 6581 gets fixed so that we can delete
   ;; it altogether.
-  (not (ert--explain-not-equal-including-properties a b)))
+  (not (ert--explain-equal-including-properties a b)))
 
 
 ;;; Defining and locating tests.
@@ -571,16 +571,15 @@ failed."
    (when (and (not firstp) (eq fast slow)) (return nil))))
 
 (defun ert--explain-format-atom (x)
-  "Format the atom X for `ert--explain-not-equal'."
+  "Format the atom X for `ert--explain-equal'."
   (typecase x
     (fixnum (list x (format "#x%x" x) (format "?%c" x)))
     (t x)))
 
-(defun ert--explain-not-equal (a b)
-  "Explainer function for `equal'.
+(defun ert--explain-equal-rec (a b)
+  "Returns a programmer-readable explanation of why A and B are not `equal'.
 
-Returns a programmer-readable explanation of why A and B are not
-`equal', or nil if they are."
+Returns nil if they are."
   (if (not (equal (type-of a) (type-of b)))
       `(different-types ,a ,b)
     (etypecase a
@@ -598,13 +597,13 @@ Returns a programmer-readable explanation of why A and B are not
                  (loop for i from 0
                        for ai in a
                        for bi in b
-                       for xi = (ert--explain-not-equal ai bi)
+                       for xi = (ert--explain-equal-rec ai bi)
                        do (when xi (return `(list-elt ,i ,xi)))
                        finally (assert (equal a b) t)))
-             (let ((car-x (ert--explain-not-equal (car a) (car b))))
+             (let ((car-x (ert--explain-equal-rec (car a) (car b))))
                (if car-x
                    `(car ,car-x)
-                 (let ((cdr-x (ert--explain-not-equal (cdr a) (cdr b))))
+                 (let ((cdr-x (ert--explain-equal-rec (cdr a) (cdr b))))
                    (if cdr-x
                        `(cdr ,cdr-x)
                      (assert (equal a b) t)
@@ -618,7 +617,7 @@ Returns a programmer-readable explanation of why A and B are not
                (loop for i from 0
                      for ai across a
                      for bi across b
-                     for xi = (ert--explain-not-equal ai bi)
+                     for xi = (ert--explain-equal-rec ai bi)
                      do (when xi (return `(array-elt ,i ,xi)))
                      finally (assert (equal a b) t))))
       (atom (if (not (equal a b))
@@ -627,7 +626,15 @@ Returns a programmer-readable explanation of why A and B are not
                   `(different-atoms ,(ert--explain-format-atom a)
                                     ,(ert--explain-format-atom b)))
               nil)))))
-(put 'equal 'ert-explainer 'ert--explain-not-equal)
+
+(defun ert--explain-equal (a b)
+  "Explainer function for `equal'."
+  ;; Do a quick comparison in C to avoid running our expensive
+  ;; comparison when possible.
+  (if (equal a b)
+      nil
+    (ert--explain-equal-rec a b)))
+(put 'equal 'ert-explainer 'ert--explain-equal)
 
 (defun ert--significant-plist-keys (plist)
   "Return the keys of PLIST that have non-null values, in order."
@@ -658,8 +665,8 @@ key/value pairs in each list does not matter."
                    (value-b (plist-get b key)))
                (assert (not (equal value-a value-b)) t)
                `(different-properties-for-key
-                 ,key ,(ert--explain-not-equal-including-properties value-a
-                                                                    value-b)))))
+                 ,key ,(ert--explain-equal-including-properties value-a
+                                                                value-b)))))
       (cond (keys-in-a-not-in-b
              (explain-with-key (first keys-in-a-not-in-b)))
             (keys-in-b-not-in-a
@@ -681,13 +688,16 @@ If SUFFIXP is non-nil, returns a suffix of S, otherwise a prefix."
           (t
            (substring s 0 len)))))
 
-(defun ert--explain-not-equal-including-properties (a b)
+;; TODO(ohler): Once bug 6581 is fixed, rename this to
+;; `ert--explain-equal-including-properties-rec' and add a fast-path
+;; wrapper like `ert--explain-equal'.
+(defun ert--explain-equal-including-properties (a b)
   "Explainer function for `ert-equal-including-properties'.
 
 Returns a programmer-readable explanation of why A and B are not
 `ert-equal-including-properties', or nil if they are."
   (if (not (equal a b))
-      (ert--explain-not-equal a b)
+      (ert--explain-equal a b)
     (assert (stringp a) t)
     (assert (stringp b) t)
     (assert (eql (length a) (length b)) t)
@@ -713,7 +723,7 @@ Returns a programmer-readable explanation of why A and B are not
           )))
 (put 'ert-equal-including-properties
      'ert-explainer
-     'ert--explain-not-equal-including-properties)
+     'ert--explain-equal-including-properties)
 
 
 ;;; Implementation of `ert-info'.
@@ -1244,12 +1254,14 @@ Also changes the counters in STATS to match."
                    (ert-test-passed (incf (ert--stats-passed-expected stats) d))
                    (ert-test-failed (incf (ert--stats-failed-expected stats) d))
                    (null)
-                   (ert-test-aborted-with-non-local-exit))
+                   (ert-test-aborted-with-non-local-exit)
+                   (ert-test-quit))
                (etypecase (aref results pos)
                  (ert-test-passed (incf (ert--stats-passed-unexpected stats) d))
                  (ert-test-failed (incf (ert--stats-failed-unexpected stats) d))
                  (null)
-                 (ert-test-aborted-with-non-local-exit)))))
+                 (ert-test-aborted-with-non-local-exit)
+                 (ert-test-quit)))))
       ;; Adjust counters to remove the result that is currently in stats.
       (update -1)
       ;; Put new test and result into stats.
@@ -1342,7 +1354,8 @@ EXPECTEDP specifies whether the result was expected."
              (ert-test-passed ".P")
              (ert-test-failed "fF")
              (null "--")
-             (ert-test-aborted-with-non-local-exit "aA"))))
+             (ert-test-aborted-with-non-local-exit "aA")
+             (ert-test-quit "qQ"))))
     (elt s (if expectedp 0 1))))
 
 (defun ert-string-for-test-result (result expectedp)
@@ -1353,7 +1366,8 @@ EXPECTEDP specifies whether the result was expected."
              (ert-test-passed '("passed" "PASSED"))
              (ert-test-failed '("failed" "FAILED"))
              (null '("unknown" "UNKNOWN"))
-             (ert-test-aborted-with-non-local-exit '("aborted" "ABORTED")))))
+             (ert-test-aborted-with-non-local-exit '("aborted" "ABORTED"))
+             (ert-test-quit '("quit" "QUIT")))))
     (elt s (if expectedp 0 1))))
 
 (defun ert--pp-with-indentation-and-newline (object)
@@ -1478,7 +1492,9 @@ Returns the stats object."
                  (message "%s" (buffer-string))))
               (ert-test-aborted-with-non-local-exit
                (message "Test %S aborted with non-local exit"
-                        (ert-test-name test)))))
+                        (ert-test-name test)))
+              (ert-test-quit
+               (message "Quit during %S" (ert-test-name test)))))
           (let* ((max (prin1-to-string (length (ert--stats-tests stats))))
                  (format-string (concat "%9s  %"
                                         (prin1-to-string (length max))
@@ -1495,9 +1511,9 @@ Returns the stats object."
   "Like `ert-run-tests-batch', but exits Emacs when done.
 
 The exit status will be 0 if all test results were as expected, 1
-on unexpected results, or 2 if the framework detected an error
-outside of the tests (e.g. invalid SELECTOR or bug in the code
-that runs the tests)."
+on unexpected results, or 2 if the tool detected an error outside
+of the tests (e.g. invalid SELECTOR or bug in the code that runs
+the tests)."
   (unwind-protect
       (let ((stats (ert-run-tests-batch selector)))
         (kill-emacs (if (zerop (ert-stats-completed-unexpected stats)) 0 1)))
@@ -1853,7 +1869,9 @@ non-nil, returns the face for expected results.."
                      (ert-test-result-with-condition-condition result))
                     (ert--make-xrefs-region begin (point)))))
                (ert-test-aborted-with-non-local-exit
-                (insert "    aborted\n")))
+                (insert "    aborted\n"))
+               (ert-test-quit
+                (insert "    quit\n")))
              (insert "\n")))))
   nil)
 
@@ -1874,7 +1892,6 @@ BUFFER-NAME, if non-nil, is the buffer name to use."
   (unless buffer-name (setq buffer-name "*ert*"))
   (let ((buffer (get-buffer-create buffer-name)))
     (with-current-buffer buffer
-      (setq buffer-read-only t)
       (let ((inhibit-read-only t))
         (buffer-disable-undo)
         (erase-buffer)
@@ -1997,19 +2014,12 @@ and how to display message."
 ;;; Simple view mode for auxiliary information like stack traces or
 ;;; messages.  Mainly binds "q" for quit.
 
-(define-derived-mode ert-simple-view-mode fundamental-mode "ERT-View"
+(define-derived-mode ert-simple-view-mode special-mode "ERT-View"
   "Major mode for viewing auxiliary information in ERT.")
-
-(loop for (key binding) in
-      '(("q" quit-window)
-        )
-      do
-      (define-key ert-simple-view-mode-map key binding))
-
 
 ;;; Commands and button actions for the results buffer.
 
-(define-derived-mode ert-results-mode fundamental-mode "ERT-Results"
+(define-derived-mode ert-results-mode special-mode "ERT-Results"
   "Major mode for viewing results of ERT test runs.")
 
 (loop for (key binding) in
@@ -2017,7 +2027,6 @@ and how to display message."
         ("\t" forward-button)
         ([backtab] backward-button)
         ("j" ert-results-jump-between-summary-and-result)
-        ("q" quit-window)
         ("L" ert-results-toggle-printer-limits-for-test-at-point)
         ("n" ert-results-next-test)
         ("p" ert-results-previous-test)
@@ -2349,7 +2358,6 @@ To be used in the ERT results buffer."
        (let ((backtrace (ert-test-result-with-condition-backtrace result))
              (buffer (get-buffer-create "*ERT Backtrace*")))
          (pop-to-buffer buffer)
-         (setq buffer-read-only t)
          (let ((inhibit-read-only t))
            (buffer-disable-undo)
            (erase-buffer)
@@ -2375,7 +2383,6 @@ To be used in the ERT results buffer."
          (result (aref (ert--stats-test-results stats) pos)))
     (let ((buffer (get-buffer-create "*ERT Messages*")))
       (pop-to-buffer buffer)
-      (setq buffer-read-only t)
       (let ((inhibit-read-only t))
         (buffer-disable-undo)
         (erase-buffer)
@@ -2397,7 +2404,6 @@ To be used in the ERT results buffer."
          (result (aref (ert--stats-test-results stats) pos)))
     (let ((buffer (get-buffer-create "*ERT list of should forms*")))
       (pop-to-buffer buffer)
-      (setq buffer-read-only t)
       (let ((inhibit-read-only t))
         (buffer-disable-undo)
         (erase-buffer)
@@ -2451,7 +2457,6 @@ To be used in the ERT results buffer."
     (setq data (sort data (lambda (a b)
                             (> (second a) (second b)))))
     (pop-to-buffer buffer)
-    (setq buffer-read-only t)
     (let ((inhibit-read-only t))
       (buffer-disable-undo)
       (erase-buffer)

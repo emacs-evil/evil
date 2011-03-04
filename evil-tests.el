@@ -1,8 +1,10 @@
 ;; evil-tests.el --- unit tests for Evil -*- coding: utf-8 -*-
 
 ;; This file is for developers. It runs some unit tests on Evil.
-;; To load it, add the following line to .emacs:
+;; To load it, add the following lines to .emacs:
 ;;
+;;     (setq evil-tests-run t) ; run tests immediately
+;;     (global-set-key [f12] 'evil-tests-run) ; hotkey
 ;;     (require 'evil-tests)
 ;;
 ;; This file is NOT part of Evil itself.
@@ -10,21 +12,18 @@
 (require 'ert)
 (require 'evil)
 
-;; ERT bug: The explainer function for `equal' hangs when passed
-;; a keymap with a char-table. The bug can be reproduced with:
-;;
-;;     (should (equal (make-keymap) (make-keymap)))
-;;
-;; TODO (Vegard): This should be forwarded to Christian Ohler.
-;; For the time being, we remove the explainer.
-(put 'equal 'ert-explainer nil)
-
-(defvar evil-tests-run t
+(defvar evil-tests-run nil
   "Run Evil tests.")
+
+(defun evil-tests-run ()
+  "Run Evil tests."
+  (interactive)
+  (ert-run-tests-batch '(tag evil)))
 
 (defmacro evil-test-buffer (&rest body)
   "Execute BODY in a temporary buffer.
-The buffer contains the familiar *scratch* message."
+The buffer contains the familiar *scratch* message,
+and `evil-local-mode' is enabled."
   (declare (indent defun)
            (debug t))
   `(let ((kill-ring kill-ring)
@@ -158,9 +157,15 @@ buffer.\n")
   "Verify that `self-insert-command' is suppressed in STATE"
   (evil-test-buffer
     (evil-test-change-state state)
-    (should-error (execute-kbd-macro "abc"))
-    (should (string= ";; " (buffer-substring
-                            (point-min) (+ (point-min) 3))))))
+    (should (eq (key-binding "a") 'undefined))
+    (should (eq (key-binding "b") 'undefined))
+    (should (eq (key-binding "c") 'undefined))
+    (ert-info ("Don't insert text")
+      ;; may or may not signal an error, depending on batch mode
+      (condition-case nil
+          (execute-kbd-macro "abc")
+        (error nil))
+      (should (string= (buffer-substring 1 4) ";; ")))))
 
 (ert-deftest evil-test-emacs-state-suppress-keymap ()
   "`self-insert-command' works in emacs-state"
@@ -280,7 +285,7 @@ unchanged test-buffer in normal-state."
 
 
 (when evil-tests-run
-  (ert-run-tests-batch '(tag evil)))
+  (evil-tests-run))
 
 (provide 'evil-tests)
 
