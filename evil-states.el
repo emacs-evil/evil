@@ -44,6 +44,7 @@
 ;; according to the current state (pushing Visual keymaps to the top
 ;; when the user enters Visual state, etc.).
 
+(require 'evil-vars)
 (require 'evil-common)
 
 (defun evil-enable ()
@@ -265,8 +266,7 @@ The basic keymap of this state will then be
         (pop body))))
 
     ;; macro expansion
-    `(let ((mode-map-alist (default-value 'evil-mode-map-alist)))
-
+    `(progn
        ;; Save the state's properties in `evil-states-alist' for
        ;; runtime lookup. Among other things, this information is used
        ;; to determine what keymaps should be activated by the state
@@ -316,11 +316,13 @@ bindings to be activated whenever KEYMAP and %s state are active."
 
        ,@(when suppress-keymap
            `((set-keymap-parent ,keymap evil-suppress-map)))
-       (evil-add-to-alist 'mode-map-alist
-                          ',local-mode ,local-keymap
-                          ',mode ,keymap)
 
-       (setq-default evil-mode-map-alist mode-map-alist)
+       (let ((mode-map-alist (default-value 'evil-mode-map-alist)))
+         (evil-add-to-alist 'mode-map-alist
+                            ',local-mode ,local-keymap
+                            ',mode ,keymap)
+
+         (setq-default evil-mode-map-alist mode-map-alist))
 
        (make-variable-buffer-local ',mode)
        (make-variable-buffer-local ',local-mode)
