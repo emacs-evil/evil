@@ -66,7 +66,7 @@ To enable Evil globally, do (evil-mode 1)."
     (evil-refresh-local-maps)
     (unless (memq 'evil-modeline-tag global-mode-string)
       (setq global-mode-string
-            (append '(" " evil-modeline-tag " ")
+            (append '("" evil-modeline-tag)
                     global-mode-string)))
     (evil-normal-state))
    (t
@@ -111,12 +111,12 @@ current buffer only.")
       (cond
        ((evil-state-p entry)
         (unless (memq entry excluded)
-          (dolist (mode (evil-state-keymaps entry excluded))
+          (dolist (mode (apply 'evil-state-keymaps entry excluded))
             (add-to-list 'result mode t 'eq))))
        ((keymapp entry)
         (add-to-list 'result entry t 'eq))
        ((keymapp (symbol-value entry))
-        (add-to-list 'result entry t 'eq))
+        (add-to-list 'result (symbol-value entry) t 'eq))
        (t
         (setq map (cdr (or (assq entry evil-mode-map-alist)
                            (assq entry minor-mode-map-alist))))
@@ -165,7 +165,8 @@ Its order reflects the state in the current buffer."
 ;; new buffer or when the buffer-local values are reset.
 (defun evil-refresh-local-maps ()
   "Initialize a buffer-local value for all local keymaps."
-  (setq evil-mode-map-alist (copy-sequence evil-mode-map-alist))
+  (unless (assq 'evil-mode-map-alist (buffer-local-variables))
+    (setq evil-mode-map-alist (copy-sequence evil-mode-map-alist)))
   (dolist (entry evil-local-keymaps-alist)
     (let ((mode (car entry))
           (map  (cdr entry)))
@@ -202,67 +203,67 @@ Disable all states if nil."
                (or state evil-state 'emacs) :mode)))
     (funcall func (if state 1 -1))))
 
-(defmacro evil-define-mode (mode doc &rest body)
-  "Define a minor mode MODE listed in `evil-mode-map-alist'.
-Its keymap will have higher precedence than modes defined
-with `define-minor-mode'.
+(defmacro evil-define-keymap (keymap doc &rest body)
+  "Define a keymap KEYMAP listed in `evil-mode-map-alist'.
+That means it will have precedence over regular keymaps.
 
-DOC is the documentation for the toggle command. BODY is executed
-after toggling the mode. Before the actual body code, optional
-keyword arguments may be specified:
+DOC is the documentation for the variable. BODY, if specified,
+is executed after toggling the mode. Optional keyword arguments
+may be specified before the body code:
 
-:keymap OBJECT  Keymap variable or keymap. If unspecified, the variable
-                is based on the mode name.
+:mode VAR       Mode variable. If unspecified, the variable
+                is based on the keymap name.
 :local BOOLEAN  Whether the keymap should be buffer-local, that is,
-                reinitialized for each buffer."
+                reinitialized for each buffer.
+:func BOOLEAN   Create a toggle function even if BODY is empty."
   (declare (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp sexp]]
                            def-body))
            (indent defun))
-  (let (keymap keymap-val keyword local)
+  (let (func mode keyword local)
     (while (keywordp (car-safe body))
       (setq keyword (pop body))
       (cond
-       ((eq keyword :keymap)
-        (setq keymap (pop body)))
+       ((eq keyword :mode)
+        (setq mode (pop body)))
        ((eq keyword :local)
         (setq local (pop body)))
+       ((eq keyword :func)
+        (setq func (pop body)))
        (t
         (pop body)))
-      (when (keymapp keymap)
-        (setq keymap-val keymap keymap nil))
-      (unless keymap
-        (setq keymap
-              (intern (replace-regexp-in-string
-                       "\\(?:-mode\\)*$" "-map"
-                       (symbol-name mode))))))
+      (setq mode (or mode
+                     (intern (replace-regexp-in-string
+                              "\\(?:-\\(?:key\\)?map\\)?$" "-mode"
+                              (symbol-name keymap))))))
     `(progn
-       (defvar ,keymap ,keymap-val)
+       (defvar ,keymap nil)
        (unless (get ',keymap 'variable-documentation)
          (put ',keymap 'variable-documentation ,doc))
-       ,@(when local
-           `((make-variable-buffer-local ',keymap)
-             (evil-add-to-alist 'evil-local-keymaps-alist
-                                ',mode ',keymap)))
        (defvar ,mode nil)
        (unless (get ',mode 'variable-documentation)
          (put ',mode 'variable-documentation ,doc))
        (make-variable-buffer-local ',mode)
-       (let ((temp (copy-sequence (default-value 'evil-mode-map-alist))))
+       ,@(when local
+           `((make-variable-buffer-local ',keymap)
+             (evil-add-to-alist 'evil-local-keymaps-alist
+                                ',mode ',keymap)))
+       (let ((temp (copy-sequence (default-value
+                                    'evil-mode-map-alist))))
          (evil-add-to-alist 'temp ',mode ,keymap)
          (setq-default evil-mode-map-alist temp))
-       (unless (fboundp ',mode)
-         (defun ,mode (&optional arg)
-           ,@(when doc `(,doc))
-           (interactive)
-           (cond
-            ((numberp arg)
-             (setq ,mode (> arg 0)))
-            (t
-             (setq ,mode (not ,mode))))
-           ,@body
-           ',mode)))))
+       ,(when (or body func)
+          `(defun ,mode (&optional arg)
+             ,@(when doc `(,doc))
+             (interactive)
+             (cond
+              ((numberp arg)
+               (setq ,mode (> arg 0)))
+              (t
+               (setq ,mode (not ,mode))))
+             ,@body))
+       ',keymap)))
 
 (defmacro evil-define-state (state doc &rest body)
   "Define a Evil state STATE.
@@ -411,12 +412,12 @@ bindings to be activated whenever KEYMAP and %s state are active."
                  (when ,message (evil-unlogged-message ,message)))
              (setq evil-state ',state)))))
 
-       (evil-define-mode ,local-mode nil
-         :keymap ,local-keymap
+       (evil-define-keymap ,local-keymap nil
+         :mode ,local-mode
          :local t)
 
-       (evil-define-mode ,mode nil
-         :keymap ,keymap)
+       (evil-define-keymap ,keymap nil
+         :mode ,mode)
 
        ',state)))
 
@@ -424,7 +425,7 @@ bindings to be activated whenever KEYMAP and %s state are active."
 
 (evil-define-state normal
   "Normal state, AKA \"Command\" state."
-  :tag "<N>"
+  :tag " <N> "
   :suppress-keymap t
   (if evil-state
       (evil-setup-normal-repeat)
@@ -432,11 +433,11 @@ bindings to be activated whenever KEYMAP and %s state are active."
 
 (evil-define-state emacs
   "Emacs state."
-  :tag "<E>")
+  :tag " <E> ")
 
 (evil-define-state insert
   "Insert state."
-  :tag "<I>"
+  :tag " <I> "
   (if evil-state
       (evil-setup-insert-repeat)))
 

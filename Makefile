@@ -19,3 +19,11 @@ clean:
 	rm -f *~
 	rm -f \#*\#
 	rm -f *.elc
+
+.PHONY: emacs
+emacs: compile
+	emacs -Q -L . -l evil-tests.el --eval "(call-interactively 'evil-tests-run)" &
+
+.PHONY: terminal
+terminal: compile
+	emacs -nw -Q -L . -l evil-tests.el --eval "(call-interactively 'evil-tests-run)"

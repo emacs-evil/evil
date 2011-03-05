@@ -4,10 +4,10 @@
 
 (evil-define-state operator
   "Operator-Pending state"
-  :tag "<O>"
-  :enable (normal evil-operator-shortcut-mode))
+  :tag " <O> "
+  :enable (normal evil-operator-shortcut-map))
 
-(evil-define-mode evil-operator-shortcut-mode
+(evil-define-keymap evil-operator-shortcut-map
   "Keymap for Operator-Pending shortcuts like \"dd\" and \"gqq\"."
   :local t)
 

@@ -120,12 +120,31 @@ buffer.\n")
       (should (symbol-value mode))
       (should (symbol-value local-mode)))
     (ert-info ("Push state keymaps to the top")
-      (should (equal (nth 0 evil-mode-map-alist)
-                     (cons local-mode local-keymap)))
-      (should (equal (nth 1 evil-mode-map-alist)
-                     (cons mode keymap))))
+      (evil-test-state-keymaps state))
     (ert-info ("Refresh modeline tag")
       (should (equal evil-modeline-tag tag)))))
+
+(defun evil-test-state-keymaps (state)
+  "Verify that STATE's keymaps are pushed to the top"
+  (let ((actual (evil-state-keymaps state))
+        (expected (list (symbol-value (evil-state-property
+                                       state :local-keymap))
+                        (symbol-value (evil-state-property
+                                       state :keymap)))))
+    ;; additional keymaps inherited with :enable
+    (cond
+     ((eq state 'operator)
+      (setq expected
+            (append expected
+                    (list evil-normal-state-local-map
+                          evil-normal-state-map
+                          evil-operator-shortcut-map)))))
+    (dotimes (i (length expected))
+      (should (keymapp (nth i expected)))
+      (should (eq (nth i actual) (nth i expected)))
+      (should (memq (nth i expected) (current-active-maps)))
+      (should (eq (cdr (nth i evil-mode-map-alist))
+                  (nth i expected))))))
 
 (ert-deftest evil-test-exit-normal-state ()
   "Enter Normal state and then disable all states"
@@ -194,8 +213,8 @@ Operator-Pending state")
       (evil-test-change-state 'operator)
       (should (memq evil-operator-shortcut-map
                     (evil-state-keymaps 'operator)))
-      (should (keymapp evil-operator-shortcut-map)))
-      (should evil-operator-shortcut-mode)
+      (should (keymapp evil-operator-shortcut-map))
+      (should evil-operator-shortcut-mode))
     (ert-info ("Disable `evil-operator-shortcut-mode'
 outside Operator-Pending state")
       (evil-test-change-state 'normal)
