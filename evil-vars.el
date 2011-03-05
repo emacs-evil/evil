@@ -41,6 +41,20 @@ having higher priority.")
 (defvar evil-insert-repeat-info nil
   "Repeat information accumulated during insert mode.")
 
+(defvar evil-insert-repeat-type nil
+  "The repeat-type of the current command. If set to 'change the
+command will be recorded by tracking the changes, if set to nil
+by tracking the key-sequences, if set to 'ignore the command is
+ignored.")
+
+(defvar evil-insert-repeat-point nil
+  "The position of point at the beginning of an change-tracking
+  editing command.")
+
+(defvar evil-insert-repeat-types (make-hash-table :test 'eq)
+  "The hash-table to hold the insert repeat type for each
+  command.")
+
 (defvar evil-command-modified-buffer nil
   "Non-nil if the current command modified the buffer, i.e., it
   is an editing command. This variable is used to detect editing

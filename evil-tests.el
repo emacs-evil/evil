@@ -489,6 +489,28 @@ unchanged test-buffer in normal-state."
      (vconcat "2oevil\nrulz" [escape] "3.")
      "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you")))
 
+
+(defun evil-test-dummy-complete ()
+  "Test function for change-base repeation.
+Removes 5 characters, insert BEGIN\\n\\nEND\\nplaces
+cursor on the new line."
+  (interactive)
+  (delete-char 5)
+  (insert "BEGIN\n")
+  (save-excursion
+    (insert "\nEND\n")))
+  
+
+(ert-deftest evil-test-repeat-by-change ()
+  "Test repeation by tracking changes for completion commands."
+  (let (line-move-visual)
+    (define-key evil-insert-state-map (kbd "C-c C-p") 'evil-test-dummy-complete)
+    (evil-set-insert-repeat-type 'evil-test-dummy-complete 'change)
+    (evil-test-editing-clean
+     (vconcat [right right right] "iABC " (kbd "C-c C-p") "BODY" [escape]
+	      [down down home] ".")
+     "\\`;; ABC BEGIN\nBODY\nEND\nABC BEGIN\nBOD°Y\nEND\nr is for")))
+  
 (when evil-tests-run
   (evil-tests-run))
 
