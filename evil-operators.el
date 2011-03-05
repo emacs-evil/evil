@@ -4,7 +4,7 @@
 
 (evil-define-state operator
   "Operator-Pending state"
-  :tag "<O>"
+  :tag " <O> "
   :enable (normal evil-operator-shortcut-map))
 
 (evil-define-keymap evil-operator-shortcut-map

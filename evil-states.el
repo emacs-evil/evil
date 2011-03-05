@@ -65,7 +65,7 @@ To enable Evil globally, do (evil-mode 1)."
     (evil-refresh-local-maps)
     (unless (memq 'evil-modeline-tag global-mode-string)
       (setq global-mode-string
-            (append '(" " evil-modeline-tag " ")
+            (append '("" evil-modeline-tag)
                     global-mode-string)))
     (evil-normal-state))
    (t
@@ -424,12 +424,12 @@ bindings to be activated whenever KEYMAP and %s state are active."
 
 (evil-define-state normal
   "Normal state, AKA \"Command\" state."
-  :tag "<N>"
+  :tag " <N> "
   :suppress-keymap t)
 
 (evil-define-state emacs
   "Emacs state."
-  :tag "<E>")
+  :tag " <E> ")
 
 (define-key evil-normal-state-map "\C-z" 'evil-emacs-state)
 (define-key evil-emacs-state-map "\C-z" 'evil-normal-state)
