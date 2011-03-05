@@ -110,7 +110,7 @@ current buffer only.")
       (cond
        ((evil-state-p entry)
         (unless (memq entry excluded)
-          (dolist (mode (evil-state-keymaps entry excluded))
+          (dolist (mode (apply 'evil-state-keymaps entry excluded))
             (add-to-list 'result mode t 'eq))))
        ((keymapp entry)
         (add-to-list 'result entry t 'eq))
@@ -164,7 +164,8 @@ Its order reflects the state in the current buffer."
 ;; new buffer or when the buffer-local values are reset.
 (defun evil-refresh-local-maps ()
   "Initialize a buffer-local value for all local keymaps."
-  (setq evil-mode-map-alist (copy-sequence evil-mode-map-alist))
+  (unless (assq 'evil-mode-map-alist (buffer-local-variables))
+    (setq evil-mode-map-alist (copy-sequence evil-mode-map-alist)))
   (dolist (entry evil-local-keymaps-alist)
     (let ((mode (car entry))
           (map  (cdr entry)))
