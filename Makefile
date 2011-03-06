@@ -22,8 +22,11 @@ clean:
 
 .PHONY: emacs
 emacs: compile
-	emacs -Q -L . -l evil-tests.el --eval "(call-interactively 'evil-tests-run)" &
+	emacs -Q -L . -l evil-tests.el --eval "(evil-mode 1)" --eval "(call-interactively 'evil-tests-run)" &
+
+.PHONY: term
+term: terminal
 
 .PHONY: terminal
 terminal: compile
-	emacs -nw -Q -L . -l evil-tests.el --eval "(call-interactively 'evil-tests-run)"
+	emacs -nw -Q -L . -l evil-tests.el --eval "(evil-mode 1)" --eval "(call-interactively 'evil-tests-run)"

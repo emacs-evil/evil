@@ -391,9 +391,10 @@ bindings to be activated whenever KEYMAP and %s state are active."
          (cond
           ((and (numberp arg) (< arg 1))
            (unwind-protect
-               (let (evil-state)
-                 (evil-normalize-keymaps)
+               (let ((evil-state evil-state))
                  (run-hooks ',exit-hook)
+                 (setq evil-state nil)
+                 (evil-normalize-keymaps)
                  ,@body)
              (setq evil-state nil)))
           (t
