@@ -46,10 +46,12 @@ having higher priority.")
 command will be recorded by tracking the changes, if set to nil
 by tracking the key-sequences, if set to 'ignore the command is
 ignored.")
+(make-variable-buffer-local 'evil-insert-repeat-type)
 
 (defvar evil-insert-repeat-point nil
   "The position of point at the beginning of an change-tracking
   editing command.")
+(make-variable-buffer-local 'evil-insert-repeat-point)
 
 (defvar evil-insert-repeat-types (make-hash-table :test 'eq)
   "The hash-table to hold the insert repeat type for each
@@ -65,10 +67,12 @@ ignored.")
 
 (defvar evil-insert-count nil
   "The explicit count passed to an command starting insert mode.")
+(make-variable-buffer-local 'evil-insert-count)
 
 (defvar evil-insert-lines nil
   "Non-nil if the current insertion command is a line-insertion
 command o or O.")
+(make-variable-buffer-local 'evil-insert-lines)
 
 (defconst evil-version "0.1"
   "The current version of Evil")
