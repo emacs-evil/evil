@@ -440,21 +440,22 @@ bindings to be activated whenever KEYMAP and %s state are active."
   "Insert state."
   :tag " <I> "
   (if evil-state
-      (evil-setup-insert-repeat)))
+      (progn
+	(evil-setup-insert-repeat)
+	(add-hook 'evil-insert-state-exit-hook
+		  'evil-cleanup-insert-state))
+    (remove-hook 'evil-insert-state-exit-hook
+		 'evil-cleanup-insert-state)))
 
 
-;; TODO: can we do this directly in the state handler? It is important that
-;;       insert-state is still active when repeating the insertion!
-(defun evil-exit-insert-state ()
-  "This function is called to exit insert-state switching back to normal-state.
+(defun evil-cleanup-insert-state ()
+  "This function is called when insert-state is about being exited.
 This handles the repeat-count of the insert command."
-  (interactive)
   (evil-teardown-insert-repeat)
   (dotimes (i (1- evil-insert-count))
     (when evil-insert-lines
       (evil-insert-newline-below))
     (evil-execute-repeat-info evil-insert-repeat-info))
-  (evil-normal-state)
   (unless (bolp) (backward-char)))
 
 
@@ -469,9 +470,9 @@ This handles the repeat-count of the insert command."
 (define-key evil-normal-state-map "r" 'evil-replace-char)
 (define-key evil-normal-state-map "." 'evil-repeat)
 
-(define-key evil-insert-state-map [escape] 'evil-exit-insert-state)
+(define-key evil-insert-state-map [escape] 'evil-normal-state)
 
-;; TODO: the following commands are very preliminary just for testing.
+
 (defun evil-insert-newline-above ()
   "Inserts a new line above point and places point in that line
 w.r.t. indentation."
@@ -520,6 +521,7 @@ The insertion will be repeated `count' times."
 	evil-insert-lines t)
   (evil-insert-state 1))
 
+;; TODO: the following commands are very preliminary just for testing.
 (defun evil-replace-char (char &optional count)
   (interactive (list (read-char)
                      (prefix-numeric-value current-prefix-arg)))
