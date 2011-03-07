@@ -21,12 +21,12 @@ clean:
 	rm -f *.elc
 
 .PHONY: emacs
-emacs: compile
+emacs: clean
 	emacs -Q -L . -l evil-tests.el --eval "(evil-mode 1)" --eval "(call-interactively 'evil-tests-run)" &
 
 .PHONY: term
 term: terminal
 
 .PHONY: terminal
-terminal: compile
+terminal: clean
 	emacs -nw -Q -L . -l evil-tests.el --eval "(evil-mode 1)" --eval "(call-interactively 'evil-tests-run)"
