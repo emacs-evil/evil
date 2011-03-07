@@ -50,6 +50,14 @@ describing it, etc.")
   "Current motion type.")
 (make-variable-buffer-local 'evil-mode-map-alist)
 
+(defvar evil-this-motion nil
+  "Current motion.")
+(make-variable-buffer-local 'evil-mode-map-alist)
+
+(defvar evil-this-motion-count nil
+  "Current motion count.")
+(make-variable-buffer-local 'evil-mode-map-alist)
+
 (defvar evil-operators nil
   "List of operator commands.")
 

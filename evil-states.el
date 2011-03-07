@@ -188,7 +188,9 @@ If SPECS is nil, make the cursor a black filled box."
   (dolist (spec specs)
     (cond
      ((functionp spec)
-      (funcall spec))
+      (condition-case nil
+          (funcall spec)
+        (error nil)))
      ((stringp spec)
       (set-cursor-color spec))
      (t
@@ -199,8 +201,9 @@ If SPECS is nil, make the cursor a black filled box."
   "Change state to STATE.
 Disable all states if nil."
   (let ((func (evil-state-property
-               (or state evil-state 'emacs) :mode)))
-    (funcall func (if state 1 -1))))
+               (or state 'emacs) :mode)))
+    (unless (eq state evil-state)
+      (funcall func (if state 1 -1)))))
 
 (defmacro evil-define-keymap (keymap doc &rest body)
   "Define a keymap KEYMAP listed in `evil-mode-map-alist'.
@@ -347,7 +350,7 @@ The basic keymap of this state will then be
         :message (defvar ,message ,message-value
                    ,(format "Echo area indicator for %s state.\n\n%s"
                             state doc))
-        :cursor (defvar ,cursor ,cursor-value
+        :cursor (defvar ,cursor ',cursor-value
                   ,(format "Cursor for %s state.
 May be a cursor type as per `cursor-type', a color string as passed
 to `set-cursor-color', a zero-argument function for changing the
@@ -409,7 +412,8 @@ bindings to be activated whenever KEYMAP and %s state are active."
                  (evil-set-cursor ,cursor)
                  ,@body
                  (run-hooks ',entry-hook)
-                 (when ,message (evil-unlogged-message ,message)))
+                 (when (called-interactively-p)
+                   (when ,message (evil-unlogged-message ,message))))
              (setq evil-state ',state)))))
 
        (evil-define-keymap ,local-keymap nil
@@ -426,7 +430,16 @@ bindings to be activated whenever KEYMAP and %s state are active."
 (evil-define-state normal
   "Normal state, AKA \"Command\" state."
   :tag " <N> "
-  :suppress-keymap t)
+  :suppress-keymap t
+  :enable (operator))
+
+(evil-define-state insert
+  "Insert state."
+  :tag " <I> ")
+
+(evil-define-state visual
+  "Visual state."
+  :tag " <V> ")
 
 (evil-define-state emacs
   "Emacs state."
