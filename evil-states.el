@@ -441,11 +441,11 @@ bindings to be activated whenever KEYMAP and %s state are active."
   :tag " <I> "
   (if evil-state
       (progn
-	(evil-setup-insert-repeat)
-	(add-hook 'evil-insert-state-exit-hook
-		  'evil-cleanup-insert-state))
+        (evil-setup-insert-repeat)
+        (add-hook 'evil-insert-state-exit-hook
+                  'evil-cleanup-insert-state))
     (remove-hook 'evil-insert-state-exit-hook
-		 'evil-cleanup-insert-state)))
+                 'evil-cleanup-insert-state)))
 
 
 (defun evil-cleanup-insert-state ()
@@ -480,20 +480,20 @@ w.r.t. indentation."
   (newline)
   (forward-line -1)
   (back-to-indentation))
-  
+
 (defun evil-insert-newline-below ()
   "Inserts a new line below point and places point in that line
 w.r.t. indentation."
   (end-of-line)
   (newline)
   (back-to-indentation))
-  
+
 (defun evil-insert-before (count)
   "Switches to insert-state just before point.
 The insertion will be repeated `count' times."
   (interactive "p")
   (setq evil-insert-count count
-	evil-insert-lines nil)
+        evil-insert-lines nil)
   (evil-insert-state 1))
 
 (defun evil-insert-after (count)
@@ -509,7 +509,7 @@ The insertion will be repeated `count' times."
   (interactive "p")
   (evil-insert-newline-above)
   (setq evil-insert-count count
-	evil-insert-lines t)
+        evil-insert-lines t)
   (evil-insert-state 1))
 
 (defun evil-insert-below (count)
@@ -518,7 +518,7 @@ The insertion will be repeated `count' times."
   (interactive "p")
   (evil-insert-newline-below)
   (setq evil-insert-count count
-	evil-insert-lines t)
+        evil-insert-lines t)
   (evil-insert-state 1))
 
 ;; TODO: the following commands are very preliminary just for testing.

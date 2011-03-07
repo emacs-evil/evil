@@ -219,42 +219,42 @@ Operator-Pending state")
 outside Operator-Pending state")
       (evil-test-change-state 'normal)
       (should-not evil-operator-shortcut-mode))))
-      
-      
+
+
 (ert-deftest evil-test-normalize-repeat-info ()
   "Verify normalize-repeat-info"
   (ert-info ("Single array")
     (should (equal (evil-normalize-repeat-info
-		    '("abc"))
-		   '([?a ?b ?c]))))
+                    '("abc"))
+                   '([?a ?b ?c]))))
   (ert-info ("Single symbol")
     (should (equal (evil-normalize-repeat-info
-		    '(SYM))
-		   '(SYM))))
+                    '(SYM))
+                   '(SYM))))
   (ert-info ("Arrays only")
     (should (equal (evil-normalize-repeat-info
-		    '("abc" [XX YY] "def"))
-		   '([?a ?b ?c XX YY ?d ?e ?f]))))
+                    '("abc" [XX YY] "def"))
+                   '([?a ?b ?c XX YY ?d ?e ?f]))))
   (ert-info ("Several symbols")
     (should (equal (evil-normalize-repeat-info
-		    '(BEG MID END))
-		   '(BEG MID END))))
+                    '(BEG MID END))
+                   '(BEG MID END))))
   (ert-info ("Arrays with symbol at the beginning")
     (should (equal (evil-normalize-repeat-info
-		    '(BEG "abc" [XX YY] "def"))
-		   '(BEG [?a ?b ?c XX YY ?d ?e ?f]))))
+                    '(BEG "abc" [XX YY] "def"))
+                   '(BEG [?a ?b ?c XX YY ?d ?e ?f]))))
   (ert-info ("Arrays with symbol at the end")
     (should (equal (evil-normalize-repeat-info
-		    '("abc" [XX YY] "def" END))
-		   '([?a ?b ?c XX YY ?d ?e ?f] END))))
+                    '("abc" [XX YY] "def" END))
+                   '([?a ?b ?c XX YY ?d ?e ?f] END))))
   (ert-info ("Arrays with symbol in the middle")
     (should (equal (evil-normalize-repeat-info
-		    '("abc" [XX YY] MID "def" ))
-		   '([?a ?b ?c XX YY] MID [?d ?e ?f]))))
+                    '("abc" [XX YY] MID "def" ))
+                   '([?a ?b ?c XX YY] MID [?d ?e ?f]))))
   (ert-info ("Concatenate arrays with several symbols")
     (should (equal (evil-normalize-repeat-info
-		    '(BEG "abc" [XX YY] MID "def" END))
-		   '(BEG [?a ?b ?c XX YY] MID [?d ?e ?f] END)))))
+                    '(BEG "abc" [XX YY] MID "def" END))
+                   '(BEG [?a ?b ?c XX YY] MID [?d ?e ?f] END)))))
 
 (defun evil-test-repeat-info (keys &optional recorded)
   "Executes a sequence of keys and verifies that `evil-repeat-info' records them correctly.
@@ -262,7 +262,7 @@ outside Operator-Pending state")
 expected sequence of recorded events, if nil `keys' is used"
   (execute-kbd-macro keys)
   (should (equal (evil-normalize-repeat-info evil-repeat-info)
-		 (list (vconcat (or recorded keys))))))
+                 (list (vconcat (or recorded keys))))))
 
 (ert-deftest evil-test-normal-repeat-info-simple-command ()
   "Save key-sequence after simple editing command in vi-state"
@@ -332,19 +332,19 @@ unchanged test-buffer in normal-state."
   :tags '(evil)
   (ert-info ("Repeat replace")
     (evil-test-editing-clean (vconcat "rX" [right right] ".")
-  			     "\\`X;°XThis"))
+                             "\\`X;°XThis"))
 
   (ert-info ("Repeat replace with count")
     (evil-test-editing-clean (vconcat "2rX" [right right] ".")
-  			     "\\`XX X°Xis "))
+                             "\\`XX X°Xis "))
 
   (ert-info ("Repeat replace without count with a new count")
     (evil-test-editing-clean (vconcat "rX" [right right] "13.")
-  			     "\\`X;XXXXXXXXXXXX°Xis for"))
+                             "\\`X;XXXXXXXXXXXX°Xis for"))
 
   (ert-info ("Repeat replace with count replacing original count")
     (evil-test-editing-clean (vconcat "11rX" [right right] "20.")
-			     "\\`XXXXXXXXXXXfXXXXXXXXXXXXXXXXXXX°Xdon't ")))
+                             "\\`XXXXXXXXXXXfXXXXXXXXXXXXXXXXXXX°Xdon't ")))
 
 (ert-deftest evil-test-cmd-replace-char ()
   "Calling `evil-replace-char' should replace characters."
@@ -377,15 +377,15 @@ unchanged test-buffer in normal-state."
   :tags '(evil)
   (ert-info ("Repeat insert")
     (evil-test-editing-clean (vconcat "iABC" [escape] "..")
-  			     "ABABAB°CCC;; This"))
+                             "ABABAB°CCC;; This"))
 
   (ert-info ("Repeat insert with count")
     (evil-test-editing-clean (vconcat "2iABC" [escape] "..")
-  			     "ABCABABCABABCAB°CCC;; This"))
+                             "ABCABABCABABCAB°CCC;; This"))
 
   (ert-info ("Repeat insert with repeat count")
     (evil-test-editing-clean (vconcat "iABC" [escape] "11.")
-  			     "ABABCABCABCABCABCABCABCABCABCABCAB°CC;; This"))
+                             "ABABCABCABCABCABCABCABCABCABCABCAB°CC;; This"))
 
   (ert-info ("Repeat insert with count with repeat with count")
     (evil-test-editing-clean
@@ -416,15 +416,15 @@ unchanged test-buffer in normal-state."
   :tags '(evil)
   (ert-info ("Repeat insert")
     (evil-test-editing-clean (vconcat "aABC" [escape] "..")
-  			     ";ABCABCAB°C; This"))
+                             ";ABCABCAB°C; This"))
 
   (ert-info ("Repeat insert with count")
     (evil-test-editing-clean (vconcat "2aABC" [escape] "..")
-  			     ";ABCABCABCABCABCAB°C; This"))
+                             ";ABCABCABCABCABCAB°C; This"))
 
   (ert-info ("Repeat insert with repeat count")
     (evil-test-editing-clean (vconcat "aABC" [escape] "11.")
-  			     ";ABCABCABCABCABCABCABCABCABCABCABCAB°C; This"))
+                             ";ABCABCABCABCABCABCABCABCABCABCABCAB°C; This"))
 
   (ert-info ("Repeat insert with count with repeat with count")
     (evil-test-editing-clean
@@ -454,7 +454,7 @@ unchanged test-buffer in normal-state."
   :tags '(evil)
   (ert-info ("Repeat insert")
     (evil-test-editing-clean (vconcat "Oevil\nrulz" [escape] "..")
-  			     "\\`evil\nevil\nevil\nrul°z\nrulz\nrulz\n;; This"))
+                             "\\`evil\nevil\nevil\nrul°z\nrulz\nrulz\n;; This"))
 
   (ert-info ("Repeat insert with count")
     (evil-test-editing-clean
@@ -463,7 +463,7 @@ unchanged test-buffer in normal-state."
 
   (ert-info ("Repeat insert with repeat count")
     (evil-test-editing-clean (vconcat "Oevil\nrulz" [escape] "2.")
-			     "evil\nevil\nrulz\nevil\nrul°z\nrulz\n;; This"))
+                             "evil\nevil\nrulz\nevil\nrul°z\nrulz\n;; This"))
 
   (ert-info ("Repeat insert with count with repeat with count")
     (evil-test-editing-clean
@@ -491,7 +491,7 @@ unchanged test-buffer in normal-state."
   :tags '(evil)
   (ert-info ("Repeat insert")
     (evil-test-editing-clean (vconcat "oevil\nrulz" [escape] "..")
-			     "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you"))
+                             "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you"))
 
   (ert-info ("Repeat insert with count")
     (evil-test-editing-clean
@@ -518,7 +518,7 @@ cursor on the new line."
   (insert "BEGIN\n")
   (save-excursion
     (insert "\nEND\n")))
-  
+
 
 (ert-deftest evil-test-repeat-by-change ()
   "Test repeation by tracking changes for completion commands."
@@ -527,9 +527,9 @@ cursor on the new line."
     (evil-set-insert-repeat-type 'evil-test-dummy-complete 'change)
     (evil-test-editing-clean
      (vconcat [right right right] "iABC " (kbd "C-c C-p") "BODY" [escape]
-	      [down down home] ".")
+              [down down home] ".")
      "\\`;; ABC BEGIN\nBODY\nEND\nABC BEGIN\nBOD°Y\nEND\nr is for")))
-  
+
 (when evil-tests-run
   (evil-tests-run))
 
