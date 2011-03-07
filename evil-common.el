@@ -1,5 +1,7 @@
 ;;;; Common functions and utilities
 
+(require 'evil-vars)
+
 (defun evil-add-to-alist (list-var key val &rest elements)
   "Add the assocation of KEY and VAL to the value of LIST-VAR.
 If the list already contains an entry for KEY, update that entry;
@@ -91,15 +93,33 @@ sorting in between."
                  (add-to-list 'forms '(pop sorted) t))
                forms))))
 
+(defun evil-truncate-vector (vector length &optional offset)
+  "Return a copy of VECTOR truncated to LENGTH.
+If LENGTH is negative, skip last elements of VECTOR.
+If OFFSET is specified, skip first elements of VECTOR."
+  ;; if LENGTH is too large, trim it
+  (when (> length (length vector))
+    (setq length (length vector)))
+  ;; if LENGTH is negative, convert it to the positive equivalent
+  (when (< length 0)
+    (setq length (max 0 (+ (length vector) length))))
+  (if offset
+      (setq length (- length offset))
+    (setq offset 0))
+  (let ((result (make-vector length t)))
+    (dotimes (idx length result)
+      (aset result idx (aref vector (+ idx offset))))))
+
 (defmacro evil-save-echo-area (&rest body)
   "Save the echo area; execute BODY; restore the echo area.
 Intermittent messages are not logged in the *Messages* buffer."
-  (declare (indent defun))
-  `(let ((oldmsg (current-message))
+  (declare (indent defun)
+           (debug t))
+  `(let ((old-msg (current-message))
          message-log-max)
      (unwind-protect
          (progn ,@body)
-       (if oldmsg (message "%s" oldmsg)
+       (if old-msg (message "%s" old-msg)
          (message nil)))))
 
 (defun evil-unlogged-message (string &rest args)
@@ -109,7 +129,53 @@ That is, the message is not logged in the *Messages* buffer.
   (let (message-log-max)
     (apply 'message string args)))
 
-(provide 'evil-common)
+(defmacro evil-save-state (&rest body)
+  "Save the current state; execute BODY; restore the state."
+  (declare (indent defun)
+           (debug t))
+  `(let ((old-state evil-state))
+     (unwind-protect
+         (progn ,@body)
+       (evil-change-state old-state))))
+
+;;; Region
+
+(defun evil-transient-save ()
+  "Save Transient Mark mode and make the new setup buffer-local.
+The variables to save are listed in `evil-transient-vars'.
+Their values are stored in `evil-transient-vals'."
+  (dolist (var evil-transient-vars)
+    (when (and (boundp var)
+               (not (assq var evil-transient-vals)))
+      (add-to-list 'evil-transient-vals
+                   (list var (symbol-value var)
+                         (and (assq var (buffer-local-variables)) t)))
+      (make-variable-buffer-local var))))
+
+(defun evil-transient-restore ()
+  "Restore Transient Mark mode from `evil-transient-vals'."
+  (let (entry local var val)
+    (while (setq entry (pop evil-transient-vals))
+      (setq var (nth 0 entry)
+            val (nth 1 entry)
+            local (nth 2 entry))
+      (unless local
+        (kill-local-variable var))
+      (unless (equal var val)
+        (if (fboundp var)
+            (funcall var (if var 1 -1))
+          (setq var val))))))
+
+(defmacro evil-save-transient-mark (&rest body)
+  "Save Transient Mark mode; execute BODY; restore it."
+  (declare (indent defun)
+           (debug t))
+  `(let (evil-transient-vals)
+     (unwind-protect
+         (progn
+           (evil-transient-save)
+           ,@body)
+       (evil-transient-restore))))
 
 ;;; Highlighting
 
@@ -118,6 +184,10 @@ That is, the message is not logged in the *Messages* buffer.
    'emacs-lisp-mode
    '(("(\\(evil-define-[-[:word:]]+\\)\\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
       (1 font-lock-keyword-face)
-      (2 font-lock-function-name-face nil t)))))
+      (2 font-lock-function-name-face nil t))
+     ("(\\(evil-\\(?:with\\|save\\)-[-[:word:]]+\\)\\>"
+      1 font-lock-keyword-face))))
+
+(provide 'evil-common)
 
 ;;; evil-common.el ends here

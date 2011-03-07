@@ -28,6 +28,36 @@ Elements have the form (MODE . KEYMAP), with the first keymaps
 having higher priority.")
 (make-variable-buffer-local 'evil-mode-map-alist)
 
+(defvar evil-transient-vars '(transient-mark-mode mark-active)
+  "List of variables pertaining to Transient Mark mode.")
+
+(defvar evil-transient-vals nil
+  "Association list of old values for Transient Mark mode variables.
+Entries have the form (VARIABLE VALUE LOCAL), where LOCAL is
+whether the variable was previously buffer-local.")
+
+(defvar evil-types-alist nil
+  "Specifications made by `evil-define-type'.
+Entries have the form (TYPE . PLIST), where PLIST is a property
+list specifying functions for handling the type: expanding it,
+describing it, etc.")
+
+(defvar evil-motion-marker nil
+  "Marker for storing the starting position of a motion.")
+(make-variable-buffer-local 'evil-mode-map-alist)
+
+(defvar evil-this-type nil
+  "Current motion type.")
+(make-variable-buffer-local 'evil-mode-map-alist)
+
+(defvar evil-operators nil
+  "List of operator commands.")
+
+(defvar evil-inhibit-operator nil
+  "Inhibit current operator.
+If an operator calls a motion and the motion sets this variable
+to t, the operator code is not executed.")
+
 (defconst evil-suppress-map (make-keymap)
   "Full keymap disabling default bindings to self-insert-command.")
 (suppress-keymap evil-suppress-map)

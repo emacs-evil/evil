@@ -43,6 +43,8 @@ buffer.\n")
          (goto-char (point-min))
          ,@body))))
 
+;;; States
+
 (defun evil-test-local-mode-enabled ()
   "Verify that `evil-local-mode' is enabled properly"
   (ert-info ("Set the mode variable to t")
@@ -207,17 +209,171 @@ of `self-insert-command' from Normal state"
   "Enable shortcut keymap in Operator-Pending state"
   :tags '(evil)
   (evil-test-buffer
-    (ert-info ("Enable `evil-operator-shortcut-mode' in
+    (ert-info ("Activate `evil-operator-shortcut-map' in
 Operator-Pending state")
       (evil-test-change-state 'operator)
       (should (memq evil-operator-shortcut-map
                     (evil-state-keymaps 'operator)))
       (should (keymapp evil-operator-shortcut-map))
       (should evil-operator-shortcut-mode))
-    (ert-info ("Disable `evil-operator-shortcut-mode'
+    (should (memq evil-operator-shortcut-map
+                  (current-active-maps)))
+    (ert-info ("Deactivate `evil-operator-shortcut-map'
 outside Operator-Pending state")
-      (evil-test-change-state 'normal)
-      (should-not evil-operator-shortcut-mode))))
+      (evil-test-change-state 'emacs)
+      (should-not evil-operator-shortcut-mode)
+      (should-not (memq evil-operator-shortcut-map
+                        (current-active-maps))))
+    (ert-info ("Reset `evil-operator-shortcut-map'
+when entering Operator-Pending state")
+      (define-key evil-operator-shortcut-map "f" 'foo)
+      (should (eq (lookup-key evil-operator-shortcut-map "f")
+                  'foo))
+      (evil-test-change-state 'operator)
+      (should-not (eq (lookup-key evil-operator-shortcut-map "f")
+                      'foo)))
+    (ert-info ("Reset `evil-operator-shortcut-map'
+when exiting Operator-Pending state")
+      (define-key evil-operator-shortcut-map "b" 'bar)
+      (should (eq (lookup-key evil-operator-shortcut-map "b")
+                  'bar))
+      (evil-test-change-state 'emacs)
+      (should-not (eq (lookup-key evil-operator-shortcut-map "b")
+                      'bar)))))
+
+;;; Type system
+
+(ert-deftest evil-test-exclusive-type ()
+  "Expand and contract the `line' type"
+  :tags '(evil)
+  (evil-test-buffer
+    (let* ((first-line 1)
+           (second-line (progn
+                          (forward-line)
+                          (point)))
+           (third-line (progn
+                         (forward-line)
+                         (point))))
+      (ert-info ("Return the beginning and end unchanged
+if they are the same")
+        (should (equal (evil-expand 1 1 'exclusive)
+                       (list 1 1 'exclusive))))
+      (ert-info ("expand to `inclusive' if the end position
+is at the beginning of a line")
+        (should (equal (evil-expand (1+ first-line) second-line 'exclusive)
+                       (list (1+ first-line) second-line 'inclusive))))
+      (ert-info ("expand to `line' if both the beginning and end
+are at the beginning of a line")
+        (should (equal (evil-expand first-line second-line 'exclusive)
+                       (list first-line second-line 'line))))
+      (ert-info ("Measure as the strict difference between the end
+and the beginning")
+        (should (string= (evil-describe 1 1 'exclusive)
+                         "0 characters"))
+        (should (string= (evil-describe 1 2 'exclusive)
+                         "1 character"))
+        (should (string= (evil-describe 5 2 'exclusive)
+                         "3 characters"))))))
+
+(ert-deftest evil-test-inclusive-type ()
+  "Expand and contract the `inclusive' type"
+  :tags '(evil)
+  (evil-test-buffer
+    (ert-info ("Include the ending character")
+      (should (equal (evil-expand 1 1 'inclusive)
+                     '(1 2 inclusive))))
+    (ert-info ("Don't mind if positions are in wrong order")
+      (should (equal (evil-expand 5 2 'inclusive)
+                     '(2 6 inclusive))))
+    (ert-info ("Exclude the ending character when contracting")
+      (should (equal (evil-contract 1 2 'inclusive)
+                     '(1 1 inclusive))))
+    (ert-info ("Don't mind positions order when contracting")
+      (should (equal (evil-contract 6 2 'inclusive)
+                     '(2 5 inclusive))))
+    (ert-info ("Measure as one more than the difference")
+      (should (string= (evil-describe 1 1 'inclusive)
+                       "1 character"))
+      (should (string= (evil-describe 5 2 'inclusive)
+                       "4 characters")))))
+
+(ert-deftest evil-test-line-type ()
+  "Expand the `line' type"
+  :tags '(evil)
+  (evil-test-buffer
+    (let* ((first-line 1)
+           (second-line (progn
+                          (forward-line)
+                          (point)))
+           (third-line (progn
+                         (forward-line)
+                         (point))))
+      (ert-info ("Expand to the whole first line")
+        (should (equal (evil-expand first-line first-line 'line)
+                       (list first-line second-line 'line)))
+        (should (string= (evil-describe first-line first-line 'line)
+                         "1 line")))
+      (ert-info ("Expand to the two first lines")
+        (should (equal (evil-expand first-line second-line 'line)
+                       (list first-line third-line 'line)))
+        (should (string= (evil-describe first-line second-line 'line)
+                         "2 lines"))))))
+
+(ert-deftest evil-test-block-type ()
+  "Expand and contract the `block' type"
+  :tags '(evil)
+  (evil-test-buffer
+    (let* ((first-line 1)
+           (second-line (progn
+                          (forward-line)
+                          (point)))
+           (third-line (progn
+                         (forward-line)
+                         (point))))
+      (ert-info ("Expand to a 1x1 block")
+        (should (equal (evil-expand 1 1 'block)
+                       (list 1 2 'block)))
+        (should (string= (evil-describe 1 1 'block)
+                         "1 row and 1 column")))
+      (ert-info ("Expand to a 2x1 block")
+        (should (equal (evil-expand first-line second-line 'block)
+                       (list first-line (1+ second-line) 'block)))
+        (should (string= (evil-describe first-line second-line 'block)
+                         "2 rows and 1 column")))
+      (ert-info ("Expand to a 3x2 block")
+        (should (equal (evil-expand first-line (1+ third-line) 'block)
+                       (list first-line (1+ (1+ third-line)) 'block)))
+        (should (string= (evil-describe first-line (1+ third-line) 'block)
+                         "3 rows and 2 columns")))
+      (ert-info ("Contract to a 0x0 rectangle")
+        (should (equal (evil-contract 1 2 'block)
+                       (list 1 1 'block))))
+      (ert-info ("Contract to a 2x0 rectangle")
+        (should (equal (evil-contract first-line (1+ second-line) 'block)
+                       (list first-line second-line 'block))))
+      (ert-info ("Contract to a 3x1 rectangle")
+        (should (equal (evil-contract first-line (1+ (1+ third-line)) 'block)
+                       (list first-line (1+ third-line) 'block)))))))
+
+;;; Utilities
+
+(ert-deftest evil-test-truncate-vector ()
+  "Test `evil-truncate-vector'"
+  :tags '(evil)
+  (ert-info ("Positive numbers")
+    (should (equal (evil-truncate-vector [a b c] 0) []))
+    (should (equal (evil-truncate-vector [a b c] 1) [a]))
+    (should (equal (evil-truncate-vector [a b c] 2) [a b]))
+    (should (equal (evil-truncate-vector [a b c] 3) [a b c]))
+    (should (equal (evil-truncate-vector [a b c] 4) [a b c])))
+  (ert-info ("Negative numbers")
+    (should (equal (evil-truncate-vector [a b c] -1) [a b]))
+    (should (equal (evil-truncate-vector [a b c] -2) [a]))
+    (should (equal (evil-truncate-vector [a b c] -3) []))
+    (should (equal (evil-truncate-vector [a b c] -4) [])))
+  (ert-info ("Limit cases")
+    (should (equal (evil-truncate-vector [] 0) []))
+    (should (equal (evil-truncate-vector [] 3) []))))
 
 (when evil-tests-run
   (evil-tests-run))
