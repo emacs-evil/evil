@@ -134,23 +134,38 @@ current buffer only.")
 (defun evil-normalize-keymaps (&optional state)
   "Create a buffer-local value for `evil-mode-map-alist'.
 Its order reflects the state in the current buffer."
-  (let ((state (or state evil-state)) alist mode)
+  (let ((state (or state evil-state))
+        (modes (evil-concat-lists
+                (mapcar 'cdr (evil-state-property nil :mode))
+                (mapcar 'cdr (evil-state-property nil :local-mode))))
+        alist mode)
     ;; initialize a buffer-local value
     (setq evil-mode-map-alist
           (copy-sequence (default-value 'evil-mode-map-alist)))
     ;; update references to buffer-local keymaps
     (evil-refresh-local-maps)
     ;; disable all modes
-    (dolist (entry (append evil-mode-map-alist
-                           evil-local-keymaps-alist))
-      (set (car entry) nil))
+    (dolist (entry (evil-concat-lists evil-mode-map-alist
+                                      evil-local-keymaps-alist))
+      (setq mode (car entry))
+      (if (and (fboundp mode)
+               (not (memq mode modes)))
+          (funcall mode -1)
+        (set mode nil)))
     ;; enable modes for current state
     (unless (null state)
       (dolist (map (evil-state-keymaps state))
-        (setq mode (or (car (rassq map evil-mode-map-alist))
-                       (car (rassq map minor-mode-map-alist))))
-        (when mode
-          (set mode t)
+        (when (setq mode (or (car (rassq map evil-mode-map-alist))
+                             (car (rassq map minor-mode-map-alist))))
+          (if (and (fboundp mode)
+                   (not (memq mode modes)))
+              (funcall mode 1)
+            (set mode t))
+          ;; refresh the keymap for good measure (buffer-local keymaps
+          ;; may change in the toggle function itself)
+          (setq map (or (cdr (assq mode evil-mode-map-alist))
+                        (cdr (assq mode minor-mode-map-alist))
+                        map))
           (add-to-list 'alist (cons mode map) t)))
       ;; move the enabled modes to the front of the list
       (setq evil-mode-map-alist

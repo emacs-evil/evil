@@ -5,17 +5,15 @@
 
 (evil-define-keymap evil-operator-shortcut-map
   "Keymap for Operator-Pending shortcuts like \"dd\" and \"gqq\"."
-  :local t)
+  :local t
+  (setq evil-operator-shortcut-map (make-sparse-keymap))
+  (evil-refresh-local-maps))
 
 (evil-define-state operator
   "Operator-Pending state"
   :tag " <O> "
   :cursor evil-half-cursor
-  :enable (normal evil-operator-shortcut-map)
-  ;; reset the shortcut keymap whenever Operator-Pending state
-  ;; is entered or exited
-  (setq evil-operator-shortcut-map (make-sparse-keymap))
-  (evil-refresh-local-maps))
+  :enable (normal evil-operator-shortcut-map))
 
 ;; the half-height "Operator-Pending cursor" cannot be specified
 ;; as a static `cursor-type' value, since its height depends on
@@ -107,7 +105,9 @@ in the `interactive' specification of an operator command."
            (t
             (setq range (evil-motion-range evil-this-motion
                                            evil-this-motion-count
-                                           type)
+                                           (or type
+                                               (evil-type motion)
+                                               'exclusive))
                   beg (nth 0 range)
                   end (nth 1 range)
                   evil-this-type (nth 2 range))
@@ -132,19 +132,9 @@ The return value is a list (BEG END TYPE)."
                ((or (evil-visual-state-p)
                     (region-active-p))
                 (cond
-                 ;; only expand a selection if the current type is
-                 ;; different from the requested type
-                 ((and type (not (eq type evil-this-type)))
-                  (evil-expand (region-beginning) (region-end) type))
-                 (t
-                  (list (region-beginning) (region-end)
-                        (or evil-this-type 'exclusive)))))
+                 (evil-expand (region-beginning) (region-end) type)))
                (t
-                (evil-expand evil-motion-marker (point)
-                             (or type
-                                 (evil-type motion)
-                                 evil-this-type
-                                 'exclusive)))))
+                (evil-expand evil-motion-marker (point) type))))
           ;; delete marker so it doesn't slow down editing
           (move-marker evil-motion-marker nil)
           (setq evil-motion-marker nil))))))
