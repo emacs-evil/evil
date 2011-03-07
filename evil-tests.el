@@ -530,6 +530,21 @@ cursor on the new line."
               [down down home] ".")
      "\\`;; ABC BEGIN\nBODY\nEND\nABC BEGIN\nBOD°Y\nEND\nr is for")))
 
+(ert-deftest evil-test-repeat-kill-buffer ()
+  "Test safe-guard preventing buffers from being deleted when repeating a command."
+  (ert-info ("Test killing works for direct calls to `evil-execute-repeat-info'")
+    (evil-test-buffer
+      (evil-local-mode 1)
+      (setq evil-repeat-info '((kill-buffer nil)))
+      (evil-execute-repeat-info evil-repeat-info)
+      (should (not (looking-at ";; This")))))
+
+  (ert-info ("Verify an error is raised when using `evil-repeat' command")
+    (evil-test-buffer
+      (evil-local-mode 1)
+      (setq evil-repeat-info '((kill-buffer nil)))
+      (should-error (call-interactively 'evil-repeat)))))
+
 (when evil-tests-run
   (evil-tests-run))
 

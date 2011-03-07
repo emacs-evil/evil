@@ -261,7 +261,13 @@ and only if `count' is non-nil."
 (defun evil-repeat (count)
   "Repeat the last editing command with count replaced by `count'."
   (interactive "P")
-  (evil-execute-repeat-info-with-count count evil-repeat-info))
+  (let ((confirm-kill-emacs t)
+        (kill-buffer-hook
+         (cons #'(lambda ()
+                   (error "Cannot delete buffer in repeat command."))
+               kill-buffer-hook)))
+
+    (evil-execute-repeat-info-with-count count evil-repeat-info)))
 
 (provide 'evil-repeat)
 
