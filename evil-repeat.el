@@ -33,10 +33,11 @@
 ;; elements.
 ;;
 ;; A special version is `evil-execute-repeat-info-with-count'. This
-;; function works as `evil-execute-repeat-info' but the
-;; prefix-argument of the first command of the passed
-;; repeat-information is executed with the prefix-argument replaced by
-;; a special count.
+;; function works as `evil-execute-repeat-info' replaces the count of
+;; the first command. This is done by parsing the key-sequence,
+;; ignoring all calls to `digit-prefix-argument' and
+;; `negative-argument' and prepending the count as a string to the
+;; vector of the remaining key-sequence.
 
 (require 'evil-vars)
 
@@ -213,38 +214,48 @@ where point should be placed after all changes."
      (t (error "Unexpected repeat-info: %S" rep)))))
 
 
-(defun evil-replace-command-prefix-arg ()
-  "Replaces the replace-count by `evil-repeat-count'.
-Called from a pre-command-hook during repeation."
-  (unless (memq this-command '(digit-argument negative-argument))
-    (remove-hook 'pre-command-hook 'evil-replace-command-prefix-arg)
-    (setq prefix-arg evil-repeat-count)))
-
-
-;; TODO: repeating will not work for operator because we do not have
-;;       operator-pending-state, yet. In this case a non-nil value of
-;;       evil-repeat-count must be used as count for the motion.
-
-;; TODO: the count-replacing is currently done via pre-command-hook
-;;       which makes recursive use of this function is dangerous. But
-;;       this may happen if `evil-repeat' with count is called to
-;;       execute a insertion. This is because insertion with count is
-;;       also done via `evil-execute-repeat-info'. It only works
-;;       because the insertion part is not done with explicit count. A
-;;       better solution may be to execute key-sequences with an own
-;;       version of `execute-kbd-macro' which handles calls do
-;;       `digit-argument' directly. This solution would work without
-;;       pre-command-hook and therefore robust for recursive calls.
+;; TODO: currently we prepend the replacing count before the
+;;       key-sequence that calls the command. Can we use direct
+;;       modification of prefix-arg instead? Does it work in
+;;       conjunction with execute-kbd-macro?
 (defun evil-execute-repeat-info-with-count (count repeat-info)
   "Repeat the repeat-information `repeat-info' with the count of
 the first command replaced by `count'. The count is replaced if
 and only if `count' is non-nil."
   (let ((evil-repeating-command t))
     (if count
-        (let ((evil-repeat-count count))
-          (add-hook 'pre-command-hook 'evil-replace-command-prefix-arg)
-          (evil-execute-repeat-info repeat-info)
-          (remove-hook 'pre-command-hook 'evil-replace-command-prefix-arg))
+        (let (done)
+          (while (and repeat-info
+                      (arrayp (car repeat-info))
+                      (not done))
+            (let* ((rep (pop repeat-info))
+                   (len (length rep))
+                   (beg 0)
+                   (end 1))
+              (while (and (<= end len) (not done))
+                (let ((cmd (key-binding (substring rep beg end))))
+                  (cond
+                   ((arrayp cmd) ;; a keyboard macro, just execute it
+                    (setq rep (vconcat cmd (substring rep end))
+                          beg 0
+                          end 1
+                          len (length rep)))
+                   ((functionp cmd)
+                    (if (memq cmd '(digit-argument negative-argument))
+                        ;; skip those commands
+                        (setq beg end
+                              end (1+ end))
+                      ;; a real command, replace the prefix argument
+                      (push (vconcat (number-to-string count)
+                                     (substring rep beg len))
+                            repeat-info)
+                      (setq done t)))
+                   ((null cmd) (error "No command bound to %s" (substring rep beg end)))
+                   (t ;; append a further event
+                    (setq end (1+ end))))))))
+          (evil-execute-repeat-info repeat-info))
+
+      ;; execute the repeat-information
       (evil-execute-repeat-info repeat-info))))
 
 (defun evil-repeat (count)
