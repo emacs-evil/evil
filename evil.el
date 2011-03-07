@@ -3,6 +3,7 @@
 (require 'evil-states)
 (require 'evil-types)
 (require 'evil-operators)
+(require 'evil-repeat)
 
 (provide 'evil)
 

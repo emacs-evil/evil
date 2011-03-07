@@ -179,13 +179,14 @@ buffer.\n")
   "Verify that `self-insert-command' is suppressed in STATE"
   (evil-test-buffer
     (evil-test-change-state state)
-    (should (eq (key-binding "a") 'undefined))
-    (should (eq (key-binding "b") 'undefined))
-    (should (eq (key-binding "c") 'undefined))
+    ;; TODO: this must be done better
+    (should (eq (key-binding "y") 'undefined))
+    (should (eq (key-binding "u") 'undefined))
+    (should (eq (key-binding "e") 'undefined))
     (ert-info ("Don't insert text")
       ;; may or may not signal an error, depending on batch mode
       (condition-case nil
-          (execute-kbd-macro "abc")
+          (execute-kbd-macro "yue")
         (error nil))
       (should (string= (buffer-substring 1 4) ";; ")))))
 
@@ -374,6 +375,331 @@ and the beginning")
   (ert-info ("Limit cases")
     (should (equal (evil-truncate-vector [] 0) []))
     (should (equal (evil-truncate-vector [] 3) []))))
+
+
+(ert-deftest evil-test-normalize-repeat-info ()
+  "Verify normalize-repeat-info"
+  (ert-info ("Single array")
+    (should (equal (evil-normalize-repeat-info
+                    '("abc"))
+                   '([?a ?b ?c]))))
+  (ert-info ("Single symbol")
+    (should (equal (evil-normalize-repeat-info
+                    '(SYM))
+                   '(SYM))))
+  (ert-info ("Arrays only")
+    (should (equal (evil-normalize-repeat-info
+                    '("abc" [XX YY] "def"))
+                   '([?a ?b ?c XX YY ?d ?e ?f]))))
+  (ert-info ("Several symbols")
+    (should (equal (evil-normalize-repeat-info
+                    '(BEG MID END))
+                   '(BEG MID END))))
+  (ert-info ("Arrays with symbol at the beginning")
+    (should (equal (evil-normalize-repeat-info
+                    '(BEG "abc" [XX YY] "def"))
+                   '(BEG [?a ?b ?c XX YY ?d ?e ?f]))))
+  (ert-info ("Arrays with symbol at the end")
+    (should (equal (evil-normalize-repeat-info
+                    '("abc" [XX YY] "def" END))
+                   '([?a ?b ?c XX YY ?d ?e ?f] END))))
+  (ert-info ("Arrays with symbol in the middle")
+    (should (equal (evil-normalize-repeat-info
+                    '("abc" [XX YY] MID "def" ))
+                   '([?a ?b ?c XX YY] MID [?d ?e ?f]))))
+  (ert-info ("Concatenate arrays with several symbols")
+    (should (equal (evil-normalize-repeat-info
+                    '(BEG "abc" [XX YY] MID "def" END))
+                   '(BEG [?a ?b ?c XX YY] MID [?d ?e ?f] END)))))
+
+(defun evil-test-repeat-info (keys &optional recorded)
+  "Executes a sequence of keys and verifies that `evil-repeat-info' records them correctly.
+`keys' is the sequence of keys to execute `recorded' is the
+expected sequence of recorded events, if nil `keys' is used"
+  (execute-kbd-macro keys)
+  (should (equal (evil-normalize-repeat-info evil-repeat-info)
+                 (list (vconcat (or recorded keys))))))
+
+(ert-deftest evil-test-normal-repeat-info-simple-command ()
+  "Save key-sequence after simple editing command in vi-state"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-test-change-state 'normal)
+    (ert-info ("Call simple command without count")
+      (evil-test-repeat-info "x"))
+    (ert-info ("Call simple command with count 3")
+      (evil-test-repeat-info "3x"))))
+
+(ert-deftest evil-test-normal-repeat-info-char-command ()
+  "Save key-sequence after editing command with character in vi-state"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-test-change-state 'normal)
+    (ert-info ("Call command with character argument without count")
+      (evil-test-repeat-info "r5"))
+    (ert-info ("Call command with character argument with count 12")
+      (evil-test-repeat-info "12rX"))))
+
+(ert-deftest evil-test-insert-repeat-info ()
+  "Save key-sequence after insertion mode"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-test-change-state 'normal)
+    (ert-info ("Insert text without count")
+      (evil-test-repeat-info (vconcat "iABC" [escape])))
+    (ert-info ("Insert text with count 42")
+      (evil-test-repeat-info (vconcat "42iABC" [escape])))))
+
+(defun evil-test-editing (keys expected &optional point-char)
+  "Execute key-sequence `keys' and verify if the text around point matches
+`expected' afterwards.
+`keys' is a sequence of events to be passed to `execute-kbd-macro'
+`expected' is a regexp with a special character marking (point)'s position
+`point-char' is the special character marking (point)'s position, defaulted to °
+If, e.g., expected is \"ABC°def\" this means the expected text before point is
+\"ABC\" and the expected text after point is \"def\". "
+  (setq point-char (regexp-quote (char-to-string (or point-char ?°))))
+  (unless (string-match point-char expected)
+    (error "No cursor specified in expected string: %s" expected))
+  (let ((before (substring expected 0 (match-beginning 0)))
+        (after (substring expected (match-end 0))))
+    (execute-kbd-macro keys)
+    (ert-info ((format "Text before point is %s"
+                       (buffer-substring (max (point-min)
+                                              (- (point) (length before)))
+                                         (point))))
+      (should (looking-back before)))
+    (ert-info ((format "Text after point is %s"
+                       (buffer-substring (point)
+                                         (min (point-max)
+                                              (+ (point) (length after))))))
+      (should (looking-at after)))))
+
+(defun evil-test-editing-clean (keys expected &optional point-char)
+  "The same as `evil-test-editing' but starts with a new
+unchanged test-buffer in normal-state."
+  (evil-test-buffer
+    (evil-test-change-state 'normal)
+    (evil-test-editing keys expected point-char)))
+
+
+(ert-deftest evil-test-repeat ()
+  "Repeat several editing commands."
+  :tags '(evil)
+  (ert-info ("Repeat replace")
+    (evil-test-editing-clean (vconcat "rX" [right right] ".")
+                             "\\`X;°XThis"))
+
+  (ert-info ("Repeat replace with count")
+    (evil-test-editing-clean (vconcat "2rX" [right right] ".")
+                             "\\`XX X°Xis "))
+
+  (ert-info ("Repeat replace without count with a new count")
+    (evil-test-editing-clean (vconcat "rX" [right right] "13.")
+                             "\\`X;XXXXXXXXXXXX°Xis for"))
+
+  (ert-info ("Repeat replace with count replacing original count")
+    (evil-test-editing-clean (vconcat "11rX" [right right] "20.")
+                             "\\`XXXXXXXXXXXfXXXXXXXXXXXXXXXXXXX°Xdon't ")))
+
+(ert-deftest evil-test-cmd-replace-char ()
+  "Calling `evil-replace-char' should replace characters."
+  :tags '(evil)
+  (evil-test-editing-clean "r5" "\\`°5; This")
+  (evil-test-editing-clean "3rX" "\\`XX°XThis"))
+
+(ert-deftest evil-test-insert-before ()
+  "Test insertion of text before point"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (should (and (looking-at "This") (looking-back ";; ")))
+    (evil-test-editing  (vconcat "ievil rulz " [escape])
+                        "\\`;; evil rulz° This")))
+
+(ert-deftest evil-test-insert-before-with-count ()
+  "Test insertion of text before point with repeat count"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (should (and (looking-at "This") (looking-back ";; ")))
+    (evil-test-editing  (vconcat "2ievil rulz " [escape])
+                        "\\`;; evil rulz evil rulz° This")))
+
+(ert-deftest evil-test-repeat-insert-before ()
+  "Test repeating of insert-before command."
+  :tags '(evil)
+  (ert-info ("Repeat insert")
+    (evil-test-editing-clean (vconcat "iABC" [escape] "..")
+                             "ABABAB°CCC;; This"))
+
+  (ert-info ("Repeat insert with count")
+    (evil-test-editing-clean (vconcat "2iABC" [escape] "..")
+                             "ABCABABCABABCAB°CCC;; This"))
+
+  (ert-info ("Repeat insert with repeat count")
+    (evil-test-editing-clean (vconcat "iABC" [escape] "11.")
+                             "ABABCABCABCABCABCABCABCABCABCABCAB°CC;; This"))
+
+  (ert-info ("Repeat insert with count with repeat with count")
+    (evil-test-editing-clean
+     (vconcat "10iABC" [escape] "11.")
+     "ABCABCABCABCABCABCABCABCABCABABCABCABCABCABCABCABCABCABCABCAB°CC;; This")))
+
+(ert-deftest evil-test-insert-after ()
+  "Test insertion of text after point"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (should (and (looking-at "This") (looking-back ";; ")))
+    (evil-test-editing  (vconcat "aevil rulz " [escape])
+                        "\\`;; Tevil rulz° his")))
+
+(ert-deftest evil-test-insert-after-with-count ()
+  "Test insertion of text after point with repeat count"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (evil-test-editing  (vconcat "2aevil rulz " [escape])
+                        "\\`;; Tevil rulz evil rulz° his")))
+
+(ert-deftest evil-test-repeat-insert-after ()
+  "Test repeating of insert-after command."
+  :tags '(evil)
+  (ert-info ("Repeat insert")
+    (evil-test-editing-clean (vconcat "aABC" [escape] "..")
+                             ";ABCABCAB°C; This"))
+
+  (ert-info ("Repeat insert with count")
+    (evil-test-editing-clean (vconcat "2aABC" [escape] "..")
+                             ";ABCABCABCABCABCAB°C; This"))
+
+  (ert-info ("Repeat insert with repeat count")
+    (evil-test-editing-clean (vconcat "aABC" [escape] "11.")
+                             ";ABCABCABCABCABCABCABCABCABCABCABCAB°C; This"))
+
+  (ert-info ("Repeat insert with count with repeat with count")
+    (evil-test-editing-clean
+     (vconcat "10aABC" [escape] "11.")
+     ";ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB°C; This")))
+
+(ert-deftest evil-test-insert-above ()
+  "Test insertion of text above point"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (forward-line)
+    (evil-test-editing  (vconcat "Oabc\ndef" [escape])
+                        "evaluation.\nabc\nde°f\n;; If you")))
+
+(ert-deftest evil-test-insert-above-with-count ()
+  "Test insertion of text above point with repeat count"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (forward-line)
+    (evil-test-editing  (vconcat "2Oevil\nrulz" [escape])
+                        "evaluation.\nevil\nrulz\nevil\nrul°z\n;; If you")))
+
+(ert-deftest evil-test-repeat-insert-above ()
+  "Test repeating of insert-above command."
+  :tags '(evil)
+  (ert-info ("Repeat insert")
+    (evil-test-editing-clean (vconcat "Oevil\nrulz" [escape] "..")
+                             "\\`evil\nevil\nevil\nrul°z\nrulz\nrulz\n;; This"))
+
+  (ert-info ("Repeat insert with count")
+    (evil-test-editing-clean
+     (vconcat "2Oevil\nrulz" [escape] "..")
+     "\\`evil\nrulz\nevil\nevil\nrulz\nevil\nevil\nrulz\nevil\nrul°z\nrulz\nrulz\n;; This"))
+
+  (ert-info ("Repeat insert with repeat count")
+    (evil-test-editing-clean (vconcat "Oevil\nrulz" [escape] "2.")
+                             "evil\nevil\nrulz\nevil\nrul°z\nrulz\n;; This"))
+
+  (ert-info ("Repeat insert with count with repeat with count")
+    (evil-test-editing-clean
+     (vconcat "2Oevil\nrulz" [escape] "3.")
+     "\\`evil\nrulz\nevil\nevil\nrulz\nevil\nrulz\nevil\nrul°z\nrulz\n;; This")))
+
+(ert-deftest evil-test-insert-below ()
+  "Test insertion of text below point"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (evil-test-editing  (vconcat "oabc\ndef" [escape])
+                        "evaluation.\nabc\nde°f\n;; If you")))
+
+(ert-deftest evil-test-insert-below-with-count ()
+  "Test insertion of text below point with repeat count"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (evil-test-editing  (vconcat "2oevil\nrulz" [escape])
+                        "evaluation.\nevil\nrulz\nevil\nrul°z\n;; If you")))
+
+(ert-deftest evil-test-repeat-insert-below ()
+  "Test repeating of insert-below command."
+  :tags '(evil)
+  (ert-info ("Repeat insert")
+    (evil-test-editing-clean (vconcat "oevil\nrulz" [escape] "..")
+                             "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you"))
+
+  (ert-info ("Repeat insert with count")
+    (evil-test-editing-clean
+     (vconcat "2oevil\nrulz" [escape] "..")
+     "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you"))
+
+  (ert-info ("Repeat insert with repeat count")
+    (evil-test-editing-clean
+     (vconcat "oevil\nrulz" [escape] "2.")
+     "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you"))
+
+  (ert-info ("Repeat insert with count with repeat with count")
+    (evil-test-editing-clean
+     (vconcat "2oevil\nrulz" [escape] "3.")
+     "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you")))
+
+
+(defun evil-test-dummy-complete ()
+  "Test function for change-base repeation.
+Removes 5 characters, insert BEGIN\\n\\nEND\\nplaces
+cursor on the new line."
+  (interactive)
+  (delete-char 5)
+  (insert "BEGIN\n")
+  (save-excursion
+    (insert "\nEND\n")))
+
+
+(ert-deftest evil-test-repeat-by-change ()
+  "Test repeation by tracking changes for completion commands."
+  (let (line-move-visual)
+    (define-key evil-insert-state-map (kbd "C-c C-p") 'evil-test-dummy-complete)
+    (evil-set-insert-repeat-type 'evil-test-dummy-complete 'change)
+    (evil-test-editing-clean
+     (vconcat [right right right] "iABC " (kbd "C-c C-p") "BODY" [escape]
+              [down down home] ".")
+     "\\`;; ABC BEGIN\nBODY\nEND\nABC BEGIN\nBOD°Y\nEND\nr is for")))
+
+(ert-deftest evil-test-repeat-kill-buffer ()
+  "Test safe-guard preventing buffers from being deleted when repeating a command."
+  (ert-info ("Test killing works for direct calls to `evil-execute-repeat-info'")
+    (evil-test-buffer
+      (evil-local-mode 1)
+      (setq evil-repeat-info '((kill-buffer nil)))
+      (evil-execute-repeat-info evil-repeat-info)
+      (should (not (looking-at ";; This")))))
+
+  (ert-info ("Verify an error is raised when using `evil-repeat' command")
+    (evil-test-buffer
+      (evil-local-mode 1)
+      (setq evil-repeat-info '((kill-buffer nil)))
+      (should-error (call-interactively 'evil-repeat)))))
 
 (when evil-tests-run
   (evil-tests-run))
