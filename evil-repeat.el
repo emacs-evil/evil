@@ -224,7 +224,8 @@ the first command replaced by `count'. The count is replaced if
 and only if `count' is non-nil."
   (let ((evil-repeating-command t))
     (if count
-        (let (done)
+        (let ((evil-repeat-count count)
+	      done)
           (while (and repeat-info
                       (arrayp (car repeat-info))
                       (not done))

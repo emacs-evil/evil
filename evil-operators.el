@@ -94,10 +94,15 @@ in the `interactive' specification of an operator command."
                 evil-this-motion-count (cadr motion)
                 evil-this-motion (car motion)
                 evil-this-type nil)
-          (when (or current-prefix-arg evil-this-motion-count)
+	  (cond
+	   (evil-repeat-count
+	    (setq evil-this-motion-count evil-repeat-count)
+	    ;; only the count of the first operator is overwritten
+	    (setq evil-repeat-count nil))
+	   ((or current-prefix-arg evil-this-motion-count)
             (setq evil-this-motion-count
                   (* (prefix-numeric-value current-prefix-arg)
-                     (prefix-numeric-value evil-this-motion-count))))
+                     (prefix-numeric-value evil-this-motion-count)))))
           (cond
            ((or (null evil-this-motion)
                 (eq evil-this-motion 'keyboard-quit))
