@@ -701,6 +701,29 @@ cursor on the new line."
       (setq evil-repeat-info '((kill-buffer nil)))
       (should-error (call-interactively 'evil-repeat)))))
 
+(ert-deftest evil-test-operator ()
+  "Test operator."
+  (evil-test-editing-clean
+   (vconcat [right right right] "g?" [M-right])
+   ";; °Guvf buffer")) 
+
+(ert-deftest evil-test-operator-with-count ()
+  "Test operator."
+  (ert-info ("Count before operator")
+    (evil-test-editing-clean
+     (vconcat [right right right] "2g?" [M-right])
+     ";; °Guvf ohssre is"))
+
+  (ert-info ("Count before motion")
+    (evil-test-editing-clean
+     (vconcat [right right right] "g?2" [M-right])
+     ";; °Guvf ohssre is"))
+
+  (ert-info ("Count before operator and motion")
+    (evil-test-editing-clean
+     (vconcat [right right right] "3g?2" [M-right])
+     ";; °Guvf ohssre vf sbe abgrf lbh don't")))
+
 (when evil-tests-run
   (evil-tests-run))
 
