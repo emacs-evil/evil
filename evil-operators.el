@@ -45,7 +45,7 @@ arguments: the beginning and end of the range."
                            [&optional stringp]
                            [&rest keywordp sexp]
                            def-body)))
-  (let (beg end interactive keys type keyword)
+  (let (beg end interactive type keyword)
     ;; collect BEG, END and TYPE
     (setq args (delq '&optional args)
           beg (or (pop args) 'beg)
@@ -58,10 +58,6 @@ arguments: the beginning and end of the range."
     (while (keywordp (setq keyword (car body)))
       (setq body (cdr body))
       (cond
-       ((eq keyword :keys)
-        (setq keys (pop body))
-        (when (or (stringp keys) (not (listp keys)))
-          (setq keys (list keys))))
        (t
         (pop body))))
     ;; collect `interactive' specification
@@ -70,8 +66,6 @@ arguments: the beginning and end of the range."
     ;; macro expansion
     `(progn
        (add-to-list 'evil-operators ',operator t)
-       (dolist (key ',keys)
-         (define-key evil-operator-state-map key ',operator))
        (defun ,operator (,beg ,end &optional ,type ,@args)
          ,@(when doc `(,doc))
          (interactive
@@ -215,7 +209,6 @@ Both COUNT and CMD may be nil."
 
 (evil-define-operator evil-rot13 (beg end)
   "ROT13 encrypt text."
-  :keys "g?"
   (rot13-region beg end))
 
 (provide 'evil-operators)

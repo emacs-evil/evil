@@ -17,6 +17,7 @@
 
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
 
+(define-key evil-operator-state-map "g?" 'evil-rot13)
 
 (provide 'evil-maps)
 
