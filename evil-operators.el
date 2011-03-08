@@ -2,6 +2,7 @@
 
 (require 'evil-states)
 (require 'evil-types)
+(require 'evil-compatibility)
 
 (evil-define-keymap evil-operator-shortcut-map
   "Keymap for Operator-Pending shortcuts like \"dd\" and \"gqq\"."
@@ -94,12 +95,12 @@ in the `interactive' specification of an operator command."
                 evil-this-motion-count (cadr motion)
                 evil-this-motion (car motion)
                 evil-this-type nil)
-	  (cond
-	   (evil-repeat-count
-	    (setq evil-this-motion-count evil-repeat-count)
-	    ;; only the count of the first operator is overwritten
-	    (setq evil-repeat-count nil))
-	   ((or current-prefix-arg evil-this-motion-count)
+          (cond
+           (evil-repeat-count
+            (setq evil-this-motion-count evil-repeat-count)
+            ;; only the count of the first operator is overwritten
+            (setq evil-repeat-count nil))
+           ((or current-prefix-arg evil-this-motion-count)
             (setq evil-this-motion-count
                   (* (prefix-numeric-value current-prefix-arg)
                      (prefix-numeric-value evil-this-motion-count)))))

@@ -225,7 +225,7 @@ and only if `count' is non-nil."
   (let ((evil-repeating-command t))
     (if count
         (let ((evil-repeat-count count)
-	      done)
+              done)
           (while (and repeat-info
                       (arrayp (car repeat-info))
                       (not done))

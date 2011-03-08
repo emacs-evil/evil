@@ -705,7 +705,7 @@ cursor on the new line."
   "Test operator."
   (evil-test-editing-clean
    (vconcat [right right right] "g?" [M-right])
-   ";; °Guvf buffer")) 
+   ";; °Guvf buffer"))
 
 (ert-deftest evil-test-operator-with-count ()
   "Test operator with count argument."
@@ -728,7 +728,7 @@ cursor on the new line."
   "Test repeating of an operator."
   (evil-test-editing-clean
    (vconcat [right right right] "g?" [M-right] [M-right] ".")
-   ";; Guvf° ohssre is")) 
+   ";; Guvf° ohssre is"))
 
 (ert-deftest evil-test-operator-repeat-with-count ()
   "Test repeating of an operator with new count."
@@ -736,12 +736,12 @@ cursor on the new line."
     (evil-test-editing-clean
      (vconcat [right right right] "2g?" [M-right] "3.")
      ";; °This buffer vf for notes"))
-  
+
   (ert-info ("Count before motion")
     (evil-test-editing-clean
      (vconcat [right right right] "g?2" [M-right] "3.")
      ";; °This buffer vf for notes"))
-  
+
   (ert-info ("Count before operator and motion")
     (evil-test-editing-clean
      (vconcat [right right right] "3g?2" [M-right] "4.")
