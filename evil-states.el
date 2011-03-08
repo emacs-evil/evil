@@ -393,13 +393,15 @@ Use the command `%s' to change this variable.\n\n%s" state mode doc))
 Elements have the form (KEYMAP . AUX-MAP), where AUX-MAP contains state
 bindings to be activated whenever KEYMAP and %s state are active."
                         state state))
-        :predicate (defun ,predicate ()
-                     ,(format "Whether the current state is %s." state)
-                     (eq evil-state ',state))
+        :predicate ',predicate
         :enable ',enable)
 
        ,@(when suppress-keymap
            `((set-keymap-parent ,keymap evil-suppress-map)))
+
+       (defun ,predicate ()
+         ,(format "Whether the current state is %s." state)
+         (eq evil-state ',state))
 
        ;; define state function
        (defun ,mode (&optional arg)

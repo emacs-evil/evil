@@ -6,14 +6,15 @@
 (evil-define-state insert
   "Insert state."
   :tag " <I> "
-  (if evil-state
-      (progn
-        (evil-setup-insert-repeat)
-        (add-hook 'evil-insert-state-exit-hook
-                  'evil-cleanup-insert-state))
+  :cursor (bar . 2)
+  (cond
+   ((evil-insert-state-p)
+    (evil-setup-insert-repeat)
+    (add-hook 'evil-insert-state-exit-hook
+              'evil-cleanup-insert-state))
+   (t
     (remove-hook 'evil-insert-state-exit-hook
-                 'evil-cleanup-insert-state)))
-
+                 'evil-cleanup-insert-state))))
 
 (defun evil-cleanup-insert-state ()
   "This function is called when insert-state is about being exited.
@@ -72,7 +73,6 @@ The insertion will be repeated `count' times."
   (setq evil-insert-count count
         evil-insert-lines t)
   (evil-insert-state 1))
-
 
 (provide 'evil-insert)
 
