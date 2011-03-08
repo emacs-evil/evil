@@ -2,6 +2,7 @@
 
 (require 'evil-states)
 (require 'evil-types)
+(require 'evil-compatibility)
 
 (evil-define-keymap evil-operator-shortcut-map
   "Keymap for Operator-Pending shortcuts like \"dd\" and \"gqq\"."
