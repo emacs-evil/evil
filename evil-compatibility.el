@@ -7,7 +7,7 @@
 (unless (fboundp 'region-active-p)
   (defun region-active-p ()
     "Returns t iff region and mark are active."
-    mark-active))
+    (and transient-mark-mode mark-active)))
 
 (provide 'evil-compatibility)
 
