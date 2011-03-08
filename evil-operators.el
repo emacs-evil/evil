@@ -1,5 +1,7 @@
 ;;;; Operator-Pending state
 
+(require 'evil-vars)
+(require 'evil-common)
 (require 'evil-states)
 (require 'evil-types)
 (require 'evil-compatibility)
@@ -87,7 +89,8 @@ in the `interactive' specification of an operator command."
     (evil-save-state
       (evil-save-echo-area
         (cond
-         ((evil-visual-state-p)
+         ((or (evil-visual-state-p)
+              (region-active-p))
           (list (region-beginning) (region-end)))
          (t
           (evil-operator-state)
@@ -114,9 +117,9 @@ in the `interactive' specification of an operator command."
                                            (or type
                                                (evil-type motion)
                                                'exclusive))
-                  beg (nth 0 range)
-                  end (nth 1 range)
-                  evil-this-type (nth 2 range))
+                  beg (pop range)
+                  end (pop range)
+                  evil-this-type (pop range))
             (list beg end)))))))))
 
 (defun evil-motion-range (motion &optional count type)
@@ -129,16 +132,17 @@ The return value is a list (BEG END TYPE)."
         (setq evil-motion-marker (move-marker (make-marker) (point)))
         (unwind-protect
             (let ((current-prefix-arg count))
-              (condition-case nil
+              (condition-case err
                   (call-interactively motion)
-                (error nil))
+                (error (prog1 nil
+                         (setq evil-write-echo-area t)
+                         (message (error-message-string err)))))
               (cond
                ;; if text has been selected (i.e., it's a text object),
                ;; return the selection
                ((or (evil-visual-state-p)
                     (region-active-p))
-                (cond
-                 (evil-expand (region-beginning) (region-end) type)))
+                (evil-expand (region-beginning) (region-end) type))
                (t
                 (evil-expand evil-motion-marker (point) type))))
           ;; delete marker so it doesn't slow down editing

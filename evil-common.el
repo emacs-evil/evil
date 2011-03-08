@@ -116,11 +116,12 @@ Intermittent messages are not logged in the *Messages* buffer."
   (declare (indent defun)
            (debug t))
   `(let ((old-msg (current-message))
-         message-log-max)
+         evil-write-echo-area)
      (unwind-protect
          (progn ,@body)
-       (if old-msg (message "%s" old-msg)
-         (message nil)))))
+       (unless evil-write-echo-area
+         (if old-msg (message "%s" old-msg)
+           (message nil))))))
 
 (defun evil-unlogged-message (string &rest args)
   "Display an unlogged message in the echo area.

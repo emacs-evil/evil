@@ -112,6 +112,10 @@ ignored.")
 command o or O.")
 (make-variable-buffer-local 'evil-insert-lines)
 
+(defvar evil-write-echo-area nil
+  "If set to t inside `evil-save-echo-area', then the echo area
+is not restored.")
+
 (defconst evil-version "0.1"
   "The current version of Evil")
 
