@@ -79,10 +79,15 @@ may contain a property list. If TRANSFORM is undefined,
 return positions unchanged."
   (let* ((type (or type (evil-type properties)))
          (buffer (or buffer (current-buffer)))
-         (transform (evil-type-property type transform)))
+         (transform (when (and type transform)
+                      (evil-type-property type transform))))
     (if transform
         (apply transform beg end buffer properties)
-      (append (list beg end type) properties))))
+      (setq beg (if (markerp beg) (marker-position beg) beg)
+            end (if (markerp end) (marker-position end) end))
+      (if type
+          (append (list beg end type) properties)
+        (append (list beg end) properties)))))
 
 (defun evil-describe (beg end type &optional buffer &rest properties)
   "Return description of BEG and END in BUFFER with PROPERTIES.

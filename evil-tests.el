@@ -1,4 +1,4 @@
-;; evil-tests.el --- unit tests for Evil -*- coding: utf-8 -*-
+;; evil-tests.el --- unit tests for Evil -*- coding: utf-8 -*-
 
 ;; This file is for developers. It runs some unit tests on Evil.
 ;; To load it, add the following lines to .emacs:
@@ -177,18 +177,25 @@ buffer.\n")
 
 (defun evil-test-suppress-keymap (state)
   "Verify that `self-insert-command' is suppressed in STATE"
-  (evil-test-buffer
-    (evil-test-change-state state)
-    ;; TODO: this must be done better
-    (should (eq (key-binding "y") 'undefined))
-    (should (eq (key-binding "u") 'undefined))
-    (should (eq (key-binding "e") 'undefined))
-    (ert-info ("Don't insert text")
-      ;; may or may not signal an error, depending on batch mode
-      (condition-case nil
-          (execute-kbd-macro "yue")
-        (error nil))
-      (should (string= (buffer-substring 1 4) ";; ")))))
+  (let ((mode (evil-state-property state :mode))
+        (local (evil-state-property state :local-mode)))
+    (evil-test-buffer
+      (evil-test-change-state state)
+      ;; TODO: this must be done better
+      (ert-info ("Disable the state's own keymaps so that the
+suppression keymap comes first")
+        (unless (eq state 'normal)
+          (set mode nil)
+          (set local nil)))
+      (should (eq (key-binding "y") 'undefined))
+      (should (eq (key-binding "u") 'undefined))
+      (should (eq (key-binding "e") 'undefined))
+      (ert-info ("Don't insert text")
+        ;; may or may not signal an error, depending on batch mode
+        (condition-case nil
+            (execute-kbd-macro "yue")
+          (error nil))
+        (should (string= (buffer-substring 1 4) ";; ")))))) ;
 
 (ert-deftest evil-test-emacs-state-suppress-keymap ()
   "`self-insert-command' works in emacs-state"
@@ -356,29 +363,31 @@ and the beginning")
         (should (equal (evil-contract first-line (1+ (1+ third-line)) 'block)
                        (list first-line (1+ third-line) 'block)))))))
 
-;;; Utilities
-
-(ert-deftest evil-test-truncate-vector ()
-  "Test `evil-truncate-vector'"
+(ert-deftest evil-test-type-transform ()
+  "Test `evil-transform'"
   :tags '(evil)
-  (ert-info ("Positive numbers")
-    (should (equal (evil-truncate-vector [a b c] 0) []))
-    (should (equal (evil-truncate-vector [a b c] 1) [a]))
-    (should (equal (evil-truncate-vector [a b c] 2) [a b]))
-    (should (equal (evil-truncate-vector [a b c] 3) [a b c]))
-    (should (equal (evil-truncate-vector [a b c] 4) [a b c])))
-  (ert-info ("Negative numbers")
-    (should (equal (evil-truncate-vector [a b c] -1) [a b]))
-    (should (equal (evil-truncate-vector [a b c] -2) [a]))
-    (should (equal (evil-truncate-vector [a b c] -3) []))
-    (should (equal (evil-truncate-vector [a b c] -4) [])))
-  (ert-info ("Limit cases")
-    (should (equal (evil-truncate-vector [] 0) []))
-    (should (equal (evil-truncate-vector [] 3) []))))
+  (evil-test-buffer
+    (ert-info ("Return positions unchanged when passed nil for
+TYPE or TRANSFORM")
+      (should (equal (evil-transform 1 2 'block nil)
+                     '(1 2 block)))
+      (should (equal (evil-transform 1 2 nil 'expand)
+                     '(1 2)))
+      (should (equal (evil-transform 1 2 nil nil)
+                     '(1 2))))
+    (ert-info ("Accept markers, but return positions")
+      (should (equal (evil-transform (move-marker (make-marker) 1) 1
+                                     'inclusive 'expand)
+                     '(1 2 inclusive)))
+      (should (equal (evil-transform (move-marker (make-marker) 1) 2
+                                     nil nil)
+                     '(1 2))))))
 
+;;; Repeat system
 
 (ert-deftest evil-test-normalize-repeat-info ()
   "Verify normalize-repeat-info"
+  :tags '(evil)
   (ert-info ("Single array")
     (should (equal (evil-normalize-repeat-info
                     '("abc"))
@@ -481,7 +490,6 @@ unchanged test-buffer in normal-state."
   (evil-test-buffer
     (evil-test-change-state 'normal)
     (evil-test-editing keys expected point-char)))
-
 
 (ert-deftest evil-test-repeat ()
   "Repeat several editing commands."
@@ -664,7 +672,6 @@ unchanged test-buffer in normal-state."
      (vconcat "2oevil\nrulz" [escape] "3.")
      "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you")))
 
-
 (defun evil-test-dummy-complete ()
   "Test function for change-base repeation.
 Removes 5 characters, insert BEGIN\\n\\nEND\\nplaces
@@ -675,9 +682,9 @@ cursor on the new line."
   (save-excursion
     (insert "\nEND\n")))
 
-
 (ert-deftest evil-test-repeat-by-change ()
   "Test repeation by tracking changes for completion commands."
+  :tags '(evil)
   (let (line-move-visual)
     (define-key evil-insert-state-map (kbd "C-c C-p") 'evil-test-dummy-complete)
     (evil-set-insert-repeat-type 'evil-test-dummy-complete 'change)
@@ -688,6 +695,7 @@ cursor on the new line."
 
 (ert-deftest evil-test-repeat-kill-buffer ()
   "Test safe-guard preventing buffers from being deleted when repeating a command."
+  :tags '(evil)
   (ert-info ("Test killing works for direct calls to `evil-execute-repeat-info'")
     (evil-test-buffer
       (evil-local-mode 1)
@@ -703,12 +711,14 @@ cursor on the new line."
 
 (ert-deftest evil-test-operator ()
   "Test operator."
+  :tags '(evil)
   (evil-test-editing-clean
    (vconcat [right right right] "g?" [M-right])
    ";; °Guvf buffer"))
 
 (ert-deftest evil-test-operator-with-count ()
   "Test operator with count argument."
+  :tags '(evil)
   (ert-info ("Count before operator")
     (evil-test-editing-clean
      (vconcat [right right right] "2g?" [M-right])
@@ -726,12 +736,14 @@ cursor on the new line."
 
 (ert-deftest evil-test-operator-repeat ()
   "Test repeating of an operator."
+  :tags '(evil)
   (evil-test-editing-clean
    (vconcat [right right right] "g?" [M-right] [M-right] ".")
    ";; Guvf° ohssre is"))
 
 (ert-deftest evil-test-operator-repeat-with-count ()
   "Test repeating of an operator with new count."
+  :tags '(evil)
   (ert-info ("Count before operator")
     (evil-test-editing-clean
      (vconcat [right right right] "2g?" [M-right] "3.")
@@ -746,6 +758,26 @@ cursor on the new line."
     (evil-test-editing-clean
      (vconcat [right right right] "3g?2" [M-right] "4.")
      ";; °This buffer is for abgrf lbh don't")))
+
+;;; Utilities
+
+(ert-deftest evil-test-truncate-vector ()
+  "Test `evil-truncate-vector'"
+  :tags '(evil)
+  (ert-info ("Positive numbers")
+    (should (equal (evil-truncate-vector [a b c] 0) []))
+    (should (equal (evil-truncate-vector [a b c] 1) [a]))
+    (should (equal (evil-truncate-vector [a b c] 2) [a b]))
+    (should (equal (evil-truncate-vector [a b c] 3) [a b c]))
+    (should (equal (evil-truncate-vector [a b c] 4) [a b c])))
+  (ert-info ("Negative numbers")
+    (should (equal (evil-truncate-vector [a b c] -1) [a b]))
+    (should (equal (evil-truncate-vector [a b c] -2) [a]))
+    (should (equal (evil-truncate-vector [a b c] -3) []))
+    (should (equal (evil-truncate-vector [a b c] -4) [])))
+  (ert-info ("Limit cases")
+    (should (equal (evil-truncate-vector [] 0) []))
+    (should (equal (evil-truncate-vector [] 3) []))))
 
 (when evil-tests-run
   (evil-tests-run))
