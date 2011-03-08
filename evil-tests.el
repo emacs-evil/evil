@@ -1,4 +1,4 @@
-;; evil-tests.el --- unit tests for Evil -*- coding: utf-8 -*-
+;; evil-tests.el --- unit tests for Evil -*- coding: utf-8 -*-
 
 ;; This file is for developers. It runs some unit tests on Evil.
 ;; To load it, add the following lines to .emacs:
@@ -732,7 +732,12 @@ cursor on the new line."
   (ert-info ("Count before operator and motion")
     (evil-test-editing-clean
      (vconcat [right right right] "3g?2" [M-right])
-     ";; °Guvf ohssre vf sbe abgrf lbh don't")))
+     ";; °Guvf ohssre vf sbe abgrf lbh don't"))
+
+  (ert-info ("Count exceeding buffer boundaries")
+    (evil-test-editing-clean
+     (vconcat [right right right] "g?200" [right])
+     ";; °Guvf ohssre vf sbe abgrf lbh qba'g")))
 
 (ert-deftest evil-test-operator-repeat ()
   "Test repeating of an operator."
