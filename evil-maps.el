@@ -37,6 +37,7 @@
 (define-key evil-motion-state-map "g^" 'evil-first-non-blank-of-visual-line)
 (define-key evil-motion-state-map "g$" 'evil-end-of-visual-line)
 
+(define-key evil-operator-state-map "d" 'evil-delete)
 (define-key evil-operator-state-map "g?" 'evil-rot13)
 
 (provide 'evil-maps)

@@ -208,6 +208,10 @@ Both COUNT and CMD may be nil."
 
 ;;; Operator commands
 
+(evil-define-operator evil-delete (beg end &optional type register)
+  "Delete text."
+  (kill-region beg end))
+
 (evil-define-operator evil-rot13 (beg end)
   "ROT13 encrypt text."
   (rot13-region beg end))
