@@ -167,13 +167,14 @@ Their values are stored in `evil-transient-vals'."
             (funcall var (if var 1 -1))
           (setq var val))))))
 
-(defmacro evil-save-transient-mark (&rest body)
-  "Save Transient Mark mode; execute BODY; restore it."
+(defmacro evil-save-region (&rest body)
+  "Save Transient Mark mode, mark activation, mark and point.
+Execute BODY, then restore those things."
   (declare (indent defun)
            (debug t))
   `(let (evil-transient-vals)
      (unwind-protect
-         (progn
+         (save-excursion
            (evil-transient-save)
            ,@body)
        (evil-transient-restore))))

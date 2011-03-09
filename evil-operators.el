@@ -7,17 +7,17 @@
 (require 'evil-motions)
 (require 'evil-compatibility)
 
-(evil-define-keymap evil-operator-shortcut-map
-  "Keymap for Operator-Pending shortcuts like \"dd\" and \"gqq\"."
-  :local t
-  (setq evil-operator-shortcut-map (make-sparse-keymap))
-  (evil-refresh-local-maps))
-
 (evil-define-state operator
   "Operator-Pending state"
   :tag " <O> "
   :cursor evil-half-cursor
   :enable (normal evil-operator-shortcut-map))
+
+(evil-define-keymap evil-operator-shortcut-map
+  "Keymap for Operator-Pending shortcuts like \"dd\" and \"gqq\"."
+  :local t
+  (setq evil-operator-shortcut-map (make-sparse-keymap))
+  (evil-refresh-local-maps))
 
 ;; the half-height "Operator-Pending cursor" cannot be specified
 ;; as a static `cursor-type' value, since its height depends on
@@ -46,7 +46,8 @@ arguments: the beginning and end of the range."
                            [&optional stringp]
                            [&rest keywordp sexp]
                            def-body)))
-  (let (beg end interactive type keyword)
+  (let ((repeat t)
+        beg end interactive keep-visual keyword type whole-lines)
     ;; collect BEG, END and TYPE
     (setq args (delq '&optional args)
           beg (or (pop args) 'beg)
@@ -59,6 +60,12 @@ arguments: the beginning and end of the range."
     (while (keywordp (setq keyword (car body)))
       (setq body (cdr body))
       (cond
+       ((eq keyword :keep-visual)
+        (setq keep-visual (pop body)))
+       ((eq keyword :whole-lines)
+        (setq whole-lines (pop body)))
+       ((eq keyword :repeat)
+        (setq repeat (pop body)))
        (t
         (pop body))))
     ;; collect `interactive' specification
@@ -81,8 +88,8 @@ arguments: the beginning and end of the range."
 The return value is a list (BEG END), which can be used
 in the `interactive' specification of an operator command."
   (let (beg end motion range)
-    (evil-save-state
-      (evil-save-echo-area
+    (evil-save-echo-area
+      (evil-save-state
         (cond
          ((or (evil-visual-state-p)
               (region-active-p))
@@ -90,14 +97,14 @@ in the `interactive' specification of an operator command."
          (t
           (evil-operator-state)
           (setq motion (evil-keypress-parser)
-                evil-this-motion-count (cadr motion)
-                evil-this-motion (car motion)
+                evil-this-motion (pop motion)
+                evil-this-motion-count (pop motion)
                 evil-this-type nil)
           (cond
            (evil-repeat-count
-            (setq evil-this-motion-count evil-repeat-count)
-            ;; only the count of the first operator is overwritten
-            (setq evil-repeat-count nil))
+            (setq evil-this-motion-count evil-repeat-count
+                  ;; only the first operator's count is overwritten
+                  evil-repeat-count nil))
            ((or current-prefix-arg evil-this-motion-count)
             (setq evil-this-motion-count
                   (* (prefix-numeric-value current-prefix-arg)
@@ -107,11 +114,12 @@ in the `interactive' specification of an operator command."
                 (eq evil-this-motion 'keyboard-quit))
             (setq quit-flag t))
            (t
-            (setq range (evil-motion-range evil-this-motion
-                                           evil-this-motion-count
-                                           (or type
-                                               (evil-type motion)
-                                               'exclusive))
+            (setq range (evil-motion-range
+                         evil-this-motion
+                         evil-this-motion-count
+                         (or type
+                             (evil-type evil-this-motion)
+                             'exclusive))
                   beg (pop range)
                   end (pop range)
                   evil-this-type (pop range))
@@ -120,29 +128,28 @@ in the `interactive' specification of an operator command."
 (defun evil-motion-range (motion &optional count type)
   "Execute a motion and return the buffer positions.
 The return value is a list (BEG END TYPE)."
-  (let (beg end range)
-    (evil-save-transient-mark
-      (save-excursion
-        (transient-mark-mode 1)
-        (setq evil-motion-marker (move-marker (make-marker) (point)))
-        (unwind-protect
-            (let ((current-prefix-arg count))
-              (condition-case err
-                  (call-interactively motion)
-                (error (prog1 nil
-                         (setq evil-write-echo-area t)
-                         (message (error-message-string err)))))
-              (cond
-               ;; if text has been selected (i.e., it's a text object),
-               ;; return the selection
-               ((or (evil-visual-state-p)
-                    (region-active-p))
-                (evil-expand (region-beginning) (region-end) type))
-               (t
-                (evil-expand evil-motion-marker (point) type))))
-          ;; delete marker so it doesn't slow down editing
-          (move-marker evil-motion-marker nil)
-          (setq evil-motion-marker nil))))))
+  (evil-save-region
+    (transient-mark-mode 1)
+    (setq evil-motion-marker (move-marker (make-marker) (point)))
+    (unwind-protect
+        (let ((current-prefix-arg count)
+              (evil-this-type type))
+          (condition-case err
+              (call-interactively motion)
+            (error (prog1 nil
+                     (setq evil-write-echo-area t)
+                     (message (error-message-string err)))))
+          (cond
+           ;; if text has been selected (i.e., it's a text object),
+           ;; return the selection
+           ((or (evil-visual-state-p)
+                (region-active-p))
+            (evil-expand (region-beginning) (region-end) evil-this-type))
+           (t
+            (evil-expand evil-motion-marker (point) evil-this-type))))
+      ;; delete marker so it doesn't slow down editing
+      (move-marker evil-motion-marker nil)
+      (setq evil-motion-marker nil))))
 
 (defun evil-keypress-parser ()
   "Read from keyboard and build a command description.
@@ -208,7 +215,7 @@ Both COUNT and CMD may be nil."
 
 ;;; Operator commands
 
-(evil-define-operator evil-delete (beg end &optional type register)
+(evil-define-operator evil-delete (beg end type register)
   "Delete text."
   (kill-region beg end))
 
