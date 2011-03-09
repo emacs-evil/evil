@@ -39,7 +39,7 @@ and `evil-local-mode' is enabled."
          (insert ";; This buffer is for notes you don't want to save, \
 and for Lisp evaluation.\n;; If you want to create a file, visit \
 that file with C-x C-f,\n;; then enter the text in that file's own \
-buffer.\n")
+buffer.\n\nBelow the empty line.")
          (goto-char (point-min))
          ,@body))))
 
@@ -778,22 +778,105 @@ cursor on the new line."
      ";; °This buffer is for abgrf lbh don't")))
 
 
+;;; Motions
+
 (ert-deftest evil-test-forward-char ()
-  "Test forward-char motion."
+  "Test `evil-forward-char' motion."
+  :tags '(evil)
   (ert-info ("Simple")
     (evil-test-editing-clean "l" "\\`;°; This"))
   (ert-info ("With count")
     (evil-test-editing-clean "12l" "\\`;; This buff°er is"))
-  (ert-info ("End-of-line")
+  (ert-info ("End of line")
     (evil-test-buffer
       (end-of-line)
       (backward-char)
       (should-error (execute-kbd-macro "l"))
       (should-error (execute-kbd-macro "10l"))))
   (ert-info ("Until end-of-line")
-    (evil-test-editing-clean "100l" "evaluation°\\.\n")))
+    (evil-test-editing-clean "100l" "evaluation°\\.\n"))
+  (ert-info ("On empty line")
+    (evil-test-buffer
+      (forward-line 3)
+      (evil-verify-around-point "buffer\\.\n°\nBelow")
+      (should-error (execute-kbd-macro "l"))
+      (evil-verify-around-point "buffer.\n°\nBelow")
+      (should-error (execute-kbd-macro "42l"))
+      (evil-verify-around-point "buffer.\n°\nBelow"))))
 
+(ert-deftest evil-test-backward-char ()
+  "Test `evil-backward-char' motion."
+  :tags '(evil)
+  (ert-info ("Simple")
+    (evil-test-buffer
+      (forward-word)
+      (evil-verify-around-point "This° buffer")
+      (execute-kbd-macro "h")
+      (evil-verify-around-point "\\`;; Thi°s buffer")))
+  (ert-info ("With count")
+    (evil-test-buffer
+      (forward-word)
+      (evil-verify-around-point "This° buffer")
+      (execute-kbd-macro "3h")
+      (evil-verify-around-point "\\`;; T°his buffer")
+      (execute-kbd-macro "100h")
+      (evil-verify-around-point "\\`°;; This buffer")))
+  (ert-info ("Beginning of line")
+    (evil-test-buffer
+      (forward-line)
+      (should-error (execute-kbd-macro "h"))
+      (evil-verify-around-point "\n°;; If you")
+      (should-error (execute-kbd-macro "10h"))
+      (evil-verify-around-point "\n°;; If you")))
+  (ert-info ("Until beginning-of-line")
+    (evil-test-buffer
+      (forward-line)
+      (forward-word)
+      (evil-verify-around-point ";; If° you")
+      (execute-kbd-macro "100h")
+      (evil-verify-around-point "\n°;; If you")))
+  (ert-info ("On empty line")
+    (evil-test-buffer
+      (forward-line 3)
+      (evil-verify-around-point "buffer\\.\n°\nBelow")
+      (should-error (execute-kbd-macro "h"))
+      (evil-verify-around-point "buffer.\n°\nBelow")
+      (should-error (execute-kbd-macro "42h"))
+      (evil-verify-around-point "buffer.\n°\nBelow"))))
 
+(ert-deftest evil-test-previous-line ()
+  "Test `evil-previous-line' motion."
+  :tags '(evil))
+
+(ert-deftest evil-test-next-line ()
+  "Test `evil-next-line' motion."
+  :tags '(evil))
+
+(ert-deftest evil-test-beginning-of-line ()
+  "Test `evil-beginning-line' motion."
+  :tags '(evil))
+
+(ert-deftest evil-test-end-of-line ()
+  "Test `evil-end-line' motion."
+  :tags '(evil))
+
+(ert-deftest evil-test-first-non-blank ()
+  "Test `evil-first-non-blank' motion."
+  :tags '(evil))
+
+(ert-deftest evil-test-last-non-blank ()
+  "Test `evil-last-non-blank' motion."
+  :tags '(evil))
+
+(ert-deftest evil-test-first-non-blank-beg ()
+  "Test `evil-first-non-blank-beg' motion."
+  :tags '(evil))
+
+(ert-deftest evil-test-first-non-blank-end ()
+  "Test `evil-first-non-blank-beg' motion."
+  :tags '(evil))
+
+;; TODO: I don't know how to test the visual motions or window motions.
 
 ;;; Utilities
 

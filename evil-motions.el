@@ -144,7 +144,7 @@ This function passes its command to `digit-argument' (usually a
                           'digit-argument
                         'evil-beginning-of-line)))
 
-(evil-define-motion evil-first-non-blank (exclusive)
+(evil-define-motion evil-first-non-blank (count)
   "Move the cursor to the first non-blank character of the
 current line."
   :type exclusive
@@ -178,16 +178,16 @@ COUNT, default the first line."
   (if count
       (goto-line count)
     (goto-char (point-min)))
-  (evil-first-non-blank))
+  (evil-first-non-blank 1))
 
-(evil-define-motion vim:motion-go-to-first-non-blank-end (count)
+(evil-define-motion evil-move-to-first-non-blank-end (count)
   "Moves the cursor to the first non-blank charactor of line
 COUNT, default the last line."
   :type line
   (if count
       (goto-line count)
     (goto-char (point-max)))
-  (evil-first-non-blank))
+  (evil-first-non-blank 1))
 
 (evil-define-motion evil-beginning-of-visual-line (count)
   "Move the cursor to the first character of the current screen
@@ -199,7 +199,7 @@ line."
   "Move the cursor to the first non blank character of the
 current screen line."
   :type exclusive
-  (evil-beginning-of-visual-line)
+  (evil-beginning-of-visual-line 1)
   (skip-chars-forward " \t\r"))
 
 (evil-define-motion evil-end-of-visual-line (count)
