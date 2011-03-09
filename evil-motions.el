@@ -112,22 +112,22 @@ at least one argument: the count."
       (next-line count))))
 
 (evil-define-motion evil-move-to-window-line (count)
-  "Moves the cursor to line COUNT from the top of the window on
-the first non-blank character."
+  "Moves the cursor to line COUNT from the top of the window
+on the first non-blank character."
   :type line
   (move-to-window-line (or count 0))
   (back-to-indentation))
 
 (evil-define-motion evil-move-to-middle-window-line (count)
-  "Moves the cursor to the middle line of the current window on
-the first non-blank character."
+  "Moves the cursor to the middle line of the current window
+on the first non-blank character."
   :type line
   (move-to-window-line (/ (window-body-height) 2))
   (back-to-indentation))
 
 (evil-define-motion evil-move-to-last-window-line (count)
-  "Moves the cursor to line COUNT from the bottom of the window on
-the first non-blank character."
+  "Moves the cursor to line COUNT from the bottom of the window
+on the first non-blank character."
   :type line
   (move-to-window-line (- (window-body-height) (or count 0) 1))
   (back-to-indentation))
@@ -139,22 +139,21 @@ the first non-blank character."
 
 (evil-define-motion evil-beginning-of-line-or-digit-argument ()
   "Move the cursor to the beginning of the current line.
-This function passes its command to `digit-argument' (usually a
-0) if it is not the first event."
+This function passes its command to `digit-argument' (usually a 0)
+if it is not the first event."
   :type exclusive
   (call-interactively (if current-prefix-arg
                           'digit-argument
                         'evil-beginning-of-line)))
 
 (evil-define-motion evil-first-non-blank (count)
-  "Move the cursor to the first non-blank character of the
-current line."
+  "Move the cursor to the first non-blank character of the current line."
   :type exclusive
   (back-to-indentation))
 
 (evil-define-motion evil-end-of-line (count)
-  "Move the cursor to the end of the current line. If COUNT is
-given move COUNT - 1 lines downward first."
+  "Move the cursor to the end of the current line.
+If COUNT is given, move COUNT - 1 lines downward first."
   :type inclusive
   (end-of-line count)
   (unless (or (evil-visual-state-p)
@@ -162,8 +161,8 @@ given move COUNT - 1 lines downward first."
     (backward-char)))
 
 (evil-define-motion evil-last-non-blank (count)
-  "Move the cursor to the last non-blank charactor of the current
-line. If COUNT is given move COUNT - 1 lines downward first."
+  "Move the cursor to the last non-blank character of the current line.
+If COUNT is given, move COUNT - 1 lines downward first."
   :type inclusive
   (goto-char
    (save-excursion
@@ -174,8 +173,8 @@ line. If COUNT is given move COUNT - 1 lines downward first."
        (line-beginning-position)))))
 
 (evil-define-motion evil-move-to-first-non-blank-beg (count)
-  "Moves the cursor to the first non-blank charactor of line
-COUNT, default the first line."
+  "Moves the cursor to the first non-blank character of line COUNT.
+By default the first line."
   :type line
   (if count
       (goto-line count)
@@ -183,7 +182,7 @@ COUNT, default the first line."
   (evil-first-non-blank 1))
 
 (evil-define-motion evil-move-to-first-non-blank-end (count)
-  "Moves the cursor to the first non-blank charactor of line
+  "Moves the cursor to the first non-blank character of line
 COUNT, default the last line."
   :type line
   (if count
@@ -192,22 +191,20 @@ COUNT, default the last line."
   (evil-first-non-blank 1))
 
 (evil-define-motion evil-beginning-of-visual-line (count)
-  "Move the cursor to the first character of the current screen
-line."
+  "Move the cursor to the first character of the current screen line."
   :type exclusive
   (beginning-of-visual-line))
 
 (evil-define-motion evil-first-non-blank-of-visual-line (count)
-  "Move the cursor to the first non blank character of the
-current screen line."
+  "Move the cursor to the first non blank character
+of the current screen line."
   :type exclusive
   (evil-beginning-of-visual-line 1)
   (skip-chars-forward " \t\r"))
 
 (evil-define-motion evil-end-of-visual-line (count)
-  "Move the cursor to the last character of the current screen
-line. If COUNT is given move COUNT - 1 screen lines downward
-first."
+  "Move the cursor to the last character of the current screen line.
+If COUNT is given, move COUNT - 1 screen lines downward first."
   :type inclusive
   (end-of-visual-line count)
   (unless (or (evil-visual-state-p)
