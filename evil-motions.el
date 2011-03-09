@@ -83,13 +83,15 @@ at least one argument: the count."
   "Move the cursor COUNT lines up."
   :type line
   (let (line-move-visual)
-    (previous-line (or count 1))))
+    (with-no-warnings
+      (previous-line (or count 1)))))
 
 (evil-define-motion evil-next-line (count)
   "Move the cursor COUNT lines down."
   :type line
   (let (line-move-visual)
-    (next-line (or count 1))))
+    (with-no-warnings
+      (next-line (or count 1)))))
 
 ;; This motion can be used for repeated commands like 'dd'
 ;;(evil-define-motion vim:motion-lines (linewise count)
@@ -101,13 +103,15 @@ at least one argument: the count."
   "Move the cursor COUNT screen lines up."
   :type exclusive
   (let ((line-move-visual t))
-    (previous-line (or count 1))))
+    (with-no-warnings
+      (previous-line (or count 1)))))
 
 (evil-define-motion evil-previous-visual-line (count)
   "Move the cursor COUNT screen lines down."
   :type exclusive
   (let ((line-move-visual t))
-    (next-line (or count 1))))
+    (with-no-warnings
+      (next-line (or count 1)))))
 
 (evil-define-motion evil-move-to-window-line (count)
   "Moves the cursor to line COUNT from the top of the window on
