@@ -449,14 +449,15 @@ bindings to be activated whenever KEYMAP and %s state are active."
   "Normal state, AKA \"Command\" state."
   :tag " <N> "
   :suppress-keymap t
-  :enable (operator)
+  :enable (motion operator)
   (if evil-state
       (evil-setup-normal-repeat)
     (evil-teardown-normal-repeat)))
 
 (evil-define-state visual
   "Visual state."
-  :tag " <V> ")
+  :tag " <V> "
+  :enable (motion))
 
 (evil-define-state emacs
   "Emacs state."

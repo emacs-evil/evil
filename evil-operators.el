@@ -4,6 +4,7 @@
 (require 'evil-common)
 (require 'evil-states)
 (require 'evil-types)
+(require 'evil-motions)
 (require 'evil-compatibility)
 
 (evil-define-keymap evil-operator-shortcut-map
