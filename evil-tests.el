@@ -461,20 +461,19 @@ expected sequence of recorded events, if nil `keys' is used"
     (ert-info ("Insert text with count 42")
       (evil-test-repeat-info (vconcat "42iABC" [escape])))))
 
-(defun evil-test-editing (keys expected &optional point-char)
-  "Execute key-sequence `keys' and verify if the text around point matches
-`expected' afterwards.
-`keys' is a sequence of events to be passed to `execute-kbd-macro'
-`expected' is a regexp with a special character marking (point)'s position
-`point-char' is the special character marking (point)'s position, defaulted to °
-If, e.g., expected is \"ABC°def\" this means the expected text before point is
-\"ABC\" and the expected text after point is \"def\". "
+(defun evil-verify-around-point (expected &optional point-char)
+  "Verifies the text around point matches some predefined text.
+`keys' is a sequence of events to be passed to
+`execute-kbd-macro' `expected' is a regexp with a special
+character marking (point)'s position `point-char' is the special
+character marking (point)'s position, defaulted to ° If, e.g.,
+expected is \"ABC°def\" this means the expected text before point
+is \"ABC\" and the expected text after point is \"def\". "
   (setq point-char (regexp-quote (char-to-string (or point-char ?°))))
   (unless (string-match point-char expected)
     (error "No cursor specified in expected string: %s" expected))
   (let ((before (substring expected 0 (match-beginning 0)))
         (after (substring expected (match-end 0))))
-    (execute-kbd-macro keys)
     (ert-info ((format "Text before point is %s"
                        (buffer-substring (max (point-min)
                                               (- (point) (length before)))
@@ -485,6 +484,18 @@ If, e.g., expected is \"ABC°def\" this means the expected text before point is
                                          (min (point-max)
                                               (+ (point) (length after))))))
       (should (looking-at after)))))
+
+
+(defun evil-test-editing (keys expected &optional point-char)
+  "Execute key-sequence `keys' and verify if the text around point matches
+`expected' afterwards.
+`keys' is a sequence of events to be passed to `execute-kbd-macro'
+`expected' is a regexp with a special character marking (point)'s position
+`point-char' is the special character marking (point)'s position, defaulted to °
+If, e.g., expected is \"ABC°def\" this means the expected text before point is
+\"ABC\" and the expected text after point is \"def\". "
+  (execute-kbd-macro keys)
+  (evil-verify-around-point expected point-char))
 
 (defun evil-test-editing-clean (keys expected &optional point-char)
   "The same as `evil-test-editing' but starts with a new
