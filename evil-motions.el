@@ -23,8 +23,6 @@ at least one argument: the count."
     ;; collect COUNT
     (setq args (delq '&optional args)
           count (or (pop args) 'count))
-    (when args
-      (add-to-list 'args '&optional))
     ;; collect docstring
     (when (stringp (car body))
       (setq doc (pop body)))
@@ -44,14 +42,14 @@ at least one argument: the count."
        (add-to-list 'evil-motions ',motion t)
        (when ',type
          (evil-set-type ',motion ',type))
-       (defun ,motion (,count ,@args)
+       (defun ,motion (&optional ,count ,@args)
          ,@(when doc `(,doc))
          (interactive
           (append (list (prefix-numeric-value
                          current-prefix-arg))
                   ,@interactive))
+         (setq ,count (or ,count 1))
          ,@body))))
-
 
 (defmacro evil-narrow-to-line (&rest body)
   "Narrows to the current line."
@@ -84,14 +82,14 @@ at least one argument: the count."
   :type line
   (let (line-move-visual)
     (with-no-warnings
-      (previous-line (or count 1)))))
+      (previous-line count))))
 
 (evil-define-motion evil-next-line (count)
   "Move the cursor COUNT lines down."
   :type line
   (let (line-move-visual)
     (with-no-warnings
-      (next-line (or count 1)))))
+      (next-line count))))
 
 ;; This motion can be used for repeated commands like 'dd'
 ;;(evil-define-motion vim:motion-lines (linewise count)
@@ -104,14 +102,14 @@ at least one argument: the count."
   :type exclusive
   (let ((line-move-visual t))
     (with-no-warnings
-      (previous-line (or count 1)))))
+      (previous-line count))))
 
 (evil-define-motion evil-previous-visual-line (count)
   "Move the cursor COUNT screen lines down."
   :type exclusive
   (let ((line-move-visual t))
     (with-no-warnings
-      (next-line (or count 1)))))
+      (next-line count))))
 
 (evil-define-motion evil-move-to-window-line (count)
   "Moves the cursor to line COUNT from the top of the window on
