@@ -766,6 +766,24 @@ cursor on the new line."
      (vconcat [right right right] "3g?2" [M-right] "4.")
      ";; °This buffer is for abgrf lbh don't")))
 
+
+(ert-deftest evil-test-forward-char ()
+  "Test forward-char motion."
+  (ert-info ("Simple")
+    (evil-test-editing-clean "l" "\\`;°; This"))
+  (ert-info ("With count")
+    (evil-test-editing-clean "12l" "\\`;; This buff°er is"))
+  (ert-info ("End-of-line")
+    (evil-test-buffer
+      (end-of-line)
+      (backward-char)
+      (should-error (execute-kbd-macro "l"))
+      (should-error (execute-kbd-macro "10l"))))
+  (ert-info ("Until end-of-line")
+    (evil-test-editing-clean "100l" "evaluation°\\.\n")))
+
+
+
 ;;; Utilities
 
 (ert-deftest evil-test-truncate-vector ()
