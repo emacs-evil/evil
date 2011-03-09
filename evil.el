@@ -4,6 +4,7 @@
 (require 'evil-types)
 (require 'evil-insert)
 (require 'evil-operators)
+(require 'evil-motions)
 (require 'evil-repeat)
 (require 'evil-maps)
 
