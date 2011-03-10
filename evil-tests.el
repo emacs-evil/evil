@@ -993,11 +993,38 @@ cursor on the new line."
 
 (ert-deftest evil-test-first-non-blank-beg ()
   "Test `evil-first-non-blank-beg' motion."
-  :tags '(evil))
+  :tags '(evil)
+  (evil-test-code-buffer
+    (execute-kbd-macro "6gg")
+    (evil-verify-around-point "{\n  °printf")
+    (execute-kbd-macro "3gg")
+    (evil-verify-around-point "stdlib.h>\n°\nint")
+    (execute-kbd-macro "8gg")
+    (evil-verify-around-point "SUCCESS;\n    ° \n}")
+    (execute-kbd-macro "gg")
+    (evil-verify-around-point "\\`°#include <stdio.h>"))
+  (evil-test-buffer
+    (execute-kbd-macro "100gg")
+    (evil-verify-around-point "\n\n°Below the empty line\\.")))
 
 (ert-deftest evil-test-first-non-blank-end ()
   "Test `evil-first-non-blank-beg' motion."
-  :tags '(evil))
+   :tags '(evil)
+   (evil-test-code-buffer
+    (execute-kbd-macro "6G")
+    (evil-verify-around-point "{\n  °printf")
+    (execute-kbd-macro "3G")
+    (evil-verify-around-point "stdlib.h>\n°\nint")
+    (execute-kbd-macro "8G")
+    (evil-verify-around-point "SUCCESS;\n    ° \n}")
+    (execute-kbd-macro "G")
+    (evil-verify-around-point "}\n°\\'"))
+  (evil-test-buffer
+    (execute-kbd-macro "G")
+    (evil-verify-around-point "\n\n°Below the empty line\\.")
+    (goto-char (point-min))
+    (execute-kbd-macro "100G")
+    (evil-verify-around-point "\n\n°Below the empty line\\.")))
 
 (ert-deftest evil-test-operator-0 ()
   "Test motion \"0\" with an operator."
