@@ -12,23 +12,27 @@
 
 (defmacro evil-define-motion (motion args &rest body)
   "Define an motion command MOTION.
-ARGS is the argument list, which must contain
-at least one argument: the count."
+ARGS is the argument list, which if non-nil must contain
+the count as the first argument."
   (declare (indent defun)
            (debug (&define name lambda-list
                            [&optional stringp]
                            [&rest keywordp sexp]
                            def-body)))
-  (let (count interactive keyword type)
-    ;; collect COUNT
-    (setq args (delq '&optional args)
-          count (or (pop args) 'count))
+  (let (interactive keyword type)
+    (when args
+      (setq args `(&optional ,@(delq '&optional args))
+            interactive
+            ;; the count is either numerical or nil
+            '(list (when current-prefix-arg
+                     (prefix-numeric-value
+                      current-prefix-arg)))))
     ;; collect docstring
     (when (stringp (car body))
       (setq doc (pop body)))
     ;; collect keywords
-    (while (keywordp (setq keyword (car body)))
-      (setq body (cdr body))
+    (while (keywordp (car-safe body))
+      (setq keyword (pop body))
       (cond
        ((eq keyword :type)
         (setq type (pop body)))
@@ -36,19 +40,17 @@ at least one argument: the count."
         (pop body))))
     ;; collect `interactive' specification
     (when (eq (car-safe (car-safe body)) 'interactive)
-      (setq interactive (cdr (pop body))))
+      (setq interactive `(append ,interactive ,@(cdr (pop body)))))
     ;; macro expansion
     `(progn
        (add-to-list 'evil-motions ',motion t)
        (when ',type
          (evil-set-type ',motion ',type))
-       (defun ,motion (&optional ,count ,@args)
-         ,@(when doc `(,doc))
+       (defun ,motion (,@args)
+         ,@(when doc `(,doc)) ; avoid nil before `interactive'
          (interactive
-          (append (list (when current-prefix-arg
-                          (prefix-numeric-value
-                           current-prefix-arg)))
-                  ,@interactive))
+          ,@(when interactive
+              `(,interactive)))
          ,@body))))
 
 (defmacro evil-narrow-to-line (&rest body)
@@ -118,7 +120,7 @@ on the first non-blank character."
   (move-to-window-line (or count 0))
   (back-to-indentation))
 
-(evil-define-motion evil-move-to-middle-window-line (count)
+(evil-define-motion evil-move-to-middle-window-line ()
   "Moves the cursor to the middle line of the current window
 on the first non-blank character."
   :type line
@@ -146,7 +148,7 @@ if it is not the first event."
                           'digit-argument
                         'evil-beginning-of-line)))
 
-(evil-define-motion evil-first-non-blank (count)
+(evil-define-motion evil-first-non-blank ()
   "Move the cursor to the first non-blank character of the current line."
   :type exclusive
   (back-to-indentation))
@@ -179,7 +181,7 @@ By default the first line."
   (if count
       (goto-line count)
     (goto-char (point-min)))
-  (evil-first-non-blank 1))
+  (evil-first-non-blank))
 
 (evil-define-motion evil-move-to-first-non-blank-end (count)
   "Moves the cursor to the first non-blank character of line
@@ -188,18 +190,18 @@ COUNT, default the last line."
   (if count
       (goto-line count)
     (goto-char (point-max)))
-  (evil-first-non-blank 1))
+  (evil-first-non-blank))
 
-(evil-define-motion evil-beginning-of-visual-line (count)
+(evil-define-motion evil-beginning-of-visual-line ()
   "Move the cursor to the first character of the current screen line."
   :type exclusive
   (beginning-of-visual-line))
 
-(evil-define-motion evil-first-non-blank-of-visual-line (count)
+(evil-define-motion evil-first-non-blank-of-visual-line ()
   "Move the cursor to the first non blank character
 of the current screen line."
   :type exclusive
-  (evil-beginning-of-visual-line 1)
+  (evil-beginning-of-visual-line)
   (skip-chars-forward " \t\r"))
 
 (evil-define-motion evil-end-of-visual-line (count)
