@@ -61,8 +61,8 @@ To enable Evil globally, do (evil-mode 1)."
   (cond
    (evil-local-mode
     (setq emulation-mode-map-alists
-          (evil-concat-lists '(evil-mode-map-alist)
-                             emulation-mode-map-alists))
+          (evil-concat-alists '(evil-mode-map-alist)
+                              emulation-mode-map-alists))
     (evil-refresh-local-maps)
     (unless (memq 'evil-modeline-tag global-mode-string)
       (setq global-mode-string
@@ -146,7 +146,7 @@ Its order reflects the state in the current buffer."
     ;; update references to buffer-local keymaps
     (evil-refresh-local-maps)
     ;; disable all modes
-    (dolist (entry (evil-concat-lists evil-mode-map-alist
+    (dolist (entry (evil-concat-alists evil-mode-map-alist
                                       evil-local-keymaps-alist))
       (setq mode (car entry))
       (if (and (fboundp mode)
@@ -170,7 +170,7 @@ Its order reflects the state in the current buffer."
           (add-to-list 'alist (cons mode map) t)))
       ;; move the enabled modes to the front of the list
       (setq evil-mode-map-alist
-            (evil-concat-lists
+            (evil-concat-alists
              alist evil-mode-map-alist)))))
 
 ;; Local keymaps are implemented using buffer-local variables.

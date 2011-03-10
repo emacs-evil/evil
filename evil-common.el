@@ -18,22 +18,48 @@ otherwise add at the end of the list."
 
 (defun evil-concat-lists (&rest sequences)
   "Concatenate lists, removing duplicates.
-The firstmost occurrence of an element is retained.
-Cons cells are treated as alist entries."
-  (let ((result (pop sequences))
-        (tail (copy-sequence (pop sequences))))
+The first occurrence is retained.
+
+To concatenate association lists, see `evil-concat-alists'."
+  (let ((first (pop sequences))
+        (tail (copy-sequence (pop sequences)))
+        result)
+    ;; remove internal duplicates
+    (dolist (elt first)
+      (add-to-list 'result elt t 'eq))
+    ;; remove tail duplicates
     (catch 'empty
       (dolist (elt result)
-        (cond
-         ((null tail)
-          (throw 'empty t))
-         ((consp elt)
-          (setq tail (assq-delete-all (car elt) tail)))
-         (t
-          (setq tail (delq elt tail))))))
+        (if tail
+            (setq tail (delq elt tail))
+          (throw 'empty t))))
+    (setq result (append result tail))
     (if sequences
-        (apply 'evil-concatenate-lists result sequences)
-      (append result tail))))
+        (apply 'evil-concat-lists result sequences)
+      result)))
+
+(defun evil-concat-alists (&rest sequences)
+  "Concatenate association lists, removing duplicates.
+The first association is retained.
+
+To concatenate regular lists, see `evil-concat-lists'."
+  (let ((first (pop sequences))
+        (tail (copy-sequence (pop sequences)))
+        result)
+    ;; remove internal duplicates
+    (dolist (elt first)
+      (unless (assq (car-safe elt) result)
+        (add-to-list 'result elt t 'eq)))
+    ;; remove tail duplicates
+    (catch 'empty
+      (dolist (elt result)
+        (if tail
+            (setq tail (assq-delete-all (car-safe elt) tail))
+          (throw 'empty t))))
+    (setq result (append result tail))
+    (if sequences
+        (apply 'evil-concat-lists result sequences)
+      result)))
 
 (defun evil-get-property (alist key prop)
   "Return property PROP for KEY in ALIST.

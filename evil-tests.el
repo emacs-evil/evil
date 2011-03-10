@@ -939,13 +939,13 @@ cursor on the new line."
 (ert-deftest evil-test-truncate-vector ()
   "Test `evil-truncate-vector'"
   :tags '(evil)
-  (ert-info ("Positive numbers")
+  (ert-info ("Truncate vector to length")
     (should (equal (evil-truncate-vector [a b c] 0) []))
     (should (equal (evil-truncate-vector [a b c] 1) [a]))
     (should (equal (evil-truncate-vector [a b c] 2) [a b]))
     (should (equal (evil-truncate-vector [a b c] 3) [a b c]))
     (should (equal (evil-truncate-vector [a b c] 4) [a b c])))
-  (ert-info ("Negative numbers")
+  (ert-info ("Truncate vector by offset")
     (should (equal (evil-truncate-vector [a b c] -1) [a b]))
     (should (equal (evil-truncate-vector [a b c] -2) [a]))
     (should (equal (evil-truncate-vector [a b c] -3) []))
@@ -953,6 +953,25 @@ cursor on the new line."
   (ert-info ("Limit cases")
     (should (equal (evil-truncate-vector [] 0) []))
     (should (equal (evil-truncate-vector [] 3) []))))
+
+(ert-deftest evil-test-concat-lists ()
+  "Test `evil-concat-lists' and `evil-concat-alists'"
+  :tags '(evil)
+  (ert-info ("Remove duplicates across lists")
+    (should (equal (evil-concat-lists
+                    nil '(a b) '(b c))
+                   '(a b c))))
+  (ert-info ("Remove duplicates inside lists")
+    (should (equal (evil-concat-lists
+                    '(a a b) nil '(b c) nil)
+                   '(a b c))))
+  (ert-info ("Remove duplicate associations")
+    (should (equal (evil-concat-alists
+                    '((a . b)) '((a . c)))
+                   '((a . b))))
+    (should-not (equal (evil-concat-lists
+                        '((a . b)) '((a . c)))
+                       '((a . b))))))
 
 (when evil-tests-run
   (evil-tests-run))
