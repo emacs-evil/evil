@@ -234,35 +234,12 @@ and only if `count' is non-nil."
         (while (and repeat-info
                     (arrayp (car repeat-info))
                     (not done))
-          (let* ((rep (pop repeat-info))
-                 (len (length rep))
-                 (beg 0)
-                 (end 1)
-                 (found-prefix nil))
-            (while (and (<= end len) (not done))
-              (let ((cmd (key-binding (substring rep beg end))))
-                (cond
-                 ((arrayp cmd) ;; a keyboard macro, just execute it
-                  (setq rep (vconcat cmd (substring rep end))
-                        beg 0
-                        end 1
-                        len (length rep)))
-                 ((functionp cmd)
-                  (if (or (memq cmd '(digit-argument negative-argument))
-                          (and found-prefix
-                               (get cmd 'evil-digit-argument-redirection)))
-                      ;; skip those commands
-                      (setq found-prefix t ; we found at least one prefix argument
-                            beg end
-                            end (1+ end))
-                    ;; a real command, replace the prefix argument
-                    (push (vconcat (number-to-string count)
-                                   (substring rep beg len))
-                          repeat-info)
-                    (setq done t)))
-                 ((null cmd) (error "No command bound to %s" (substring rep beg end)))
-                 (t ;; append a further event
-                  (setq end (1+ end))))))))
+          (let* ((count-and-cmd (evil-extract-count (pop repeat-info))))
+            (push (vconcat (number-to-string count)
+                           (nth 2 count-and-cmd)
+                           (nth 3 count-and-cmd))
+                  repeat-info)
+            (setq done t)))
         (evil-execute-repeat-info repeat-info)))
 
      ;; repeat with original count

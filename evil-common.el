@@ -205,6 +205,49 @@ Execute BODY, then restore those things."
            ,@body)
        (evil-transient-restore))))
 
+
+(defun evil-extract-count (keys)
+  "Splits the key-sequence `keys' in prefix-argument part and the rest.
+Returns two number (PREFIX CMD SEQ REST) where PREFIX is prefix
+count, CMD the command to be executed, SEQ the subsequence
+calling CMD and REST all remaining events in the key-sequence.
+PREFIX and REST may be nil of they do not exist. If a command is
+bound to some keyboard-macro it is expaned recursively."
+  (catch 'done
+    (let* ((len (length keys))
+           (beg 0)
+           (end 1)
+           (found-prefix nil))
+      (while (and (<= end len))
+        (let ((cmd (key-binding (substring keys beg end))))
+          (cond
+           ((arrayp cmd) ;; a keyboard macro, replace the command with the macro
+            (setq keys (vconcat (substring keys 0 beg)
+                                cmd
+                                (substring keys end))
+                  end (1+ beg)
+                  len (length keys)))
+
+           ((functionp cmd)
+            (if (or (memq cmd '(digit-argument negative-argument))
+                    (and found-prefix
+                         (get cmd 'evil-digit-argument-redirection)))
+                ;; skip those commands
+                (setq found-prefix t ; we found at least one prefix argument
+                      beg end
+                      end (1+ end))
+              ;; a real command, finish
+              (throw 'done (list (and (not (zerop beg))
+                                      (string-to-number (concat (substring keys 0 beg))))
+                                 cmd
+                                 (substring keys beg end)
+                                 (and (< end len) (substring keys end))))))
+           ((null cmd) (error "No command bound to %s" (substring keys beg end)))
+
+           (t ;; append a further event
+            (setq end (1+ end))))))
+      (error "Key sequence contains no complete binding"))))
+
 ;;; Highlighting
 
 (when (fboundp 'font-lock-add-keywords)

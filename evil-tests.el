@@ -985,6 +985,51 @@ cursor on the new line."
                         '((a . b)) '((a . c)))
                        '((a . b))))))
 
+
+(ert-deftest evil-test-extract-count ()
+  "Test `evil-extract-count'"
+  :tags '(evil)
+  (evil-test-buffer
+    (ert-info ("Exact without count")
+      (should (equal (evil-extract-count "x")
+                     (list nil 'delete-char "x" nil)))
+      (should (equal (evil-extract-count "g0")
+                     (list nil 'evil-beginning-of-visual-line "g0" nil))))
+
+    (ert-info ("Exact with count")
+      (should (equal (evil-extract-count "420x")
+                     (list 420 'delete-char "x" nil)))
+      (should (equal (evil-extract-count "2301g0")
+                     (list 2301 'evil-beginning-of-visual-line "g0" nil))))
+
+    (ert-info ("Extra elements without count")
+      (should (equal (evil-extract-count "xAB")
+                     (list nil 'delete-char "x" "AB")))
+      (should (equal (evil-extract-count "g0CD")
+                     (list nil 'evil-beginning-of-visual-line "g0" "CD"))))
+
+    (ert-info ("Extra elements with count")
+      (should (equal (evil-extract-count "420xAB")
+                     (list 420 'delete-char "x" "AB")))
+      (should (equal (evil-extract-count "2301g0CD")
+                     (list 2301 'evil-beginning-of-visual-line "g0" "CD"))))
+
+    (ert-info ("Exact \"0\" count")
+      (should (equal (evil-extract-count "0")
+                  (list nil 'evil-digit-argument-or-evil-beginning-of-line "0" nil))))
+
+    (ert-info ("Extra elements and \"0\"")
+      (should (equal (evil-extract-count "0XY")
+                  (list nil 'evil-digit-argument-or-evil-beginning-of-line "0" "XY"))))
+
+    (ert-info ("Count only")
+      (should-error (evil-extract-count "1230")))
+
+    (ert-info ("Unknown command")
+      (should-error (evil-extract-count "°"))
+      (should-error (evil-extract-count "12°")))))
+
+
 (when evil-tests-run
   (evil-tests-run))
 

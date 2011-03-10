@@ -98,6 +98,9 @@ in the `interactive' specification of an operator command."
           (evil-operator-state)
           (define-key evil-operator-shortcut-map
             (vector last-command-event) 'evil-line)
+          (let ((count-and-cmd (evil-extract-count (this-command-keys))))
+            (define-key evil-operator-shortcut-map
+              (nth 2 count-and-cmd) 'evil-line))
           (setq motion (evil-keypress-parser)
                 evil-this-motion (pop motion)
                 evil-this-motion-count (pop motion)
