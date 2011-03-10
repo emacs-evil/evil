@@ -123,7 +123,7 @@ be transformations on buffer positions, like :expand and :contract."
                            [&rest [keywordp function-form]]))
            (indent defun))
   (let (args defun-forms func keyword name plist string sym)
-    (while (keywordp (car body))
+    (while (keywordp (car-safe body))
       (setq keyword (pop body)
             func (pop body)
             sym (intern (replace-regexp-in-string

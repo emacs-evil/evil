@@ -57,8 +57,8 @@ arguments: the beginning and end of the range."
     (when (stringp (car body))
       (setq doc (pop body)))
     ;; collect keywords
-    (while (keywordp (setq keyword (car body)))
-      (setq body (cdr body))
+    (while (keywordp (car-safe body))
+      (setq keyword (pop body))
       (cond
        ((eq keyword :keep-visual)
         (setq keep-visual (pop body)))
