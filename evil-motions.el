@@ -70,12 +70,12 @@ at least one argument: the count."
 (evil-define-motion evil-forward-char (count)
   "Move cursor to the right by COUNT characters."
   :type exclusive
-  (evil-narrow-to-line (forward-char count)))
+  (evil-narrow-to-line (forward-char (or count 1))))
 
 (evil-define-motion evil-backward-char (count)
   "Move cursor to the left by COUNT characters."
   :type exclusive
-  (evil-narrow-to-line (backward-char count)))
+  (evil-narrow-to-line (backward-char (or count 1))))
 
 (evil-define-motion evil-previous-line (count)
   "Move the cursor COUNT lines up."
