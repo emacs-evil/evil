@@ -103,16 +103,23 @@ current buffer only.")
                                    state :local-keymap)))
          (aux-maps (evil-state-auxiliary-keymaps state))
          (enable (evil-state-property state :enable))
-         (excluded (add-to-list 'excluded state))
-         ;; the keymaps for STATE
-         (result (append (list local-map) aux-maps (list map))))
+         result)
+    (unless (memq state enable)
+      (add-to-list 'enable state))
     ;; the keymaps for other states and modes enabled by STATE
     (dolist (entry enable result)
       (cond
+       ((memq entry excluded)
+        nil)
+       ((eq entry state)
+        (setq result
+              (evil-concat-lists result
+               (list local-map) aux-maps (list map)))
+        (add-to-list 'excluded state))
        ((evil-state-p entry)
-        (unless (memq entry excluded)
-          (dolist (mode (apply 'evil-state-keymaps entry excluded))
-            (add-to-list 'result mode t 'eq))))
+        (setq result (evil-concat-lists
+                      result
+                      (apply 'evil-state-keymaps entry excluded))))
        ((keymapp entry)
         (add-to-list 'result entry t 'eq))
        ((keymapp (symbol-value entry))

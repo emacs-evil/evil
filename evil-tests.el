@@ -138,12 +138,13 @@ buffer.\n\nBelow the empty line.")
     (cond
      ((eq state 'operator)
       (setq expected
-            (append expected
-                    (list evil-normal-state-local-map
-                          evil-normal-state-map
-                          evil-motion-state-local-map
-                          evil-motion-state-map
-                          evil-operator-shortcut-map)))))
+            (list evil-operator-shortcut-map
+                  evil-operator-state-local-map
+                  evil-operator-state-map
+                  evil-normal-state-local-map
+                  evil-normal-state-map
+                  evil-motion-state-local-map
+                  evil-motion-state-map))))
     (dotimes (i (length expected))
       (should (keymapp (nth i expected)))
       (should (eq (nth i actual) (nth i expected)))
