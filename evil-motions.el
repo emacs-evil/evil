@@ -45,10 +45,10 @@ at least one argument: the count."
        (defun ,motion (&optional ,count ,@args)
          ,@(when doc `(,doc))
          (interactive
-          (append (list (prefix-numeric-value
-                         current-prefix-arg))
+          (append (list (when current-prefix-arg
+                          (prefix-numeric-value
+                           current-prefix-arg)))
                   ,@interactive))
-         (setq ,count (or ,count 1))
          ,@body))))
 
 (defmacro evil-narrow-to-line (&rest body)
