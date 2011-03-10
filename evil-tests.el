@@ -520,10 +520,9 @@ unchanged test-buffer in normal-state."
   (ert-info ("Repeat replace without count with a new count")
     (evil-test-editing-clean (vconcat "rX" [right right] "13.")
                              "\\`X;XXXXXXXXXXXX°Xis for"))
-
   (ert-info ("Repeat replace with count replacing original count")
-    (evil-test-editing-clean (vconcat "11rX" [right right] "20.")
-                             "\\`XXXXXXXXXXXfXXXXXXXXXXXXXXXXXXX°Xdon't ")))
+    (evil-test-editing-clean (vconcat "10rX" [right right] "20.")
+                             "\\`XXXXXXXXXXfXXXXXXXXXXXXXXXXXXX°X don't ")))
 
 (ert-deftest evil-test-cmd-replace-char ()
   "Calling `evil-replace-char' should replace characters."
@@ -911,7 +910,15 @@ cursor on the new line."
 
 (ert-deftest evil-test-beginning-of-line ()
   "Test `evil-beginning-line' motion."
-  :tags '(evil))
+  :tags '(evil)
+  (ert-info ("Simple")
+    (evil-test-buffer
+      (forward-line)
+      (forward-word)
+      (evil-verify-around-point ";; If° you")
+      (dotimes (i 2)
+        (execute-kbd-macro "0")
+        (evil-verify-around-point "evaluation\.\n°;; If you")))))
 
 (ert-deftest evil-test-end-of-line ()
   "Test `evil-end-line' motion."
@@ -931,6 +938,10 @@ cursor on the new line."
 
 (ert-deftest evil-test-first-non-blank-end ()
   "Test `evil-first-non-blank-beg' motion."
+  :tags '(evil))
+
+(ert-deftest evil-test-operator-0 ()
+  "Test motion \"0\" with an operator."
   :tags '(evil))
 
 ;; TODO: I don't know how to test the visual motions or window motions.

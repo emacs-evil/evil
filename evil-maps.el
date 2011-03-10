@@ -4,6 +4,26 @@
 (require 'evil-insert)
 (require 'evil-operators)
 
+(defmacro evil-redirect-digit-argument (map keys target)
+  "Bind a special wrapper function which calles either `target' or `digit-argument'.
+`digit-argument' is only called if a prefix-argument has already been started, otherwise `target' is called.
+MAP    the keymap where the command should be bound
+KEYS   the key-sequence to which the command should be bound
+TARGET the command to call."
+  (let ((wrapper (intern (concat "evil-digit-argument-or-"
+                                 (symbol-name (eval target))))))
+    `(progn
+       (defun ,wrapper ()
+         (interactive)
+         (if current-prefix-arg
+             (progn
+               (setq this-command 'digit-argument)
+               (call-interactively 'digit-argument))
+           (setq this-command ,target)
+           (call-interactively ,target)))
+       (put ',wrapper 'evil-digit-argument-redirection t)
+       (define-key ,map ,keys ',wrapper))))
+
 (define-key evil-emacs-state-map "\C-z" 'evil-normal-state)
 
 (define-key evil-normal-state-map "\C-z" 'evil-emacs-state)
@@ -17,6 +37,18 @@
 
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
 
+;; "0" is a special command when called first
+(evil-redirect-digit-argument evil-motion-state-map "0" 'evil-beginning-of-line)
+(define-key evil-motion-state-map "1" 'digit-argument)
+(define-key evil-motion-state-map "2" 'digit-argument)
+(define-key evil-motion-state-map "3" 'digit-argument)
+(define-key evil-motion-state-map "4" 'digit-argument)
+(define-key evil-motion-state-map "5" 'digit-argument)
+(define-key evil-motion-state-map "6" 'digit-argument)
+(define-key evil-motion-state-map "7" 'digit-argument)
+(define-key evil-motion-state-map "8" 'digit-argument)
+(define-key evil-motion-state-map "9" 'digit-argument)
+
 (define-key evil-motion-state-map "l" 'evil-forward-char)
 (define-key evil-motion-state-map "h" 'evil-backward-char)
 (define-key evil-motion-state-map "k" 'evil-previous-line)
@@ -24,7 +56,6 @@
 (define-key evil-motion-state-map "H" 'evil-move-to-window-line)
 (define-key evil-motion-state-map "M" 'evil-move-to-middle-window-line)
 (define-key evil-motion-state-map "L" 'evil-move-to-last-window-line)
-(define-key evil-motion-state-map "0" 'evil-beginning-of-line-or-digit-argument)
 (define-key evil-motion-state-map "$" 'evil-end-of-line)
 (define-key evil-motion-state-map "^" 'evil-first-non-blank)
 (define-key evil-motion-state-map "g_" 'evil-last-non-blank)

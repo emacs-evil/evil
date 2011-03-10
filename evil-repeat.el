@@ -223,41 +223,50 @@ where point should be placed after all changes."
 the first command replaced by `count'. The count is replaced if
 and only if `count' is non-nil."
   (let ((evil-repeating-command t))
-    (if count
-        (let ((evil-repeat-count count)
-              done)
-          (while (and repeat-info
-                      (arrayp (car repeat-info))
-                      (not done))
-            (let* ((rep (pop repeat-info))
-                   (len (length rep))
-                   (beg 0)
-                   (end 1))
-              (while (and (<= end len) (not done))
-                (let ((cmd (key-binding (substring rep beg end))))
-                  (cond
-                   ((arrayp cmd) ;; a keyboard macro, just execute it
-                    (setq rep (vconcat cmd (substring rep end))
-                          beg 0
-                          end 1
-                          len (length rep)))
-                   ((functionp cmd)
-                    (if (memq cmd '(digit-argument negative-argument))
-                        ;; skip those commands
-                        (setq beg end
-                              end (1+ end))
-                      ;; a real command, replace the prefix argument
-                      (push (vconcat (number-to-string count)
-                                     (substring rep beg len))
-                            repeat-info)
-                      (setq done t)))
-                   ((null cmd) (error "No command bound to %s" (substring rep beg end)))
-                   (t ;; append a further event
-                    (setq end (1+ end))))))))
-          (evil-execute-repeat-info repeat-info))
+    (cond
+     ;; do nothing (zero repeation)
+     ((and count (zerop count)))
 
-      ;; execute the repeat-information
-      (evil-execute-repeat-info repeat-info))))
+     ;; replace count
+     (count
+      (let ((evil-repeat-count count)
+            done)
+        (while (and repeat-info
+                    (arrayp (car repeat-info))
+                    (not done))
+          (let* ((rep (pop repeat-info))
+                 (len (length rep))
+                 (beg 0)
+                 (end 1)
+                 (found-prefix nil))
+            (while (and (<= end len) (not done))
+              (let ((cmd (key-binding (substring rep beg end))))
+                (cond
+                 ((arrayp cmd) ;; a keyboard macro, just execute it
+                  (setq rep (vconcat cmd (substring rep end))
+                        beg 0
+                        end 1
+                        len (length rep)))
+                 ((functionp cmd)
+                  (if (or (memq cmd '(digit-argument negative-argument))
+                          (and found-prefix
+                               (get cmd 'evil-digit-argument-redirection)))
+                      ;; skip those commands
+                      (setq found-prefix t ; we found at least one prefix argument
+                            beg end
+                            end (1+ end))
+                    ;; a real command, replace the prefix argument
+                    (push (vconcat (number-to-string count)
+                                   (substring rep beg len))
+                          repeat-info)
+                    (setq done t)))
+                 ((null cmd) (error "No command bound to %s" (substring rep beg end)))
+                 (t ;; append a further event
+                  (setq end (1+ end))))))))
+        (evil-execute-repeat-info repeat-info)))
+
+     ;; repeat with original count
+     (t (evil-execute-repeat-info repeat-info)))))
 
 (defun evil-repeat (count)
   "Repeat the last editing command with count replaced by `count'."

@@ -71,7 +71,7 @@ to t, the operator code is not executed.")
 
 (defconst evil-suppress-map (make-keymap)
   "Full keymap disabling default bindings to self-insert-command.")
-(suppress-keymap evil-suppress-map)
+(suppress-keymap evil-suppress-map t)
 
 (defvar evil-repeat-info nil
   "A list if repeat-informations to repeat the last command.")

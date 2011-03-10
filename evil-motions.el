@@ -172,9 +172,12 @@ on the first non-blank character."
 This function passes its command to `digit-argument' (usually a 0)
 if it is not the first event."
   :type exclusive
-  (call-interactively (if current-prefix-arg
-                          'digit-argument
-                        'evil-beginning-of-line)))
+  (if current-prefix-arg
+      (progn
+        (setq this-command 'digit-argument)
+        (call-interactively 'digit-argument))
+    (setq this-command 'evil-beginning-of-line)
+    (call-interactively 'evil-beginning-of-line)))
 
 (evil-define-motion evil-first-non-blank ()
   "Move the cursor to the first non-blank character of the current line."
