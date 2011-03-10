@@ -122,11 +122,12 @@ the count as the first argument."
   (let (line-move-visual)
     (evil-line-move (or count 1))))
 
-;; This motion can be used for repeated commands like 'dd'
-;;(evil-define-motion vim:motion-lines (linewise count)
-;;  "Moves count - 1 lines down."
-;;  (let (line-move-visual)
-;;    (next-line (1- (or count 1)))))
+;; This motion can be used for repeated commands like "dd"
+(evil-define-motion evil-line (count)
+ "Moves count - 1 lines down."
+ :type line
+ (let (line-move-visual)
+   (evil-line-move (1- (or count 1)))))
 
 (evil-define-motion evil-previous-visual-line (count)
   "Move the cursor COUNT screen lines down."

@@ -96,6 +96,8 @@ in the `interactive' specification of an operator command."
           (list (region-beginning) (region-end)))
          (t
           (evil-operator-state)
+          (define-key evil-operator-shortcut-map
+            (vector last-command-event) 'evil-line)
           (setq motion (evil-keypress-parser)
                 evil-this-motion (pop motion)
                 evil-this-motion-count (pop motion)
