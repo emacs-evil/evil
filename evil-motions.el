@@ -53,8 +53,19 @@ the count as the first argument."
               `(,interactive)))
          ,@body))))
 
+(defmacro evil-signal-without-movement (&rest body)
+  "Catches errors point has not changed within this scope."
+  (declare (indent defun))
+  `(let ((p (point)))
+     (condition-case err
+         (progn ,@body)
+       (error
+        (when (= p (point))
+          (signal (car err) (cdr err)))))))
+
 (defmacro evil-narrow-to-line (&rest body)
   "Narrows to the current line."
+  (declare (indent defun))
   `(save-restriction
      (narrow-to-region
       (line-beginning-position)
@@ -62,12 +73,7 @@ the count as the first argument."
           (line-end-position)
         (max (line-beginning-position)
              (1- (line-end-position)))))
-     (let ((p (point)))
-       (condition-case err
-           (progn ,@body)
-         (error
-          (when (= p (point))
-            (signal (car err) (cdr err))))))))
+     (evil-signal-without-movement ,@body)))
 
 (evil-define-motion evil-forward-char (count)
   "Move cursor to the right by COUNT characters."
@@ -79,19 +85,42 @@ the count as the first argument."
   :type exclusive
   (evil-narrow-to-line (backward-char (or count 1))))
 
+;; The purpose of this function is the provide line motions which
+;; preserve the column. This is how 'previous-line and 'next-line
+;; work, but unfortunately this behaviour is hard coded, i.e., if and
+;; only if the last command was one of 'previous-line and 'next-line
+;; the column is preserved. Furthermore, in contrast to vim, when we
+;; cannot go further those motions move point to the beginning resp.
+;; the end of the line (we do never want point to leave its column).
+;; The code here comes from simple.el, and I hope it will work in
+;; future.
+(defun evil-line-move (count)
+  "A wrapper for line motions which conserves the column."
+  (evil-signal-without-movement
+    (setq this-command 'next-line)
+    (let ((opoint (point)))
+      (unwind-protect
+          (with-no-warnings
+            (next-line count))
+        (cond
+         ((> count 0)
+          (line-move-finish (or goal-column temporary-goal-column)
+                            opoint nil))
+         ((< count 0)
+          (line-move-finish (or goal-column temporary-goal-column)
+                            opoint t)))))))
+
 (evil-define-motion evil-previous-line (count)
   "Move the cursor COUNT lines up."
   :type line
   (let (line-move-visual)
-    (with-no-warnings
-      (previous-line count))))
+    (evil-line-move (- (or count 1)))))
 
 (evil-define-motion evil-next-line (count)
   "Move the cursor COUNT lines down."
   :type line
   (let (line-move-visual)
-    (with-no-warnings
-      (next-line count))))
+    (evil-line-move (or count 1))))
 
 ;; This motion can be used for repeated commands like 'dd'
 ;;(evil-define-motion vim:motion-lines (linewise count)
@@ -99,19 +128,17 @@ the count as the first argument."
 ;;  (let (line-move-visual)
 ;;    (next-line (1- (or count 1)))))
 
-(evil-define-motion evil-next-visual-line (count)
-  "Move the cursor COUNT screen lines up."
-  :type exclusive
-  (let ((line-move-visual t))
-    (with-no-warnings
-      (previous-line count))))
-
 (evil-define-motion evil-previous-visual-line (count)
   "Move the cursor COUNT screen lines down."
   :type exclusive
   (let ((line-move-visual t))
-    (with-no-warnings
-      (next-line count))))
+    (evil-line-move (- (or count 1)))))
+
+(evil-define-motion evil-next-visual-line (count)
+  "Move the cursor COUNT screen lines up."
+  :type exclusive
+  (let ((line-move-visual t))
+    (evil-line-move (or count 1))))
 
 (evil-define-motion evil-move-to-window-line (count)
   "Moves the cursor to line COUNT from the top of the window

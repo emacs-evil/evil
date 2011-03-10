@@ -36,6 +36,7 @@ and `evil-local-mode' is enabled."
          (switch-to-buffer-other-window (current-buffer))
          (buffer-enable-undo)
          (evil-local-mode 1)
+         (delete-region (point-min) (point-max))
          (insert ";; This buffer is for notes you don't want to save, \
 and for Lisp evaluation.\n;; If you want to create a file, visit \
 that file with C-x C-f,\n;; then enter the text in that file's own \
@@ -846,11 +847,66 @@ cursor on the new line."
 
 (ert-deftest evil-test-previous-line ()
   "Test `evil-previous-line' motion."
-  :tags '(evil))
+  :tags '(evil)
+  (ert-info ("Simple")
+    (evil-test-buffer
+      (forward-line 4)
+      (forward-word)
+      (evil-verify-around-point "\nBelow° the")
+      (execute-kbd-macro "k")
+      (evil-verify-around-point "own buffer.\n°\nBelow")))
+  (ert-info ("With count")
+    (evil-test-buffer
+      (forward-line 4)
+      (forward-word)
+      (evil-verify-around-point "\nBelow° the")
+      (execute-kbd-macro "2k")
+      (evil-verify-around-point ";; th°en enter")))
+  (ert-info ("Until beginning of buffer")
+    (evil-test-buffer
+      (forward-line 4)
+      (forward-word)
+      (evil-verify-around-point "\nBelow° the")
+      (execute-kbd-macro "100k")
+      (evil-verify-around-point ";; Th°is buffer")))
+  (ert-info ("At beginning of buffer")
+    (evil-test-buffer
+      (forward-word)
+      (evil-verify-around-point ";; This° buffer")
+      (should-error (execute-kbd-macro "k"))
+      (evil-verify-around-point ";; This° buffer")
+      (should-error (execute-kbd-macro "42k"))
+      (evil-verify-around-point ";; This° buffer"))))
 
 (ert-deftest evil-test-next-line ()
   "Test `evil-next-line' motion."
-  :tags '(evil))
+  :tags '(evil)
+  (ert-info ("Simple")
+    (evil-test-buffer
+      (forward-word)
+      (evil-verify-around-point ";; This° buffer")
+      (execute-kbd-macro "j")
+      (evil-verify-around-point ";; If y°ou")))
+  (ert-info ("With count")
+    (evil-test-buffer
+      (forward-word)
+      (evil-verify-around-point ";; This° buffer")
+      (execute-kbd-macro "2j")
+      (evil-verify-around-point ";; then° enter")))
+  (ert-info ("Until end of buffer")
+    (evil-test-buffer
+      (forward-word)
+      (evil-verify-around-point ";; This° buffer")
+      (execute-kbd-macro "100j")
+      (evil-verify-around-point "Below t°he ")))
+  (ert-info ("At end of buffer")
+    (evil-test-buffer
+      (re-search-forward "Below")
+      (evil-verify-around-point "\nBelow° the")
+      (should-error (execute-kbd-macro "j"))
+      (evil-verify-around-point "\nBelow° the")
+      (should-error (execute-kbd-macro "42j"))
+      (evil-verify-around-point "\nBelow° the"))))
 
 (ert-deftest evil-test-beginning-of-line ()
   "Test `evil-beginning-line' motion."
