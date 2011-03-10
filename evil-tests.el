@@ -44,6 +44,31 @@ buffer.\n\nBelow the empty line.")
          (goto-char (point-min))
          ,@body))))
 
+(defmacro evil-test-code-buffer (&rest body)
+  "Execute BODY in a temporary buffer.
+The buffer contains a C hellow world,
+and `evil-local-mode' is enabled."
+  (declare (indent defun)
+           (debug t))
+  `(let ((kill-ring kill-ring)
+         (kill-ring-yank-pointer kill-ring-yank-pointer)
+         x-select-enable-clipboard
+         message-log-max)
+     (save-window-excursion
+       (with-temp-buffer
+         (switch-to-buffer-other-window (current-buffer))
+         (buffer-enable-undo)
+         (evil-local-mode 1)
+         (delete-region (point-min) (point-max))
+         (insert "#include <stdio.h>\n#include <stdlib.h>\n\n\
+int main(int argc, char** argv)     \n{\n\
+  printf(\"Hello world\\n\");\n\
+  return EXIT_SUCCESS;\n\
+     \n\
+}\n")
+         (goto-char (point-min))
+         ,@body))))
+
 ;;; States
 
 (defun evil-test-local-mode-enabled ()
@@ -911,26 +936,60 @@ cursor on the new line."
 (ert-deftest evil-test-beginning-of-line ()
   "Test `evil-beginning-line' motion."
   :tags '(evil)
-  (ert-info ("Simple")
-    (evil-test-buffer
-      (forward-line)
-      (forward-word)
-      (evil-verify-around-point ";; If° you")
-      (dotimes (i 2)
-        (execute-kbd-macro "0")
-        (evil-verify-around-point "evaluation\.\n°;; If you")))))
+  (evil-test-buffer
+    (forward-line)
+    (forward-word)
+    (evil-verify-around-point ";; If° you")
+    (dotimes (i 2)
+      (execute-kbd-macro "0")
+      (evil-verify-around-point "evaluation\.\n°;; If you"))))
 
 (ert-deftest evil-test-end-of-line ()
   "Test `evil-end-line' motion."
-  :tags '(evil))
+  :tags '(evil)
+  (evil-test-buffer
+    (forward-line)
+    (forward-word)
+    (evil-verify-around-point ";; If° you")
+    (dotimes (i 2)
+      (execute-kbd-macro "$")
+      (evil-verify-around-point "C-x C-f°,\n;; then"))
+    (forward-line 2)
+    (evil-verify-around-point "buffer\\.\n°\nBelow")
+    (execute-kbd-macro "$")
+    (evil-verify-around-point "buffer\\.\n°\nBelow")))
 
 (ert-deftest evil-test-first-non-blank ()
   "Test `evil-first-non-blank' motion."
-  :tags '(evil))
+  :tags '(evil)
+  (evil-test-code-buffer
+    (forward-line 5)
+    (end-of-line)
+    (backward-char)
+    (evil-verify-around-point "world\\\\n\")°;\n  return")
+    (dotimes (i 2)
+      (execute-kbd-macro "^")
+      (evil-verify-around-point "{\n  °printf"))
+    (forward-line 2)
+    (evil-verify-around-point "SUCCESS;\n°     \n}")
+    (execute-kbd-macro "^")
+    (evil-verify-around-point "SUCCESS;\n    ° \n}")))
+
 
 (ert-deftest evil-test-last-non-blank ()
   "Test `evil-last-non-blank' motion."
-  :tags '(evil))
+  :tags '(evil)
+  (evil-test-code-buffer
+    (forward-line 3)
+    (evil-verify-around-point "\n°int main")
+    (dotimes (i 2)
+      (execute-kbd-macro "g_")
+      (evil-verify-around-point "argv°)     \n"))
+    (forward-line 4)
+    (forward-char 3)
+    (evil-verify-around-point "SUCCESS;\n   °  \n}")
+    (execute-kbd-macro "g_")
+    (evil-verify-around-point "SUCCESS;\n°     \n}")))
 
 (ert-deftest evil-test-first-non-blank-beg ()
   "Test `evil-first-non-blank-beg' motion."
@@ -1016,11 +1075,11 @@ cursor on the new line."
 
     (ert-info ("Exact \"0\" count")
       (should (equal (evil-extract-count "0")
-                  (list nil 'evil-digit-argument-or-evil-beginning-of-line "0" nil))))
+                     (list nil 'evil-digit-argument-or-evil-beginning-of-line "0" nil))))
 
     (ert-info ("Extra elements and \"0\"")
       (should (equal (evil-extract-count "0XY")
-                  (list nil 'evil-digit-argument-or-evil-beginning-of-line "0" "XY"))))
+                     (list nil 'evil-digit-argument-or-evil-beginning-of-line "0" "XY"))))
 
     (ert-info ("Count only")
       (should-error (evil-extract-count "1230")))

@@ -182,7 +182,7 @@ if it is not the first event."
 (evil-define-motion evil-first-non-blank ()
   "Move the cursor to the first non-blank character of the current line."
   :type exclusive
-  (back-to-indentation))
+  (evil-narrow-to-line (back-to-indentation)))
 
 (evil-define-motion evil-end-of-line (count)
   "Move the cursor to the end of the current line.
