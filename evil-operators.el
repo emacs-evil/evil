@@ -156,14 +156,15 @@ The return value is a list (BEG END TYPE)."
       (move-marker evil-motion-marker nil)
       (setq evil-motion-marker nil))))
 
-(defun evil-keypress-parser ()
-  "Read from keyboard and build a command description.
+(defun evil-keypress-parser (&optional input)
+  "Read from keyboard or INPUT and build a command description.
 Returns (CMD COUNT), where COUNT is the numeric prefix argument.
 Both COUNT and CMD may be nil."
-  (let ((inhibit-quit t)
-        char digit keys cmd count)
+  (let ((input (append input nil))
+        (inhibit-quit t)
+        char cmd count digit seq)
     (while (progn
-             (setq char (read-event))
+             (setq char (or (pop input) (read-event)))
              (when (symbolp char)
                (setq char (or (get char 'ascii-character) char)))
              ;; this trick from simple.el's `digit-argument'
@@ -172,16 +173,16 @@ Both COUNT and CMD may be nil."
                  (setq digit (- (logand char ?\177) ?0))
                (setq digit nil))
              (if (keymapp cmd)
-                 (setq keys (vconcat keys (vector char)))
-               (setq keys (vector char)))
-             (setq cmd (key-binding keys t))
+                 (setq seq (append seq (list char)))
+               (setq seq (list char)))
+             (setq cmd (key-binding (vconcat seq) t))
              (cond
               ;; if CMD is a keymap, we need to read more
               ((keymapp cmd)
                t)
               ;; numeric prefix argument
               ((or (memq cmd '(digit-argument))
-                   (and (eq (length keys) 1)
+                   (and (eq (length seq) 1)
                         (not (keymapp cmd))
                         count
                         (memq digit '(0 1 2 3 4 5 6 7 8 9))))
@@ -192,14 +193,14 @@ Both COUNT and CMD may be nil."
                t)
               ;; catch middle digits like "da2w"
               ((and (not cmd)
-                    (> (length keys) 1)
+                    (> (length seq) 1)
                     (memq digit '(0 1 2 3 4 5 6 7 8 9)))
                (setq count (concat (or count "")
                                    (number-to-string digit)))
                ;; remove the digit from the key sequence
                ;; so we can see if the previous one goes anywhere
-               (setq keys (evil-truncate-vector keys -1))
-               (setq cmd (key-binding keys))
+               (setq seq (nbutlast seq 1))
+               (setq cmd (key-binding (vconcat seq)))
                t)
               ((eq cmd 'negative-argument)
                (unless count

@@ -748,6 +748,33 @@ cursor on the new line."
       (setq evil-repeat-info '((kill-buffer nil)))
       (should-error (call-interactively 'evil-repeat)))))
 
+;;; Operators
+
+(ert-deftest evil-test-keypress-parser ()
+  "Test `evil-keypress-parser'"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-test-change-state 'operator)
+    (ert-info ("Read from the keyboard unless INPUT is given")
+      (setq unread-command-events '(?d))
+      (should (equal (evil-keypress-parser)
+                     '(evil-delete nil)))
+      (should (equal (evil-keypress-parser '(?d))
+                     '(evil-delete nil))))
+    (ert-info ("Handle counts not starting with zero")
+      (should (equal (evil-keypress-parser '(?2 ?d))
+                     '(evil-delete 2)))
+      (should (equal (evil-keypress-parser '(?2 ?0 ?d))
+                     '(evil-delete 20)))
+      (should (equal (evil-keypress-parser '(?2 ?0 ?2 ?d))
+                     '(evil-delete 202)))
+      (should (equal (evil-keypress-parser '(?4 ?0 ?4 ?g ??))
+                     '(evil-rot13 404))))
+    (ert-info ("Treat 0 as a motion")
+      (should (equal
+               (evil-keypress-parser '(?0))
+               '(evil-digit-argument-or-evil-beginning-of-line nil))))))
+
 (ert-deftest evil-test-operator ()
   "Test operator."
   :tags '(evil)
