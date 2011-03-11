@@ -206,25 +206,24 @@ int main(int argc, char** argv)     \n{\n\
 
 (defun evil-test-suppress-keymap (state)
   "Verify that `self-insert-command' is suppressed in STATE"
-  (let ((mode (evil-state-property state :mode))
-        (local (evil-state-property state :local-mode)))
-    (evil-test-buffer
-      (evil-test-change-state state)
-      ;; TODO: this must be done better
-      (ert-info ("Disable the state's own keymaps so that the
+  (evil-test-buffer
+    (evil-test-change-state state)
+    ;; TODO: this must be done better
+    (ert-info ("Disable the state's own keymaps so that the
 suppression keymap comes first")
-        (unless (eq state 'normal)
-          (set mode nil)
-          (set local nil)))
-      (should (eq (key-binding "y") 'undefined))
-      (should (eq (key-binding "u") 'undefined))
-      (should (eq (key-binding "e") 'undefined))
-      (ert-info ("Don't insert text")
-        ;; may or may not signal an error, depending on batch mode
-        (condition-case nil
-            (execute-kbd-macro "yue")
-          (error nil))
-        (should (string= (buffer-substring 1 4) ";; ")))))) ;
+      (setq evil-motion-state nil
+            evil-motion-state-local nil
+            evil-operator-state nil
+            evil-operator-state-local nil))
+    (should (eq (key-binding "y") 'undefined))
+    (should (eq (key-binding "u") 'undefined))
+    (should (eq (key-binding "e") 'undefined))
+    (ert-info ("Don't insert text")
+      ;; may or may not signal an error, depending on batch mode
+      (condition-case nil
+          (execute-kbd-macro "yue")
+        (error nil))
+      (should (string= (buffer-substring 1 4) ";; "))))) ;
 
 (ert-deftest evil-test-emacs-state-suppress-keymap ()
   "`self-insert-command' works in emacs-state"
@@ -511,7 +510,6 @@ is \"ABC\" and the expected text after point is \"def\". "
                                          (min (point-max)
                                               (+ (point) (length after))))))
       (should (looking-at after)))))
-
 
 (defun evil-test-editing (keys expected &optional point-char)
   "Execute key-sequence `keys' and verify if the text around point matches
@@ -1054,7 +1052,6 @@ cursor on the new line."
     (execute-kbd-macro "^")
     (evil-verify-around-point "SUCCESS;\n    ° \n}")))
 
-
 (ert-deftest evil-test-last-non-blank ()
   "Test `evil-last-non-blank' motion."
   :tags '(evil)
@@ -1150,7 +1147,6 @@ cursor on the new line."
                         '((a . b)) '((a . c)))
                        '((a . b))))))
 
-
 (ert-deftest evil-test-extract-count ()
   "Test `evil-extract-count'"
   :tags '(evil)
@@ -1193,7 +1189,6 @@ cursor on the new line."
     (ert-info ("Unknown command")
       (should-error (evil-extract-count "°"))
       (should-error (evil-extract-count "12°")))))
-
 
 (when evil-tests-run
   (evil-tests-run))
