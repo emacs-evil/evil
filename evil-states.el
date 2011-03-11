@@ -70,8 +70,7 @@ To enable Evil globally, do (evil-mode 1)."
                     global-mode-string)))
     (evil-normal-state))
    (t
-    (when evil-state
-      (funcall (evil-state-func) -1)))))
+    (evil-change-state nil))))
 
 (define-globalized-minor-mode evil-mode
   evil-local-mode evil-enable)
@@ -89,11 +88,6 @@ current buffer only.")
 (defun evil-state-p (sym)
   "Whether SYM is the name of a state."
   (assq sym evil-states-alist))
-
-(defun evil-state-func (&optional state)
-  "Return the toggle function for STATE."
-  (setq state (or state evil-state))
-  (evil-state-property state :mode))
 
 (defun evil-state-keymaps (state &rest excluded)
   "Return an ordered list of keymaps activated by STATE."
@@ -114,7 +108,7 @@ current buffer only.")
        ((eq entry state)
         (setq result
               (evil-concat-lists result
-               (list local-map) aux-maps (list map)))
+                                 (list local-map) aux-maps (list map)))
         (add-to-list 'excluded state))
        ((evil-state-p entry)
         (setq result (evil-concat-lists
@@ -154,21 +148,24 @@ Its order reflects the state in the current buffer."
     (evil-refresh-local-maps)
     ;; disable all modes
     (dolist (entry (evil-concat-alists evil-mode-map-alist
-                                      evil-local-keymaps-alist))
+                                       evil-local-keymaps-alist))
       (setq mode (car entry))
-      (if (and (fboundp mode)
-               (not (memq mode modes)))
-          (funcall mode -1)
-        (set mode nil)))
+      ;; modes not defined by a state are disabled
+      ;; with their toggle function, if defined
+      (when (and (fboundp mode)
+                 (not (memq mode modes)))
+        (funcall mode -1))
+      (set mode nil))
     ;; enable modes for current state
     (unless (null state)
       (dolist (map (evil-state-keymaps state))
         (when (setq mode (or (car (rassq map evil-mode-map-alist))
                              (car (rassq map minor-mode-map-alist))))
-          (if (and (fboundp mode)
-                   (not (memq mode modes)))
-              (funcall mode 1)
-            (set mode t))
+          ;; enable non-state modes
+          (when (and (fboundp mode)
+                     (not (memq mode modes)))
+            (funcall mode 1))
+          (set mode t)
           ;; refresh the keymap for good measure (buffer-local keymaps
           ;; may change in the toggle function itself)
           (setq map (or (cdr (assq mode evil-mode-map-alist))
@@ -223,9 +220,9 @@ If SPECS is nil, make the cursor a black filled box."
 (defun evil-change-state (state)
   "Change state to STATE.
 Disable all states if nil."
-  (let ((func (evil-state-property
-               (or state 'emacs) :mode)))
-    (unless (eq state evil-state)
+  (let ((func (evil-state-property (or state evil-state) :mode)))
+    (when (and (functionp func)
+               (not (eq state evil-state)))
       (funcall func (if state 1 -1)))))
 
 (defmacro evil-define-keymap (keymap doc &rest body)
@@ -427,8 +424,7 @@ bindings to be activated whenever KEYMAP and %s state are active."
           (t
            (unless evil-local-mode
              (evil-enable))
-           (when evil-state
-             (funcall (evil-state-func) -1))
+           (evil-change-state nil)
            (unwind-protect
                (let ((evil-state ',state))
                  (evil-normalize-keymaps)
@@ -437,8 +433,9 @@ bindings to be activated whenever KEYMAP and %s state are active."
                  (evil-set-cursor ,cursor)
                  ,@body
                  (run-hooks ',entry-hook)
-                 (when (called-interactively-p)
-                   (when ,message (evil-unlogged-message ,message))))
+                 (when (and (called-interactively-p)
+                            ,message)
+                   (evil-unlogged-message ,message)))
              (setq evil-state ',state)))))
 
        (evil-define-keymap ,local-keymap nil
