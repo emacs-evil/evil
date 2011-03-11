@@ -123,18 +123,11 @@ sorting in between."
   "Return a copy of VECTOR truncated to LENGTH.
 If LENGTH is negative, skip last elements of VECTOR.
 If OFFSET is specified, skip first elements of VECTOR."
-  ;; if LENGTH is too large, trim it
-  (when (> length (length vector))
-    (setq length (length vector)))
-  ;; if LENGTH is negative, convert it to the positive equivalent
-  (when (< length 0)
-    (setq length (max 0 (+ (length vector) length))))
-  (if offset
-      (setq length (- length offset))
-    (setq offset 0))
-  (let ((result (make-vector length t)))
-    (dotimes (idx length result)
-      (aset result idx (aref vector (+ idx offset))))))
+  (if (>= length 0)
+      (setq length (- (length vector) length))
+    (setq length (- length)))
+  (setq vector (nthcdr (or offset 0) (append vector nil)))
+  (vconcat (nbutlast vector length)))
 
 (defmacro evil-save-echo-area (&rest body)
   "Save the echo area; execute BODY; restore the echo area.
