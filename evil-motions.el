@@ -281,14 +281,6 @@ expression."
         (skip-chars-backward chars)
         (point))))))
 
-(defun evil-select-empty-lines (direction)
-  "Returns the position of the next or previous empty line."
-  (save-excursion
-    (let ((dir (if (eq direction 'fwd) +1 -1)))
-      (while (and (not (and (bolp) (eolp)))
-                  (zerop (forward-line dir))))
-      (and (bolp) (eolp) (point)))))
-
 (defmacro evil-define-union-select (name &rest selectors)
   "Creates a selector function NAME which returns the next or
 previous position of one of SELECTORS. NAME is the name of the
@@ -299,6 +291,7 @@ PARAMS...).  The union selector calls (FUNC direction PARAMS...)
 for each element and returns the smallest (in forward direction)
 or largest (in backward direction) value returned by those
 selectors. If no selector returns a value nil is returned."
+  (declare (indent defun))
   `(defun ,name (direction)
      ,@(and selectors (listp selectors)
             (stringp (car selectors))
@@ -437,11 +430,19 @@ the end of the first object. If there no previous object raises
     ;; go back to the end of the found object
     (goto-char (funcall sel 'fwd))))
 
+(defun evil-select-empty-lines (direction)
+  "Returns the position of the next or previous empty line."
+  (save-excursion
+    (let ((dir (if (eq direction 'fwd) +1 -1)))
+      (while (and (not (and (bolp) (eolp)))
+                  (zerop (forward-line dir))))
+      (and (bolp) (eolp) (point)))))
+
 (evil-define-union-select evil-select-word
-                          "Selector for a word."
-                          (evil-select-chars evil-word)
-                          (evil-select-chars (concat "^ \t\r\n" evil-word))
-                          (evil-select-empty-lines))
+  "Selector for a word."
+  (evil-select-chars evil-word)
+  (evil-select-chars (concat "^ \t\r\n" evil-word))
+  (evil-select-empty-lines))
 
 (evil-define-motion evil-forward-word-begin (count)
   "Move the cursor the beginning of the COUNT-th next word."

@@ -1108,6 +1108,34 @@ cursor on the new line."
 
 ;; TODO: I don't know how to test the visual motions or window motions.
 
+
+(ert-deftest evil-test-negate-chars ()
+  "Test `evil-negate-chars'."
+  :tags '(evil)
+  (should (equal (evil-negate-chars "a-b") "^a-b"))
+  (should (equal (evil-negate-chars "^a-b") "a-b")))
+
+(ert-deftest evil-test-select-chars ()
+  "Test `evil-test-select-chars'."
+  :tags '(evil)
+  (evil-test-code-buffer
+    (ert-info ("Simple forward")
+      (goto-char (evil-select-chars 'fwd "{"))
+      (evil-verify-around-point "argv)     \n°{")
+      (goto-char (evil-select-chars 'fwd "a-z"))
+      (evil-verify-around-point "print°f")
+      (goto-char (evil-select-chars 'fwd "a-z"))
+      (evil-verify-around-point "print°f"))
+    (ert-info ("End of buffer")
+      (should (not (evil-select-chars 'fwd "Q"))))
+    (ert-info ("Simple backward")
+      (goto-char (evil-select-chars 'bwd "*"))
+      (evil-verify-around-point "char°** argv)")
+      (goto-char (evil-select-chars 'bwd "*"))
+      (evil-verify-around-point "char°** argv)"))
+    (ert-info ("Beginning of buffer")
+      (should (not (evil-select-chars 'bwd "Q"))))))
+
 ;;; Utilities
 
 (ert-deftest evil-test-concat-lists ()
