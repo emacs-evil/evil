@@ -221,13 +221,15 @@ bound to some keyboard-macro it is expaned recursively."
       (while (and (<= end len))
         (let ((cmd (key-binding (substring keys beg end))))
           (cond
-           ((arrayp cmd) ;; a keyboard macro, replace the command with the macro
+           ((memq cmd '(undefined nil))
+            (error "No command bound to %s" (substring keys beg end)))
+
+           ((arrayp cmd) ; a keyboard macro, replace the command with the macro
             (setq keys (vconcat (substring keys 0 beg)
                                 cmd
                                 (substring keys end))
                   end (1+ beg)
                   len (length keys)))
-
            ((functionp cmd)
             (if (or (memq cmd '(digit-argument negative-argument))
                     (and found-prefix
@@ -238,11 +240,11 @@ bound to some keyboard-macro it is expaned recursively."
                       end (1+ end))
               ;; a real command, finish
               (throw 'done (list (and (not (zerop beg))
-                                      (string-to-number (concat (substring keys 0 beg))))
+                                      (string-to-number
+                                       (concat (substring keys 0 beg))))
                                  cmd
                                  (substring keys beg end)
                                  (and (< end len) (substring keys end))))))
-           ((null cmd) (error "No command bound to %s" (substring keys beg end)))
 
            (t ;; append a further event
             (setq end (1+ end))))))
