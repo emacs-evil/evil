@@ -378,7 +378,7 @@ object raises 'beginning-of-buffer."
         ;; go to beginning of previous object
         (save-excursion
           (unless (bobp)
-            (borward-char)
+            (backward-char)
             (setq p (funcall sel 'bwd))))
         ;; if sucessful move point ...
         (if p (goto-char p)
@@ -412,9 +412,10 @@ the end of the first object. If there no previous object raises
                   at-object nil))
           (dotimes (i count)
             ;; go to end of previous object
+            (setq p nil)
             (save-excursion
-              (unless (eobp)
-                (forward-char)
+              (unless (bobp)
+                (backward-char)
                 (setq p (funcall sel 'bwd))))
             ;; if successful move point
             (if p (goto-char p)
