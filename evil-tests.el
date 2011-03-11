@@ -830,6 +830,58 @@ cursor on the new line."
      (vconcat [right right right] "3g?2" [M-right] "4.")
      ";; °This buffer is for abgrf lbh don't")))
 
+(ert-deftest evil-test-operator-delete ()
+  "Test deleting text."
+  :tags '(evil)
+  (ert-info ("Delete characters")
+    (evil-test-editing-clean
+     "dl"
+     "°; This buffer is for notes")
+    (evil-test-editing-clean
+     "d1l"
+     "°; This buffer is for notes")
+    (evil-test-editing-clean
+     "1dl"
+     "°; This buffer is for notes")
+    (evil-test-editing-clean
+     "1d1l"
+     "°; This buffer is for notes")
+    (evil-test-editing-clean
+     "d2l"
+     "° This buffer is for notes")
+    (evil-test-editing-clean
+     "2dl"
+     "° This buffer is for notes")
+    (ert-info ("Multiply counts together")
+      (evil-test-editing-clean
+       "2d2l"
+       "°his buffer is for notes")))
+  (ert-info ("Delete current line")
+    (evil-test-editing-clean
+     "dd"
+     "°;; If you want to create a file")
+    (evil-test-editing-clean
+     "d1d"
+     "°;; If you want to create a file")
+    (evil-test-editing-clean
+     "1dd"
+     "°;; If you want to create a file")
+    (evil-test-editing-clean
+     "1d1d"
+     "°;; If you want to create a file"))
+  (ert-info ("Delete two lines")
+    (evil-test-editing-clean
+     "d2d"
+     "°;; then enter the text")
+    (evil-test-editing-clean
+     "2dd"
+     "°;; then enter the text")
+    (evil-test-editing-clean
+     "dj"
+     "°;; then enter the text")
+    (evil-test-editing-clean
+     "jdk"
+     "°;; then enter the text")))
 
 ;;; Motions
 
@@ -1036,8 +1088,8 @@ cursor on the new line."
 
 (ert-deftest evil-test-first-non-blank-end ()
   "Test `evil-first-non-blank-beg' motion."
-   :tags '(evil)
-   (evil-test-code-buffer
+  :tags '(evil)
+  (evil-test-code-buffer
     (execute-kbd-macro "6G")
     (evil-verify-around-point "{\n  °printf")
     (execute-kbd-macro "3G")
