@@ -68,6 +68,15 @@ TARGET the command to call."
 (define-key evil-motion-state-map "g^" 'evil-first-non-blank-of-visual-line)
 (define-key evil-motion-state-map "g$" 'evil-end-of-visual-line)
 
+(define-key evil-motion-state-map "w" 'evil-forward-word-begin)
+(define-key evil-motion-state-map "e" 'evil-forward-word-end)
+(define-key evil-motion-state-map "b" 'evil-backward-word-begin)
+(define-key evil-motion-state-map "ge" 'evil-backward-word-end)
+(define-key evil-motion-state-map "W" 'evil-forward-WORD-begin)
+(define-key evil-motion-state-map "E" 'evil-forward-WORD-end)
+(define-key evil-motion-state-map "B" 'evil-backward-WORD-begin)
+(define-key evil-motion-state-map "gE" 'evil-backward-WORD-end)
+
 (define-key evil-operator-state-map "d" 'evil-delete)
 (define-key evil-operator-state-map "g?" 'evil-rot13)
 

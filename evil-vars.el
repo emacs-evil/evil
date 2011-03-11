@@ -119,6 +119,9 @@ command o or O.")
   "If set to t inside `evil-save-echo-area', then the echo area
 is not restored.")
 
+(defvar evil-word "a-zA-Z0-9_"
+  "The characters to be considered as a word.")
+
 (defconst evil-version "0.1"
   "The current version of Evil")
 
