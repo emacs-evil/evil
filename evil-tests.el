@@ -1110,24 +1110,6 @@ cursor on the new line."
 
 ;;; Utilities
 
-(ert-deftest evil-test-truncate-vector ()
-  "Test `evil-truncate-vector'"
-  :tags '(evil)
-  (ert-info ("Truncate vector to length")
-    (should (equal (evil-truncate-vector [a b c] 0) []))
-    (should (equal (evil-truncate-vector [a b c] 1) [a]))
-    (should (equal (evil-truncate-vector [a b c] 2) [a b]))
-    (should (equal (evil-truncate-vector [a b c] 3) [a b c]))
-    (should (equal (evil-truncate-vector [a b c] 4) [a b c])))
-  (ert-info ("Truncate vector by offset")
-    (should (equal (evil-truncate-vector [a b c] -1) [a b]))
-    (should (equal (evil-truncate-vector [a b c] -2) [a]))
-    (should (equal (evil-truncate-vector [a b c] -3) []))
-    (should (equal (evil-truncate-vector [a b c] -4) [])))
-  (ert-info ("Limit cases")
-    (should (equal (evil-truncate-vector [] 0) []))
-    (should (equal (evil-truncate-vector [] 3) []))))
-
 (ert-deftest evil-test-concat-lists ()
   "Test `evil-concat-lists' and `evil-concat-alists'"
   :tags '(evil)

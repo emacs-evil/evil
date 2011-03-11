@@ -119,16 +119,6 @@ sorting in between."
                  (add-to-list 'forms '(pop sorted) t))
                forms))))
 
-(defun evil-truncate-vector (vector length &optional offset)
-  "Return a copy of VECTOR truncated to LENGTH.
-If LENGTH is negative, skip last elements of VECTOR.
-If OFFSET is specified, skip first elements of VECTOR."
-  (if (>= length 0)
-      (setq length (- (length vector) length))
-    (setq length (- length)))
-  (setq vector (nthcdr (or offset 0) (append vector nil)))
-  (vconcat (nbutlast vector length)))
-
 (defmacro evil-save-echo-area (&rest body)
   "Save the echo area; execute BODY; restore the echo area.
 Intermittent messages are not logged in the *Messages* buffer."
