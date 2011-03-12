@@ -253,7 +253,7 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
       (substring chars 1)
     (concat "^" chars)))
 
-(defun evil-select-chars (direction chars)
+(defun evil-select-chars (chars count)
   "Returns the position of the last character in the next sequence of CHARS.
 
 DIRECTION is either 'fwd or 'bwd. If DIRECTION is 'fwd the
@@ -266,20 +266,20 @@ the function returns nil.
 
 CHARS is a character set like inside of a `[...]' in a regular
 expression."
-  (save-excursion
+  (setq count (or count 1))
+  (catch 'done
     (cond
-     ((eq direction 'fwd)
-      (skip-chars-forward (evil-negate-chars chars))
-      (unless (eobp)
-        (skip-chars-forward chars)
-        (backward-char)
-        (point)))
-     (t
-      (unless (eobp) (forward-char))
-      (skip-chars-backward (evil-negate-chars chars))
-      (unless (bobp)
-        (skip-chars-backward chars)
-        (point))))))
+     ((> count 0)
+      (dotimes (i count)
+        (if (re-search-forward (concat "[" chars "]") nil t)
+            (skip-chars-forward chars)
+          (throw 'done (- count i)))))
+     ((< count 0)
+      (dotimes (i (- count))
+        (if (re-search-backward (concat "[" chars "]") nil t)
+            (skip-chars-backward chars)
+          (throw 'done (+ count i))))))
+    0))
 
 (defmacro evil-define-union-select (name &rest selectors)
   "Creates a selector function NAME which returns the next or
@@ -292,40 +292,56 @@ for each element and returns the smallest (in forward direction)
 or largest (in backward direction) value returned by those
 selectors. If no selector returns a value nil is returned."
   (declare (indent defun))
-  `(defun ,name (direction)
+  `(defun ,name (count)
      ,@(and selectors (listp selectors)
             (stringp (car selectors))
             (list (pop selectors)))
-     (let ((results
-            (remq nil
-                  (list ,@(mapcar #'(lambda (move)
-                                      (cons (car move) (cons 'direction (cdr move))))
-                                  selectors)))))
-       (when results
-         (apply (if (eq direction 'fwd) #'min #'max) results)))))
+     (setq count (or count 1))
+     (catch 'done
+       (cond
+        ((> count 0)
+         (while (> count 0)
+           (let ((results
+                  (remq nil
+                        (list ,@(mapcar
+                                 #'(lambda (sel)
+                                     `(save-excursion
+                                        (when (zerop ,(append sel '(1)))
+                                          (point))))
+                                 selectors)))))
+             (unless results (throw 'done count))
+             (goto-char (apply #'min results))
+             (setq count (1- count)))))
+        ((< count 0)
+         (while (< count 0)
+           (let ((results
+                  (remq nil
+                        (list ,@(mapcar
+                                 #'(lambda (sel)
+                                     `(save-excursion
+                                        (when (zerop ,(append sel '(-1)))
+                                          (point))))
+                                 selectors)))))
+             (unless results (throw 'done count))
+             (goto-char (apply #'max results))
+             (setq count (1+ count))))))
+       count)))
 
 (defun evil-select-forward-end (sel &optional count)
   "Moves point the the COUNT next end of the object specified by
 selector SEL. If there are no COUNT objects move the point to the
 end of the last object. If there no next object raises
 'end-of-buffer."
-  (catch 'done
-    (dotimes (i (or count 1))
-      (let (p)
-        ;; go to end of next object
-        (save-excursion
-          (unless (eobp)
-            (forward-char)
-            (setq p (funcall sel 'fwd))))
-        ;; if sucessful move point ...
-        (if p (goto-char p)
-          ;; otherwise raise error (if first iteration) or return
-          ;; number of successful moves
-          (when (zerop i)
-            (signal 'end-of-buffer nil))
-          (throw 'done i))))
-    ;; moved completely
-    count))
+  (setq count (or count 1))
+  (when (eobp)
+    (signal 'end-of-buffer nil))
+  (prog1
+      (forward-char)
+    (let ((rest (funcall sel count)))
+      (when (= rest count)
+        (signal 'end-of-buffer nil))
+      rest)
+    (backward-char)))
 
 (defun evil-select-forward-begin (sel count)
   "Moves point the the COUNT next beginning of the object
@@ -334,110 +350,79 @@ point to the beginning of the last object. If there no next
 object raises 'end-of-buffer."
   (setq count (or count 1))
   (prog1
-      (catch 'done
-        (let ((start (point))
-              (at-object t); t iff we start at an object
-              p)
-          ;; goto to the end of the current or the next object
-          (unless (setq p (funcall sel 'fwd))
-            (signal 'end-of-buffer nil))
-          (goto-char p)
-          ;; check if point we started at the first object
-          (when (> (funcall sel 'bwd) start)
+      (let ((start (point)))
+        ;; goto to the end of the current or the next object
+        (unless (zerop (funcall sel 1))
+          (signal 'end-of-buffer nil))
+        ;; check if point we started at the first object
+        (if (> (save-excursion
+                 (funcall sel -1)
+                 (point))
+               start)
             ;; no
-            (setq count (1- count)
-                  at-object nil))
-          (dotimes (i count)
-            ;; go to end of next object
-            (save-excursion
-              (unless (eobp)
-                (forward-char)
-                (setq p (funcall sel 'fwd))))
-            ;; if successful move point
-            (if p (goto-char p)
-              ;; otherwise raise error (if first iteration) or return
-              ;; number of successful moves. Note that we have to
-              ;; respect if we started on an object (at-object).
-              (when (and at-object (zerop i))
-                (goto-char start)
-                (signal 'end-of-buffer nil))
-              (throw 'done (if at-object i (1+ i)))))
-          ;; moved completely
-          (if at-object count (1+ count))))
-    ;; go back to the beginning of the found object
-    (goto-char (funcall sel 'bwd))))
+            (funcall sel (1- count))
+          ;; yes
+          (let ((rest (funcall sel count)))
+            (when (= rest count)
+              (signal 'end-of-buffer nil))
+            rest)))
+    (funcall sel -1)))
 
 (defun evil-select-backward-begin (sel &optional count)
   "Moves point the the COUNT previous beginning of the object
 specified by selector SEL. If there are no COUNT objects move the
 point to the beginning of the first object. If there no previous
 object raises 'beginning-of-buffer."
-  (catch 'done
-    (dotimes (i (or count 1))
-      (let (p)
-        ;; go to beginning of previous object
-        (save-excursion
-          (unless (bobp)
-            (backward-char)
-            (setq p (funcall sel 'bwd))))
-        ;; if sucessful move point ...
-        (if p (goto-char p)
-          ;; otherwise raise error (if first iteration) or return
-          ;; number of successful moves
-          (when (zerop i)
-            (signal 'beginning-of-buffer nil))
-          (throw 'done i))))
-    ;; moved completely
-    count))
+  (setq count (- (or count 1)))
+  (let ((rest (funcall sel count)))
+    (when (= rest count)
+      (signal 'beginning-of-buffer nil))
+    (- rest)))
 
 (defun evil-select-backward-end (sel count)
   "Moves point the the COUNT previous end of the object specified
 by selector SEL. If there are no COUNT objects move the point to
 the end of the first object. If there no previous object raises
 'beginning-of-buffer."
-  (setq count (or count 1))
+  (setq count (- (or count 1)))
   (prog1
-      (catch 'done
-        (let ((start (point))
-              (at-object t); t iff we start at an object
-              p)
-          ;; goto to the beginning of the current or the previous object
-          (unless (setq p (funcall sel 'bwd))
-            (signal 'beginning-of-buffer nil))
-          (goto-char p)
-          ;; check if point we started at the first object
-          (when (< (funcall sel 'fwd) start)
+      (let ((start (point)))
+        ;; goto to the end of the current or the next object
+        (unless (zerop (funcall sel -1))
+          (signal 'beginning-of-buffer nil))
+        ;; check if point we started at the first object
+        (if (< (save-excursion
+                 (funcall sel +1)
+                 (1- (point)))
+               start)
             ;; no
-            (setq count (1- count)
-                  at-object nil))
-          (dotimes (i count)
-            ;; go to end of previous object
-            (setq p nil)
-            (save-excursion
-              (unless (bobp)
-                (backward-char)
-                (setq p (funcall sel 'bwd))))
-            ;; if successful move point
-            (if p (goto-char p)
-              ;; otherwise raise error (if first iteration) or return
-              ;; number of successful moves. Note that we have to
-              ;; respect if we started on an object (at-object).
-              (when (and at-object (zerop i))
-                (goto-char start)
-                (signal 'beginning-of-buffer nil))
-              (throw 'done (if at-object i (1+ i)))))
-          ;; moved completely
-          (if at-object count (1+ count))))
-    ;; go back to the end of the found object
-    (goto-char (funcall sel 'fwd))))
+            (funcall sel (1+ count))
+          ;; yes
+          (let ((rest (funcall sel count)))
+          (when (= rest count)
+            (signal 'beginning-of-buffer nil))
+          rest)))
+    (funcall sel +1)
+    (backward-char)))
 
-(defun evil-select-empty-lines (direction)
+
+(defun evil-select-empty-lines (count)
   "Returns the position of the next or previous empty line."
-  (save-excursion
-    (let ((dir (if (eq direction 'fwd) +1 -1)))
-      (while (and (not (and (bolp) (eolp)))
-                  (zerop (forward-line dir))))
-      (and (bolp) (eolp) (point)))))
+  (setq count (or count 1))
+  (cond
+   ((> count 0)
+    (while (and (> count 0)
+                (re-search-forward "^$" nil t))
+      (forward-char)
+      (setq count (1- count))))
+   ((< count 0)
+    (while (and (< count 0)
+                (not (bobp))
+                (or (backward-char) t)
+                (re-search-backward "^$" nil t))
+      (setq count (1+ count)))))
+  count)
+
 
 (evil-define-union-select evil-select-word
   "Selector for a word."
@@ -467,9 +452,9 @@ the end of the first object. If there no previous object raises
 
 
 (evil-define-union-select evil-select-WORD
-                          "Selector for a WORD."
-                          (evil-select-chars "^ \t\r\n")
-                          (evil-select-empty-lines))
+  "Selector for a WORD."
+  (evil-select-chars "^ \t\r\n")
+  (evil-select-empty-lines))
 
 (evil-define-motion evil-forward-WORD-begin (count)
   "Move the cursor the beginning of the COUNT-th next WORD."
@@ -490,6 +475,60 @@ the end of the first object. If there no previous object raises
   "Move the cursor the end of the COUNT-th previous WORD."
   :type inclusive
   (evil-select-forward-end #'evil-select-WORD count))
+
+
+(defun evil-select-sentence-1 (count)
+  "Select a sentence."
+  (setq count (or count 1))
+  (cond
+   ((> count 0)
+    (while (and (> count 0)
+                (re-search-forward (sentence-end) nil t))
+      (goto-char (1+ (match-beginning 0)))
+      (setq count (1- count))))
+   ((< count 0)
+    (let ((p (point))
+          (orig-count count))
+      (while (and (< count 0)
+                  (re-search-backward (sentence-end) nil t))
+        (when (< (match-end 0) p)
+          (setq count (1+ count))))
+      (if (= orig-count count)
+          (goto-char p)
+        (re-search-forward (sentence-end) nil t)))))
+  count)
+
+(defun evil-select-paragraph (count)
+  "Selector for a paragraph."
+  (let* ((p (point))
+         (rest (forward-paragraph count)))
+    (when (and (= p (point))
+               (not (looking-at paragraph-start)))
+      (if (> count 0)
+          (setq rest (1- rest))
+        (setq rest (1+ rest))))
+    rest))
+
+(evil-define-union-select evil-select-sentence
+  "Selector for a sentence."
+  (evil-select-sentence-1)
+  (evil-select-paragraph))
+
+(evil-define-motion evil-forward-sentence-begin (count)
+  :type exclusive
+  (evil-select-forward-begin #'evil-select-sentence count))
+
+(evil-define-motion evil-backward-sentence-begin (count)
+  :type exclusive
+  (evil-select-backward-begin #'evil-select-sentence count))
+
+(evil-define-motion evil-forward-paragraph-begin (count)
+  :type exclusive
+  (evil-select-forward-begin #'evil-select-paragraph count))
+
+(evil-define-motion evil-backward-paragraph-begin (count)
+  :type exclusive
+  (evil-select-backward-begin #'evil-select-paragraph count))
 
 (provide 'evil-motions)
 
