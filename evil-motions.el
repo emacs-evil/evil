@@ -477,26 +477,28 @@ the end of the first object. If there no previous object raises
   (evil-select-forward-end #'evil-select-WORD count))
 
 
-(defun evil-select-sentence-1 (count)
+(defun evil-select-sentence (count)
   "Select a sentence."
   (setq count (or count 1))
-  (cond
-   ((> count 0)
-    (while (and (> count 0)
-                (re-search-forward (sentence-end) nil t))
-      (goto-char (1+ (match-beginning 0)))
-      (setq count (1- count))))
-   ((< count 0)
-    (let ((p (point))
-          (orig-count count))
-      (while (and (< count 0)
-                  (re-search-backward (sentence-end) nil t))
-        (when (< (match-end 0) p)
-          (setq count (1+ count))))
-      (if (= orig-count count)
-          (goto-char p)
-        (re-search-forward (sentence-end) nil t)))))
-  count)
+  (let ((s-end (concat "\\(?:\\`\\|[^[:space:]\n]\n$\\)[[:space:]\n]*\\|" (sentence-end))))
+    (cond
+     ((> count 0)
+      (while (and (> count 0)
+                  (re-search-forward s-end nil t))
+        (goto-char (1+ (match-beginning 0)))
+        (setq count (1- count))))
+     ((< count 0)
+      (let ((p (point))
+            (orig-count count))
+        (while (and (< count 0)
+                    (not (bobp))
+                    (re-search-backward s-end nil t))
+          (when (< (match-end 0) p)
+            (setq count (1+ count))))
+        (if (= orig-count count)
+            (goto-char p)
+          (re-search-forward s-end nil t)))))
+    count))
 
 (defun evil-select-paragraph (count)
   "Selector for a paragraph."
@@ -509,18 +511,35 @@ the end of the first object. If there no previous object raises
         (setq rest (1+ rest))))
     rest))
 
-(evil-define-union-select evil-select-sentence
-  "Selector for a sentence."
-  (evil-select-sentence-1)
-  (evil-select-paragraph))
-
 (evil-define-motion evil-forward-sentence-begin (count)
   :type exclusive
-  (evil-select-forward-begin #'evil-select-sentence count))
+  (dotimes (i (or count 1))
+    (let ((results
+           (remq nil
+                 (list
+                  (save-excursion
+                    (evil-select-forward-begin #'evil-select-sentence 1)
+                    (point))
+                  (save-excursion
+                    (evil-select-forward-begin #'evil-select-paragraph 1)
+                    (point))))))
+      (when results
+        (goto-char (apply #'min results))))))
 
 (evil-define-motion evil-backward-sentence-begin (count)
   :type exclusive
-  (evil-select-backward-begin #'evil-select-sentence count))
+  (dotimes (i (or count 1))
+    (let ((results
+           (remq nil
+                 (list
+                  (save-excursion
+                    (and (zerop (evil-select-sentence -1))
+                         (point)))
+                  (save-excursion
+                    (and (zerop (evil-select-paragraph -1))
+                         (point)))))))
+      (when results
+        (goto-char (apply #'max results))))))
 
 (evil-define-motion evil-forward-paragraph-begin (count)
   :type exclusive
