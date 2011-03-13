@@ -24,50 +24,112 @@
 (defmacro evil-test-buffer (&rest body)
   "Execute BODY in a temporary buffer.
 The buffer contains the familiar *scratch* message,
-and `evil-local-mode' is enabled."
+and `evil-local-mode' is enabled.
+
+An alternative buffer string can be specified with the
+:text keyword before the body code."
   (declare (indent defun)
            (debug t))
-  `(let ((kill-ring kill-ring)
-         (kill-ring-yank-pointer kill-ring-yank-pointer)
-         x-select-enable-clipboard
-         message-log-max)
-     (save-window-excursion
-       (with-temp-buffer
-         (switch-to-buffer-other-window (current-buffer))
-         (buffer-enable-undo)
-         (evil-local-mode 1)
-         (delete-region (point-min) (point-max))
-         (insert ";; This buffer is for notes you don't want to save, \
+  (let ((text ";; This buffer is for notes you don't want to save, \
 and for Lisp evaluation.\n;; If you want to create a file, visit \
 that file with C-x C-f,\n;; then enter the text in that file's own \
-buffer.\n\nBelow the empty line.")
-         (goto-char (point-min))
-         ,@body))))
+buffer.\n\nBelow the empty line.") keyword)
+    (while (keywordp (car-safe body))
+      (setq keyword (pop body))
+      (cond
+       ((eq keyword :text)
+        (setq text (pop body)))
+       (t
+        (pop body))))
+    `(let ((kill-ring kill-ring)
+           (kill-ring-yank-pointer kill-ring-yank-pointer)
+           x-select-enable-clipboard
+           message-log-max)
+       (save-window-excursion
+         (with-temp-buffer
+           (switch-to-buffer-other-window (current-buffer))
+           (buffer-enable-undo)
+           (evil-local-mode 1)
+           (delete-region (point-min) (point-max))
+           (insert ,text)
+           (goto-char (point-min))
+           ,@body)))))
 
 (defmacro evil-test-code-buffer (&rest body)
   "Execute BODY in a temporary buffer.
-The buffer contains a C hellow world,
+The buffer contains a C \"Hello world\" program,
 and `evil-local-mode' is enabled."
   (declare (indent defun)
            (debug t))
-  `(let ((kill-ring kill-ring)
-         (kill-ring-yank-pointer kill-ring-yank-pointer)
-         x-select-enable-clipboard
-         message-log-max)
-     (save-window-excursion
-       (with-temp-buffer
-         (switch-to-buffer-other-window (current-buffer))
-         (buffer-enable-undo)
-         (evil-local-mode 1)
-         (delete-region (point-min) (point-max))
-         (insert "#include <stdio.h>\n#include <stdlib.h>\n\n\
+  `(evil-test-buffer
+     :text "#include <stdio.h>\n#include <stdlib.h>\n\n\
 int main(int argc, char** argv)     \n{\n\
   printf(\"Hello world\\n\");\n\
-  return EXIT_SUCCESS;\n\
-     \n\
-}\n")
-         (goto-char (point-min))
-         ,@body))))
+  return EXIT_SUCCESS;\n     \n}\n"
+     ,@body))
+
+(defun evil-test-text
+  (before after &optional before-predicate after-predicate)
+  "Verifies the text around point.
+BEFORE is the expected text before point, and AFTER is
+the text after point. BEFORE-PREDICATE is a predicate function
+to execute at the beginning of the text, and AFTER-PREDICATE
+is executed at the end."
+  (when before
+    (if (functionp before)
+        (setq before-predicate before
+              before nil)
+      (should (string= (buffer-substring
+                        (- (point) (length before))
+                        (point))
+                       before))))
+  (when after
+    (if (functionp after)
+        (setq after-predicate after
+              after nil)
+      (should (string= (buffer-substring
+                        (point)
+                        (+ (point) (length after)))
+                       after))))
+  (when before-predicate
+    (ert-info ((format "Expect `%s' at the beginning" before-predicate))
+      (save-excursion
+        (backward-char (length before))
+        (should (funcall before-predicate)))))
+  (when after-predicate
+    (ert-info ((format "Expect `%s' at the end" after-predicate))
+      (save-excursion
+        (forward-char (length after))
+        (should (funcall after-predicate))))))
+
+(defmacro evil-test-macro
+  (keys &optional before after before-predicate after-predicate)
+  "Execute keybard macro KEYS and verify the text around point.
+KEYS can be a string, a vector, a form, or a list of these.
+See `evil-test-text' for an explanation of the other arguments."
+  (declare (indent defun))
+  `(let ((keys ',keys))
+     (when (listp keys)
+       (cond
+        ((and (symbolp (car-safe keys))
+              (fboundp (car-safe keys)))
+         (eval keys)
+         (setq keys nil))
+        (t
+         (setq keys (eval `(vconcat ,@keys))))))
+     (when keys
+       (execute-kbd-macro keys))
+     (evil-test-text ,before ,after ,before-predicate ,after-predicate)))
+
+(defmacro evil-test-buffer-edit
+  (keys &optional before after before-predicate after-predicate)
+  "The same as `evil-test-macro', but starts with a new
+unchanged test-buffer in Normal state."
+  (declare (indent defun))
+  `(evil-test-buffer
+     (evil-test-change-state 'normal)
+     (evil-test-macro ,keys
+       ,before ,after ,before-predicate ,after-predicate)))
 
 ;;; States
 
@@ -450,9 +512,10 @@ TYPE or TRANSFORM")
                    '(BEG [?a ?b ?c XX YY] MID [?d ?e ?f] END)))))
 
 (defun evil-test-repeat-info (keys &optional recorded)
-  "Executes a sequence of keys and verifies that `evil-repeat-info' records them correctly.
-`keys' is the sequence of keys to execute `recorded' is the
-expected sequence of recorded events, if nil `keys' is used"
+  "Executes a sequence of keys and verifies that `evil-repeat-info'
+records them correctly. KEYS is the sequence of keys to execute.
+RECORDED is the expected sequence of recorded events. If nil,
+KEYS is used."
   (execute-kbd-macro keys)
   (should (equal (evil-normalize-repeat-info evil-repeat-info)
                  (list (vconcat (or recorded keys))))))
@@ -487,71 +550,32 @@ expected sequence of recorded events, if nil `keys' is used"
     (ert-info ("Insert text with count 42")
       (evil-test-repeat-info (vconcat "42iABC" [escape])))))
 
-(defun evil-verify-around-point (expected &optional point-char)
-  "Verifies the text around point matches some predefined text.
-`keys' is a sequence of events to be passed to
-`execute-kbd-macro' `expected' is a regexp with a special
-character marking (point)'s position `point-char' is the special
-character marking (point)'s position, defaulted to ° If, e.g.,
-expected is \"ABC°def\" this means the expected text before point
-is \"ABC\" and the expected text after point is \"def\". "
-  (setq point-char (regexp-quote (char-to-string (or point-char ?°))))
-  (unless (string-match point-char expected)
-    (error "No cursor specified in expected string: %s" expected))
-  (let ((before (substring expected 0 (match-beginning 0)))
-        (after (substring expected (match-end 0))))
-    (ert-info ((format "Text before point is %s"
-                       (buffer-substring (max (point-min)
-                                              (- (point) (length before)))
-                                         (point))))
-      (should (looking-back before)))
-    (ert-info ((format "Text after point is %s"
-                       (buffer-substring (point)
-                                         (min (point-max)
-                                              (+ (point) (length after))))))
-      (should (looking-at after)))))
-
-(defun evil-test-editing (keys expected &optional point-char)
-  "Execute key-sequence `keys' and verify if the text around point matches
-`expected' afterwards.
-`keys' is a sequence of events to be passed to `execute-kbd-macro'
-`expected' is a regexp with a special character marking (point)'s position
-`point-char' is the special character marking (point)'s position, defaulted to °
-If, e.g., expected is \"ABC°def\" this means the expected text before point is
-\"ABC\" and the expected text after point is \"def\". "
-  (execute-kbd-macro keys)
-  (evil-verify-around-point expected point-char))
-
-(defun evil-test-editing-clean (keys expected &optional point-char)
-  "The same as `evil-test-editing' but starts with a new
-unchanged test-buffer in normal-state."
-  (evil-test-buffer
-    (evil-test-change-state 'normal)
-    (evil-test-editing keys expected point-char)))
-
 (ert-deftest evil-test-repeat ()
   "Repeat several editing commands."
   :tags '(evil)
   (ert-info ("Repeat replace")
-    (evil-test-editing-clean (vconcat "rX" [right right] ".")
-                             "\\`X;°XThis"))
+    (evil-test-buffer-edit ("rX" [right right] ".")
+      "X;" "XThis" 'bobp))
 
   (ert-info ("Repeat replace with count")
-    (evil-test-editing-clean (vconcat "2rX" [right right] ".")
-                             "\\`XX X°Xis "))
+    (evil-test-buffer-edit ("2rX" [right right] ".")
+      "XX X" "Xis " 'bobp))
 
   (ert-info ("Repeat replace without count with a new count")
-    (evil-test-editing-clean (vconcat "rX" [right right] "13.")
-                             "\\`X;XXXXXXXXXXXX°Xis for"))
+    (evil-test-buffer-edit ("rX" [right right] "13.")
+      "X;XXXXXXXXXXXX" "Xis for" 'bobp))
+
   (ert-info ("Repeat replace with count replacing original count")
-    (evil-test-editing-clean (vconcat "10rX" [right right] "20.")
-                             "\\`XXXXXXXXXXfXXXXXXXXXXXXXXXXXXX°X don't ")))
+    (evil-test-buffer-edit ("10rX" [right right] "20.")
+      "XXXXXXXXXXfXXXXXXXXXXXXXXXXXXX" "X don't " 'bobp)))
 
 (ert-deftest evil-test-cmd-replace-char ()
   "Calling `evil-replace-char' should replace characters."
   :tags '(evil)
-  (evil-test-editing-clean "r5" "\\`°5; This")
-  (evil-test-editing-clean "3rX" "\\`XX°XThis"))
+  (evil-test-buffer-edit "r5"
+    'bobp "5; This")
+  (evil-test-buffer-edit "3rX"
+    "XX" "XThis" 'bobp))
 
 (ert-deftest evil-test-insert-before ()
   "Test insertion of text before point"
@@ -560,8 +584,8 @@ unchanged test-buffer in normal-state."
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
     (should (and (looking-at "This") (looking-back ";; ")))
-    (evil-test-editing  (vconcat "ievil rulz " [escape])
-                        "\\`;; evil rulz° This")))
+    (evil-test-macro ("ievil rulz " [escape])
+      ";; evil rulz" " This" 'bobp)))
 
 (ert-deftest evil-test-insert-before-with-count ()
   "Test insertion of text before point with repeat count"
@@ -570,28 +594,29 @@ unchanged test-buffer in normal-state."
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
     (should (and (looking-at "This") (looking-back ";; ")))
-    (evil-test-editing  (vconcat "2ievil rulz " [escape])
-                        "\\`;; evil rulz evil rulz° This")))
+    (evil-test-macro ("2ievil rulz " [escape])
+      ";; evil rulz evil rulz" " This" 'bobp)))
 
 (ert-deftest evil-test-repeat-insert-before ()
   "Test repeating of insert-before command."
   :tags '(evil)
   (ert-info ("Repeat insert")
-    (evil-test-editing-clean (vconcat "iABC" [escape] "..")
-                             "ABABAB°CCC;; This"))
+    (evil-test-buffer-edit ("iABC" [escape] "..")
+      "ABABAB" "CCC;; This"))
 
   (ert-info ("Repeat insert with count")
-    (evil-test-editing-clean (vconcat "2iABC" [escape] "..")
-                             "ABCABABCABABCAB°CCC;; This"))
+    (evil-test-buffer-edit ("2iABC" [escape] "..")
+      "ABCABABCABABCAB" "CCC;; This"))
 
   (ert-info ("Repeat insert with repeat count")
-    (evil-test-editing-clean (vconcat "iABC" [escape] "11.")
-                             "ABABCABCABCABCABCABCABCABCABCABCAB°CC;; This"))
+    (evil-test-buffer-edit ("iABC" [escape] "11.")
+      "ABABCABCABCABCABCABCABCABCABCABCAB"
+      "CC;; This"))
 
   (ert-info ("Repeat insert with count with repeat with count")
-    (evil-test-editing-clean
-     (vconcat "10iABC" [escape] "11.")
-     "ABCABCABCABCABCABCABCABCABCABABCABCABCABCABCABCABCABCABCABCAB°CC;; This")))
+    (evil-test-buffer-edit ("10iABC" [escape] "11.")
+      "ABCABCABCABCABCABCABCABCABCABABCABCABCABCABCABCABCABCABCABCAB"
+      "CC;; This")))
 
 (ert-deftest evil-test-insert-after ()
   "Test insertion of text after point"
@@ -600,8 +625,8 @@ unchanged test-buffer in normal-state."
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
     (should (and (looking-at "This") (looking-back ";; ")))
-    (evil-test-editing  (vconcat "aevil rulz " [escape])
-                        "\\`;; Tevil rulz° his")))
+    (evil-test-macro ("aevil rulz " [escape])
+      ";; Tevil rulz" " his" 'bobp)))
 
 (ert-deftest evil-test-insert-after-with-count ()
   "Test insertion of text after point with repeat count"
@@ -609,28 +634,29 @@ unchanged test-buffer in normal-state."
   (evil-test-buffer
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
-    (evil-test-editing  (vconcat "2aevil rulz " [escape])
-                        "\\`;; Tevil rulz evil rulz° his")))
+    (evil-test-macro ("2aevil rulz " [escape])
+      ";; Tevil rulz evil rulz" " his" 'bobp)))
 
 (ert-deftest evil-test-repeat-insert-after ()
   "Test repeating of insert-after command."
   :tags '(evil)
   (ert-info ("Repeat insert")
-    (evil-test-editing-clean (vconcat "aABC" [escape] "..")
-                             ";ABCABCAB°C; This"))
+    (evil-test-buffer-edit ("aABC" [escape] "..")
+      ";ABCABCAB" "C; This"))
 
   (ert-info ("Repeat insert with count")
-    (evil-test-editing-clean (vconcat "2aABC" [escape] "..")
-                             ";ABCABCABCABCABCAB°C; This"))
+    (evil-test-buffer-edit ("2aABC" [escape] "..")
+      ";ABCABCABCABCABCAB" "C; This"))
 
   (ert-info ("Repeat insert with repeat count")
-    (evil-test-editing-clean (vconcat "aABC" [escape] "11.")
-                             ";ABCABCABCABCABCABCABCABCABCABCABCAB°C; This"))
+    (evil-test-buffer-edit ("aABC" [escape] "11.")
+      ";ABCABCABCABCABCABCABCABCABCABCABCAB"
+      "C; This"))
 
   (ert-info ("Repeat insert with count with repeat with count")
-    (evil-test-editing-clean
-     (vconcat "10aABC" [escape] "11.")
-     ";ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB°C; This")))
+    (evil-test-buffer-edit ("10aABC" [escape] "11.")
+      ";ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB"
+      "C; This")))
 
 (ert-deftest evil-test-insert-above ()
   "Test insertion of text above point"
@@ -638,8 +664,9 @@ unchanged test-buffer in normal-state."
   (evil-test-buffer
     (evil-local-mode 1)
     (forward-line)
-    (evil-test-editing  (vconcat "Oabc\ndef" [escape])
-                        "evaluation.\nabc\nde°f\n;; If you")))
+    (evil-test-macro ("Oabc\ndef" [escape])
+      "evaluation.\nabc\nde"
+      "f\n;; If you")))
 
 (ert-deftest evil-test-insert-above-with-count ()
   "Test insertion of text above point with repeat count"
@@ -647,67 +674,74 @@ unchanged test-buffer in normal-state."
   (evil-test-buffer
     (evil-local-mode 1)
     (forward-line)
-    (evil-test-editing  (vconcat "2Oevil\nrulz" [escape])
-                        "evaluation.\nevil\nrulz\nevil\nrul°z\n;; If you")))
+    (evil-test-macro ("2Oevil\nrulz" [escape])
+      "evaluation.\nevil\nrulz\nevil\nrul"
+      "z\n;; If you")))
 
 (ert-deftest evil-test-repeat-insert-above ()
   "Test repeating of insert-above command."
   :tags '(evil)
   (ert-info ("Repeat insert")
-    (evil-test-editing-clean (vconcat "Oevil\nrulz" [escape] "..")
-                             "\\`evil\nevil\nevil\nrul°z\nrulz\nrulz\n;; This"))
+    (evil-test-buffer-edit ("Oevil\nrulz" [escape] "..")
+      "evil\nevil\nevil\nrul"
+      "z\nrulz\nrulz\n;; This"
+      'bobp))
 
   (ert-info ("Repeat insert with count")
-    (evil-test-editing-clean
-     (vconcat "2Oevil\nrulz" [escape] "..")
-     "\\`evil\nrulz\nevil\nevil\nrulz\nevil\nevil\nrulz\nevil\nrul°z\nrulz\nrulz\n;; This"))
+    (evil-test-buffer-edit ("2Oevil\nrulz" [escape] "..")
+      "evil\nrulz\nevil\nevil\nrulz\nevil\nevil\nrulz\nevil\nrul"
+      "z\nrulz\nrulz\n;; This"
+      'bobp))
 
   (ert-info ("Repeat insert with repeat count")
-    (evil-test-editing-clean (vconcat "Oevil\nrulz" [escape] "2.")
-                             "evil\nevil\nrulz\nevil\nrul°z\nrulz\n;; This"))
+    (evil-test-buffer-edit ("Oevil\nrulz" [escape] "2.")
+      "evil\nevil\nrulz\nevil\nrul"
+      "z\nrulz\n;; This"))
 
   (ert-info ("Repeat insert with count with repeat with count")
-    (evil-test-editing-clean
-     (vconcat "2Oevil\nrulz" [escape] "3.")
-     "\\`evil\nrulz\nevil\nevil\nrulz\nevil\nrulz\nevil\nrul°z\nrulz\n;; This")))
+    (evil-test-buffer-edit ("2Oevil\nrulz" [escape] "3.")
+      "evil\nrulz\nevil\nevil\nrulz\nevil\nrulz\nevil\nrul"
+      "z\nrulz\n;; This"
+      'bobp)))
 
 (ert-deftest evil-test-insert-below ()
   "Test insertion of text below point"
   :tags '(evil)
   (evil-test-buffer
     (evil-local-mode 1)
-    (evil-test-editing  (vconcat "oabc\ndef" [escape])
-                        "evaluation.\nabc\nde°f\n;; If you")))
+    (evil-test-macro ("oabc\ndef" [escape])
+      "evaluation.\nabc\nde" "f\n;; If you")))
 
 (ert-deftest evil-test-insert-below-with-count ()
   "Test insertion of text below point with repeat count"
   :tags '(evil)
   (evil-test-buffer
     (evil-local-mode 1)
-    (evil-test-editing  (vconcat "2oevil\nrulz" [escape])
-                        "evaluation.\nevil\nrulz\nevil\nrul°z\n;; If you")))
+    (evil-test-macro ("2oevil\nrulz" [escape])
+      "evaluation.\nevil\nrulz\nevil\nrul" "z\n;; If you")))
 
 (ert-deftest evil-test-repeat-insert-below ()
   "Test repeating of insert-below command."
   :tags '(evil)
   (ert-info ("Repeat insert")
-    (evil-test-editing-clean (vconcat "oevil\nrulz" [escape] "..")
-                             "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you"))
+    (evil-test-buffer-edit ("oevil\nrulz" [escape] "..")
+      "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul"
+      "z\n;; If you"))
 
   (ert-info ("Repeat insert with count")
-    (evil-test-editing-clean
-     (vconcat "2oevil\nrulz" [escape] "..")
-     "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you"))
+    (evil-test-buffer-edit ("2oevil\nrulz" [escape] "..")
+      "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul"
+      "z\n;; If you"))
 
   (ert-info ("Repeat insert with repeat count")
-    (evil-test-editing-clean
-     (vconcat "oevil\nrulz" [escape] "2.")
-     "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you"))
+    (evil-test-buffer-edit ("oevil\nrulz" [escape] "2.")
+      "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul"
+      "z\n;; If you"))
 
   (ert-info ("Repeat insert with count with repeat with count")
-    (evil-test-editing-clean
-     (vconcat "2oevil\nrulz" [escape] "3.")
-     "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul°z\n;; If you")))
+    (evil-test-buffer-edit ("2oevil\nrulz" [escape] "3.")
+      "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul"
+      "z\n;; If you")))
 
 (defun evil-test-dummy-complete ()
   "Test function for change-base repeation.
@@ -725,20 +759,24 @@ cursor on the new line."
   (let (line-move-visual)
     (define-key evil-insert-state-map (kbd "C-c C-p") 'evil-test-dummy-complete)
     (evil-set-insert-repeat-type 'evil-test-dummy-complete 'change)
-    (evil-test-editing-clean
-     (vconcat [right right right] "iABC " (kbd "C-c C-p") "BODY" [escape]
-              [down down home] ".")
-     "\\`;; ABC BEGIN\nBODY\nEND\nABC BEGIN\nBOD°Y\nEND\nr is for")))
+    (evil-test-buffer-edit ([right right right] "iABC "
+                            (kbd "C-c C-p") "BODY"
+                            [escape] [down down home] ".")
+      ";; ABC BEGIN\nBODY\nEND\nABC BEGIN\nBOD"
+      "Y\nEND\nr is for"
+      'bobp)))
 
 (ert-deftest evil-test-repeat-kill-buffer ()
-  "Test safe-guard preventing buffers from being deleted when repeating a command."
+  "Test safe-guard preventing buffers from being deleted
+when repeating a command."
   :tags '(evil)
-  (ert-info ("Test killing works for direct calls to `evil-execute-repeat-info'")
+  (ert-info ("Test killing works for direct calls
+to `evil-execute-repeat-info'")
     (evil-test-buffer
       (evil-local-mode 1)
       (setq evil-repeat-info '((kill-buffer nil)))
       (evil-execute-repeat-info evil-repeat-info)
-      (should (not (looking-at ";; This")))))
+      (should (not (looking-at ";; This"))))) ;
 
   (ert-info ("Verify an error is raised when using `evil-repeat' command")
     (evil-test-buffer
@@ -754,11 +792,15 @@ cursor on the new line."
   (evil-test-buffer
     (evil-test-change-state 'operator)
     (ert-info ("Read from the keyboard unless INPUT is given")
-      (setq unread-command-events '(?d))
-      (should (equal (evil-keypress-parser)
-                     '(evil-delete nil)))
-      (should (equal (evil-keypress-parser '(?d))
-                     '(evil-delete nil))))
+      (let ((unread-command-events '(?d)))
+        (should (equal (evil-keypress-parser)
+                       '(evil-delete nil)))
+        (should (equal (evil-keypress-parser '(?d))
+                       '(evil-delete nil)))))
+    (ert-info ("Read remainder from the keyboard if INPUT is incomplete")
+      (let ((unread-command-events '(?d)))
+        (should (equal (evil-keypress-parser '(?2))
+                       '(evil-delete 2)))))
     (ert-info ("Handle counts not starting with zero")
       (should (equal (evil-keypress-parser '(?2 ?d))
                      '(evil-delete 2)))
@@ -776,110 +818,90 @@ cursor on the new line."
 (ert-deftest evil-test-operator ()
   "Test operator."
   :tags '(evil)
-  (evil-test-editing-clean
-   (vconcat [right right right] "g?" [M-right])
-   ";; °Guvf buffer"))
+  (evil-test-buffer-edit ([right right right] "g?" [M-right])
+    ";; " "Guvf buffer"))
 
 (ert-deftest evil-test-operator-with-count ()
   "Test operator with count argument."
   :tags '(evil)
   (ert-info ("Count before operator")
-    (evil-test-editing-clean
-     (vconcat [right right right] "2g?" [M-right])
-     ";; °Guvf ohssre is"))
+    (evil-test-buffer-edit ([right right right] "2g?" [M-right])
+      ";; " "Guvf ohssre is"))
 
   (ert-info ("Count before motion")
-    (evil-test-editing-clean
-     (vconcat [right right right] "g?2" [M-right])
-     ";; °Guvf ohssre is"))
+    (evil-test-buffer-edit ([right right right] "g?2" [M-right])
+      ";; " "Guvf ohssre is"))
 
   (ert-info ("Count before operator and motion")
-    (evil-test-editing-clean
-     (vconcat [right right right] "3g?2" [M-right])
-     ";; °Guvf ohssre vf sbe abgrf lbh don't"))
+    (evil-test-buffer-edit ([right right right] "3g?2" [M-right])
+      ";; " "Guvf ohssre vf sbe abgrf lbh don't"))
 
   (ert-info ("Count exceeding buffer boundaries")
-    (evil-test-editing-clean
-     (vconcat [right right right] "g?200" [right])
-     ";; °Guvf ohssre vf sbe abgrf lbh qba'g")))
+    (evil-test-buffer-edit ([right right right] "g?200" [right])
+      ";; " "Guvf ohssre vf sbe abgrf lbh qba'g")))
 
 (ert-deftest evil-test-operator-repeat ()
   "Test repeating of an operator."
   :tags '(evil)
-  (evil-test-editing-clean
-   (vconcat [right right right] "g?" [M-right] [M-right] ".")
-   ";; Guvf° ohssre is"))
+  (evil-test-buffer-edit ([right right right] "g?" [M-right] [M-right] ".")
+    ";; Guvf" " ohssre is"))
 
 (ert-deftest evil-test-operator-repeat-with-count ()
   "Test repeating of an operator with new count."
   :tags '(evil)
   (ert-info ("Count before operator")
-    (evil-test-editing-clean
-     (vconcat [right right right] "2g?" [M-right] "3.")
-     ";; °This buffer vf for notes"))
+    (evil-test-buffer-edit ([right right right] "2g?" [M-right] "3.")
+      ";; " "This buffer vf for notes"))
 
   (ert-info ("Count before motion")
-    (evil-test-editing-clean
-     (vconcat [right right right] "g?2" [M-right] "3.")
-     ";; °This buffer vf for notes"))
+    (evil-test-buffer-edit ([right right right] "g?2" [M-right] "3.")
+      ";; " "This buffer vf for notes"))
 
   (ert-info ("Count before operator and motion")
-    (evil-test-editing-clean
-     (vconcat [right right right] "3g?2" [M-right] "4.")
-     ";; °This buffer is for abgrf lbh don't")))
+    (evil-test-buffer-edit ([right right right] "3g?2" [M-right] "4.")
+      ";; " "This buffer is for abgrf lbh don't")))
 
 (ert-deftest evil-test-operator-delete ()
   "Test deleting text."
   :tags '(evil)
   (ert-info ("Delete characters")
-    (evil-test-editing-clean
-     "dl"
-     "°; This buffer is for notes")
-    (evil-test-editing-clean
-     "d1l"
-     "°; This buffer is for notes")
-    (evil-test-editing-clean
-     "1dl"
-     "°; This buffer is for notes")
-    (evil-test-editing-clean
-     "1d1l"
-     "°; This buffer is for notes")
-    (evil-test-editing-clean
-     "d2l"
-     "° This buffer is for notes")
-    (evil-test-editing-clean
-     "2dl"
-     "° This buffer is for notes")
+    (evil-test-buffer-edit "dl"
+      'bobp "; This buffer is for notes")
+    (evil-test-buffer-edit "d1l"
+      'bobp "; This buffer is for notes")
+    (evil-test-buffer-edit "1dl"
+      'bobp "; This buffer is for notes")
+    (evil-test-buffer-edit "1d1l"
+      'bobp "; This buffer is for notes")
+    (evil-test-buffer-edit "d2l"
+      'bobp " This buffer is for notes")
+    (evil-test-buffer-edit "2dl"
+      'bobp " This buffer is for notes")
     (ert-info ("Multiply counts together")
-      (evil-test-editing-clean
-       "2d2l"
-       "°his buffer is for notes")))
+      (evil-test-buffer-edit "d4l"
+        'bobp "his buffer is for notes")
+      (evil-test-buffer-edit "4dl"
+        'bobp "his buffer is for notes")
+      (evil-test-buffer-edit "2d2l"
+        'bobp "his buffer is for notes")))
   (ert-info ("Delete current line")
-    (evil-test-editing-clean
-     "dd"
-     "°;; If you want to create a file")
-    (evil-test-editing-clean
-     "d1d"
-     "°;; If you want to create a file")
-    (evil-test-editing-clean
-     "1dd"
-     "°;; If you want to create a file")
-    (evil-test-editing-clean
-     "1d1d"
-     "°;; If you want to create a file"))
+    (evil-test-buffer-edit "dd"
+      'bobp ";; If you want to create a file")
+    (evil-test-buffer-edit "d1d"
+      'bobp ";; If you want to create a file")
+    (evil-test-buffer-edit "1dd"
+      'bobp ";; If you want to create a file")
+    (evil-test-buffer-edit "1d1d"
+      'bobp ";; If you want to create a file"))
   (ert-info ("Delete two lines")
-    (evil-test-editing-clean
-     "d2d"
-     "°;; then enter the text")
-    (evil-test-editing-clean
-     "2dd"
-     "°;; then enter the text")
-    (evil-test-editing-clean
-     "dj"
-     "°;; then enter the text")
-    (evil-test-editing-clean
-     "jdk"
-     "°;; then enter the text")))
+    (evil-test-buffer-edit "d2d"
+      'bobp ";; then enter the text")
+    (evil-test-buffer-edit "2dd"
+      'bobp ";; then enter the text")
+    (evil-test-buffer-edit "dj"
+      'bobp ";; then enter the text")
+    (evil-test-buffer-edit "jdk"
+      'bobp ";; then enter the text")))
 
 ;;; Motions
 
@@ -887,9 +909,11 @@ cursor on the new line."
   "Test `evil-forward-char' motion."
   :tags '(evil)
   (ert-info ("Simple")
-    (evil-test-editing-clean "l" "\\`;°; This"))
+    (evil-test-buffer-edit "l"
+      ";" "; This" 'bobp))
   (ert-info ("With count")
-    (evil-test-editing-clean "12l" "\\`;; This buff°er is"))
+    (evil-test-buffer-edit "12l"
+      ";; This buff" "er is" 'bobp))
   (ert-info ("End of line")
     (evil-test-buffer
       (end-of-line)
@@ -897,55 +921,56 @@ cursor on the new line."
       (should-error (execute-kbd-macro "l"))
       (should-error (execute-kbd-macro "10l"))))
   (ert-info ("Until end-of-line")
-    (evil-test-editing-clean "100l" "evaluation°\\.\n"))
+    (evil-test-buffer-edit "100l"
+      "evaluation" ".\n"))
   (ert-info ("On empty line")
     (evil-test-buffer
-      (forward-line 3)
-      (evil-verify-around-point "buffer\\.\n°\nBelow")
+      (evil-test-macro (forward-line 3)
+        "buffer.\n" "\nBelow")
       (should-error (execute-kbd-macro "l"))
-      (evil-verify-around-point "buffer.\n°\nBelow")
+      (evil-test-text "buffer.\n" "\nBelow")
       (should-error (execute-kbd-macro "42l"))
-      (evil-verify-around-point "buffer.\n°\nBelow"))))
+      (evil-test-text "buffer.\n" "\nBelow"))))
 
 (ert-deftest evil-test-backward-char ()
   "Test `evil-backward-char' motion."
   :tags '(evil)
   (ert-info ("Simple")
     (evil-test-buffer
-      (forward-word)
-      (evil-verify-around-point "This° buffer")
-      (execute-kbd-macro "h")
-      (evil-verify-around-point "\\`;; Thi°s buffer")))
+      (evil-test-macro (forward-word)
+        "This" " buffer")
+      (evil-test-macro "h"
+        ";; Thi" "s buffer" 'bobp)))
   (ert-info ("With count")
     (evil-test-buffer
-      (forward-word)
-      (evil-verify-around-point "This° buffer")
-      (execute-kbd-macro "3h")
-      (evil-verify-around-point "\\`;; T°his buffer")
-      (execute-kbd-macro "100h")
-      (evil-verify-around-point "\\`°;; This buffer")))
+      (evil-test-macro (forward-word)
+        "This" " buffer")
+      (evil-test-macro "3h"
+        ";; T" "his buffer" 'bobp)
+      (evil-test-macro "100h"
+        'bobp ";; This buffer")))
   (ert-info ("Beginning of line")
     (evil-test-buffer
       (forward-line)
       (should-error (execute-kbd-macro "h"))
-      (evil-verify-around-point "\n°;; If you")
+      (evil-test-text "\n" ";; If you")
       (should-error (execute-kbd-macro "10h"))
-      (evil-verify-around-point "\n°;; If you")))
+      (evil-test-text "\n" ";; If you")))
   (ert-info ("Until beginning-of-line")
     (evil-test-buffer
       (forward-line)
       (forward-word)
-      (evil-verify-around-point ";; If° you")
-      (execute-kbd-macro "100h")
-      (evil-verify-around-point "\n°;; If you")))
+      (evil-test-text ";; If" " you")
+      (evil-test-macro "100h"
+        "\n" ";; If you")))
   (ert-info ("On empty line")
     (evil-test-buffer
-      (forward-line 3)
-      (evil-verify-around-point "buffer\\.\n°\nBelow")
+      (evil-test-macro (forward-line 3)
+        "buffer.\n" "\nBelow")
       (should-error (execute-kbd-macro "h"))
-      (evil-verify-around-point "buffer.\n°\nBelow")
+      (evil-test-text "buffer.\n" "\nBelow")
       (should-error (execute-kbd-macro "42h"))
-      (evil-verify-around-point "buffer.\n°\nBelow"))))
+      (evil-test-text "buffer.\n" "\nBelow"))))
 
 (ert-deftest evil-test-previous-line ()
   "Test `evil-previous-line' motion."
@@ -954,61 +979,61 @@ cursor on the new line."
     (evil-test-buffer
       (forward-line 4)
       (forward-word)
-      (evil-verify-around-point "\nBelow° the")
-      (execute-kbd-macro "k")
-      (evil-verify-around-point "own buffer.\n°\nBelow")))
+      (evil-test-text "\nBelow" " the")
+      (evil-test-macro "k"
+        "own buffer.\n" "\nBelow")))
   (ert-info ("With count")
     (evil-test-buffer
       (forward-line 4)
       (forward-word)
-      (evil-verify-around-point "\nBelow° the")
-      (execute-kbd-macro "2k")
-      (evil-verify-around-point ";; th°en enter")))
+      (evil-test-text "\nBelow" " the")
+      (evil-test-macro "2k"
+        ";; th" "en enter")))
   (ert-info ("Until beginning of buffer")
     (evil-test-buffer
       (forward-line 4)
       (forward-word)
-      (evil-verify-around-point "\nBelow° the")
-      (execute-kbd-macro "100k")
-      (evil-verify-around-point ";; Th°is buffer")))
+      (evil-test-text "\nBelow" " the")
+      (evil-test-macro "100k"
+        ";; Th" "is buffer")))
   (ert-info ("At beginning of buffer")
     (evil-test-buffer
-      (forward-word)
-      (evil-verify-around-point ";; This° buffer")
+      (evil-test-macro (forward-word)
+        ";; This" " buffer")
       (should-error (execute-kbd-macro "k"))
-      (evil-verify-around-point ";; This° buffer")
+      (evil-test-text ";; This" " buffer")
       (should-error (execute-kbd-macro "42k"))
-      (evil-verify-around-point ";; This° buffer"))))
+      (evil-test-text ";; This" " buffer"))))
 
 (ert-deftest evil-test-next-line ()
   "Test `evil-next-line' motion."
   :tags '(evil)
   (ert-info ("Simple")
     (evil-test-buffer
-      (forward-word)
-      (evil-verify-around-point ";; This° buffer")
-      (execute-kbd-macro "j")
-      (evil-verify-around-point ";; If y°ou")))
+      (evil-test-macro (forward-word)
+        ";; This" " buffer")
+      (evil-test-macro "j"
+        ";; If y" "ou")))
   (ert-info ("With count")
     (evil-test-buffer
-      (forward-word)
-      (evil-verify-around-point ";; This° buffer")
-      (execute-kbd-macro "2j")
-      (evil-verify-around-point ";; then° enter")))
+      (evil-test-macro (forward-word)
+        ";; This" " buffer")
+      (evil-test-macro "2j"
+        ";; then" " enter")))
   (ert-info ("Until end of buffer")
     (evil-test-buffer
-      (forward-word)
-      (evil-verify-around-point ";; This° buffer")
-      (execute-kbd-macro "100j")
-      (evil-verify-around-point "Below t°he ")))
+      (evil-test-macro (forward-word)
+        ";; This" " buffer")
+      (evil-test-macro "100j"
+        "Below t" "he ")))
   (ert-info ("At end of buffer")
     (evil-test-buffer
       (re-search-forward "Below")
-      (evil-verify-around-point "\nBelow° the")
+      (evil-test-text "\nBelow" " the")
       (should-error (execute-kbd-macro "j"))
-      (evil-verify-around-point "\nBelow° the")
+      (evil-test-text "\nBelow" " the")
       (should-error (execute-kbd-macro "42j"))
-      (evil-verify-around-point "\nBelow° the"))))
+      (evil-test-text "\nBelow" " the"))))
 
 (ert-deftest evil-test-beginning-of-line ()
   "Test `evil-beginning-line' motion."
@@ -1016,10 +1041,10 @@ cursor on the new line."
   (evil-test-buffer
     (forward-line)
     (forward-word)
-    (evil-verify-around-point ";; If° you")
+    (evil-test-text ";; If" " you")
     (dotimes (i 2)
-      (execute-kbd-macro "0")
-      (evil-verify-around-point "evaluation\.\n°;; If you"))))
+      (evil-test-macro "0"
+        "evaluation\.\n" ";; If you"))))
 
 (ert-deftest evil-test-end-of-line ()
   "Test `evil-end-line' motion."
@@ -1027,14 +1052,14 @@ cursor on the new line."
   (evil-test-buffer
     (forward-line)
     (forward-word)
-    (evil-verify-around-point ";; If° you")
+    (evil-test-text ";; If" " you")
     (dotimes (i 2)
-      (execute-kbd-macro "$")
-      (evil-verify-around-point "C-x C-f°,\n;; then"))
-    (forward-line 2)
-    (evil-verify-around-point "buffer\\.\n°\nBelow")
-    (execute-kbd-macro "$")
-    (evil-verify-around-point "buffer\\.\n°\nBelow")))
+      (evil-test-macro "$"
+        "C-x C-f" ",\n;; then"))
+    (evil-test-macro (forward-line 2)
+      "buffer.\n" "\nBelow")
+    (evil-test-macro "$"
+      "buffer.\n" "\nBelow")))
 
 (ert-deftest evil-test-first-non-blank ()
   "Test `evil-first-non-blank' motion."
@@ -1043,64 +1068,64 @@ cursor on the new line."
     (forward-line 5)
     (end-of-line)
     (backward-char)
-    (evil-verify-around-point "world\\\\n\")°;\n  return")
+    (evil-test-text "world\\n\")" ";\n  return")
     (dotimes (i 2)
-      (execute-kbd-macro "^")
-      (evil-verify-around-point "{\n  °printf"))
-    (forward-line 2)
-    (evil-verify-around-point "SUCCESS;\n°     \n}")
-    (execute-kbd-macro "^")
-    (evil-verify-around-point "SUCCESS;\n    ° \n}")))
+      (evil-test-macro "^"
+        "{\n  " "printf"))
+    (evil-test-macro (forward-line 2)
+      "SUCCESS;\n" "     \n}")
+    (evil-test-macro "^"
+      "SUCCESS;\n    " " \n}")))
 
 (ert-deftest evil-test-last-non-blank ()
   "Test `evil-last-non-blank' motion."
   :tags '(evil)
   (evil-test-code-buffer
-    (forward-line 3)
-    (evil-verify-around-point "\n°int main")
+    (evil-test-macro (forward-line 3)
+      "\n" "int main")
     (dotimes (i 2)
-      (execute-kbd-macro "g_")
-      (evil-verify-around-point "argv°)     \n"))
+      (evil-test-macro "g_"
+        "argv" ")     \n"))
     (forward-line 4)
     (forward-char 3)
-    (evil-verify-around-point "SUCCESS;\n   °  \n}")
-    (execute-kbd-macro "g_")
-    (evil-verify-around-point "SUCCESS;\n°     \n}")))
+    (evil-test-text "SUCCESS;\n   " "  \n}")
+    (evil-test-macro "g_"
+      "SUCCESS;\n" "     \n}")))
 
 (ert-deftest evil-test-first-non-blank-beg ()
   "Test `evil-first-non-blank-beg' motion."
   :tags '(evil)
   (evil-test-code-buffer
-    (execute-kbd-macro "6gg")
-    (evil-verify-around-point "{\n  °printf")
-    (execute-kbd-macro "3gg")
-    (evil-verify-around-point "stdlib.h>\n°\nint")
-    (execute-kbd-macro "8gg")
-    (evil-verify-around-point "SUCCESS;\n    ° \n}")
-    (execute-kbd-macro "gg")
-    (evil-verify-around-point "\\`°#include <stdio.h>"))
+    (evil-test-macro "6gg"
+      "{\n  " "printf")
+    (evil-test-macro "3gg"
+      "stdlib.h>\n" "\nint")
+    (evil-test-macro "8gg"
+      "SUCCESS;\n    " " \n}")
+    (evil-test-macro "gg"
+      'bobp "#include <stdio.h>"))
   (evil-test-buffer
-    (execute-kbd-macro "100gg")
-    (evil-verify-around-point "\n\n°Below the empty line\\.")))
+    (evil-test-macro "100gg"
+      "\n\n" "Below the empty line.")))
 
 (ert-deftest evil-test-first-non-blank-end ()
   "Test `evil-first-non-blank-beg' motion."
   :tags '(evil)
   (evil-test-code-buffer
-    (execute-kbd-macro "6G")
-    (evil-verify-around-point "{\n  °printf")
-    (execute-kbd-macro "3G")
-    (evil-verify-around-point "stdlib.h>\n°\nint")
-    (execute-kbd-macro "8G")
-    (evil-verify-around-point "SUCCESS;\n    ° \n}")
-    (execute-kbd-macro "G")
-    (evil-verify-around-point "}\n°\\'"))
+    (evil-test-macro "6G"
+      "{\n  " "printf")
+    (evil-test-macro "3G"
+      "stdlib.h>\n" "\nint")
+    (evil-test-macro "8G"
+      "SUCCESS;\n    " " \n}")
+    (evil-test-macro "G"
+      "}\n" 'eobp))
   (evil-test-buffer
-    (execute-kbd-macro "G")
-    (evil-verify-around-point "\n\n°Below the empty line\\.")
+    (evil-test-macro "G"
+      "\n\n" "Below the empty line.")
     (goto-char (point-min))
-    (execute-kbd-macro "100G")
-    (evil-verify-around-point "\n\n°Below the empty line\\.")))
+    (evil-test-macro "100G"
+      "\n\n" "Below the empty line.")))
 
 (ert-deftest evil-test-operator-0 ()
   "Test motion \"0\" with an operator."
@@ -1159,11 +1184,13 @@ cursor on the new line."
 
     (ert-info ("Exact \"0\" count")
       (should (equal (evil-extract-count "0")
-                     (list nil 'evil-digit-argument-or-evil-beginning-of-line "0" nil))))
+                     (list nil 'evil-digit-argument-or-evil-beginning-of-line
+                           "0" nil))))
 
     (ert-info ("Extra elements and \"0\"")
       (should (equal (evil-extract-count "0XY")
-                     (list nil 'evil-digit-argument-or-evil-beginning-of-line "0" "XY"))))
+                     (list nil 'evil-digit-argument-or-evil-beginning-of-line
+                           "0" "XY"))))
 
     (ert-info ("Count only")
       (should-error (evil-extract-count "1230")))
