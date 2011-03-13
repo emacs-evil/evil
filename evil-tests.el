@@ -1115,26 +1115,26 @@ cursor on the new line."
   (should (equal (evil-negate-chars "a-b") "^a-b"))
   (should (equal (evil-negate-chars "^a-b") "a-b")))
 
-(ert-deftest evil-test-select-chars ()
-  "Test `evil-test-select-chars'."
+(ert-deftest evil-test-move-chars ()
+  "Test `evil-test-move-chars'."
   :tags '(evil)
   (evil-test-code-buffer
     (ert-info ("Simple forward")
-      (evil-select-chars "{" 1)
+      (evil-move-chars "{" 1)
       (evil-verify-around-point "argv)     \n{°")
-      (evil-select-chars "a-z" 1)
+      (evil-move-chars "a-z" 1)
       (evil-verify-around-point "printf°")
-      (evil-select-chars "a-z" 1)
+      (evil-move-chars "a-z" 1)
       (evil-verify-around-point "Hello° world"))
     (ert-info ("End of buffer")
-      (should (= 1 (evil-select-chars "Q" 1))))
+      (should (= 1 (evil-move-chars "Q" 1))))
     (ert-info ("Simple backward")
-      (evil-select-chars "*" -1)
+      (evil-move-chars "*" -1)
       (evil-verify-around-point "char°** argv)")
-      (evil-select-chars "*" -1)
+      (evil-move-chars "*" -1)
       (evil-verify-around-point "char°** argv)"))
     (ert-info ("Beginning of buffer")
-      (should (= -1 (evil-select-chars "Q" -1))))))
+      (should (= -1 (evil-move-chars "Q" -1))))))
 
 (ert-deftest evil-test-forward-word-end ()
   "Test `evil-test-forward-word-end'"
