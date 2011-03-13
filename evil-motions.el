@@ -501,15 +501,22 @@ the end of the first object. If there no previous object raises
     count))
 
 (defun evil-select-paragraph (count)
-  "Selector for a paragraph."
-  (let* ((p (point))
-         (rest (forward-paragraph count)))
-    (when (and (= p (point))
-               (not (looking-at paragraph-start)))
-      (if (> count 0)
-          (setq rest (1- rest))
-        (setq rest (1+ rest))))
-    rest))
+  "Select a paragraph."
+  (setq count (or count 1))
+  (catch 'done
+    (while (< count 0)
+      (let ((p (point)))
+        (forward-paragraph -1)
+        (when (= p (point))
+          (throw 'done count))
+        (setq count (1+ count))))
+    (while (> count 0)
+      (let ((p (point)))
+        (forward-paragraph +1)
+        (when (= p (point))
+          (throw 'done count))
+        (setq count (1- count))))
+    0))
 
 (evil-define-motion evil-forward-sentence-begin (count)
   :type exclusive
