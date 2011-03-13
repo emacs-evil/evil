@@ -1109,12 +1109,6 @@ cursor on the new line."
 ;; TODO: I don't know how to test the visual motions or window motions.
 
 
-(ert-deftest evil-test-negate-chars ()
-  "Test `evil-negate-chars'."
-  :tags '(evil)
-  (should (equal (evil-negate-chars "a-b") "^a-b"))
-  (should (equal (evil-negate-chars "^a-b") "a-b")))
-
 (ert-deftest evil-test-move-chars ()
   "Test `evil-test-move-chars'."
   :tags '(evil)

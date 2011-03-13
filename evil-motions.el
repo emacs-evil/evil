@@ -247,12 +247,6 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
 
 ;; Text object and movement framework
 
-(defun evil-negate-chars (chars)
-  "Returns the negated character set of CHARS."
-  (if (= (aref chars 0) ?^)
-      (substring chars 1)
-    (concat "^" chars)))
-
 (defun evil-move-chars (chars count)
   "Returns the position of the last character in the next sequence of CHARS.
 
