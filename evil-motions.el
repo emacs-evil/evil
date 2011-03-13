@@ -273,19 +273,15 @@ the function returns nil.
 CHARS is a character set like inside of a `[...]' in a regular
 expression."
   (setq count (or count 1))
-  (catch 'done
-    (cond
-     ((> count 0)
-      (dotimes (i count)
-        (if (re-search-forward (concat "[" chars "]") nil t)
-            (skip-chars-forward chars)
-          (throw 'done (- count i)))))
-     ((< count 0)
-      (dotimes (i (- count))
-        (if (re-search-backward (concat "[" chars "]") nil t)
-            (skip-chars-backward chars)
-          (throw 'done (+ count i))))))
-    0))
+  (while (and (> count 0)
+              (re-search-forward (concat "[" chars "]") nil t))
+    (skip-chars-forward chars)
+    (setq count (1- count)))
+  (while (and (< count 0)
+              (re-search-backward (concat "[" chars "]") nil t))
+    (skip-chars-backward chars)
+    (setq count (1+ count)))
+  count)
 
 (defmacro evil-define-union-move (name &rest moves)
   "Creates a move which moves to one the next or previous of one of MOVES.
@@ -300,33 +296,30 @@ the number of moves that could not be performed."
             (list (pop moves)))
      (setq count (or count 1))
      (catch 'done
-       (cond
-        ((> count 0)
-         (while (> count 0)
-           (let ((results
-                  (remq nil
-                        (list ,@(mapcar
-                                 #'(lambda (move)
-                                     `(save-excursion
-                                        (when (zerop ,(append move '(1)))
-                                          (point))))
-                                 moves)))))
-             (unless results (throw 'done count))
-             (goto-char (apply #'min results))
-             (setq count (1- count)))))
-        ((< count 0)
-         (while (< count 0)
-           (let ((results
-                  (remq nil
-                        (list ,@(mapcar
-                                 #'(lambda (move)
-                                     `(save-excursion
-                                        (when (zerop ,(append move '(-1)))
-                                          (point))))
-                                 moves)))))
-             (unless results (throw 'done count))
-             (goto-char (apply #'max results))
-             (setq count (1+ count))))))
+       (while (> count 0)
+         (let ((results
+                (remq nil
+                      (list ,@(mapcar
+                               #'(lambda (move)
+                                   `(save-excursion
+                                      (when (zerop ,(append move '(1)))
+                                        (point))))
+                               moves)))))
+           (unless results (throw 'done count))
+           (goto-char (apply #'min results))
+           (setq count (1- count))))
+       (while (< count 0)
+         (let ((results
+                (remq nil
+                      (list ,@(mapcar
+                               #'(lambda (move)
+                                   `(save-excursion
+                                      (when (zerop ,(append move '(-1)))
+                                        (point))))
+                               moves)))))
+           (unless results (throw 'done count))
+           (goto-char (apply #'max results))
+           (setq count (1+ count))))
        count)))
 
 (defun evil-move-forward-end (move &optional count)
