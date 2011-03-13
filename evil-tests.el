@@ -69,6 +69,32 @@ int main(int argc, char** argv)     \n{\n\
          (goto-char (point-min))
          ,@body))))
 
+
+(defmacro evil-test-paragraph-buffer (&rest body)
+  "Execute BODY in a temporary buffer.
+The buffer contains the familiar *scratch* message,
+and `evil-local-mode' is enabled."
+  (declare (indent defun)
+           (debug t))
+  `(let ((kill-ring kill-ring)
+         (kill-ring-yank-pointer kill-ring-yank-pointer)
+         x-select-enable-clipboard
+         message-log-max)
+     (save-window-excursion
+       (with-temp-buffer
+         (switch-to-buffer-other-window (current-buffer))
+         (buffer-enable-undo)
+         (evil-local-mode 1)
+         (delete-region (point-min) (point-max))
+         (insert ";; This buffer is for notes you don't want to save, and for Lisp evaluation.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.\n\n\nSingle Line\n\n\n
+;; This buffer is for notes you don't want to save, and for Lisp evaluation.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.\n")
+         (goto-char (point-min))
+         ,@body))))
+
 ;;; States
 
 (defun evil-test-local-mode-enabled ()
@@ -1206,7 +1232,7 @@ cursor on the new line."
       (evil-verify-around-point "file'°s own"))
     (ert-info ("Beginning of buffer")
       (execute-kbd-macro "1000ge")
-      (evil-verify-around-point "\\`;°; This")
+      (evil-verify-around-point "\\`°;; This")
       (should-error (execute-kbd-macro "ge"))
       (should-error (execute-kbd-macro "10ge")))))
 
@@ -1234,6 +1260,24 @@ cursor on the new line."
       (evil-verify-around-point "\\`°;; This")
       (should-error (execute-kbd-macro "b"))
       (should-error (execute-kbd-macro "10b")))))
+
+(ert-deftest evil-test-forward-paragraph-begin ()
+  "Test `evil-test-forward-paragraph-begin'"
+   (ert-info ("Simple")
+     (evil-test-paragraph-buffer
+       (execute-kbd-macro "}")
+       (evil-verify-around-point "\n°\nSingle Line")))
+   (ert-info ("With count")
+     (evil-test-paragraph-buffer
+       (execute-kbd-macro "2}")
+       (evil-verify-around-point "\n°\n;; This")))
+   (ert-info ("End of buffer")
+     (evil-test-paragraph-buffer
+       (execute-kbd-macro "100}")
+       (should (eobp))
+       (should-error (execute-kbd-macro "}"))
+       (should-error (execute-kbd-macro "42}"))))
+   )
 
 ;;; Utilities
 

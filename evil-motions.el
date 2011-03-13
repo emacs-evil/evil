@@ -75,6 +75,18 @@ the count as the first argument."
              (1- (line-end-position)))))
      (evil-signal-without-movement ,@body)))
 
+(defun evil-eobp ()
+  "Returns t iff (point) is at end-of-buffer w.r.t. end-of-line."
+  (or (eobp)
+      (and (not (evil-visual-state-p))
+           (= (point) (1- (point-max)))
+           (not (eolp)))))
+
+(defun evil-adjust-eol ()
+  "Move (point) one character back if at eol on an non-empty line."
+  (when (and (eolp) (not (bolp)))
+    (backward-char)))
+
 (evil-define-motion evil-forward-char (count)
   "Move cursor to the right by COUNT characters."
   :type exclusive
@@ -323,15 +335,16 @@ move MOVE. If there are no COUNT objects move the point to the
 end of the last object. If there no next object raises
 'end-of-buffer."
   (setq count (or count 1))
-  (when (eobp)
+  (when (evil-eobp)
     (signal 'end-of-buffer nil))
-  (prog1
-      (forward-char)
-    (let ((rest (funcall move count)))
-      (when (= rest count)
-        (signal 'end-of-buffer nil))
-      rest)
-    (backward-char)))
+  (forward-char)
+  (setq count (funcall move count))
+  (backward-char)
+  (unless (or (zerop count) (evil-eobp))
+    (setq count (1- count))
+    (goto-char (point-max)))
+  (evil-adjust-eol)
+  count)
 
 (defun evil-move-forward-begin (move count)
   "Moves point the the COUNT next beginning of the object
@@ -339,24 +352,23 @@ specified by move MOVE. If there are no COUNT objects move the
 point to the beginning of the last object. If there no next
 object raises 'end-of-buffer."
   (setq count (or count 1))
-  (prog1
-      (let ((start (point)))
-        ;; goto to the end of the current or the next object
-        (unless (zerop (funcall move 1))
-          (signal 'end-of-buffer nil))
-        ;; check if point we started at the first object
-        (if (> (save-excursion
-                 (funcall move -1)
-                 (point))
-               start)
-            ;; no
-            (funcall move (1- count))
-          ;; yes
-          (let ((rest (funcall move count)))
-            (when (= rest count)
-              (signal 'end-of-buffer nil))
-            rest)))
-    (funcall move -1)))
+  (when (evil-eobp)
+    (signal 'end-of-buffer nil))
+  (let ((opoint (point)))
+    ;; goto to the end of the current or the next object
+    (when (zerop (funcall move 1))
+      ;; check if point we started at the first object
+      (when (> (save-excursion (funcall move -1) (point)) opoint)
+        ;; no
+        (setq count (1- count)))
+      (setq count (funcall move count))
+      ;; go back to beginning of object
+      (funcall move -1))
+    (unless (or (zerop count) (evil-eobp))
+      (setq count (1- count))
+      (goto-char (point-max))))
+  (evil-adjust-eol)
+  count)
 
 (defun evil-move-backward-begin (move &optional count)
   "Moves point the the COUNT previous beginning of the object
@@ -364,10 +376,13 @@ specified by move MOVE. If there are no COUNT objects move the
 point to the beginning of the first object. If there no previous
 object raises 'beginning-of-buffer."
   (setq count (- (or count 1)))
-  (let ((rest (funcall move count)))
-    (when (= rest count)
-      (signal 'beginning-of-buffer nil))
-    (- rest)))
+  (when (bobp)
+    (signal 'beginning-of-buffer nil))
+  (setq count (funcall move count))
+  (unless (or (zerop count) (bobp))
+    (setq count (1+ count))
+    (goto-char (point-min)))
+  (- count))
 
 (defun evil-move-backward-end (move count)
   "Moves point the the COUNT previous end of the object specified
@@ -375,25 +390,23 @@ by move MOVE. If there are no COUNT objects move the point to
 the end of the first object. If there no previous object raises
 'beginning-of-buffer."
   (setq count (- (or count 1)))
-  (prog1
-      (let ((start (point)))
-        ;; goto to the end of the current or the next object
-        (unless (zerop (funcall move -1))
-          (signal 'beginning-of-buffer nil))
-        ;; check if point we started at the first object
-        (if (< (save-excursion
-                 (funcall move +1)
-                 (1- (point)))
-               start)
-            ;; no
-            (funcall move (1+ count))
-          ;; yes
-          (let ((rest (funcall move count)))
-          (when (= rest count)
-            (signal 'beginning-of-buffer nil))
-          rest)))
-    (funcall move +1)
-    (backward-char)))
+  (when (bobp)
+    (signal 'beginning-of-buffer nil))
+  (let ((opoint (point)))
+    ;; goto to the beginning of the current or the previous object
+    (when (zerop (funcall move -1))
+      ;; check if point we started at the first object
+      (when (<= (save-excursion (funcall move 1) (point)) opoint)
+        ;; no
+        (setq count (1+ count)))
+      (setq count (funcall move count))
+      ;; go to end of object
+      (funcall move 1)
+      (backward-char))
+    (unless (or (zerop count) (bobp))
+      (setq count (1+ count))
+      (goto-char (point-min))))
+  (- count))
 
 
 (defun evil-move-empty-lines (count)
@@ -523,6 +536,7 @@ the end of the first object. If there no previous object raises
 (evil-define-motion evil-backward-paragraph-begin (count)
   :type exclusive
   (evil-move-backward-begin #'evil-move-paragraph count))
+
 
 (provide 'evil-motions)
 

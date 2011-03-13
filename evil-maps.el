@@ -79,6 +79,8 @@ TARGET the command to call."
 
 (define-key evil-motion-state-map "(" 'evil-backward-sentence-begin)
 (define-key evil-motion-state-map ")" 'evil-forward-sentence-begin)
+(define-key evil-motion-state-map "{" 'evil-backward-paragraph-begin)
+(define-key evil-motion-state-map "}" 'evil-forward-paragraph-begin)
 
 (define-key evil-operator-state-map "d" 'evil-delete)
 (define-key evil-operator-state-map "g?" 'evil-rot13)
