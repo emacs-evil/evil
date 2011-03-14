@@ -138,24 +138,36 @@ The buffer contains the familiar *scratch* message,
 and `evil-local-mode' is enabled."
   (declare (indent defun)
            (debug t))
-  `(let ((kill-ring kill-ring)
-         (kill-ring-yank-pointer kill-ring-yank-pointer)
-         x-select-enable-clipboard
-         message-log-max)
-     (save-window-excursion
-       (with-temp-buffer
-         (switch-to-buffer-other-window (current-buffer))
-         (buffer-enable-undo)
-         (evil-local-mode 1)
-         (delete-region (point-min) (point-max))
-         (insert ";; This buffer is for notes you don't want to save, and for Lisp evaluation.
+  (let ((nnew-begin 0)
+        (nnew-end 0))
+    (while (and body (keywordp (car body)))
+      (let ((key (pop body))
+            (arg (pop body)))
+        (cond
+         ((eq key :begin-newlines)
+          (setq nnew-begin arg))
+         ((eq key :end-newlines)
+          (setq nnew-end arg)))))
+    `(let ((kill-ring kill-ring)
+           (kill-ring-yank-pointer kill-ring-yank-pointer)
+           x-select-enable-clipboard
+           message-log-max)
+       (save-window-excursion
+         (with-temp-buffer
+           (switch-to-buffer-other-window (current-buffer))
+           (buffer-enable-undo)
+           (evil-local-mode 1)
+           (delete-region (point-min) (point-max))
+           (insert ,(make-string nnew-begin ?\n))
+           (insert ";; This buffer is for notes you don't want to save, and for Lisp evaluation.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer.\n\n\nSingle Line\n\n\n
 ;; This buffer is for notes you don't want to save, and for Lisp evaluation.
 ;; If you want to create a file, visit that file with C-x C-f,
-;; then enter the text in that file's own buffer.\n")
-         (goto-char (point-min))
-         ,@body))))
+;; then enter the text in that file's own buffer.")
+           (insert ,(make-string nnew-end ?\n))
+           (goto-char (point-min))
+           ,@body)))))
 
 ;;; States
 
@@ -1263,6 +1275,61 @@ to `evil-execute-repeat-info'")
       (should-error (execute-kbd-macro "b"))
       (should-error (execute-kbd-macro "10b")))))
 
+(ert-deftest evil-test-move-paragraph ()
+  "Test `evil-move-paragraph'"
+  (evil-test-paragraph-buffer
+    (ert-info ("Simple forward")
+      (should (= (evil-move-paragraph 1) 0))
+      (evil-test-text "own buffer." 'eolp)
+      (should (= (evil-move-paragraph 1) 0))
+      (evil-test-text "Single Line" 'eolp))
+    (goto-char (point-min))
+    (ert-info ("Forward with count")
+      (should (= (evil-move-paragraph 2) 0))
+      (evil-test-text "Single Line" 'eolp))
+    (ert-info ("End of buffer without newline")
+      (should (= (evil-move-paragraph 2) 1))
+      (evil-test-text "own buffer." 'evil-eobp)
+      (should (= (evil-move-paragraph 2) 2))
+      (evil-test-text "own buffer." 'evil-eobp)
+      (should (= (evil-move-paragraph 1) 1))
+      (evil-test-text "own buffer." 'evil-eobp)))
+  (evil-test-paragraph-buffer :end-newlines 2
+    (ert-info ("End of buffer with newline")
+      (should (= (evil-move-paragraph 4) 1))
+      (evil-test-text "own buffer." "\n\n" nil 'eobp)
+      (should (= (evil-move-paragraph 2) 2))
+      (evil-test-text "own buffer." "\n\n" nil 'eobp)
+      (should (= (evil-move-paragraph 1) 1))
+      (evil-test-text "own buffer." '"\n\n" nil 'eobp)))
+  (evil-test-paragraph-buffer
+    (goto-char (1- (point-max)))
+    (ert-info ("Simple backward")
+      (should (= (evil-move-paragraph -1) 0))
+      (evil-test-text 'bolp ";; This buffer")
+      (should (= (evil-move-paragraph -1) 0))
+      (evil-test-text 'bolp "Single Line"))
+    (goto-char (1- (point-max)))
+    (ert-info ("Backward with count")
+      (should (= (evil-move-paragraph -2) 0))
+      (evil-test-text 'bolp "Single Line"))
+    (ert-info ("Beginning of buffer without newline")
+      (should (= (evil-move-paragraph -2) -1))
+      (evil-test-text 'bobp ";; This buffer")
+      (should (= (evil-move-paragraph -2) -2))
+      (evil-test-text 'bobp ";; This buffer")
+      (should (= (evil-move-paragraph -1) -1))
+      (evil-test-text 'bobp ";; This buffer")))
+  (evil-test-paragraph-buffer :begin-newlines 2
+    (goto-char (1- (point-max)))
+    (ert-info ("Beginning of buffer with newline")
+      (should (= (evil-move-paragraph -4) -1))
+      (evil-test-text "\n\n" ";; This buffer" 'bobp)
+      (should (= (evil-move-paragraph -2) -2))
+      (evil-test-text "\n\n" ";; This buffer" 'bobp)
+      (should (= (evil-move-paragraph -1) -1))
+      (evil-test-text "\n\n" ";; This buffer" 'bobp))))
+
 (ert-deftest evil-test-forward-paragraph-begin ()
   "Test `evil-test-forward-paragraph-begin'"
    (ert-info ("Simple")
@@ -1273,7 +1340,7 @@ to `evil-execute-repeat-info'")
        (evil-test-macro "2}" 'bolp ";; This")))
    (ert-info ("End of buffer")
      (evil-test-paragraph-buffer
-       (evil-test-macro "100}" nil 'eobp)
+       (evil-test-macro "100}" nil 'evil-eobp)
        (should-error (execute-kbd-macro "}"))
        (should-error (execute-kbd-macro "42}")))))
 
