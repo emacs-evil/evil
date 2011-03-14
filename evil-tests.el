@@ -1330,8 +1330,8 @@ to `evil-execute-repeat-info'")
       (should (= (evil-move-paragraph -1) -1))
       (evil-test-text "\n\n" ";; This buffer" 'bobp))))
 
-(ert-deftest evil-test-forward-paragraph-end ()
-  "Test `evil-test-forward-paragraph-end'"
+(ert-deftest evil-test-forward-paragraph ()
+  "Test `evil-test-forward-paragraph'"
    (ert-info ("Simple")
      (evil-test-paragraph-buffer
        (evil-test-macro "}" "own buffer.\n" 'bolp)))

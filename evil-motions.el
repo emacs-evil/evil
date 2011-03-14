@@ -543,7 +543,7 @@ the end of the first object. If there no previous object raises
       (setq count (1- count)))
     count))
 
-(evil-define-motion evil-forward-sentence-begin (count)
+(evil-define-motion evil-forward-sentence (count)
   :type exclusive
   "Moves to the next COUNT-th beginning of a sentence or end of a paragraph."
   (setq count (or count 1))
@@ -563,7 +563,7 @@ the end of the first object. If there no previous object raises
                           (remq nil (list beg-sentence end-par))))
         (setq count (1- count))))))
 
-(evil-define-motion evil-backward-sentence-begin (count)
+(evil-define-motion evil-backward-sentence (count)
   :type exclusive
   "Moves to the previous COUNT-th beginning of a sentence or paragraph."
   (setq count (or count 1))
@@ -583,14 +583,14 @@ the end of the first object. If there no previous object raises
                           (remq nil (list beg-sentence beg-par))))
         (setq count (1- count))))))
 
-(evil-define-motion evil-forward-paragraph-end (count)
+(evil-define-motion evil-forward-paragraph (count)
   "Moves to the end of the COUNT-th next paragraph."
   :type exclusive
   (if (evil-eobp)
       (signal 'end-of-buffer nil)
     (forward-paragraph count)))
 
-(evil-define-motion evil-backward-paragraph-begin (count)
+(evil-define-motion evil-backward-paragraph (count)
   "Moves to the beginning of the COUNT-th previous paragraph."
   :type exclusive
   (if (bobp)
