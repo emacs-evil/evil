@@ -257,34 +257,60 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
     (backward-char)))
 
 
-;; Text object and movement framework
+;;; Text object and movement framework
+;; Usual text objects like words, WORDS, paragraphs and sentences are
+;; defined via a corresponding move-function. The move function must
+;; have the following properties:
+;;
+;; 1. Take exactly one argument, the count.
+;;
+;; 2. When count is positive, move point forward to the first
+;;    character after the end of the next count-th object.
+;;
+;; 3. When count is negative, move point backward to the first
+;;    character of the count-th previous object.
+;;
+;; 4. If point is placed on the first character of an object, the
+;;    backward motion does *not* count that object.
+;;
+;; 5. If point is placed on the last character of an object, the
+;;    forward motion *does* count that object.
+;;
+;; 6. The return value is count left, i.e., in forward direction count
+;;    is decreased by one for each successful move, in backward
+;;    direction count is increased by one for each successful move,
+;;    the final value of count is returned. Therefore, if the complete
+;;    move is successful the return value is 0.
+;;
+;; After a forward motion point has to be placed on the first
+;; character after some object unless no motion was possible at all.
+;; Similar, after a backward motion point has to be placed on the
+;; first character of some object unless no motion was possible at
+;; all. This implies that point should *never* be moved to eob or bob
+;; unless an object ends or begins at eob or bob. (Usually, Emacs
+;; motions always move as far as possible. But we want to use the
+;; motion-function to identify certain objects in the buffer and thus
+;; exact movement to object boundaries is required).
+
 
 (defun evil-move-chars (chars count)
-  "Returns the position of the last character in the next sequence of CHARS.
-
-DIRECTION is either 'fwd or 'bwd. If DIRECTION is 'fwd the
-function returns the position of the last character in the next
-consecutive sequence of CHARS. If DIRECTION is 'bwd the function
-returns the position of the first character in the next sequence
-of CHARS in backward direction. If the character at point is one
-of CHARS then this sequence is used. If no position can be found
-the function returns nil.
-
-CHARS is a character set like inside of a `[...]' in a regular
-expression."
-  (setq count (or count 1))
-  (while (and (> count 0)
-              (re-search-forward (concat "[" chars "]") nil t))
-    (skip-chars-forward chars)
-    (setq count (1- count)))
-  (while (and (< count 0)
-              (re-search-backward (concat "[" chars "]") nil t))
-    (skip-chars-backward chars)
-    (setq count (1+ count)))
-  count)
+  "Moves point to the end or beginning of a sequence of CHARS.
+CHARS is a character set as in [...] of regular expressions."
+  (let ((re (concat "[" chars "]")))
+    (setq count (or count 1))
+    (while (and (> count 0)
+                (re-search-forward re nil t))
+      (skip-chars-forward chars)
+      (setq count (1- count)))
+    (while (and (< count 0)
+                (re-search-backward re nil t))
+      (skip-chars-backward chars)
+      (setq count (1+ count)))
+    count))
 
 (defmacro evil-define-union-move (name &rest moves)
-  "Creates a move which moves to one the next or previous of one of MOVES.
+  "Creates a move which moves to the next object boundary defined
+by one movement function in MOVES.
 
 MOVES is a list whose elements have the form (FUNC PARAMS...).
 The union move calls (FUNC PARAMS... COUNT). The return value is
