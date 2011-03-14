@@ -1267,10 +1267,10 @@ to `evil-execute-repeat-info'")
   "Test `evil-test-forward-paragraph-begin'"
    (ert-info ("Simple")
      (evil-test-paragraph-buffer
-       (evil-test-macro "}" "\n" "\nSingle Line")))
+       (evil-test-macro "}" 'bolp "Single Line")))
    (ert-info ("With count")
      (evil-test-paragraph-buffer
-       (evil-test-macro "2}" "\n" "\n;; This")))
+       (evil-test-macro "2}" 'bolp ";; This")))
    (ert-info ("End of buffer")
      (evil-test-paragraph-buffer
        (evil-test-macro "100}" nil 'eobp)
