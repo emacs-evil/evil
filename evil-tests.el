@@ -1375,6 +1375,58 @@ to `evil-execute-repeat-info'")
        (should-error (execute-kbd-macro "{"))
        (should-error (execute-kbd-macro "42{")))))
 
+(ert-deftest evil-test-forward-sentence ()
+  "Test `evil-test-forward-sentence'"
+   (ert-info ("Simple")
+     (evil-test-paragraph-buffer
+       (evil-test-macro ")" 'bolp  ";; If you")
+       (evil-test-macro ")" "own buffer.\n" 'bolp)
+       (evil-test-macro ")" 'bolp "Single Line")))
+   (ert-info ("With count")
+     (evil-test-paragraph-buffer
+       (evil-test-macro "2)" "own buffer.\n" 'bolp)
+       (evil-test-macro "2)" "Single Line\n" 'bolp)
+       (evil-test-macro "2)" 'bolp ";; If you want")))
+   (ert-info ("End of buffer")
+     (evil-test-paragraph-buffer
+       (evil-test-macro "100)" "own buffer" "." nil 'evil-eobp)
+       (should-error (execute-kbd-macro ")"))
+       (should-error (execute-kbd-macro "42)"))))
+   (ert-info ("End of buffer with newline")
+     (evil-test-paragraph-buffer :begin-newlines 2 :end-newlines 2
+       (evil-test-macro "8)" "own buffer.\n" 'bolp)
+       (evil-test-macro "100)" "own buffer.\n\n" 'evil-eobp)
+       (should-error (execute-kbd-macro ")"))
+       (should-error (execute-kbd-macro "42)")))))
+
+(ert-deftest evil-test-backward-sentence ()
+  "Test `evil-test-backward-sentence'"
+   (ert-info ("Simple")
+     (evil-test-paragraph-buffer
+       (goto-char (1- (point-max)))
+       (evil-test-macro "(" 'bolp ";; If you")
+       (evil-test-macro "(" 'bolp ";; This buffer")
+       (evil-test-macro "(" 'bolp "\n;; This buffer")))
+   (ert-info ("With count")
+     (evil-test-paragraph-buffer
+       (goto-char (1- (point-max)))
+       (evil-test-macro "2(" 'bolp ";; This buffer")
+       (evil-test-macro "2(" 'bolp "Single Line")))
+   (ert-info ("Beginning of buffer")
+     (evil-test-paragraph-buffer
+       (goto-char (1- (point-max)))
+       (evil-test-macro "100(" 'bobp ";; This")
+       (should-error (execute-kbd-macro "("))
+       (should-error (execute-kbd-macro "42("))))
+   (ert-info ("Beginning of buffer with newlines")
+     (evil-test-paragraph-buffer :begin-newlines 2
+       (goto-char (1- (point-max)))
+       (evil-test-macro "7(" "\n\n" ";; This" 'bobp)
+       (evil-test-macro "(" "\n" "\n;; This" 'bobp)
+       (evil-test-macro "100(" 'bobp "\n\n;; This")
+       (should-error (execute-kbd-macro "("))
+       (should-error (execute-kbd-macro "42(")))))
+
 ;;; Utilities
 
 (ert-deftest evil-test-concat-lists ()
