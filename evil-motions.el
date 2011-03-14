@@ -476,25 +476,40 @@ the end of the first object. If there no previous object raises
 (defun evil-move-sentence (count)
   "Move by sentence."
   (setq count (or count 1))
-  (let ((opoint (point))
-        (sentence-end (sentence-end)))
-    (while (and (< count 0) (not (bobp)))
-      (let ((pos (point))
-            (par-beg (save-excursion (start-of-paragraph-text) (point))))
-        (if (and (re-search-backward sentence-end par-beg t)
+  (catch 'done
+    (let ((opoint (point))
+          (sentence-end (sentence-end)))
+      ;; backward
+      (while (and (< count 0) (not (bobp)))
+        (let ((pos (point))
+              (par-beg (save-excursion
+                         (and (zerop (evil-move-paragraph -1))
+                              (point)))))
+          (cond
+           ((and (re-search-backward sentence-end par-beg t)
                  (or (< (match-end 0) pos)
                      (re-search-backward sentence-end par-beg t)))
-            (goto-char (match-end 0))
-          (goto-char par-beg)))
-      (setq count (1+ count)))
-    (while (and (> count 0) (not (eobp)))
-      (let ((par-end (save-excursion (end-of-paragraph-text) (point))))
-        (if (re-search-forward sentence-end par-end t)
-            (skip-chars-backward " \t\n")
-          (goto-char par-end)))
-      (setq count (1- count)))
-    (constrain-to-field nil opoint t)
-    count))
+            (goto-char (match-end 0)))
+           (par-beg
+            (goto-char par-beg))
+           (t
+            (goto-char pos)
+            (throw 'done count))))
+        (setq count (1+ count)))
+      ;; forward
+      (while (and (> count 0) (not (eobp)))
+        (let ((par-end (save-excursion
+                         (and (zerop (evil-move-paragraph +1)) (point)))))
+          (cond
+           ((re-search-forward sentence-end par-end t)
+            (skip-chars-backward " \t\n"))
+           (par-end
+            (goto-char par-end))
+           (t
+            (throw 'done count))))
+        (setq count (1- count)))
+      (constrain-to-field nil opoint t)
+      count)))
 
 (defun evil-move-paragraph (count)
   "Move by paragraph."
