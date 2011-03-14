@@ -545,11 +545,43 @@ the end of the first object. If there no previous object raises
 
 (evil-define-motion evil-forward-sentence-begin (count)
   :type exclusive
-  (evil-move-forward-begin #'evil-move-sentence count))
+  "Moves to the next COUNT-th beginning of a sentence or end of a paragraph."
+  (setq count (or count 1))
+  (if (evil-eobp)
+      (signal 'end-of-buffer nil)
+    (while (and (> count 0)
+                (not (evil-eobp)))
+      (let ((beg-sentence
+             (save-excursion
+               (and (zerop (evil-move-forward-begin #'evil-move-sentence 1))
+                    (point))))
+            (end-par
+             (save-excursion
+               (forward-paragraph)
+               (point))))
+        (goto-char (apply #'min
+                          (remq nil (list beg-sentence end-par))))
+        (setq count (1- count))))))
 
 (evil-define-motion evil-backward-sentence-begin (count)
   :type exclusive
-  (evil-move-backward-begin #'evil-move-sentence count))
+  "Moves to the previous COUNT-th beginning of a sentence or paragraph."
+  (setq count (or count 1))
+  (if (bobp)
+      (signal 'beginning-of-buffer nil)
+    (while (and (> count 0)
+                (not (bobp)))
+      (let ((beg-sentence
+             (save-excursion
+               (and (zerop (evil-move-backward-begin #'evil-move-sentence 1))
+                    (point))))
+            (beg-par
+             (save-excursion
+               (backward-paragraph)
+               (point))))
+        (goto-char (apply #'max
+                          (remq nil (list beg-sentence beg-par))))
+        (setq count (1- count))))))
 
 (evil-define-motion evil-forward-paragraph-end (count)
   :type exclusive
