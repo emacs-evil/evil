@@ -584,12 +584,14 @@ the end of the first object. If there no previous object raises
         (setq count (1- count))))))
 
 (evil-define-motion evil-forward-paragraph-end (count)
+  "Moves to the end of the COUNT-th next paragraph."
   :type exclusive
   (if (evil-eobp)
       (signal 'end-of-buffer nil)
     (forward-paragraph count)))
 
 (evil-define-motion evil-backward-paragraph-begin (count)
+  "Moves to the beginning of the COUNT-th previous paragraph."
   :type exclusive
   (if (bobp)
       (signal 'beginning-of-buffer nil)
