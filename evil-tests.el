@@ -1330,14 +1330,14 @@ to `evil-execute-repeat-info'")
       (should (= (evil-move-paragraph -1) -1))
       (evil-test-text "\n\n" ";; This buffer" 'bobp))))
 
-(ert-deftest evil-test-forward-paragraph-begin ()
-  "Test `evil-test-forward-paragraph-begin'"
+(ert-deftest evil-test-forward-paragraph-end ()
+  "Test `evil-test-forward-paragraph-end'"
    (ert-info ("Simple")
      (evil-test-paragraph-buffer
-       (evil-test-macro "}" 'bolp "Single Line")))
+       (evil-test-macro "}" "own buffer.\n" 'bolp)))
    (ert-info ("With count")
      (evil-test-paragraph-buffer
-       (evil-test-macro "2}" 'bolp ";; This")))
+       (evil-test-macro "2}" "Single Line\n" 'bolp)))
    (ert-info ("End of buffer")
      (evil-test-paragraph-buffer
        (evil-test-macro "100}" nil 'evil-eobp)

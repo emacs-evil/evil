@@ -551,13 +551,17 @@ the end of the first object. If there no previous object raises
   :type exclusive
   (evil-move-backward-begin #'evil-move-sentence count))
 
-(evil-define-motion evil-forward-paragraph-begin (count)
+(evil-define-motion evil-forward-paragraph-end (count)
   :type exclusive
-  (evil-move-forward-begin #'evil-move-paragraph count))
+  (if (evil-eobp)
+      (signal 'end-of-buffer nil)
+    (forward-paragraph count)))
 
 (evil-define-motion evil-backward-paragraph-begin (count)
   :type exclusive
-  (evil-move-backward-begin #'evil-move-paragraph count))
+  (if (bobp)
+      (signal 'beginning-of-buffer nil)
+    (backward-paragraph count)))
 
 
 (provide 'evil-motions)
