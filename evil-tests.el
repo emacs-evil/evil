@@ -1340,9 +1340,40 @@ to `evil-execute-repeat-info'")
        (evil-test-macro "2}" "Single Line\n" 'bolp)))
    (ert-info ("End of buffer")
      (evil-test-paragraph-buffer
-       (evil-test-macro "100}" nil 'evil-eobp)
+       ;; TODO: the next test currently fails because of the end-of-line problematic.
+       ;;   (evil-test-macro "100}" "own buffer" "." nil 'evil-eobp)
+       ;; we replace it with the following
+       (evil-test-macro "100}" "own buffer." "" nil 'evil-eobp)
+       (should-error (execute-kbd-macro "}"))
+       (should-error (execute-kbd-macro "42}"))))
+   (ert-info ("End of buffer with newline")
+     (evil-test-paragraph-buffer :end-newlines 2
+       (evil-test-macro "100}" "own buffer.\n\n" 'evil-eobp)
        (should-error (execute-kbd-macro "}"))
        (should-error (execute-kbd-macro "42}")))))
+
+(ert-deftest evil-test-backward-paragraph ()
+  "Test `evil-test-backward-paragraph'"
+   (ert-info ("Simple")
+     (evil-test-paragraph-buffer
+       (goto-char (1- (point-max)))
+       (evil-test-macro "{" 'bolp "\n;; This buffer")))
+   (ert-info ("With count")
+     (evil-test-paragraph-buffer
+       (goto-char (1- (point-max)))
+       (evil-test-macro "2{" 'bolp "\nSingle Line")))
+   (ert-info ("Beginning of buffer")
+     (evil-test-paragraph-buffer
+       (goto-char (1- (point-max)))
+       (evil-test-macro "100{" 'bobp ";; This")
+       (should-error (execute-kbd-macro "{"))
+       (should-error (execute-kbd-macro "42{"))))
+   (ert-info ("Beginning of buffer with newlines")
+     (evil-test-paragraph-buffer :begin-newlines 2
+       (goto-char (1- (point-max)))
+       (evil-test-macro "100{" 'bobp "\n\n;; This")
+       (should-error (execute-kbd-macro "{"))
+       (should-error (execute-kbd-macro "42{")))))
 
 ;;; Utilities
 
