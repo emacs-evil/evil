@@ -84,6 +84,9 @@ TARGET the command to call."
 
 (define-key evil-operator-state-map "d" 'evil-delete)
 (define-key evil-operator-state-map "g?" 'evil-rot13)
+(define-key evil-operator-state-map "y" 'evil-yank)
+(define-key evil-normal-state-map "p" 'evil-paste-behind)
+(define-key evil-normal-state-map "P" 'evil-paste-before)
 
 (provide 'evil-maps)
 

@@ -941,6 +941,82 @@ to `evil-execute-repeat-info'")
     (evil-test-buffer-edit "jdk"
       'bobp ";; then enter the text")))
 
+(evil-define-motion evil-test-square-motion (count)
+  "Test motion, selects a square."
+  :type block
+  (let ((column (current-column)))
+    (forward-line (1- count))
+    (move-to-column (+ column count -1))))
+
+(ert-deftest evil-test-yank ()
+  "Test yanking of text"
+  (ert-info ("Yank characters")
+    (evil-test-buffer
+      (execute-kbd-macro "wy2e")
+      (should (string= (current-kill 0) "This buffer"))))
+
+  (ert-info ("Yank lines")
+    (evil-test-buffer
+      (execute-kbd-macro "yj")
+      (goto-char (point-min))
+      (should
+       (string= (current-kill 0)
+                (concat (buffer-substring (point-min) (line-end-position 2))
+                        "\n")))
+      (should (eq (car-safe (get-text-property 0 'yank-handler (current-kill 0)))
+                  'evil-yank-line-handler))
+      (execute-kbd-macro "jy5j")
+      (goto-char (point-min))
+      (should
+       (string= (current-kill 0)
+                (concat (buffer-substring (line-beginning-position 2) (line-end-position 5))
+                        "\n")))
+      (should (eq (car-safe (get-text-property 0 'yank-handler (current-kill 0)))
+                  'evil-yank-line-handler))))
+
+  (ert-info ("Yank rectangle")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy3s")
+      (goto-char (point-min))
+      (should
+       (string= (current-kill 0) "Thi\nIf \nthe"))
+      (should (eq (car-safe (get-text-property 0 'yank-handler (current-kill 0)))
+                  'evil-yank-block-handler)))))
+
+
+(ert-deftest evil-test-paste-before ()
+  "Test `evil-paste-before'"
+  (ert-info ("Paste characters")
+    (evil-test-buffer
+      (execute-kbd-macro "wy2e^jP")
+      (evil-test-text 'bolp "This buffer;; If")))
+  (ert-info ("Paste characters with count")
+    (evil-test-buffer
+      (execute-kbd-macro "wy2e^j3P")
+      (evil-test-text 'bolp "This bufferThis bufferThis buffer;; If")))
+
+  (ert-info ("Paste lines")
+    (evil-test-buffer
+      (execute-kbd-macro "2yj4jP")
+      (evil-test-text "\n\n" (concat (current-kill 0) "Below the empty line"))))
+  (ert-info ("Paste lines with count")
+    (evil-test-buffer
+      (execute-kbd-macro "2yj4j2P")
+      (evil-test-text "\n\n" (concat (current-kill 0) (current-kill 0) "Below the empty line"))))
+
+  (ert-info ("Paste block")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "w3ys^eP")
+
+      (goto-char (point-min)) (forward-char)
+      (evil-test-text ";" "Thi; This buffer" 'bobp)
+      (forward-line) (forward-char)
+      (evil-test-text "\n;" "If ; If you")
+      (forward-line) (forward-char)
+      (evil-test-text "\n;" "the; then enter"))))
+
 ;;; Motions
 
 (ert-deftest evil-test-forward-char ()

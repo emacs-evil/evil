@@ -229,6 +229,165 @@ Both COUNT and CMD may be nil."
   "ROT13 encrypt text."
   (rot13-region beg end))
 
+
+(evil-define-operator evil-yank (begin end type register)
+  "Saves the characters in motion into the kill-ring."
+  ;; TODO: this is a hack as long as the `type' parameter does not
+  ;; work
+  (setq type evil-this-type)
+  (cond
+   ((eq type 'block)
+    (evil-yank-rectangle begin end register))
+   ((eq type 'line)
+    (evil-yank-lines begin end register))
+   (t
+    (let ((text (buffer-substring begin end)))
+      (if register
+          (set-register register text)
+        (kill-new text))))))
+
+(defun evil-yank-lines (begin end register)
+  "Saves the next count lines into the kill-ring."
+  (let ((txt (buffer-substring begin end)))
+    ;; Ensure the text ends with newline.  This is required if the
+    ;; deleted lines were the last lines in the buffer.
+    (unless (= (aref txt (1- (length txt))) ?\n)
+      (setq txt (concat txt "\n")))
+    (if register
+        (progn
+          (put-text-property 0 (length txt)
+                             'yank-handler
+                             (list #'evil-yank-line-handler txt)
+                             txt)
+          (set-register register txt))
+      (kill-new txt nil (list #'evil-yank-line-handler txt)))))
+
+(defun evil-yank-rectangle (begin end register)
+  "Stores the rectangle defined by motion into the kill-ring."
+  ;; TODO: yanking should not insert spaces or expand tabs.
+  (let ((begrow (line-number-at-pos begin))
+        (begcol (save-excursion (goto-char begin) (current-column)))
+        (endrow (line-number-at-pos end))
+        (endcol (save-excursion (goto-char end) (current-column)))
+        (parts nil))
+    (when (> begrow endrow) (evil-swap begrow endrow))
+    (when (> begcol endcol) (evil-swap begcol endcol))
+
+    (goto-line endrow)
+    (dotimes (i (1+ (- endrow begrow)))
+      (let ((beg (save-excursion (move-to-column begcol) (point)))
+            (end (save-excursion (move-to-column endcol) (point))))
+        (push (cons (save-excursion
+                      (goto-char beg)
+                      (- (current-column) begcol))
+                    (buffer-substring beg end))
+              parts)
+        (forward-line -1)))
+    (let* ((txt (mapconcat #'cdr parts "\n"))
+           ;; `txt' contains the block as single lines
+           (yinfo (list #'evil-yank-block-handler
+                       (cons (- endcol begcol) parts)
+                       nil
+                       #'delete-rectangle)))
+      (if register
+          (progn
+            (put-text-property 0 (length txt) 'yank-handler yinfo txt)
+            (set-register register txt))
+        (kill-new txt nil yinfo)))
+    (goto-line begrow)
+    (move-to-column begcol)))
+
+
+(defun evil-yank-line-handler (text)
+  "Inserts the current text linewise."
+  (beginning-of-line)
+  (set-mark (point))
+  (insert text))
+
+
+(defun evil-yank-block-handler (text)
+  "Inserts the current text as block."
+  ;; TODO: yank-pop with count will not work for blocks, because
+  ;; it's difficult to place (point) (or (mark)) at the correct
+  ;; position since they may not exist.
+  (let ((ncols (car text))
+        (parts (cdr text))
+        (col (current-column))
+        (current-line (line-number-at-pos (point)))
+        (last-pos (point)))
+
+    (set-mark (point))
+    (dolist (part parts)
+
+      (let* ((offset (car part))
+             (txt (cdr part))
+             (len (length txt)))
+
+        ;; maybe we have to insert a new line at eob
+        (when (< (line-number-at-pos (point))
+                 current-line)
+          (goto-char (point-max))
+          (newline))
+        (setq current-line (1+ current-line))
+
+        (unless (and (< (current-column) col)   ; nothing in this line
+                     (<= offset 0) (zerop len)) ; and nothing to insert
+          (move-to-column (+ col (max 0 offset)) t)
+          (insert txt)
+          (unless (eolp)
+            ;; text follows, so we have to insert spaces
+            (insert (make-string (- ncols len) ? ))))
+        (setq last-pos (point))
+        (forward-line 1)))
+    (goto-char last-pos)
+    (exchange-point-and-mark)))
+
+
+(defun evil-paste-before (count &optional register)
+  "Pastes the latest yanked text before the cursor position."
+  (interactive "P")
+  (let ((pos (point))
+        beg end)
+    (save-excursion
+      (dotimes (i (or count 1))
+        (if register
+            (insert-for-yank (get-register register))
+          (set-mark (point))
+          (insert-for-yank (current-kill 0))
+          (setq beg (min (point) (mark t) (or beg (point)))
+                end (max (point) (mark t) (or end (point)))))))
+    (let* ((txt (if register (get-register register) (current-kill 0)))
+           (yhandler (get-text-property 0 'yank-handler txt)))
+      (when (eq (car-safe yhandler) 'evil-yank-line-handler)
+        ;; place cursor at for non-blank of first inserted line
+        (goto-char pos)
+        (evil-first-non-blank)))))
+
+
+(defun evil-paste-behind (count &optional register)
+  "Pastes the latest yanked text behind point."
+  (interactive "P")
+  (let ((txt (if register (get-register register) (current-kill 0))))
+    (unless txt
+      (error "Kill-ring empty"))
+    (let ((yhandler (get-text-property 0 'yank-handler txt))
+          (pos (point)))
+      (cond
+       ((eq (car-safe yhandler) 'evil-yank-line-handler)
+        (let ((at-eob (= (line-end-position) (point-max))))
+          (forward-line)
+          (when at-eob (newline))
+          (evil-paste-before count register)
+          (evil-first-non-blank)))
+
+       ((eq (car-safe yhandler) 'evil-yank-block-handler)
+        (forward-char)
+        (evil-paste-before count register))
+
+       (t
+        (unless (eobp) (forward-char))
+        (evil-paste-before count register))))))
+
 (provide 'evil-operators)
 
 ;;; evil-operators.el ends here
