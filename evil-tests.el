@@ -1035,50 +1035,60 @@ to `evil-execute-repeat-info'")
     (evil-test-buffer
       (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
       (execute-kbd-macro "w3ys^eP")
-
-      (goto-char (point-min)) (forward-char)
       (evil-test-text-lines
        '(";" "Thi; This buffer" bobp)
        '(";" "If ; If you" bolp)
        '(";" "the; then enter" bolp))))
-
   (ert-info ("Paste block with count")
     (evil-test-buffer
       (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
       (execute-kbd-macro "w3ys^e2P")
-
-      (goto-char (point-min)) (forward-char)
       (evil-test-text-lines
        '(";" "ThiThi; This buffer" bobp)
        '(";" "If If ; If you" bolp)
        '(";" "thethe; then enter" bolp))))
-
   (ert-info ("Paste block with empty line")
     (evil-test-buffer
       (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
       (execute-kbd-macro "w5ys^e2P")
-
-      (goto-char (point-min)) (forward-char)
       (evil-test-text-lines
        '(";" "This This ; This buffer" bobp)
        '(";" "If yoIf yo; If you" bolp)
        '(";" "then then ; then enter" bolp)
        '(bolp eolp)
        '("B" "ow thow thelow the empty" bolp))))
-
   (ert-info ("Paste block crossing end of buffer")
     (evil-test-buffer
       (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-      (execute-kbd-macro "w5ys^je2P")
-
-      (goto-char (point-min)) (forward-char)
+      (execute-kbd-macro "w5ys^je2Pk")
       (evil-test-text-lines
        '(";" "; This buffer" bobp)
        '(";" "This This ; If you" bolp)
        '(";" "If yoIf yo; then enter" bolp)
        '(" " "then then" bolp eolp)
        '("B" "          elow the empty" bolp)
-       '(" " "ow thow th" bolp eobp)))))
+       '(" " "ow thow th" bolp eobp))))
+  (ert-info ("Paste block at end-of-line")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "w5ysj$2Pk")
+      (let ((start-column (current-column)))
+        (evil-test-text-lines
+         '("for L" "isp evaluation." nil eolp)
+         '("C-x C-f" "This This ," nil eolp)
+         '((lambda ()
+             (and (looking-back "own buffer.\\s-*")
+                  (= (current-column) start-column)))
+           "If yoIf yo" nil eolp)
+         '((lambda ()
+             (and (looking-back "^\\s-*")
+                  (= (current-column) start-column)))
+           "then then" nil eolp)
+         '("Below the empty line." eolp)
+         '((lambda ()
+             (and (looking-back "^\\s-*")
+                  (= (current-column) start-column)))
+           "ow thow th" nil eolp))))))
 
 
 (ert-deftest evil-test-paste-behind ()
@@ -1116,7 +1126,65 @@ to `evil-execute-repeat-info'")
                       (concat (current-kill 0)
                               (substring (current-kill 0) 0 -1))
                       'bolp 'eobp)))
-  )
+
+  (ert-info ("Paste block")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "w3ys^ep")
+      (evil-test-text-lines
+       '(";;" "Thi This buffer" bobp)
+       '(";;" "If  If you" bolp)
+       '(";;" "the then enter" bolp))))
+  (ert-info ("Paste block with count")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "w3ys^e2p")
+      (evil-test-text-lines
+       '(";;" "ThiThi This buffer" bobp)
+       '(";;" "If If  If you" bolp)
+       '(";;" "thethe then enter" bolp))))
+  (ert-info ("Paste block with empty line")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "w5ys^e2p")
+      (evil-test-text-lines
+       '(";;" "This This  This buffer" bobp)
+       '(";;" "If yoIf yo If you" bolp)
+       '(";;" "then then  then enter" bolp)
+       '(bolp eolp)
+       '("Be" "ow thow thlow the empty" bolp))))
+  (ert-info ("Paste block crossing end of buffer")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "w5ys^je2pk")
+      (evil-test-text-lines
+       '(";;" " This buffer" bobp)
+       '(";;" "This This  If you" bolp)
+       '(";;" "If yoIf yo then enter" bolp)
+       '("  " "then then" bolp eolp)
+       '("Be" "          low the empty" bolp)
+       '("  " "ow thow th" bolp eobp))))
+  (ert-info ("Paste block at end-of-line")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "w5ysj$2pk")
+      (let ((start-column (current-column)))
+        (evil-test-text-lines
+         '("for Li" "sp evaluation." nil eolp)
+         '("C-x C-f," "This This" nil eolp)
+         '((lambda ()
+             (and (looking-back "own buffer\\.\\s-*")
+                  (= (current-column) start-column)))
+           "If yoIf yo" nil eolp)
+         '((lambda ()
+             (and (looking-back "^\\s-*")
+                  (= (current-column) start-column)))
+           "then then" nil eolp)
+         '("Below the empty line." eolp)
+         '((lambda ()
+             (and (looking-back "^\\s-*")
+                  (= (current-column) start-column)))
+           "ow thow th" nil eolp))))))
 
 ;;; Motions
 
