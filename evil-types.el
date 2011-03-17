@@ -59,17 +59,26 @@ will make `line' the type of the `next-line' command."
     (put object 'type type)))
   object)
 
-(defun evil-expand (beg end type &optional buffer &rest properties)
+(defun evil-expand (beg end type &rest properties)
   "Expand BEG and END as TYPE in BUFFER with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list."
-  (apply 'evil-transform beg end type 'expand buffer properties))
+  (apply 'evil-transform beg end type
+         ;; don't expand if already expanded
+         (unless (plist-get properties :expanded) 'expand)
+         nil properties))
 
-(defun evil-contract (beg end type &optional buffer &rest properties)
+(defun evil-contract (beg end type &rest properties)
   "Contract BEG and END as TYPE in BUFFER with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list."
-  (apply 'evil-transform beg end type 'contract buffer properties))
+  (apply 'evil-transform beg end type 'contract nil properties))
+
+(defun evil-normalize (beg end type &rest properties)
+  "Normalize BEG and END as TYPE in BUFFER with PROPERTIES.
+Returns a list (BEG END TYPE PROPERTIES ...), where the tail
+may contain a property list."
+  (apply 'evil-transform beg end type 'normalize nil properties))
 
 (defun evil-transform
   (beg end type transform &optional buffer &rest properties)
@@ -77,17 +86,19 @@ may contain a property list."
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list. If TRANSFORM is undefined,
 return positions unchanged."
-  (let* ((type (or type (evil-type properties)))
+  (let* ((beg (if (markerp beg) (marker-position beg) beg))
+         (end (if (markerp end) (marker-position end) end))
+         (type (or type (evil-type properties)))
          (buffer (or buffer (current-buffer)))
          (transform (when (and type transform)
                       (evil-type-property type transform))))
-    (if transform
-        (apply transform beg end buffer properties)
-      (setq beg (if (markerp beg) (marker-position beg) beg)
-            end (if (markerp end) (marker-position end) end))
-      (if type
-          (append (list beg end type) properties)
-        (append (list beg end) properties)))))
+    (cond
+     (transform
+      (apply transform beg end buffer properties))
+     (type
+      (append (list beg end type) properties))
+     (t
+      (append (list beg end) properties)))))
 
 (defun evil-describe (beg end type &optional buffer &rest properties)
   "Return description of BEG and END in BUFFER with PROPERTIES.
@@ -113,6 +124,9 @@ It is followed by a list of keywords and functions:
                 return a pair of expanded buffer positions.
 :contract FUNC  Contraction function, optional. This is the opposite
                 of :expand, provided the expansion is reversible.
+:normalize FUNC Normalization function, optional. This function should
+                take two unexpanded positions and adjust them before
+                expansion.
 :string FUNC    Description function. This takes two buffer positions
                 and returns a human-readable string.
 
@@ -145,9 +159,9 @@ in BUFFER with PROPERTIES.\n%s\n\n%s" type string doc)
                 (save-excursion
                   (switch-to-buffer buffer)
                   (evil-sort beg end)
-                  (unless (plist-get properties 'expanded)
+                  (unless (plist-get properties :expanded)
                     (setq range (evil-expand
-                                 beg end ',type buffer properties)
+                                 beg end ',type properties)
                           beg (pop range)
                           end (pop range))
                     (when (symbolp (car range))
@@ -171,13 +185,14 @@ in BUFFER with PROPERTIES.\n%s\n\n%s" sym type string doc)
                   (when (markerp end)
                     (setq end (marker-position end)))
                   (evil-sort beg end)
-                  ,@(when (memq keyword '(:expand :contract))
-                      `((when (plist-get properties 'expanded)
-                          (setq properties
-                                (plist-put properties
-                                           'expanded
-                                           ,(eq keyword :expand))))))
-                  (setq range (apply ',func beg end nil)
+                  (when (memq ,keyword '(:expand :contract))
+                    (setq properties
+                          (plist-put properties
+                                     :expanded
+                                     ,(eq keyword :expand))))
+                  (setq range (or (apply ',func beg end nil)
+                                  (append (list beg end type)
+                                          properties))
                         beg (pop range)
                         end (pop range))
                   (evil-sort beg end)
@@ -204,23 +219,23 @@ If the end position is at the beginning of a line, then:
 
 * Otherwise, move the end position to the end of the previous
   line and return `inclusive' (expanded)."
-  :expand (lambda (beg end)
-            (cond
-             ((and (/= beg end)
-                   (progn
-                     (goto-char end)
-                     (bolp)))
-              (backward-char)
-              (setq end (max beg (point)))
-              (cond
-               ((progn
-                  (goto-char beg)
-                  (looking-back "^[ \f\t\v]*"))
-                (evil-expand beg end 'line))
-               (t
-                (evil-expand beg end 'inclusive))))
-             (t
-              (list beg end))))
+  :normalize (lambda (beg end)
+               (cond
+                ((and (/= beg end)
+                      (progn
+                        (goto-char end)
+                        (bolp)))
+                 (backward-char)
+                 (setq end (max beg (point)))
+                 (cond
+                  ((progn
+                     (goto-char beg)
+                     (looking-back "^[ \f\t\v]*"))
+                   (evil-expand beg end 'line))
+                  (t
+                   (evil-expand beg end 'inclusive))))
+                (t
+                 (list beg end))))
   :string (lambda (beg end)
             (let ((width (- end beg)))
               (format "%s character%s" width
@@ -232,6 +247,11 @@ If the end position is at the beginning of a line, then:
             (list beg (min (1+ end) (point-max))))
   :contract (lambda (beg end)
               (list beg (max beg (1- end))))
+  :normalize (lambda (beg end)
+               (goto-char end)
+               (when (eq (char-after) ?\n)
+                 (setq end (max beg (1- end))))
+               (list beg end))
   :string (lambda (beg end)
             (let ((width (- end beg)))
               (format "%s character%s" width

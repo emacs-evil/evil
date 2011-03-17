@@ -408,16 +408,18 @@ when exiting Operator-Pending state")
                          (point))))
       (ert-info ("Return the beginning and end unchanged
 if they are the same")
-        (should (equal (evil-expand 1 1 'exclusive)
+        (should (equal (evil-normalize 1 1 'exclusive)
                        (list 1 1 'exclusive))))
       (ert-info ("expand to `inclusive' if the end position
 is at the beginning of a line")
-        (should (equal (evil-expand (1+ first-line) second-line 'exclusive)
-                       (list (1+ first-line) second-line 'inclusive))))
+        (should (equal (evil-normalize (1+ first-line) second-line 'exclusive)
+                       (list (1+ first-line) second-line 'inclusive
+                             :expanded t))))
       (ert-info ("expand to `line' if both the beginning and end
 are at the beginning of a line")
-        (should (equal (evil-expand first-line second-line 'exclusive)
-                       (list first-line second-line 'line))))
+        (should (equal (evil-normalize first-line second-line 'exclusive)
+                       (list first-line second-line 'line
+                             :expanded t))))
       (ert-info ("Measure as the strict difference between the end
 and the beginning")
         (should (string= (evil-describe 1 1 'exclusive)
@@ -433,16 +435,16 @@ and the beginning")
   (evil-test-buffer
     (ert-info ("Include the ending character")
       (should (equal (evil-expand 1 1 'inclusive)
-                     '(1 2 inclusive))))
+                     '(1 2 inclusive :expanded t))))
     (ert-info ("Don't mind if positions are in wrong order")
       (should (equal (evil-expand 5 2 'inclusive)
-                     '(2 6 inclusive))))
+                     '(2 6 inclusive :expanded t))))
     (ert-info ("Exclude the ending character when contracting")
       (should (equal (evil-contract 1 2 'inclusive)
-                     '(1 1 inclusive))))
+                     '(1 1 inclusive :expanded nil))))
     (ert-info ("Don't mind positions order when contracting")
       (should (equal (evil-contract 6 2 'inclusive)
-                     '(2 5 inclusive))))
+                     '(2 5 inclusive :expanded nil))))
     (ert-info ("Measure as one more than the difference")
       (should (string= (evil-describe 1 1 'inclusive)
                        "1 character"))
@@ -462,12 +464,12 @@ and the beginning")
                          (point))))
       (ert-info ("Expand to the whole first line")
         (should (equal (evil-expand first-line first-line 'line)
-                       (list first-line second-line 'line)))
+                       (list first-line second-line 'line :expanded t)))
         (should (string= (evil-describe first-line first-line 'line)
                          "1 line")))
       (ert-info ("Expand to the two first lines")
         (should (equal (evil-expand first-line second-line 'line)
-                       (list first-line third-line 'line)))
+                       (list first-line third-line 'line :expanded t)))
         (should (string= (evil-describe first-line second-line 'line)
                          "2 lines"))))))
 
@@ -484,28 +486,28 @@ and the beginning")
                          (point))))
       (ert-info ("Expand to a 1x1 block")
         (should (equal (evil-expand 1 1 'block)
-                       (list 1 2 'block)))
+                       (list 1 2 'block :expanded t)))
         (should (string= (evil-describe 1 1 'block)
                          "1 row and 1 column")))
       (ert-info ("Expand to a 2x1 block")
         (should (equal (evil-expand first-line second-line 'block)
-                       (list first-line (1+ second-line) 'block)))
+                       (list first-line (1+ second-line) 'block :expanded t)))
         (should (string= (evil-describe first-line second-line 'block)
                          "2 rows and 1 column")))
       (ert-info ("Expand to a 3x2 block")
         (should (equal (evil-expand first-line (1+ third-line) 'block)
-                       (list first-line (1+ (1+ third-line)) 'block)))
+                       (list first-line (1+ (1+ third-line)) 'block :expanded t)))
         (should (string= (evil-describe first-line (1+ third-line) 'block)
                          "3 rows and 2 columns")))
       (ert-info ("Contract to a 0x0 rectangle")
         (should (equal (evil-contract 1 2 'block)
-                       (list 1 1 'block))))
+                       (list 1 1 'block :expanded nil))))
       (ert-info ("Contract to a 2x0 rectangle")
         (should (equal (evil-contract first-line (1+ second-line) 'block)
-                       (list first-line second-line 'block))))
+                       (list first-line second-line 'block :expanded nil))))
       (ert-info ("Contract to a 3x1 rectangle")
         (should (equal (evil-contract first-line (1+ (1+ third-line)) 'block)
-                       (list first-line (1+ third-line) 'block)))))))
+                       (list first-line (1+ third-line) 'block :expanded nil)))))))
 
 (ert-deftest evil-test-type-transform ()
   "Test `evil-transform'"
@@ -522,7 +524,7 @@ TYPE or TRANSFORM")
     (ert-info ("Accept markers, but return positions")
       (should (equal (evil-transform (move-marker (make-marker) 1) 1
                                      'inclusive 'expand)
-                     '(1 2 inclusive)))
+                     '(1 2 inclusive :expanded t)))
       (should (equal (evil-transform (move-marker (make-marker) 1) 2
                                      nil nil)
                      '(1 2))))))
@@ -1577,100 +1579,100 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-forward-paragraph ()
   "Test `evil-test-forward-paragraph'"
-   (ert-info ("Simple")
-     (evil-test-paragraph-buffer
-       (evil-test-macro "}" "own buffer.\n" 'bolp)))
-   (ert-info ("With count")
-     (evil-test-paragraph-buffer
-       (evil-test-macro "2}" "Single Line\n" 'bolp)))
-   (ert-info ("End of buffer")
-     (evil-test-paragraph-buffer
-       ;; TODO: the next test currently fails because of the end-of-line problematic.
-       ;;   (evil-test-macro "100}" "own buffer" "." nil 'evil-eobp)
-       ;; we replace it with the following
-       (evil-test-macro "100}" "own buffer." "" nil 'evil-eobp)
-       (should-error (execute-kbd-macro "}"))
-       (should-error (execute-kbd-macro "42}"))))
-   (ert-info ("End of buffer with newline")
-     (evil-test-paragraph-buffer :end-newlines 2
-       (evil-test-macro "100}" "own buffer.\n\n" 'evil-eobp)
-       (should-error (execute-kbd-macro "}"))
-       (should-error (execute-kbd-macro "42}")))))
+  (ert-info ("Simple")
+    (evil-test-paragraph-buffer
+      (evil-test-macro "}" "own buffer.\n" 'bolp)))
+  (ert-info ("With count")
+    (evil-test-paragraph-buffer
+      (evil-test-macro "2}" "Single Line\n" 'bolp)))
+  (ert-info ("End of buffer")
+    (evil-test-paragraph-buffer
+      ;; TODO: the next test currently fails because of the end-of-line problematic.
+      ;;   (evil-test-macro "100}" "own buffer" "." nil 'evil-eobp)
+      ;; we replace it with the following
+      (evil-test-macro "100}" "own buffer." "" nil 'evil-eobp)
+      (should-error (execute-kbd-macro "}"))
+      (should-error (execute-kbd-macro "42}"))))
+  (ert-info ("End of buffer with newline")
+    (evil-test-paragraph-buffer :end-newlines 2
+      (evil-test-macro "100}" "own buffer.\n\n" 'evil-eobp)
+      (should-error (execute-kbd-macro "}"))
+      (should-error (execute-kbd-macro "42}")))))
 
 (ert-deftest evil-test-backward-paragraph ()
   "Test `evil-test-backward-paragraph'"
-   (ert-info ("Simple")
-     (evil-test-paragraph-buffer
-       (goto-char (1- (point-max)))
-       (evil-test-macro "{" 'bolp "\n;; This buffer")))
-   (ert-info ("With count")
-     (evil-test-paragraph-buffer
-       (goto-char (1- (point-max)))
-       (evil-test-macro "2{" 'bolp "\nSingle Line")))
-   (ert-info ("Beginning of buffer")
-     (evil-test-paragraph-buffer
-       (goto-char (1- (point-max)))
-       (evil-test-macro "100{" 'bobp ";; This")
-       (should-error (execute-kbd-macro "{"))
-       (should-error (execute-kbd-macro "42{"))))
-   (ert-info ("Beginning of buffer with newlines")
-     (evil-test-paragraph-buffer :begin-newlines 2
-       (goto-char (1- (point-max)))
-       (evil-test-macro "100{" 'bobp "\n\n;; This")
-       (should-error (execute-kbd-macro "{"))
-       (should-error (execute-kbd-macro "42{")))))
+  (ert-info ("Simple")
+    (evil-test-paragraph-buffer
+      (goto-char (1- (point-max)))
+      (evil-test-macro "{" 'bolp "\n;; This buffer")))
+  (ert-info ("With count")
+    (evil-test-paragraph-buffer
+      (goto-char (1- (point-max)))
+      (evil-test-macro "2{" 'bolp "\nSingle Line")))
+  (ert-info ("Beginning of buffer")
+    (evil-test-paragraph-buffer
+      (goto-char (1- (point-max)))
+      (evil-test-macro "100{" 'bobp ";; This")
+      (should-error (execute-kbd-macro "{"))
+      (should-error (execute-kbd-macro "42{"))))
+  (ert-info ("Beginning of buffer with newlines")
+    (evil-test-paragraph-buffer :begin-newlines 2
+      (goto-char (1- (point-max)))
+      (evil-test-macro "100{" 'bobp "\n\n;; This")
+      (should-error (execute-kbd-macro "{"))
+      (should-error (execute-kbd-macro "42{")))))
 
 (ert-deftest evil-test-forward-sentence ()
   "Test `evil-test-forward-sentence'"
-   (ert-info ("Simple")
-     (evil-test-paragraph-buffer
-       (evil-test-macro ")" 'bolp  ";; If you")
-       (evil-test-macro ")" "own buffer.\n" 'bolp)
-       (evil-test-macro ")" 'bolp "Single Line")))
-   (ert-info ("With count")
-     (evil-test-paragraph-buffer
-       (evil-test-macro "2)" "own buffer.\n" 'bolp)
-       (evil-test-macro "2)" "Single Line\n" 'bolp)
-       (evil-test-macro "2)" 'bolp ";; If you want")))
-   (ert-info ("End of buffer")
-     (evil-test-paragraph-buffer
-       (evil-test-macro "100)" "own buffer" "." nil 'evil-eobp)
-       (should-error (execute-kbd-macro ")"))
-       (should-error (execute-kbd-macro "42)"))))
-   (ert-info ("End of buffer with newline")
-     (evil-test-paragraph-buffer :begin-newlines 2 :end-newlines 2
-       (evil-test-macro "8)" "own buffer.\n" 'bolp)
-       (evil-test-macro "100)" "own buffer.\n\n" 'evil-eobp)
-       (should-error (execute-kbd-macro ")"))
-       (should-error (execute-kbd-macro "42)")))))
+  (ert-info ("Simple")
+    (evil-test-paragraph-buffer
+      (evil-test-macro ")" 'bolp  ";; If you")
+      (evil-test-macro ")" "own buffer.\n" 'bolp)
+      (evil-test-macro ")" 'bolp "Single Line")))
+  (ert-info ("With count")
+    (evil-test-paragraph-buffer
+      (evil-test-macro "2)" "own buffer.\n" 'bolp)
+      (evil-test-macro "2)" "Single Line\n" 'bolp)
+      (evil-test-macro "2)" 'bolp ";; If you want")))
+  (ert-info ("End of buffer")
+    (evil-test-paragraph-buffer
+      (evil-test-macro "100)" "own buffer" "." nil 'evil-eobp)
+      (should-error (execute-kbd-macro ")"))
+      (should-error (execute-kbd-macro "42)"))))
+  (ert-info ("End of buffer with newline")
+    (evil-test-paragraph-buffer :begin-newlines 2 :end-newlines 2
+      (evil-test-macro "8)" "own buffer.\n" 'bolp)
+      (evil-test-macro "100)" "own buffer.\n\n" 'evil-eobp)
+      (should-error (execute-kbd-macro ")"))
+      (should-error (execute-kbd-macro "42)")))))
 
 (ert-deftest evil-test-backward-sentence ()
   "Test `evil-test-backward-sentence'"
-   (ert-info ("Simple")
-     (evil-test-paragraph-buffer
-       (goto-char (1- (point-max)))
-       (evil-test-macro "(" 'bolp ";; If you")
-       (evil-test-macro "(" 'bolp ";; This buffer")
-       (evil-test-macro "(" 'bolp "\n;; This buffer")))
-   (ert-info ("With count")
-     (evil-test-paragraph-buffer
-       (goto-char (1- (point-max)))
-       (evil-test-macro "2(" 'bolp ";; This buffer")
-       (evil-test-macro "2(" 'bolp "Single Line")))
-   (ert-info ("Beginning of buffer")
-     (evil-test-paragraph-buffer
-       (goto-char (1- (point-max)))
-       (evil-test-macro "100(" 'bobp ";; This")
-       (should-error (execute-kbd-macro "("))
-       (should-error (execute-kbd-macro "42("))))
-   (ert-info ("Beginning of buffer with newlines")
-     (evil-test-paragraph-buffer :begin-newlines 2
-       (goto-char (1- (point-max)))
-       (evil-test-macro "7(" "\n\n" ";; This" 'bobp)
-       (evil-test-macro "(" "\n" "\n;; This" 'bobp)
-       (evil-test-macro "100(" 'bobp "\n\n;; This")
-       (should-error (execute-kbd-macro "("))
-       (should-error (execute-kbd-macro "42(")))))
+  (ert-info ("Simple")
+    (evil-test-paragraph-buffer
+      (goto-char (1- (point-max)))
+      (evil-test-macro "(" 'bolp ";; If you")
+      (evil-test-macro "(" 'bolp ";; This buffer")
+      (evil-test-macro "(" 'bolp "\n;; This buffer")))
+  (ert-info ("With count")
+    (evil-test-paragraph-buffer
+      (goto-char (1- (point-max)))
+      (evil-test-macro "2(" 'bolp ";; This buffer")
+      (evil-test-macro "2(" 'bolp "Single Line")))
+  (ert-info ("Beginning of buffer")
+    (evil-test-paragraph-buffer
+      (goto-char (1- (point-max)))
+      (evil-test-macro "100(" 'bobp ";; This")
+      (should-error (execute-kbd-macro "("))
+      (should-error (execute-kbd-macro "42("))))
+  (ert-info ("Beginning of buffer with newlines")
+    (evil-test-paragraph-buffer :begin-newlines 2
+      (goto-char (1- (point-max)))
+      (evil-test-macro "7(" "\n\n" ";; This" 'bobp)
+      (evil-test-macro "(" "\n" "\n;; This" 'bobp)
+      (evil-test-macro "100(" 'bobp "\n\n;; This")
+      (should-error (execute-kbd-macro "("))
+      (should-error (execute-kbd-macro "42(")))))
 
 ;;; Utilities
 
