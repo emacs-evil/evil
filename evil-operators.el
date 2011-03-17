@@ -7,6 +7,8 @@
 (require 'evil-motions)
 (require 'evil-compatibility)
 
+(require 'rect)
+
 (evil-define-state operator
   "Operator-Pending state"
   :tag " <O> "
@@ -264,39 +266,37 @@ Both COUNT and CMD may be nil."
 
 (defun evil-yank-rectangle (begin end register)
   "Stores the rectangle defined by motion into the kill-ring."
-  ;; TODO: yanking should not insert spaces or expand tabs.
-  (let ((begrow (line-number-at-pos begin))
-        (begcol (save-excursion (goto-char begin) (current-column)))
-        (endrow (line-number-at-pos end))
-        (endcol (save-excursion (goto-char end) (current-column)))
-        (parts nil))
-    (when (> begrow endrow) (evil-swap begrow endrow))
-    (when (> begcol endcol) (evil-swap begcol endcol))
-
-    (goto-line endrow)
-    (dotimes (i (1+ (- endrow begrow)))
-      (let ((beg (save-excursion (move-to-column begcol) (point)))
-            (end (save-excursion (move-to-column endcol) (point))))
-        (push (cons (save-excursion
-                      (goto-char beg)
-                      (- (current-column) begcol))
-                    (buffer-substring beg end))
-              parts)
-        (forward-line -1)))
-    (let* ((txt (mapconcat #'cdr parts "\n"))
-           ;; `txt' contains the block as single lines
+  (let ((lines (list nil)))
+    (apply-on-rectangle #'extract-rectangle-line begin end lines)
+    ;; We remove spaces from the beginning and the end of the next.
+    ;; Spaces are inserted explicitly in the yank-handler in order to
+    ;; *not* insert lines full of spaces.
+    (setq lines (nreverse (cdr lines)))
+    ;; txt is used as default insert text when pasting this rectangle
+    ;; in another program, e.g., using the X clipboard. Note that this
+    ;; text does include spaces at the beginning and end of each line
+    ;; as well as empty lines consisting of spaces only.
+    (let* ((txt (mapconcat #'identity lines "\n"))
+           ;; ytxt contains a list if triples (begspace endspace txt)
+           ;; where begspace is the number of spaces at the beginning
+           ;; and endspace the number of spaces at the end and txt the
+           ;; stripped line.
+           (ytxt (mapcar
+                  #'(lambda (line)
+                      (string-match "^ *\\(.*?\\) *$" line)
+                      (list (match-beginning 1)
+                            (- (match-end 0) (match-end 1))
+                            (match-string 1 line)))
+                  lines))
            (yinfo (list #'evil-yank-block-handler
-                       (cons (- endcol begcol) parts)
-                       nil
-                       #'delete-rectangle)))
+                        ytxt
+                        nil
+                        #'delete-rectangle)))
       (if register
           (progn
             (put-text-property 0 (length txt) 'yank-handler yinfo txt)
             (set-register register txt))
-        (kill-new txt nil yinfo)))
-    (goto-line begrow)
-    (move-to-column begcol)))
-
+        (kill-new txt nil yinfo)))))
 
 (defun evil-yank-line-handler (text)
   "Inserts the current text linewise."
@@ -307,21 +307,17 @@ Both COUNT and CMD may be nil."
 
 (defun evil-yank-block-handler (text)
   "Inserts the current text as block."
-  ;; TODO: yank-pop with count will not work for blocks, because
-  ;; it's difficult to place (point) (or (mark)) at the correct
-  ;; position since they may not exist.
-  (let ((ncols (car text))
-        (parts (cdr text))
+  (let ((lines text)
         (col (current-column))
         (current-line (line-number-at-pos (point)))
         (last-pos (point)))
 
     (set-mark (point))
-    (dolist (part parts)
+    (dolist (line lines)
 
-      (let* ((offset (car part))
-             (txt (cdr part))
-             (len (length txt)))
+      (let* ((begextra (car line))
+             (endextra (cadr line))
+             (txt (caddr line)))
 
         ;; maybe we have to insert a new line at eob
         (when (< (line-number-at-pos (point))
@@ -330,13 +326,17 @@ Both COUNT and CMD may be nil."
           (newline))
         (setq current-line (1+ current-line))
 
-        (unless (and (< (current-column) col)   ; nothing in this line
-                     (<= offset 0) (zerop len)) ; and nothing to insert
-          (move-to-column (+ col (max 0 offset)) t)
+        (unless (and (< (save-excursion
+                          (goto-char (line-end-position))
+                          (current-column))
+                        col)                    ; nothing in this line
+                     (zerop (length txt)))      ; and nothing to insert
+          (move-to-column col t)
+          (insert (make-string begextra ? ))
           (insert txt)
           (unless (eolp)
             ;; text follows, so we have to insert spaces
-            (insert (make-string (- ncols len) ? ))))
+            (insert (make-string endextra ? ))))
         (setq last-pos (point))
         (forward-line 1)))
     (goto-char last-pos)

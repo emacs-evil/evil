@@ -102,6 +102,22 @@ is executed at the end."
         (forward-char (length after))
         (should (funcall after-predicate))))))
 
+(defun evil-test-text-lines (&rest line-tests)
+  "Calls `evil-test-text' once for each element of `line-tests' on successive lines.
+The first element of `line-tests' is the test for the
+current-line. The other elements are tested on the successive
+line while (point) as always moved to the same column as in the
+first line via `move-to-column'."
+  (let ((col (current-column)))
+    (save-excursion
+      (dolist (test line-tests)
+        (move-to-column col)
+        (ert-info ((format "Line: %s column: %s"
+                           (line-number-at-pos)
+                           (current-column)))
+          (apply #'evil-test-text test))
+        (forward-line)))))
+
 (defmacro evil-test-macro
   (keys &optional before after before-predicate after-predicate)
   "Execute keybard macro KEYS and verify the text around point.
@@ -1011,11 +1027,48 @@ to `evil-execute-repeat-info'")
       (execute-kbd-macro "w3ys^eP")
 
       (goto-char (point-min)) (forward-char)
-      (evil-test-text ";" "Thi; This buffer" 'bobp)
-      (forward-line) (forward-char)
-      (evil-test-text "\n;" "If ; If you")
-      (forward-line) (forward-char)
-      (evil-test-text "\n;" "the; then enter"))))
+      (evil-test-text-lines
+       '(";" "Thi; This buffer" bobp)
+       '(";" "If ; If you" bolp)
+       '(";" "the; then enter" bolp))))
+
+  (ert-info ("Paste block with count")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "w3ys^e2P")
+
+      (goto-char (point-min)) (forward-char)
+      (evil-test-text-lines
+       '(";" "ThiThi; This buffer" bobp)
+       '(";" "If If ; If you" bolp)
+       '(";" "thethe; then enter" bolp))))
+
+  (ert-info ("Paste block with empty line")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "w5ys^e2P")
+
+      (goto-char (point-min)) (forward-char)
+      (evil-test-text-lines
+       '(";" "This This ; This buffer" bobp)
+       '(";" "If yoIf yo; If you" bolp)
+       '(";" "then then ; then enter" bolp)
+       '(bolp eolp)
+       '("B" "ow thow thelow the empty" bolp))))
+
+  (ert-info ("Paste block crossing end of buffer")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "w5ys^je2P")
+
+      (goto-char (point-min)) (forward-char)
+      (evil-test-text-lines
+       '(";" "; This buffer" bobp)
+       '(";" "This This ; If you" bolp)
+       '(";" "If yoIf yo; then enter" bolp)
+       '(" " "then then" bolp eolp)
+       '("B" "          elow the empty" bolp)
+       '(" " "ow thow th" bolp eobp)))))
 
 ;;; Motions
 
