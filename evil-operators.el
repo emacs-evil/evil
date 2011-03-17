@@ -289,13 +289,17 @@ Both COUNT and CMD may be nil."
    ((eq type 'line)
     (evil-yank-lines begin end register))
    (t
-    (let ((text (buffer-substring begin end)))
-      (if register
-          (set-register register text)
-        (kill-new text))))))
+    (evil-yank-characters begin end register))))
+
+(defun evil-yank-characters (begin end register)
+  "Saves the characters defined by the region BEGIN and END in the kill-ring."
+  (let ((text (buffer-substring begin end)))
+    (if register
+        (set-register register text)
+      (kill-new text))))
 
 (defun evil-yank-lines (begin end register)
-  "Saves the next count lines into the kill-ring."
+  "Saves the lines in the region BEGIN and END into the kill-ring."
   (let ((txt (buffer-substring begin end)))
     ;; Ensure the text ends with newline.  This is required if the
     ;; deleted lines were the last lines in the buffer.
@@ -311,7 +315,7 @@ Both COUNT and CMD may be nil."
       (kill-new txt nil (list #'evil-yank-line-handler txt)))))
 
 (defun evil-yank-rectangle (begin end register)
-  "Stores the rectangle defined by motion into the kill-ring."
+  "Stores the rectangle defined by region BEGIN and END into the kill-ring."
   (let ((lines (list nil)))
     (apply-on-rectangle #'extract-rectangle-line begin end lines)
     ;; We remove spaces from the beginning and the end of the next.
