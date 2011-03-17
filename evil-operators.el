@@ -317,7 +317,7 @@ Both COUNT and CMD may be nil."
 
       (let* ((begextra (car line))
              (endextra (cadr line))
-             (txt (caddr line)))
+             (txt (nth 2 line)))
 
         ;; maybe we have to insert a new line at eob
         (when (< (line-number-at-pos (point))
