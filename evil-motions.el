@@ -136,10 +136,10 @@ the count as the first argument."
 
 ;; This motion can be used for repeated commands like "dd"
 (evil-define-motion evil-line (count)
- "Moves count - 1 lines down."
- :type line
- (let (line-move-visual)
-   (evil-line-move (1- (or count 1)))))
+  "Moves count - 1 lines down."
+  :type line
+  (let (line-move-visual)
+    (evil-line-move (1- (or count 1)))))
 
 (evil-define-motion evil-previous-visual-line (count)
   "Move the cursor COUNT screen lines down."
