@@ -359,9 +359,10 @@ Both COUNT and CMD may be nil."
     (let* ((txt (if register (get-register register) (current-kill 0)))
            (yhandler (get-text-property 0 'yank-handler txt)))
       (when (eq (car-safe yhandler) 'evil-yank-line-handler)
-        ;; place cursor at for non-blank of first inserted line
+        ;; place cursor at first non-blank of first inserted line
         (goto-char pos)
-        (evil-first-non-blank)))))
+        (evil-first-non-blank)))
+    (set-mark end)))
 
 
 (defun evil-paste-behind (count &optional register)
@@ -378,6 +379,11 @@ Both COUNT and CMD may be nil."
           (forward-line)
           (when at-eob (newline))
           (evil-paste-before count register)
+          ;; Remove the final newline at eob
+          (when at-eob
+            (save-excursion
+              (goto-char (point-max))
+              (delete-backward-char 1)))
           (evil-first-non-blank)))
 
        ((eq (car-safe yhandler) 'evil-yank-block-handler)
@@ -386,7 +392,8 @@ Both COUNT and CMD may be nil."
 
        (t
         (unless (eobp) (forward-char))
-        (evil-paste-before count register))))))
+        (evil-paste-before count register)
+        (goto-char (1- (mark))))))))
 
 (provide 'evil-operators)
 

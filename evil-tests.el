@@ -966,6 +966,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-yank ()
   "Test yanking of text"
+  :tags '(evil)
   (ert-info ("Yank characters")
     (evil-test-buffer
       (execute-kbd-macro "wy2e")
@@ -1003,6 +1004,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-paste-before ()
   "Test `evil-paste-before'"
+  :tags '(evil)
   (ert-info ("Paste characters")
     (evil-test-buffer
       (execute-kbd-macro "wy2e^jP")
@@ -1011,6 +1013,14 @@ to `evil-execute-repeat-info'")
     (evil-test-buffer
       (execute-kbd-macro "wy2e^j3P")
       (evil-test-text 'bolp "This bufferThis bufferThis buffer;; If")))
+  (ert-info ("Paste characters at end-of-buffer")
+    (evil-test-buffer
+      (execute-kbd-macro "wy2eG$2P")
+      (evil-test-text "Below the empty line" "This bufferThis buffer." 'bolp 'eobp)))
+  (ert-info ("Paste characters at end-of-buffer on empty line.")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "wy2eG$a" (kbd "RET") [escape] "2P"))
+      (evil-test-text 'bolp "This bufferThis buffer" nil 'eobp)))
 
   (ert-info ("Paste lines")
     (evil-test-buffer
@@ -1069,6 +1079,44 @@ to `evil-execute-repeat-info'")
        '(" " "then then" bolp eolp)
        '("B" "          elow the empty" bolp)
        '(" " "ow thow th" bolp eobp)))))
+
+
+(ert-deftest evil-test-paste-behind ()
+  "Test `evil-paste-before'"
+  :tags '(evil)
+  (ert-info ("Paste characters")
+    (evil-test-buffer
+      (execute-kbd-macro "wy2e^jp")
+      (evil-test-text ";This buffe" "r; If" 'bolp)))
+  (ert-info ("Paste characters with count")
+    (evil-test-buffer
+      (execute-kbd-macro "wy2e^j3p")
+      (evil-test-text ";This bufferThis bufferThis buffe" "r; If" 'bolp)))
+  (ert-info ("Paste characters at end-of-buffer")
+    (evil-test-buffer
+      (execute-kbd-macro "wy2eG$2p")
+      (evil-test-text "Below the empty line.This bufferThis buffe" "r" 'bolp 'eobp)))
+  (ert-info ("Paste characters at end-of-buffer on empty line.")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "wy2eG$a" (kbd "RET") [escape] "2p"))
+      (evil-test-text "This bufferThis buffe" "r" 'bolp 'eobp)))
+
+  (ert-info ("Paste lines")
+    (evil-test-buffer
+      (execute-kbd-macro "2yj3jp")
+      (evil-test-text "\n\n" (concat (current-kill 0) "Below the empty line"))))
+  (ert-info ("Paste lines with count")
+    (evil-test-buffer
+      (execute-kbd-macro "2yj3j2p")
+      (evil-test-text "\n\n" (concat (current-kill 0) (current-kill 0) "Below the empty line"))))
+  (ert-info ("Paste lines at end-of-buffer")
+    (evil-test-buffer
+      (execute-kbd-macro "2yj5j2p")
+      (evil-test-text "Below the empty line.\n"
+                      (concat (current-kill 0)
+                              (substring (current-kill 0) 0 -1))
+                      'bolp 'eobp)))
+  )
 
 ;;; Motions
 
