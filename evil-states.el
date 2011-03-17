@@ -435,7 +435,7 @@ bindings to be activated whenever KEYMAP and %s state are active."
                  (run-hooks ',entry-hook)
                  (when (and (called-interactively-p)
                             ,message)
-                   (evil-unlogged-message ,message)))
+                   (evil-echo ,message)))
              (setq evil-state ',state)))))
 
        (evil-define-keymap ,local-keymap nil

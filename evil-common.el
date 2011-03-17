@@ -119,6 +119,7 @@ sorting in between."
                  (add-to-list 'forms '(pop sorted) t))
                forms))))
 
+;; toggleable version of `with-temp-message'
 (defmacro evil-save-echo-area (&rest body)
   "Save the echo area; execute BODY; restore the echo area.
 Intermittent messages are not logged in the *Messages* buffer."
@@ -132,7 +133,7 @@ Intermittent messages are not logged in the *Messages* buffer."
          (if old-msg (message "%s" old-msg)
            (message nil))))))
 
-(defun evil-unlogged-message (string &rest args)
+(defun evil-echo (string &rest args)
   "Display an unlogged message in the echo area.
 That is, the message is not logged in the *Messages* buffer.
 \(To log the message, just use `message'.)"
