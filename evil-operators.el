@@ -85,52 +85,58 @@ arguments: the beginning and end of the range."
              (setq evil-inhibit-operator nil)
            ,@body)))))
 
-(defun evil-operator-range (&optional type)
+(defun evil-operator-range ()
   "Read a motion from the keyboard and return its buffer positions.
-The return value is a list (BEG END), which can be used
+The return value is a list (BEG END TYPE), which can be used
 in the `interactive' specification of an operator command."
-  (let (beg end motion range)
+  (let ((beg (point)) (end (point)) (type evil-this-type)
+        command count modifier motion range)
     (evil-save-echo-area
-      (evil-save-state
-        (cond
-         ((or (evil-visual-state-p)
-              (region-active-p))
-          (list (region-beginning) (region-end)))
-         (t
+      (cond
+       ;; Visual selection
+       ((or (evil-visual-state-p)
+            (region-active-p))
+        (setq beg (region-beginning)
+              end (region-end)))
+       (t
+        ;; read motion from keyboard
+        (evil-save-state
           (evil-operator-state)
-          (define-key evil-operator-shortcut-map
-            (vector last-command-event) 'evil-line)
-          (let ((count-and-cmd (evil-extract-count (this-command-keys))))
-            (define-key evil-operator-shortcut-map
-              (nth 2 count-and-cmd) 'evil-line))
-          (setq motion (evil-keypress-parser)
-                evil-this-motion (pop motion)
-                evil-this-motion-count (pop motion)
-                evil-this-type nil)
-          (cond
-           (evil-repeat-count
-            (setq evil-this-motion-count evil-repeat-count
-                  ;; only the first operator's count is overwritten
-                  evil-repeat-count nil))
-           ((or current-prefix-arg evil-this-motion-count)
-            (setq evil-this-motion-count
-                  (* (prefix-numeric-value current-prefix-arg)
-                     (prefix-numeric-value evil-this-motion-count)))))
-          (cond
-           ((or (null evil-this-motion)
-                (eq evil-this-motion 'keyboard-quit))
-            (setq quit-flag t))
-           (t
+          ;; Make linewise operator shortcuts. E.g., "d" yields the
+          ;; shortcut "dd", and "g?" yields shortcuts "g??" and "g?g?".
+          (let ((keys (nth 2 (evil-extract-count (this-command-keys)))))
+            (setq keys (append keys nil))
+            (dotimes (var (length keys))
+              (define-key evil-operator-shortcut-map
+                (vconcat (nthcdr var keys)) 'evil-line)))
+          (setq command (evil-read-motion)
+                motion (pop command)
+                count (pop command)
+                type (pop command))
+          (if (null motion)
+              (setq quit-flag t)
+            (cond
+             (evil-repeat-count
+              (setq count evil-repeat-count
+                    ;; only the first operator's count is overwritten
+                    evil-repeat-count nil))
+             ((or count current-prefix-arg)
+              ;; multiply operator count and motion count together
+              (setq count
+                    (* (prefix-numeric-value count)
+                       (prefix-numeric-value current-prefix-arg)))))
             (setq range (evil-motion-range
-                         evil-this-motion
-                         evil-this-motion-count
-                         (or type
-                             (evil-type evil-this-motion)
-                             'exclusive))
+                         motion
+                         count
+                         type)
                   beg (pop range)
                   end (pop range)
-                  evil-this-type (pop range))
-            (list beg end)))))))))
+                  type (pop range))
+            ;; update global variables
+            (setq evil-this-motion motion
+                  evil-this-motion-count count
+                  evil-this-type type)))))
+      (list beg end type))))
 
 (defun evil-motion-range (motion &optional count type)
   "Execute a motion and return the buffer positions.
@@ -140,6 +146,9 @@ The return value is a list (BEG END TYPE)."
     (setq evil-motion-marker (move-marker (make-marker) (point)))
     (unwind-protect
         (let ((current-prefix-arg count)
+              ;; Store the type in global variable `evil-this-type'.
+              ;; Motions can change their type during execution
+              ;; by setting this variable.
               (evil-this-type type))
           (condition-case err
               (call-interactively motion)
@@ -153,10 +162,47 @@ The return value is a list (BEG END TYPE)."
                 (region-active-p))
             (evil-expand (region-beginning) (region-end) evil-this-type))
            (t
-            (evil-expand evil-motion-marker (point) evil-this-type))))
+            (apply 'evil-expand
+                   (evil-normalize
+                    evil-motion-marker (point) evil-this-type)))))
       ;; delete marker so it doesn't slow down editing
       (move-marker evil-motion-marker nil)
       (setq evil-motion-marker nil))))
+
+(defun evil-read-motion (&optional motion count type modifier)
+  "Read a MOTION, motion COUNT and motion TYPE from the keyboard.
+The type may be overridden with MODIFIER.
+Return a list (MOTION COUNT TYPE)."
+  (let ((modifiers '((evil-visual-char . char)
+                     (evil-visual-line . line)
+                     (evil-visual-block . block)))
+        command prefix)
+    (unless motion
+      (while (progn
+               (setq command (evil-keypress-parser)
+                     motion (pop command)
+                     prefix (pop command))
+               (when prefix
+                 (if count
+                     (setq count (string-to-number
+                                  (concat (number-to-string count)
+                                          (number-to-string prefix))))
+                   (setq count prefix)))
+               ;; if the command is a type modifier, read more
+               (when (assq motion modifiers)
+                 (setq modifier
+                       (or modifier
+                           (cdr (assq motion modifiers))))))))
+    (setq type (or type (evil-type motion 'exclusive)))
+    (when modifier
+      (cond
+       ((eq modifier 'char)
+        (if (eq type 'exclusive)
+            (setq type 'inclusive)
+          (setq type 'exclusive)))
+       (t
+        (setq type modifier))))
+    (list motion count type)))
 
 (defun evil-keypress-parser (&optional input)
   "Read from keyboard or INPUT and build a command description.
@@ -208,7 +254,7 @@ Both COUNT and CMD may be nil."
                (unless count
                  (setq count "-")))
               ;; user pressed C-g, so return nil for CMD
-              ((eq cmd 'keyboard-quit)
+              ((memq cmd '(keyboard-quit undefined))
                (setq cmd nil))
               ;; we are done, exit the `while' loop
               (t
