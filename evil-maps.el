@@ -31,6 +31,8 @@ TARGET the command to call."
 (define-key evil-normal-state-map "i" 'evil-insert-before)
 (define-key evil-normal-state-map "O" 'evil-insert-above)
 (define-key evil-normal-state-map "o" 'evil-insert-below)
+(define-key evil-normal-state-map "I" 'evil-insert-beginning-of-line)
+(define-key evil-normal-state-map "A" 'evil-insert-end-of-line)
 (define-key evil-normal-state-map "x" 'delete-char)
 (define-key evil-normal-state-map "r" 'evil-replace-char)
 (define-key evil-normal-state-map "." 'evil-repeat)

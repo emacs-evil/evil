@@ -2,6 +2,7 @@
 
 (require 'evil-states)
 (require 'evil-repeat)
+(require 'evil-motions)
 
 (evil-define-state insert
   "Insert state."
@@ -75,6 +76,21 @@ The insertion will be repeated COUNT times."
         evil-insert-lines t)
   (indent-according-to-mode)
   (evil-insert-state 1))
+
+(defun evil-insert-beginning-of-line (count)
+  "Switches to insert-state just before the first non-blank character on the current line.
+The insertion will be repeated COUNT times."
+  (interactive "p")
+  (evil-first-non-blank)
+  (evil-insert-before count))
+
+(defun evil-insert-end-of-line (count)
+  "Switches to insert-state at the end of the current line.
+The insertion will be repeated COUNT times."
+  (interactive "p")
+  (end-of-line)
+  (unless (bolp) (backward-char))
+  (evil-insert-after count))
 
 (provide 'evil-insert)
 

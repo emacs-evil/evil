@@ -799,6 +799,84 @@ KEYS is used."
       "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul"
       "z\n;; If you")))
 
+(ert-deftest evil-test-insert-beginning-of-line ()
+  "Test insertion of text at beginning of line"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (should (and (looking-at "This") (looking-back ";; ")))
+    (evil-test-macro ("Ievil rulz " [escape])
+      "evil rulz" " ;; This" 'bobp)))
+
+(ert-deftest evil-test-insert-beginning-of-line-with-count ()
+  "Test insertion of text at beginning of line with repeat count"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (evil-test-text ";; " "This" 'bobp)
+    (evil-test-macro ("2Ievil rulz " [escape])
+      "evil rulz evil rulz" " ;; This" 'bobp)))
+
+(ert-deftest evil-test-repeat-insert-beginning-of-line ()
+  "Test repeating of insertion at beginning of line."
+  :tags '(evil)
+  (ert-info ("Repeat insert")
+    (evil-test-buffer-edit ("$IABC" [escape] "..")
+      "AB" "CABCABC;; This"))
+
+  (ert-info ("Repeat insert with count")
+    (evil-test-buffer-edit ("$2IABC" [escape] "..")
+      "ABCAB" "CABCABCABCABC;; This"))
+
+  (ert-info ("Repeat insert with repeat count")
+    (evil-test-buffer-edit ("$IABC" [escape] "11.")
+      "ABCABCABCABCABCABCABCABCABCABCAB" "CABC;; This"))
+
+  (ert-info ("Repeat insert with count with repeat with count")
+    (evil-test-buffer-edit ("$10IABC" [escape] "11.")
+      "ABCABCABCABCABCABCABCABCABCABCAB" "CABCABCABCABCABCABCABCABCABCABC;; This")))
+
+(ert-deftest evil-test-insert-end-of-line ()
+  "Test insertion of text at end of line"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (evil-test-text ";; " "This" 'bobp)
+    (evil-test-macro ("Aevil rulz " [escape])
+      "evaluation.evil rulz" " " nil 'eolp)))
+
+(ert-deftest evil-test-insert-end-of-line-with-count ()
+  "Test insertion of text at end of line with repeat count"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (evil-test-macro ("2Aevil rulz " [escape])
+      "evaluation.evil rulz evil rulz" " " nil 'eolp)))
+
+(ert-deftest evil-test-repeat-insert-end-of-line ()
+  "Test repeating of insert-after command."
+  :tags '(evil)
+  (ert-info ("Repeat insert")
+    (evil-test-buffer-edit ("AABC" [escape] "..")
+      "evaluation.ABCABCAB" "C" nil 'eolp))
+
+  (ert-info ("Repeat insert with count")
+    (evil-test-buffer-edit ("2AABC" [escape] "..")
+      "evaluation.ABCABCABCABCABCAB" "C" nil 'eolp))
+
+  (ert-info ("Repeat insert with repeat count")
+    (evil-test-buffer-edit ("AABC" [escape] "11.")
+      "evaluation.ABCABCABCABCABCABCABCABCABCABCABCAB" "C" nil 'eolp))
+
+  (ert-info ("Repeat insert with count with repeat with count")
+    (evil-test-buffer-edit ("10AABC" [escape] "11.")
+      "evaluation.ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB"
+      "C" nil 'eolp)))
+
 (defun evil-test-dummy-complete ()
   "Test function for change-base repeation.
 Removes 5 characters, insert BEGIN\\n\\nEND\\nplaces
