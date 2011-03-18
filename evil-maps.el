@@ -87,6 +87,8 @@ TARGET the command to call."
 (define-key evil-operator-state-map "y" 'evil-yank)
 (define-key evil-normal-state-map "p" 'evil-paste-behind)
 (define-key evil-normal-state-map "P" 'evil-paste-before)
+(define-key evil-normal-state-map "\C-p" 'evil-paste-pop)
+(define-key evil-normal-state-map "\C-n" 'evil-paste-pop-next)
 
 (provide 'evil-maps)
 
