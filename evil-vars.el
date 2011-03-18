@@ -122,6 +122,16 @@ is not restored.")
 (defvar evil-word "a-zA-Z0-9_"
   "The characters to be considered as a word.")
 
+(defvar evil-last-paste nil
+  "Information about the latest paste.
+This should be a list (CMD POINT BEG END) where CMD is the last
+paste-command (either `evil-paste-before' or
+`evil-paste-behind'), POINT is the position of point before the
+paste, BEG end END are the region of the inserted text.")
+
+(defvar evil-paste-count nil
+  "The count argument of the current paste command.")
+
 (defconst evil-version "0.1"
   "The current version of Evil")
 

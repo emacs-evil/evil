@@ -323,23 +323,10 @@ Both COUNT and CMD may be nil."
     ;; *not* insert lines full of spaces.
     (setq lines (nreverse (cdr lines)))
     ;; txt is used as default insert text when pasting this rectangle
-    ;; in another program, e.g., using the X clipboard. Note that this
-    ;; text does include spaces at the beginning and end of each line
-    ;; as well as empty lines consisting of spaces only.
+    ;; in another program, e.g., using the X clipboard.
     (let* ((txt (mapconcat #'identity lines "\n"))
-           ;; ytxt contains a list if triples (begspace endspace txt)
-           ;; where begspace is the number of spaces at the beginning
-           ;; and endspace the number of spaces at the end and txt the
-           ;; stripped line.
-           (ytxt (mapcar
-                  #'(lambda (line)
-                      (string-match "^ *\\(.*?\\) *$" line)
-                      (list (match-beginning 1)
-                            (- (match-end 0) (match-end 1))
-                            (match-string 1 line)))
-                  lines))
            (yinfo (list #'evil-yank-block-handler
-                        ytxt
+                        lines
                         nil
                         #'delete-rectangle)))
       (if register
@@ -350,32 +337,60 @@ Both COUNT and CMD may be nil."
 
 (defun evil-yank-line-handler (text)
   "Inserts the current text linewise."
-  (beginning-of-line)
-  (set-mark (point))
-  (insert text))
+  (let ((text (apply #'concat (make-list (or evil-paste-count 1) text)))
+        (opoint (point)))
+    (cond
+     ((eq this-command 'evil-paste-behind)
+      (end-of-line)
+      (set-mark (point))
+      (newline)
+      (insert text)
+      (delete-backward-char 1) ; delete the last newline
+      (setq evil-last-paste
+            (list 'evil-paste-behind
+                  evil-paste-count
+                  opoint
+                  (mark t)
+                  (point)))
+      (set-mark (1+ (mark t))))
+     (t
+      (beginning-of-line)
+      (set-mark (point))
+      (insert text)
+      (setq evil-last-paste
+            (list 'evil-paste-before
+                  evil-paste-count
+                  opoint
+                  (mark t)
+                  (point)))))
+    (exchange-point-and-mark)
+    (evil-first-non-blank)))
 
 
-(defun evil-yank-block-handler (text)
+(defun evil-yank-block-handler (lines)
   "Inserts the current text as block."
-  (let ((lines text)
-        (col (current-column))
+  (let ((count (or evil-paste-count 1))
+        (col (if (eq this-command 'evil-paste-behind)
+                 (1+ (current-column))
+               (current-column)))
         (current-line (line-number-at-pos (point)))
-        (last-pos (point)))
+        (opoint (point)))
 
-    (set-mark (point))
     (dolist (line lines)
-
-      (let* ((begextra (car line))
-             (endextra (cadr line))
-             (txt (nth 2 line)))
-
+      ;; concat multiple copies according to count
+      (setq line (apply #'concat (make-list count line)))
+      ;; strip whitespaces at beginning and end
+      (string-match "^ *\\(.*?\\) *$" line)
+      (let ((txt (match-string 1 line))
+            (begextra (match-beginning 1))
+            (endextra (- (match-end 0) (match-end 1))))
         ;; maybe we have to insert a new line at eob
-        (when (< (line-number-at-pos (point))
-                 current-line)
+        (while (< (line-number-at-pos (point))
+                  current-line)
           (goto-char (point-max))
           (newline))
         (setq current-line (1+ current-line))
-
+        ;; insert text unless we insert an empty line behind eol
         (unless (and (< (save-excursion
                           (goto-char (line-end-position))
                           (current-column))
@@ -387,63 +402,61 @@ Both COUNT and CMD may be nil."
           (unless (eolp)
             ;; text follows, so we have to insert spaces
             (insert (make-string endextra ? ))))
-        (setq last-pos (point))
         (forward-line 1)))
-    (goto-char last-pos)
-    (exchange-point-and-mark)))
-
+    (setq evil-last-paste
+          (list this-command
+                evil-paste-count
+                opoint
+                (length lines)                   ; number of rows
+                (* count (length (car lines))))) ; number of colums
+    (goto-char opoint)
+    (when (and (eq this-command 'evil-paste-behind)
+               (not (eolp)))
+      (forward-char))))
 
 (defun evil-paste-before (count &optional register)
   "Pastes the latest yanked text before the cursor position."
   (interactive "P")
-  (let ((pos (point))
-        beg end)
-    (save-excursion
-      (dotimes (i (or count 1))
-        (if register
-            (insert-for-yank (get-register register))
-          (set-mark (point))
-          (insert-for-yank (current-kill 0))
-          (setq beg (min (point) (mark t) (or beg (point)))
-                end (max (point) (mark t) (or end (point)))))))
-    (let* ((txt (if register (get-register register) (current-kill 0)))
-           (yhandler (get-text-property 0 'yank-handler txt)))
-      (when (eq (car-safe yhandler) 'evil-yank-line-handler)
-        ;; place cursor at first non-blank of first inserted line
-        (goto-char pos)
-        (evil-first-non-blank)))
-    (set-mark end)))
-
+  (let* ((txt (if register (get-register register) (current-kill 0)))
+         (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
+    (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
+        (let ((evil-paste-count count)
+              (this-command 'evil-paste-before)) ; for non-interactive use
+          (insert-for-yank txt))
+      ;; no yank-handler, default
+      (let ((opoint (point)))
+        (dotimes (i (or count 1))
+          (insert-for-yank txt))
+        (set-mark opoint)
+        (setq evil-last-paste
+              (list 'evil-paste-before
+                    count
+                    opoint
+                    opoint       ; begin
+                    (point)))    ; end
+        (exchange-point-and-mark)))))
 
 (defun evil-paste-behind (count &optional register)
   "Pastes the latest yanked text behind point."
   (interactive "P")
-  (let ((txt (if register (get-register register) (current-kill 0))))
-    (unless txt
-      (error "Kill-ring empty"))
-    (let ((yhandler (get-text-property 0 'yank-handler txt))
-          (pos (point)))
-      (cond
-       ((eq (car-safe yhandler) 'evil-yank-line-handler)
-        (let ((at-eob (= (line-end-position) (point-max))))
-          (forward-line)
-          (when at-eob (newline))
-          (evil-paste-before count register)
-          ;; Remove the final newline at eob
-          (when at-eob
-            (save-excursion
-              (goto-char (point-max))
-              (delete-backward-char 1)))
-          (evil-first-non-blank)))
-
-       ((eq (car-safe yhandler) 'evil-yank-block-handler)
-        (forward-char)
-        (evil-paste-before count register))
-
-       (t
-        (unless (eobp) (forward-char))
-        (evil-paste-before count register)
-        (goto-char (1- (mark))))))))
+  (let* ((txt (if register (get-register register) (current-kill 0)))
+         (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
+    (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
+        (let ((evil-paste-count count)
+              (this-command 'evil-paste-behind)) ; for non-interactive use
+          (insert-for-yank txt))
+      ;; no yank-handler, default
+      (let ((opoint (point)))
+        (unless (eolp) (forward-char))
+        (dotimes (i (or count 1))
+          (insert-for-yank txt))
+        (setq evil-last-paste
+              (list 'evil-paste-before
+                    count
+                    opoint
+                    opoint       ; begin
+                    (point)))    ; end
+        (backward-char)))))
 
 (provide 'evil-operators)
 
