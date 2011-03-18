@@ -303,7 +303,8 @@ Both COUNT and CMD may be nil."
   (let ((txt (buffer-substring begin end)))
     ;; Ensure the text ends with newline.  This is required if the
     ;; deleted lines were the last lines in the buffer.
-    (unless (= (aref txt (1- (length txt))) ?\n)
+    (when (or (zerop (length txt))
+              (/= (aref txt (1- (length txt))) ?\n))
       (setq txt (concat txt "\n")))
     (if register
         (progn
