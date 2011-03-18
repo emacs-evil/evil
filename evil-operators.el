@@ -81,7 +81,7 @@ arguments: the beginning and end of the range."
          (interactive
           (append (evil-operator-range) ,@interactive))
          (if (and evil-inhibit-operator
-                  (called-interactively-p))
+                  (evil-called-interactively-p))
              (setq evil-inhibit-operator nil)
            ,@body)))))
 

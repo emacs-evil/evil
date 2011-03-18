@@ -47,6 +47,7 @@
 (require 'evil-vars)
 (require 'evil-common)
 (require 'evil-repeat)
+(require 'evil-compatibility)
 
 (defun evil-enable ()
   "Enable Evil in the current buffer, if appropriate.
@@ -433,7 +434,7 @@ bindings to be activated whenever KEYMAP and %s state are active."
                  (evil-set-cursor ,cursor)
                  ,@body
                  (run-hooks ',entry-hook)
-                 (when (and (called-interactively-p)
+                 (when (and (evil-called-interactively-p)
                             ,message)
                    (evil-echo ,message)))
              (setq evil-state ',state)))))
