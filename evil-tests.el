@@ -893,12 +893,15 @@ cursor on the new line."
   (let (line-move-visual)
     (define-key evil-insert-state-map (kbd "C-c C-p") 'evil-test-dummy-complete)
     (evil-set-insert-repeat-type 'evil-test-dummy-complete 'change)
-    (evil-test-buffer-edit ([right right right] "iABC "
-                            (kbd "C-c C-p") "BODY"
-                            [escape] [down down home] ".")
+    (evil-test-buffer
+     (forward-char 3)
+     (execute-kbd-macro (vconcat "iABC " (kbd "C-c C-p") "BODY" [escape]))
+     (forward-line 2)
+     (execute-kbd-macro ".")
+     (evil-test-text
       ";; ABC BEGIN\nBODY\nEND\nABC BEGIN\nBOD"
       "Y\nEND\nr is for"
-      'bobp)))
+      'bobp))))
 
 (ert-deftest evil-test-repeat-kill-buffer ()
   "Test safe-guard preventing buffers from being deleted
