@@ -649,7 +649,7 @@ KEYS is used."
   (evil-test-buffer
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
-    (should (and (looking-at "This") (looking-back ";; ")))
+    (evil-test-text ";; " "This" 'bobp)
     (evil-test-macro ("2ievil rulz " [escape])
       ";; evil rulz evil rulz" " This" 'bobp)))
 
@@ -680,7 +680,7 @@ KEYS is used."
   (evil-test-buffer
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
-    (should (and (looking-at "This") (looking-back ";; ")))
+    (evil-test-text ";; " "This" 'bobp)
     (evil-test-macro ("aevil rulz " [escape])
       ";; Tevil rulz" " his" 'bobp)))
 
