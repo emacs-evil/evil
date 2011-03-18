@@ -43,7 +43,7 @@ w.r.t. indentation."
 
 (defun evil-insert-before (count)
   "Switches to insert-state just before point.
-The insertion will be repeated `count' times."
+The insertion will be repeated COUNT times."
   (interactive "p")
   (setq evil-insert-count count
         evil-insert-lines nil)
@@ -51,27 +51,29 @@ The insertion will be repeated `count' times."
 
 (defun evil-insert-after (count)
   "Switches to insert-state just after point.
-The insertion will be repeated `count' times."
+The insertion will be repeated COUNT times."
   (interactive "p")
   (unless (eolp) (forward-char))
   (evil-insert-before count))
 
 (defun evil-insert-above (count)
   "Inserts a new line above point and switches to insert mode.
-The insertion will be repeated `count' times."
+The insertion will be repeated COUNT times."
   (interactive "p")
   (evil-insert-newline-above)
   (setq evil-insert-count count
         evil-insert-lines t)
+  (indent-according-to-mode)
   (evil-insert-state 1))
 
 (defun evil-insert-below (count)
   "Inserts a new line below point and switches to insert mode.
-The insertion will be repeated `count' times."
+The insertion will be repeated COUNT times."
   (interactive "p")
   (evil-insert-newline-below)
   (setq evil-insert-count count
         evil-insert-lines t)
+  (indent-according-to-mode)
   (evil-insert-state 1))
 
 (provide 'evil-insert)
