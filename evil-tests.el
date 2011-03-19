@@ -674,6 +674,23 @@ KEYS is used."
       "ABCABCABCABCABCABCABCABCABCABABCABCABCABCABCABCABCABCABCABCAB"
       "CC;; This")))
 
+(ert-deftest evil-test-insert-before-vcount ()
+  "Test `evil-insert-before' with vertical repeation."
+  :tags '(evil)
+  (evil-test-buffer
+    (forward-word)
+    (define-key evil-normal-state-local-map "i"
+      #'(lambda (count)
+          (interactive "p")
+          (evil-insert-before count 5)))
+    (execute-kbd-macro (vconcat "2iABC" [escape]))
+    (evil-test-text-lines
+     '(";; ThisABCAB" "C buffer" bobp)
+     '(";; If yABCAB" "Cou" bolp)
+     '(";; thenABCAB" "C enter" bolp)
+     '("       ABCAB" "C" bolp eolp)
+     '("Below tABCAB" "Che empty" bolp))))
+
 (ert-deftest evil-test-insert-after ()
   "Test insertion of text after point"
   :tags '(evil)
@@ -713,6 +730,23 @@ KEYS is used."
     (evil-test-buffer-edit ("10aABC" [escape] "11.")
       ";ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB"
       "C; This")))
+
+(ert-deftest evil-test-insert-after-vcount ()
+  "Test `evil-insert-after' with vertical repeation."
+  :tags '(evil)
+  (evil-test-buffer
+    (forward-word)
+    (define-key evil-normal-state-local-map "a"
+      #'(lambda (count)
+          (interactive "p")
+          (evil-insert-after count 5)))
+    (execute-kbd-macro (vconcat "2aABC" [escape]))
+    (evil-test-text-lines
+     '(";; This ABCAB" "Cbuffer" bobp)
+     '(";; If yoABCAB" "Cu" bolp)
+     '(";; then ABCAB" "Center" bolp)
+     '((lambda () (looking-back "\\(        \\|\t\\)ABCAB")) "C")
+     '("Below thABCAB" "Ce empty" bolp))))
 
 (ert-deftest evil-test-insert-above ()
   "Test insertion of text above point"
@@ -838,6 +872,23 @@ KEYS is used."
     (evil-test-buffer-edit ("$10IABC" [escape] "11.")
       "ABCABCABCABCABCABCABCABCABCABCAB" "CABCABCABCABCABCABCABCABCABCABC;; This")))
 
+(ert-deftest evil-test-insert-beginning-of-line-vcount ()
+  "Test `evil-insert-beginning-of-line' with vertical repeation."
+  :tags '(evil)
+  (evil-test-code-buffer
+    (forward-line 3)
+    (forward-word)
+    (define-key evil-normal-state-local-map "I"
+      #'(lambda (count)
+          (interactive "p")
+          (evil-insert-beginning-of-line count 4)))
+    (execute-kbd-macro (vconcat "2IABC" [escape]))
+    (evil-test-text-lines
+     '("ABCAB" "Cint main" bolp)
+     '("ABCAB" "C{" bolp eolp)
+     '("  ABC" "ABCprintf" bolp)
+     '("  ABC" "ABCreturn" bolp))))
+
 (ert-deftest evil-test-insert-end-of-line ()
   "Test insertion of text at end of line"
   :tags '(evil)
@@ -876,6 +927,23 @@ KEYS is used."
     (evil-test-buffer-edit ("10AABC" [escape] "11.")
       "evaluation.ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB"
       "C" nil 'eolp)))
+
+(ert-deftest evil-test-insert-end-of-line-vcount ()
+  "Test `evil-insert-end-of-line' with vertical repeation."
+  :tags '(evil)
+  (evil-test-code-buffer
+    (forward-line 3)
+    (forward-word)
+    (define-key evil-normal-state-local-map "A"
+      #'(lambda (count)
+          (interactive "p")
+          (evil-insert-end-of-line count 4)))
+    (execute-kbd-macro (vconcat "2AABC" [escape]))
+    (evil-test-text-lines
+     '("argv)     ABCAB" "C" nil eolp)
+     '("{ABCABC" "" bolp eolp)
+     '("world\\n\");ABCABC" "" nil eolp)
+     '("EXIT_SUCCESS;ABCABC" "" nil eolp))))
 
 (defun evil-test-dummy-complete ()
   "Test function for change-base repeation.

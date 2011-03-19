@@ -110,6 +110,15 @@ ignored.")
   "The explicit count passed to an command starting insert mode.")
 (make-variable-buffer-local 'evil-insert-count)
 
+(defvar evil-insert-vcount nil
+  "The information about the number of following lines the
+insertion should be repeated. This is list (LINE COLUMN COUNT)
+where LINE is the line-number where the original insertion
+started and COLUMN is either a number of function determining the
+column where the repeated insertions should take place. COUNT is
+number of repeats (including the original insertion).")
+(make-variable-buffer-local 'evil-insert-vcount)
+
 (defvar evil-insert-lines nil
   "Non-nil if the current insertion command is a line-insertion
 command o or O.")

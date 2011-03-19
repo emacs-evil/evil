@@ -25,6 +25,19 @@ This handles the repeat-count of the insert command."
     (when evil-insert-lines
       (evil-insert-newline-below))
     (evil-execute-repeat-info evil-insert-repeat-info))
+  (when evil-insert-vcount
+    (let ((line (nth 0 evil-insert-vcount))
+          (col (nth 1 evil-insert-vcount))
+          (vcount (nth 2 evil-insert-vcount)))
+      (save-excursion
+        (dotimes (v (1- vcount))
+          (goto-char (point-min))
+          (forward-line (+ line v))
+          (if (numberp col)
+              (move-to-column col t)
+            (funcall col))
+          (dotimes (i (or evil-insert-count 1))
+            (evil-execute-repeat-info evil-insert-repeat-info))))))
   (unless (bolp) (backward-char)))
 
 (defun evil-insert-newline-above ()
@@ -42,20 +55,26 @@ w.r.t. indentation."
   (newline)
   (back-to-indentation))
 
-(defun evil-insert-before (count)
+(defun evil-insert-before (count &optional vcount)
   "Switches to insert-state just before point.
-The insertion will be repeated COUNT times."
+The insertion will be repeated COUNT times and repeated once for
+the next VCOUNT-1 lines starting at the same column."
   (interactive "p")
   (setq evil-insert-count count
-        evil-insert-lines nil)
+        evil-insert-lines nil
+        evil-insert-vcount (and vcount
+                                (> vcount 1)
+                                (list (line-number-at-pos)
+                                      (current-column)
+                                      vcount)))
   (evil-insert-state 1))
 
-(defun evil-insert-after (count)
+(defun evil-insert-after (count &optional vcount)
   "Switches to insert-state just after point.
 The insertion will be repeated COUNT times."
   (interactive "p")
   (unless (eolp) (forward-char))
-  (evil-insert-before count))
+  (evil-insert-before count vcount))
 
 (defun evil-insert-above (count)
   "Inserts a new line above point and switches to insert mode.
@@ -77,20 +96,33 @@ The insertion will be repeated COUNT times."
   (indent-according-to-mode)
   (evil-insert-state 1))
 
-(defun evil-insert-beginning-of-line (count)
+(defun evil-insert-beginning-of-line (count &optional vcount)
   "Switches to insert-state just before the first non-blank character on the current line.
 The insertion will be repeated COUNT times."
   (interactive "p")
   (evil-first-non-blank)
-  (evil-insert-before count))
+  (setq evil-insert-count count
+        evil-insert-lines nil
+        evil-insert-vcount (and vcount
+                                (> vcount 1)
+                                (list (line-number-at-pos)
+                                      #'evil-first-non-blank
+                                      vcount)))
+  (evil-insert-state 1))
 
-(defun evil-insert-end-of-line (count)
+(defun evil-insert-end-of-line (count &optional vcount)
   "Switches to insert-state at the end of the current line.
 The insertion will be repeated COUNT times."
   (interactive "p")
   (end-of-line)
-  (unless (bolp) (backward-char))
-  (evil-insert-after count))
+  (setq evil-insert-count count
+        evil-insert-lines nil
+        evil-insert-vcount (and vcount
+                                (> vcount 1)
+                                (list (line-number-at-pos)
+                                      #'end-of-line
+                                      vcount)))
+  (evil-insert-state 1))
 
 (provide 'evil-insert)
 
