@@ -1437,6 +1437,33 @@ to `evil-execute-repeat-info'")
        '("Be" "          low the empty" bolp)
        '("  " "ow thow th" bolp eobp)))))
 
+
+(ert-deftest evil-test-delete ()
+  "Test `evil-delete'"
+  :tags '(evil)
+  (ert-info ("Delete characters")
+    (evil-test-buffer
+      (evil-test-macro "wd2e" ";; " " is for" 'bobp)
+      (should (string= (current-kill 0) "This buffer"))
+      (evil-test-macro "P" ";; " "This buffer is for" 'bobp)))
+
+  (ert-info ("Delete lines")
+    (evil-test-buffer
+      (evil-test-macro "2dd" 'bobp ";; then enter")
+      (evil-test-macro "P" 'bobp ";; This buffer")))
+
+  (ert-info ("Delete rectangle")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wd3s")
+      (evil-test-text-lines
+       '(";; " "s buffer" bobp)
+       '(";; " "you want" bolp)
+       '(";; " "n enter" bolp)
+       '(bolp eolp)))))
+
+
+
 ;;; Motions
 
 (ert-deftest evil-test-forward-char ()

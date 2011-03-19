@@ -84,13 +84,13 @@ TARGET the command to call."
 (define-key evil-motion-state-map "{" 'evil-backward-paragraph)
 (define-key evil-motion-state-map "}" 'evil-forward-paragraph)
 
-(define-key evil-operator-state-map "d" 'evil-delete)
-(define-key evil-operator-state-map "g?" 'evil-rot13)
-(define-key evil-operator-state-map "y" 'evil-yank)
 (define-key evil-normal-state-map "p" 'evil-paste-behind)
 (define-key evil-normal-state-map "P" 'evil-paste-before)
 (define-key evil-normal-state-map "\C-p" 'evil-paste-pop)
 (define-key evil-normal-state-map "\C-n" 'evil-paste-pop-next)
+(define-key evil-operator-state-map "y" 'evil-yank)
+(define-key evil-operator-state-map "d" 'evil-delete)
+(define-key evil-operator-state-map "g?" 'evil-rot13)
 
 (provide 'evil-maps)
 

@@ -269,10 +269,6 @@ Both COUNT and CMD may be nil."
 
 ;;; Operator commands
 
-(evil-define-operator evil-delete (beg end type register)
-  "Delete text."
-  (kill-region beg end))
-
 (evil-define-operator evil-rot13 (beg end)
   "ROT13 encrypt text."
   (rot13-region beg end))
@@ -525,6 +521,16 @@ is negative this is a more recent kill."
   (interactive "p")
   (evil-paste-pop (- count)))
 
+
+(evil-define-operator evil-delete (beg end type register)
+  "Delete and save in kill-ring or REGISTER."
+  ;; TODO: this is a hack as long as the `type' parameter does not
+  ;; work
+  (setq type evil-this-type)
+  (evil-yank beg end type register)
+  (if (eq type 'block)
+      (delete-rectangle beg end)
+    (delete-region beg end)))
 
 (provide 'evil-operators)
 
