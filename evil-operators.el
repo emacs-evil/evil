@@ -532,6 +532,25 @@ is negative this is a more recent kill."
       (delete-rectangle beg end)
     (delete-region beg end)))
 
+
+(evil-define-operator evil-change (beg end type register)
+  "Delete region and change to insert state.
+If the region is linewise insertion starts on an empty line. If
+region is a block, the inserted text in inserted at each line of
+the block."
+  ;; TODO: this is a hack as long as the `type' parameter does not
+  ;; work
+  (let ((nlines (1+ (- (line-number-at-pos end)
+                       (line-number-at-pos beg)))))
+    (setq type evil-this-type)
+    (evil-delete beg end type register)
+    (cond
+     ((eq type 'line) (evil-insert-above 1))
+     ((eq type 'block)
+      (evil-insert-before 1 nlines))
+     (t
+      (evil-insert-before 1)))))
+
 (provide 'evil-operators)
 
 ;;; evil-operators.el ends here

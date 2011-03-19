@@ -1463,6 +1463,32 @@ to `evil-execute-repeat-info'")
        '(bolp eolp)))))
 
 
+(ert-deftest evil-test-change ()
+  "Test `evil-change'"
+  :tags '(evil)
+  (ert-info ("Change characters")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "wc2eABC" [escape]))
+      (evil-test-text ";; AB" "C is for" 'bobp)
+      (should (string= (current-kill 0) "This buffer"))
+      (evil-test-macro "p" ";; ABCThis buffe" "r is for" 'bobp)))
+
+  (ert-info ("Change lines")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "2ccABCLINE\nDEFLINE" [escape]))
+      (evil-test-text "ABCLINE\nDEFLIN" "E\n;; then enter" 'bobp)
+      (evil-test-macro "p" "DEFLINE\n" ";; This buffer")))
+
+  (ert-info ("Change rectangle")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro (vconcat "wc3sABC" [escape]))
+      (evil-test-text-lines
+       '(";; AB" "Cs buffer" bobp)
+       '(";; AB" "Cyou want" bolp)
+       '(";; AB" "Cn enter" bolp)
+       '(bolp eolp)))))
+
 
 ;;; Motions
 
