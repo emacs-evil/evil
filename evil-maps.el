@@ -93,6 +93,27 @@ TARGET the command to call."
 (define-key evil-operator-state-map "c" 'evil-change)
 (define-key evil-operator-state-map "g?" 'evil-rot13)
 
+(define-key evil-motion-state-map (kbd "C-e") 'evil-scroll-line-down)
+(define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down)
+(define-key evil-motion-state-map (kbd "C-f") 'evil-scroll-page-down)
+(define-key evil-motion-state-map "z+" 'evil-scroll-bottom-line-to-top)
+
+(define-key evil-motion-state-map (kbd "C-y") 'evil-scroll-line-up)
+(define-key evil-motion-state-map (kbd "C-u") 'evil-scroll-up)
+(define-key evil-motion-state-map (kbd "C-b") 'evil-scroll-page-up)
+(define-key evil-motion-state-map "z^" 'evil-scroll-top-line-to-bottom)
+
+(define-key evil-motion-state-map "zt" 'evil-scroll-line-to-top)
+;; TODO: z RET has an advanced form taking an count before the RET
+;; but this requires again a special state with a single command
+;; bound to RET
+(define-key evil-motion-state-map (vconcat "z" [return]) "zt^")
+(define-key evil-motion-state-map (kbd "z RET") (vconcat "z" [return]))
+(define-key evil-motion-state-map "zz" 'evil-scroll-line-to-center)
+(define-key evil-motion-state-map "z." "zz^")
+(define-key evil-motion-state-map "zb" 'evil-scroll-line-to-bottom)
+(define-key evil-motion-state-map "z-" "zb^")
+
 (provide 'evil-maps)
 
 ;;; evil-maps.el ends here
