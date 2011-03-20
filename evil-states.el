@@ -71,6 +71,13 @@ To enable Evil globally, do (evil-mode 1)."
                     global-mode-string)))
     (evil-normal-state))
    (t
+    (let (new-global-mode-string)
+      (while global-mode-string
+        (let ((next (pop global-mode-string)))
+          (if (eq next 'evil-modeline-tag)
+              (pop new-global-mode-string) ;; remove the ""
+            (push next new-global-mode-string))))
+      (setq global-mode-string (nreverse new-global-mode-string)))
     (evil-change-state nil))))
 
 (define-globalized-minor-mode evil-mode
