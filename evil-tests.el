@@ -171,7 +171,6 @@ unchanged test-buffer in Normal state."
      (evil-test-macro ,keys
        ,before ,after ,before-predicate ,after-predicate)))
 
-
 (defmacro evil-test-paragraph-buffer (&rest body)
   "Execute BODY in a temporary buffer.
 The buffer contains the familiar *scratch* message,
@@ -1033,14 +1032,14 @@ cursor on the new line."
     (define-key evil-insert-state-map (kbd "C-c C-p") 'evil-test-dummy-complete)
     (evil-set-insert-repeat-type 'evil-test-dummy-complete 'change)
     (evil-test-buffer
-     (forward-char 3)
-     (execute-kbd-macro (vconcat "iABC " (kbd "C-c C-p") "BODY" [escape]))
-     (forward-line 2)
-     (execute-kbd-macro ".")
-     (evil-test-text
-      ";; ABC BEGIN\nBODY\nEND\nABC BEGIN\nBOD"
-      "Y\nEND\nr is for"
-      'bobp))))
+      (forward-char 3)
+      (execute-kbd-macro (vconcat "iABC " (kbd "C-c C-p") "BODY" [escape]))
+      (forward-line 2)
+      (execute-kbd-macro ".")
+      (evil-test-text
+       ";; ABC BEGIN\nBODY\nEND\nABC BEGIN\nBOD"
+       "Y\nEND\nr is for"
+       'bobp))))
 
 (ert-deftest evil-test-repeat-kill-buffer ()
   "Test safe-guard preventing buffers from being deleted
@@ -1223,7 +1222,6 @@ to `evil-execute-repeat-info'")
       (should (eq (car-safe (get-text-property 0 'yank-handler (current-kill 0)))
                   'evil-yank-block-handler)))))
 
-
 (ert-deftest evil-test-paste-before ()
   "Test `evil-paste-before'"
   :tags '(evil)
@@ -1311,7 +1309,6 @@ to `evil-execute-repeat-info'")
              (and (looking-back "^\\s-*")
                   (= (current-column) start-column)))
            "ow thow th" nil eolp))))))
-
 
 (ert-deftest evil-test-paste-behind ()
   "Test `evil-paste-before'"
@@ -1408,7 +1405,6 @@ to `evil-execute-repeat-info'")
                   (= (current-column) start-column)))
            "ow thow th" nil eolp))))))
 
-
 (ert-deftest evil-test-paste-pop-before ()
   "Test `evil-paste-pop' after `evil-paste-before'"
   :tags '(evil)
@@ -1457,7 +1453,6 @@ to `evil-execute-repeat-info'")
        '(" " "then then" bolp eolp)
        '("B" "          elow the empty" bolp)
        '(" " "ow thow th" bolp eobp)))))
-
 
 (ert-deftest evil-test-paste-pop-behind ()
   "Test `evil-paste-pop' after `evil-paste-behind'"
@@ -1508,7 +1503,6 @@ to `evil-execute-repeat-info'")
        '("Be" "          low the empty" bolp)
        '("  " "ow thow th" bolp eobp)))))
 
-
 (ert-deftest evil-test-delete ()
   "Test `evil-delete'"
   :tags '(evil)
@@ -1532,7 +1526,6 @@ to `evil-execute-repeat-info'")
        '(";; " "you want" bolp)
        '(";; " "n enter" bolp)
        '(bolp eolp)))))
-
 
 (ert-deftest evil-test-change ()
   "Test `evil-change'"
@@ -1559,7 +1552,6 @@ to `evil-execute-repeat-info'")
        '(";; AB" "Cyou want" bolp)
        '(";; AB" "Cn enter" bolp)
        '(bolp eolp)))))
-
 
 ;;; Motions
 
@@ -1790,7 +1782,6 @@ to `evil-execute-repeat-info'")
   :tags '(evil))
 
 ;; TODO: I don't know how to test the visual motions or window motions.
-
 
 (ert-deftest evil-test-move-chars ()
   "Test `evil-test-move-chars'."

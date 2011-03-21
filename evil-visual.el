@@ -26,7 +26,7 @@
    ((evil-visual-state-p)
     (evil-transient-save)
     (evil-visual-select (point) (point) evil-visual-char
-                        (called-interactively-p))
+                        (evil-called-interactively-p))
     (add-hook 'pre-command-hook 'evil-visual-pre-command nil t)
     (add-hook 'post-command-hook 'evil-visual-post-command nil t)
     (setq evil-visual-region-expanded nil))
