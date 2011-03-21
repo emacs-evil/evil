@@ -3,6 +3,7 @@
 (require 'evil-states)
 (require 'evil-insert)
 (require 'evil-operators)
+(require 'evil-window)
 
 (defmacro evil-redirect-digit-argument (map keys target)
   "Bind a special wrapper function which calles either `target' or `digit-argument'.
