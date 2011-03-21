@@ -73,8 +73,9 @@ to t, the operator code is not executed.")
   "Full keymap disabling default bindings to self-insert-command.")
 (suppress-keymap evil-suppress-map t)
 
-(defvar evil-repeat-info nil
-  "A list if repeat-informations to repeat the last command.")
+;; TODO: customize size of ring
+(defvar evil-repeat-info-ring (make-ring 10)
+  "A ring of repeat-informations to repeat the last command.")
 
 (defvar evil-repeating-command nil
   "This variable is non-nil if a command is currently being repeated.")

@@ -568,12 +568,12 @@ TYPE or TRANSFORM")
                    '(BEG [?a ?b ?c XX YY] MID [?d ?e ?f] END)))))
 
 (defun evil-test-repeat-info (keys &optional recorded)
-  "Executes a sequence of keys and verifies that `evil-repeat-info'
+  "Executes a sequence of keys and verifies that `evil-repeat-info-ring'
 records them correctly. KEYS is the sequence of keys to execute.
 RECORDED is the expected sequence of recorded events. If nil,
 KEYS is used."
   (execute-kbd-macro keys)
-  (should (equal (evil-normalize-repeat-info evil-repeat-info)
+  (should (equal (evil-normalize-repeat-info (ring-ref evil-repeat-info-ring 0))
                  (list (vconcat (or recorded keys))))))
 
 (ert-deftest evil-test-normal-repeat-info-simple-command ()
@@ -979,14 +979,16 @@ when repeating a command."
 to `evil-execute-repeat-info'")
     (evil-test-buffer
       (evil-local-mode 1)
-      (setq evil-repeat-info '((kill-buffer nil)))
-      (evil-execute-repeat-info evil-repeat-info)
+      (setq evil-repeat-info-ring (make-ring 10))
+      (ring-insert evil-repeat-info-ring '((kill-buffer nil)))
+      (evil-execute-repeat-info (ring-ref evil-repeat-info-ring 0))
       (should (not (looking-at ";; This"))))) ;
 
   (ert-info ("Verify an error is raised when using `evil-repeat' command")
     (evil-test-buffer
-      (evil-local-mode 1)
-      (setq evil-repeat-info '((kill-buffer nil)))
+      (setq evil-repeat-info-ring (make-ring 10))
+      (ring-insert evil-repeat-info-ring '((kill-buffer nil)))
+      (evil-execute-repeat-info (ring-ref evil-repeat-info-ring 0))
       (should-error (call-interactively 'evil-repeat)))))
 
 ;;; Operators
