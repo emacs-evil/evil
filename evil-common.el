@@ -2,6 +2,14 @@
 
 (require 'evil-vars)
 
+(defun evil-motion-p (cmd)
+  "Return non-nil if CMD is a motion."
+  (memq cmd evil-motions))
+
+(defun evil-operator-p (cmd)
+  "Return non-nil if CMD is an operator."
+  (memq cmd evil-operators))
+
 (defun evil-add-to-alist (list-var key val &rest elements)
   "Add the assocation of KEY and VAL to the value of LIST-VAR.
 If the list already contains an entry for KEY, update that entry;
@@ -149,6 +157,19 @@ That is, the message is not logged in the *Messages* buffer.
          (progn ,@body)
        (evil-change-state old-state))))
 
+(defun evil-move-to-column (column &optional dir force)
+  "Move point to column COLUMN in the current line.
+Places point at left of the tab character (at the right if DIR
+is non-nil) and returns point."
+  (interactive "p")
+  (move-to-column column force)
+  (unless force
+    (when (or (not dir) (and (numberp dir) (< dir 1)))
+      (when (> (current-column) column)
+        (unless (bolp)
+          (backward-char)))))
+  (point))
+
 ;;; Region
 
 (defun evil-transient-save ()
@@ -167,15 +188,56 @@ Their values are stored in `evil-transient-vals'."
   "Restore Transient Mark mode from `evil-transient-vals'."
   (let (entry local var val)
     (while (setq entry (pop evil-transient-vals))
-      (setq var (nth 0 entry)
-            val (nth 1 entry)
-            local (nth 2 entry))
+      (setq var (pop entry)
+            val (pop entry)
+            local (pop entry))
       (unless local
         (kill-local-variable var))
-      (unless (equal var val)
+      (unless (equal (symbol-value var) val)
         (if (fboundp var)
             (funcall var (if var 1 -1))
           (setq var val))))))
+
+;; In theory, an active region implies Transient Mark mode, and
+;; disabling Transient Mark mode implies deactivating the region.
+;; In practice, Emacs never clears `mark-active' except in Transient
+;; Mark mode, so we define our own toggle functions to make things
+;; more predictable.
+(defun evil-transient-mark (&optional arg)
+  "Toggle Transient Mark mode.
+Ensure that the region is properly deactivated.
+Enable with positive ARG, disable with negative ARG."
+  (unless (numberp arg)
+    (setq arg (if transient-mark-mode -1 1)))
+  (cond
+   ((< arg 1)
+    (evil-active-region -1)
+    (when transient-mark-mode
+      (transient-mark-mode -1)))
+   (t
+    (unless transient-mark-mode
+      (transient-mark-mode 1)))))
+
+(defun evil-active-region (&optional arg)
+  "Toggle active region.
+Ensure that Transient Mark mode is properly enabled.
+Enable with positive ARG, disable with negative ARG."
+  (unless (numberp arg)
+    (setq arg (if (region-active-p) -1 1)))
+  (cond
+   ((and (< arg 1))
+    (when (or transient-mark-mode mark-active)
+      (setq mark-active nil
+            deactivate-mark nil)
+      (run-hooks 'deactivate-mark-hook)))
+   (t
+    (evil-transient-mark 1)
+    (when deactivate-mark
+      (setq deactivate-mark nil))
+    (unless (mark t)
+      (evil-move-mark (point)))
+    (unless (region-active-p)
+      (set-mark (mark t))))))
 
 (defmacro evil-save-region (&rest body)
   "Save Transient Mark mode, mark activation, mark and point.
@@ -189,6 +251,26 @@ Execute BODY, then restore those things."
            ,@body)
        (evil-transient-restore))))
 
+(defun evil-set-region (beg end &optional dir)
+  "Set Emacs region to BEG and END.
+Preserves the order of point and mark, unless specified by DIR:
+a positive number means mark goes before or is equal to point,
+a negative number means point goes before mark."
+  (let* ((point (point))
+         (mark (or (mark t) point))
+         (dir (or dir (if (< point mark) -1 1))))
+    (evil-sort beg end)
+    (when (< dir 0)
+      (evil-swap beg end))
+    (evil-move-mark beg)
+    (goto-char end)))
+
+;; `set-mark' does too much at once
+(defun evil-move-mark (pos)
+  "Set buffer's mark to POS."
+  (set-marker (mark-marker) pos))
+
+;;; Key sequences
 
 (defun evil-extract-count (keys)
   "Splits the key-sequence `keys' in prefix-argument part and the rest.
