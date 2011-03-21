@@ -1341,101 +1341,117 @@ to `evil-execute-repeat-info'")
 (ert-deftest evil-test-paste-pop-before ()
   "Test `evil-paste-pop' after `evil-paste-before'"
   :tags '(evil)
-  (evil-test-buffer
-    (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-    (execute-kbd-macro "wy2e2yyy5s^je2P")
-    (save-excursion
-      (goto-char (1+ (point-min)))
-      (evil-test-text-lines
-       '(";" "; This buffer" bobp)
-       '(";" "This This ; If you" bolp)
-       '(";" "If yoIf yo; then enter" bolp)
-       '(" " "then then" bolp eolp)
-       '("B" "          elow the empty" bolp)
-       '(" " "ow thow th" bolp eobp))))
+  (ert-info ("Yank")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2P")
+      (save-excursion
+        (goto-char (1+ (point-min)))
+        (evil-test-text-lines
+         '(";" "; This buffer" bobp)
+         '(";" "This This ; If you" bolp)
+         '(";" "If yoIf yo; then enter" bolp)
+         '(" " "then then" bolp eolp)
+         '("B" "          elow the empty" bolp)
+         '(" " "ow thow th" bolp eobp)))))
 
-  (evil-test-buffer
-    (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-    (execute-kbd-macro "wy2e2yyy5s^je2P\C-p")
-    (evil-test-text "evaluation.\n" (concat (current-kill 0) (current-kill 0) ";; If you")))
+  (ert-info ("Single pop")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2P\C-p")
+      (evil-test-text "evaluation.\n"
+                      (concat (current-kill 0) (current-kill 0) ";; If you"))))
 
-  (evil-test-buffer
-    (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-    (execute-kbd-macro "wy2e2yyy5s^je2P\C-p\C-p")
-    (evil-test-text "evaluation.\n;" "This bufferThis buffer; If you"))
+  (ert-info ("Two pops")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2P\C-p\C-p")
+      (evil-test-text "evaluation.\n;" "This bufferThis buffer; If you")))
 
-  (evil-test-buffer
-    (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-    (execute-kbd-macro "wy2e2yyy5s^je2P2\C-p")
-    (evil-test-text "evaluation.\n;" "This bufferThis buffer; If you"))
+  (ert-info ("Pop with count")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2P2\C-p")
+      (evil-test-text "evaluation.\n;" "This bufferThis buffer; If you")))
 
-  (evil-test-buffer
-    (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-    (execute-kbd-macro "wy2e2yyy5s^je2P2\C-p\C-n")
-    (evil-test-text "evaluation.\n" (concat (current-kill 0) (current-kill 0) ";; If you")))
+  (ert-info ("Single pop-next")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2P2\C-p\C-n")
+      (evil-test-text "evaluation.\n"
+                      (concat (current-kill 0) (current-kill 0) ";; If you"))))
 
-  (evil-test-buffer
-    (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-    (execute-kbd-macro "wy2e2yyy5s^je2P\C-p\C-p2\C-n")
-    (save-excursion
-      (goto-char (1+ (point-min)))
-      (evil-test-text-lines
-       '(";" "; This buffer" bobp)
-       '(";" "This This ; If you" bolp)
-       '(";" "If yoIf yo; then enter" bolp)
-       '(" " "then then" bolp eolp)
-       '("B" "          elow the empty" bolp)
-       '(" " "ow thow th" bolp eobp)))))
+  (ert-info ("Pop-next with count")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2P\C-p\C-p2\C-n")
+      (save-excursion
+        (goto-char (1+ (point-min)))
+        (evil-test-text-lines
+         '(";" "; This buffer" bobp)
+         '(";" "This This ; If you" bolp)
+         '(";" "If yoIf yo; then enter" bolp)
+         '(" " "then then" bolp eolp)
+         '("B" "          elow the empty" bolp)
+         '(" " "ow thow th" bolp eobp))))))
 
 
 (ert-deftest evil-test-paste-pop-behind ()
   "Test `evil-paste-pop' after `evil-paste-behind'"
   :tags '(evil)
-  (evil-test-buffer
-    (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-    (execute-kbd-macro "wy2e2yyy5s^je2p")
-    (save-excursion
-      (goto-char (+ 2 (point-min)))
-      (evil-test-text-lines
-       '(";;" " This buffer" bobp)
-       '(";;" "This This  If you" bolp)
-       '(";;" "If yoIf yo then enter" bolp)
-       '("  " "then then" bolp eolp)
-       '("Be" "          low the empty" bolp)
-       '("  " "ow thow th" bolp eobp))))
+  (ert-info ("Paste")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2p")
+      (save-excursion
+        (goto-char (+ 2 (point-min)))
+        (evil-test-text-lines
+         '(";;" " This buffer" bobp)
+         '(";;" "This This  If you" bolp)
+         '(";;" "If yoIf yo then enter" bolp)
+         '("  " "then then" bolp eolp)
+         '("Be" "          low the empty" bolp)
+         '("  " "ow thow th" bolp eobp)))))
 
-  (evil-test-buffer
-    (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-    (execute-kbd-macro "wy2e2yyy5s^je2p\C-p")
-    (evil-test-text "with C-x C-f,\n" (concat (current-kill 0) (current-kill 0) ";; then enter")))
+  (ert-info ("Single pop")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2p\C-p")
+      (evil-test-text "with C-x C-f,\n"
+                      (concat (current-kill 0) (current-kill 0) ";; then enter"))))
 
-  (evil-test-buffer
-    (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-    (execute-kbd-macro "wy2e2yyy5s^je2p\C-p\C-p")
-    (evil-test-text "evaluation.\n;;This bufferThis buffe" "r If you"))
+  (ert-info ("Two pops")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2p\C-p\C-p")
+      (evil-test-text "evaluation.\n;;This bufferThis buffe" "r If you")))
 
-  (evil-test-buffer
-    (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-    (execute-kbd-macro "wy2e2yyy5s^je2p2\C-p")
-    (evil-test-text "evaluation.\n;;This bufferThis buffe" "r If you"))
+  (ert-info ("Pop with count")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2p2\C-p")
+      (evil-test-text "evaluation.\n;;This bufferThis buffe" "r If you")))
 
-  (evil-test-buffer
-    (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-    (execute-kbd-macro "wy2e2yyy5s^je2p2\C-p\C-n")
-    (evil-test-text "with C-x C-f,\n" (concat (current-kill 0) (current-kill 0) ";; then enter")))
+  (ert-info ("Pop-next")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2p2\C-p\C-n")
+      (evil-test-text "with C-x C-f,\n"
+                      (concat (current-kill 0) (current-kill 0) ";; then enter"))))
 
-  (evil-test-buffer
-    (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-    (execute-kbd-macro "wy2e2yyy5s^je2p\C-p\C-p2\C-n")
-    (save-excursion
-      (goto-char (+ 2 (point-min)))
-      (evil-test-text-lines
-       '(";;" " This buffer" bobp)
-       '(";;" "This This  If you" bolp)
-       '(";;" "If yoIf yo then enter" bolp)
-       '("  " "then then" bolp eolp)
-       '("Be" "          low the empty" bolp)
-       '("  " "ow thow th" bolp eobp)))))
+  (ert-info ("Pop-next with count")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2p\C-p\C-p2\C-n")
+      (save-excursion
+        (goto-char (+ 2 (point-min)))
+        (evil-test-text-lines
+         '(";;" " This buffer" bobp)
+         '(";;" "This This  If you" bolp)
+         '(";;" "If yoIf yo then enter" bolp)
+         '("  " "then then" bolp eolp)
+         '("Be" "          low the empty" bolp)
+         '("  " "ow thow th" bolp eobp))))))
 
 
 (ert-deftest evil-test-delete ()
