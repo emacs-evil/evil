@@ -481,6 +481,12 @@ Both COUNT and CMD may be nil."
     (when register
       (setq evil-last-paste nil))))
 
+;; TODO: if undoing is disabled in the current buffer paste pop won't
+;; work. Although this is probably not a big problem because usually
+;; buffers for editing where `evil-paste-pop' may be useful have
+;; undoing enabled. A solution would be to temporarily enable undo
+;; when pasting and storing the undo-information in a special variable
+;; that does not interfere with buffer-undo-list
 (defun evil-paste-pop (count)
   "Replace the just-yanked stretch of killed text with a different stretch.
 This command is allowed only immediatly after a `yank',
@@ -493,28 +499,29 @@ The COUNT argument inserts the COUNTth previous kill.  If COUNT
 is negative this is a more recent kill."
   (interactive "p")
   (unless (memq last-command
-                '(yank
-                  evil-paste-behind
+                '(evil-paste-behind
                   evil-paste-before))
-    (error "Previous command was not a evil-paste: %s" last-command))
-  (cond
-   ((eq last-command 'yank)
-    (funcall (or yank-undo-function #'delete-region) (mark t) (point))
-    (current-kill count)
-    (yank)
-    (setq this-command 'yank))
-   ((not evil-last-paste)
+    (error "Previous command was not an evil-paste: %s" last-command))
+  (unless evil-last-paste
     (error "Previous paste command used a register"))
-   (t
-    (setq this-command (nth 0 evil-last-paste))
-    (save-excursion
-      (goto-char (nth 2 evil-last-paste))
-      (funcall (or yank-undo-function #'delete-region)
-               (nth 3 evil-last-paste)
-               (nth 4 evil-last-paste)))
+  (let ((paste-undo (list nil)))
+    (when (or (not buffer-undo-list)
+              (eq t buffer-undo-list)
+              (car buffer-undo-list))
+      (error "Can't undo previous paste"))
+    (pop buffer-undo-list) ;; remove 'nil
+    (while (and buffer-undo-list
+                (car buffer-undo-list))
+      (push (pop buffer-undo-list) paste-undo))
+    (let ((buffer-undo-list (nreverse paste-undo))
+          (orig-message (symbol-function 'message)))
+      (fset 'message #'(lambda (&rest rest)))
+      (undo)
+      (fset 'message orig-message))
     (goto-char (nth 2 evil-last-paste))
     (current-kill count)
-    (funcall (nth 0 evil-last-paste) (nth 1 evil-last-paste)))))
+    (setq this-command (nth 0 evil-last-paste))
+    (funcall (nth 0 evil-last-paste) (nth 1 evil-last-paste))))
 
 (defun evil-paste-pop-next (count)
   "Same as `evil-paste-pop' but with negative argument."
