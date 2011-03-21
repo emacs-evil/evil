@@ -118,6 +118,30 @@ first line via `move-to-column'."
           (apply #'evil-test-text test))
         (forward-line)))))
 
+(defmacro evil-test-region
+  (string &optional end-string before-predicate after-predicate)
+  "Verify that the region corresponds to STRING."
+  (declare (indent defun))
+  `(progn
+     (save-excursion
+       (goto-char (region-beginning))
+       (evil-test-text nil (or ,string ,end-string) ,before-predicate))
+     (save-excursion
+       (goto-char (region-end))
+       (evil-test-text (or ,end-string ,string) nil nil ,after-predicate))))
+
+(defmacro evil-test-overlay
+  (overlay string &optional end-string before-predicate after-predicate)
+  "Verify that OVERLAY corresponds to STRING."
+  (declare (indent defun))
+  `(progn
+     (save-excursion
+       (goto-char (overlay-start ,overlay))
+       (evil-test-text nil (or ,string ,end-string) ,before-predicate))
+     (save-excursion
+       (goto-char (overlay-end ,overlay))
+       (evil-test-text (or ,end-string ,string) nil nil ,after-predicate))))
+
 (defmacro evil-test-macro
   (keys &optional before after before-predicate after-predicate)
   "Execute keybard macro KEYS and verify the text around point.
@@ -339,7 +363,7 @@ suppression keymap comes first")
       (condition-case nil
           (execute-kbd-macro "yue")
         (error nil))
-      (should (string= (buffer-substring 1 4) ";; "))))) ;
+      (should (string= (buffer-substring 1 4) ";; ")))))
 
 (ert-deftest evil-test-emacs-state-suppress-keymap ()
   "`self-insert-command' works in emacs-state"
@@ -405,7 +429,8 @@ when exiting Operator-Pending state")
                           (point)))
            (third-line (progn
                          (forward-line)
-                         (point))))
+                         (point)))
+           (overlay (make-overlay 1 1)))
       (ert-info ("Return the beginning and end unchanged
 if they are the same")
         (should (equal (evil-normalize 1 1 'exclusive)
@@ -427,29 +452,63 @@ and the beginning")
         (should (string= (evil-describe 1 2 'exclusive)
                          "1 character"))
         (should (string= (evil-describe 5 2 'exclusive)
-                         "3 characters"))))))
+                         "3 characters")))
+      (ert-info ("Expand and measure overlay")
+        (overlay-put overlay 'type 'exclusive)
+        (should (string= (evil-describe-overlay overlay)
+                         "0 characters"))
+        (move-overlay overlay 1 3)
+        (evil-expand-overlay overlay)
+        (should (string= (evil-describe-overlay overlay)
+                         "2 characters"))
+        (evil-contract-overlay overlay)
+        (should (string= (evil-describe-overlay overlay)
+                         "2 characters"))
+        (ert-info ("Normalize overlay")
+          (move-overlay overlay (1+ first-line) second-line)
+          (evil-normalize-overlay overlay)
+          (should (= (overlay-start overlay) (1+ first-line)))
+          (should (= (overlay-end overlay) second-line))
+          (should (eq (evil-type overlay) 'inclusive))
+          (should (overlay-get overlay :expanded)))
+        (ert-info ("Contract overlay")
+          (evil-contract-overlay overlay)
+          (should-not (overlay-get overlay :expanded)))))))
 
 (ert-deftest evil-test-inclusive-type ()
   "Expand and contract the `inclusive' type"
   :tags '(evil)
   (evil-test-buffer
-    (ert-info ("Include the ending character")
-      (should (equal (evil-expand 1 1 'inclusive)
-                     '(1 2 inclusive :expanded t))))
-    (ert-info ("Don't mind if positions are in wrong order")
-      (should (equal (evil-expand 5 2 'inclusive)
-                     '(2 6 inclusive :expanded t))))
-    (ert-info ("Exclude the ending character when contracting")
-      (should (equal (evil-contract 1 2 'inclusive)
-                     '(1 1 inclusive :expanded nil))))
-    (ert-info ("Don't mind positions order when contracting")
-      (should (equal (evil-contract 6 2 'inclusive)
-                     '(2 5 inclusive :expanded nil))))
-    (ert-info ("Measure as one more than the difference")
-      (should (string= (evil-describe 1 1 'inclusive)
-                       "1 character"))
-      (should (string= (evil-describe 5 2 'inclusive)
-                       "4 characters")))))
+    (let ((overlay (make-overlay 1 1)))
+      (ert-info ("Include the ending character")
+        (should (equal (evil-expand 1 1 'inclusive)
+                       '(1 2 inclusive :expanded t))))
+      (ert-info ("Don't mind if positions are in wrong order")
+        (should (equal (evil-expand 5 2 'inclusive)
+                       '(2 6 inclusive :expanded t))))
+      (ert-info ("Exclude the ending character when contracting")
+        (should (equal (evil-contract 1 2 'inclusive)
+                       '(1 1 inclusive :expanded nil))))
+      (ert-info ("Don't mind positions order when contracting")
+        (should (equal (evil-contract 6 2 'inclusive)
+                       '(2 5 inclusive :expanded nil))))
+      (ert-info ("Measure as one more than the difference")
+        (should (string= (evil-describe 1 1 'inclusive)
+                         "1 character"))
+        (should (string= (evil-describe 5 2 'inclusive)
+                         "4 characters")))
+      (ert-info ("Expand overlay")
+        (overlay-put overlay 'type 'inclusive)
+        (evil-expand-overlay overlay)
+        (should (= (overlay-start overlay) 1))
+        (should (= (overlay-end overlay) 2))
+        (should (overlay-get overlay :expanded)))
+      (ert-info ("Contract overlay")
+        (move-overlay overlay 1 4)
+        (evil-contract-overlay overlay)
+        (should (= (overlay-start overlay) 1))
+        (should (= (overlay-end overlay) 3))
+        (should-not (overlay-get overlay :expanded))))))
 
 (ert-deftest evil-test-line-type ()
   "Expand the `line' type"
@@ -461,7 +520,8 @@ and the beginning")
                           (point)))
            (third-line (progn
                          (forward-line)
-                         (point))))
+                         (point)))
+           (overlay (make-overlay 1 1)))
       (ert-info ("Expand to the whole first line")
         (should (equal (evil-expand first-line first-line 'line)
                        (list first-line second-line 'line :expanded t)))
@@ -471,7 +531,18 @@ and the beginning")
         (should (equal (evil-expand first-line second-line 'line)
                        (list first-line third-line 'line :expanded t)))
         (should (string= (evil-describe first-line second-line 'line)
-                         "2 lines"))))))
+                         "2 lines")))
+      (ert-info ("Expand overlay")
+        (overlay-put overlay 'type 'line)
+        (evil-expand-overlay overlay)
+        (should (= (overlay-start overlay) first-line))
+        (should (= (overlay-end overlay) second-line))
+        (should (overlay-get overlay :expanded)))
+      (ert-info ("Restore overlay")
+        (evil-contract-overlay overlay)
+        (should (= (overlay-start overlay) 1))
+        (should (= (overlay-end overlay) 1))
+        (should-not (overlay-get overlay :expanded))))))
 
 (ert-deftest evil-test-block-type ()
   "Expand and contract the `block' type"
@@ -981,7 +1052,7 @@ to `evil-execute-repeat-info'")
       (evil-local-mode 1)
       (setq evil-repeat-info '((kill-buffer nil)))
       (evil-execute-repeat-info evil-repeat-info)
-      (should (not (looking-at ";; This"))))) ;
+      (should (not (looking-at ";; This")))))
 
   (ert-info ("Verify an error is raised when using `evil-repeat' command")
     (evil-test-buffer
@@ -1744,6 +1815,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-forward-word-end ()
   "Test `evil-test-forward-word-end'"
+  :tags '(evil)
   (evil-test-buffer
     (ert-info ("Non-word")
       (evil-test-macro "e" ";" "; This" 'bobp))
@@ -1765,6 +1837,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-forward-word-begin ()
   "Test `evil-test-forward-word-begin'"
+  :tags '(evil)
   (evil-test-buffer
     (ert-info ("Simple")
       (evil-test-macro "w" ";; " "This"))
@@ -1786,6 +1859,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-backward-word-end ()
   "Test `evil-test-backward-word-end'"
+  :tags '(evil)
   (evil-test-buffer
     (goto-char (1- (point-max)))
     (ert-info ("Simple")
@@ -1806,6 +1880,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-backward-word-begin ()
   "Test `evil-test-backward-word-begin'"
+  :tags '(evil)
   (evil-test-buffer
     (goto-char (1- (point-max)))
     (ert-info ("Simple")
@@ -1826,6 +1901,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-move-paragraph ()
   "Test `evil-move-paragraph'"
+  :tags '(evil)
   (evil-test-paragraph-buffer
     (ert-info ("Simple forward")
       (should (= (evil-move-paragraph 1) 0))
@@ -1881,6 +1957,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-forward-paragraph ()
   "Test `evil-test-forward-paragraph'"
+  :tags '(evil)
   (ert-info ("Simple")
     (evil-test-paragraph-buffer
       (evil-test-macro "}" "own buffer.\n" 'bolp)))
@@ -1903,6 +1980,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-backward-paragraph ()
   "Test `evil-test-backward-paragraph'"
+  :tags '(evil)
   (ert-info ("Simple")
     (evil-test-paragraph-buffer
       (goto-char (1- (point-max)))
@@ -1926,6 +2004,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-forward-sentence ()
   "Test `evil-test-forward-sentence'"
+  :tags '(evil)
   (ert-info ("Simple")
     (evil-test-paragraph-buffer
       (evil-test-macro ")" 'bolp  ";; If you")
@@ -1950,6 +2029,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-backward-sentence ()
   "Test `evil-test-backward-sentence'"
+  :tags '(evil)
   (ert-info ("Simple")
     (evil-test-paragraph-buffer
       (goto-char (1- (point-max)))
@@ -1975,6 +2055,119 @@ to `evil-execute-repeat-info'")
       (evil-test-macro "100(" 'bobp "\n\n;; This")
       (should-error (execute-kbd-macro "("))
       (should-error (execute-kbd-macro "42(")))))
+
+;;; Visual state
+
+(defun evil-test-visual-select (type &optional mark point)
+  "Verify that TYPE is selected correctly"
+  (evil-visual-select mark point type)
+  (ert-info ("Activate region unless TYPE is `block'")
+    (cond
+     ((eq type 'block)
+      (should (mark t))
+      (should-not (region-active-p))
+      (should-not transient-mark-mode))
+     (t
+      (should (mark))
+      (should (region-active-p)))))
+  (ert-info ("Refresh `evil-visual-overlay'")
+    (should (overlayp evil-visual-overlay))
+    (should (= (overlay-start evil-visual-overlay)
+               (car (evil-expand (point) (mark) type))))
+    (should (= (overlay-end evil-visual-overlay)
+               (cadr (evil-expand (point) (mark) type))))
+    (should (eq (overlay-get evil-visual-overlay 'type) type))
+    (should (eq (overlay-get evil-visual-overlay 'direction)
+                (if (< (point) (mark)) -1 1)))
+    (should (eq (overlay-get evil-visual-overlay :expanded) t)))
+  (ert-info ("Use `evil-visual-overlay' for highlighting
+unless TYPE is `block'")
+    (cond
+     ((eq type 'block)
+      (should evil-visual-block-overlays)
+      (should-not (overlay-get evil-visual-overlay 'face)))
+     (t
+      (should-not evil-visual-block-overlays)
+      (should (overlay-get evil-visual-overlay 'face))))))
+
+(ert-deftest evil-test-visual-char ()
+  "Test Visual character selection"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-test-visual-select evil-visual-char))
+  (ert-info ("Move to other end")
+    (evil-test-buffer
+      (evil-test-macro "wve"
+        "Thi" "s buffer")
+      (evil-test-macro "o"
+        ";; " "This buffer")))
+  (ert-info ("Delete a word")
+    (evil-test-buffer-edit "wved"
+      ";; " " buffer" 'bobp))
+  (ert-info ("Delete a line")
+    (evil-test-buffer-edit "wvjeVovd"
+      ";; " " you" 'bobp)))
+
+(ert-deftest evil-test-visual-line ()
+  "Test Visual line selection"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-test-visual-select evil-visual-line))
+  (ert-info ("Move to other end")
+    (evil-test-buffer
+      (evil-test-macro "wVe"
+        "Thi" "s buffer")
+      (evil-test-macro "o"
+        ";; " "This buffer")))
+  (ert-info ("Delete a line")
+    (evil-test-buffer-edit "wVed"
+      'bobp ";; If you want to create a file"))
+  (ert-info ("Delete two lines")
+    (evil-test-buffer-edit "wVjevoVd"
+      'bobp ";; then enter the text in that file")))
+
+(ert-deftest evil-test-visual-block ()
+  "Test Visual line selection"
+  :tags '(evil)
+  (evil-test-buffer
+    (evil-test-visual-select evil-visual-block))
+  (ert-info ("Move to other corner")
+    (evil-test-buffer
+      (evil-test-macro "\C-vjjll"
+        ";;" " then enter")
+      (evil-test-macro "O"
+        'bolp ";; then enter")
+      (evil-test-macro "o"
+        ";;" " This buffer")
+      (evil-test-macro "O"
+        'bobp ";; This buffer")))
+  (ert-info ("Delete a 1x4 block")
+    (evil-test-buffer-edit "w\C-ved"
+      ";; " " buffer" 'bobp))
+  (ert-info ("Delete a 1x2 block")
+    (evil-test-buffer-edit "w\C-vjeVo\C-vokd"
+      ";; " "is buffer" 'bobp)))
+
+(ert-deftest evil-test-visual-restore ()
+  "Test restoring a previous selection"
+  :tags '(evil)
+  (ert-info ("Start a characterwise selection
+if no previous selection")
+    (evil-test-buffer-edit ("wgved")
+      ";; " " buffer" 'bobp))           ;
+  (ert-info ("Restore characterwise selection")
+    (evil-test-buffer-edit ("wve" [escape] "gvd")
+      ";; " " buffer" 'bobp)
+    (evil-test-buffer-edit ("wvjeVov" [escape] "gvd")
+      ";; " " you" 'bobp))
+  (ert-info ("Restore linewise selection")
+    (evil-test-buffer-edit ("wVe" [escape] "gvd")
+      'bobp ";; If you want to create a file")
+    (evil-test-buffer-edit ("wVjevoV" [escape] "gvd")
+      'bobp ";; then enter the text in that file"))
+  (ert-info ("Restore blockwise selection")
+    (evil-test-buffer-edit ("w\C-ve" [escape] "gvd")
+      ";; " " buffer" 'bobp)))
 
 ;;; Utilities
 
