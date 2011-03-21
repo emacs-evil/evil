@@ -443,7 +443,9 @@ bindings to be activated whenever KEYMAP and %s state are active."
                  (run-hooks ',entry-hook)
                  (when (and (evil-called-interactively-p)
                             ,message)
-                   (evil-echo ,message)))
+                   (if (functionp ,message)
+                       (funcall ,message)
+                     (evil-echo ,message))))
              (setq evil-state ',state)))))
 
        (evil-define-keymap ,local-keymap nil
@@ -465,11 +467,6 @@ bindings to be activated whenever KEYMAP and %s state are active."
   (if evil-state
       (evil-setup-normal-repeat)
     (evil-teardown-normal-repeat)))
-
-(evil-define-state visual
-  "Visual state."
-  :tag " <V> "
-  :enable (motion))
 
 (evil-define-state emacs
   "Emacs state."
