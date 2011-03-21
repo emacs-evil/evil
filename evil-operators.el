@@ -98,7 +98,8 @@ in the `interactive' specification of an operator command."
        ((or (evil-visual-state-p)
             (region-active-p))
         (setq beg (region-beginning)
-              end (region-end)))
+              end (region-end))
+        (goto-char beg))
        (t
         ;; read motion from keyboard
         (evil-save-state
@@ -190,10 +191,10 @@ Return a list (MOTION COUNT TYPE)."
                                           (number-to-string prefix))))
                    (setq count prefix)))
                ;; if the command is a type modifier, read more
-               (when (assq motion modifiers)
+               (when (rassq motion evil-visual-alist)
                  (setq modifier
                        (or modifier
-                           (cdr (assq motion modifiers))))))))
+                           (car (rassq motion evil-visual-alist))))))))
     (setq type (or type (evil-type motion 'exclusive)))
     (when modifier
       (cond
