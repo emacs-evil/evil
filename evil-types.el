@@ -341,11 +341,10 @@ in BUFFER with PROPERTIES.\n%s\n\n%s" sym type string doc)
                                            properties))
                                   (append (list beg end type)
                                           properties))
-                        beg (pop range)
-                        end (pop range))
+                        beg  (or (pop range) beg)
+                        end  (or (pop range) end)
+                        type (or (pop range) type))
                   (evil-sort beg end)
-                  (when (symbolp (car range))
-                    (setq type (or (pop range) type)))
                   (while range
                     (setq properties
                           (plist-put properties
@@ -369,18 +368,17 @@ If the end position is at the beginning of a line, then:
   line and return `inclusive' (expanded)."
   :normalize (lambda (beg end)
                (cond
-                ((and (/= beg end)
-                      (progn
-                        (goto-char end)
-                        (bolp)))
-                 (backward-char)
-                 (setq end (max beg (point)))
+                ((progn
+                   (goto-char end)
+                   (and (/= beg end) (bolp)))
+                 (setq end (max beg (1- end)))
                  (cond
                   ((progn
                      (goto-char beg)
                      (looking-back "^[ \f\t\v]*"))
                    (evil-expand beg end 'line))
                   (t
+                   (setq end (max beg (1- end)))
                    (evil-expand beg end 'inclusive))))
                 (t
                  (list beg end))))

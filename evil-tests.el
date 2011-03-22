@@ -437,7 +437,7 @@ if they are the same")
       (ert-info ("expand to `inclusive' if the end position
 is at the beginning of a line")
         (should (equal (evil-normalize (1+ first-line) second-line 'exclusive)
-                       (list (1+ first-line) second-line 'inclusive
+                       (list (1+ first-line) (1- second-line) 'inclusive
                              :expanded t))))
       (ert-info ("expand to `line' if both the beginning and end
 are at the beginning of a line")
@@ -467,7 +467,7 @@ and the beginning")
           (move-overlay overlay (1+ first-line) second-line)
           (evil-normalize-overlay overlay)
           (should (= (overlay-start overlay) (1+ first-line)))
-          (should (= (overlay-end overlay) second-line))
+          (should (= (overlay-end overlay) (1- second-line)))
           (should (eq (evil-type overlay) 'inclusive))
           (should (overlay-get overlay :expanded)))
         (ert-info ("Contract overlay")
