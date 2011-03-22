@@ -108,8 +108,8 @@ the selection is enabled."
   "Blockwise selection."
   :message "-- VISUAL BLOCK --"
   (evil-transient-mark -1)
-  (overlay-put evil-visual-overlay 'corner nil)
-  (overlay-put evil-visual-overlay 'corner (evil-visual-block-corner)))
+  (overlay-put evil-visual-overlay :corner nil)
+  (overlay-put evil-visual-overlay :corner (evil-visual-block-corner)))
 
 (defun evil-visual-pre-command ()
   "Run before each command in Visual state.
@@ -326,8 +326,7 @@ FORCE returns the previous end if not in Visual state."
   "Return current Visual type, nil if not in Visual state.
 FORCE returns the previous Visual type if not in Visual state."
   (when (or force (evil-visual-state-p))
-    (and (overlayp evil-visual-overlay)
-         (overlay-get evil-visual-overlay 'type))))
+    (evil-type evil-visual-overlay)))
 
 ;; recognizes user changes, e.g., customizing
 ;; `evil-visual-char' to `exclusive'
@@ -395,27 +394,36 @@ the horizontal or vertical component of CORNER is used.
 CORNER defaults to `upper-left'."
   (let* ((point (or point (point)))
          (mark (or mark (mark t)))
-         (corner (symbol-name (or corner
-                                  (overlay-get evil-visual-overlay
-                                               'corner))))
+         (corner (symbol-name
+                  (or corner
+                      (and (overlayp evil-visual-overlay)
+                           (overlay-get evil-visual-overlay
+                                        :corner))
+                      'upper-left)))
          (point-col (save-excursion
                       (goto-char point)
                       (current-column)))
          (mark-col (save-excursion
                      (goto-char mark)
                      (current-column)))
-         (horizontal (or (and (string-match "left\\|right" corner)
-                              (match-string 0 corner))
-                         "left"))
-         (vertical (or (and (string-match "upper\\|lower" corner)
-                            (match-string 0 corner))
-                       "upper")))
+         horizontal vertical)
     (cond
+     ((= point-col mark-col)
+      (setq horizontal
+            (or (and (string-match "left\\|right" corner)
+                     (match-string 0 corner))
+                "left")))
      ((< point-col mark-col)
       (setq horizontal "left"))
      ((> point-col mark-col)
       (setq horizontal "right")))
     (cond
+     ((= (line-number-at-pos point)
+         (line-number-at-pos mark))
+      (setq vertical
+            (or (and (string-match "upper\\|lower" corner)
+                     (match-string 0 corner))
+                "upper")))
      ((< point mark)
       (setq vertical "upper"))
      ((> point mark)
@@ -436,33 +444,16 @@ When called interactively, the selection is rotated blockwise."
    (let ((corners '(upper-left upper-right lower-right lower-left)))
      (list (or (cadr (memq (evil-visual-block-corner) corners))
                'upper-left))))
-  (let* ((point (point))
-         (mark (or (mark t) point))
-         (beg (or beg (point)))
+  (let* ((beg (or beg (point)))
          (end (or end (mark t) beg))
-         (beg-col (save-excursion
-                    (goto-char beg)
-                    (current-column)))
-         (end-col (save-excursion
-                    (goto-char end)
-                    (current-column))))
-    (evil-sort beg end)
-    (evil-sort beg-col end-col)
-    (unless (memq corner '(upper-left lower-right))
-      (evil-swap beg-col end-col))
-    (setq point (save-excursion
-                  (goto-char beg)
-                  (move-to-column beg-col)
-                  (point))
-          mark  (save-excursion
-                  (goto-char end)
-                  (move-to-column end-col)
-                  (point)))
-    (unless (memq corner '(upper-left upper-right))
-      (evil-swap mark point))
-    (evil-move-mark mark)
-    (goto-char point)
-    (overlay-put evil-visual-overlay 'corner corner)))
+         (range (evil-block-rotate beg end :corner corner)))
+    (setq beg (pop range)
+          end (pop range))
+    (unless (eq corner (evil-visual-block-corner beg end corner))
+      (evil-swap beg end))
+    (goto-char beg)
+    (evil-move-mark end)
+    (overlay-put evil-visual-overlay :corner corner)))
 
 (provide 'evil-visual)
 

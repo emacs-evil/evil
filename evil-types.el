@@ -31,7 +31,7 @@
   "Return the type of OBJECT, or DEFAULT if none."
   (or (cond
        ((overlayp object)
-        (overlay-get object 'type))
+        (overlay-get object :type))
        ((listp object)
         ;; (BEG END TYPE)
         (if (and (>= (length object) 3)
@@ -40,7 +40,7 @@
                  (symbolp (nth 2 object)))
             (nth 2 object)
           ;; property list
-          (plist-get object 'type)))
+          (plist-get object :type)))
        ;; motion
        ((symbolp object)
         (get object 'type)))
@@ -52,14 +52,14 @@ For example, (evil-set-type 'next-line 'line)
 will make `line' the type of the `next-line' command."
   (cond
    ((overlayp object)
-    (overlay-put object 'type type))
+    (overlay-put object :type type))
    ((listp object)
     (if (and (>= (length object) 3)
              (numberp (nth 0 object))
              (numberp (nth 1 object))
              (symbolp (nth 2 object)))
         (setcar (nthcdr 2 object) type)
-      (plist-put object 'type type)))
+      (plist-put object :type type)))
    ((symbolp object)
     (put object 'type type)))
   object)
@@ -118,7 +118,7 @@ If no description is available, return the empty string.
 
 The overlay equivalent is `evil-describe-overlay'."
   (let* ((type (or type (evil-type properties)))
-         (properties (plist-put properties 'type type))
+         (properties (plist-put properties :type type))
          (describe (evil-type-property type :string)))
     (or (when describe
           (apply describe beg end properties))
@@ -291,7 +291,8 @@ be transformations on buffer positions, like :expand and :contract."
             name (intern (format "evil-%s-%s" type sym))
             args (car (cdr-safe func))
             string (car (cdr (cdr-safe func)))
-            string (if (stringp string) string "")
+            string (if (stringp string)
+                       (format "%s\n\n" string) "")
             plist (plist-put plist keyword `',name))
       (add-to-list
        'defun-forms
@@ -299,7 +300,7 @@ be transformations on buffer positions, like :expand and :contract."
         ((eq keyword :string)
          `(defun ,name (beg end &rest properties)
             ,(format "Return size of %s from BEG to END \
-with PROPERTIES.\n%s\n\n%s" type string doc)
+with PROPERTIES.\n\n%s%s" type string doc)
             (let (type range)
               (when (and beg end)
                 (save-excursion
@@ -307,10 +308,10 @@ with PROPERTIES.\n%s\n\n%s" type string doc)
                   (unless (plist-get properties :expanded)
                     (setq range (evil-expand
                                  beg end ',type properties)
-                          beg (pop range)
-                          end (pop range))
-                    (when (symbolp (car range))
-                      (setq type (or (pop range) type)))
+                          beg  (or (pop range) beg)
+                          end  (or (pop range) end)
+                          type (if (evil-type-p (car-safe range))
+                                   (pop range) type))
                     (while range
                       (setq properties
                             (plist-put properties
@@ -322,7 +323,7 @@ with PROPERTIES.\n%s\n\n%s" type string doc)
         (t
          `(defun ,name (beg end &rest properties)
             ,(format "Perform %s transformation on %s from BEG to END \
-in BUFFER with PROPERTIES.\n%s\n\n%s" sym type string doc)
+with PROPERTIES.\n\n%s%s" sym type string doc)
             (let ((type ',type) range)
               (when (and beg end)
                 (save-excursion
@@ -343,7 +344,8 @@ in BUFFER with PROPERTIES.\n%s\n\n%s" sym type string doc)
                                           properties))
                         beg  (or (pop range) beg)
                         end  (or (pop range) end)
-                        type (or (pop range) type))
+                        type (if (evil-type-p (car-safe range))
+                                 (pop range) type))
                   (evil-sort beg end)
                   (while range
                     (setq properties
@@ -428,7 +430,7 @@ the last column is included."
                    (end-col (progn
                               (goto-char end)
                               (current-column)))
-                   (corner (plist-get properties 'corner)))
+                   (corner (plist-get properties :corner)))
               (cond
                ((= beg-col end-col)
                 (goto-char end)
@@ -482,16 +484,18 @@ the last column is included."
                       width
                       (if (= width 1) "" "s"))))
   :rotate (lambda (beg end &rest properties)
-            (let* ((beg-col (progn
-                              (goto-char beg)
-                              (current-column)))
-                   (end-col (progn
-                              (goto-char end)
-                              (current-column)))
-                   (left  (min beg-col end-col))
-                   (right (max beg-col end-col))
-                   (corner (or (plist-get properties 'corner)
+            "Rotate block according to :corner property.
+:corner can be one of `upper-left',``upper-right', `lower-left'
+and `lower-right'."
+            (let* ((left (progn
+                           (goto-char beg)
+                           (current-column)))
+                   (right (progn
+                            (goto-char end)
+                            (current-column)))
+                   (corner (or (plist-get properties :corner)
                                'upper-left)))
+              (evil-sort left right)
               (goto-char beg)
               (if (memq corner '(upper-right lower-left))
                   (move-to-column right)
@@ -503,7 +507,7 @@ the last column is included."
                 (move-to-column right))
               (setq end (point))
               (setq properties (plist-put properties
-                                          'corner corner))
+                                          :corner corner))
               (append (list beg end) properties))))
 
 (provide 'evil-types)
