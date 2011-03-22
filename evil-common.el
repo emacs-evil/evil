@@ -1,6 +1,7 @@
 ;;;; Common functions and utilities
 
 (require 'evil-vars)
+(require 'evil-compatibility)
 
 (defun evil-motion-p (cmd)
   "Return non-nil if CMD is a motion."
