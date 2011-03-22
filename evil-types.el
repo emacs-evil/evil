@@ -175,7 +175,7 @@ Return a new overlay if COPY is non-nil."
       (setq overlay (copy-overlay overlay)))
     (while range
       (overlay-put overlay (pop range) (pop range)))
-    (overlay-put overlay 'type type)
+    (evil-set-type overlay type)
     (move-overlay overlay beg end buffer)
     overlay))
 

@@ -182,8 +182,8 @@ exclude that newline from the region."
         (setq evil-visual-overlay (make-overlay mark point))
       (evil-contract-overlay evil-visual-overlay)
       (move-overlay evil-visual-overlay mark point))
-    (overlay-put evil-visual-overlay 'type type)
     (overlay-put evil-visual-overlay 'direction dir)
+    (evil-set-type evil-visual-overlay type)
     (evil-expand-overlay evil-visual-overlay)
     (evil-visual-highlight)))
 
