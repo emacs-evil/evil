@@ -141,6 +141,11 @@ paste, BEG end END are the region of the inserted text.")
 (defvar evil-paste-count nil
   "The count argument of the current paste command.")
 
+(defvar evil-temporary-undo nil
+  "When undo is disabled in current buffer, certain commands
+depending on undo use the variable instead of
+`buffer-undo-list'.")
+
 (defconst evil-version "0.1"
   "The current version of Evil")
 

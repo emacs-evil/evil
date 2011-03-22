@@ -1396,6 +1396,24 @@ to `evil-execute-repeat-info'")
          '(" " "ow thow th" bolp eobp))))))
 
 
+(ert-deftest evil-test-paste-pop-without-undo ()
+  "Text `evil-paste-pop' with undo disabled."
+  (ert-info ("Pop-next with count without undo")
+    (evil-test-buffer
+      (setq buffer-undo-list t)
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wy2e2yyy5s^je2P\C-p\C-p2\C-n")
+      (save-excursion
+        (goto-char (1+ (point-min)))
+        (evil-test-text-lines
+         '(";" "; This buffer" bobp)
+         '(";" "This This ; If you" bolp)
+         '(";" "If yoIf yo; then enter" bolp)
+         '(" " "then then" bolp eolp)
+         '("B" "          elow the empty" bolp)
+         '(" " "ow thow th" bolp eobp))))))
+
+
 (ert-deftest evil-test-paste-pop-behind ()
   "Test `evil-paste-pop' after `evil-paste-behind'"
   :tags '(evil)

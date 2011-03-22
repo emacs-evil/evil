@@ -234,6 +234,53 @@ bound to some keyboard-macro it is expaned recursively."
             (setq end (1+ end))))))
       (error "Key sequence contains no complete binding"))))
 
+;;; Undo ring
+
+(defmacro evil-with-undo (&rest body)
+  "Executes the body with enabled undo. If undo is disabled in
+the current buffer, the undo information is stored in
+`evil-temporary-undo' instead of `buffer-undo-list'."
+  (declare (indent defun)
+           (debug t))
+  `(progn
+       (if (eq buffer-undo-list t)
+           ;; Undo disabled
+           (setq evil-temporary-undo t
+                 buffer-undo-list nil)
+         (setq evil-temporary-undo nil))
+       ,@body
+       (when evil-temporary-undo
+         ;; Undo disabled. Don't forget to add the undo-boundary at the
+         ;; beginning, with undo enabled this would be done by the
+         ;; Emacs main loop.
+         (setq evil-temporary-undo (cons nil buffer-undo-list)
+               buffer-undo-list t))))
+
+(defun evil-undo-pop ()
+  "Undos the last buffer change and removes the last undo
+information from `buffer-undo-list'. If undo is disabled in the
+current buffer, use the information of `evil-temporary-undo'
+instead."
+  (let ((paste-undo (list nil)))
+    (let ((undo-list (if (eq buffer-undo-list t)
+                         evil-temporary-undo
+                       buffer-undo-list)))
+      (when (or (not undo-list) (car undo-list))
+        (error "Can't undo previous paste"))
+      (pop undo-list) ;; remove 'nil
+      (while (and undo-list
+                  (car undo-list))
+        (push (pop undo-list) paste-undo))
+      (let ((buffer-undo-list (nreverse paste-undo))
+            (orig-message (symbol-function 'message)))
+        (fset 'message #'(lambda (&rest rest)))
+        (undo)
+        (fset 'message orig-message))
+      (if (eq buffer-undo-list t)
+          (setq evil-temporary-undo nil)
+        (setq buffer-undo-list undo-list)))))
+
+
 ;;; Highlighting
 
 (when (fboundp 'font-lock-add-keywords)
