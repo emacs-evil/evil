@@ -139,6 +139,11 @@ number of repeats (including the original insertion).")
 command o or O.")
 (make-variable-buffer-local 'evil-insert-lines)
 
+(defvar evil-replace-alist nil
+  "Association list of characters overwritten in Replace state.
+The format is (POS . CHAR).")
+(make-variable-buffer-local 'evil-replace-alist)
+
 (defvar evil-write-echo-area nil
   "If set to t inside `evil-save-echo-area', then the echo area
 is not restored.")

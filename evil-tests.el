@@ -333,7 +333,9 @@ and `evil-local-mode' is enabled."
     (evil-test-change-state 'normal)
     (evil-test-change-state 'operator)
     (evil-test-change-state 'normal)
-    (evil-test-change-state 'emacs)))
+    (evil-test-change-state 'emacs)
+    (evil-test-change-state 'replace)
+    (evil-test-change-state 'normal)))
 
 (ert-deftest evil-test-enter-normal-state-disabled ()
   "Enter Normal state even if `evil-local-mode' is disabled"
