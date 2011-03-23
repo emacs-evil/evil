@@ -158,6 +158,14 @@ That is, the message is not logged in the *Messages* buffer.
          (progn ,@body)
        (evil-change-state old-state))))
 
+(defmacro evil-with-state (state &rest body)
+  "Change to STATE; execute BODY; restore previous state."
+  (declare (indent defun)
+           (debug t))
+  `(evil-save-state
+     (evil-change-state ',state)
+     ,@body))
+
 (defun evil-move-to-column (column &optional dir force)
   "Move point to column COLUMN in the current line.
 Places point at left of the tab character (at the right if DIR
