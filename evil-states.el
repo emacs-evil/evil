@@ -149,6 +149,8 @@ Its order reflects the state in the current buffer."
                 (mapcar 'cdr (evil-state-property nil :mode))
                 (mapcar 'cdr (evil-state-property nil :local-mode))))
         alist mode)
+    ;; update references to global keymaps
+    (evil-refresh-global-maps)
     ;; initialize a buffer-local value
     (setq evil-mode-map-alist
           (copy-sequence (default-value 'evil-mode-map-alist)))
@@ -185,13 +187,29 @@ Its order reflects the state in the current buffer."
             (evil-concat-alists
              alist evil-mode-map-alist)))))
 
+(defun evil-refresh-global-maps ()
+  "Refresh the global value of `evil-mode-map-alist'.
+Update its entries if keymaps change."
+  (let ((modes (evil-state-property nil :mode))
+        (maps  (evil-state-property nil :keymap))
+        (temp  (default-value 'evil-mode-map-alist))
+        state mode map)
+    (dolist (mode modes)
+      (setq state (car-safe mode)
+            mode (cdr-safe mode)
+            map (symbol-value (cdr (assq state maps))))
+      (evil-add-to-alist 'temp mode map))
+    (setq-default evil-mode-map-alist temp)))
+
 ;; Local keymaps are implemented using buffer-local variables.
 ;; However, unless a buffer-local value already exists,
 ;; `define-key' acts on the variable's default (global) value.
 ;; So we need to initialize the variable whenever we enter a
 ;; new buffer or when the buffer-local values are reset.
 (defun evil-refresh-local-maps ()
-  "Initialize a buffer-local value for all local keymaps."
+  "Refresh the buffer-local value of `evil-mode-map-alist'.
+Initialize a buffer-local value for all local keymaps
+and update their list entries."
   (unless (assq 'evil-mode-map-alist (buffer-local-variables))
     (setq evil-mode-map-alist (copy-sequence evil-mode-map-alist)))
   (dolist (entry evil-local-keymaps-alist)
@@ -275,14 +293,11 @@ may be specified before the body code:
        (unless (get ',mode 'variable-documentation)
          (put ',mode 'variable-documentation ,doc))
        (make-variable-buffer-local ',mode)
+       (evil-refresh-global-maps)
        ,@(when local
            `((make-variable-buffer-local ',keymap)
              (evil-add-to-alist 'evil-local-keymaps-alist
                                 ',mode ',keymap)))
-       (let ((temp (copy-sequence (default-value
-                                    'evil-mode-map-alist))))
-         (evil-add-to-alist 'temp ',mode ,keymap)
-         (setq-default evil-mode-map-alist temp))
        ,(when (or body func)
           `(defun ,mode (&optional arg)
              ,@(when doc `(,doc))
@@ -471,15 +486,6 @@ bindings to be activated whenever KEYMAP and %s state are active."
 (evil-define-state emacs
   "Emacs state."
   :tag " <E> ")
-
-;; TODO: the following commands are very preliminary just for testing.
-(defun evil-replace-char (char &optional count)
-  (interactive (list (read-char)
-                     (prefix-numeric-value current-prefix-arg)))
-  (setq count (or count 1))
-  (delete-char count)
-  (insert-char char count)
-  (backward-char))
 
 (provide 'evil-states)
 
