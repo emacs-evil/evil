@@ -10,6 +10,11 @@ or call the state function (e.g., `evil-normal-state').")
   "Modeline indicator for the current state.")
 (make-variable-buffer-local 'evil-modeline-tag)
 
+(defvar evil-global-keymaps-alist nil
+  "Association list of keymap variables.
+Entries have the form (MODE . KEYMAP), where KEYMAP
+is the variable containing the keymap for MODE.")
+
 (defvar evil-local-keymaps-alist nil
   "Association list of keymap variables that must be
 reinitialized in each buffer. Entries have the form

@@ -190,15 +190,12 @@ Its order reflects the state in the current buffer."
 (defun evil-refresh-global-maps ()
   "Refresh the global value of `evil-mode-map-alist'.
 Update its entries if keymaps change."
-  (let ((modes (evil-state-property nil :mode))
-        (maps  (evil-state-property nil :keymap))
-        (temp  (default-value 'evil-mode-map-alist))
-        state mode map)
-    (dolist (mode modes)
-      (setq state (car-safe mode)
-            mode (cdr-safe mode)
-            map (symbol-value (cdr (assq state maps))))
-      (evil-add-to-alist 'temp mode map))
+  (let ((temp (default-value 'evil-mode-map-alist))
+        mode map)
+    (dolist (entry evil-global-keymaps-alist)
+      (setq mode (car entry)
+            map  (cdr entry))
+      (evil-add-to-alist 'temp mode (symbol-value map)))
     (setq-default evil-mode-map-alist temp)))
 
 ;; Local keymaps are implemented using buffer-local variables.
@@ -294,9 +291,11 @@ may be specified before the body code:
          (put ',mode 'variable-documentation ,doc))
        (make-variable-buffer-local ',mode)
        (evil-refresh-global-maps)
-       ,@(when local
-           `((make-variable-buffer-local ',keymap)
-             (evil-add-to-alist 'evil-local-keymaps-alist
+       ,@(if local
+             `((make-variable-buffer-local ',keymap)
+               (evil-add-to-alist 'evil-local-keymaps-alist
+                                  ',mode ',keymap))
+           `((evil-add-to-alist 'evil-global-keymaps-alist
                                 ',mode ',keymap)))
        ,(when (or body func)
           `(defun ,mode (&optional arg)
