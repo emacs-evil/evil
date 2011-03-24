@@ -166,6 +166,39 @@ That is, the message is not logged in the *Messages* buffer.
      (evil-change-state ',state)
      ,@body))
 
+(defun evil-set-cursor (specs)
+  "Change the cursor's apperance according to SPECS.
+SPECS may be a cursor type as per `cursor-type', a color
+string as passed to `set-cursor-color', a zero-argument
+function for changing the cursor, or a list of the above.
+If SPECS is nil, make the cursor a black filled box."
+  (set-cursor-color "black")
+  (setq cursor-type 'box)
+  (unless (and (listp specs) (not (consp specs)))
+    (setq specs (list specs)))
+  (dolist (spec specs)
+    (cond
+     ((functionp spec)
+      (condition-case nil
+          (funcall spec)
+        (error nil)))
+     ((stringp spec)
+      (set-cursor-color spec))
+     (t
+      (setq cursor-type spec))))
+  (redisplay))
+
+(defmacro evil-save-cursor (&rest body)
+  "Save the current cursor; execute BODY; restore the cursor."
+  (declare (indent defun)
+           (debug t))
+  `(let ((cursor cursor-type)
+         (color (cdr (assq 'cursor-color (frame-parameters)))))
+     (unwind-protect
+         (progn ,@body)
+       (evil-set-cursor cursor)
+       (evil-set-cursor color))))
+
 (defun evil-move-to-column (column &optional dir force)
   "Move point to column COLUMN in the current line.
 Places point at left of the tab character (at the right if DIR

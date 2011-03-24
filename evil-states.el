@@ -218,28 +218,6 @@ and update their list entries."
       (evil-add-to-alist 'evil-mode-map-alist
                          mode (symbol-value map)))))
 
-(defun evil-set-cursor (specs)
-  "Change the cursor's apperance according to SPECS.
-SPECS may be a cursor type as per `cursor-type', a color
-string as passed to `set-cursor-color', a zero-argument
-function for changing the cursor, or a list of the above.
-If SPECS is nil, make the cursor a black filled box."
-  (set-cursor-color "black")
-  (setq cursor-type 'box)
-  (unless (and (listp specs) (not (consp specs)))
-    (setq specs (list specs)))
-  (dolist (spec specs)
-    (cond
-     ((functionp spec)
-      (condition-case nil
-          (funcall spec)
-        (error nil)))
-     ((stringp spec)
-      (set-cursor-color spec))
-     (t
-      (setq cursor-type spec))))
-  (redisplay))
-
 (defun evil-change-state (state)
   "Change state to STATE.
 Disable all states if nil."
