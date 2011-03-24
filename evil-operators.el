@@ -50,7 +50,7 @@ arguments: the beginning and end of the range."
                            [&rest keywordp sexp]
                            def-body)))
   (let ((repeat t)
-        beg end interactive keep-visual keyword type whole-lines)
+        beg end interactive keep-visual keyword motion type whole-lines)
     ;; collect BEG, END and TYPE
     (setq args (delq '&optional args)
           beg (or (pop args) 'beg)
@@ -63,6 +63,10 @@ arguments: the beginning and end of the range."
     (while (keywordp (car-safe body))
       (setq keyword (pop body))
       (cond
+       ((eq keyword :motion)
+        (setq motion (pop body))
+        (unless motion
+          (setq motion 'undefined)))
        ((eq keyword :keep-visual)
         (setq keep-visual (pop body)))
        ((eq keyword :whole-lines)
@@ -80,18 +84,19 @@ arguments: the beginning and end of the range."
        (defun ,operator (,beg ,end &optional ,type ,@args)
          ,@(when doc `(,doc))
          (interactive
-          (append (evil-operator-range) ,@interactive))
+          (append (evil-operator-range ',motion ',keep-visual)
+                  ,@interactive))
          (if (and evil-inhibit-operator
                   (evil-called-interactively-p))
              (setq evil-inhibit-operator nil)
            ,@body)))))
 
-(defun evil-operator-range ()
+(defun evil-operator-range (&optional motion keep-visual)
   "Read a motion from the keyboard and return its buffer positions.
 The return value is a list (BEG END TYPE), which can be used
 in the `interactive' specification of an operator command."
-  (let ((beg (point)) (end (point)) (type evil-this-type)
-        command count modifier motion range)
+  (let ((beg (point)) (end (point))
+        command count modifier range type)
     (evil-save-echo-area
       (cond
        ;; Visual selection
@@ -99,45 +104,53 @@ in the `interactive' specification of an operator command."
             (region-active-p))
         (setq beg (region-beginning)
               end (region-end))
-        (goto-char beg))
+        (unless keep-visual
+          (evil-active-region -1))
+        (if (eq evil-this-type 'block)
+            (evil-visual-block-rotate 'upper-left)
+          (goto-char beg)))
        (t
         ;; read motion from keyboard
         (evil-save-state
-          (evil-operator-state)
-          ;; Make linewise operator shortcuts. E.g., "d" yields the
-          ;; shortcut "dd", and "g?" yields shortcuts "g??" and "g?g?".
-          (let ((keys (nth 2 (evil-extract-count (this-command-keys)))))
-            (setq keys (append keys nil))
-            (dotimes (var (length keys))
-              (define-key evil-operator-shortcut-map
-                (vconcat (nthcdr var keys)) 'evil-line)))
-          (setq command (evil-read-motion)
-                motion (pop command)
-                count (pop command)
-                type (pop command))
-          (if (null motion)
-              (setq quit-flag t)
-            (cond
-             (evil-repeat-count
-              (setq count evil-repeat-count
-                    ;; only the first operator's count is overwritten
-                    evil-repeat-count nil))
-             ((or count current-prefix-arg)
-              ;; multiply operator count and motion count together
-              (setq count
-                    (* (prefix-numeric-value count)
-                       (prefix-numeric-value current-prefix-arg)))))
+          (unless motion
+            (evil-operator-state)
+            ;; Make linewise operator shortcuts. E.g., "d" yields the
+            ;; shortcut "dd", and "g?" yields shortcuts "g??" and "g?g?".
+            (let ((keys (nth 2 (evil-extract-count (this-command-keys)))))
+              (setq keys (append keys nil))
+              (dotimes (var (length keys))
+                (define-key evil-operator-shortcut-map
+                  (vconcat (nthcdr var keys)) 'evil-line)))
+            (setq command (evil-read-motion motion)
+                  motion (pop command)
+                  count (pop command)
+                  type (pop command)))
+          (cond
+           ((null motion)
+            (setq quit-flag t))
+           ((eq motion 'undefined)
+            (setq motion nil))
+           (evil-repeat-count
+            (setq count evil-repeat-count
+                  ;; only the first operator's count is overwritten
+                  evil-repeat-count nil))
+           ((or count current-prefix-arg)
+            ;; multiply operator count and motion count together
+            (setq count
+                  (* (prefix-numeric-value count)
+                     (prefix-numeric-value current-prefix-arg)))))
+          (when motion
             (setq range (evil-motion-range
                          motion
                          count
                          type)
                   beg (pop range)
                   end (pop range)
-                  type (pop range))
-            ;; update global variables
-            (setq evil-this-motion motion
-                  evil-this-motion-count count
-                  evil-this-type type)))))
+                  type (pop range)))
+          ;; update global variables
+          (setq evil-this-motion motion
+                evil-this-motion-count count
+                evil-this-type type))))
       (list beg end type))))
 
 (defun evil-motion-range (motion &optional count type)
@@ -145,7 +158,8 @@ in the `interactive' specification of an operator command."
 The return value is a list (BEG END TYPE)."
   (evil-save-region
     (transient-mark-mode 1)
-    (setq evil-motion-marker (move-marker (make-marker) (point)))
+    (setq evil-motion-marker (move-marker (make-marker) (point))
+          type (or type (evil-type motion 'exclusive)))
     (unwind-protect
         (let ((current-prefix-arg count)
               ;; Store the type in global variable `evil-this-type'.
