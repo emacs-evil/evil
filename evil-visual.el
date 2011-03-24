@@ -29,13 +29,13 @@
                         (evil-called-interactively-p))
     (add-hook 'pre-command-hook 'evil-visual-pre-command nil t)
     (add-hook 'post-command-hook 'evil-visual-post-command nil t)
+    (add-hook 'evil-normal-state-entry-hook
+              'evil-visual-deactivate-hook nil t)
     (setq evil-visual-region-expanded nil))
    (t
     (remove-hook 'pre-command-hook 'evil-visual-pre-command t)
     (remove-hook 'post-command-hook 'evil-visual-post-command t)
-    (evil-visual-highlight -1)
-    (evil-active-region -1)
-    (evil-transient-restore))))
+    (evil-visual-highlight -1))))
 
 (defmacro evil-define-visual-selection (selection doc &rest body)
   "Define a Visual selection SELECTION.
@@ -137,6 +137,13 @@ otherwise exit Visual state."
             evil-visual-region-expanded)
         (evil-normal-state)
       (evil-visual-refresh))))
+
+(defun evil-visual-deactivate-hook ()
+  "Deactivate the region and restore Transient Mark mode."
+  (evil-active-region -1)
+  (evil-transient-restore)
+  (remove-hook 'evil-normal-state-entry-hook
+               'evil-visual-deactivate-hook t))
 
 (defun evil-visual-select (&optional mark point type message)
   "Create a Visual selection with MARK, POINT and TYPE.
