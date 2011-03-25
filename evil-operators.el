@@ -409,8 +409,15 @@ Both COUNT and CMD may be nil."
                           (current-column))
                         col)                    ; nothing in this line
                      (zerop (length txt)))      ; and nothing to insert
-          (move-to-column col t)
-          (insert (make-string begextra ? ))
+          ;; If we paste behind eol it may be sufficient to insert
+          ;; tabs.
+          (if (< (save-excursion
+                   (goto-char (line-end-position))
+                   (current-column))
+                 col)
+              (move-to-column (+ col begextra) t)
+            (move-to-column col t)
+            (insert (make-string begextra ? )))
           (insert txt)
           (unless (eolp)
             ;; text follows, so we have to insert spaces
