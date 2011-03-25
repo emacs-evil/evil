@@ -358,6 +358,47 @@ bound to some keyboard-macro it is expaned recursively."
             (setq end (1+ end))))))
       (error "Key sequence contains no complete binding"))))
 
+
+;;; Command properties
+
+(defun evil-add-command-properties (command &rest properties)
+  "Adds the evil properties of a COMMAND.
+REST should be a list of an even number of values, the first of a pair considered
+as a key, the second as the value. The properties are stored in an alist at
+the symbol COMMAND's property list entry 'evil-properties."
+  (let ((cmd-properties (get command 'evil-properties)))
+    (when (>= (length properties) 2)
+      (apply #'evil-add-to-alist 'cmd-properties properties))
+    (put command 'evil-properties cmd-properties)))
+
+(defun evil-set-command-properties (command &rest properties)
+  "Sets the evil properties of a COMMAND.
+REST should be a list of an even number of values, the first of a pair considered
+as a key, the second as the value. The properties are stored in an alist at
+the symbol COMMAND's property list entry 'evil-properties."
+  (put command 'evil-properties nil)
+  (apply #'evil-add-command-properties command properties))
+
+(defun evil-has-properties-p (command)
+  "Returns non-nil if and only if evil-properties are defined for COMMAND.
+If no evil-properties are defined for COMMAND several parts of
+evil apply certain default rules, e.g., the repeat-system decides
+whether the command is repeatable by monitoring buffer changes."
+  (and (get command 'evil-properties) t))
+
+(defun evil-get-command-property (command prop)
+  "Returns the value of evil-property PROP of command COMMAND."
+  (cdr-safe (assq prop (get command 'evil-properties))))
+
+(defun evil-repeatable-p (command)
+  "Return non-nil iff COMMAND is repeatable."
+  (evil-get-command-property command 'repeatable))
+
+(defun evil-keep-visual-p (command)
+  "Return non-nil iff COMMAND should not exit visual state."
+  (evil-get-command-property command 'keep-visual))
+
+
 ;;; Highlighting
 
 (when (fboundp 'font-lock-add-keywords)
