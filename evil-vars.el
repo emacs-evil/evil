@@ -77,6 +77,12 @@ to t, the operator code is not executed.")
 (defvar evil-repeat-info-ring (make-ring 10)
   "A ring of repeat-informations to repeat the last command.")
 
+(defvar evil-last-repeat nil
+  "Information about the latest repeat command. This is a list of two elements
+(POINT COUNT) where POINT is the position of point before the
+latest repeat and COUNT the count-argument of the latest repeat
+command.")
+
 (defvar evil-repeating-command nil
   "This variable is non-nil if a command is currently being repeated.")
 

@@ -36,6 +36,8 @@ TARGET the command to call."
 (define-key evil-normal-state-map "x" 'delete-char)
 (define-key evil-normal-state-map "r" 'evil-replace-char)
 (define-key evil-normal-state-map "." 'evil-repeat)
+(define-key evil-normal-state-map (kbd "C-.") 'evil-repeat-pop)
+(define-key evil-normal-state-map (kbd "M-.") 'evil-repeat-pop-next)
 
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
 

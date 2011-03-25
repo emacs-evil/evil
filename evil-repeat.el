@@ -261,10 +261,41 @@ and only if `count' is non-nil."
         (kill-buffer-hook
          (cons #'(lambda ()
                    (error "Cannot delete buffer in repeat command."))
-               kill-buffer-hook)))
+               kill-buffer-hook))
+        (evil-repeat-info-ring (ring-copy evil-repeat-info-ring))
+        (this-command this-command)
+        (last-command last-command))
+    (setq evil-last-repeat (list (point) count))
+    (evil-with-undo
+      (evil-execute-repeat-info-with-count count (ring-ref evil-repeat-info-ring 0)))))
 
-    (evil-execute-repeat-info-with-count count (ring-ref evil-repeat-info-ring 0))))
+;; TODO: the same issue concering disabled undos as for `evil-paste-pop'
+(defun evil-repeat-pop (count)
+  "Replace the just repeated command with a previously executed command.
+This command is allowed only immediatly after a `evil-repeat',
+`evil-repeat-pop' or `evil-repeat-pop-next'. This command uses
+the same repeat count that was used for the first repeat.
 
+The COUNT argument inserts the COUNTth previous kill.  If COUNT
+is negative this is a more recent kill."
+  (interactive "p")
+  (unless (and (eq last-command 'evil-repeat)
+               evil-last-repeat)
+    (error "Previous command was not evil-repeat: %s" last-command))
+  (evil-undo-pop)
+  (goto-char (car evil-last-repeat))
+  ;; rotate the repeat-ring
+  (while (> count 0)
+    (ring-insert-at-beginning evil-repeat-info-ring
+                              (ring-remove evil-repeat-info-ring 0))
+    (setq count (1- count)))
+  (setq this-command 'evil-repeat)
+  (evil-repeat (cadr evil-last-repeat)))
+
+(defun evil-repeat-pop-next (count)
+  "Same as `evil-repeat-pop' with negative COUNT."
+  (interactive "p")
+  (evil-repeat-pop (- count)))
 
 (provide 'evil-repeat)
 
