@@ -32,8 +32,6 @@
      (move-to-column ocolumn)))
 
 ;;; Scrolling
-;; TODO: in vim, scroll commands preserve the current column but the
-;; emacs version do not
 
 (evil-define-command evil-scroll-line-up (count)
   "Scrolls the window COUNT lines upwards."
@@ -54,54 +52,58 @@
   :repeatable nil
   :keep-visual t
   (interactive "P")
-  (let ((p (point))
-        (c (or count (/ (evil-num-visible-lines) 2))))
-    (save-excursion
-      (scroll-down (min (evil-max-scroll-up) c)))
-    (forward-line (- c))
-    (when (= (line-number-at-pos p)
-             (line-number-at-pos (point)))
-      (signal 'beginning-of-buffer nil))))
+  (evil-save-column
+    (let ((p (point))
+          (c (or count (/ (evil-num-visible-lines) 2))))
+      (save-excursion
+        (scroll-down (min (evil-max-scroll-up) c)))
+      (forward-line (- c))
+      (when (= (line-number-at-pos p)
+               (line-number-at-pos (point)))
+        (signal 'beginning-of-buffer nil)))))
 
 (evil-define-command evil-scroll-down (count)
   "Scrolls the window and the cursor COUNT lines downwards, default half of the screen."
   :repeatable nil
   :keep-visual t
   (interactive "P")
-  (let ((p (point))
-        (c (or count (/ (evil-num-visible-lines) 2))))
-    (save-excursion
-      (scroll-up (min (evil-max-scroll-down) c)))
-    (forward-line c)
-    (when (= (line-number-at-pos p)
-             (line-number-at-pos (point)))
-      (signal 'end-of-buffer nil))))
+  (evil-save-column
+    (let ((p (point))
+          (c (or count (/ (evil-num-visible-lines) 2))))
+      (save-excursion
+        (scroll-up (min (evil-max-scroll-down) c)))
+      (forward-line c)
+      (when (= (line-number-at-pos p)
+               (line-number-at-pos (point)))
+        (signal 'end-of-buffer nil)))))
 
 (evil-define-command evil-scroll-page-up (count)
   "Scrolls the window COUNT pages upwards."
   :repeatable nil
   :keep-visual t
   (interactive "p")
-  (condition-case nil
-      (dotimes (i count)
-        (scroll-down nil))
-    (error
-     (if (bobp)
-         (signal 'beginning-of-buffer nil)
-       (goto-char (point-min))))))
+  (evil-save-column
+    (condition-case nil
+        (dotimes (i count)
+          (scroll-down nil))
+      (error
+       (if (bobp)
+           (signal 'beginning-of-buffer nil)
+         (goto-char (point-min)))))))
 
 (evil-define-command evil-scroll-page-down (count)
   "Scrolls the window COUNT pages upwards."
   :repeatable nil
   :keep-visual t
   (interactive "p")
-  (condition-case nil
-      (dotimes (i count)
-        (scroll-up nil))
-    (error
-     (if (evil-eobp)
-         (signal 'end-of-buffer nil)
-       (goto-char (point-max))))))
+  (evil-save-column
+    (condition-case nil
+        (dotimes (i count)
+          (scroll-up nil))
+      (error
+       (if (evil-eobp)
+           (signal 'end-of-buffer nil)
+         (goto-char (point-max)))))))
 
 (evil-define-command evil-scroll-line-to-top (count)
   "Scrolls line number COUNT (or the cursor line) to the top of the window."
