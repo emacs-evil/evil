@@ -4,6 +4,12 @@
 
 (require 'evil-motions)
 
+(condition-case nil
+    (require 'windmove)
+  (error
+   (message "evil: Could not load 'windmove', window-commands not available.")
+   nil))
+
 ;;; Utility function
 (defun evil-num-visible-lines ()
   "Returns the number of currently visible lines."
@@ -105,7 +111,9 @@
   ;; :keep-visual t
   (interactive "P")
   (evil-save-column
-    (goto-line (or count (line-number-at-pos (point))))
+    (let ((line (or count (line-number-at-pos (point)))))
+      (goto-char (point-min))
+      (forward-line (1- line)))
     (recenter 0)))
 
 (defun evil-scroll-line-to-center (count)
@@ -114,7 +122,9 @@
   ;; :keep-visual t
   (interactive "P")
   (evil-save-column
-    (goto-line (or count (line-number-at-pos (point))))
+    (let ((line (or count (line-number-at-pos (point)))))
+      (goto-char (point-min))
+      (forward-line (1- line)))
     (recenter nil)))
 
 (defun evil-scroll-line-to-bottom (count)
@@ -123,7 +133,9 @@
   ;; :keep-visual t
   (interactive "P")
   (evil-save-column
-    (goto-line (or count (line-number-at-pos (point))))
+    (let ((line (or count (line-number-at-pos (point)))))
+      (goto-char (point-min))
+      (forward-line (1- line)))
     (recenter -1)))
 
 (defun evil-scroll-bottom-line-to-top (count)
@@ -132,7 +144,9 @@
   ;; :keep-visual t
   (interactive "P")
   (if count
-      (goto-line count)
+      (progn
+        (goto-char (point-min))
+        (forward-line (1- count)))
     (goto-char (window-end))
     (unless (bobp) (backward-char)))
   (recenter 0)
@@ -144,18 +158,15 @@
   ;; :keep-visual t
   (interactive "P")
   (if count
-      (goto-line count)
+      (progn
+        (goto-char (point-min))
+        (forward-line (1- count)))
     (goto-char (window-start)))
   (recenter -1)
   (evil-first-non-blank))
-(condition-case nil
-    (require 'windmove)
-  (error
-   (message "vim-mode: Could not load 'windmove', window-commands not available.")
-   nil))
-
 
 ;;; Window
+
 
 (defun evil-resize-window (new-size &optional horizontal)
   "Sets the current window's with or height to `new-size'."
