@@ -9,13 +9,12 @@
     "Returns t iff region and mark are active."
     (and transient-mark-mode mark-active)))
 
-;; In Emacs 22 `called-interactively-p' takes no arguments, newer
-;; Emacs 23 versions take one argument.
-(cond
- ((zerop (cdr (subr-arity (symbol-function 'called-interactively-p))))
-  (defalias 'evil-called-interactively-p 'called-interactively-p))
- ((defsubst evil-called-interactively-p ()
-    (called-interactively-p 'interactive))))
+;; In older versions of Emacs, `called-interactively-p' takes
+;; no arguments. Emacs 23.2 and newer takes one argument.
+(defmacro evil-called-interactively-p ()
+  (if (version< emacs-version "23.2")
+      '(called-interactively-p)
+    '(called-interactively-p 'any)))
 
 (provide 'evil-compatibility)
 

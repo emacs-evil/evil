@@ -60,6 +60,11 @@ should be ignored completely. 'change means the command is
 repeated by tracking the buffer changed."
   (puthash command type evil-insert-repeat-types))
 
+(defun evil-repeat-normal-command-p ()
+  "Return non-nil iff the current command should be recored for repeation."
+  (if (evil-has-properties-p this-command)
+      (evil-repeatable-p this-command)
+    evil-command-modified-buffer))
 
 (defun evil-normal-pre-repeat ()
   "Called from `pre-command-hook' in vi-state. Initializes
@@ -77,7 +82,7 @@ buffer."
 recording of repeat-information and eventually stores it in the
 global variable `evil-repeat-info-ring' if the command is repeatable."
   (when (and (functionp this-command)
-             evil-command-modified-buffer)
+             (evil-repeat-normal-command-p))
     (evil-add-repeat-info
      (evil-normalize-repeat-info (list (this-command-keys))))))
 

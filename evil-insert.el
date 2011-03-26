@@ -82,7 +82,8 @@ The insertion will be repeated COUNT times."
   (interactive "p")
   (evil-insert-newline-above)
   (setq evil-insert-count count
-        evil-insert-lines t)
+        evil-insert-lines t
+        evil-insert-vcount nil)
   (indent-according-to-mode)
   (evil-insert-state 1))
 
@@ -92,7 +93,8 @@ The insertion will be repeated COUNT times."
   (interactive "p")
   (evil-insert-newline-below)
   (setq evil-insert-count count
-        evil-insert-lines t)
+        evil-insert-lines t
+        evil-insert-vcount nil)
   (indent-according-to-mode)
   (evil-insert-state 1))
 

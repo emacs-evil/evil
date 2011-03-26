@@ -10,6 +10,11 @@ or call the state function (e.g., `evil-normal-state').")
   "Modeline indicator for the current state.")
 (make-variable-buffer-local 'evil-modeline-tag)
 
+(defvar evil-global-keymaps-alist nil
+  "Association list of keymap variables.
+Entries have the form (MODE . KEYMAP), where KEYMAP
+is the variable containing the keymap for MODE.")
+
 (defvar evil-local-keymaps-alist nil
   "Association list of keymap variables that must be
 reinitialized in each buffer. Entries have the form
@@ -28,7 +33,7 @@ Elements have the form (MODE . KEYMAP), with the first keymaps
 having higher priority.")
 (make-variable-buffer-local 'evil-mode-map-alist)
 
-(defvar evil-transient-vars '(transient-mark-mode mark-active)
+(defvar evil-transient-vars '(transient-mark-mode)
   "List of variables pertaining to Transient Mark mode.")
 
 (defvar evil-transient-vals nil
@@ -58,8 +63,23 @@ describing it, etc.")
   "Current motion count.")
 (make-variable-buffer-local 'evil-mode-map-alist)
 
-(defvar evil-motions nil
-  "List of motion commands.")
+(defvar evil-motions
+  '(backward-char backward-list backward-paragraph backward-sentence
+                  backward-sexp backward-up-list backward-word
+                  beginning-of-buffer beginning-of-defun
+                  beginning-of-line beginning-of-visual-line down-list
+                  end-of-buffer end-of-defun end-of-line
+                  end-of-visual-line exchange-point-and-mark
+                  forward-char forward-list forward-paragraph
+                  forward-sentence forward-sexp forward-word
+                  keyboard-quit mouse-drag-region mouse-save-then-kill
+                  mouse-set-point mouse-set-region
+                  move-beginning-of-line move-end-of-line next-line
+                  previous-line scroll-down scroll-up undo
+                  universal-argument up-list
+                  evil-visual-exchange-corners
+                  evil-visual-block-rotate)
+  "List of movement commands.")
 
 (defvar evil-operators nil
   "List of operator commands.")
@@ -131,6 +151,11 @@ number of repeats (including the original insertion).")
 command o or O.")
 (make-variable-buffer-local 'evil-insert-lines)
 
+(defvar evil-replace-alist nil
+  "Association list of characters overwritten in Replace state.
+The format is (POS . CHAR).")
+(make-variable-buffer-local 'evil-replace-alist)
+
 (defvar evil-write-echo-area nil
   "If set to t inside `evil-save-echo-area', then the echo area
 is not restored.")
@@ -152,6 +177,26 @@ paste, BEG end END are the region of the inserted text.")
   "When undo is disabled in current buffer, certain commands
 depending on undo use the variable instead of
 `buffer-undo-list'.")
+
+(defvar evil-visual-alist nil
+  "Association list of Visual selections.
+Elements have the form (NAME . FUNCTION).")
+
+(defvar evil-visual-overlay nil
+  "Overlay for Visual selection.
+This stores the boundaries of the selection and its type.
+It is also used for highlighting, unless the type is `block',
+in which case see `evil-visual-block-overlays'.")
+(make-variable-buffer-local 'evil-visual-overlay)
+
+(defvar evil-visual-block-overlays nil
+  "Overlays for Visual Block selection, one for each line.
+They are reused to prevent flicker.")
+(make-variable-buffer-local 'evil-visual-block-overlays)
+
+(defvar evil-visual-region-expanded nil
+  "Whether the region matches the Visual selection.")
+(make-variable-buffer-local 'evil-visual-region-expanded)
 
 (defconst evil-version "0.1"
   "The current version of Evil")
