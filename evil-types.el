@@ -165,9 +165,9 @@ Return a new overlay if COPY is non-nil."
          (buffer (overlay-buffer overlay))
          (properties (overlay-properties overlay))
          (range (save-excursion
-                  (set-buffer (or buffer (current-buffer)))
-                  (apply 'evil-transform
-                         beg end type transform properties)))
+                  (with-current-buffer (or buffer (current-buffer))
+                    (apply 'evil-transform
+                           beg end type transform properties))))
          (beg (pop range))
          (end (pop range))
          (type (if (evil-type-p (car-safe range)) (pop range) type)))
@@ -248,9 +248,9 @@ If no description is available, return the empty string."
         (buffer (overlay-buffer overlay))
         (properties (overlay-properties overlay)))
     (save-excursion
-      (set-buffer (or buffer (current-buffer)))
-      (apply 'evil-describe
-             beg end type properties))))
+      (with-current-buffer (or buffer (current-buffer))
+        (apply 'evil-describe
+               beg end type properties)))))
 
 (defun evil-type-property (type prop)
   "Return property PROP for TYPE."
