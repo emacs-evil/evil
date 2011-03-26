@@ -612,7 +612,7 @@ TYPE or TRANSFORM")
         :text text
         (evil-test-change-state 'normal)
         (evil-test-macro "wdv}"
-          "Above " "\nBelow some empty line")))
+          "Above" " \nBelow some empty line")))
     (ert-info ("Change type to `line'")
       (evil-test-buffer
         :text text
@@ -1978,10 +1978,7 @@ to `evil-execute-repeat-info'")
       (evil-test-macro "2}" "Single Line\n" 'bolp)))
   (ert-info ("End of buffer")
     (evil-test-paragraph-buffer
-      ;; TODO: the next test currently fails because of the end-of-line problematic.
-      ;;   (evil-test-macro "100}" "own buffer" "." nil 'evil-eobp)
-      ;; we replace it with the following
-      (evil-test-macro "100}" "own buffer." "" nil 'evil-eobp)
+      (evil-test-macro "100}" "own buffer" "." nil 'evil-eobp)
       (should-error (execute-kbd-macro "}"))
       (should-error (execute-kbd-macro "42}"))))
   (ert-info ("End of buffer with newline")

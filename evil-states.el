@@ -456,9 +456,20 @@ bindings to be activated whenever KEYMAP and %s state are active."
   :tag " <N> "
   :suppress-keymap t
   :enable (motion operator)
-  (if evil-state
-      (evil-setup-normal-repeat)
-    (evil-teardown-normal-repeat)))
+  (cond
+   ((evil-normal-state-p)
+    (evil-setup-normal-repeat)
+    (add-hook 'post-command-hook 'evil-normal-post-command nil t))
+   (t
+    (unless evil-state
+      (evil-teardown-normal-repeat))
+    (remove-hook 'post-command-hook 'evil-normal-post-command t))))
+
+(defun evil-normal-post-command ()
+  "Prevent point from reaching the end of the line."
+  (when (evil-normal-state-p)
+    (when (and (eolp) (not (bolp)))
+      (backward-char))))
 
 (evil-define-state emacs
   "Emacs state."
