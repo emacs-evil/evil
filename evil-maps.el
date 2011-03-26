@@ -39,6 +39,7 @@ TARGET the command to call."
 (define-key evil-normal-state-map "r" 'evil-replace)
 (define-key evil-normal-state-map "R" 'evil-replace-state)
 (define-key evil-normal-state-map "." 'evil-repeat)
+(define-key evil-normal-state-map "J" 'evil-join-successive-lines)
 
 (define-key evil-normal-state-map "v" 'evil-visual-char)
 (define-key evil-normal-state-map "V" 'evil-visual-line)
@@ -53,6 +54,7 @@ TARGET the command to call."
 (define-key evil-visual-state-map [escape] 'evil-normal-state)
 (define-key evil-visual-state-map "o" 'exchange-point-and-mark)
 (define-key evil-visual-state-map "O" 'evil-visual-exchange-corners)
+(define-key evil-visual-state-map "J" 'evil-join-lines)
 
 ;; "0" is a special command when called first
 (evil-redirect-digit-argument evil-motion-state-map "0" 'evil-beginning-of-line)

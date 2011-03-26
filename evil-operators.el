@@ -584,6 +584,20 @@ the block."
      (t
       (evil-insert-before 1)))))
 
+(evil-define-operator evil-join-lines (beg end)
+  "Join lines covered by region (BEG . END) with a minimum of two
+lines."
+  (goto-char beg)
+  (evil-join-successive-lines
+   (1+ (- (line-number-at-pos end)
+          (line-number-at-pos)))))
+
+(defun evil-join-successive-lines (count)
+  "Join COUNT lines with a minimum of two lines."
+  (interactive "p")
+  (join-line 1))
+
+
 (provide 'evil-operators)
 
 ;;; evil-operators.el ends here

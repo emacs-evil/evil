@@ -1583,6 +1583,17 @@ to `evil-execute-repeat-info'")
        '(";; AB" "Cn enter" bolp)
        '(bolp eolp)))))
 
+(ert-deftest evil-join-lines ()
+  "Test `evil-join-lines'."
+  (ert-info ("Simple")
+    (evil-test-buffer-edit "J"
+      "evaluation." " ;; If you"))
+
+  (ert-info ("Visual")
+    (evil-test-buffer-edit "VjJ"
+      "evaluation." " ;; If you")))
+
+
 ;;; Motions
 
 (ert-deftest evil-test-forward-char ()
