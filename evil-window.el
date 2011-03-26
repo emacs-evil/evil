@@ -83,13 +83,8 @@
   :keep-visual t
   (interactive "p")
   (evil-save-column
-    (condition-case nil
-        (dotimes (i count)
-          (scroll-down nil))
-      (error
-       (if (bobp)
-           (signal 'beginning-of-buffer nil)
-         (goto-char (point-min)))))))
+    (dotimes (i count)
+      (scroll-down nil))))
 
 (evil-define-command evil-scroll-page-down (count)
   "Scrolls the window COUNT pages upwards."
@@ -97,13 +92,8 @@
   :keep-visual t
   (interactive "p")
   (evil-save-column
-    (condition-case nil
-        (dotimes (i count)
-          (scroll-up nil))
-      (error
-       (if (evil-eobp)
-           (signal 'end-of-buffer nil)
-         (goto-char (point-max)))))))
+    (dotimes (i count)
+      (scroll-up nil))))
 
 (evil-define-command evil-scroll-line-to-top (count)
   "Scrolls line number COUNT (or the cursor line) to the top of the window."
