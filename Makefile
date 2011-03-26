@@ -1,35 +1,41 @@
-SHELL = /bin/sh
+SHELL = /bin/bash
 
-.PHONY: all
+.PHONY: all compile indent test tests clean emacs term terminal
+
 all: compile
 
-.PHONY: compile
 compile: clean
 	emacs --batch -Q -L . -f batch-byte-compile evil*.el
 
-.PHONY: test
+indent:
+	emacs --batch evil*.el -Q -L . -l evil-tests.el \
+--eval "(dolist (buffer (reverse (buffer-list))) \
+(when (buffer-file-name buffer) \
+(set-buffer buffer) \
+(message \"Indenting %s\" (current-buffer)) \
+(setq-default indent-tabs-mode nil) \
+(untabify (point-min) (point-max)) \
+(indent-region (point-min) (point-max)) \
+(delete-trailing-whitespace) \
+(when (buffer-modified-p) (save-buffer 0))))"
+
 test: compile tests
 
-.PHONY: tests
 tests:
 	emacs --batch -Q -L . -l evil-tests.el -f ert-run-tests-batch-and-exit
 
-.PHONY: clean
 clean:
 	rm -f *~
 	rm -f \#*\#
 	rm -f *.elc
 
-.PHONY: emacs
 emacs: clean
 	emacs -Q -L . -l evil-tests.el --eval "(evil-mode 1)" \
---eval "(if (y-or-n-p-with-timeout \"Run tests? \" 2 nil) \
+--eval "(if (y-or-n-p-with-timeout \"Run tests? \" 2 t) \
 (ert-run-tests-interactively t) \
 (message \"You can run the tests at any time with \`M-x evil-tests-run\'\"))" &
 
-.PHONY: term
 term: terminal
 
-.PHONY: terminal
 terminal: clean
 	emacs -nw -Q -L . -l evil-tests.el --eval "(evil-mode 1)" --eval "(ert-run-tests-interactively t)"
