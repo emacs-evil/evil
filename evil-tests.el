@@ -597,6 +597,29 @@ TYPE or TRANSFORM")
                                      nil nil)
                      '(1 2))))))
 
+(ert-deftest evil-test-type-modifiers ()
+  "Test type modifiers like \"dv}\""
+  :tags '(evil)
+  (let ((text "Above some line\n\nBelow some empty line"))
+    (ert-info ("Change `inclusive' motions to `exclusive'")
+      (evil-test-buffer
+        :text text
+        (evil-test-change-state 'normal)
+        (evil-test-macro "dve"
+          'bobp "e some line")))
+    (ert-info ("Change `exclusive' motions to `inclusive'")
+      (evil-test-buffer
+        :text text
+        (evil-test-change-state 'normal)
+        (evil-test-macro "wdv}"
+          "Above " "\nBelow some empty line")))
+    (ert-info ("Change type to `line'")
+      (evil-test-buffer
+        :text text
+        (evil-test-change-state 'normal)
+        (evil-test-macro "wdV}"
+          'bobp "Below some empty line")))))
+
 ;;; Repeat system
 
 (ert-deftest evil-test-normalize-repeat-info ()
