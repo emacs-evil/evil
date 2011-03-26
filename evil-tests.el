@@ -68,6 +68,39 @@ int main(int argc, char** argv)     \n{\n\
   return EXIT_SUCCESS;\n     \n}\n"
      ,@body))
 
+(defmacro evil-test-paragraph-buffer (&rest body)
+  "Execute BODY in a temporary buffer.
+The buffer contains the familiar *scratch* message,
+and `evil-local-mode' is enabled."
+  (declare (indent defun)
+           (debug t))
+  (let ((beg-newl 0)
+        (end-newl 0)
+        arg key keys)
+    (while (keywordp (car-safe body))
+      (setq key (pop body)
+            arg (pop body))
+      (cond
+       ((eq key :begin-newlines)
+        (setq beg-newl arg))
+       ((eq key :end-newlines)
+        (setq end-newl arg))
+       (t
+        (setq keys (append keys (list key arg))))))
+    `(evil-test-buffer
+       ,@keys
+       :text ,(format
+               "%s;; This buffer is for notes you don't want to save, \
+and for Lisp evaluation.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.\n\n\nSingle Line\n\n\n
+;; This buffer is for notes you don't want to save, and for Lisp evaluation.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.%s"
+               (make-string beg-newl ?\n)
+               (make-string end-newl ?\n))
+       ,@body)))
+
 (defun evil-test-text
   (before after &optional before-predicate after-predicate)
   "Verifies the text around point.
@@ -170,43 +203,6 @@ unchanged test-buffer in Normal state."
      (evil-test-change-state 'normal)
      (evil-test-macro ,keys
        ,before ,after ,before-predicate ,after-predicate)))
-
-(defmacro evil-test-paragraph-buffer (&rest body)
-  "Execute BODY in a temporary buffer.
-The buffer contains the familiar *scratch* message,
-and `evil-local-mode' is enabled."
-  (declare (indent defun)
-           (debug t))
-  (let ((nnew-begin 0)
-        (nnew-end 0))
-    (while (and body (keywordp (car body)))
-      (let ((key (pop body))
-            (arg (pop body)))
-        (cond
-         ((eq key :begin-newlines)
-          (setq nnew-begin arg))
-         ((eq key :end-newlines)
-          (setq nnew-end arg)))))
-    `(let ((kill-ring kill-ring)
-           (kill-ring-yank-pointer kill-ring-yank-pointer)
-           x-select-enable-clipboard
-           message-log-max)
-       (save-window-excursion
-         (with-temp-buffer
-           (switch-to-buffer-other-window (current-buffer))
-           (buffer-enable-undo)
-           (evil-local-mode 1)
-           (delete-region (point-min) (point-max))
-           (insert ,(make-string nnew-begin ?\n))
-           (insert ";; This buffer is for notes you don't want to save, and for Lisp evaluation.
-;; If you want to create a file, visit that file with C-x C-f,
-;; then enter the text in that file's own buffer.\n\n\nSingle Line\n\n\n
-;; This buffer is for notes you don't want to save, and for Lisp evaluation.
-;; If you want to create a file, visit that file with C-x C-f,
-;; then enter the text in that file's own buffer.")
-           (insert ,(make-string nnew-end ?\n))
-           (goto-char (point-min))
-           ,@body)))))
 
 ;;; States
 
