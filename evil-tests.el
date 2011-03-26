@@ -1538,6 +1538,10 @@ to `evil-execute-repeat-info'")
       (evil-test-macro "2dd" 'bobp ";; then enter")
       (evil-test-macro "P" 'bobp ";; This buffer")))
 
+  (ert-info ("Delete last line")
+    (evil-test-buffer
+      (evil-test-macro "Gk2dd" "buffer" "." nil 'eobp)))
+
   (ert-info ("Delete rectangle")
     (evil-test-buffer
       (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
@@ -1563,6 +1567,11 @@ to `evil-execute-repeat-info'")
       (execute-kbd-macro (vconcat "2ccABCLINE\nDEFLINE" [escape]))
       (evil-test-text "ABCLINE\nDEFLIN" "E\n;; then enter" 'bobp)
       (evil-test-macro "p" "DEFLINE\n" ";; This buffer")))
+
+  (ert-info ("Change last line")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "Gk2ccABC" [escape]))
+      (evil-test-text "buffer.\nAB" "C" nil 'eobp)))
 
   (ert-info ("Change rectangle")
     (evil-test-buffer

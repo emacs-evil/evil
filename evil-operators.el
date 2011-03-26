@@ -551,9 +551,15 @@ is negative this is a more recent kill."
   ;; work
   (setq type evil-this-type)
   (evil-yank beg end type register)
-  (if (eq type 'block)
-      (delete-rectangle beg end)
-    (delete-region beg end)))
+  (cond
+   ((eq type 'block)
+    (delete-rectangle beg end))
+   ((and (eq type 'line)
+         (= (point-max) end)
+         (/= (point-min) beg))
+    (delete-region (1- beg) end))
+   (t
+    (delete-region beg end))))
 
 
 (evil-define-operator evil-change (beg end type register)
@@ -564,11 +570,15 @@ the block."
   ;; TODO: this is a hack as long as the `type' parameter does not
   ;; work
   (let ((nlines (1+ (- (line-number-at-pos end)
-                       (line-number-at-pos beg)))))
+                       (line-number-at-pos beg))))
+        (at-eob (= (point-max) end)))
     (setq type evil-this-type)
     (evil-delete beg end type register)
     (cond
-     ((eq type 'line) (evil-insert-above 1))
+     ((eq type 'line)
+      (if at-eob
+          (evil-insert-below 1)
+        (evil-insert-above 1)))
      ((eq type 'block)
       (evil-insert-before 1 nlines))
      (t
