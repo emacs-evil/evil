@@ -7,14 +7,19 @@
 ;; The basic transformation is "expansion". For example, the `line'
 ;; type "expands" a pair of positions to whole lines by moving the
 ;; first position to the beginning of its line and the last position
-;; to the end of its line. That line selection is what the rest of
-;; Emacs actually sees and acts on.
+;; to the end of its line. That expanded selection is what the rest
+;; of Emacs sees and acts on.
 ;;
-;; The opposite of expansion is "contraction", which requires the
-;; expansion to be one-to-one. The `inclusive' type, which increases
-;; the last position by one, is one-to-one and contractable. The
-;; `line' type has no contraction procedure, since it may expand
-;; multiple positions to the same lines.
+;; An optional transformation is "contraction", which is the opposite
+;; of expansion (assuming the expansion is one-to-one). The
+;; `inclusive' type, which increases the last position by one, is
+;; one-to-one and contractable. The `line' type is not one-to-one
+;; as it may expand multiple positions to the same lines, so it
+;; has no contraction procedure.
+;;
+;; Another optional transformation is "normalization", which takes
+;; two unexpanded positions and adjusts them before expansion.
+;; This is useful for cleaning up "invalid" positions.
 ;;
 ;; Types are defined at the end of this file using the macro
 ;; `evil-define-type'.
@@ -26,7 +31,7 @@
   "Return the type of OBJECT, or DEFAULT if none."
   (or (cond
        ((overlayp object)
-        (overlay-get object 'type))
+        (overlay-get object :type))
        ((listp object)
         ;; (BEG END TYPE)
         (if (and (>= (length object) 3)
@@ -35,7 +40,7 @@
                  (symbolp (nth 2 object)))
             (nth 2 object)
           ;; property list
-          (plist-get object 'type)))
+          (plist-get object :type)))
        ;; motion
        ((symbolp object)
         (get object 'type)))
@@ -47,85 +52,226 @@ For example, (evil-set-type 'next-line 'line)
 will make `line' the type of the `next-line' command."
   (cond
    ((overlayp object)
-    (overlay-put object 'type type))
+    (overlay-put object :type type))
    ((listp object)
     (if (and (>= (length object) 3)
              (numberp (nth 0 object))
              (numberp (nth 1 object))
              (symbolp (nth 2 object)))
         (setcar (nthcdr 2 object) type)
-      (plist-put object 'type type)))
+      (plist-put object :type type)))
    ((symbolp object)
     (put object 'type type)))
   object)
 
 (defun evil-expand (beg end type &rest properties)
-  "Expand BEG and END as TYPE in BUFFER with PROPERTIES.
+  "Expand BEG and END as TYPE with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
-may contain a property list."
+may contain a property list.
+
+The overlay equivalent is `evil-expand-overlay'."
   (apply 'evil-transform beg end type
          ;; don't expand if already expanded
          (unless (plist-get properties :expanded) 'expand)
-         nil properties))
+         properties))
 
 (defun evil-contract (beg end type &rest properties)
-  "Contract BEG and END as TYPE in BUFFER with PROPERTIES.
+  "Contract BEG and END as TYPE with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
-may contain a property list."
-  (apply 'evil-transform beg end type 'contract nil properties))
+may contain a property list.
+
+The overlay equivalent is `evil-contract-overlay'."
+  (apply 'evil-transform beg end type 'contract properties))
 
 (defun evil-normalize (beg end type &rest properties)
-  "Normalize BEG and END as TYPE in BUFFER with PROPERTIES.
+  "Normalize BEG and END as TYPE with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
-may contain a property list."
-  (apply 'evil-transform beg end type 'normalize nil properties))
+may contain a property list.
+
+The overlay equivalent is `evil-normalize-overlay'."
+  (apply 'evil-transform beg end type 'normalize properties))
 
 (defun evil-transform
-  (beg end type transform &optional buffer &rest properties)
-  "Apply TRANSFORM on BEG and END in BUFFER with PROPERTIES.
+  (beg end type transform &rest properties)
+  "Apply TRANSFORM on BEG and END with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list. If TRANSFORM is undefined,
-return positions unchanged."
+return positions unchanged.
+
+The overlay equivalent is `evil-transform-overlay'."
   (let* ((beg (if (markerp beg) (marker-position beg) beg))
          (end (if (markerp end) (marker-position end) end))
          (type (or type (evil-type properties)))
-         (buffer (or buffer (current-buffer)))
          (transform (when (and type transform)
                       (evil-type-property type transform))))
     (cond
      (transform
-      (apply transform beg end buffer properties))
+      (apply transform beg end properties))
      (type
       (append (list beg end type) properties))
      (t
       (append (list beg end) properties)))))
 
-(defun evil-describe (beg end type &optional buffer &rest properties)
-  "Return description of BEG and END in BUFFER with PROPERTIES.
-If no description is available, return the empty string."
+(defun evil-describe (beg end type &rest properties)
+  "Return description of BEG and END with PROPERTIES.
+If no description is available, return the empty string.
+
+The overlay equivalent is `evil-describe-overlay'."
   (let* ((type (or type (evil-type properties)))
-         (properties (plist-put properties 'type type))
+         (properties (plist-put properties :type type))
          (describe (evil-type-property type :string)))
     (or (when describe
-          (apply describe beg end buffer properties))
+          (apply describe beg end properties))
         "")))
+
+(defun evil-expand-overlay (overlay &optional copy)
+  "Expand OVERLAY according to its `type' property.
+Return a new overlay if COPY is non-nil."
+  (let ((type (evil-type overlay)))
+    (when copy
+      (setq overlay (copy-overlay overlay)))
+    (unless (overlay-get overlay :expanded)
+      (when (and type (evil-type-property type 'expand))
+        ;; explicitly set :expanded to nil before expanding,
+        ;; so that it is guaranteed to change back to nil
+        ;; if the overlay is restored
+        (overlay-put overlay :expanded nil)
+        (setq overlay (evil-backup-overlay overlay)
+              overlay (evil-transform-overlay overlay 'expand))))
+    overlay))
+
+(defun evil-contract-overlay (overlay &optional copy)
+  "Contract OVERLAY according to its `type' property.
+If the type cannot be contracted, restore original positions.
+Return a new overlay if COPY is non-nil."
+  (let ((type (evil-type overlay)))
+    (if (and type (evil-type-property type 'contract))
+        (setq overlay (evil-reset-overlay overlay copy)
+              overlay (evil-transform-overlay overlay 'contract))
+      (setq overlay (evil-restore-overlay overlay copy)))
+    overlay))
+
+(defun evil-normalize-overlay (overlay &optional copy)
+  "Normalize OVERLAY according to its `type' property.
+Return a new overlay if COPY is non-nil."
+  (evil-transform-overlay overlay 'normalize copy))
+
+(defun evil-transform-overlay (overlay transform &optional copy)
+  "Apply TRANSFORM to OVERLAY according to its `type' property.
+Return a new overlay if COPY is non-nil."
+  (let* ((beg (overlay-start overlay))
+         (end (overlay-end overlay))
+         (type (evil-type overlay))
+         (buffer (overlay-buffer overlay))
+         (properties (overlay-properties overlay))
+         (range (save-excursion
+                  (with-current-buffer (or buffer (current-buffer))
+                    (apply 'evil-transform
+                           beg end type transform properties))))
+         (beg (pop range))
+         (end (pop range))
+         (type (if (evil-type-p (car-safe range)) (pop range) type)))
+    (when copy
+      (setq overlay (copy-overlay overlay)))
+    (while range
+      (overlay-put overlay (pop range) (pop range)))
+    (evil-set-type overlay type)
+    (move-overlay overlay beg end buffer)
+    overlay))
+
+(defun evil-backup-overlay (overlay &optional copy)
+  "Back up current OVERLAY positions and properties.
+The information is stored in a `backup' property.
+Return a new overlay if COPY is non-nil."
+  (let* ((beg (overlay-start overlay))
+         (end (overlay-end overlay))
+         (buffer (overlay-buffer overlay))
+         (beg-marker (move-marker (make-marker) beg buffer))
+         (end-marker (move-marker (make-marker) end buffer))
+         (properties (overlay-properties overlay)))
+    (setq overlay (evil-reset-overlay overlay copy))
+    (set-marker-insertion-type beg-marker t)
+    (set-marker-insertion-type end-marker nil)
+    (overlay-put overlay 'backup
+                 (append (list beg-marker end-marker) properties))
+    overlay))
+
+(defun evil-restore-overlay (overlay &optional copy)
+  "Restore previous OVERLAY positions and properties.
+The information is retrieved from the `backup' property.
+Return a new overlay if COPY is non-nil."
+  (let ((backup (overlay-get overlay 'backup))
+        beg end beg-marker end-marker properties buffer)
+    (cond
+     (backup
+      (setq beg-marker (pop backup)
+            end-marker (pop backup)
+            properties backup
+            beg (or (marker-position beg-marker)
+                    (overlay-start overlay))
+            end (or (marker-position end-marker)
+                    (overlay-end overlay))
+            buffer (or (marker-buffer beg-marker)
+                       (marker-buffer end-marker)
+                       (overlay-buffer overlay))
+            overlay (evil-reset-overlay overlay copy))
+      (move-overlay overlay beg end buffer)
+      (while properties
+        (overlay-put overlay (pop properties) (pop properties))))
+     (copy
+      (setq overlay (copy-overlay overlay))))
+    overlay))
+
+(defun evil-reset-overlay (overlay &optional copy)
+  "Reset back-up information for OVERLAY.
+Return a new overlay if COPY is non-nil."
+  (let* ((backup (overlay-get overlay 'backup))
+         (beg (pop backup))
+         (end (pop backup)))
+    (cond
+     (copy
+      (setq overlay (copy-overlay overlay)))
+     ;; unless we're making a copy, delete old markers
+     ;; so they don't slow down editing
+     (backup
+      (set-marker beg nil)
+      (set-marker end nil)))
+    (overlay-put overlay 'backup nil)
+    overlay))
+
+(defun evil-describe-overlay (overlay)
+  "Return description of OVERLAY.
+If no description is available, return the empty string."
+  (let ((beg (overlay-start overlay))
+        (end (overlay-end overlay))
+        (type (evil-type overlay))
+        (buffer (overlay-buffer overlay))
+        (properties (overlay-properties overlay)))
+    (save-excursion
+      (with-current-buffer (or buffer (current-buffer))
+        (apply 'evil-describe
+               beg end type properties)))))
 
 (defun evil-type-property (type prop)
   "Return property PROP for TYPE."
   (evil-get-property evil-types-alist type prop))
+
+(defun evil-type-p (sym)
+  "Whether SYM is the name of a type."
+  (assq sym evil-types-alist))
 
 (defmacro evil-define-type (type doc &rest body)
   "Define type TYPE.
 DOC is a general description and shows up in all docstrings.
 It is followed by a list of keywords and functions:
 
-:expand FUNC    Expansion function. This function should take two
-                positions in the current buffer, BEG and END, and
-                return a pair of expanded buffer positions.
+:expand FUNC    Expansion function. This function should accept
+                two positions in the current buffer, BEG and END,
+                and return a pair of expanded buffer positions.
 :contract FUNC  Contraction function, optional. This is the opposite
-                of :expand, provided the expansion is reversible.
+                of :expand (provided the expansion is reversible).
 :normalize FUNC Normalization function, optional. This function should
-                take two unexpanded positions and adjust them before
+                accept two unexpanded positions and adjust them before
                 expansion.
 :string FUNC    Description function. This takes two buffer positions
                 and returns a human-readable string.
@@ -145,41 +291,42 @@ be transformations on buffer positions, like :expand and :contract."
             name (intern (format "evil-%s-%s" type sym))
             args (car (cdr-safe func))
             string (car (cdr (cdr-safe func)))
-            string (if (stringp string) string "")
+            string (if (stringp string)
+                       (format "%s\n\n" string) "")
             plist (plist-put plist keyword `',name))
       (add-to-list
        'defun-forms
        (cond
         ((eq keyword :string)
-         `(defun ,name (beg end &optional buffer &rest properties)
+         `(defun ,name (beg end &rest properties)
             ,(format "Return size of %s from BEG to END \
-in BUFFER with PROPERTIES.\n%s\n\n%s" type string doc)
-            (let ((buffer (or buffer (current-buffer))) type range)
+with PROPERTIES.\n\n%s%s" type string doc)
+            (let (type range)
               (when (and beg end)
                 (save-excursion
-                  (switch-to-buffer buffer)
                   (evil-sort beg end)
                   (unless (plist-get properties :expanded)
                     (setq range (evil-expand
                                  beg end ',type properties)
-                          beg (pop range)
-                          end (pop range))
-                    (when (symbolp (car range))
-                      (setq type (or (pop range) type)))
+                          beg  (or (pop range) beg)
+                          end  (or (pop range) end)
+                          type (if (evil-type-p (car-safe range))
+                                   (pop range) type))
                     (while range
                       (setq properties
                             (plist-put properties
                                        (pop range) (pop range)))))
-                  (or (apply ',func beg end nil) ""))))))
+                  (or (apply ',func beg end
+                             (when ,(> (length args) 2)
+                               properties))
+                      ""))))))
         (t
-         `(defun ,name (beg end &optional buffer &rest properties)
+         `(defun ,name (beg end &rest properties)
             ,(format "Perform %s transformation on %s from BEG to END \
-in BUFFER with PROPERTIES.\n%s\n\n%s" sym type string doc)
-            (let ((buffer (or buffer (current-buffer)))
-                  (type ',type) range)
+with PROPERTIES.\n\n%s%s" sym type string doc)
+            (let ((type ',type) range)
               (when (and beg end)
                 (save-excursion
-                  (switch-to-buffer buffer)
                   (when (markerp beg)
                     (setq beg (marker-position beg)))
                   (when (markerp end)
@@ -190,14 +337,16 @@ in BUFFER with PROPERTIES.\n%s\n\n%s" sym type string doc)
                           (plist-put properties
                                      :expanded
                                      ,(eq keyword :expand))))
-                  (setq range (or (apply ',func beg end nil)
+                  (setq range (or (apply ',func beg end
+                                         (when ,(> (length args) 2)
+                                           properties))
                                   (append (list beg end type)
                                           properties))
-                        beg (pop range)
-                        end (pop range))
+                        beg  (or (pop range) beg)
+                        end  (or (pop range) end)
+                        type (if (evil-type-p (car-safe range))
+                                 (pop range) type))
                   (evil-sort beg end)
-                  (when (symbolp (car range))
-                    (setq type (or (pop range) type)))
                   (while range
                     (setq properties
                           (plist-put properties
@@ -221,18 +370,17 @@ If the end position is at the beginning of a line, then:
   line and return `inclusive' (expanded)."
   :normalize (lambda (beg end)
                (cond
-                ((and (/= beg end)
-                      (progn
-                        (goto-char end)
-                        (bolp)))
-                 (backward-char)
-                 (setq end (max beg (point)))
+                ((progn
+                   (goto-char end)
+                   (and (/= beg end) (bolp)))
+                 (setq end (max beg (1- end)))
                  (cond
                   ((progn
                      (goto-char beg)
                      (looking-back "^[ \f\t\v]*"))
                    (evil-expand beg end 'line))
                   (t
+                   (setq end (max beg (1- end)))
                    (evil-expand beg end 'inclusive))))
                 (t
                  (list beg end))))
@@ -282,7 +430,7 @@ the last column is included."
                    (end-col (progn
                               (goto-char end)
                               (current-column)))
-                   (corner (plist-get properties 'corner)))
+                   (corner (plist-get properties :corner)))
               (cond
                ((= beg-col end-col)
                 (goto-char end)
@@ -336,16 +484,18 @@ the last column is included."
                       width
                       (if (= width 1) "" "s"))))
   :rotate (lambda (beg end &rest properties)
-            (let* ((beg-col (progn
-                              (goto-char beg)
-                              (current-column)))
-                   (end-col (progn
-                              (goto-char end)
-                              (current-column)))
-                   (left  (min beg-col end-col))
-                   (right (max beg-col end-col))
-                   (corner (or (plist-get properties 'corner)
+            "Rotate block according to :corner property.
+:corner can be one of `upper-left',``upper-right', `lower-left'
+and `lower-right'."
+            (let* ((left (progn
+                           (goto-char beg)
+                           (current-column)))
+                   (right (progn
+                            (goto-char end)
+                            (current-column)))
+                   (corner (or (plist-get properties :corner)
                                'upper-left)))
+              (evil-sort left right)
               (goto-char beg)
               (if (memq corner '(upper-right lower-left))
                   (move-to-column right)
@@ -357,7 +507,7 @@ the last column is included."
                 (move-to-column right))
               (setq end (point))
               (setq properties (plist-put properties
-                                          'corner corner))
+                                          :corner corner))
               (append (list beg end) properties))))
 
 (provide 'evil-types)

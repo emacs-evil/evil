@@ -2,8 +2,10 @@
 
 (require 'evil-states)
 (require 'evil-insert)
+(require 'evil-replace)
 (require 'evil-operators)
 (require 'evil-window)
+(require 'evil-visual)
 
 (defmacro evil-redirect-digit-argument (map keys target)
   "Bind a special wrapper function which calles either `target' or `digit-argument'.
@@ -35,10 +37,23 @@ TARGET the command to call."
 (define-key evil-normal-state-map "I" 'evil-insert-beginning-of-line)
 (define-key evil-normal-state-map "A" 'evil-insert-end-of-line)
 (define-key evil-normal-state-map "x" 'delete-char)
-(define-key evil-normal-state-map "r" 'evil-replace-char)
+(define-key evil-normal-state-map "r" 'evil-replace)
+(define-key evil-normal-state-map "R" 'evil-replace-state)
 (define-key evil-normal-state-map "." 'evil-repeat)
 
+(define-key evil-normal-state-map "v" 'evil-visual-char)
+(define-key evil-normal-state-map "V" 'evil-visual-line)
+(define-key evil-normal-state-map "\C-v" 'evil-visual-block)
+(define-key evil-normal-state-map "gv" 'evil-visual-restore)
+
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
+
+(define-key evil-replace-state-map [escape] 'evil-normal-state)
+(define-key evil-replace-state-map [backspace] 'evil-replace-backspace)
+
+(define-key evil-visual-state-map [escape] 'evil-normal-state)
+(define-key evil-visual-state-map "o" 'exchange-point-and-mark)
+(define-key evil-visual-state-map "O" 'evil-visual-exchange-corners)
 
 ;; "0" is a special command when called first
 (evil-redirect-digit-argument evil-motion-state-map "0" 'evil-beginning-of-line)

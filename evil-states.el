@@ -149,6 +149,8 @@ Its order reflects the state in the current buffer."
                 (mapcar 'cdr (evil-state-property nil :mode))
                 (mapcar 'cdr (evil-state-property nil :local-mode))))
         alist mode)
+    ;; update references to global keymaps
+    (evil-refresh-global-maps)
     ;; initialize a buffer-local value
     (setq evil-mode-map-alist
           (copy-sequence (default-value 'evil-mode-map-alist)))
@@ -185,13 +187,26 @@ Its order reflects the state in the current buffer."
             (evil-concat-alists
              alist evil-mode-map-alist)))))
 
+(defun evil-refresh-global-maps ()
+  "Refresh the global value of `evil-mode-map-alist'.
+Update its entries if keymaps change."
+  (let ((temp (default-value 'evil-mode-map-alist))
+        mode map)
+    (dolist (entry evil-global-keymaps-alist)
+      (setq mode (car entry)
+            map  (cdr entry))
+      (evil-add-to-alist 'temp mode (symbol-value map)))
+    (setq-default evil-mode-map-alist temp)))
+
 ;; Local keymaps are implemented using buffer-local variables.
 ;; However, unless a buffer-local value already exists,
 ;; `define-key' acts on the variable's default (global) value.
 ;; So we need to initialize the variable whenever we enter a
 ;; new buffer or when the buffer-local values are reset.
 (defun evil-refresh-local-maps ()
-  "Initialize a buffer-local value for all local keymaps."
+  "Refresh the buffer-local value of `evil-mode-map-alist'.
+Initialize a buffer-local value for all local keymaps
+and update their list entries."
   (unless (assq 'evil-mode-map-alist (buffer-local-variables))
     (setq evil-mode-map-alist (copy-sequence evil-mode-map-alist)))
   (dolist (entry evil-local-keymaps-alist)
@@ -202,28 +217,6 @@ Its order reflects the state in the current buffer."
         (set map (make-sparse-keymap)))
       (evil-add-to-alist 'evil-mode-map-alist
                          mode (symbol-value map)))))
-
-(defun evil-set-cursor (specs)
-  "Change the cursor's apperance according to SPECS.
-SPECS may be a cursor type as per `cursor-type', a color
-string as passed to `set-cursor-color', a zero-argument
-function for changing the cursor, or a list of the above.
-If SPECS is nil, make the cursor a black filled box."
-  (set-cursor-color "black")
-  (setq cursor-type 'box)
-  (unless (and (listp specs) (not (consp specs)))
-    (setq specs (list specs)))
-  (dolist (spec specs)
-    (cond
-     ((functionp spec)
-      (condition-case nil
-          (funcall spec)
-        (error nil)))
-     ((stringp spec)
-      (set-cursor-color spec))
-     (t
-      (setq cursor-type spec))))
-  (redisplay))
 
 (defun evil-change-state (state)
   "Change state to STATE.
@@ -275,14 +268,13 @@ may be specified before the body code:
        (unless (get ',mode 'variable-documentation)
          (put ',mode 'variable-documentation ,doc))
        (make-variable-buffer-local ',mode)
-       ,@(when local
-           `((make-variable-buffer-local ',keymap)
-             (evil-add-to-alist 'evil-local-keymaps-alist
+       (evil-refresh-global-maps)
+       ,@(if local
+             `((make-variable-buffer-local ',keymap)
+               (evil-add-to-alist 'evil-local-keymaps-alist
+                                  ',mode ',keymap))
+           `((evil-add-to-alist 'evil-global-keymaps-alist
                                 ',mode ',keymap)))
-       (let ((temp (copy-sequence (default-value
-                                    'evil-mode-map-alist))))
-         (evil-add-to-alist 'temp ',mode ,keymap)
-         (setq-default evil-mode-map-alist temp))
        ,(when (or body func)
           `(defun ,mode (&optional arg)
              ,@(when doc `(,doc))
@@ -443,7 +435,9 @@ bindings to be activated whenever KEYMAP and %s state are active."
                  (run-hooks ',entry-hook)
                  (when (and (evil-called-interactively-p)
                             ,message)
-                   (evil-echo ,message)))
+                   (if (functionp ,message)
+                       (funcall ,message)
+                     (evil-echo ,message))))
              (setq evil-state ',state)))))
 
        (evil-define-keymap ,local-keymap nil
@@ -462,27 +456,24 @@ bindings to be activated whenever KEYMAP and %s state are active."
   :tag " <N> "
   :suppress-keymap t
   :enable (motion operator)
-  (if evil-state
-      (evil-setup-normal-repeat)
-    (evil-teardown-normal-repeat)))
+  (cond
+   ((evil-normal-state-p)
+    (evil-setup-normal-repeat)
+    (add-hook 'post-command-hook 'evil-normal-post-command nil t))
+   (t
+    (unless evil-state
+      (evil-teardown-normal-repeat))
+    (remove-hook 'post-command-hook 'evil-normal-post-command t))))
 
-(evil-define-state visual
-  "Visual state."
-  :tag " <V> "
-  :enable (motion))
+(defun evil-normal-post-command ()
+  "Prevent point from reaching the end of the line."
+  (when (evil-normal-state-p)
+    (when (and (eolp) (not (bolp)))
+      (backward-char))))
 
 (evil-define-state emacs
   "Emacs state."
   :tag " <E> ")
-
-;; TODO: the following commands are very preliminary just for testing.
-(defun evil-replace-char (char &optional count)
-  (interactive (list (read-char)
-                     (prefix-numeric-value current-prefix-arg)))
-  (setq count (or count 1))
-  (delete-char count)
-  (insert-char char count)
-  (backward-char))
 
 (provide 'evil-states)
 

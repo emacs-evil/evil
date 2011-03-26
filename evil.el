@@ -3,6 +3,8 @@
 (require 'evil-states)
 (require 'evil-types)
 (require 'evil-insert)
+(require 'evil-replace)
+(require 'evil-visual)
 (require 'evil-operators)
 (require 'evil-motions)
 (require 'evil-repeat)
