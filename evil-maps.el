@@ -101,6 +101,8 @@ TARGET the command to call."
 (define-key evil-motion-state-map "{" 'evil-backward-paragraph)
 (define-key evil-motion-state-map "}" 'evil-forward-paragraph)
 
+(define-key evil-motion-state-map "%" 'evil-jump-item)
+
 (define-key evil-motion-state-map "f" 'evil-find-char)
 (define-key evil-motion-state-map "t" 'evil-find-char-to)
 (define-key evil-motion-state-map "F" 'evil-find-char-backward)

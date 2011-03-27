@@ -2179,6 +2179,30 @@ to `evil-execute-repeat-info'")
     (let ((evil-find-skip-newlines t))
       (evil-test-buffer-edit "jwTT" ";; T" "his buffer" 'bobp))))
 
+(ert-deftest evil-test-jump-item ()
+  "Test `evil-jump-item'."
+  (ert-info ("Simple")
+    (evil-test-code-buffer
+      (forward-line 3)
+      (re-search-forward "(" nil t)
+      (backward-char)
+      (evil-test-text "main" "(int argc")
+      (evil-test-macro "%" "argv" ")")
+      (evil-test-macro "%" "main" "(int argc")))
+  (ert-info ("Before parenthesis")
+    (evil-test-code-buffer
+      (forward-line 3)
+      (evil-test-macro "%" "argv" ")")
+      (backward-char 5)
+      (evil-test-macro "%" "main" "(int argc")))
+  (ert-info ("Over several lines")
+    (evil-test-code-buffer
+      (forward-line 4)
+      (evil-test-macro "%" "EXIT_SUCCESS;\n     \n" "}" nil 'eolp)))
+  (ert-info ("On line without parenthesis")
+    (evil-test-buffer
+      (should-error (execute-kbd-macro "%")))))
+
 ;;; Visual state
 
 (defun evil-test-visual-select (type &optional mark point)
