@@ -7,7 +7,7 @@ all: compile
 compile: clean
 	emacs --batch -Q -L . -f batch-byte-compile evil*.el
 
-indent:
+indent: clean
 	emacs --batch evil*.el -Q -L . -l evil-tests.el \
 --eval "(dolist (buffer (reverse (buffer-list))) \
 (when (buffer-file-name buffer) \
