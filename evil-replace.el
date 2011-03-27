@@ -9,6 +9,7 @@
   "Replace state."
   :tag " <R> "
   :cursor hbar
+  :message "-- REPLACE --"
   (cond
    ((evil-replace-state-p)
     (overwrite-mode 1)

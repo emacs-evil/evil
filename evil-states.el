@@ -476,7 +476,8 @@ bindings to be activated whenever KEYMAP and %s state are active."
 
 (evil-define-state emacs
   "Emacs state."
-  :tag " <E> ")
+  :tag " <E> "
+  :message "-- EMACS --")
 
 
 ;; TODO: this function is not perfect: if (point) is placed behind a

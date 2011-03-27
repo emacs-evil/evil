@@ -8,6 +8,7 @@
   "Insert state."
   :tag " <I> "
   :cursor (bar . 2)
+  :message "-- INSERT --"
   (cond
    ((evil-insert-state-p)
     (evil-setup-insert-repeat)
