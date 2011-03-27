@@ -415,7 +415,7 @@ bindings to be activated whenever KEYMAP and %s state are active."
        (defun ,mode (&optional arg)
          ,(format "Enable %s state. Disable with negative ARG.\n\n%s"
                   state doc)
-         (interactive)
+         (interactive "p")
          (cond
           ((and (numberp arg) (< arg 1))
            (unwind-protect
@@ -437,8 +437,7 @@ bindings to be activated whenever KEYMAP and %s state are active."
                  (evil-set-cursor ,cursor)
                  ,@body
                  (run-hooks ',entry-hook)
-                 (when (and (evil-called-interactively-p)
-                            ,message)
+                 (when (and arg ,message)
                    (if (functionp ,message)
                        (funcall ,message)
                      (evil-echo ,message))))
