@@ -69,6 +69,8 @@ To enable Evil globally, do (evil-mode 1)."
       (setq global-mode-string
             (append '("" evil-modeline-tag)
                     global-mode-string)))
+    (ad-enable-advice 'show-paren-function 'around 'evil-show-paren-function)
+    (ad-activate 'show-paren-function)
     (evil-normal-state))
    (t
     (let (new-global-mode-string)
@@ -78,6 +80,8 @@ To enable Evil globally, do (evil-mode 1)."
               (pop new-global-mode-string) ;; remove the ""
             (push next new-global-mode-string))))
       (setq global-mode-string (nreverse new-global-mode-string)))
+    (ad-disable-advice 'show-paren-function 'around 'evil-show-paren-function)
+    (ad-activate 'show-paren-function)
     (evil-change-state nil))))
 
 (define-globalized-minor-mode evil-mode
@@ -474,6 +478,28 @@ bindings to be activated whenever KEYMAP and %s state are active."
 (evil-define-state emacs
   "Emacs state."
   :tag " <E> ")
+
+
+;; TODO: this function is not perfect: if (point) is placed behind a
+;; closing parenthesis that pair will be highlighted even if
+;; `evil-show-paren-range' is 0. The problem is to find a position not
+;; adjacent to a parenthesis because otherwise the default-behaviour
+;; of show-parent-function will apply.
+(defadvice show-paren-function (around evil-show-paren-function)
+  "Advices show-paren-function so also parentheses near point are matched."
+  (save-excursion
+    (goto-char
+     (or (catch 'end
+           (save-excursion
+             (dotimes (d (1+ (* 2 evil-show-paren-range)))
+               (forward-char (if (evenp d) d (- d)))
+               (let ((sc (syntax-class (syntax-after (point)))))
+                 (case sc
+                   (4 (throw 'end (point)))
+                   (5 (throw 'end (1+ (point)))))))
+             nil))
+         (point)))
+    ad-do-it))
 
 (provide 'evil-states)
 

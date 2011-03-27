@@ -193,6 +193,20 @@ They are reused to prevent flicker.")
   (interactive)
   (message "Evil version %s" evil-version))
 
+
+;;; Customizations
+
+(defgroup evil nil
+  "A VIM emulation mode."
+  :group 'emulations)
+
+(defcustom evil-show-paren-range
+  0
+  "The minimal distance between point and a parenthesis which
+causes the parenthesis to be highlighted."
+  :type 'integer
+  :group 'evil)
+
 (provide 'evil-vars)
 
 ;;; evil-vars.el ends here
