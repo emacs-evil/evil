@@ -352,13 +352,11 @@ suppression keymap comes first")
             evil-motion-state-local nil
             evil-operator-state nil
             evil-operator-state-local nil))
-    (should (eq (key-binding "y") 'undefined))
-    (should (eq (key-binding "u") 'undefined))
-    (should (eq (key-binding "e") 'undefined))
+    (should (eq (key-binding "Q") 'undefined))
     (ert-info ("Don't insert text")
       ;; may or may not signal an error, depending on batch mode
       (condition-case nil
-          (execute-kbd-macro "yue")
+          (execute-kbd-macro "QQQ")
         (error nil))
       (should (string= (buffer-substring 1 4) ";; ")))))
 
