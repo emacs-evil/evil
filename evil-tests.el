@@ -1583,6 +1583,22 @@ to `evil-execute-repeat-info'")
        '(";; AB" "Cn enter" bolp)
        '(bolp eolp)))))
 
+(ert-deftest evil-change-word ()
+  "Test change of word."
+  (ert-info ("Non-word")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "cwABC" [escape]))
+      (evil-test-text "AB" "C This buffer" 'bobp)))
+  (ert-info ("Word")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "wcwABC" [escape]))
+      (evil-test-text ";; AB" "C buffer" 'bobp)))
+  (ert-info ("Single character")
+    (evil-test-buffer
+      (delete-char 1)
+      (execute-kbd-macro (vconcat "cwABC" [escape]))
+      (evil-test-text "AB" "C This buffer" 'bobp))))
+
 (ert-deftest evil-join-lines ()
   "Test `evil-join-lines'."
   (ert-info ("Simple")

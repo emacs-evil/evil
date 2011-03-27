@@ -348,15 +348,17 @@ the number of moves that could not be performed."
            (setq count (1+ count))))
        count)))
 
-(defun evil-move-forward-end (move &optional count)
+(defun evil-move-forward-end (move &optional count count-current)
   "Moves point the the COUNT next end of the object specified by
 move MOVE. If there are no COUNT objects move the point to the
 end of the last object. If there no next object raises
-'end-of-buffer."
+'end-of-buffer. If COUNT-CURRENT is non-nil, the current object
+counts as one move, otherwise the end of the current object is
+*not* counted."
   (setq count (or count 1))
   (when (evil-eobp)
     (signal 'end-of-buffer nil))
-  (forward-char)
+  (unless count-current (forward-char))
   (setq count (funcall move count))
   (backward-char)
   (unless (or (zerop count) (evil-eobp))
@@ -455,7 +457,10 @@ the end of the first object. If there no previous object raises
 (evil-define-motion evil-forward-word-begin (count)
   "Move the cursor the beginning of the COUNT-th next word."
   :type exclusive
-  (evil-move-forward-begin #'evil-move-word count))
+  (if (not (eq this-command 'evil-change))
+      (evil-move-forward-begin #'evil-move-word count)
+    (evil-move-forward-end #'evil-move-word count t)
+    (setq evil-this-type 'inclusive)))
 
 (evil-define-motion evil-forward-word-end (count)
   "Move the cursor the end of the COUNT-th next word."
@@ -481,7 +486,10 @@ the end of the first object. If there no previous object raises
 (evil-define-motion evil-forward-WORD-begin (count)
   "Move the cursor the beginning of the COUNT-th next WORD."
   :type exclusive
-  (evil-move-forward-begin #'evil-move-WORD count))
+  (if (not (eq this-command 'evil-change))
+      (evil-move-forward-begin #'evil-move-WORD count)
+    (evil-move-forward-end #'evil-move-WORD count t)
+    (setq evil-this-type 'inclusive)))
 
 (evil-define-motion evil-forward-WORD-end (count)
   "Move the cursor the end of the COUNT-th next WORD."
