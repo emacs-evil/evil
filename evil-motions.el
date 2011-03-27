@@ -499,12 +499,12 @@ the end of the first object. If there no previous object raises
 (evil-define-motion evil-backward-WORD-begin (count)
   "Move the cursor the beginning of the COUNT-th previous WORD."
   :type exclusive
-  (evil-move-forward-begin #'evil-move-WORD count))
+  (evil-move-backward-begin #'evil-move-WORD count))
 
 (evil-define-motion evil-backward-WORD-end (count)
   "Move the cursor the end of the COUNT-th previous WORD."
   :type inclusive
-  (evil-move-forward-end #'evil-move-WORD count))
+  (evil-move-backward-end #'evil-move-WORD count))
 
 ;; This function is slightly adapted from paragraphs.el
 (defun evil-move-sentence (count)
