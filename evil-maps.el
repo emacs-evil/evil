@@ -101,6 +101,13 @@ TARGET the command to call."
 (define-key evil-motion-state-map "{" 'evil-backward-paragraph)
 (define-key evil-motion-state-map "}" 'evil-forward-paragraph)
 
+(define-key evil-motion-state-map "f" 'evil-find-char)
+(define-key evil-motion-state-map "t" 'evil-find-char-to)
+(define-key evil-motion-state-map "F" 'evil-find-char-backward)
+(define-key evil-motion-state-map "T" 'evil-find-char-to-backward)
+(define-key evil-motion-state-map ";" 'evil-repeat-find-char)
+(define-key evil-motion-state-map "," 'evil-repeat-find-char-reverse)
+
 (define-key evil-normal-state-map "p" 'evil-paste-behind)
 (define-key evil-normal-state-map "P" 'evil-paste-before)
 (define-key evil-normal-state-map "\C-p" 'evil-paste-pop)

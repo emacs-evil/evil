@@ -631,6 +631,68 @@ the end of the first object. If there no previous object raises
       (signal 'beginning-of-buffer nil)
     (backward-paragraph count)))
 
+(evil-define-motion evil-find-char (count char)
+  "Move the cursor to the next COUNT'th occurrence of character CHAR."
+  :type inclusive
+  (interactive (list (read-char)))
+  (setq count (or count 1))
+  (let ((fwd (> count 0)))
+    (setq evil-last-find (list #'evil-find-char char fwd))
+    (when fwd (forward-char))
+    (let ((case-fold-search nil))
+      (unless (prog1
+                  (search-forward (char-to-string char)
+                                  (unless evil-find-skip-newlines
+                                    (if fwd
+                                        (line-end-position)
+                                      (line-beginning-position)))
+                                  t count)
+                (when fwd (backward-char)))
+        (error "Can't find %c" char)))))
+
+(evil-define-motion evil-find-char-backward (count char)
+  "Move the cursor to the next COUNT'th occurrence of character CHAR."
+  :type exclusive
+  (interactive (list (read-char)))
+  (evil-find-char (- (or count 1)) char))
+
+(evil-define-motion evil-find-char-to (count char)
+  "Move the cursor to the character before the next COUNT'th occurence of arg."
+  :type inclusive
+  (interactive (list (read-char)))
+  (unwind-protect
+      (progn
+        (evil-find-char count char)
+        (if (> (or count 1) 0)
+            (backward-char)
+          (forward-char)))
+    (setcar evil-last-find #'evil-find-char-to)))
+
+(evil-define-motion evil-find-char-to-backward (count char)
+  "Move the cursor to the character before the previous COUNT'th occurence of arg."
+  :type exclusive
+  (interactive (list (read-char)))
+  (evil-find-char-to (- (or count 1)) char))
+
+(evil-define-motion evil-repeat-find-char (count)
+  "Repeat the last find COUNT times."
+  :type inclusive
+  (setq count (or count 1))
+  (if evil-last-find
+      (let ((cmd (car evil-last-find))
+            (char (nth 1 evil-last-find))
+            (fwd (nth 2 evil-last-find))
+            evil-last-find)
+        (funcall cmd (if fwd count (- count)) char)
+        (unless (nth 2 evil-last-find)
+          (setq evil-this-type 'exclusive)))
+    (error "No previous search")))
+
+(evil-define-motion evil-repeat-find-char-reverse (count)
+  "Repeat the last find COUNT times in the opposite direction."
+  :type inclusive
+  (evil-repeat-find-char (- (or count 1))))
+
 
 (provide 'evil-motions)
 
