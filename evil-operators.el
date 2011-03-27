@@ -312,20 +312,16 @@ Both COUNT and CMD may be nil."
 
 (defun evil-yank-lines (begin end register)
   "Saves the lines in the region BEGIN and END into the kill-ring."
-  (let ((txt (buffer-substring begin end)))
+  (let ((txt (buffer-substring begin end))
+        (yinfo (list #'evil-yank-line-handler)))
     ;; Ensure the text ends with newline.  This is required if the
     ;; deleted lines were the last lines in the buffer.
     (when (or (zerop (length txt))
               (/= (aref txt (1- (length txt))) ?\n))
       (setq txt (concat txt "\n")))
     (if register
-        (progn
-          (put-text-property 0 (length txt)
-                             'yank-handler
-                             (list #'evil-yank-line-handler txt)
-                             txt)
-          (set-register register txt))
-      (kill-new txt nil (list #'evil-yank-line-handler txt)))))
+        (set-register register (propertize txt 'yank-handler yinfo))
+      (kill-new txt nil yinfo))))
 
 (defun evil-yank-rectangle (begin end register)
   "Stores the rectangle defined by region BEGIN and END into the kill-ring."
@@ -343,15 +339,14 @@ Both COUNT and CMD may be nil."
                         nil
                         #'evil-delete-yanked-rectangle)))
       (if register
-          (progn
-            (put-text-property 0 (length txt) 'yank-handler yinfo txt)
-            (set-register register txt))
+          (set-register register (propertize txt 'yank-handler yinfo))
         (kill-new txt nil yinfo)))))
 
 (defun evil-yank-line-handler (text)
   "Inserts the current text linewise."
   (let ((text (apply #'concat (make-list (or evil-paste-count 1) text)))
         (opoint (point)))
+    (remove-list-of-text-properties 0 (length text) yank-excluded-properties text)
     (cond
      ((eq this-command 'evil-paste-behind)
       (end-of-line)
@@ -418,6 +413,7 @@ Both COUNT and CMD may be nil."
               (move-to-column (+ col begextra) t)
             (move-to-column col t)
             (insert (make-string begextra ? )))
+          (remove-list-of-text-properties 0 (length txt) yank-excluded-properties txt)
           (insert txt)
           (unless (eolp)
             ;; text follows, so we have to insert spaces
