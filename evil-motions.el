@@ -436,7 +436,8 @@ the end of the first object. If there no previous object raises
   (cond
    ((> count 0)
     (while (and (> count 0)
-                (re-search-forward "^$" nil t))
+                (re-search-forward "^$" nil t)
+                (not (eobp)))
       (forward-char)
       (setq count (1- count))))
    ((< count 0)
