@@ -1601,6 +1601,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-join-lines ()
   "Test `evil-join-lines'."
+  :tags '(evil)
   (ert-info ("Simple")
     (evil-test-buffer-edit "J"
       "evaluation." " ;; If you"))
@@ -1609,6 +1610,18 @@ to `evil-execute-repeat-info'")
     (evil-test-buffer-edit "VjJ"
       "evaluation." " ;; If you")))
 
+(ert-deftest evil-test-change-chars ()
+  "Test `evil-change-chars'."
+  :tags '(evil)
+  (ert-info ("Simple")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "5sABC" [escape]))
+      (evil-test-text "AB" "Cis buffer" 'bobp)))
+  (ert-info ("On empty ine")
+    (evil-test-buffer
+      (forward-line 3)
+      (execute-kbd-macro (vconcat "5sABC" [escape]))
+      (evil-test-text "own buffer.\nAB" "C\nBelow"))))
 
 ;;; Motions
 

@@ -594,6 +594,16 @@ lines."
   (join-line 1))
 
 
+;; TODO: register
+(defun evil-change-chars (count &optional register)
+  "Remove the next COUNT characters and switch to insert-state."
+  (interactive "p")
+  (delete-region (point)
+                 (min (+ (point) count)
+                      (line-end-position)))
+  (evil-insert-before 1))
+
+
 (provide 'evil-operators)
 
 ;;; evil-operators.el ends here
