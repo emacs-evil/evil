@@ -292,9 +292,6 @@ Both COUNT and CMD may be nil."
 
 (evil-define-operator evil-yank (begin end type register)
   "Saves the characters in motion into the kill-ring."
-  ;; TODO: this is a hack as long as the `type' parameter does not
-  ;; work
-  (setq type evil-this-type)
   (cond
    ((eq type 'block)
     (evil-yank-rectangle begin end register))
@@ -543,9 +540,6 @@ is negative this is a more recent kill."
 
 (evil-define-operator evil-delete (beg end type register)
   "Delete and save in kill-ring or REGISTER."
-  ;; TODO: this is a hack as long as the `type' parameter does not
-  ;; work
-  (setq type evil-this-type)
   (evil-yank beg end type register)
   (cond
    ((eq type 'block)
@@ -563,12 +557,9 @@ is negative this is a more recent kill."
 If the region is linewise insertion starts on an empty line. If
 region is a block, the inserted text in inserted at each line of
 the block."
-  ;; TODO: this is a hack as long as the `type' parameter does not
-  ;; work
   (let ((nlines (1+ (- (line-number-at-pos end)
                        (line-number-at-pos beg))))
         (at-eob (= (point-max) end)))
-    (setq type evil-this-type)
     (evil-delete beg end type register)
     (cond
      ((eq type 'line)
