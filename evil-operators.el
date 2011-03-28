@@ -87,8 +87,7 @@ arguments: the beginning and end of the range."
                            [&optional stringp]
                            [&rest keywordp sexp]
                            def-body)))
-  (let ((repeat t)
-        beg end interactive keep-visual keyword motion type whole-lines)
+  (let (arg beg end interactive keep-visual key keys motion type whole-lines)
     ;; collect BEG, END and TYPE
     (setq args (delq '&optional args)
           beg (or (pop args) 'beg)
@@ -99,28 +98,28 @@ arguments: the beginning and end of the range."
       (setq doc (pop body)))
     ;; collect keywords
     (while (keywordp (car-safe body))
-      (setq keyword (pop body))
+      (setq key (pop body)
+            arg (pop body))
       (cond
-       ((eq keyword :motion)
-        (setq motion (pop body))
+       ((eq key :motion)
+        (setq motion arg)
         (unless motion
           (setq motion 'undefined)))
-       ((eq keyword :keep-visual)
-        (setq keep-visual (pop body)))
-       ((eq keyword :whole-lines)
-        (setq whole-lines (pop body)))
-       ((eq keyword :repeat)
-        (setq repeat (pop body)))
+       ((eq key :keep-visual)
+        (setq keep-visual arg))
+       ((eq key :whole-lines)
+        (setq whole-lines arg))
        (t
-        (pop body))))
+        (setq keys (append keys (list key arg))))))
     ;; collect `interactive' specification
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive (cdr (pop body))))
     ;; macro expansion
     `(progn
        (add-to-list 'evil-operators ',operator t)
-       (defun ,operator (,beg ,end &optional ,type ,@args)
+       (evil-define-command ,operator (,beg ,end &optional ,type ,@args)
          ,@(when doc `(,doc))
+         ,@keys
          (interactive
           (append (evil-operator-range ',motion ',keep-visual)
                   ,@interactive))
