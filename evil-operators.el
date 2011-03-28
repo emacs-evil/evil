@@ -40,44 +40,6 @@
     (force-window-update (selected-window))
     (redisplay)))
 
-(defmacro evil-define-command (command &rest body)
-  "Define a command COMMAND."
-  (declare (indent defun)
-           (debug (&define name
-                           [&optional lambda-list]
-                           [&optional stringp]
-                           [&rest keywordp sexp]
-                           def-body)))
-  (let (args
-        doc
-        keyword
-        (keep-visual nil)
-        (repeatable t))
-    ;; collect arguments
-    (when (listp (car body))
-      (setq args (pop body)))
-    ;; collect docstring
-    (when (stringp (car body))
-      (setq doc (pop body)))
-    ;; collect keywords
-    (while (keywordp (car-safe body))
-      (setq keyword (pop body))
-      (cond
-       ((eq keyword :keep-visual)
-        (setq keep-visual (pop body)))
-       ((eq keyword :repeatable)
-        (setq repeatable (pop body)))
-       (t
-        (error "Unknown keyword: %S" (pop body)))))
-    `(progn
-       (evil-set-command-properties
-        ',command 'keep-visual ,keep-visual 'repeatable ,repeatable)
-       ,@(and body
-              `((defun ,command (,@args)
-                  ,@(when doc `(,doc))
-                  ,@body))))))
-
-
 (defmacro evil-define-operator (operator args &rest body)
   "Define an operator command OPERATOR.
 ARGS is the argument list, which must contain at least two

@@ -361,6 +361,43 @@ bound to some keyboard-macro it is expaned recursively."
 
 ;;; Command properties
 
+(defmacro evil-define-command (command &rest body)
+  "Define a command COMMAND."
+  (declare (indent defun)
+           (debug (&define name
+                           [&optional lambda-list]
+                           [&optional stringp]
+                           [&rest keywordp sexp]
+                           def-body)))
+  (let ((keep-visual nil)
+        (repeatable t)
+        arg args doc key)
+    ;; collect arguments
+    (when (listp (car-safe body))
+      (setq args (pop body)))
+    ;; collect docstring
+    (when (stringp (car-safe body))
+      (setq doc (pop body)))
+    ;; collect keywords
+    (while (keywordp (car-safe body))
+      (setq key (pop body)
+            arg (pop body))
+      (cond
+       ((eq key :keep-visual)
+        (setq keep-visual arg))
+       ((eq key :repeatable)
+        (setq repeatable arg))
+       (t
+        (error "Unknown keyword: %S" arg))))
+    `(progn
+       (evil-set-command-properties
+        ',command 'keep-visual ,keep-visual 'repeatable ,repeatable)
+       ,@(when body
+           `((defun ,command (,@args)
+               ,@(when doc `(,doc))
+               ,@body)))
+       ',command)))
+
 (defun evil-add-command-properties (command &rest properties)
   "Adds the evil properties of a COMMAND.
 REST should be a list of an even number of values, the first of a pair considered
