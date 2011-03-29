@@ -40,8 +40,10 @@ TARGET the command to call."
 (define-key evil-normal-state-map "r" 'evil-replace)
 (define-key evil-normal-state-map "R" 'evil-replace-state)
 (define-key evil-normal-state-map "s" 'evil-change-chars)
-(define-key evil-normal-state-map "." 'evil-repeat)
 (define-key evil-normal-state-map "J" 'evil-join-successive-lines)
+(define-key evil-normal-state-map "." 'evil-repeat)
+(define-key evil-normal-state-map (kbd "C-.") 'evil-repeat-pop)
+(define-key evil-normal-state-map (kbd "M-.") 'evil-repeat-pop-next)
 
 (define-key evil-normal-state-map "v" 'evil-visual-char)
 (define-key evil-normal-state-map "V" 'evil-visual-line)

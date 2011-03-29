@@ -467,56 +467,64 @@ Both COUNT and CMD may be nil."
 (defun evil-paste-before (count &optional register)
   "Pastes the latest yanked text before the cursor position."
   (interactive "P")
-  (let* ((txt (if register (get-register register) (current-kill 0)))
-         (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
-    (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
-        (let ((evil-paste-count count)
-              (this-command 'evil-paste-before)) ; for non-interactive use
-          (insert-for-yank txt))
-      ;; no yank-handler, default
-      (let ((opoint (point)))
-        (dotimes (i (or count 1))
-          (insert-for-yank txt))
-        (set-mark opoint)
-        (setq evil-last-paste
-              (list 'evil-paste-before
-                    count
-                    opoint
-                    opoint       ; begin
-                    (point)))    ; end
-        (exchange-point-and-mark)))
-    ;; no paste pop after pasting a register
-    (when register
-      (setq evil-last-paste nil))))
+  (evil-with-undo
+    (let* ((txt (if register (get-register register) (current-kill 0)))
+           (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
+      (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
+          (let ((evil-paste-count count)
+                (this-command 'evil-paste-before)) ; for non-interactive use
+            (insert-for-yank txt))
+        ;; no yank-handler, default
+        (let ((opoint (point)))
+          (dotimes (i (or count 1))
+            (insert-for-yank txt))
+          (set-mark opoint)
+          (setq evil-last-paste
+                (list 'evil-paste-before
+                      count
+                      opoint
+                      opoint            ; begin
+                      (point)))         ; end
+          (exchange-point-and-mark)))
+      ;; no paste pop after pasting a register
+      (when register
+        (setq evil-last-paste nil)))))
 
 (defun evil-paste-behind (count &optional register)
   "Pastes the latest yanked text behind point."
   (interactive "P")
-  (let* ((txt (if register (get-register register) (current-kill 0)))
-         (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
-    (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
-        (let ((evil-paste-count count)
-              (this-command 'evil-paste-behind)) ; for non-interactive use
-          (insert-for-yank txt))
-      ;; no yank-handler, default
-      (let ((opoint (point)))
-        ;; TODO: Perhaps it is better to collect a list of all (point . mark) pairs
-        ;; to undo the yanking for count > 1. The reason is that this yanking could
-        ;; very well use 'yank-handler.
-        (unless (eolp) (forward-char))
-        (let ((begin (point)))
-          (dotimes (i (or count 1))
+  (evil-with-undo
+    (let* ((txt (if register (get-register register) (current-kill 0)))
+           (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
+      (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
+          (let ((evil-paste-count count)
+                (this-command 'evil-paste-behind)) ; for non-interactive use
             (insert-for-yank txt))
-          (setq evil-last-paste
-                (list 'evil-paste-behind
-                      count
-                      opoint
-                      begin        ; begin
-                      (point)))    ; end
-          (backward-char))))
-    (when register
-      (setq evil-last-paste nil))))
+        ;; no yank-handler, default
+        (let ((opoint (point)))
+          ;; TODO: Perhaps it is better to collect a list of all (point . mark) pairs
+          ;; to undo the yanking for count > 1. The reason is that this yanking could
+          ;; very well use 'yank-handler.
+          (unless (eolp) (forward-char))
+          (let ((begin (point)))
+            (dotimes (i (or count 1))
+              (insert-for-yank txt))
+            (setq evil-last-paste
+                  (list 'evil-paste-behind
+                        count
+                        opoint
+                        begin           ; begin
+                        (point)))       ; end
+            (backward-char))))
+      (when register
+        (setq evil-last-paste nil)))))
 
+;; TODO: if undoing is disabled in the current buffer paste pop won't
+;; work. Although this is probably not a big problem because usually
+;; buffers for editing where `evil-paste-pop' may be useful have
+;; undoing enabled. A solution would be to temporarily enable undo
+;; when pasting and storing the undo-information in a special variable
+;; that does not interfere with buffer-undo-list
 (defun evil-paste-pop (count)
   "Replace the just-yanked stretch of killed text with a different stretch.
 This command is allowed only immediatly after a `yank',
@@ -529,28 +537,16 @@ The COUNT argument inserts the COUNTth previous kill.  If COUNT
 is negative this is a more recent kill."
   (interactive "p")
   (unless (memq last-command
-                '(yank
-                  evil-paste-behind
+                '(evil-paste-behind
                   evil-paste-before))
-    (error "Previous command was not a evil-paste: %s" last-command))
-  (cond
-   ((eq last-command 'yank)
-    (funcall (or yank-undo-function #'delete-region) (mark t) (point))
-    (current-kill count)
-    (yank)
-    (setq this-command 'yank))
-   ((not evil-last-paste)
+    (error "Previous command was not an evil-paste: %s" last-command))
+  (unless evil-last-paste
     (error "Previous paste command used a register"))
-   (t
-    (setq this-command (nth 0 evil-last-paste))
-    (save-excursion
-      (goto-char (nth 2 evil-last-paste))
-      (funcall (or yank-undo-function #'delete-region)
-               (nth 3 evil-last-paste)
-               (nth 4 evil-last-paste)))
-    (goto-char (nth 2 evil-last-paste))
-    (current-kill count)
-    (funcall (nth 0 evil-last-paste) (nth 1 evil-last-paste)))))
+  (evil-undo-pop)
+  (goto-char (nth 2 evil-last-paste))
+  (current-kill count)
+  (setq this-command (nth 0 evil-last-paste))
+  (funcall (nth 0 evil-last-paste) (nth 1 evil-last-paste)))
 
 (defun evil-paste-pop-next (count)
   "Same as `evil-paste-pop' but with negative argument."

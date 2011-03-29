@@ -93,8 +93,15 @@ to t, the operator code is not executed.")
   "Full keymap disabling default bindings to self-insert-command.")
 (suppress-keymap evil-suppress-map t)
 
-(defvar evil-repeat-info nil
-  "A list if repeat-informations to repeat the last command.")
+;; TODO: customize size of ring
+(defvar evil-repeat-info-ring (make-ring 10)
+  "A ring of repeat-informations to repeat the last command.")
+
+(defvar evil-last-repeat nil
+  "Information about the latest repeat command. This is a list of two elements
+(POINT COUNT) where POINT is the position of point before the
+latest repeat and COUNT the count-argument of the latest repeat
+command.")
 
 (defvar evil-repeating-command nil
   "This variable is non-nil if a command is currently being repeated.")
@@ -169,6 +176,11 @@ paste, BEG end END are the region of the inserted text.")
 
 (defvar evil-paste-count nil
   "The count argument of the current paste command.")
+
+(defvar evil-temporary-undo nil
+  "When undo is disabled in current buffer, certain commands
+depending on undo use the variable instead of
+`buffer-undo-list'.")
 
 (defvar evil-visual-alist nil
   "Association list of Visual selections.
