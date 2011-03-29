@@ -371,7 +371,7 @@ Both COUNT and CMD may be nil."
       (set-mark (point))
       (newline)
       (insert text)
-      (delete-backward-char 1) ; delete the last newline
+      (delete-char -1) ; delete the last newline
       (setq evil-last-paste
             (list 'evil-paste-behind
                   evil-paste-count
