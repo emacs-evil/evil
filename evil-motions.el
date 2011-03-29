@@ -19,7 +19,7 @@ the count as the first argument."
                            [&optional stringp]
                            [&rest keywordp sexp]
                            def-body)))
-  (let (interactive keyword type)
+  (let (arg interactive key keys type)
     (when args
       (setq args `(&optional ,@(delq '&optional args))
             interactive
@@ -32,22 +32,19 @@ the count as the first argument."
       (setq doc (pop body)))
     ;; collect keywords
     (while (keywordp (car-safe body))
-      (setq keyword (pop body))
-      (cond
-       ((eq keyword :type)
-        (setq type (pop body)))
-       (t
-        (pop body))))
+      (setq key (pop body)
+            arg (pop body))
+      (setq keys (append keys (list key arg))))
     ;; collect `interactive' specification
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive `(append ,interactive ,@(cdr (pop body)))))
     ;; macro expansion
     `(progn
        (add-to-list 'evil-motions ',motion t)
-       (when ',type
-         (evil-set-type ',motion ',type))
-       (defun ,motion (,@args)
+       (evil-define-command ,motion (,@args)
          ,@(when doc `(,doc)) ; avoid nil before `interactive'
+         ,@keys
+         :keep-visual t
          (interactive
           ,@(when interactive
               `(,interactive)))

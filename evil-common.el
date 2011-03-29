@@ -358,6 +358,121 @@ bound to some keyboard-macro it is expaned recursively."
             (setq end (1+ end))))))
       (error "Key sequence contains no complete binding"))))
 
+
+;;; Command properties
+
+(defmacro evil-define-command (command &rest body)
+  "Define a command COMMAND."
+  (declare (indent defun)
+           (debug (&define name
+                           [&optional lambda-list]
+                           [&optional stringp]
+                           [&rest keywordp sexp]
+                           def-body)))
+  (let ((keys (plist-put nil :repeatable t))
+        arg args doc key)
+    ;; collect arguments
+    (when (listp (car-safe body))
+      (setq args (pop body)))
+    ;; collect docstring
+    (when (stringp (car-safe body))
+      (setq doc (pop body)))
+    ;; collect keywords
+    (while (keywordp (car-safe body))
+      (setq key (pop body)
+            arg (pop body))
+      (unless nil ; TODO: add keyword check
+        (plist-put keys key arg)))
+    `(progn
+       (apply 'evil-set-command-properties ',command ',keys)
+       ,@(when body
+           `((defun ,command (,@args)
+               ,@(when doc `(,doc))
+               ,@body)))
+       ',command)))
+
+(defun evil-add-command-properties (command &rest properties)
+  "Add Evil PROPERTIES to COMMAND.
+PROPERTIES should be a list of an even number of values, the
+first of a pair considered as a key, the second as the value.
+They are stored as a plist in the COMMAND symbol's
+`evil-properties' property."
+  (let ((plist (get command 'evil-properties)))
+    (while properties
+      (setq plist (plist-put plist (pop properties) (pop properties))))
+    (put command 'evil-properties plist)))
+
+(defun evil-set-command-properties (command &rest properties)
+  "Set Evil PROPERTIES of COMMAND.
+PROPERTIES should be a list of an even number of values, the
+first of a pair considered as a key, the second as the value.
+They are stored as a plist in the COMMAND symbol's
+`evil-properties' property."
+  (put command 'evil-properties nil)
+  (apply #'evil-add-command-properties command properties))
+
+;; If no evil-properties are defined for the command, several parts of
+;; Evil apply certain default rules, e.g., the repeat-system decides
+;; whether the command is repeatable by monitoring buffer changes.
+(defun evil-has-properties-p (command)
+  "Whether Evil properties are defined for COMMAND."
+  (get command 'evil-properties))
+
+(defun evil-has-property (command property)
+  "Whether COMMAND has Evil PROPERTY."
+  (plist-member (get command 'evil-properties) property))
+
+(defun evil-get-command-property (command property)
+  "Returns the value of Evil PROPERTY of COMMAND."
+  (plist-get (get command 'evil-properties) property))
+
+(defun evil-repeatable-p (command)
+  "Whether COMMAND is repeatable."
+  (evil-get-command-property command :repeatable))
+
+(defun evil-keep-visual-p (command)
+  "Whether COMMAND should not exit Visual state."
+  (evil-get-command-property command :keep-visual))
+
+(dolist (cmd '(backward-char
+               backward-list
+               backward-paragraph
+               backward-sentence
+               backward-sexp
+               backward-up-list
+               backward-word
+               beginning-of-buffer
+               beginning-of-defun
+               beginning-of-line
+               beginning-of-visual-line
+               down-list
+               end-of-buffer
+               end-of-defun
+               end-of-line
+               end-of-visual-line
+               exchange-point-and-mark
+               forward-char
+               forward-list
+               forward-paragraph
+               forward-sentence
+               forward-sexp
+               forward-word
+               keyboard-quit
+               mouse-drag-region
+               mouse-save-then-kill
+               mouse-set-point
+               mouse-set-region
+               move-beginning-of-line
+               move-end-of-line
+               next-line
+               previous-line
+               scroll-down
+               scroll-up
+               undo
+               universal-argument
+               up-list))
+  (evil-set-command-properties cmd :keep-visual t))
+
 ;;; Highlighting
 
 (when (fboundp 'font-lock-add-keywords)

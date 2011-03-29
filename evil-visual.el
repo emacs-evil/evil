@@ -30,9 +30,9 @@
     (add-hook 'pre-command-hook 'evil-visual-pre-command nil t)
     (add-hook 'post-command-hook 'evil-visual-post-command nil t)
     (add-hook 'evil-normal-state-entry-hook
-              'evil-visual-deactivate-hook nil t)
-    (setq evil-visual-region-expanded nil))
+              'evil-visual-deactivate-hook nil t))
    (t
+    (setq evil-visual-region-expanded nil)
     (remove-hook 'pre-command-hook 'evil-visual-pre-command t)
     (remove-hook 'post-command-hook 'evil-visual-post-command t)
     (evil-visual-highlight -1))))
@@ -71,8 +71,9 @@ the selection is enabled."
        (add-to-list 'evil-visual-alist (cons ',selection ',name))
        (defvar ,name ',type ,doc)
        (defvar ,message ,string ,doc)
-       (defun ,name (&optional mark point message)
+       (evil-define-command ,name (&optional mark point message)
          ,@(when doc `(,doc))
+         :keep-visual t
          (interactive (list nil nil t))
          (if (and (eq (evil-visual-type) ,name)
                   message)
@@ -117,10 +118,7 @@ Unless `this-command' is a motion, expand the region
 to the selection."
   (when (evil-visual-state-p)
     (setq evil-this-type (evil-visual-type))
-    (unless (or (evil-motion-p this-command)
-                (rassq this-command evil-visual-alist)
-                (rassq this-command (evil-state-property nil :mode))
-                (memq this-command '(evil-visual-restore)))
+    (unless (evil-keep-visual-p this-command)
       (evil-visual-expand-region
        ;; don't include final newline in linewise selection
        ;; unless the command has real need of it
@@ -169,15 +167,16 @@ echo a pre-defined message."
   "Expand the region to the Visual selection.
 If NO-TRAILING-NEWLINE is t and the selection ends with a newline,
 exclude that newline from the region."
-  (let ((beg (evil-visual-beginning))
-        (end (evil-visual-end)))
-    (when no-trailing-newline
-      (save-excursion
-        (goto-char end)
-        (when (and (bolp) (not (bobp)))
-          (setq end (max beg (1- (point)))))))
-    (setq evil-visual-region-expanded t)
-    (evil-set-region beg end)))
+  (unless evil-visual-region-expanded
+    (let ((beg (evil-visual-beginning))
+          (end (evil-visual-end)))
+      (when no-trailing-newline
+        (save-excursion
+          (goto-char end)
+          (when (and (bolp) (not (bobp)))
+            (setq end (max beg (1- (point)))))))
+      (setq evil-visual-region-expanded t)
+      (evil-set-region beg end))))
 
 (defun evil-visual-refresh (&optional type mark point)
   "Refresh `evil-visual-overlay'."
@@ -343,8 +342,9 @@ FORCE returns the previous Visual type if not in Visual state."
             (cons (symbol-value (cdr-safe e)) (cdr-safe e)))
           evil-visual-alist))
 
-(defun evil-visual-restore ()
+(evil-define-command evil-visual-restore ()
   "Restore previous selection."
+  :keep-visual t
   (interactive)
   (let* ((point (point))
          (mark (or (mark t) point))
@@ -360,7 +360,7 @@ FORCE returns the previous Visual type if not in Visual state."
           (evil-swap mark point)))
       (evil-visual-select mark point type t))))
 
-(defun evil-visual-exchange-corners ()
+(evil-define-command evil-visual-exchange-corners ()
   "Rearrange corners in Visual Block mode.
 
         M---+           +---M
@@ -370,6 +370,7 @@ FORCE returns the previous Visual type if not in Visual state."
 For example, if mark is in the upper left corner and point
 in the lower right, this function puts mark in the upper right
 corner and point in the lower left."
+  :keep-visual t
   (interactive)
   (cond
    ((eq (evil-visual-type) 'block)
@@ -437,7 +438,7 @@ CORNER defaults to `upper-left'."
       (setq vertical "lower")))
     (intern (format "%s-%s" vertical horizontal))))
 
-(defun evil-visual-block-rotate (corner &optional beg end)
+(evil-define-command evil-visual-block-rotate (corner &optional beg end)
   "In Visual Block selection, put point in CORNER.
 Corner may be one of `upper-left', `upper-right', `lower-left'
 and `lower-right':
@@ -447,6 +448,7 @@ and `lower-right':
         lower-left +---+ lower-right
 
 When called interactively, the selection is rotated blockwise."
+  :keep-visual t
   (interactive
    (let ((corners '(upper-left upper-right lower-right lower-left)))
      (list (or (cadr (memq (evil-visual-block-corner) corners))
@@ -460,7 +462,9 @@ When called interactively, the selection is rotated blockwise."
       (evil-swap beg end))
     (goto-char beg)
     (evil-move-mark end)
-    (overlay-put evil-visual-overlay :corner corner)))
+    (when (evil-visual-state-p)
+      (evil-visual-refresh)
+      (overlay-put evil-visual-overlay :corner corner))))
 
 (provide 'evil-visual)
 

@@ -442,6 +442,7 @@ bindings to be activated whenever KEYMAP and %s state are active."
                        (funcall ,message)
                      (evil-echo ,message))))
              (setq evil-state ',state)))))
+       (evil-set-command-properties ',mode :keep-visual t)
 
        (evil-define-keymap ,local-keymap nil
          :mode ,local-mode
