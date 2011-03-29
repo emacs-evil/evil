@@ -49,7 +49,11 @@ arguments: the beginning and end of the range."
                            [&optional stringp]
                            [&rest keywordp sexp]
                            def-body)))
-  (let (arg beg end interactive keep-visual key keys motion type whole-lines)
+  (let ((move-point nil) ; should be t
+        (keep-visual nil)
+        (whole-lines nil)
+        (motion nil)
+        arg beg end interactive key keys type)
     ;; collect BEG, END and TYPE
     (setq args (delq '&optional args)
           beg (or (pop args) 'beg)
@@ -69,6 +73,8 @@ arguments: the beginning and end of the range."
           (setq motion 'undefined)))
        ((eq key :keep-visual)
         (setq keep-visual arg))
+       ((eq key :move-point)
+        (setq move-point arg))
        ((eq key :whole-lines)
         (setq whole-lines arg))
        (t
@@ -82,15 +88,33 @@ arguments: the beginning and end of the range."
        (evil-define-command ,operator (,beg ,end &optional ,type ,@args)
          ,@(when doc `(,doc))
          ,@keys
+         :keep-visual t
          (interactive
-          (append (evil-operator-range ',motion ',keep-visual)
-                  ,@interactive))
+          (let* ((range (evil-operator-range ',motion))
+                 (beg (nth 0 range))
+                 (end (nth 1 range))
+                 (type (nth 2 range))
+                 (range (append range (progn ,@interactive)))
+                 (opoint (point)))
+            (if ,keep-visual
+                (when (evil-visual-state-p)
+                  (evil-visual-expand-region))
+              (when (evil-visual-state-p)
+                (evil-normal-state))
+              (when (region-active-p)
+                (evil-active-region -1)))
+            (if ,move-point
+                (if (eq type 'block)
+                    (evil-visual-block-rotate 'upper-left beg end)
+                  (goto-char beg))
+              (goto-char opoint))
+            range))
          (if (and evil-inhibit-operator
                   (evil-called-interactively-p))
              (setq evil-inhibit-operator nil)
            ,@body)))))
 
-(defun evil-operator-range (&optional motion keep-visual)
+(defun evil-operator-range (&optional motion)
   "Read a motion from the keyboard and return its buffer positions.
 The return value is a list (BEG END TYPE), which can be used
 in the `interactive' specification of an operator command."
@@ -99,15 +123,14 @@ in the `interactive' specification of an operator command."
     (evil-save-echo-area
       (cond
        ;; Visual selection
-       ((or (evil-visual-state-p)
-            (region-active-p))
+       ((evil-visual-state-p)
+        (setq beg (evil-visual-beginning)
+              end (evil-visual-end)
+              type (evil-visual-type)))
+       ((region-active-p)
         (setq beg (region-beginning)
-              end (region-end))
-        (unless keep-visual
-          (evil-active-region -1))
-        (if (eq evil-this-type 'block)
-            (evil-visual-block-rotate 'upper-left)
-          (goto-char beg)))
+              end (region-end)
+              type (or evil-this-type 'exclusive)))
        (t
         ;; read motion from keyboard
         (evil-save-state
@@ -288,7 +311,6 @@ Both COUNT and CMD may be nil."
   "ROT13 encrypt text."
   (rot13-region beg end))
 
-
 (evil-define-operator evil-yank (begin end type register)
   "Saves the characters in motion into the kill-ring."
   (cond
@@ -370,7 +392,6 @@ Both COUNT and CMD may be nil."
     (exchange-point-and-mark)
     (evil-first-non-blank)))
 
-
 (defun evil-yank-block-handler (lines)
   "Inserts the current text as block."
   (let ((count (or evil-paste-count 1))
@@ -425,7 +446,6 @@ Both COUNT and CMD may be nil."
     (when (and (eq this-command 'evil-paste-behind)
                (not (eolp)))
       (forward-char))))
-
 
 (defun evil-delete-yanked-rectangle (nrows ncols)
   "Special function to delete the block yanked by a previous paste command."
@@ -536,7 +556,6 @@ is negative this is a more recent kill."
   (interactive "p")
   (evil-paste-pop (- count)))
 
-
 (evil-define-operator evil-delete (beg end type register)
   "Delete and save in kill-ring or REGISTER."
   (evil-yank beg end type register)
@@ -549,7 +568,6 @@ is negative this is a more recent kill."
     (delete-region (1- beg) end))
    (t
     (delete-region beg end))))
-
 
 (evil-define-operator evil-change (beg end type register)
   "Delete region and change to insert state.
@@ -582,7 +600,6 @@ lines."
   "Join COUNT lines with a minimum of two lines."
   (interactive "p")
   (join-line 1))
-
 
 ;; TODO: register
 (defun evil-change-chars (count &optional register)
