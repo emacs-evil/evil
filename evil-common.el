@@ -399,33 +399,39 @@ bound to some keyboard-macro it is expaned recursively."
        ',command)))
 
 (defun evil-add-command-properties (command &rest properties)
-  "Adds the evil properties of a COMMAND.
-REST should be a list of an even number of values, the first of a pair considered
-as a key, the second as the value. The properties are stored in an alist at
-the symbol COMMAND's property list entry 'evil-properties."
-  (let ((cmd-properties (get command 'evil-properties)))
-    (when (>= (length properties) 2)
-      (apply #'evil-add-to-alist 'cmd-properties properties))
-    (put command 'evil-properties cmd-properties)))
+  "Add Evil PROPERTIES to COMMAND.
+PROPERTIES should be a list of an even number of values, the
+first of a pair considered as a key, the second as the value.
+They are stored as a plist in the COMMAND symbol's
+`evil-properties' property."
+  (let ((plist (get command 'evil-properties)))
+    (while properties
+      (setq plist (plist-put plist (pop properties) (pop properties))))
+    (put command 'evil-properties plist)))
 
 (defun evil-set-command-properties (command &rest properties)
-  "Sets the evil properties of a COMMAND.
-REST should be a list of an even number of values, the first of a pair considered
-as a key, the second as the value. The properties are stored in an alist at
-the symbol COMMAND's property list entry 'evil-properties."
+  "Set Evil PROPERTIES of COMMAND.
+PROPERTIES should be a list of an even number of values, the
+first of a pair considered as a key, the second as the value.
+They are stored as a plist in the COMMAND symbol's
+`evil-properties' property."
   (put command 'evil-properties nil)
   (apply #'evil-add-command-properties command properties))
 
+;; If no evil-properties are defined for the command, several parts of
+;; Evil apply certain default rules, e.g., the repeat-system decides
+;; whether the command is repeatable by monitoring buffer changes.
 (defun evil-has-properties-p (command)
-  "Returns non-nil if and only if evil-properties are defined for COMMAND.
-If no evil-properties are defined for COMMAND several parts of
-evil apply certain default rules, e.g., the repeat-system decides
-whether the command is repeatable by monitoring buffer changes."
-  (and (get command 'evil-properties) t))
+  "Whether Evil properties are defined for COMMAND."
+  (get command 'evil-properties))
 
-(defun evil-get-command-property (command prop)
-  "Returns the value of evil-property PROP of command COMMAND."
-  (cdr-safe (assq prop (get command 'evil-properties))))
+(defun evil-has-property (command property)
+  "Whether COMMAND has Evil PROPERTY."
+  (plist-member (get command 'evil-properties) property))
+
+(defun evil-get-command-property (command property)
+  "Returns the value of Evil PROPERTY of COMMAND."
+  (plist-get (get command 'evil-properties) property))
 
 (defun evil-repeatable-p (command)
   "Return non-nil iff COMMAND is repeatable."
