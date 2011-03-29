@@ -41,7 +41,9 @@
             (nth 2 object)
           ;; property list
           (plist-get object :type)))
-       ;; motion
+       ;; command
+       ((commandp object)
+        (evil-get-command-property object :type))
        ((symbolp object)
         (get object 'type)))
       default))
@@ -60,6 +62,8 @@ will make `line' the type of the `next-line' command."
              (symbolp (nth 2 object)))
         (setcar (nthcdr 2 object) type)
       (plist-put object :type type)))
+   ((commandp object)
+    (evil-add-command-properties object :type type))
    ((symbolp object)
     (put object 'type type)))
   object)

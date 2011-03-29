@@ -34,22 +34,17 @@ the count as the first argument."
     (while (keywordp (car-safe body))
       (setq key (pop body)
             arg (pop body))
-      (cond
-       ((eq key :type)
-        (setq type arg))
-       (t
-        (setq keys (append keys (list key arg))))))
+      (setq keys (append keys (list key arg))))
     ;; collect `interactive' specification
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive `(append ,interactive ,@(cdr (pop body)))))
     ;; macro expansion
     `(progn
        (add-to-list 'evil-motions ',motion t)
-       (when ',type
-         (evil-set-type ',motion ',type))
        (evil-define-command ,motion (,@args)
          ,@(when doc `(,doc)) ; avoid nil before `interactive'
          ,@keys
+         :keep-visual t
          (interactive
           ,@(when interactive
               `(,interactive)))
