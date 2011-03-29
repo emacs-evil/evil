@@ -369,8 +369,7 @@ bound to some keyboard-macro it is expaned recursively."
                            [&optional stringp]
                            [&rest keywordp sexp]
                            def-body)))
-  (let ((keep-visual nil)
-        (repeatable t)
+  (let ((keys (plist-put nil :repeatable t))
         arg args doc key)
     ;; collect arguments
     (when (listp (car-safe body))
@@ -382,16 +381,10 @@ bound to some keyboard-macro it is expaned recursively."
     (while (keywordp (car-safe body))
       (setq key (pop body)
             arg (pop body))
-      (cond
-       ((eq key :keep-visual)
-        (setq keep-visual arg))
-       ((eq key :repeatable)
-        (setq repeatable arg))
-       (t
-        (error "Unknown keyword: %S" arg))))
+      (unless nil ; TODO: add keyword check
+        (plist-put keys key arg)))
     `(progn
-       (evil-set-command-properties
-        ',command 'keep-visual ,keep-visual 'repeatable ,repeatable)
+       (apply 'evil-set-command-properties ',command ',keys)
        ,@(when body
            `((defun ,command (,@args)
                ,@(when doc `(,doc))
@@ -434,13 +427,51 @@ They are stored as a plist in the COMMAND symbol's
   (plist-get (get command 'evil-properties) property))
 
 (defun evil-repeatable-p (command)
-  "Return non-nil iff COMMAND is repeatable."
-  (evil-get-command-property command 'repeatable))
+  "Whether COMMAND is repeatable."
+  (evil-get-command-property command :repeatable))
 
 (defun evil-keep-visual-p (command)
-  "Return non-nil iff COMMAND should not exit visual state."
-  (evil-get-command-property command 'keep-visual))
+  "Whether COMMAND should not exit Visual state."
+  (evil-get-command-property command :keep-visual))
 
+(dolist (cmd '(backward-char
+               backward-list
+               backward-paragraph
+               backward-sentence
+               backward-sexp
+               backward-up-list
+               backward-word
+               beginning-of-buffer
+               beginning-of-defun
+               beginning-of-line
+               beginning-of-visual-line
+               down-list
+               end-of-buffer
+               end-of-defun
+               end-of-line
+               end-of-visual-line
+               exchange-point-and-mark
+               forward-char
+               forward-list
+               forward-paragraph
+               forward-sentence
+               forward-sexp
+               forward-word
+               keyboard-quit
+               mouse-drag-region
+               mouse-save-then-kill
+               mouse-set-point
+               mouse-set-region
+               move-beginning-of-line
+               move-end-of-line
+               next-line
+               previous-line
+               scroll-down
+               scroll-up
+               undo
+               universal-argument
+               up-list))
+  (evil-set-command-properties cmd :keep-visual t))
 
 ;;; Highlighting
 
