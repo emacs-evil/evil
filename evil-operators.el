@@ -337,9 +337,10 @@ Both COUNT and CMD may be nil."
     (when (or (zerop (length txt))
               (/= (aref txt (1- (length txt))) ?\n))
       (setq txt (concat txt "\n")))
+    (setq txt (propertize txt 'yank-handler yinfo))
     (if register
-        (set-register register (propertize txt 'yank-handler yinfo))
-      (kill-new txt nil yinfo))))
+        (set-register register txt)
+      (kill-new txt))))
 
 (defun evil-yank-rectangle (begin end register)
   "Stores the rectangle defined by region BEGIN and END into the kill-ring."
@@ -351,14 +352,14 @@ Both COUNT and CMD may be nil."
     (setq lines (nreverse (cdr lines)))
     ;; txt is used as default insert text when pasting this rectangle
     ;; in another program, e.g., using the X clipboard.
-    (let* ((txt (mapconcat #'identity lines "\n"))
-           (yinfo (list #'evil-yank-block-handler
+    (let* ((yinfo (list #'evil-yank-block-handler
                         lines
                         nil
-                        #'evil-delete-yanked-rectangle)))
+                        #'evil-delete-yanked-rectangle))
+           (txt (propertize (mapconcat #'identity lines "\n") 'yank-handler yinfo)))
       (if register
-          (set-register register (propertize txt 'yank-handler yinfo))
-        (kill-new txt nil yinfo)))))
+          (set-register register txt)
+        (kill-new txt)))))
 
 (defun evil-yank-line-handler (text)
   "Inserts the current text linewise."
