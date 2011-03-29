@@ -367,19 +367,15 @@ the current buffer, the undo information is stored in
 `evil-temporary-undo' instead of `buffer-undo-list'."
   (declare (indent defun)
            (debug t))
-  `(progn
-       (if (eq buffer-undo-list t)
-           ;; Undo disabled
-           (setq evil-temporary-undo t
-                 buffer-undo-list nil)
-         (setq evil-temporary-undo nil))
+  `(let ((orig-buffer-undo-list t))
+     (let (buffer-undo-list)
        ,@body
-       (when evil-temporary-undo
-         ;; Undo disabled. Don't forget to add the undo-boundary at the
-         ;; beginning, with undo enabled this would be done by the
-         ;; Emacs main loop.
-         (setq evil-temporary-undo (cons nil buffer-undo-list)
-               buffer-undo-list t))))
+       (setq evil-temporary-undo (cons nil buffer-undo-list)))
+     (unless (eq buffer-undo-list t)
+       ;; Undo is enabled, so update the global buffer undo list.
+       (setq buffer-undo-list (append evil-temporary-undo buffer-undo-list)
+             evil-temporary-undo nil))))
+
 
 (defun evil-undo-pop ()
   "Undos the last buffer change and removes the last undo
