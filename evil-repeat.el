@@ -50,7 +50,6 @@ discarding old commands."
   "Returns the repeat-type of a certain `command'."
   (gethash command evil-insert-repeat-types))
 
-
 (defun evil-set-insert-repeat-type (command type)
   "Changes the repeat type of `command' to `type'.
 `command' is the symbol of the command `type' is either nil,
@@ -98,7 +97,6 @@ global variable `evil-repeat-info-ring' if the command is repeatable."
   (remove-hook 'pre-command-hook 'evil-normal-pre-repeat t)
   (remove-hook 'after-change-functions 'evil-normal-change-repeat t)
   (remove-hook 'post-command-hook 'evil-normal-post-repeat t))
-
 
 (defun evil-insert-pre-repeat ()
   "Called from `pre-command-hook' in insert mode. Decides how the
@@ -200,7 +198,6 @@ array."
       (setcdr result-last (cons (apply #'vconcat cur) nil)))
     (cdr result)))
 
-
 (defun evil-execute-change (changes rel-point)
   "Executes as list of changes.
 
@@ -226,7 +223,6 @@ where point should be placed after all changes."
      ((arrayp rep) (execute-kbd-macro rep))
      ((consp rep) (apply (car rep) (cdr rep)))
      (t (error "Unexpected repeat-info: %S" rep)))))
-
 
 ;; TODO: currently we prepend the replacing count before the
 ;;       key-sequence that calls the command. Can we use direct

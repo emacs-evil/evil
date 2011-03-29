@@ -253,7 +253,6 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
               (bolp))
     (backward-char)))
 
-
 ;;; Text object and movement framework
 ;; Usual text objects like words, WORDS, paragraphs and sentences are
 ;; defined via a corresponding move-function. The move function must
@@ -288,7 +287,6 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
 ;; motions always move as far as possible. But we want to use the
 ;; motion-function to identify certain objects in the buffer and thus
 ;; exact movement to object boundaries is required).
-
 
 (defun evil-move-chars (chars count)
   "Moves point to the end or beginning of a sequence of CHARS.
@@ -426,7 +424,6 @@ the end of the first object. If there no previous object raises
       (goto-char (point-min))))
   (- count))
 
-
 (defun evil-move-empty-lines (count)
   "Moves to the next or previous empty line, repeated COUNT times."
   (setq count (or count 1))
@@ -444,7 +441,6 @@ the end of the first object. If there no previous object raises
                 (re-search-backward "^$" nil t))
       (setq count (1+ count)))))
   count)
-
 
 (evil-define-union-move evil-move-word
   "Move by words."
@@ -474,7 +470,6 @@ the end of the first object. If there no previous object raises
   "Move the cursor the end of the COUNT-th previous word."
   :type inclusive
   (evil-move-backward-end #'evil-move-word count))
-
 
 (evil-define-union-move evil-move-WORD
   "Move by WORDs."

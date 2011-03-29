@@ -1483,7 +1483,6 @@ to `evil-execute-repeat-info'")
          '("B" "          elow the empty" bolp)
          '(" " "ow thow th" bolp eobp))))))
 
-
 (ert-deftest evil-test-paste-pop-without-undo ()
   "Text `evil-paste-pop' with undo disabled."
   (ert-info ("Pop-next with count without undo")

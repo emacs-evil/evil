@@ -480,7 +480,6 @@ bindings to be activated whenever KEYMAP and %s state are active."
   :tag " <E> "
   :message "-- EMACS --")
 
-
 ;; TODO: this function is not perfect: if (point) is placed behind a
 ;; closing parenthesis that pair will be highlighted even if
 ;; `evil-show-paren-range' is 0. The problem is to find a position not

@@ -155,7 +155,6 @@
   (recenter -1)
   (evil-first-non-blank))
 
-
 ;;; Window
 
 (defun evil-resize-window (new-size &optional horizontal)
@@ -194,7 +193,6 @@
    ((consp tree)
     (set-window-buffer win (cadr tree)))
    (t (set-window-buffer win tree))))
-
 
 ;; TODO: window-split, window-new functions may take an file-argument
 ;; when called from ex-mode
@@ -309,7 +307,6 @@ top-left."
     (evil-window-top-left)
     (other-window (1- count))))
 
-
 ;; (defun evil-window-new (count (argument:file file) nonrepeatable)
 ;;   "Splits the current window horizontally and opens a new buffer or edits a certain `file'."
 ;;   (split-window (selected-window) count)
@@ -354,13 +351,11 @@ top-left."
   (interactive "p")
   (evil-resize-window (+ (window-width) count) t))
 
-
 (evil-define-command evil-window-decrease-width (count)
   "Decrease current window width by COUNT."
   :repeatable nil
   (interactive "p")
   (evil-resize-window (- (window-width) count) t))
-
 
 (evil-define-command evil-window-set-height (count)
   "Sets the height of the current window to COUNT."

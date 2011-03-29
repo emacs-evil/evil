@@ -209,7 +209,6 @@ They are reused to prevent flicker.")
   (interactive)
   (message "Evil version %s" evil-version))
 
-
 ;;; Customizations
 
 (defgroup evil nil

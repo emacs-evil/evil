@@ -358,7 +358,6 @@ bound to some keyboard-macro it is expaned recursively."
             (setq end (1+ end))))))
       (error "Key sequence contains no complete binding"))))
 
-
 ;;; Undo ring
 
 (defmacro evil-with-undo (&rest body)
@@ -375,7 +374,6 @@ the current buffer, the undo information is stored in
        ;; Undo is enabled, so update the global buffer undo list.
        (setq buffer-undo-list (append evil-temporary-undo buffer-undo-list)
              evil-temporary-undo nil))))
-
 
 (defun evil-undo-pop ()
   "Undos the last buffer change and removes the last undo
@@ -400,7 +398,6 @@ instead."
       (if (eq buffer-undo-list t)
           (setq evil-temporary-undo nil)
         (setq buffer-undo-list undo-list)))))
-
 
 ;;; Command properties
 
