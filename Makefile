@@ -18,6 +18,7 @@ indent: clean
 (untabify (point-min) (point-max)) \
 (indent-region (point-min) (point-max)) \
 (delete-trailing-whitespace) \
+(untabify (point-min) (point-max)) \
 (goto-char (point-min)) \
 (while (re-search-forward \"\\n\\\\{3,\\\\}\" nil t) \
 (replace-match \"\\n\\n\")) \
