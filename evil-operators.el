@@ -90,7 +90,7 @@ arguments: the beginning and end of the range."
          ,@keys
          :keep-visual t
          (interactive
-          (let* ((point (point))
+          (let* ((orig (point))
                  (range (evil-operator-range ',motion))
                  (beg (pop range))
                  (end (pop range))
@@ -98,19 +98,22 @@ arguments: the beginning and end of the range."
             (unwind-protect
                 (setq range (append (list beg end type)
                                     (progn ,@interactive)))
-              (setq point (point))
+              (setq orig (point))
+              (when ,move-point
+                (if (and ',motion (not (evil-visual-state-p)))
+                    (goto-char (max beg (1- end)))
+                  (if (eq type 'block)
+                      (evil-visual-block-rotate 'upper-left beg end)
+                    (goto-char beg))))
               (if ,keep-visual
                   (when (evil-visual-state-p)
                     (evil-visual-expand-region))
                 (when (evil-visual-state-p)
                   (evil-normal-state))
                 (when (region-active-p)
-                  (evil-active-region -1))))
-            (if ,move-point
-                (if (eq type 'block)
-                    (evil-visual-block-rotate 'upper-left beg end)
-                  (goto-char beg))
-              (goto-char point))
+                  (evil-active-region -1)))
+              (unless ,move-point
+                (goto-char orig)))
             range))
          (if (and evil-inhibit-operator
                   (evil-called-interactively-p))

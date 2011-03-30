@@ -43,17 +43,13 @@
 
 (evil-define-operator evil-replace (beg end type char)
   "Replace text from BEG to END with CHAR."
-  :move-point nil
+  :move-point t ; TODO: remove
   :motion evil-forward-char
   (interactive (list (evil-save-cursor
                        (evil-set-cursor evil-replace-state-cursor)
                        ;; TODO: this doesn't handle special input
                        ;; methods such as "C-x 8 ."
-                       (prog1 (read-char)
-                         (if (evil-visual-state-p)
-                             (goto-char beg)
-                           (goto-char (max beg (1- end))))))))
-  ;; TODO: block handling
+                       (read-char))))
   (let ((opoint (point))) ; `save-excursion' doesn't work reliably
     (goto-char beg)
     (unwind-protect
