@@ -101,17 +101,15 @@ current buffer only.")
   "Whether SYM is the name of a state."
   (assq sym evil-states-alist))
 
-(defun evil-state-keymaps (state &rest excluded)
-  "Return an ordered list of keymaps activated by STATE."
+(defun evil-state-modes (state &rest excluded)
+  "Return an ordered list of minor modes activated by STATE."
   (let* ((state (or state evil-state))
-         (map (symbol-value (evil-state-property state :keymap)))
-         (local-map (symbol-value (evil-state-property
-                                   state :local-keymap)))
-         (aux-maps (evil-state-auxiliary-keymaps state))
+         (mode (evil-state-property state :mode))
+         (local (evil-state-property state :local-mode))
+         (aux (evil-state-auxiliary-modes state))
          (enable (evil-state-property state :enable))
          result)
-    (unless (memq state enable)
-      (add-to-list 'enable state))
+    (add-to-list 'enable state)
     ;; the keymaps for other states and modes enabled by STATE
     (dolist (entry enable result)
       (cond
@@ -119,22 +117,18 @@ current buffer only.")
         nil)
        ((eq entry state)
         (setq result
-              (evil-concat-lists result
-                                 (list local-map) aux-maps (list map)))
+              (evil-concat-lists
+               result (list local) aux (list mode)))
         (add-to-list 'excluded state))
        ((evil-state-p entry)
         (setq result (evil-concat-lists
                       result
-                      (apply 'evil-state-keymaps entry excluded))))
-       ((keymapp entry)
-        (add-to-list 'result entry t 'eq))
-       ((keymapp (symbol-value entry))
-        (add-to-list 'result (symbol-value entry) t 'eq))
+                      (apply 'evil-state-modes entry excluded))))
+       ((or (keymapp entry)
+            (keymapp (symbol-value entry)))
+        (add-to-list 'result (evil-keymap-mode entry) t 'eq))
        (t
-        (setq map (cdr (or (assq entry evil-mode-map-alist)
-                           (assq entry minor-mode-map-alist))))
-        (when map
-          (add-to-list 'result map t 'eq)))))))
+        (add-to-list 'result entry t 'eq))))))
 
 (defun evil-state-auxiliary-keymaps (state)
   "Return an ordered list of auxiliary keymaps for STATE."
@@ -145,6 +139,15 @@ current buffer only.")
       (when (keymapp (setq map (cdr (assq map alist))))
         (add-to-list 'result map t 'eq)))))
 
+(defun evil-state-auxiliary-modes (state)
+  "Return an ordered list of auxiliary minor modes for STATE."
+  (let* ((state (or state evil-state))
+         (alist (symbol-value (evil-state-property state :aux)))
+         mode result)
+    (dolist (map (current-active-maps) result)
+      (when (setq mode (evil-keymap-mode (cdr (assq map alist))))
+        (add-to-list 'result mode t 'eq)))))
+
 (defun evil-normalize-keymaps (&optional state)
   "Create a buffer-local value for `evil-mode-map-alist'.
 Its order reflects the state in the current buffer."
@@ -152,40 +155,29 @@ Its order reflects the state in the current buffer."
         (modes (evil-concat-lists
                 (mapcar 'cdr (evil-state-property nil :mode))
                 (mapcar 'cdr (evil-state-property nil :local-mode))))
-        alist mode)
+        alist)
     ;; update references to global keymaps
     (evil-refresh-global-maps)
-    ;; initialize a buffer-local value
-    (setq evil-mode-map-alist
-          (copy-sequence (default-value 'evil-mode-map-alist)))
     ;; update references to buffer-local keymaps
     (evil-refresh-local-maps)
     ;; disable all modes
-    (dolist (entry (evil-concat-alists evil-mode-map-alist
-                                       evil-local-keymaps-alist))
-      (setq mode (car entry))
+    (dolist (mode (mapcar 'car (append evil-mode-map-alist
+                                       evil-local-keymaps-alist)))
       ;; modes not defined by a state are disabled
-      ;; with their toggle function, if defined
+      ;; with their toggle function (if any)
       (when (and (fboundp mode)
                  (not (memq mode modes)))
         (funcall mode -1))
       (set mode nil))
     ;; enable modes for current state
-    (unless (null state)
-      (dolist (map (evil-state-keymaps state))
-        (when (setq mode (or (car (rassq map evil-mode-map-alist))
-                             (car (rassq map minor-mode-map-alist))))
-          ;; enable non-state modes
-          (when (and (fboundp mode)
-                     (not (memq mode modes)))
-            (funcall mode 1))
-          (set mode t)
-          ;; refresh the keymap for good measure (buffer-local keymaps
-          ;; may change in the toggle function itself)
-          (setq map (or (cdr (assq mode evil-mode-map-alist))
-                        (cdr (assq mode minor-mode-map-alist))
-                        map))
-          (add-to-list 'alist (cons mode map) t)))
+    (when state
+      (dolist (mode (evil-state-modes state))
+        ;; enable non-state modes
+        (when (and (fboundp mode)
+                   (not (memq mode modes)))
+          (funcall mode 1))
+        (set mode t)
+        (evil-add-to-alist 'alist mode (evil-mode-keymap mode)))
       ;; move the enabled modes to the front of the list
       (setq evil-mode-map-alist
             (evil-concat-alists
@@ -211,8 +203,8 @@ Update its entries if keymaps change."
   "Refresh the buffer-local value of `evil-mode-map-alist'.
 Initialize a buffer-local value for all local keymaps
 and update their list entries."
-  (unless (assq 'evil-mode-map-alist (buffer-local-variables))
-    (setq evil-mode-map-alist (copy-sequence evil-mode-map-alist)))
+  (setq evil-mode-map-alist
+        (copy-sequence (default-value 'evil-mode-map-alist)))
   (dolist (entry evil-local-keymaps-alist)
     (let ((mode (car entry))
           (map  (cdr entry)))
@@ -221,6 +213,33 @@ and update their list entries."
         (set map (make-sparse-keymap)))
       (evil-add-to-alist 'evil-mode-map-alist
                          mode (symbol-value map)))))
+
+(defun evil-keymap-mode (keymap)
+  "Return minor mode for KEYMAP.
+See also `evil-mode-keymap'."
+  (let ((map (if (keymapp keymap) keymap (symbol-value keymap)))
+        (var (when (symbolp keymap) keymap)))
+    (or (when var
+          (or (car (rassq var evil-global-keymaps-alist))
+              (car (rassq var evil-local-keymaps-alist))))
+        (car (rassq map (mapcar (lambda (e)
+                                  ;; from (MODE-VAR . MAP-VAR)
+                                  ;; to (MODE-VAR . MAP)
+                                  (cons (car-safe e)
+                                        (symbol-value (cdr-safe e))))
+                                (append evil-global-keymaps-alist
+                                        evil-local-keymaps-alist))))
+        (car (rassq map minor-mode-map-alist)))))
+
+(defun evil-mode-keymap (mode &optional variable)
+  "Return keymap for minor MODE.
+Return the keymap variable if VARIABLE is non-nil.
+See also `evil-keymap-mode'."
+  (let* ((var (or (cdr (assq mode evil-global-keymaps-alist))
+                  (cdr (assq mode evil-local-keymaps-alist))))
+         (map (or (symbol-value var)
+                  (cdr (assq mode minor-mode-map-alist)))))
+    (if variable var map)))
 
 (defun evil-change-state (state)
   "Change state to STATE.
