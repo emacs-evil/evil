@@ -49,8 +49,7 @@
                        (evil-set-cursor evil-replace-state-cursor)
                        ;; TODO: this doesn't handle special input
                        ;; methods such as "C-x 8 ."
-                       (unwind-protect
-                           (read-char)
+                       (prog1 (read-char)
                          (if (evil-visual-state-p)
                              (goto-char beg)
                            (goto-char (max beg (1- end))))))))
