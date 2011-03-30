@@ -255,8 +255,9 @@ and only if `count' is non-nil."
      ;; repeat with original count
      (t (evil-execute-repeat-info repeat-info)))))
 
-(defun evil-repeat (count)
+(evil-define-command evil-repeat (count)
   "Repeat the last editing command with count replaced by `count'."
+  :repeatable nil
   (interactive "P")
   (let ((confirm-kill-emacs t)
         (kill-buffer-hook
