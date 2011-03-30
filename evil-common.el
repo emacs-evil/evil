@@ -312,6 +312,52 @@ a negative number means point goes before mark."
   "Set buffer's mark to POS."
   (set-marker (mark-marker) pos))
 
+(defun evil-apply-on-block (func beg end &rest args)
+  "Call FUNC for each line of Visual Block selection.
+The selection may be specified explicitly with BEG and END.
+FUNC must take at least two arguments, the beginning and end of
+each line. Extra arguments to FUNC may be passed via ARGS."
+  (let (beg-marker end-marker left right eob)
+    (save-excursion
+      (evil-sort beg end)
+      ;; calculate columns
+      (goto-char end)
+      (setq right (current-column))
+      (goto-char beg)
+      (setq left (current-column))
+      ;; ensure LEFT < RIGHT
+      (when (> left right)
+        (evil-sort left right)
+        (setq beg (save-excursion
+                    (goto-char beg)
+                    (move-to-column left)
+                    (point))
+              end (save-excursion
+                    (goto-char end)
+                    (move-to-column right)
+                    (point))))
+      (goto-char beg)
+      (setq beg-marker (move-marker (make-marker) beg)
+            end-marker (move-marker (make-marker) end))
+      (set-marker-insertion-type beg-marker nil)
+      (set-marker-insertion-type end-marker t)
+      ;; apply FUNC on each line
+      (while (progn
+               (apply func
+                      (save-excursion
+                        (move-to-column left t)
+                        (point))
+                      (save-excursion
+                        (move-to-column right t)
+                        (point))
+                      args)
+               (forward-line 1)
+               (and (prog1 (not eob)
+                      (setq eob (eobp)))
+                    (<= (point) end-marker))))
+      (set-marker beg-marker nil)
+      (set-marker end-marker nil))))
+
 ;;; Key sequences
 
 (defun evil-extract-count (keys)
