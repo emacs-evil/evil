@@ -57,11 +57,13 @@
   (let ((opoint (point))) ; `save-excursion' doesn't work reliably
     (goto-char beg)
     (unwind-protect
-        (while (< (point) end)
-          (if (eq (char-after) ?\n)
-              (forward-char)
-            (delete-char 1)
-            (insert-char char 1)))
+        (if (eq type 'block)
+            (evil-apply-on-block 'evil-replace beg end nil char)
+          (while (< (point) end)
+            (if (eq (char-after) ?\n)
+                (forward-char)
+              (delete-char 1)
+              (insert-char char 1))))
       (goto-char opoint))))
 
 (provide 'evil-replace)
