@@ -130,15 +130,6 @@ current buffer only.")
        (t
         (add-to-list 'result entry t 'eq))))))
 
-(defun evil-state-auxiliary-keymaps (state)
-  "Return an ordered list of auxiliary keymaps for STATE."
-  (let* ((state (or state evil-state))
-         (alist (symbol-value (evil-state-property state :aux)))
-         result)
-    (dolist (map (current-active-maps) result)
-      (when (keymapp (setq map (cdr (assq map alist))))
-        (add-to-list 'result map t 'eq)))))
-
 (defun evil-state-auxiliary-modes (state)
   "Return an ordered list of auxiliary minor modes for STATE."
   (let* ((state (or state evil-state))

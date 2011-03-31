@@ -249,7 +249,8 @@ unchanged test-buffer in Normal state."
       (should-not (symbol-value (evil-state-property state :local-mode)))
       (should-not (memq (symbol-value (evil-state-property state :local-keymap))
                         (current-active-maps)))
-      (dolist (map (evil-state-auxiliary-keymaps state))
+      (dolist (map (mapcar 'evil-mode-keymap
+                           (evil-state-auxiliary-modes state)))
         (should-not (memq map (current-active-maps)))))))
 
 (ert-deftest evil-test-toggle-local-mode ()
