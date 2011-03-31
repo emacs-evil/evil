@@ -61,9 +61,10 @@ repeated by tracking the buffer changed."
 
 (defun evil-repeat-normal-command-p ()
   "Return non-nil iff the current command should be recored for repeation."
-  (if (evil-has-properties-p this-command)
-      (evil-repeatable-p this-command)
-    evil-command-modified-buffer))
+  (and evil-state
+       (if (evil-has-properties-p this-command)
+           (evil-repeatable-p this-command)
+         evil-command-modified-buffer)))
 
 (defun evil-normal-pre-repeat ()
   "Called from `pre-command-hook' in vi-state. Initializes
@@ -74,7 +75,8 @@ recording of repeat-information for the current command."
   "Called from `after-change-functions' in vi-state. Records that
 the current command is an editing command, i.e., it modified the
 buffer."
-  (setq evil-command-modified-buffer t))
+  (when evil-state
+    (setq evil-command-modified-buffer t)))
 
 (defun evil-normal-post-repeat ()
   "Called from `post-command-hook' in vi-state. Finishes
@@ -255,8 +257,9 @@ and only if `count' is non-nil."
      ;; repeat with original count
      (t (evil-execute-repeat-info repeat-info)))))
 
-(defun evil-repeat (count)
+(evil-define-command evil-repeat (count)
   "Repeat the last editing command with count replaced by `count'."
+  :repeatable nil
   (interactive "P")
   (let ((confirm-kill-emacs t)
         (kill-buffer-hook

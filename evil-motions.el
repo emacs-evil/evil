@@ -45,6 +45,7 @@ the count as the first argument."
          ,@(when doc `(,doc)) ; avoid nil before `interactive'
          ,@keys
          :keep-visual t
+         :repeatable nil
          (interactive
           ,@(when interactive
               `(,interactive)))
