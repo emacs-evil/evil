@@ -69,7 +69,11 @@ repeated by tracking the buffer changed."
 (defun evil-normal-pre-repeat ()
   "Called from `pre-command-hook' in vi-state. Initializes
 recording of repeat-information for the current command."
-  (setq evil-command-modified-buffer nil))
+  ;; prefix arguments always preceed the actual commands and they are
+  ;; part of the key sequence of the actual command, therefore they
+  ;; can be safely ignored
+  (setq evil-command-modified-buffer nil
+        evil-normal-repeat-info nil))
 
 (defun evil-normal-change-repeat (beg end len)
   "Called from `after-change-functions' in vi-state. Records that
@@ -84,11 +88,15 @@ recording of repeat-information and eventually stores it in the
 global variable `evil-repeat-info-ring' if the command is repeatable."
   (when (and (functionp this-command)
              (evil-repeat-normal-command-p))
-    (evil-add-repeat-info
-     (evil-normalize-repeat-info (reverse (cons
-                                           (this-command-keys)
-                                           evil-normal-repeat-info))))
-    (setq evil-normal-repeat-info nil)))
+    (unless (memq this-command '(digit-argument
+                                 negative-argument
+                                 universal-argument
+                                 universal-argument-minus
+                                 universal-argument-other-key))
+      (evil-add-repeat-info
+       (evil-normalize-repeat-info (reverse (cons
+                                             (this-command-keys)
+                                             evil-normal-repeat-info)))))))
 
 (defun evil-setup-normal-repeat ()
   "Initializes recording of repeat-information in vi-state."
