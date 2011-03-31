@@ -85,7 +85,10 @@ global variable `evil-repeat-info-ring' if the command is repeatable."
   (when (and (functionp this-command)
              (evil-repeat-normal-command-p))
     (evil-add-repeat-info
-     (evil-normalize-repeat-info (list (this-command-keys))))))
+     (evil-normalize-repeat-info (reverse (cons
+                                           (this-command-keys)
+                                           evil-normal-repeat-info))))
+    (setq evil-normal-repeat-info nil)))
 
 (defun evil-setup-normal-repeat ()
   "Initializes recording of repeat-information in vi-state."
@@ -300,6 +303,28 @@ is negative this is a more recent kill."
   "Same as `evil-repeat-pop' with negative COUNT."
   (interactive "p")
   (evil-repeat-pop (- count)))
+
+
+;; `read-key' is introduced in Emacs 23.2
+(defun evil-read-key (&optional prompt)
+  "Read a key from the keyboard.
+Translates it according to the input method."
+  (let ((old-global-map (current-global-map))
+        (new-global-map (make-sparse-keymap))
+        (overriding-terminal-local-map (make-sparse-keymap))
+        overriding-local-map)
+    (unwind-protect
+        (progn
+          (define-key new-global-map [menu-bar]
+            (lookup-key global-map [menu-bar]))
+          (define-key new-global-map [tool-bar]
+            (lookup-key global-map [tool-bar]))
+          (add-to-list 'new-global-map
+                       (make-char-table nil 'self-insert-command) t)
+          (use-global-map new-global-map)
+          (push (this-command-keys) evil-normal-repeat-info)
+          (aref (read-key-sequence prompt nil t) 0))
+      (use-global-map old-global-map))))
 
 (provide 'evil-repeat)
 

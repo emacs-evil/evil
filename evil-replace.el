@@ -4,6 +4,7 @@
 (require 'evil-common)
 (require 'evil-states)
 (require 'evil-operators)
+(require 'evil-repeat)
 
 (evil-define-state replace
   "Replace state."

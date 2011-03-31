@@ -106,6 +106,10 @@ command.")
 (defvar evil-repeating-command nil
   "This variable is non-nil if a command is currently being repeated.")
 
+;; TODO: can we combine the next two variables?
+(defvar evil-normal-repeat-info nil
+  "Repeat information accumulated during normal mode.")
+
 (defvar evil-insert-repeat-info nil
   "Repeat information accumulated during insert mode.")
 
