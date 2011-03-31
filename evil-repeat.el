@@ -320,7 +320,7 @@ Translates it according to the input method."
           (define-key new-global-map [tool-bar]
             (lookup-key global-map [tool-bar]))
           (add-to-list 'new-global-map
-                       (make-char-table nil 'self-insert-command) t)
+                       (make-char-table 'display-table 'self-insert-command) t)
           (use-global-map new-global-map)
           (push (this-command-keys) evil-normal-repeat-info)
           (aref (read-key-sequence prompt nil t) 0))
