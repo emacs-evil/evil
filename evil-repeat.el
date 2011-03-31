@@ -119,37 +119,42 @@ global variable `evil-repeat-info-ring' if the command is repeatable."
     (setq evil-insert-repeat-type
           (evil-insert-repeat-type this-command))
     (when (eq evil-insert-repeat-type 'change)
-      (setq evil-insert-repeat-point (point))
-      (push nil evil-insert-repeat-info))))
+      (setq evil-insert-repeat-point (point)
+            evil-insert-repeat-changes nil))))
 
 (defun evil-insert-change-repeat (beg end len)
   "Called from `after-change-functions' in insert mode. When the
 current command should be repeated by change the change
 information is recorded."
   (when (eq evil-insert-repeat-type 'change)
-    (setcar evil-insert-repeat-info
-            (cons (list (- beg evil-insert-repeat-point)
-                        (buffer-substring beg end)
-                        len)
-                  (car evil-insert-repeat-info)))))
+    (push (list (- beg evil-insert-repeat-point)
+                (buffer-substring beg end)
+                len)
+          evil-insert-repeat-changes)))
 
 (defun evil-insert-post-repeat ()
   "Called from `post-command-hook' in insert-state. Finishes
 recording of repeat-information and appends it to the global
 variable `evil-insert-repeat-info'."
   (when (functionp this-command)
-    ;; we ignore keyboard-macros
-    (if (eq evil-insert-repeat-info 'startup)
-        ;; the is the command that started insert-mode
-        (setq evil-insert-repeat-info (list (this-command-keys)))
+    (unless (memq this-command '(digit-argument
+                                 negative-argument
+                                 universal-argument
+                                 universal-argument-minus
+                                 universal-argument-other-key))
       (cond
+       ;; This is the command that enabled insert state.
+       ((eq evil-insert-repeat-info 'startup)
+        (push (this-command-keys) evil-normal-repeat-info)
+        (setq evil-insert-repeat-info nil))
+       ;; Check if the command is change-based
        ((eq evil-insert-repeat-type 'change)
-        (setcar evil-insert-repeat-info
-                (list #'evil-execute-change
-                      (reverse (car evil-insert-repeat-info))
-                      (- (point) evil-insert-repeat-point))))
-       ((not evil-insert-repeat-type)
-        ;; track key-sequence
+        (push (list #'evil-execute-change
+                    (reverse evil-insert-repeat-changes)
+                    (- (point) evil-insert-repeat-point))
+              evil-insert-repeat-info))
+       ;; Usual command, record by key-sequence
+       (t
         (push (this-command-keys) evil-insert-repeat-info))))))
 
 (defun evil-setup-insert-repeat ()
@@ -173,18 +178,14 @@ insert-mode."
   (remove-hook 'post-command-hook 'evil-insert-post-repeat t)
   ;; do not forget to add the command that finished insert-mode, usually
   ;; [escape]
-  (setq evil-insert-repeat-info (nreverse evil-insert-repeat-info))
-  ;; remove the command that started insert-mode from
-  ;; `evil-insert-repeat-info', so this variable will contain
-  ;; *exactly* the commands executed during insertion
-  (let ((startup (pop evil-insert-repeat-info)))
-    (setq evil-insert-repeat-info
-          (evil-normalize-repeat-info evil-insert-repeat-info))
-    (ring-insert evil-repeat-info-ring
-                 (evil-normalize-repeat-info
-                  (append (list startup)
-                          evil-insert-repeat-info
-                          (list (this-command-keys)))))))
+  (setq evil-insert-repeat-info
+        (evil-normalize-repeat-info
+         (nreverse evil-insert-repeat-info)))
+  (ring-insert evil-repeat-info-ring
+               (evil-normalize-repeat-info
+                (append (reverse evil-normal-repeat-info)
+                        evil-insert-repeat-info
+                        (list (this-command-keys))))))
 
 (defun evil-normalize-repeat-info (repeat-info)
   "Concatenates consecutive arrays in the repeat-info to a single
