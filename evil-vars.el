@@ -1,4 +1,22 @@
-;;; Settings and variables
+;;;; Settings and variables
+
+(defgroup evil nil
+  "Extensible vi layer."
+  :group 'emulations
+  :prefix 'evil-)
+
+(defcustom evil-show-paren-range 0
+  "The minimal distance between point and a parenthesis
+which causes the parenthesis to be highlighted."
+  :type 'integer
+  :group 'evil)
+
+(defcustom evil-find-skip-newlines nil
+  "Whether \"f\", \"F\", \"t\" and \"T\" skip over newlines."
+  :type 'boolean
+  :group 'evil)
+
+;;; Variables
 
 (defvar evil-state nil
   "The current Evil state.
@@ -193,24 +211,6 @@ They are reused to prevent flicker.")
 (defun evil-version ()
   (interactive)
   (message "Evil version %s" evil-version))
-
-;;; Customizations
-
-(defgroup evil nil
-  "A VIM emulation mode."
-  :group 'emulations)
-
-(defcustom evil-show-paren-range
-  0
-  "The minimal distance between point and a parenthesis which
-causes the parenthesis to be highlighted."
-  :type 'integer
-  :group 'evil)
-
-(defcustom evil-find-skip-newlines nil
-  "If non-nil character find motions t,T,f,F skip over newlines."
-  :type 'boolean
-  :group 'evil)
 
 (provide 'evil-vars)
 
