@@ -15,6 +15,8 @@
     (add-hook 'evil-insert-state-exit-hook
               'evil-cleanup-insert-state))
    (t
+    (when evil-move-cursor-back
+      (unless (bolp) (backward-char)))
     (remove-hook 'evil-insert-state-exit-hook
                  'evil-cleanup-insert-state))))
 
@@ -38,8 +40,7 @@ This handles the repeat-count of the insert command."
               (move-to-column col t)
             (funcall col))
           (dotimes (i (or evil-insert-count 1))
-            (evil-execute-repeat-info evil-insert-repeat-info))))))
-  (unless (bolp) (backward-char)))
+            (evil-execute-repeat-info evil-insert-repeat-info)))))))
 
 (defun evil-insert-newline-above ()
   "Inserts a new line above point and places point in that line

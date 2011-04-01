@@ -5,6 +5,11 @@
   :group 'emulations
   :prefix 'evil-)
 
+(defcustom evil-move-cursor-back t
+  "Whether the cursor is moved backwards when exiting Insert state."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-show-paren-range 0
   "The minimal distance between point and a parenthesis
 which causes the parenthesis to be highlighted."
