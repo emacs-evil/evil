@@ -9,16 +9,13 @@
   :tag " <I> "
   :cursor (bar . 2)
   :message "-- INSERT --"
+  :exit-hook (evil-cleanup-insert-state)
   (cond
    ((evil-insert-state-p)
-    (evil-setup-insert-repeat)
-    (add-hook 'evil-insert-state-exit-hook
-              'evil-cleanup-insert-state))
+    (evil-setup-insert-repeat))
    (t
     (when evil-move-cursor-back
-      (unless (bolp) (backward-char)))
-    (remove-hook 'evil-insert-state-exit-hook
-                 'evil-cleanup-insert-state))))
+      (unless (bolp) (backward-char))))))
 
 (defun evil-cleanup-insert-state ()
   "This function is called when insert-state is about being exited.
