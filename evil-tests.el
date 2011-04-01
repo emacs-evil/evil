@@ -33,14 +33,15 @@ An alternative buffer string can be specified with the
   (let ((text ";; This buffer is for notes you don't want to save, \
 and for Lisp evaluation.\n;; If you want to create a file, visit \
 that file with C-x C-f,\n;; then enter the text in that file's own \
-buffer.\n\nBelow the empty line.") keyword)
+buffer.\n\nBelow the empty line.")
+        arg key)
     (while (keywordp (car-safe body))
-      (setq keyword (pop body))
+      (setq key (pop body)
+            arg (pop body))
       (cond
-       ((eq keyword :text)
-        (setq text (pop body)))
-       (t
-        (pop body))))
+       ((eq key :text)
+        (setq text arg))
+       (t nil)))
     `(let ((kill-ring kill-ring)
            (kill-ring-yank-pointer kill-ring-yank-pointer)
            x-select-enable-clipboard

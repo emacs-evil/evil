@@ -258,18 +258,18 @@ may be specified before the body code:
                            [&rest [keywordp sexp]]
                            def-body))
            (indent defun))
-  (let (func mode keyword local)
+  (let (arg func key local mode)
     (while (keywordp (car-safe body))
-      (setq keyword (pop body))
+      (setq key (pop body)
+            arg (pop body))
       (cond
-       ((eq keyword :mode)
-        (setq mode (pop body)))
-       ((eq keyword :local)
-        (setq local (pop body)))
-       ((eq keyword :func)
-        (setq func (pop body)))
-       (t
-        (pop body)))
+       ((eq key :mode)
+        (setq mode arg))
+       ((eq key :local)
+        (setq local arg))
+       ((eq key :func)
+        (setq func arg))
+       (t nil))
       (setq mode (or mode
                      (intern (replace-regexp-in-string
                               "\\(?:-\\(?:key\\)?map\\)?$" "-mode"
@@ -333,39 +333,43 @@ The basic keymap of this state will then be
                            [&rest [keywordp sexp]]
                            def-body))
            (indent defun))
-  (let ((mode (intern (format "evil-%s-state" state)))
-        (keymap (intern (format "evil-%s-state-map" state)))
-        (local-mode (intern (format "evil-%s-state-local" state)))
-        (local-keymap (intern (format "evil-%s-state-local-map" state)))
-        (aux (intern (format "evil-%s-state-auxiliary-maps" state)))
-        (predicate (intern (format "evil-%s-state-p" state)))
-        (tag (intern (format "evil-%s-state-tag" state)))
-        (message (intern (format "evil-%s-state-message" state)))
-        (cursor (intern (format "evil-%s-state-cursor" state)))
-        (entry-hook (intern (format "evil-%s-state-entry-hook" state)))
-        (exit-hook (intern (format "evil-%s-state-exit-hook" state)))
-        cursor-value enable entry-hook-value exit-hook-value keyword
-        message-value tag-value suppress-keymap)
+  (let* ((mode (intern (format "evil-%s-state" state)))
+         (keymap (intern (format "%s-map" mode)))
+         (local-mode (intern (format "%s-local" mode)))
+         (local-keymap (intern (format "%s-local-map" mode)))
+         (aux (intern (format "%s-auxiliary-maps" mode)))
+         (predicate (intern (format "%s-p" mode)))
+         (tag (intern (format "%s-tag" mode)))
+         (message (intern (format "%s-message" mode)))
+         (cursor (intern (format "%s-cursor" mode)))
+         (entry-hook (intern (format "%s-entry-hook" mode)))
+         (exit-hook (intern (format "%s-exit-hook" mode)))
+         arg cursor-value enable entry-hook-value exit-hook-value
+         key message-value suppress-keymap tag-value)
     ;; collect keywords
     (while (keywordp (car-safe body))
-      (setq keyword (pop body))
+      (setq key (pop body)
+            arg (pop body))
       (cond
-       ((eq keyword :tag)
-        (setq tag-value (pop body)))
-       ((eq keyword :message)
-        (setq message-value (pop body)))
-       ((eq keyword :cursor)
-        (setq cursor-value (pop body)))
-       ((eq keyword :entry-hook)
-        (setq entry-hook-value (pop body)))
-       ((eq keyword :exit-hook)
-        (setq exit-hook-value (pop body)))
-       ((eq keyword :enable)
-        (setq enable (pop body)))
-       ((eq keyword :suppress-keymap)
-        (setq suppress-keymap (pop body)))
-       (t
-        (pop body))))
+       ((eq key :tag)
+        (setq tag-value arg))
+       ((eq key :message)
+        (setq message-value arg))
+       ((eq key :cursor)
+        (setq cursor-value arg))
+       ((eq key :entry-hook)
+        (setq entry-hook-value arg)
+        (unless (listp entry-hook-value)
+          (setq entry-hook-value (list entry-hook-value))))
+       ((eq key :exit-hook)
+        (setq exit-hook-value arg)
+        (unless (listp exit-hook-value)
+          (setq exit-hook-value (list entry-hook-value))))
+       ((eq key :enable)
+        (setq enable arg))
+       ((eq key :suppress-keymap)
+        (setq suppress-keymap arg))
+       (t nil)))
 
     ;; macro expansion
     `(progn
@@ -389,10 +393,10 @@ The basic keymap of this state will then be
 May be a cursor type as per `cursor-type', a color string as passed
 to `set-cursor-color', a zero-argument function for changing the
 cursor, or a list of the above.\n\n%s" state doc))
-        :entry-hook (defvar ,entry-hook ,entry-hook-value
+        :entry-hook (defvar ,entry-hook nil
                       ,(format "Hooks to run when entering %s state.\n\n%s"
                                state doc))
-        :exit-hook (defvar ,exit-hook ,exit-hook-value
+        :exit-hook (defvar ,exit-hook nil
                      ,(format "Hooks to run when exiting %s state.\n\n%s"
                               state doc))
         :mode (defvar ,mode nil
@@ -416,6 +420,12 @@ bindings to be activated whenever KEYMAP and %s state are active."
 
        ,@(when suppress-keymap
            `((set-keymap-parent ,keymap evil-suppress-map)))
+
+       (dolist (func ',entry-hook-value)
+         (add-hook ',entry-hook func))
+
+       (dolist (func ',exit-hook-value)
+         (add-hook ',exit-hook func))
 
        (defun ,predicate ()
          ,(format "Whether the current state is %s." state)

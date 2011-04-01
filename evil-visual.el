@@ -55,17 +55,17 @@ the selection is enabled."
   (let* ((name (intern (format "evil-visual-%s" selection)))
          (message (intern (format "%s-message" name)))
          (type selection)
-         string keyword)
+         arg key string)
     ;; collect keywords
     (while (keywordp (car-safe body))
-      (setq keyword (pop body))
+      (setq key (pop body)
+            arg (pop body))
       (cond
-       ((eq keyword :message)
-        (setq string (pop body)))
-       ((eq keyword :type)
-        (setq type (pop body)))
-       (t
-        (pop body))))
+       ((eq key :message)
+        (setq string arg))
+       ((eq key :type)
+        (setq type arg))
+       (t nil)))
     ;; macro expansion
     `(progn
        (add-to-list 'evil-visual-alist (cons ',selection ',name))

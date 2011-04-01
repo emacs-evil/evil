@@ -286,22 +286,22 @@ be transformations on buffer positions, like :expand and :contract."
                            [&optional stringp]
                            [&rest [keywordp function-form]]))
            (indent defun))
-  (let (args defun-forms func keyword name plist string sym)
+  (let (args defun-forms func key name plist string sym)
     (while (keywordp (car-safe body))
-      (setq keyword (pop body)
+      (setq key (pop body)
             func (pop body)
             sym (intern (replace-regexp-in-string
-                         "^:" "" (symbol-name keyword)))
+                         "^:" "" (symbol-name key)))
             name (intern (format "evil-%s-%s" type sym))
             args (car (cdr-safe func))
             string (car (cdr (cdr-safe func)))
             string (if (stringp string)
                        (format "%s\n\n" string) "")
-            plist (plist-put plist keyword `',name))
+            plist (plist-put plist key `',name))
       (add-to-list
        'defun-forms
        (cond
-        ((eq keyword :string)
+        ((eq key :string)
          `(defun ,name (beg end &rest properties)
             ,(format "Return size of %s from BEG to END \
 with PROPERTIES.\n\n%s%s" type string doc)
@@ -336,11 +336,11 @@ with PROPERTIES.\n\n%s%s" sym type string doc)
                   (when (markerp end)
                     (setq end (marker-position end)))
                   (evil-sort beg end)
-                  (when (memq ,keyword '(:expand :contract))
+                  (when (memq ,key '(:expand :contract))
                     (setq properties
                           (plist-put properties
                                      :expanded
-                                     ,(eq keyword :expand))))
+                                     ,(eq key :expand))))
                   (setq range (or (apply ',func beg end
                                          (when ,(> (length args) 2)
                                            properties))
