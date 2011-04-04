@@ -16,24 +16,6 @@
       '(called-interactively-p)
     '(called-interactively-p 'any)))
 
-;; `read-key' is introduced in Emacs 23.2
-(defun evil-read-key ()
-  "Read a key from the keyboard.
-Translates it according to the input method."
-  (let ((old-global-map (current-global-map))
-        (new-global-map (make-sparse-keymap))
-        (overriding-terminal-local-map (make-sparse-keymap))
-        overriding-local-map)
-    (unwind-protect
-        (progn
-          (define-key new-global-map [menu-bar]
-            (lookup-key global-map [menu-bar]))
-          (define-key new-global-map [tool-bar]
-            (lookup-key global-map [tool-bar]))
-          (use-global-map new-global-map)
-          (aref (read-key-sequence nil nil t) 0))
-      (use-global-map old-global-map))))
-
 (provide 'evil-compatibility)
 
 ;;; evil-compatibility.el ends here

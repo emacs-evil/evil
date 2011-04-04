@@ -114,6 +114,9 @@ command.")
 (defvar evil-repeating-command nil
   "This variable is non-nil if a command is currently being repeated.")
 
+(defvar evil-normal-repeat-info nil
+  "Repeat information accumulated during normal mode.")
+
 (defvar evil-insert-repeat-info nil
   "Repeat information accumulated during insert mode.")
 
@@ -128,6 +131,11 @@ ignored.")
   "The position of point at the beginning of an change-tracking
   editing command.")
 (make-variable-buffer-local 'evil-insert-repeat-point)
+
+(defvar evil-insert-repeat-changes nil
+  "Accumulated buffer changes for changed based commands in
+  insert-state.")
+(make-variable-buffer-local 'evil-insert-repeat-changes)
 
 (defvar evil-insert-repeat-types (make-hash-table :test 'eq)
   "The hash-table to hold the insert repeat type for each

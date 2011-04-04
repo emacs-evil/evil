@@ -2385,6 +2385,14 @@ if no previous selection")
                         '((a . b)) '((a . c)))
                        '((a . b))))))
 
+(ert-deftest evil-test-read-key ()
+  "Test `evil-read-key'"
+  :tags '(evil)
+  (let ((unread-command-events '(?A)))
+    (ert-info ("Prevent downcasing in `this-command-keys'")
+      (should (eq (evil-read-key) ?A))
+      (should (equal (this-command-keys) "A")))))
+
 (ert-deftest evil-test-extract-count ()
   "Test `evil-extract-count'"
   :tags '(evil)

@@ -4,6 +4,7 @@
 (require 'evil-common)
 (require 'evil-states)
 (require 'evil-operators)
+(require 'evil-repeat)
 
 (evil-define-state replace
   "Replace state."
@@ -47,14 +48,12 @@
   :motion evil-forward-char
   (interactive (list (evil-save-cursor
                        (evil-set-cursor evil-replace-state-cursor)
-                       ;; TODO: this doesn't handle special input
-                       ;; methods such as "C-x 8 ."
-                       (read-char))))
+                       (evil-read-key))))
   (let ((opoint (point))) ; `save-excursion' doesn't work reliably
-    (goto-char beg)
     (unwind-protect
         (if (eq type 'block)
             (evil-apply-on-block 'evil-replace beg end nil char)
+          (goto-char beg)
           (while (< (point) end)
             (if (eq (char-after) ?\n)
                 (forward-char)

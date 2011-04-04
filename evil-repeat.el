@@ -69,7 +69,11 @@ repeated by tracking the buffer changed."
 (defun evil-normal-pre-repeat ()
   "Called from `pre-command-hook' in vi-state. Initializes
 recording of repeat-information for the current command."
-  (setq evil-command-modified-buffer nil))
+  ;; prefix arguments always preceed the actual commands and they are
+  ;; part of the key sequence of the actual command, therefore they
+  ;; can be safely ignored
+  (setq evil-command-modified-buffer nil
+        evil-normal-repeat-info nil))
 
 (defun evil-normal-change-repeat (beg end len)
   "Called from `after-change-functions' in vi-state. Records that
@@ -84,8 +88,15 @@ recording of repeat-information and eventually stores it in the
 global variable `evil-repeat-info-ring' if the command is repeatable."
   (when (and (functionp this-command)
              (evil-repeat-normal-command-p))
-    (evil-add-repeat-info
-     (evil-normalize-repeat-info (list (this-command-keys))))))
+    (unless (memq this-command '(digit-argument
+                                 negative-argument
+                                 universal-argument
+                                 universal-argument-minus
+                                 universal-argument-other-key))
+      (evil-add-repeat-info
+       (evil-normalize-repeat-info (reverse (cons
+                                             (this-command-keys)
+                                             evil-normal-repeat-info)))))))
 
 (defun evil-setup-normal-repeat ()
   "Initializes recording of repeat-information in vi-state."
@@ -108,37 +119,42 @@ global variable `evil-repeat-info-ring' if the command is repeatable."
     (setq evil-insert-repeat-type
           (evil-insert-repeat-type this-command))
     (when (eq evil-insert-repeat-type 'change)
-      (setq evil-insert-repeat-point (point))
-      (push nil evil-insert-repeat-info))))
+      (setq evil-insert-repeat-point (point)
+            evil-insert-repeat-changes nil))))
 
 (defun evil-insert-change-repeat (beg end len)
   "Called from `after-change-functions' in insert mode. When the
 current command should be repeated by change the change
 information is recorded."
   (when (eq evil-insert-repeat-type 'change)
-    (setcar evil-insert-repeat-info
-            (cons (list (- beg evil-insert-repeat-point)
-                        (buffer-substring beg end)
-                        len)
-                  (car evil-insert-repeat-info)))))
+    (push (list (- beg evil-insert-repeat-point)
+                (buffer-substring beg end)
+                len)
+          evil-insert-repeat-changes)))
 
 (defun evil-insert-post-repeat ()
   "Called from `post-command-hook' in insert-state. Finishes
 recording of repeat-information and appends it to the global
 variable `evil-insert-repeat-info'."
   (when (functionp this-command)
-    ;; we ignore keyboard-macros
-    (if (eq evil-insert-repeat-info 'startup)
-        ;; the is the command that started insert-mode
-        (setq evil-insert-repeat-info (list (this-command-keys)))
+    (unless (memq this-command '(digit-argument
+                                 negative-argument
+                                 universal-argument
+                                 universal-argument-minus
+                                 universal-argument-other-key))
       (cond
+       ;; This is the command that enabled insert state.
+       ((eq evil-insert-repeat-info 'startup)
+        (push (this-command-keys) evil-normal-repeat-info)
+        (setq evil-insert-repeat-info nil))
+       ;; Check if the command is change-based
        ((eq evil-insert-repeat-type 'change)
-        (setcar evil-insert-repeat-info
-                (list #'evil-execute-change
-                      (reverse (car evil-insert-repeat-info))
-                      (- (point) evil-insert-repeat-point))))
-       ((not evil-insert-repeat-type)
-        ;; track key-sequence
+        (push (list #'evil-execute-change
+                    (reverse evil-insert-repeat-changes)
+                    (- (point) evil-insert-repeat-point))
+              evil-insert-repeat-info))
+       ;; Usual command, record by key-sequence
+       (t
         (push (this-command-keys) evil-insert-repeat-info))))))
 
 (defun evil-setup-insert-repeat ()
@@ -162,18 +178,14 @@ insert-mode."
   (remove-hook 'post-command-hook 'evil-insert-post-repeat t)
   ;; do not forget to add the command that finished insert-mode, usually
   ;; [escape]
-  (setq evil-insert-repeat-info (nreverse evil-insert-repeat-info))
-  ;; remove the command that started insert-mode from
-  ;; `evil-insert-repeat-info', so this variable will contain
-  ;; *exactly* the commands executed during insertion
-  (let ((startup (pop evil-insert-repeat-info)))
-    (setq evil-insert-repeat-info
-          (evil-normalize-repeat-info evil-insert-repeat-info))
-    (ring-insert evil-repeat-info-ring
-                 (evil-normalize-repeat-info
-                  (append (list startup)
-                          evil-insert-repeat-info
-                          (list (this-command-keys)))))))
+  (setq evil-insert-repeat-info
+        (evil-normalize-repeat-info
+         (nreverse evil-insert-repeat-info)))
+  (ring-insert evil-repeat-info-ring
+               (evil-normalize-repeat-info
+                (append (reverse evil-normal-repeat-info)
+                        evil-insert-repeat-info
+                        (list (this-command-keys))))))
 
 (defun evil-normalize-repeat-info (repeat-info)
   "Concatenates consecutive arrays in the repeat-info to a single
@@ -300,6 +312,28 @@ is negative this is a more recent kill."
   "Same as `evil-repeat-pop' with negative COUNT."
   (interactive "p")
   (evil-repeat-pop (- count)))
+
+
+;; `read-key' is introduced in Emacs 23.2
+(defun evil-read-key (&optional prompt)
+  "Read a key from the keyboard.
+Translates it according to the input method."
+  (let ((old-global-map (current-global-map))
+        (new-global-map (make-sparse-keymap))
+        (overriding-terminal-local-map (make-sparse-keymap))
+        overriding-local-map)
+    (unwind-protect
+        (progn
+          (define-key new-global-map [menu-bar]
+            (lookup-key global-map [menu-bar]))
+          (define-key new-global-map [tool-bar]
+            (lookup-key global-map [tool-bar]))
+          (add-to-list 'new-global-map
+                       (make-char-table 'display-table 'self-insert-command) t)
+          (use-global-map new-global-map)
+          (push (this-command-keys) evil-normal-repeat-info)
+          (aref (read-key-sequence prompt nil t) 0))
+      (use-global-map old-global-map))))
 
 (provide 'evil-repeat)
 
