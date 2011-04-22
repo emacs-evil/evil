@@ -564,7 +564,11 @@ They are stored as a plist in the COMMAND symbol's
 (when (fboundp 'font-lock-add-keywords)
   (font-lock-add-keywords
    'emacs-lisp-mode
-   '(("(\\(evil-define-[-[:word:]]+\\)\\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
+   ;; Match all `evil-define-' forms except `evil-define-key'.
+   ;; In the interests of speed, this expression is incomplete
+   ;; and will not match all three-letter words.
+   '(("(\\(evil-define-\\(?:[^ k][^ e][^ y]\\|[-[:word:]]\\{4,\\}\\)\\)\
+\\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
       (1 font-lock-keyword-face)
       (2 font-lock-function-name-face nil t))
      ("(\\(evil-\\(?:with\\|save\\)-[-[:word:]]+\\)\\>"
