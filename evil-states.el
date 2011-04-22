@@ -101,6 +101,14 @@ current buffer only.")
   "Whether SYM is the name of a state."
   (assq sym evil-states-alist))
 
+(defun evil-change-state (state)
+  "Change state to STATE.
+Disable all states if nil."
+  (let ((func (evil-state-property (or state evil-state) :mode)))
+    (when (and (functionp func)
+               (not (eq state evil-state)))
+      (funcall func (if state 1 -1)))))
+
 (defun evil-state-modes (state &rest excluded)
   "Return an ordered list of minor modes activated by STATE."
   (let* ((state (or state evil-state))
@@ -130,15 +138,6 @@ current buffer only.")
        (t
         (add-to-list 'result entry t 'eq))))))
 
-(defun evil-state-auxiliary-modes (state)
-  "Return an ordered list of auxiliary minor modes for STATE."
-  (let* ((state (or state evil-state))
-         (alist (symbol-value (evil-state-property state :aux)))
-         mode result)
-    (dolist (map (current-active-maps) result)
-      (when (setq mode (evil-keymap-mode (cdr (assq map alist))))
-        (add-to-list 'result mode t 'eq)))))
-
 (defun evil-normalize-keymaps (&optional state)
   "Create a buffer-local value for `evil-mode-map-alist'.
 Its order reflects the state in the current buffer."
@@ -147,9 +146,7 @@ Its order reflects the state in the current buffer."
                 (mapcar 'cdr (evil-state-property nil :mode))
                 (mapcar 'cdr (evil-state-property nil :local-mode))))
         alist)
-    ;; update references to global keymaps
     (evil-refresh-global-maps)
-    ;; update references to buffer-local keymaps
     (evil-refresh-local-maps)
     ;; disable all modes
     (dolist (mode (mapcar 'car (append evil-mode-map-alist
@@ -169,7 +166,7 @@ Its order reflects the state in the current buffer."
           (funcall mode 1))
         (set mode t)
         (evil-add-to-alist 'alist mode (evil-mode-keymap mode)))
-      ;; move the enabled modes to the front of the list
+      ;; move the enabled modes to the front of `evil-mode-map-alist'
       (setq evil-mode-map-alist
             (evil-concat-alists
              alist evil-mode-map-alist)))))
@@ -232,13 +229,61 @@ See also `evil-keymap-mode'."
                   (cdr (assq mode minor-mode-map-alist)))))
     (if variable var map)))
 
-(defun evil-change-state (state)
-  "Change state to STATE.
-Disable all states if nil."
-  (let ((func (evil-state-property (or state evil-state) :mode)))
-    (when (and (functionp func)
-               (not (eq state evil-state)))
-      (funcall func (if state 1 -1)))))
+(defun evil-state-auxiliary-modes (state)
+  "Return an ordered list of auxiliary minor modes for STATE."
+  (let* ((state (or state evil-state))
+         (alist (symbol-value (evil-state-property state :aux)))
+         mode result)
+    (dolist (map (current-active-maps) result)
+      (when (setq mode (evil-keymap-mode (cdr (assq map alist))))
+        (add-to-list 'result mode t 'eq)))))
+
+(defun evil-set-auxiliary-map (map aux state)
+  "Set the auxiliary keymap for MAP to AUX in STATE."
+  (let ((alist (evil-state-property state :aux)))
+    (set alist (assq-delete-all map (symbol-value alist)))
+    (add-to-list alist (cons map aux) t)))
+
+(defun evil-get-auxiliary-map (map state)
+  "Get the auxiliary keymap for MAP in STATE."
+  (let ((alist (evil-state-property state :aux)))
+    (cdr-safe (assq map (symbol-value alist)))))
+
+;; Although this mimicks the function `define-key', it is defined as a
+;; macro. This is so that we can get hold of the keymap name, which is
+;; used as a basis for the name of the auxiliary keymap. Otherwise, we
+;; would've had to come up with some automatic naming scheme
+;; (e.g., auxiliary-keymap-1, auxiliary-keymap-2, ...).
+(defmacro evil-define-key (state keymap key def)
+  "Create a STATE binding from KEY to DEF for KEYMAP.
+The syntax is equivalent to that of `define-key'. For example:
+
+    (evil-define-key 'normal text-mode-map \"a\" 'foo)
+
+This will create a binding from \"a\" to `foo' in Normal state,
+which will be active whenever `text-mode-map' is active."
+  (declare (indent defun))
+  (let* ((state (eval state))
+         (aux (intern (format "evil-%s-state-auxiliary-%s"
+                              state keymap)))
+         (doc (format "Auxiliary keymap for `%s' in %s state."
+                      keymap state)))
+    `(progn
+       (unless (evil-get-auxiliary-map ,keymap ',state)
+         (evil-set-auxiliary-map
+          ,keymap (symbol-value (evil-define-keymap ,aux ,doc)) ',state))
+       (define-key (evil-get-auxiliary-map ,keymap ',state) ,key ,def))))
+
+;; these may be useful for programmatic purposes
+(defun evil-global-set-key (state key def)
+  "Bind KEY to DEF in STATE."
+  (define-key (symbol-value (evil-state-property state :keymap))
+    key def))
+
+(defun evil-local-set-key (state key def)
+  "Bind KEY to DEF in STATE in the current buffer."
+  (define-key (symbol-value (evil-state-property state :local-keymap))
+    key def))
 
 (defmacro evil-define-keymap (keymap doc &rest body)
   "Define a keymap KEYMAP listed in `evil-mode-map-alist'.
@@ -268,27 +313,29 @@ may be specified before the body code:
        ((eq key :local)
         (setq local arg))
        ((eq key :func)
-        (setq func arg))
-       (t nil))
-      (setq mode (or mode
-                     (intern (replace-regexp-in-string
-                              "\\(?:-\\(?:key\\)?map\\)?$" "-mode"
-                              (symbol-name keymap))))))
+        (setq func arg))))
+    (setq mode (or mode
+                   (intern (replace-regexp-in-string
+                            "\\(?:-\\(?:mode-\\)?\\(?:key\\)?map\\)?$"
+                            "-mode"
+                            (symbol-name keymap)))))
     `(progn
-       (defvar ,keymap nil)
+       (defvar ,keymap ,(unless local '(make-sparse-keymap)))
        (unless (get ',keymap 'variable-documentation)
          (put ',keymap 'variable-documentation ,doc))
        (defvar ,mode nil)
        (unless (get ',mode 'variable-documentation)
          (put ',mode 'variable-documentation ,doc))
        (make-variable-buffer-local ',mode)
-       (evil-refresh-global-maps)
        ,@(if local
              `((make-variable-buffer-local ',keymap)
                (evil-add-to-alist 'evil-local-keymaps-alist
                                   ',mode ',keymap))
            `((evil-add-to-alist 'evil-global-keymaps-alist
-                                ',mode ',keymap)))
+                                ',mode ',keymap)
+             (evil-add-to-alist 'evil-mode-map-alist
+                                ',mode ,keymap)))
+       (evil-refresh-global-maps)
        ,(when (or body func)
           `(defun ,mode (&optional arg)
              ,@(when doc `(,doc))
