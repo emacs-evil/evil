@@ -559,6 +559,15 @@ They are stored as a plist in the COMMAND symbol's
                up-list))
   (evil-set-command-properties cmd :keep-visual t))
 
+;;; Macro helpers
+
+(eval-and-compile
+  (defun evil-unquote (exp)
+    "Return EXP unquoted."
+    (if (eq (car-safe exp) 'quote)
+        (cadr exp)
+      exp)))
+
 ;;; Highlighting
 
 (when (fboundp 'font-lock-add-keywords)
