@@ -250,8 +250,7 @@ unchanged test-buffer in Normal state."
       (should-not (symbol-value (evil-state-property state :local-mode)))
       (should-not (memq (symbol-value (evil-state-property state :local-keymap))
                         (current-active-maps)))
-      (dolist (map (mapcar 'evil-mode-keymap
-                           (evil-state-auxiliary-modes state)))
+      (dolist (map (evil-state-auxiliary-keymaps state))
         (should-not (memq map (current-active-maps)))))))
 
 (ert-deftest evil-test-toggle-local-mode ()
@@ -291,7 +290,7 @@ unchanged test-buffer in Normal state."
 
 (defun evil-test-state-keymaps (state)
   "Verify that STATE's keymaps are pushed to the top"
-  (let ((actual (mapcar 'evil-mode-keymap (evil-state-modes state)))
+  (let ((actual (evil-state-keymaps state))
         (expected (list (symbol-value (evil-state-property
                                        state :local-keymap))
                         (symbol-value (evil-state-property
@@ -385,8 +384,8 @@ of `self-insert-command' from Normal state"
     (ert-info ("Activate `evil-operator-shortcut-map' in
 Operator-Pending state")
       (evil-test-change-state 'operator)
-      (should (memq 'evil-operator-shortcut-mode
-                    (evil-state-modes 'operator)))
+      (should (memq evil-operator-shortcut-map
+                    (evil-state-keymaps 'operator)))
       (should (keymapp evil-operator-shortcut-map))
       (should evil-operator-shortcut-mode))
     (should (memq evil-operator-shortcut-map
@@ -413,6 +412,20 @@ when exiting Operator-Pending state")
       (evil-test-change-state 'emacs)
       (should-not (eq (lookup-key evil-operator-shortcut-map "b")
                       'bar)))))
+
+(ert-deftest evil-test-auxiliary-maps ()
+  "Test auxiliary keymaps."
+  :tags '(evil)
+  (let ((map (make-sparse-keymap)) aux)
+    (ert-info ("Create a new auxiliary keymap")
+      (evil-define-key 'normal map "f" 'foo)
+      (setq aux (evil-get-auxiliary-keymap map 'normal))
+      (should (evil-auxiliary-keymap-p aux))
+      (should (eq (lookup-key aux "f") 'foo)))
+    (ert-info ("Add to auxiliary keymap")
+      (evil-define-key 'normal map "b" 'bar)
+      (should (eq (lookup-key aux "f") 'foo))
+      (should (eq (lookup-key aux "b") 'bar)))))
 
 ;;; Type system
 

@@ -313,7 +313,6 @@ is negative this is a more recent kill."
   (interactive "p")
   (evil-repeat-pop (- count)))
 
-
 ;; `read-key' is introduced in Emacs 23.2
 (defun evil-read-key (&optional prompt)
   "Read a key from the keyboard.
