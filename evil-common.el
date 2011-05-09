@@ -25,10 +25,20 @@ otherwise add at the end of the list."
         (apply 'evil-add-to-alist list-var elements)
       (symbol-value list-var))))
 
+(defun evil-filter-list (list predicate &optional pointer)
+  "Filter LIST for entries matching PREDICATE, until POINTER.
+Returns a new list."
+  (let ((rest list) elt result)
+    (while (and rest (not (eq rest pointer)))
+      (setq elt  (car rest)
+            rest (cdr rest))
+      (unless (funcall predicate elt)
+        (setq result (append result (list elt)))))
+    (append result rest)))
+
 (defun evil-concat-lists (&rest sequences)
   "Concatenate lists, removing duplicates.
 The first occurrence is retained.
-
 To concatenate association lists, see `evil-concat-alists'."
   (let ((first (pop sequences))
         (tail (copy-sequence (pop sequences)))
@@ -50,7 +60,6 @@ To concatenate association lists, see `evil-concat-alists'."
 (defun evil-concat-alists (&rest sequences)
   "Concatenate association lists, removing duplicates.
 The first association is retained.
-
 To concatenate regular lists, see `evil-concat-lists'."
   (let ((first (pop sequences))
         (tail (copy-sequence (pop sequences)))

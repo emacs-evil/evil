@@ -3,6 +3,7 @@
 (require 'evil-states)
 (require 'evil-repeat)
 (require 'evil-motions)
+(require 'evil-undo)
 
 (evil-define-state insert
   "Insert state."
@@ -12,14 +13,18 @@
   :exit-hook (evil-cleanup-insert-state)
   (cond
    ((evil-insert-state-p)
-    (evil-setup-insert-repeat))
+    (evil-setup-insert-repeat)
+    (unless evil-want-fine-undo
+      (evil-start-undo-step)))
    (t
+    (unless evil-want-fine-undo
+      (evil-end-undo-step))
     (when evil-move-cursor-back
       (unless (bolp) (backward-char))))))
 
 (defun evil-cleanup-insert-state ()
-  "This function is called when insert-state is about being exited.
-This handles the repeat-count of the insert command."
+  "Called when Insert state is about to be exited.
+Handles the repeat-count of the insertion command."
   (evil-teardown-insert-repeat)
   (dotimes (i (1- evil-insert-count))
     (when evil-insert-lines

@@ -21,6 +21,11 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-want-fine-undo nil
+  "Whether commands like \"cw\" are undone in several steps."
+  :type 'boolean
+  :group 'evil)
+
 ;;; Variables
 
 (defvar evil-state nil
@@ -217,6 +222,10 @@ They are reused to prevent flicker.")
 (defvar evil-visual-region-expanded nil
   "Whether the region matches the Visual selection.")
 (make-variable-buffer-local 'evil-visual-region-expanded)
+
+(defvar evil-undo-list-pointer nil
+  "Everything up to this mark is united in the undo-list.")
+(make-variable-buffer-local 'evil-undo-list-pointer)
 
 (defconst evil-version "0.1"
   "The current version of Evil")

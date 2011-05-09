@@ -193,6 +193,13 @@ TARGET the command to call."
 (define-key evil-normal-state-map (kbd "C-w v") 'split-window-horizontally)
 (define-key evil-normal-state-map (kbd "C-w C-v") (kbd "C-w v"))
 
+;; Undo
+(define-key evil-normal-state-map "u" 'undo)
+
+(when (fboundp 'undo-tree-undo)
+  (define-key evil-normal-state-map "u" 'undo-tree-undo)
+  (define-key evil-normal-state-map "\C-r" 'undo-tree-redo))
+
 (provide 'evil-maps)
 
 ;;; evil-maps.el ends here
