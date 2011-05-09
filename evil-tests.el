@@ -243,10 +243,10 @@ unchanged test-buffer in Normal state."
     (should-not evil-state))
   (ert-info ("Disable all state keymaps")
     (dolist (state (mapcar 'car evil-states-alist) t)
-      (should-not (symbol-value (evil-state-property state :mode)))
+      (should-not (symbol-value (evil-state-property state :toggle)))
       (should-not (memq (symbol-value (evil-state-property state :keymap))
                         (current-active-maps)))
-      (should-not (symbol-value (evil-state-property state :local-mode)))
+      (should-not (symbol-value (evil-state-property state :local)))
       (should-not (memq (symbol-value (evil-state-property state :local-keymap))
                         (current-active-maps)))
       (dolist (map (evil-state-auxiliary-keymaps state))
@@ -267,10 +267,10 @@ unchanged test-buffer in Normal state."
   "Change state to STATE and check keymaps"
   (let (mode keymap local-mode local-keymap tag)
     (evil-change-state state)
-    (setq mode (evil-state-property state :mode)
+    (setq mode (evil-state-property state :toggle)
           keymap (symbol-value (evil-state-property
                                 state :keymap))
-          local-mode (evil-state-property state :local-mode)
+          local-mode (evil-state-property state :local)
           local-keymap (symbol-value (evil-state-property
                                       state :local-keymap))
           tag (symbol-value (evil-state-property

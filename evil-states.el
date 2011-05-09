@@ -104,7 +104,7 @@ current buffer only.")
 (defun evil-change-state (state)
   "Change state to STATE.
 Disable all states if nil."
-  (let ((func (evil-state-property (or state evil-state) :mode)))
+  (let ((func (evil-state-property (or state evil-state) :toggle)))
     (when (and (functionp func)
                (not (eq state evil-state)))
       (funcall func (if state 1 -1)))))
@@ -148,9 +148,9 @@ Skip states listed in EXCLUDED."
   "Create a buffer-local value for `evil-mode-map-alist'.
 Its order reflects the state in the current buffer."
   (let ((state (or state evil-state))
-        (modes (evil-concat-lists
-                (mapcar 'cdr (evil-state-property nil :mode))
-                (mapcar 'cdr (evil-state-property nil :local-mode))))
+        (states (evil-concat-lists
+                 (mapcar 'cdr (evil-state-property nil :toggle))
+                 (mapcar 'cdr (evil-state-property nil :local))))
         alist mode)
     (evil-refresh-global-keymaps)
     (evil-refresh-local-keymaps)
@@ -160,7 +160,7 @@ Its order reflects the state in the current buffer."
       ;; modes not defined by a state are disabled
       ;; with their toggle function (if any)
       (when (and (fboundp mode)
-                 (not (memq mode modes)))
+                 (not (memq mode states)))
         (funcall mode -1))
       (set mode nil))
     ;; enable modes for current state
@@ -171,7 +171,7 @@ Its order reflects the state in the current buffer."
           (when (setq mode (evil-keymap-mode map))
             ;; enable non-state modes
             (when (and (fboundp mode)
-                       (not (memq mode modes)))
+                       (not (memq mode states)))
               (funcall mode 1))
             (set mode t)
             ;; refresh the keymap in case it has changed
@@ -361,7 +361,7 @@ may be specified before the body code:
        ',keymap)))
 
 (defmacro evil-define-state (state doc &rest body)
-  "Define a Evil state STATE.
+  "Define an Evil state STATE.
 DOC is a general description and shows up in all docstrings.
 Then follows one or more optional keywords:
 
@@ -372,9 +372,9 @@ Then follows one or more optional keywords:
 :exit-hook LIST         Hooks run when changing from STATE.
 :enable LIST            List of other states and modes enabled by STATE.
 :suppress-keymap FLAG   If FLAG is non-nil, makes
-                        evil-suppress-map the parent of the
-                        global map of STATE effectively disabling
-                        bindings to self-insert-command.
+                        `evil-suppress-map' the parent of the
+                        global map of STATE, effectively disabling
+                        bindings to `self-insert-command'.
 
 Following the keywords is optional code to be executed each time
 the state is enabled or disabled.
@@ -392,17 +392,17 @@ The basic keymap of this state will then be
                            [&rest [keywordp sexp]]
                            def-body))
            (indent defun))
-  (let* ((mode (intern (format "evil-%s-state" state)))
-         (keymap (intern (format "%s-map" mode)))
-         (local-mode (intern (format "%s-local" mode)))
-         (local-keymap (intern (format "%s-local-map" mode)))
-         (aux (intern (format "%s-auxiliary-maps" mode)))
-         (predicate (intern (format "%s-p" mode)))
-         (tag (intern (format "%s-tag" mode)))
-         (message (intern (format "%s-message" mode)))
-         (cursor (intern (format "%s-cursor" mode)))
-         (entry-hook (intern (format "%s-entry-hook" mode)))
-         (exit-hook (intern (format "%s-exit-hook" mode)))
+  (let* ((toggle (intern (format "evil-%s-state" state)))
+         (keymap (intern (format "%s-map" toggle)))
+         (local (intern (format "%s-local" toggle)))
+         (local-keymap (intern (format "%s-local-map" toggle)))
+         (tag (intern (format "%s-tag" toggle)))
+         (message (intern (format "%s-message" toggle)))
+         (cursor (intern (format "%s-cursor" toggle)))
+         (entry-hook (intern (format "%s-entry-hook" toggle)))
+         (exit-hook (intern (format "%s-exit-hook" toggle)))
+         (modes (intern (format "%s-modes" toggle)))
+         (predicate (intern (format "%s-p" toggle)))
          arg cursor-value enable entry-hook-value exit-hook-value
          key message-value suppress-keymap tag-value)
     ;; collect keywords
@@ -441,6 +441,17 @@ The basic keymap of this state will then be
        ;; states whose definitions may not have been processed yet.
        (evil-put-property
         'evil-states-alist ',state
+        :toggle (defvar ,toggle nil
+                  ,(format "Non-nil if %s state is enabled.
+Use the command `%s' to change this variable.\n\n%s" state toggle doc))
+        :keymap (defvar ,keymap (make-sparse-keymap)
+                  ,(format "Keymap for %s state.\n\n%s" state doc))
+        :local (defvar ,local nil
+                 ,(format "Non-nil if %s state is enabled.
+Use the command `%s' to change this variable.\n\n%s" state toggle doc))
+        :local-keymap (defvar ,local-keymap nil
+                        ,(format "Buffer-local keymap for %s state.\n\n%s"
+                                 state doc))
         :tag (defvar ,tag ,tag-value
                ,(format "Modeline tag for %s state.\n\n%s" state doc))
         :message (defvar ,message ,message-value
@@ -457,22 +468,8 @@ cursor, or a list of the above.\n\n%s" state doc))
         :exit-hook (defvar ,exit-hook nil
                      ,(format "Hooks to run when exiting %s state.\n\n%s"
                               state doc))
-        :mode (defvar ,mode nil
-                ,(format "Non-nil if %s state is enabled.
-Use the command `%s' to change this variable.\n\n%s" state mode doc))
-        :keymap (defvar ,keymap (make-sparse-keymap)
-                  ,(format "Keymap for %s state.\n\n%s" state doc))
-        :local-mode (defvar ,local-mode nil
-                      ,(format "Non-nil if %s state is enabled.
-Use the command `%s' to change this variable.\n\n%s" state mode doc))
-        :local-keymap (defvar ,local-keymap nil
-                        ,(format "Buffer-local keymap for %s state.\n\n%s"
-                                 state doc))
-        :aux (defvar ,aux nil
-               ,(format "Association list of auxiliary keymaps for %s state.
-Elements have the form (KEYMAP . AUX-MAP), where AUX-MAP contains state
-bindings to be activated whenever KEYMAP and %s state are active."
-                        state state))
+        :modes (defvar ,modes nil
+                 ,(format "Modes that require %s state." state))
         :predicate ',predicate
         :enable ',enable)
 
@@ -490,7 +487,7 @@ bindings to be activated whenever KEYMAP and %s state are active."
          (eq evil-state ',state))
 
        ;; define state function
-       (defun ,mode (&optional arg)
+       (defun ,toggle (&optional arg)
          ,(format "Enable %s state. Disable with negative ARG.\n\n%s"
                   state doc)
          (interactive "p")
@@ -520,14 +517,14 @@ bindings to be activated whenever KEYMAP and %s state are active."
                        (funcall ,message)
                      (evil-echo ,message))))
              (setq evil-state ',state)))))
-       (evil-set-command-properties ',mode :keep-visual t)
-
-       (evil-define-keymap ,local-keymap nil
-         :mode ,local-mode
-         :local t)
+       (evil-set-command-properties ',toggle :keep-visual t)
 
        (evil-define-keymap ,keymap nil
-         :mode ,mode)
+         :mode ,toggle)
+
+       (evil-define-keymap ,local-keymap nil
+         :mode ,local
+         :local t)
 
        ',state)))
 
