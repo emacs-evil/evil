@@ -71,7 +71,7 @@ To enable Evil globally, do (evil-mode 1)."
                     global-mode-string)))
     (ad-enable-advice 'show-paren-function 'around 'evil-show-paren-function)
     (ad-activate 'show-paren-function)
-    (evil-normal-state))
+    (evil-change-state (evil-buffer-state nil 'normal)))
    (t
     (let (new-global-mode-string)
       (while global-mode-string
@@ -296,6 +296,28 @@ which will be active whenever `text-mode-map' is active."
   "Bind KEY to DEF in STATE in the current buffer."
   (define-key (symbol-value (evil-state-property state :local-keymap))
     key def))
+
+(defun evil-mode-state (mode &optional default)
+  "Return Evil state to use for MODE, or DEFAULT if none."
+  (let (state modes)
+    (or (catch 'loop
+          (dolist (entry (evil-state-property nil :modes))
+            (setq state (car entry)
+                  modes (symbol-value (cdr entry)))
+            (when (memq mode modes)
+              (throw 'loop state))))
+        default)))
+
+(defun evil-buffer-state (&optional buffer default)
+  "Return Evil state to use for BUFFER, or DEFAULT if none."
+  (let (state)
+    (with-current-buffer (or buffer (current-buffer))
+      (or (catch 'loop
+            (dolist (mode (append (mapcar 'car minor-mode-map-alist)
+                                  (list major-mode)))
+              (when (setq state (evil-mode-state mode))
+                (throw 'loop state))))
+          default))))
 
 (defmacro evil-define-keymap (keymap doc &rest body)
   "Define a keymap KEYMAP listed in `evil-mode-map-alist'.
