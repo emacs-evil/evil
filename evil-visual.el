@@ -64,8 +64,7 @@ the selection is enabled."
        ((eq key :message)
         (setq string arg))
        ((eq key :type)
-        (setq type arg))
-       (t nil)))
+        (setq type arg))))
     ;; macro expansion
     `(progn
        (add-to-list 'evil-visual-alist (cons ',selection ',name))

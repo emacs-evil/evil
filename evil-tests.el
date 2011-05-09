@@ -40,8 +40,7 @@ buffer.\n\nBelow the empty line.")
             arg (pop body))
       (cond
        ((eq key :text)
-        (setq text arg))
-       (t nil)))
+        (setq text arg))))
     `(let ((kill-ring kill-ring)
            (kill-ring-yank-pointer kill-ring-yank-pointer)
            x-select-enable-clipboard

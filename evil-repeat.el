@@ -234,9 +234,12 @@ where point should be placed after all changes."
   "Executes a repeat-information `repeat-info'."
   (dolist (rep repeat-info)
     (cond
-     ((arrayp rep) (execute-kbd-macro rep))
-     ((consp rep) (apply (car rep) (cdr rep)))
-     (t (error "Unexpected repeat-info: %S" rep)))))
+     ((arrayp rep)
+      (execute-kbd-macro rep))
+     ((consp rep)
+      (apply (car rep) (cdr rep)))
+     (t
+      (error "Unexpected repeat-info: %S" rep)))))
 
 ;; TODO: currently we prepend the replacing count before the
 ;;       key-sequence that calls the command. Can we use direct

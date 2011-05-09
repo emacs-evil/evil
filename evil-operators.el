@@ -299,10 +299,7 @@ Both COUNT and CMD may be nil."
                  (setq count "-")))
               ;; user pressed C-g, so return nil for CMD
               ((memq cmd '(keyboard-quit undefined))
-               (setq cmd nil))
-              ;; we are done, exit the `while' loop
-              (t
-               nil))))
+               (setq cmd nil)))))
     ;; determine COUNT
     (when (stringp count)
       (if (string= count "-")

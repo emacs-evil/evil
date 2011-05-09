@@ -192,7 +192,8 @@
       (evil-restore-window-tree newwin (cons (car tree) (cddr tree)))))
    ((consp tree)
     (set-window-buffer win (cadr tree)))
-   (t (set-window-buffer win tree))))
+   (t
+    (set-window-buffer win tree))))
 
 ;; TODO: window-split, window-new functions may take an file-argument
 ;; when called from ex-mode

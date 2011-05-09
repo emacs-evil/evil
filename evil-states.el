@@ -124,8 +124,7 @@ Skip states listed in EXCLUDED."
     ;; the keymaps for other states and modes enabled by STATE
     (dolist (entry enable result)
       (cond
-       ((memq entry excluded)
-        nil)
+       ((memq entry excluded))
        ((eq entry state)
         (setq result
               (evil-concat-lists
@@ -428,8 +427,7 @@ The basic keymap of this state will then be
        ((eq key :enable)
         (setq enable arg))
        ((eq key :suppress-keymap)
-        (setq suppress-keymap arg))
-       (t nil)))
+        (setq suppress-keymap arg))))
 
     ;; macro expansion
     `(progn
