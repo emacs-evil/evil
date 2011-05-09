@@ -49,13 +49,6 @@
 (require 'evil-repeat)
 (require 'evil-compatibility)
 
-(defun evil-enable ()
-  "Enable Evil in the current buffer, if appropriate.
-To enable Evil globally, do (evil-mode 1)."
-  ;; TODO: option for enabling vi keys in the minibuffer
-  (unless (minibufferp)
-    (evil-local-mode 1)))
-
 (define-minor-mode evil-local-mode
   "Minor mode for setting up Evil in a single buffer."
   :init-value nil
@@ -71,7 +64,15 @@ To enable Evil globally, do (evil-mode 1)."
                     global-mode-string)))
     (ad-enable-advice 'show-paren-function 'around 'evil-show-paren-function)
     (ad-activate 'show-paren-function)
-    (evil-change-state (evil-buffer-state nil 'normal)))
+    ;; restore the proper value of `major-mode' in Fundamental buffers
+    (when (eq major-mode 'evil-local-mode)
+      (setq major-mode 'fundamental-mode))
+    ;; determine and enable the initial state
+    (evil-initialize-state)
+    ;; re-determine the initial state in `post-command-hook' since the
+    ;; major mode may not be initialized yet, and some modes neglect
+    ;; to run `after-change-major-mode-hook'
+    (add-hook 'post-command-hook 'evil-initialize-state t t))
    (t
     (let (new-global-mode-string)
       (while global-mode-string
@@ -84,8 +85,24 @@ To enable Evil globally, do (evil-mode 1)."
     (ad-activate 'show-paren-function)
     (evil-change-state nil))))
 
+(defun evil-initialize ()
+  "Enable Evil in the current buffer, if appropriate.
+To enable Evil globally, do (evil-mode 1)."
+  ;; TODO: option for enabling vi keys in the minibuffer
+  (unless (minibufferp)
+    (evil-local-mode 1)))
+
 (define-globalized-minor-mode evil-mode
-  evil-local-mode evil-enable)
+  evil-local-mode evil-initialize)
+
+;; to ensure that Fundamental buffers come up in Normal state,
+;; initialize `fundamental-mode' via `evil-local-mode'
+(defadvice evil-mode (after evil activate)
+  "Enable Evil in Fundamental mode."
+  (if evil-mode
+      ;; this is changed back when initializing `evil-local-mode'
+      (setq-default major-mode 'evil-local-mode)
+    (setq-default major-mode 'fundamental-mode)))
 
 (put 'evil-mode 'function-documentation
      "Toggle Evil in all buffers.
@@ -100,6 +117,11 @@ current buffer only.")
 (defun evil-state-p (sym)
   "Whether SYM is the name of a state."
   (assq sym evil-states-alist))
+
+(defun evil-initialize-state (&optional buffer)
+  "Initialize Evil state in BUFFER."
+  (evil-change-state (evil-buffer-state buffer 'normal))
+  (remove-hook 'post-command-hook 'evil-initialize-state t))
 
 (defun evil-change-state (state)
   "Change state to STATE.
@@ -524,7 +546,7 @@ cursor, or a list of the above.\n\n%s" state doc))
              (setq evil-state nil)))
           (t
            (unless evil-local-mode
-             (evil-enable))
+             (evil-initialize))
            (evil-change-state nil)
            (unwind-protect
                (let ((evil-state ',state))
