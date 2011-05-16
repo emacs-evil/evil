@@ -2,6 +2,7 @@
 
 (require 'evil-vars)
 (require 'evil-common)
+(require 'evil-motions)
 
 ;; load undo-tree.el if available
 (unless (featurep 'undo-tree)
@@ -54,6 +55,47 @@ See `evil-start-undo-step'."
   (setq buffer-undo-list
         (evil-filter-list buffer-undo-list 'null
                           evil-undo-list-pointer)))
+
+;;; Undo ring
+
+(defmacro evil-with-undo (&rest body)
+  "Executes the body with enabled undo. If undo is disabled in
+the current buffer, the undo information is stored in
+`evil-temporary-undo' instead of `buffer-undo-list'."
+  (declare (indent defun)
+           (debug t))
+  `(let ((orig-buffer-undo-list t))
+     (let (buffer-undo-list)
+       ,@body
+       (setq evil-temporary-undo (cons nil buffer-undo-list)))
+     (unless (eq buffer-undo-list t)
+       ;; Undo is enabled, so update the global buffer undo list.
+       (setq buffer-undo-list (append evil-temporary-undo buffer-undo-list)
+             evil-temporary-undo nil))))
+
+(defun evil-undo-pop ()
+  "Undos the last buffer change and removes the last undo
+information from `buffer-undo-list'. If undo is disabled in the
+current buffer, use the information of `evil-temporary-undo'
+instead."
+  (let ((paste-undo (list nil)))
+    (let ((undo-list (if (eq buffer-undo-list t)
+                         evil-temporary-undo
+                       buffer-undo-list)))
+      (when (or (not undo-list) (car undo-list))
+        (error "Can't undo previous paste"))
+      (pop undo-list) ;; remove 'nil
+      (while (and undo-list
+                  (car undo-list))
+        (push (pop undo-list) paste-undo))
+      (let ((buffer-undo-list (nreverse paste-undo))
+            (orig-message (symbol-function 'message)))
+        (fset 'message #'(lambda (&rest rest)))
+        (undo)
+        (fset 'message orig-message))
+      (if (eq buffer-undo-list t)
+          (setq evil-temporary-undo nil)
+        (setq buffer-undo-list undo-list)))))
 
 ;;; Undo tree visualizer
 
