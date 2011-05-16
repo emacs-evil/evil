@@ -181,16 +181,14 @@ first line via `move-to-column'."
 KEYS can be a string, a vector, a form, or a list of these.
 See `evil-test-text' for an explanation of the other arguments."
   (declare (indent defun))
-  `(let ((keys ',keys))
-     (when (listp keys)
-       (cond
-        ((and (symbolp (car-safe keys))
-              (fboundp (car-safe keys)))
-         (eval keys)
-         (setq keys nil))
-        (t
-         (setq keys (eval `(vconcat ,@keys))))))
-     (when keys
+  (unless (listp keys)
+    (setq keys (list keys)))
+  `(let ((keys ,(if (and (symbolp (car-safe keys))
+                         (fboundp (car-safe keys)))
+                    keys
+                  (apply 'vconcat (mapcar 'listify-key-sequence
+                                          (mapcar 'eval keys))))))
+     (when (or (vectorp keys) (stringp keys))
        (execute-kbd-macro keys))
      (evil-test-text ,before ,after ,before-predicate ,after-predicate)))
 
@@ -640,7 +638,10 @@ TYPE or TRANSFORM")
   (ert-info ("Single array")
     (should (equal (evil-normalize-repeat-info
                     '("abc"))
-                   '([?a ?b ?c]))))
+                   '([?a ?b ?c])))
+    (should (equal (evil-normalize-repeat-info
+                    '("\M-f"))
+                   (list (kbd "M-f")))))
   (ert-info ("Single symbol")
     (should (equal (evil-normalize-repeat-info
                     '(SYM))
@@ -705,9 +706,9 @@ KEYS is used."
   (evil-test-buffer
     (evil-test-change-state 'normal)
     (ert-info ("Insert text without count")
-      (evil-test-repeat-info (vconcat "iABC" [escape])))
+      (evil-test-repeat-info (vconcat "iABC" (kbd "ESC"))))
     (ert-info ("Insert text with count 42")
-      (evil-test-repeat-info (vconcat "42iABC" [escape])))))
+      (evil-test-repeat-info (vconcat "42iABC" (kbd "ESC"))))))
 
 (ert-deftest evil-test-repeat ()
   "Repeat several editing commands."
@@ -726,7 +727,11 @@ KEYS is used."
 
   (ert-info ("Repeat replace with count replacing original count")
     (evil-test-buffer-edit ("10rX" [right right] "20.")
-      "XXXXXXXXXXfXXXXXXXXXXXXXXXXXXX" "X don't " 'bobp)))
+      "XXXXXXXXXXfXXXXXXXXXXXXXXXXXXX" "X don't " 'bobp))
+
+  (ert-info ("Repeat movement in Insert state")
+    (evil-test-buffer-edit ("wi(\M-f)" (kbd "ESC") "w.")
+      "(buffer" ")")))
 
 (ert-deftest evil-test-cmd-replace-char ()
   "Calling `evil-replace-char' should replace characters."
@@ -743,7 +748,7 @@ KEYS is used."
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
     (should (and (looking-at "This") (looking-back ";; ")))
-    (evil-test-macro ("ievil rulz " [escape])
+    (evil-test-macro ("ievil rulz " (kbd "ESC"))
       ";; evil rulz" " This" 'bobp)))
 
 (ert-deftest evil-test-insert-before-with-count ()
@@ -753,27 +758,27 @@ KEYS is used."
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
     (evil-test-text ";; " "This" 'bobp)
-    (evil-test-macro ("2ievil rulz " [escape])
+    (evil-test-macro ("2ievil rulz " (kbd "ESC"))
       ";; evil rulz evil rulz" " This" 'bobp)))
 
 (ert-deftest evil-test-repeat-insert-before ()
   "Test repeating of insert-before command."
   :tags '(evil)
   (ert-info ("Repeat insert")
-    (evil-test-buffer-edit ("iABC" [escape] "..")
+    (evil-test-buffer-edit ("iABC" (kbd "ESC") "..")
       "ABABAB" "CCC;; This"))
 
   (ert-info ("Repeat insert with count")
-    (evil-test-buffer-edit ("2iABC" [escape] "..")
+    (evil-test-buffer-edit ("2iABC" (kbd "ESC") "..")
       "ABCABABCABABCAB" "CCC;; This"))
 
   (ert-info ("Repeat insert with repeat count")
-    (evil-test-buffer-edit ("iABC" [escape] "11.")
+    (evil-test-buffer-edit ("iABC" (kbd "ESC") "11.")
       "ABABCABCABCABCABCABCABCABCABCABCAB"
       "CC;; This"))
 
   (ert-info ("Repeat insert with count with repeat with count")
-    (evil-test-buffer-edit ("10iABC" [escape] "11.")
+    (evil-test-buffer-edit ("10iABC" (kbd "ESC") "11.")
       "ABCABCABCABCABCABCABCABCABCABABCABCABCABCABCABCABCABCABCABCAB"
       "CC;; This")))
 
@@ -786,7 +791,7 @@ KEYS is used."
       #'(lambda (count)
           (interactive "p")
           (evil-insert-before count 5)))
-    (execute-kbd-macro (vconcat "2iABC" [escape]))
+    (execute-kbd-macro (vconcat "2iABC" (kbd "ESC")))
     (evil-test-text-lines
      '(";; ThisABCAB" "C buffer" bobp)
      '(";; If yABCAB" "Cou" bolp)
@@ -801,7 +806,7 @@ KEYS is used."
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
     (evil-test-text ";; " "This" 'bobp)
-    (evil-test-macro ("aevil rulz " [escape])
+    (evil-test-macro ("aevil rulz " (kbd "ESC"))
       ";; Tevil rulz" " his" 'bobp)))
 
 (ert-deftest evil-test-insert-after-with-count ()
@@ -810,27 +815,27 @@ KEYS is used."
   (evil-test-buffer
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
-    (evil-test-macro ("2aevil rulz " [escape])
+    (evil-test-macro ("2aevil rulz " (kbd "ESC"))
       ";; Tevil rulz evil rulz" " his" 'bobp)))
 
 (ert-deftest evil-test-repeat-insert-after ()
   "Test repeating of insert-after command."
   :tags '(evil)
   (ert-info ("Repeat insert")
-    (evil-test-buffer-edit ("aABC" [escape] "..")
+    (evil-test-buffer-edit ("aABC" (kbd "ESC") "..")
       ";ABCABCAB" "C; This"))
 
   (ert-info ("Repeat insert with count")
-    (evil-test-buffer-edit ("2aABC" [escape] "..")
+    (evil-test-buffer-edit ("2aABC" (kbd "ESC") "..")
       ";ABCABCABCABCABCAB" "C; This"))
 
   (ert-info ("Repeat insert with repeat count")
-    (evil-test-buffer-edit ("aABC" [escape] "11.")
+    (evil-test-buffer-edit ("aABC" (kbd "ESC") "11.")
       ";ABCABCABCABCABCABCABCABCABCABCABCAB"
       "C; This"))
 
   (ert-info ("Repeat insert with count with repeat with count")
-    (evil-test-buffer-edit ("10aABC" [escape] "11.")
+    (evil-test-buffer-edit ("10aABC" (kbd "ESC") "11.")
       ";ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB"
       "C; This")))
 
@@ -843,7 +848,7 @@ KEYS is used."
       #'(lambda (count)
           (interactive "p")
           (evil-insert-after count 5)))
-    (execute-kbd-macro (vconcat "2aABC" [escape]))
+    (execute-kbd-macro (vconcat "2aABC" (kbd "ESC")))
     (evil-test-text-lines
      '(";; This ABCAB" "Cbuffer" bobp)
      '(";; If yoABCAB" "Cu" bolp)
@@ -857,7 +862,7 @@ KEYS is used."
   (evil-test-buffer
     (evil-local-mode 1)
     (forward-line)
-    (evil-test-macro ("Oabc\ndef" [escape])
+    (evil-test-macro ("Oabc\ndef" (kbd "ESC"))
       "evaluation.\nabc\nde"
       "f\n;; If you")))
 
@@ -867,7 +872,7 @@ KEYS is used."
   (evil-test-buffer
     (evil-local-mode 1)
     (forward-line)
-    (evil-test-macro ("2Oevil\nrulz" [escape])
+    (evil-test-macro ("2Oevil\nrulz" (kbd "ESC"))
       "evaluation.\nevil\nrulz\nevil\nrul"
       "z\n;; If you")))
 
@@ -875,24 +880,24 @@ KEYS is used."
   "Test repeating of insert-above command."
   :tags '(evil)
   (ert-info ("Repeat insert")
-    (evil-test-buffer-edit ("Oevil\nrulz" [escape] "..")
+    (evil-test-buffer-edit ("Oevil\nrulz" (kbd "ESC") "..")
       "evil\nevil\nevil\nrul"
       "z\nrulz\nrulz\n;; This"
       'bobp))
 
   (ert-info ("Repeat insert with count")
-    (evil-test-buffer-edit ("2Oevil\nrulz" [escape] "..")
+    (evil-test-buffer-edit ("2Oevil\nrulz" (kbd "ESC") "..")
       "evil\nrulz\nevil\nevil\nrulz\nevil\nevil\nrulz\nevil\nrul"
       "z\nrulz\nrulz\n;; This"
       'bobp))
 
   (ert-info ("Repeat insert with repeat count")
-    (evil-test-buffer-edit ("Oevil\nrulz" [escape] "2.")
+    (evil-test-buffer-edit ("Oevil\nrulz" (kbd "ESC") "2.")
       "evil\nevil\nrulz\nevil\nrul"
       "z\nrulz\n;; This"))
 
   (ert-info ("Repeat insert with count with repeat with count")
-    (evil-test-buffer-edit ("2Oevil\nrulz" [escape] "3.")
+    (evil-test-buffer-edit ("2Oevil\nrulz" (kbd "ESC") "3.")
       "evil\nrulz\nevil\nevil\nrulz\nevil\nrulz\nevil\nrul"
       "z\nrulz\n;; This"
       'bobp)))
@@ -902,7 +907,7 @@ KEYS is used."
   :tags '(evil)
   (evil-test-buffer
     (evil-local-mode 1)
-    (evil-test-macro ("oabc\ndef" [escape])
+    (evil-test-macro ("oabc\ndef" (kbd "ESC"))
       "evaluation.\nabc\nde" "f\n;; If you")))
 
 (ert-deftest evil-test-insert-below-with-count ()
@@ -910,29 +915,29 @@ KEYS is used."
   :tags '(evil)
   (evil-test-buffer
     (evil-local-mode 1)
-    (evil-test-macro ("2oevil\nrulz" [escape])
+    (evil-test-macro ("2oevil\nrulz" (kbd "ESC"))
       "evaluation.\nevil\nrulz\nevil\nrul" "z\n;; If you")))
 
 (ert-deftest evil-test-repeat-insert-below ()
   "Test repeating of insert-below command."
   :tags '(evil)
   (ert-info ("Repeat insert")
-    (evil-test-buffer-edit ("oevil\nrulz" [escape] "..")
+    (evil-test-buffer-edit ("oevil\nrulz" (kbd "ESC") "..")
       "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul"
       "z\n;; If you"))
 
   (ert-info ("Repeat insert with count")
-    (evil-test-buffer-edit ("2oevil\nrulz" [escape] "..")
+    (evil-test-buffer-edit ("2oevil\nrulz" (kbd "ESC") "..")
       "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul"
       "z\n;; If you"))
 
   (ert-info ("Repeat insert with repeat count")
-    (evil-test-buffer-edit ("oevil\nrulz" [escape] "2.")
+    (evil-test-buffer-edit ("oevil\nrulz" (kbd "ESC") "2.")
       "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul"
       "z\n;; If you"))
 
   (ert-info ("Repeat insert with count with repeat with count")
-    (evil-test-buffer-edit ("2oevil\nrulz" [escape] "3.")
+    (evil-test-buffer-edit ("2oevil\nrulz" (kbd "ESC") "3.")
       "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul"
       "z\n;; If you")))
 
@@ -943,7 +948,7 @@ KEYS is used."
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
     (should (and (looking-at "This") (looking-back ";; ")))
-    (evil-test-macro ("Ievil rulz " [escape])
+    (evil-test-macro ("Ievil rulz " (kbd "ESC"))
       "evil rulz" " ;; This" 'bobp)))
 
 (ert-deftest evil-test-insert-beginning-of-line-with-count ()
@@ -953,26 +958,26 @@ KEYS is used."
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
     (evil-test-text ";; " "This" 'bobp)
-    (evil-test-macro ("2Ievil rulz " [escape])
+    (evil-test-macro ("2Ievil rulz " (kbd "ESC"))
       "evil rulz evil rulz" " ;; This" 'bobp)))
 
 (ert-deftest evil-test-repeat-insert-beginning-of-line ()
   "Test repeating of insertion at beginning of line."
   :tags '(evil)
   (ert-info ("Repeat insert")
-    (evil-test-buffer-edit ("$IABC" [escape] "..")
+    (evil-test-buffer-edit ("$IABC" (kbd "ESC") "..")
       "AB" "CABCABC;; This"))
 
   (ert-info ("Repeat insert with count")
-    (evil-test-buffer-edit ("$2IABC" [escape] "..")
+    (evil-test-buffer-edit ("$2IABC" (kbd "ESC") "..")
       "ABCAB" "CABCABCABCABC;; This"))
 
   (ert-info ("Repeat insert with repeat count")
-    (evil-test-buffer-edit ("$IABC" [escape] "11.")
+    (evil-test-buffer-edit ("$IABC" (kbd "ESC") "11.")
       "ABCABCABCABCABCABCABCABCABCABCAB" "CABC;; This"))
 
   (ert-info ("Repeat insert with count with repeat with count")
-    (evil-test-buffer-edit ("$10IABC" [escape] "11.")
+    (evil-test-buffer-edit ("$10IABC" (kbd "ESC") "11.")
       "ABCABCABCABCABCABCABCABCABCABCAB" "CABCABCABCABCABCABCABCABCABCABC;; This")))
 
 (ert-deftest evil-test-insert-beginning-of-line-vcount ()
@@ -985,7 +990,7 @@ KEYS is used."
       #'(lambda (count)
           (interactive "p")
           (evil-insert-beginning-of-line count 4)))
-    (execute-kbd-macro (vconcat "2IABC" [escape]))
+    (execute-kbd-macro (vconcat "2IABC" (kbd "ESC")))
     (evil-test-text-lines
      '("ABCAB" "Cint main" bolp)
      '("ABCAB" "C{" bolp eolp)
@@ -999,7 +1004,7 @@ KEYS is used."
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
     (evil-test-text ";; " "This" 'bobp)
-    (evil-test-macro ("Aevil rulz " [escape])
+    (evil-test-macro ("Aevil rulz " (kbd "ESC"))
       "evaluation.evil rulz" " " nil 'eolp)))
 
 (ert-deftest evil-test-insert-end-of-line-with-count ()
@@ -1008,26 +1013,26 @@ KEYS is used."
   (evil-test-buffer
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
-    (evil-test-macro ("2Aevil rulz " [escape])
+    (evil-test-macro ("2Aevil rulz " (kbd "ESC"))
       "evaluation.evil rulz evil rulz" " " nil 'eolp)))
 
 (ert-deftest evil-test-repeat-insert-end-of-line ()
   "Test repeating of insert-after command."
   :tags '(evil)
   (ert-info ("Repeat insert")
-    (evil-test-buffer-edit ("AABC" [escape] "..")
+    (evil-test-buffer-edit ("AABC" (kbd "ESC") "..")
       "evaluation.ABCABCAB" "C" nil 'eolp))
 
   (ert-info ("Repeat insert with count")
-    (evil-test-buffer-edit ("2AABC" [escape] "..")
+    (evil-test-buffer-edit ("2AABC" (kbd "ESC") "..")
       "evaluation.ABCABCABCABCABCAB" "C" nil 'eolp))
 
   (ert-info ("Repeat insert with repeat count")
-    (evil-test-buffer-edit ("AABC" [escape] "11.")
+    (evil-test-buffer-edit ("AABC" (kbd "ESC") "11.")
       "evaluation.ABCABCABCABCABCABCABCABCABCABCABCAB" "C" nil 'eolp))
 
   (ert-info ("Repeat insert with count with repeat with count")
-    (evil-test-buffer-edit ("10AABC" [escape] "11.")
+    (evil-test-buffer-edit ("10AABC" (kbd "ESC") "11.")
       "evaluation.ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB"
       "C" nil 'eolp)))
 
@@ -1041,7 +1046,7 @@ KEYS is used."
       #'(lambda (count)
           (interactive "p")
           (evil-insert-end-of-line count 4)))
-    (execute-kbd-macro (vconcat "2AABC" [escape]))
+    (execute-kbd-macro (vconcat "2AABC" (kbd "ESC")))
     (evil-test-text-lines
      '("argv)     ABCAB" "C" nil eolp)
      '("{ABCABC" "" bolp eolp)
@@ -1066,7 +1071,7 @@ cursor on the new line."
     (evil-set-insert-repeat-type 'evil-test-dummy-complete 'change)
     (evil-test-buffer
       (forward-char 3)
-      (execute-kbd-macro (vconcat "iABC " (kbd "C-c C-p") "BODY" [escape]))
+      (execute-kbd-macro (vconcat "iABC " (kbd "C-c C-p") "BODY" (kbd "ESC")))
       (forward-line 2)
       (execute-kbd-macro ".")
       (evil-test-text
@@ -1274,7 +1279,7 @@ to `evil-execute-repeat-info'")
       (evil-test-text "Below the empty line" "This bufferThis buffer." 'bolp 'eobp)))
   (ert-info ("Paste characters at end-of-buffer on empty line.")
     (evil-test-buffer
-      (execute-kbd-macro (vconcat "wy2eG$a" (kbd "RET") [escape] "2P"))
+      (execute-kbd-macro (vconcat "wy2eG$a" (kbd "RET ESC") "2P"))
       (evil-test-text 'bolp "This bufferThis buffer" nil 'eobp)))
 
   (ert-info ("Paste lines")
@@ -1362,7 +1367,7 @@ to `evil-execute-repeat-info'")
       (evil-test-text "Below the empty line.This bufferThis buffe" "r" 'bolp 'eobp)))
   (ert-info ("Paste characters at end-of-buffer on empty line.")
     (evil-test-buffer
-      (execute-kbd-macro (vconcat "wy2eG$a" (kbd "RET") [escape] "2p"))
+      (execute-kbd-macro (vconcat "wy2eG$a" (kbd "RET ESC") "2p"))
       (evil-test-text "This bufferThis buffe" "r" 'bolp 'eobp)))
 
   (ert-info ("Paste lines")
@@ -1604,26 +1609,26 @@ to `evil-execute-repeat-info'")
   :tags '(evil)
   (ert-info ("Change characters")
     (evil-test-buffer
-      (execute-kbd-macro (vconcat "wc2eABC" [escape]))
+      (execute-kbd-macro (vconcat "wc2eABC" (kbd "ESC")))
       (evil-test-text ";; AB" "C is for" 'bobp)
       (should (string= (current-kill 0) "This buffer"))
       (evil-test-macro "p" ";; ABCThis buffe" "r is for" 'bobp)))
 
   (ert-info ("Change lines")
     (evil-test-buffer
-      (execute-kbd-macro (vconcat "2ccABCLINE\nDEFLINE" [escape]))
+      (execute-kbd-macro (vconcat "2ccABCLINE\nDEFLINE" (kbd "ESC")))
       (evil-test-text "ABCLINE\nDEFLIN" "E\n;; then enter" 'bobp)
       (evil-test-macro "p" "DEFLINE\n" ";; This buffer")))
 
   (ert-info ("Change last line")
     (evil-test-buffer
-      (execute-kbd-macro (vconcat "Gk2ccABC" [escape]))
+      (execute-kbd-macro (vconcat "Gk2ccABC" (kbd "ESC")))
       (evil-test-text "buffer.\nAB" "C" nil 'eobp)))
 
   (ert-info ("Change rectangle")
     (evil-test-buffer
       (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-      (execute-kbd-macro (vconcat "wc3sABC" [escape]))
+      (execute-kbd-macro (vconcat "wc3sABC" (kbd "ESC")))
       (evil-test-text-lines
        '(";; AB" "Cs buffer" bobp)
        '(";; AB" "Cyou want" bolp)
@@ -1634,16 +1639,16 @@ to `evil-execute-repeat-info'")
   "Test change of word."
   (ert-info ("Non-word")
     (evil-test-buffer
-      (execute-kbd-macro (vconcat "cwABC" [escape]))
+      (execute-kbd-macro (vconcat "cwABC" (kbd "ESC")))
       (evil-test-text "AB" "C This buffer" 'bobp)))
   (ert-info ("Word")
     (evil-test-buffer
-      (execute-kbd-macro (vconcat "wcwABC" [escape]))
+      (execute-kbd-macro (vconcat "wcwABC" (kbd "ESC")))
       (evil-test-text ";; AB" "C buffer" 'bobp)))
   (ert-info ("Single character")
     (evil-test-buffer
       (delete-char 1)
-      (execute-kbd-macro (vconcat "cwABC" [escape]))
+      (execute-kbd-macro (vconcat "cwABC" (kbd "ESC")))
       (evil-test-text "AB" "C This buffer" 'bobp))))
 
 (ert-deftest evil-join-lines ()
@@ -1662,12 +1667,12 @@ to `evil-execute-repeat-info'")
   :tags '(evil)
   (ert-info ("Simple")
     (evil-test-buffer
-      (execute-kbd-macro (vconcat "5sABC" [escape]))
+      (execute-kbd-macro (vconcat "5sABC" (kbd "ESC")))
       (evil-test-text "AB" "Cis buffer" 'bobp)))
   (ert-info ("On empty ine")
     (evil-test-buffer
       (forward-line 3)
-      (execute-kbd-macro (vconcat "5sABC" [escape]))
+      (execute-kbd-macro (vconcat "5sABC" (kbd "ESC")))
       (evil-test-text "own buffer.\nAB" "C\nBelow"))))
 
 ;;; Motions
@@ -2363,17 +2368,17 @@ if no previous selection")
     (evil-test-buffer-edit ("wgved")
       ";; " " buffer" 'bobp))           ;
   (ert-info ("Restore characterwise selection")
-    (evil-test-buffer-edit ("wve" [escape] "gvd")
+    (evil-test-buffer-edit ("wve" (kbd "ESC") "gvd")
       ";; " " buffer" 'bobp)
-    (evil-test-buffer-edit ("wvjeVov" [escape] "gvd")
+    (evil-test-buffer-edit ("wvjeVov" (kbd "ESC") "gvd")
       ";; " " you" 'bobp))
   (ert-info ("Restore linewise selection")
-    (evil-test-buffer-edit ("wVe" [escape] "gvd")
+    (evil-test-buffer-edit ("wVe" (kbd "ESC") "gvd")
       'bobp ";; If you want to create a file")
-    (evil-test-buffer-edit ("wVjevoV" [escape] "gvd")
+    (evil-test-buffer-edit ("wVjevoV" (kbd "ESC") "gvd")
       'bobp ";; then enter the text in that file"))
   (ert-info ("Restore blockwise selection")
-    (evil-test-buffer-edit ("w\C-ve" [escape] "gvd")
+    (evil-test-buffer-edit ("w\C-ve" (kbd "ESC") "gvd")
       ";; " " buffer" 'bobp)))
 
 ;;; Utilities
@@ -2418,6 +2423,8 @@ if no previous selection")
     (ert-info ("Exact with count")
       (should (equal (evil-extract-count "420x")
                      (list 420 'delete-char "x" nil)))
+      (should (equal (evil-extract-count "420\M-f")
+                     (list 420 'forward-word "\M-f" nil)))
       (should (equal (evil-extract-count "2301g0")
                      (list 2301 'evil-beginning-of-visual-line "g0" nil))))
 

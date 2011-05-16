@@ -188,26 +188,29 @@ insert-mode."
                         (list (this-command-keys))))))
 
 (defun evil-normalize-repeat-info (repeat-info)
-  "Concatenates consecutive arrays in the repeat-info to a single
-array."
+  "Concatenates consecutive arrays in the repeat-info.
+Returns a single array."
   (let* ((result (cons nil nil))
          (result-last result)
-         cur
-         cur-last)
+         cur cur-last)
     (dolist (rep repeat-info)
-      (if (arrayp rep)
-          (if cur
-              (progn
-                (setcdr cur-last (cons rep nil))
-                (setq cur-last (cdr cur-last)))
-            (setq cur (cons rep nil))
-            (setq cur-last cur))
+      (cond
+       ((arrayp rep)
+        (setq rep (listify-key-sequence rep))
+        (cond
+         (cur
+          (setcdr cur-last (cons rep nil))
+          (setq cur-last (cdr cur-last)))
+         (t
+          (setq cur (cons rep nil))
+          (setq cur-last cur))))
+       (t
         (when cur
           (setcdr result-last (cons (apply #'vconcat cur) nil))
           (setq result-last (cdr result-last))
           (setq cur nil))
         (setcdr result-last (cons rep nil))
-        (setq result-last (cdr result-last))))
+        (setq result-last (cdr result-last)))))
     (when cur
       (setcdr result-last (cons (apply #'vconcat cur) nil)))
     (cdr result)))

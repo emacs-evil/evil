@@ -4,6 +4,7 @@
 (require 'evil-common)
 (require 'evil-states)
 (require 'evil-types)
+(require 'evil-undo)
 (require 'evil-visual)
 (require 'evil-motions)
 (require 'evil-compatibility)
@@ -145,7 +146,7 @@ in the `interactive' specification of an operator command."
             ;; Make linewise operator shortcuts. E.g., "d" yields the
             ;; shortcut "dd", and "g?" yields shortcuts "g??" and "g?g?".
             (let ((keys (nth 2 (evil-extract-count (this-command-keys)))))
-              (setq keys (append keys nil))
+              (setq keys (listify-key-sequence keys))
               (dotimes (var (length keys))
                 (define-key evil-operator-shortcut-map
                   (vconcat (nthcdr var keys)) 'evil-line)))

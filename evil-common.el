@@ -370,12 +370,13 @@ each line. Extra arguments to FUNC may be passed via ARGS."
 ;;; Key sequences
 
 (defun evil-extract-count (keys)
-  "Splits the key-sequence `keys' in prefix-argument part and the rest.
-Returns two number (PREFIX CMD SEQ REST) where PREFIX is prefix
-count, CMD the command to be executed, SEQ the subsequence
-calling CMD and REST all remaining events in the key-sequence.
-PREFIX and REST may be nil of they do not exist. If a command is
-bound to some keyboard-macro it is expaned recursively."
+  "Splits the key-sequence KEYS into prefix-argument and the rest.
+Returns the list (PREFIX CMD SEQ REST), where PREFIX is the
+prefix count, CMD the command to be executed, SEQ the subsequence
+calling CMD, and REST is all remaining events in the
+key-sequence. PREFIX and REST may be nil if they do not exist.
+If a command is bound to some keyboard macro, it is expanded
+recursively."
   (catch 'done
     (let* ((len (length keys))
            (beg 0)
@@ -386,7 +387,6 @@ bound to some keyboard-macro it is expaned recursively."
           (cond
            ((memq cmd '(undefined nil))
             (error "No command bound to %s" (substring keys beg end)))
-
            ((arrayp cmd) ; a keyboard macro, replace the command with the macro
             (setq keys (vconcat (substring keys 0 beg)
                                 cmd
@@ -402,13 +402,14 @@ bound to some keyboard-macro it is expaned recursively."
                       beg end
                       end (1+ end))
               ;; a real command, finish
-              (throw 'done (list (and (not (zerop beg))
-                                      (string-to-number
-                                       (concat (substring keys 0 beg))))
-                                 cmd
-                                 (substring keys beg end)
-                                 (and (< end len) (substring keys end))))))
-
+              (throw 'done
+                     (list (unless (zerop beg)
+                             (string-to-number
+                              (concat (substring keys 0 beg))))
+                           cmd
+                           (substring keys beg end)
+                           (when (< end len)
+                             (substring keys end))))))
            (t ;; append a further event
             (setq end (1+ end))))))
       (error "Key sequence contains no complete binding"))))
