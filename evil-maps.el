@@ -57,10 +57,16 @@ TARGET the command to call."
 (define-key evil-replace-state-map (kbd "ESC") 'evil-normal-state)
 (define-key evil-replace-state-map [backspace] 'evil-replace-backspace)
 
-(define-key evil-visual-state-map [escape] 'evil-normal-state)
-(define-key evil-visual-state-map "o" 'exchange-point-and-mark)
-(define-key evil-visual-state-map "O" 'evil-visual-exchange-corners)
+(define-key evil-visual-state-map (kbd "ESC") 'evil-normal-state)
+(define-key evil-visual-state-map "C" 'evil-change)
+(define-key evil-visual-state-map "D" 'evil-delete)
 (define-key evil-visual-state-map "J" 'evil-join-lines)
+(define-key evil-visual-state-map "O" 'evil-visual-exchange-corners)
+(define-key evil-visual-state-map "R" 'evil-change)
+(define-key evil-visual-state-map "S" 'evil-change)
+(define-key evil-visual-state-map "o" 'exchange-point-and-mark)
+(define-key evil-visual-state-map "s" 'evil-change)
+(define-key evil-visual-state-map "x" 'evil-delete)
 
 ;; "0" is a special command when called first
 (evil-redirect-digit-argument evil-motion-state-map "0" 'evil-beginning-of-line)
