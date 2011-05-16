@@ -43,4 +43,7 @@ emacs: clean
 term: terminal
 
 terminal: clean
-	$(EMACS) -nw -Q -L . -l evil-tests.el --eval "(evil-mode 1)" --eval "(ert-run-tests-interactively t)"
+	$(EMACS) -nw -Q -L . -l evil-tests.el --eval "(evil-mode 1)" \
+--eval "(if (y-or-n-p-with-timeout \"Run tests? \" 2 t) \
+(ert-run-tests-interactively t) \
+(message \"You can run the tests at any time with \`M-x evil-tests-run\'\"))"
