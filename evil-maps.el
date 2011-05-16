@@ -52,9 +52,9 @@ TARGET the command to call."
 (define-key evil-normal-state-map "\C-v" 'evil-visual-block)
 (define-key evil-normal-state-map "gv" 'evil-visual-restore)
 
-(define-key evil-insert-state-map [escape] 'evil-normal-state)
+(define-key evil-insert-state-map (kbd "ESC") 'evil-normal-state)
 
-(define-key evil-replace-state-map [escape] 'evil-normal-state)
+(define-key evil-replace-state-map (kbd "ESC") 'evil-normal-state)
 (define-key evil-replace-state-map [backspace] 'evil-replace-backspace)
 
 (define-key evil-visual-state-map [escape] 'evil-normal-state)
