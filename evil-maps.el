@@ -58,6 +58,7 @@ TARGET the command to call."
 (define-key evil-normal-state-map "gv" 'evil-visual-restore)
 
 (define-key evil-insert-state-map (kbd "ESC") 'evil-normal-state)
+(define-key evil-insert-state-map "\C-k" 'evil-insert-digraph)
 
 (define-key evil-replace-state-map (kbd "ESC") 'evil-normal-state)
 (define-key evil-replace-state-map [backspace] 'evil-replace-backspace)

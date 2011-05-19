@@ -4,6 +4,7 @@
 (require 'evil-types)
 (require 'evil-motions)
 (require 'evil-undo)
+(require 'evil-digraphs)
 (require 'evil-insert)
 (require 'evil-replace)
 (require 'evil-visual)
