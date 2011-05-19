@@ -143,13 +143,26 @@ sorting in between."
 Intermittent messages are not logged in the *Messages* buffer."
   (declare (indent defun)
            (debug t))
-  `(let ((old-msg (current-message))
-         evil-write-echo-area)
+  `(let (evil-echo-area-message evil-write-echo-area)
      (unwind-protect
-         (progn ,@body)
-       (unless evil-write-echo-area
-         (if old-msg (message "%s" old-msg)
-           (message nil))))))
+         (progn
+           (evil-echo-area-save)
+           ,@body)
+       (evil-echo-area-restore))))
+
+(defun evil-echo-area-save ()
+  "Save the current echo area in `evil-echo-area-message'."
+  (setq evil-echo-area-message (current-message)))
+
+(defun evil-echo-area-restore ()
+  "Restore the echo area from `evil-echo-area-message'.
+Does not restore if `evil-write-echo-area' is non-nil."
+  (unless evil-write-echo-area
+    (if evil-echo-area-message
+        (message "%s" evil-echo-area-message)
+      (message nil)))
+  (setq evil-echo-area-message nil
+        evil-write-echo-area nil))
 
 (defun evil-echo (string &rest args)
   "Display an unlogged message in the echo area.

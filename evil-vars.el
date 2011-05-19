@@ -111,10 +111,10 @@ to t, the operator code is not executed.")
   "A ring of repeat-informations to repeat the last command.")
 
 (defvar evil-last-repeat nil
-  "Information about the latest repeat command. This is a list of two elements
-(POINT COUNT) where POINT is the position of point before the
-latest repeat and COUNT the count-argument of the latest repeat
-command.")
+  "Information about the latest repeat command.
+This is a list of two elements (POINT COUNT), where POINT is
+the position of point before the latest repeat, and COUNT
+the count-argument of the latest repeat command.")
 
 (defvar evil-repeating-command nil
   "This variable is non-nil if a command is currently being repeated.")
@@ -176,6 +176,10 @@ command o or O.")
   "Association list of characters overwritten in Replace state.
 The format is (POS . CHAR).")
 (make-variable-buffer-local 'evil-replace-alist)
+
+(defvar evil-echo-area-message nil
+  "Previous value of `current-message'.")
+(make-variable-buffer-local 'evil-echo-area-message)
 
 (defvar evil-write-echo-area nil
   "If set to t inside `evil-save-echo-area', then the echo area
