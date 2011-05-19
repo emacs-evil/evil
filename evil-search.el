@@ -1,20 +1,10 @@
 ;;;; Search
 
-(defcustom evil-flash-delay 2
-  "Number of seconds to flash search matches."
-  :type  'integer
-  :group 'evil)
+(require 'evil-vars)
+(require 'evil-common)
 
-(defcustom evil-search-wrap t
-  "Whether search wraps around."
-  :type  'boolean
-  :group 'evil)
 
-(defvar evil-flash-timer nil
-  "Timer for flashing search results.")
 
-(defvar evil-search-prompt nil
-  "String to use for search prompt.")
 
 (defadvice isearch-message-prefix (around evil activate)
   "Use `evil-search-prompt'."

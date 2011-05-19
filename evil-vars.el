@@ -31,6 +31,21 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-flash-delay 2
+  "Number of seconds to flash search matches."
+  :type  'integer
+  :group 'evil)
+
+(defcustom evil-search-wrap t
+  "Whether search wraps around."
+  :type  'boolean
+  :group 'evil)
+
+(defcustom evil-regexp-search t
+  "Whether to use regular expressions for searching."
+  :type  'boolean
+  :group 'evil)
+
 ;;; Variables
 
 (defvar evil-state nil
@@ -235,6 +250,12 @@ They are reused to prevent flicker.")
 (defvar evil-undo-list-pointer nil
   "Everything up to this mark is united in the undo-list.")
 (make-variable-buffer-local 'evil-undo-list-pointer)
+
+(defvar evil-flash-timer nil
+  "Timer for flashing search results.")
+
+(defvar evil-search-prompt nil
+  "String to use for search prompt.")
 
 (defconst evil-version "0.1"
   "The current version of Evil")
