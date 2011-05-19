@@ -61,7 +61,9 @@ arguments: the beginning and end of the range."
           end (or (pop args) 'end)
           type (or (pop args) 'type))
     ;; collect docstring
-    (when (stringp (car body))
+    (when (and (> (length body) 1)
+               (or (eq (car-safe (car-safe body)) 'format)
+                   (stringp (car-safe body))))
       (setq doc (pop body)))
     ;; collect keywords
     (while (keywordp (car-safe body))

@@ -438,13 +438,16 @@ recursively."
                            [&rest keywordp sexp]
                            def-body)))
   (let ((keys (plist-put nil :repeatable t))
-        arg args doc key)
+        arg args doc doc-form key)
     ;; collect arguments
     (when (listp (car-safe body))
       (setq args (pop body)))
     ;; collect docstring
-    (when (stringp (car-safe body))
-      (setq doc (pop body)))
+    (when (> (length body) 1)
+      (if (eq (car-safe (car-safe body)) 'format)
+          (setq doc-form (pop body))
+        (when (stringp (car-safe body))
+          (setq doc (pop body)))))
     ;; collect keywords
     (while (keywordp (car-safe body))
       (setq key (pop body)
@@ -457,6 +460,8 @@ recursively."
            `((defun ,command (,@args)
                ,@(when doc `(,doc))
                ,@body)))
+       ,(when doc-form
+          `(put ',command 'function-documentation ,doc-form))
        ',command)))
 
 (defun evil-add-command-properties (command &rest properties)
