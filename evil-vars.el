@@ -26,6 +26,11 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-want-C-u-scroll nil
+  "Whether \"C-u\" scrolls like in Vim."
+  :type 'boolean
+  :group 'evil)
+
 ;;; Variables
 
 (defvar evil-state nil

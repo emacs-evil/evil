@@ -140,9 +140,10 @@ TARGET the command to call."
 (define-key evil-motion-state-map "z+" 'evil-scroll-bottom-line-to-top)
 
 (define-key evil-motion-state-map (kbd "C-y") 'evil-scroll-line-up)
-(define-key evil-motion-state-map (kbd "C-u") 'evil-scroll-up)
 (define-key evil-motion-state-map (kbd "C-b") 'evil-scroll-page-up)
 (define-key evil-motion-state-map "z^" 'evil-scroll-top-line-to-bottom)
+(when evil-want-C-u-scroll
+  (define-key evil-motion-state-map (kbd "C-u") 'evil-scroll-up))
 
 (define-key evil-motion-state-map "zt" 'evil-scroll-line-to-top)
 ;; TODO: z RET has an advanced form taking an count before the RET
