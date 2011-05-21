@@ -6,6 +6,7 @@
 (require 'evil-operators)
 (require 'evil-window)
 (require 'evil-visual)
+(require 'evil-ex)
 
 (defmacro evil-redirect-digit-argument (map keys target)
   "Bind a special wrapper function which calles either `target' or `digit-argument'.
@@ -211,6 +212,13 @@ TARGET the command to call."
 (when (fboundp 'undo-tree-undo)
   (define-key evil-normal-state-map "u" 'undo-tree-undo)
   (define-key evil-normal-state-map "\C-r" 'undo-tree-redo))
+
+
+;; Ex
+(define-key evil-normal-state-map ":" 'evil-ex-read-command)
+(evil-ex-define-cmd "write" 'evil-write)
+(evil-ex-define-cmd "wall" 'evil-write-all)
+(evil-ex-define-cmd "w" "write")
 
 (provide 'evil-maps)
 

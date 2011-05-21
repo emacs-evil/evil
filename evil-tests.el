@@ -2457,6 +2457,84 @@ if no previous selection")
       (should-error (evil-extract-count "°"))
       (should-error (evil-extract-count "12°")))))
 
+
+;;; ex
+
+(ert-deftest evil-test-ex-parse-command ()
+  "Test `evil-ex-parse-command'."
+  :tags '(evil)
+  (should (equal (evil-ex-parse-command "5,2cmd arg" 3)
+                 (list 6 "cmd" nil)))
+  (should (equal (evil-ex-parse-command "5,2cmd! arg" 3)
+                 (list 7 "cmd" t)))
+  (should (equal (evil-ex-parse-command "5,2 arg" 3)
+                 (list 3 nil nil))))
+
+(ert-deftest evil-test-ex-parse-address-base ()
+  "Test `evil-ex-parse-address-base'."
+  :tags '(evil)
+  (should (equal (evil-ex-parse-address-base "5,27cmd arg" 11)
+                 (list 11 nil)))
+  (should (equal (evil-ex-parse-address-base "5,27cmd arg" 2)
+                 (list 4 27)))
+  (should (equal (evil-ex-parse-address-base "5,27cmd arg" 1)
+                 (list 1 nil)))
+  (should (equal (evil-ex-parse-address-base "5,$cmd arg" 2)
+                 (list 3 'last-line)))
+  (should (equal (evil-ex-parse-address-base "5,'xcmd arg" 2)
+                 (list 4 '(mark ?x)))))
+
+(ert-deftest evil-test-ex-parse-address-sep ()
+  "Test `evil-ex-parse-address-sep'."
+  :tags '(evil)
+  (should (equal (evil-ex-parse-address-sep "5,27cmd arg" 11)
+                 (list 11 nil)))
+  (should (equal (evil-ex-parse-address-sep "5,27cmd arg" 2)
+                 (list 2 nil)))
+  (should (equal (evil-ex-parse-address-sep "5,27cmd arg" 1)
+                 (list 2 ?,)))
+  (should (equal (evil-ex-parse-address-sep "5;$cmd arg" 1)
+                 (list 2 ?\;))))
+
+(ert-deftest evil-test-ex-parse-address-offset ()
+  "Test `evil-ex-parse-address-offset'."
+  :tags '(evil)
+  (should (equal (evil-ex-parse-address-offset "5,27cmd arg" 11)
+                 (list 11 nil)))
+  (should (equal (evil-ex-parse-address-offset "5,+cmd arg" 2)
+                 (list 3 1)))
+  (should (equal (evil-ex-parse-address-offset "5,-cmd arg" 2)
+                 (list 3 -1)))
+  (should (equal (evil-ex-parse-address-offset "5;4+2-7-3+10-cmd arg" 2)
+                 (list 2 nil)))
+  (should (equal (evil-ex-parse-address-offset "5;4+2-7-3+10-cmd arg" 3)
+                 (list 13 1))))
+
+(ert-deftest evil-test-ex-parse-address ()
+  "Test `evil-ex-parse-address'."
+  :tags '(evil)
+  (should (equal (evil-ex-parse-address "5,27cmd arg" 0)
+                 (list 1 5 nil)))
+  (should (equal (evil-ex-parse-address "5,+cmd arg" 2)
+                 (list 3 nil 1)))
+  (should (equal (evil-ex-parse-address "5,-cmd arg" 2)
+                 (list 3 nil -1)))
+  (should (equal (evil-ex-parse-address "5;4+2-7-3+10-cmd arg" 1)
+                 (list 1 nil nil)))
+  (should (equal (evil-ex-parse-address "5;4+2-7-3+10-cmd arg" 2)
+                 (list 13 4 1))))
+
+
+(ert-deftest evil-test-ex-parse-range ()
+  "Test `evil-ex-parse-address-range'."
+  :tags '(evil)
+  (should (equal (evil-ex-parse-range ".-2;4+2-7-3+10-cmd arg" 0)
+                 (list 15 '(current-line -2) ?\; '(4 1))))
+  (should (equal (evil-ex-parse-range "'a-2,$-10cmd arg" 0)
+                 (list 9 '((mark ?a) -2) ?\, '(last-line -10))))
+  (should (equal (evil-ex-parse-range ".+42cmd arg" 0)
+                 (list 4 '(current-line 42) nil '(nil nil)))))
+
 (when evil-tests-run
   (evil-tests-run))
 

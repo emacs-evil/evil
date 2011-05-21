@@ -11,6 +11,7 @@
 (require 'evil-search)
 (require 'evil-repeat)
 (require 'evil-maps)
+(require 'evil-ex)
 
 (provide 'evil)
 
