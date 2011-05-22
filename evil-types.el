@@ -281,7 +281,9 @@ It is followed by a list of keywords and functions:
                 and returns a human-readable string.
 
 Further keywords and functions may be specified. These are assumed to
-be transformations on buffer positions, like :expand and :contract."
+be transformations on buffer positions, like :expand and :contract.
+
+\(fn TYPE DOC [[KEY FUNC]...])"
   (declare (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp function-form]]))

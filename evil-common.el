@@ -448,7 +448,9 @@ recursively."
 ;;; Command properties
 
 (defmacro evil-define-command (command &rest body)
-  "Define a command COMMAND."
+  "Define a command COMMAND.
+
+\(fn COMMAND (ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
            (debug (&define name
                            [&optional lambda-list]

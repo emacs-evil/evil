@@ -297,10 +297,10 @@ If AUX is nil, create a new auxiliary keymap."
   "Create a STATE binding from KEY to DEF for KEYMAP.
 The syntax is equivalent to that of `define-key'. For example:
 
-    (evil-define-key 'normal text-mode-map \"a\" 'foo)
+    (evil-define-key 'normal foo-mode-map \"a\" 'bar)
 
-This will create a binding from \"a\" to `foo' in Normal state,
-which will be active whenever `text-mode-map' is active."
+This will create a binding from \"a\" to `bar' in Normal state,
+which will be active whenever `foo-mode-map' is active."
   (let ((aux (if state
                  (or (evil-get-auxiliary-keymap keymap state)
                      (evil-set-auxiliary-keymap keymap state))
@@ -354,7 +354,9 @@ may be specified before the body code:
                 is based on the keymap name.
 :local BOOLEAN  Whether the keymap should be buffer-local, that is,
                 reinitialized for each buffer.
-:func BOOLEAN   Create a toggle function even if BODY is empty."
+:func BOOLEAN   Create a toggle function even if BODY is empty.
+
+\(fn KEYMAP DOC [[KEY VAL]...] BODY...)"
   (declare (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp sexp]]
@@ -431,7 +433,9 @@ For example:
       :tag \"<T> \")
 
 The basic keymap of this state will then be
-`evil-test-state-map', and so on."
+`evil-test-state-map', and so on.
+
+\(fn STATE DOC [[KEY VAL]...] BODY...)"
   (declare (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp sexp]]

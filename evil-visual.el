@@ -47,7 +47,9 @@ may be specified in BODY:
 :type TYPE              Type to use (defaults to SELECTION).
 
 Following the keywords is optional code which is executed each time
-the selection is enabled."
+the selection is enabled.
+
+\(fn SELECTION DOC [[KEY VAL]...] BODY...)"
   (declare (indent defun)
            (debug (&define name stringp
                            [&rest keywordp sexp]

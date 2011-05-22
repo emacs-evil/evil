@@ -12,8 +12,8 @@
 
 (defmacro evil-define-motion (motion args &rest body)
   "Define an motion command MOTION.
-ARGS is the argument list, which if non-nil must contain
-the count as the first argument."
+
+\(fn MOTION (COUNT ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
            (debug (&define name lambda-list
                            [&optional stringp]
