@@ -90,7 +90,8 @@
 To enable Evil globally, do (evil-mode 1)."
   ;; TODO: option for enabling vi keys in the minibuffer
   (unless (minibufferp)
-    (evil-local-mode 1)))
+    (evil-local-mode 1)
+    (remove-hook 'post-command-hook 'evil-initialize-state t)))
 
 (define-globalized-minor-mode evil-mode
   evil-local-mode evil-initialize)
