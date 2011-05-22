@@ -343,18 +343,16 @@ is the current value of RESULT. See also `evil-loop'.
 
 (defun evil-move-chars (chars count)
   "Moves point to the end or beginning of a sequence of CHARS.
-CHARS is a character set as in [...] of regular expressions."
-  (let ((re (concat "[" chars "]")))
-    (setq count (or count 1))
-    (while (and (> count 0)
-                (re-search-forward re nil t))
-      (skip-chars-forward chars)
-      (setq count (1- count)))
-    (while (and (< count 0)
-                (re-search-backward re nil t))
-      (skip-chars-backward chars)
-      (setq count (1+ count)))
-    count))
+CHARS is a character set as inside [...] in a regular expression."
+  (let ((regexp (format "[%s]" chars)))
+    (evil-motion-loop (var count)
+      (cond
+       ((< var 0)
+        (re-search-backward regexp nil t)
+        (skip-chars-backward chars))
+       (t
+        (re-search-forward regexp nil t)
+        (skip-chars-forward chars))))))
 
 (defmacro evil-define-union-move (name &rest moves)
   "Creates a move which moves to the next object boundary defined
@@ -477,23 +475,22 @@ the end of the first object. If there no previous object raises
       (goto-char (point-min))))
   (- count))
 
-(defun evil-move-empty-lines (count)
+(evil-define-motion evil-move-empty-lines (count)
   "Moves to the next or previous empty line, repeated COUNT times."
-  (setq count (or count 1))
-  (cond
-   ((> count 0)
-    (while (and (> count 0)
-                (re-search-forward "^$" nil t)
-                (not (eobp)))
-      (forward-char)
-      (setq count (1- count))))
-   ((< count 0)
-    (while (and (< count 0)
-                (not (bobp))
-                (or (backward-char) t)
-                (re-search-backward "^$" nil t))
-      (setq count (1+ count)))))
-  count)
+  :type exclusive
+  (catch 'done
+    (evil-motion-loop (var (or count 1))
+      (cond
+       ((< var 0)
+        (goto-char (or (save-excursion
+                         (unless (bobp)
+                           (backward-char)
+                           (re-search-backward "^$" nil t)))
+                       (point))))
+       (t
+        (when (and (re-search-forward "^$" nil t)
+                   (not (eobp)))
+          (forward-char)))))))
 
 (evil-define-union-move evil-move-word
   "Move by words."
