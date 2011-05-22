@@ -137,6 +137,24 @@ sorting in between."
                  (add-to-list 'forms '(pop sorted) t))
                forms))))
 
+(defmacro evil-loop (spec &rest body)
+  "Loop with countdown variable.
+Evaluate BODY with VAR counting down from COUNT to 0.
+COUNT can be negative, in which case VAR counts up instead.
+
+\(fn (VAR COUNT) BODY...)"
+  (declare (debug dolist)
+           (indent defun))
+  (let* ((var (pop spec))
+         (count (pop spec)))
+    `(let ((,var ,count))
+       (while (/= ,var 0)
+         ,@body
+         (if (> ,var 0)
+             (setq ,var (1- ,var))
+           (setq ,var (1+ ,var))))
+       ,var)))
+
 ;; toggleable version of `with-temp-message'
 (defmacro evil-save-echo-area (&rest body)
   "Save the echo area; execute BODY; restore the echo area.
@@ -568,6 +586,8 @@ They are stored as a plist in the COMMAND symbol's
       (1 font-lock-keyword-face)
       (2 font-lock-function-name-face nil t))
      ("(\\(evil-\\(?:with\\|save\\)-[-[:word:]]+\\)\\>"
+      1 font-lock-keyword-face)
+     ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>"
       1 font-lock-keyword-face))))
 
 (provide 'evil-common)
