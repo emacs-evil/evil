@@ -98,14 +98,13 @@ the count as the first argument."
   (evil-narrow-to-line (backward-char (or count 1))))
 
 ;; The purpose of this function is the provide line motions which
-;; preserve the column. This is how 'previous-line and 'next-line
-;; work, but unfortunately this behaviour is hard coded, i.e., if and
-;; only if the last command was one of 'previous-line and 'next-line
-;; the column is preserved. Furthermore, in contrast to vim, when we
-;; cannot go further those motions move point to the beginning resp.
-;; the end of the line (we do never want point to leave its column).
-;; The code here comes from simple.el, and I hope it will work in
-;; future.
+;; preserve the column. This is how `previous-line' and `next-line'
+;; work, but unfortunately the behaviour is hard-coded: if and only if
+;; the last command was `previous-line' or `next-line', the column is
+;; preserved. Furthermore, in contrast to Vim, when we cannot go
+;; further, those motions move point to the beginning resp. the end of
+;; the line (we never want point to leave its column). The code here
+;; comes from simple.el, and I hope it will work in future.
 (defun evil-line-move (count)
   "A wrapper for line motions which conserves the column."
   (evil-signal-without-movement
@@ -388,11 +387,11 @@ CHARS is a character set as inside [...] in a regular expression."
 
 (defun evil-move-forward-end (move &optional count count-current)
   "Moves point the the COUNT next end of the object specified by
-move MOVE. If there are no COUNT objects move the point to the
-end of the last object. If there no next object raises
+move MOVE. If there are no COUNT objects, move the point to the
+end of the last object. If there no next object, raises
 'end-of-buffer. If COUNT-CURRENT is non-nil, the current object
 counts as one move, otherwise the end of the current object is
-*not* counted."
+NOT counted."
   (setq count (or count 1))
   (when (evil-eobp)
     (signal 'end-of-buffer nil))
@@ -406,10 +405,10 @@ counts as one move, otherwise the end of the current object is
   count)
 
 (defun evil-move-forward-begin (move count)
-  "Moves point the the COUNT next beginning of the object
-specified by move MOVE. If there are no COUNT objects move the
-point to the beginning of the last object. If there no next
-object raises 'end-of-buffer."
+  "Moves point to the COUNT next beginning of the object
+specified by move MOVE. If there are no COUNT objects, move the
+point to the beginning of the last object. If there is no next
+object, raises 'end-of-buffer."
   (setq count (or count 1))
   (when (evil-eobp)
     (signal 'end-of-buffer nil))
@@ -430,10 +429,10 @@ object raises 'end-of-buffer."
   count)
 
 (defun evil-move-backward-begin (move &optional count)
-  "Moves point the the COUNT previous beginning of the object
-specified by move MOVE. If there are no COUNT objects move the
-point to the beginning of the first object. If there no previous
-object raises 'beginning-of-buffer."
+  "Moves point to the COUNT previous beginning of the object
+specified by move MOVE. If there are no COUNT objects, move the
+point to the beginning of the first object. If there is no previous
+object, raises 'beginning-of-buffer."
   (setq count (- (or count 1)))
   (when (bobp)
     (signal 'beginning-of-buffer nil))
@@ -444,9 +443,9 @@ object raises 'beginning-of-buffer."
   (- count))
 
 (defun evil-move-backward-end (move count)
-  "Moves point the the COUNT previous end of the object specified
-by move MOVE. If there are no COUNT objects move the point to
-the end of the first object. If there no previous object raises
+  "Moves point to the COUNT previous end of the object specified
+by move MOVE. If there are no COUNT objects, move the point to
+the end of the first object. If there is no previous object, raises
 'beginning-of-buffer."
   (setq count (- (or count 1)))
   (when (bobp)
