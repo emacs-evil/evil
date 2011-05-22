@@ -341,6 +341,38 @@ is the current value of RESULT. See also `evil-loop'.
              (when (= (point) orig)
                (throw ',done ,result))))))))
 
+(defmacro evil-define-union-move (name args &rest moves)
+  "Create a movement function named NAME.
+The function moves to the nearest object boundary defined by one
+of the movement function in MOVES, which is a list where each
+element has the form \(FUNC PARAMS... COUNT).
+
+COUNT is a variable which is bound to 1 or -1, depending on the
+direction. In each iteration, the function calls each move in
+isolation and settles for the nearest position. If unable to move
+further, the return value is the number of iterations that could
+not be performed.
+
+\(fn NAME (COUNT) MOVES...)"
+  (declare (debug (&define name def-body))
+           (indent defun))
+  (let* ((var (or (car-safe args) 'var))
+         (doc (when (stringp (car-safe moves))
+                (pop moves)))
+         (moves (mapcar #'(lambda (move)
+                            `(save-excursion
+                               ;; don't include failing moves
+                               (when (zerop ,move)
+                                 (point))))
+                        moves)))
+    `(defun ,name (count)
+       ,@(when doc `(,doc))
+       (let (bounds)
+         (evil-motion-loop (,var (or count 1))
+           (when (setq bounds (remq nil (list ,@moves)))
+             (goto-char (apply (if (> ,var 0) #'min #'max)
+                               bounds))))))))
+
 (defun evil-move-chars (chars count)
   "Moves point to the end or beginning of a sequence of CHARS.
 CHARS is a character set as inside [...] in a regular expression."
@@ -353,46 +385,6 @@ CHARS is a character set as inside [...] in a regular expression."
        (t
         (re-search-forward regexp nil t)
         (skip-chars-forward chars))))))
-
-(defmacro evil-define-union-move (name &rest moves)
-  "Creates a move which moves to the next object boundary defined
-by one movement function in MOVES.
-
-MOVES is a list whose elements have the form (FUNC PARAMS...).
-The union move calls (FUNC PARAMS... COUNT). The return value is
-the number of moves that could not be performed."
-  (declare (indent defun))
-  `(defun ,name (count)
-     ,@(and moves (listp moves)
-            (stringp (car moves))
-            (list (pop moves)))
-     (setq count (or count 1))
-     (catch 'done
-       (while (> count 0)
-         (let ((results
-                (remq nil
-                      (list ,@(mapcar
-                               #'(lambda (move)
-                                   `(save-excursion
-                                      (when (zerop ,(append move '(1)))
-                                        (point))))
-                               moves)))))
-           (unless results (throw 'done count))
-           (goto-char (apply #'min results))
-           (setq count (1- count))))
-       (while (< count 0)
-         (let ((results
-                (remq nil
-                      (list ,@(mapcar
-                               #'(lambda (move)
-                                   `(save-excursion
-                                      (when (zerop ,(append move '(-1)))
-                                        (point))))
-                               moves)))))
-           (unless results (throw 'done count))
-           (goto-char (apply #'max results))
-           (setq count (1+ count))))
-       count)))
 
 (defun evil-move-forward-end (move &optional count count-current)
   "Moves point the the COUNT next end of the object specified by
@@ -492,11 +484,11 @@ the end of the first object. If there no previous object raises
                    (not (eobp)))
           (forward-char)))))))
 
-(evil-define-union-move evil-move-word
+(evil-define-union-move evil-move-word (count)
   "Move by words."
-  (evil-move-chars evil-word)
-  (evil-move-chars (concat "^ \t\r\n" evil-word))
-  (evil-move-empty-lines))
+  (evil-move-chars evil-word count)
+  (evil-move-chars (concat "^ \t\r\n" evil-word) count)
+  (evil-move-empty-lines count))
 
 (evil-define-motion evil-forward-word-begin (count)
   "Move the cursor the beginning of the COUNT-th next word."
@@ -521,10 +513,10 @@ the end of the first object. If there no previous object raises
   :type inclusive
   (evil-move-backward-end #'evil-move-word count))
 
-(evil-define-union-move evil-move-WORD
+(evil-define-union-move evil-move-WORD (count)
   "Move by WORDs."
-  (evil-move-chars "^ \t\r\n")
-  (evil-move-empty-lines))
+  (evil-move-chars "^ \t\r\n" count)
+  (evil-move-empty-lines count))
 
 (evil-define-motion evil-forward-WORD-begin (count)
   "Move the cursor the beginning of the COUNT-th next WORD."
