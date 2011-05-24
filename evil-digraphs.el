@@ -1,6 +1,3 @@
-(eval-when-compile
-  (require 'cl))
-
 (defgroup evil-digraphs nil
   "Digraph support based on RFC 1345."
   :group 'evil
@@ -1356,23 +1353,30 @@ define the digraph and the third is its replacement."
     (?f ?l ?\xfb02)
     (?f ?t ?\xfb05)
     (?s ?t ?\xfb06))
-  "Table of digraphs defined in RFC 1345.")
-
-(defun evil-digraph-find-exact (key1 key2)
-  (labels ((find-in (table)
-                    (dolist (row table)
-                      (and (= (car row) key1)
-                           (= (cadr row) key2)
-                           (return (caddr row))))))
-    (or (find-in evil-digraphs-table-user)
-        (find-in evil-digraphs-table))))
+  "Table of digraphs defined in RFC 1345.
+Each element is a lists of three characters, where the two first
+define the digraph and the third is its replacement.
+See also `evil-digraphs-table-user'.")
 
 (defun evil-digraph-find (key1 key2)
-  (or
-   (evil-digraph-find-exact key1 key2)
-   (and (not (= key1 key2))
-        (evil-digraph-find-exact key2 key1))
-   key2))
+  "Return the digraph for KEY1 and KEY2, in that order.
+Searches in `evil-digraphs-table-user' and `evil-digraphs-table'.
+Returns nil if undefined. See also `evil-digraph'."
+  (catch 'done
+    (dolist (row (append evil-digraphs-table-user
+                         evil-digraphs-table))
+      (and (eq (nth 0 row) key1)
+           (eq (nth 1 row) key2)
+           (throw 'done (nth 2 row))))))
+
+(defun evil-digraph (key1 key2)
+  "Return the digraph for KEY1 and KEY2, in any order.
+Searches in `evil-digraphs-table-user' and `evil-digraphs-table'.
+Returns KEY2 if undefined. See also `evil-digraph-find'."
+  (or (evil-digraph-find key1 key2)
+      (unless (eq key1 key2)
+        (evil-digraph-find key2 key1))
+      key2))
 
 (provide 'evil-digraphs)
 

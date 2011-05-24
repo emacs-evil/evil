@@ -131,15 +131,32 @@ The insertion will be repeated COUNT times."
                                       vcount)))
   (evil-insert-state 1))
 
-(defun evil-insert-digraph (count)
-  "Inserts a digraph.
+(defun evil-insert-digraph (count key1 key2)
+  "Insert the digraph KEY1 KEY2.
 The insertion is repeated COUNT times."
-  (interactive "p")
-  (condition-case nil
-      (let ((digraph (evil-digraph-find (read-char) (read-char))))
-        (dotimes (var count)
-          (insert digraph)))
-    (error nil)))
+  (interactive
+   (let (count key1 key2 overlay string)
+     (unwind-protect
+         (progn
+           (setq count (prefix-numeric-value current-prefix-arg)
+                 overlay (make-overlay (point) (point)))
+           ;; create overlay prompt
+           (setq string "?")
+           (put-text-property 0 1 'face 'minibuffer-prompt string)
+           ;; put cursor at (right before) the prompt
+           (put-text-property 0 1 'cursor t string)
+           (overlay-put overlay 'after-string string)
+           (setq key1 (read-key))
+           (setq string (string key1))
+           (put-text-property 0 1 'face 'minibuffer-prompt string)
+           (put-text-property 0 1 'cursor t string)
+           (overlay-put overlay 'after-string string)
+           (setq key2 (read-key)))
+       (delete-overlay overlay))
+     (list count key1 key2)))
+  (let ((digraph (evil-digraph key1 key2)))
+    (dotimes (var count)
+      (insert digraph))))
 
 (provide 'evil-insert)
 
