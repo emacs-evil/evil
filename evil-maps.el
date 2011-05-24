@@ -219,6 +219,8 @@ TARGET the command to call."
 (evil-ex-define-cmd "write" 'evil-write)
 (evil-ex-define-cmd "wall" 'evil-write-all)
 (evil-ex-define-cmd "w" "write")
+(evil-ex-define-cmd "substitute" 'evil-substitute)
+(evil-ex-define-cmd "split" 'split-window-horizontally)
 
 (provide 'evil-maps)
 

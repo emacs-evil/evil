@@ -1,6 +1,6 @@
 ;;; Ex-mode
 
-(define-key evil-ex-keymap "\t" 'minibuffer-complete)
+(define-key evil-ex-keymap "\t" 'evil-ex-complete)
 (define-key evil-ex-keymap [return] 'exit-minibuffer)
 (define-key evil-ex-keymap (kbd "RET") 'exit-minibuffer)
 (define-key evil-ex-keymap (kbd "C-j") 'exit-minibuffer)
@@ -14,6 +14,15 @@
   "Binds the function FUNCTION to the command CMD."
   (evil-add-to-alist 'evil-ex-commands cmd function))
 
+(defun evil-ex-message (info)
+  "Changes the active ex info message to INFO."
+  (when info
+    (let ((txt (concat " [" info "]"))
+          after-change-functions
+          before-change-functions)
+      (put-text-property 0 (length txt) 'face 'evil-ex-info txt)
+      (minibuffer-message txt)
+      )))
 
 (defun evil-ex-split (text)
   "Splits an ex command line in range, command and argument.
@@ -147,7 +156,17 @@ the offset and the new position."
             (and (match-beginning 2) t))
     (list pos nil nil)))
 
-(defun evil-ex-complete (cmdline predicate flag)
+(defun evil-ex-complete ()
+  (interactive)
+  (let ((len (- (point-max)
+                (minibuffer-prompt-end))))
+    (let (after-change-functions before-change-functions)
+      (minibuffer-complete))
+    (evil-ex-update (minibuffer-prompt-end)
+                    (point-max)
+                    len)))
+
+(defun evil-ex-completion (cmdline predicate flag)
   "Called to complete an object in the ex-buffer."
   (let* ((result (evil-ex-split cmdline))
          (pos (+ (minibuffer-prompt-end) (pop result)))
@@ -156,10 +175,8 @@ the offset and the new position."
          (end (pop result))
          (cmd (pop result))
          (force (pop result)))
-    (if (or (= pos (point))
-            (and force (= pos (1+ (point)))))
-        (evil-ex-complete-command cmd force predicate flag)
-      nil)))
+    (when (and (= (point) (point-max)) (= (point) pos))
+      (evil-ex-complete-command cmd force predicate flag))))
 
 (defun evil-ex-complete-command (cmd force predicate flag)
   (cond
@@ -170,33 +187,84 @@ the offset and the new position."
    ((eq flag 'lambda)
     (test-completion cmd evil-ex-commands predicate))))
 
+(defun evil-ex-update (beg end len)
+  (let* ((result (evil-ex-split (buffer-substring (minibuffer-prompt-end) (point-max))))
+         (pos (+ (minibuffer-prompt-end) (pop result)))
+         (start (pop result))
+         (sep (pop result))
+         (end (pop result))
+         (cmd (pop result))
+         (force (pop result)))
+    (setq evil-ex-current-cmd cmd
+          evil-ex-current-arg (buffer-substring pos (point-max))
+          evil-ex-current-cmd-end (if force (1- pos) pos)
+          evil-ex-current-cmd-begin (- evil-ex-current-cmd-end (length cmd))
+          evil-ex-current-cmd-force force)
+    (push (buffer-substring-no-properties (minibuffer-prompt-end) (point-max)) mytest)
+    (when (and (> (length evil-ex-current-arg) 0)
+               (= (aref evil-ex-current-arg 0) ? ))
+      (setq evil-ex-current-arg (substring evil-ex-current-arg 1)))
+    (when cmd
+      (let ((compl (or (if (assoc cmd evil-ex-commands)
+                           (list t))
+                       (delete-duplicates
+                        (mapcar #'evil-ex-binding
+                                (all-completions evil-ex-current-cmd evil-ex-commands))))))
+        (cond
+         ((null compl) (evil-ex-message "Unknown command"))
+         ((cdr compl) (evil-ex-message "Incomplete command")))))))
+
+(defun evil-ex-binding (command)
+  "Returns the final binding of COMMAND."
+  (let ((cmd (assoc command evil-ex-commands)))
+      (while (stringp (cdr-safe cmd))
+        (setq cmd (assoc (cdr cmd) evil-ex-commands)))
+      (and cmd (cdr cmd))))
+
 (defun evil-ex-call-current-command ()
   "Execute the given command COMMAND."
   (let ((completed-command (try-completion evil-ex-current-cmd evil-ex-commands nil)))
     (when (eq completed-command t)
       (setq completed-command evil-ex-current-cmd))
-    (let ((cmd (assoc completed-command evil-ex-commands)))
-      (while (stringp (cdr-safe cmd))
-        (setq cmd (assoc (cdr cmd) evil-ex-commands)))
-      (if (and cmd (commandp (cdr cmd)))
-          (call-interactively (cdr cmd))
+    (let ((binding (evil-ex-binding completed-command)))
+      (if binding
+          (call-interactively binding)
         (error "Unknown command %s" evil-ex-current-cmd)))))
+
+(defun evil-ex-read (prompt
+                     collection
+                     update
+                     &optional
+                     require-match
+                     initial
+                     hist
+                     default
+                     inherit-input-method)
+  (let ((evil-ex-current-buffer (current-buffer)))
+    (let ((minibuffer-local-completion-map evil-ex-keymap)
+          (evil-ex-update-function update)
+          (evil-ex-info-string nil))
+      (add-hook 'minibuffer-setup-hook #'evil-ex-setup)
+      (completing-read prompt collection nil require-match initial hist default inherit-input-method))))
+
+(defun evil-ex-setup ()
+  (when evil-ex-update-function
+    (add-hook 'after-change-functions evil-ex-update-function))
+  (add-hook 'minibuffer-exit-hook #'evil-ex-teardown)
+  (remove-hook 'minibuffer-setup-hook #'evil-ex-setup))
+
+(defun evil-ex-teardown ()
+  (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown)
+  (when evil-ex-update-function
+    (remove-hook 'after-change-functions evil-ex-update-function)))
 
 (defun evil-ex-read-command (&optional initial-input)
   "Starts ex-mode."
   (interactive)
-  (let ((evil-ex-current-buffer (current-buffer)))
-    (let ((minibuffer-local-completion-map evil-ex-keymap))
-      (let ((result (completing-read ":" 'evil-ex-complete nil nil initial-input  'evil-ex-history)))
-        (when (and result
-                   (not (zerop (length result))))
-          (let* ((ret (evil-ex-split result))
-                 (evil-ex-current-cmd (nth 4 ret))
-                 (evil-ex-current-arg (substring result (nth 0 ret))))
-            (when (and (> (length evil-ex-current-arg) 0)
-                       (= (aref evil-ex-current-arg 0) ? ))
-              (setq evil-ex-current-arg (substring evil-ex-current-arg 1)))
-            (evil-ex-call-current-command)))))))
+  (let ((result (evil-ex-read ":" 'evil-ex-completion 'evil-ex-update nil initial-input  'evil-ex-history)))
+    (when (and result (not (zerop (length result))))
+      (evil-ex-call-current-command))))
+
 
 (defun evil-ex-file-name ()
   "Returns the current argument as file-name."
