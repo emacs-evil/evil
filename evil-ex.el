@@ -14,15 +14,28 @@
   "Binds the function FUNCTION to the command CMD."
   (evil-add-to-alist 'evil-ex-commands cmd function))
 
+;; TODO: this test is not very robust, could be done better
+(defun evil-ex-has-force (cmd)
+  "Returns non-nil iff the comman CMD checks for a ex-force argument in its interactive list.
+The test for the force-argument should be done by checking the
+value of the variable `evil-ex-current-cmd-force'."
+  (labels ((find-force (lst)
+                       (cond
+                        ((null lst) nil)
+                        ((eq (car lst) 'evil-ex-current-cmd-force) t)
+                        (t (or (and (listp (car lst))
+                                    (find-force (car lst)))
+                               (find-force (cdr lst)))))))
+    (find-force (interactive-form cmd))))
+
 (defun evil-ex-message (info)
-  "Changes the active ex info message to INFO."
+  "Shows an INFO message after the current minibuffer content."
   (when info
     (let ((txt (concat " [" info "]"))
           after-change-functions
           before-change-functions)
       (put-text-property 0 (length txt) 'face 'evil-ex-info txt)
-      (minibuffer-message txt)
-      )))
+      (minibuffer-message txt))))
 
 (defun evil-ex-split (text)
   "Splits an ex command line in range, command and argument.
@@ -149,6 +162,11 @@ the offset and the new position."
     (list pos off)))
 
 (defun evil-ex-parse-command (text pos)
+  "Parses TEXT starting at POS for a command.
+Returns a list (POS CMD FORCE) where
+POS is the position of the first character after the separator,
+CMD is the parsed command,
+FORCE is non-nil if and only if an exclamation followed the command."
   (if (and (string-match "\\([a-zA-Z_-]+\\)\\(!\\)?" text pos)
            (= (match-beginning 0) pos))
       (list (match-end 0)
@@ -157,14 +175,10 @@ the offset and the new position."
     (list pos nil nil)))
 
 (defun evil-ex-complete ()
+  "Starts ex minibuffer completion while temporarily disabling update functions."
   (interactive)
-  (let ((len (- (point-max)
-                (minibuffer-prompt-end))))
-    (let (after-change-functions before-change-functions)
-      (minibuffer-complete))
-    (evil-ex-update (minibuffer-prompt-end)
-                    (point-max)
-                    len)))
+  (let (after-change-functions before-change-functions)
+    (minibuffer-complete)))
 
 (defun evil-ex-completion (cmdline predicate flag)
   "Called to complete an object in the ex-buffer."
@@ -179,32 +193,60 @@ the offset and the new position."
       (evil-ex-complete-command cmd force predicate flag))))
 
 (defun evil-ex-complete-command (cmd force predicate flag)
-  (cond
-   ((eq flag nil)
-    (try-completion cmd evil-ex-commands predicate))
-   ((eq flag t)
-    (all-completions cmd evil-ex-commands predicate))
-   ((eq flag 'lambda)
-    (test-completion cmd evil-ex-commands predicate))))
+  "Called to complete a command."
+  (labels ((has-force (x)
+                      (let ((bnd (evil-ex-binding x)))
+                        (and bnd (evil-ex-has-force bnd)))))
+    (cond
+     (force
+      (labels ((pred (x)
+                     (and (or (null predicate) (funcall predicate x))
+                          (has-force x))))
+        (cond
+         ((eq flag nil)
+          (try-completion cmd evil-ex-commands predicate))
+         ((eq flag t)
+          (all-completions cmd evil-ex-commands predicate))
+         ((eq flag 'lambda)
+          (test-completion cmd evil-ex-commands predicate)))))
+     (t
+        (cond
+         ((eq flag nil)
+          (let ((result (try-completion cmd evil-ex-commands predicate)))
+            (if (and (eq result t) (has-force cmd))
+                cmd
+              result)))
+         ((eq flag t)
+          (let ((result (all-completions cmd evil-ex-commands predicate))
+                new-result)
+            (mapc #'(lambda (x)
+                      (push x new-result)
+                      (when (has-force cmd) (push (concat x "!") new-result)))
+                  result)
+            new-result))
+         ((eq flag 'lambda)
+          (test-completion cmd evil-ex-commands predicate)))))))
 
 (defun evil-ex-update (beg end len)
+  "Updates ex-variable in ex-mode when the buffer content changes."
+  (push (list beg end len (buffer-name)) mytest)
   (let* ((result (evil-ex-split (buffer-substring (minibuffer-prompt-end) (point-max))))
          (pos (+ (minibuffer-prompt-end) (pop result)))
          (start (pop result))
          (sep (pop result))
          (end (pop result))
          (cmd (pop result))
-         (force (pop result)))
+         (force (pop result))
+         (oldcmd evil-ex-current-cmd))
     (setq evil-ex-current-cmd cmd
           evil-ex-current-arg (buffer-substring pos (point-max))
           evil-ex-current-cmd-end (if force (1- pos) pos)
           evil-ex-current-cmd-begin (- evil-ex-current-cmd-end (length cmd))
           evil-ex-current-cmd-force force)
-    (push (buffer-substring-no-properties (minibuffer-prompt-end) (point-max)) mytest)
     (when (and (> (length evil-ex-current-arg) 0)
                (= (aref evil-ex-current-arg 0) ? ))
       (setq evil-ex-current-arg (substring evil-ex-current-arg 1)))
-    (when cmd
+    (when (and cmd (not (equal cmd oldcmd)))
       (let ((compl (or (if (assoc cmd evil-ex-commands)
                            (list t))
                        (delete-duplicates
@@ -240,6 +282,10 @@ the offset and the new position."
                      hist
                      default
                      inherit-input-method)
+  "Starts a completing ex minibuffer session.
+The parameters are the same as for `completing-read' but an
+addition UPDATE function can be given which is called as an hook
+of after-change-functions."
   (let ((evil-ex-current-buffer (current-buffer)))
     (let ((minibuffer-local-completion-map evil-ex-keymap)
           (evil-ex-update-function update)
@@ -248,15 +294,17 @@ the offset and the new position."
       (completing-read prompt collection nil require-match initial hist default inherit-input-method))))
 
 (defun evil-ex-setup ()
+  "Initializes ex minibuffer."
   (when evil-ex-update-function
-    (add-hook 'after-change-functions evil-ex-update-function))
+    (add-hook 'after-change-functions evil-ex-update-function nil t))
   (add-hook 'minibuffer-exit-hook #'evil-ex-teardown)
   (remove-hook 'minibuffer-setup-hook #'evil-ex-setup))
 
 (defun evil-ex-teardown ()
+  "Deinitializes ex minibuffer."
   (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown)
   (when evil-ex-update-function
-    (remove-hook 'after-change-functions evil-ex-update-function)))
+    (remove-hook 'after-change-functions evil-ex-update-function t)))
 
 (defun evil-ex-read-command (&optional initial-input)
   "Starts ex-mode."
@@ -270,9 +318,9 @@ the offset and the new position."
   "Returns the current argument as file-name."
   evil-ex-current-arg)
 
-(defun evil-write (file-name)
+(defun evil-write (file-name &optional force)
   "Saves the current buffer to FILE-NAME."
-  (interactive (list (evil-ex-file-name)))
+  (interactive (list (evil-ex-file-name) evil-ex-current-cmd-force))
   (error "Not yet implemened: WRITE <%s>" file-name))
 
 (provide 'evil-ex)
