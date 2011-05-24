@@ -12,8 +12,8 @@
 
 (defmacro evil-define-motion (motion args &rest body)
   "Define an motion command MOTION.
-ARGS is the argument list, which if non-nil must contain
-the count as the first argument."
+
+\(fn MOTION (COUNT ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
            (debug (&define name lambda-list
                            [&optional stringp]
@@ -98,14 +98,13 @@ the count as the first argument."
   (evil-narrow-to-line (backward-char (or count 1))))
 
 ;; The purpose of this function is the provide line motions which
-;; preserve the column. This is how 'previous-line and 'next-line
-;; work, but unfortunately this behaviour is hard coded, i.e., if and
-;; only if the last command was one of 'previous-line and 'next-line
-;; the column is preserved. Furthermore, in contrast to vim, when we
-;; cannot go further those motions move point to the beginning resp.
-;; the end of the line (we do never want point to leave its column).
-;; The code here comes from simple.el, and I hope it will work in
-;; future.
+;; preserve the column. This is how `previous-line' and `next-line'
+;; work, but unfortunately the behaviour is hard-coded: if and only if
+;; the last command was `previous-line' or `next-line', the column is
+;; preserved. Furthermore, in contrast to Vim, when we cannot go
+;; further, those motions move point to the beginning resp. the end of
+;; the line (we never want point to leave its column). The code here
+;; comes from simple.el, and I hope it will work in future.
 (defun evil-line-move (count)
   "A wrapper for line motions which conserves the column."
   (evil-signal-without-movement
@@ -257,102 +256,142 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
     (backward-char)))
 
 ;;; Text object and movement framework
+
 ;; Usual text objects like words, WORDS, paragraphs and sentences are
 ;; defined via a corresponding move-function. The move function must
 ;; have the following properties:
 ;;
-;; 1. Take exactly one argument, the count.
+;;   1. Take exactly one argument, the count.
+;;   2. When the count is positive, move point forward to the first
+;;      character after the end of the next count-th object.
+;;   3. When the count is negative, move point backward to the first
+;;      character of the count-th previous object.
+;;   4. If point is placed on the first character of an object, the
+;;      backward motion does NOT count that object.
+;;   5. If point is placed on the last character of an object, the
+;;      forward motion DOES count that object.
+;;   6. The return value is "count left", i.e., in forward direction
+;;      count is decreased by one for each successful move and in
+;;      backward direction count is increased by one for each
+;;      successful move, returning the final value of count.
+;;      Therefore, if the complete move is successful, the return
+;;      value is 0.
 ;;
-;; 2. When count is positive, move point forward to the first
-;;    character after the end of the next count-th object.
+;; A useful macro in this regard is `evil-motion-loop', which quits
+;; when point does not move further and returns the count difference.
+;; It also facilitates negative counts by providing a "unit value" of
+;; 1 or -1 for use in each iteration. For example, a hypothetical
+;; "foo-bar" move could be written as such:
 ;;
-;; 3. When count is negative, move point backward to the first
-;;    character of the count-th previous object.
+;;     (defun foo-bar (count)
+;;       (evil-motion-loop (var count)
+;;         (forward-foo var) ; `var' is 1 or -1 depending on COUNT
+;;         (forward-bar var)))
 ;;
-;; 4. If point is placed on the first character of an object, the
-;;    backward motion does *not* count that object.
+;; If "forward-foo" and "-bar" didn't accept negative arguments,
+;; we could choose their backward equivalents by inspecting `var':
 ;;
-;; 5. If point is placed on the last character of an object, the
-;;    forward motion *does* count that object.
+;;     (defun foo-bar (count)
+;;       (evil-motion-loop (var count)
+;;         (cond
+;;          ((< var 0)
+;;           (backward-foo 1)
+;;           (backward-bar 1))
+;;          (t
+;;           (forward-foo 1)
+;;           (forward-bar 1)))))
 ;;
-;; 6. The return value is count left, i.e., in forward direction count
-;;    is decreased by one for each successful move, in backward
-;;    direction count is increased by one for each successful move,
-;;    the final value of count is returned. Therefore, if the complete
-;;    move is successful the return value is 0.
+;; A higher-level macro, `evil-define-union-move', is defined
+;; in terms of `evil-motion-loop'.
 ;;
-;; After a forward motion point has to be placed on the first
-;; character after some object unless no motion was possible at all.
-;; Similar, after a backward motion point has to be placed on the
-;; first character of some object unless no motion was possible at
-;; all. This implies that point should *never* be moved to eob or bob
-;; unless an object ends or begins at eob or bob. (Usually, Emacs
-;; motions always move as far as possible. But we want to use the
-;; motion-function to identify certain objects in the buffer and thus
-;; exact movement to object boundaries is required).
+;; After a forward motion, point has to be placed on the first
+;; character after some object, unless no motion was possible at all.
+;; Similarly, after a backward motion, point has to be placed on the
+;; first character of some object. This implies that point should
+;; NEVER be moved to eob or bob, unless an object ends or begins at
+;; eob or bob. (Usually, Emacs motions always move as far as possible.
+;; But we want to use the motion-function to identify certain objects
+;; in the buffer, and thus exact movement to object boundaries is
+;; required.)
+
+(defmacro evil-motion-loop (spec &rest body)
+  "Loop a certain number of times.
+Evaluate BODY repeatedly COUNT times with VAR bound to 1 or -1,
+depending on the sign of COUNT. RESULT is bound to decreasing
+values from COUNT to 0, and the return value is 0 if the loop
+completes successfully. Each iteration must move point; if point
+does not change, the loop immediately quits, and the return value
+is the current value of RESULT. See also `evil-loop'.
+
+\(fn (VAR COUNT [RESULT]) BODY...)"
+  (declare (indent defun)
+           (debug ((symbolp form &optional symbolp) body)))
+  (let* ((var (pop spec))
+         (countval (pop spec))
+         (done (make-symbol "donevar"))
+         (count (make-symbol "countvar"))
+         (result (or (pop spec) (make-symbol "resultvar"))))
+    `(let* ((,count ,countval)
+            (,var (if (< ,count 0) -1 1)))
+       (catch ',done
+         (evil-loop (,result ,count)
+           (let ((orig (point)))
+             ,@body
+             (when (= (point) orig)
+               (throw ',done ,result))))))))
+
+(defmacro evil-define-union-move (name args &rest moves)
+  "Create a movement function named NAME.
+The function moves to the nearest object boundary defined by one
+of the movement function in MOVES, which is a list where each
+element has the form \(FUNC PARAMS... COUNT).
+
+COUNT is a variable which is bound to 1 or -1, depending on the
+direction. In each iteration, the function calls each move in
+isolation and settles for the nearest position. If unable to move
+further, the return value is the number of iterations that could
+not be performed.
+
+\(fn NAME (COUNT) MOVES...)"
+  (declare (debug (&define name def-body))
+           (indent defun))
+  (let* ((var (or (car-safe args) 'var))
+         (doc (when (stringp (car-safe moves))
+                (pop moves)))
+         (moves (mapcar #'(lambda (move)
+                            `(save-excursion
+                               ;; don't include failing moves
+                               (when (zerop ,move)
+                                 (point))))
+                        moves)))
+    `(defun ,name (count)
+       ,@(when doc `(,doc))
+       (let (bounds)
+         (evil-motion-loop (,var (or count 1))
+           (when (setq bounds (remq nil (list ,@moves)))
+             (goto-char (apply (if (> ,var 0) #'min #'max)
+                               bounds))))))))
 
 (defun evil-move-chars (chars count)
   "Moves point to the end or beginning of a sequence of CHARS.
-CHARS is a character set as in [...] of regular expressions."
-  (let ((re (concat "[" chars "]")))
-    (setq count (or count 1))
-    (while (and (> count 0)
-                (re-search-forward re nil t))
-      (skip-chars-forward chars)
-      (setq count (1- count)))
-    (while (and (< count 0)
-                (re-search-backward re nil t))
-      (skip-chars-backward chars)
-      (setq count (1+ count)))
-    count))
-
-(defmacro evil-define-union-move (name &rest moves)
-  "Creates a move which moves to the next object boundary defined
-by one movement function in MOVES.
-
-MOVES is a list whose elements have the form (FUNC PARAMS...).
-The union move calls (FUNC PARAMS... COUNT). The return value is
-the number of moves that could not be performed."
-  (declare (indent defun))
-  `(defun ,name (count)
-     ,@(and moves (listp moves)
-            (stringp (car moves))
-            (list (pop moves)))
-     (setq count (or count 1))
-     (catch 'done
-       (while (> count 0)
-         (let ((results
-                (remq nil
-                      (list ,@(mapcar
-                               #'(lambda (move)
-                                   `(save-excursion
-                                      (when (zerop ,(append move '(1)))
-                                        (point))))
-                               moves)))))
-           (unless results (throw 'done count))
-           (goto-char (apply #'min results))
-           (setq count (1- count))))
-       (while (< count 0)
-         (let ((results
-                (remq nil
-                      (list ,@(mapcar
-                               #'(lambda (move)
-                                   `(save-excursion
-                                      (when (zerop ,(append move '(-1)))
-                                        (point))))
-                               moves)))))
-           (unless results (throw 'done count))
-           (goto-char (apply #'max results))
-           (setq count (1+ count))))
-       count)))
+CHARS is a character set as inside [...] in a regular expression."
+  (let ((regexp (format "[%s]" chars)))
+    (evil-motion-loop (var count)
+      (cond
+       ((< var 0)
+        (re-search-backward regexp nil t)
+        (skip-chars-backward chars))
+       (t
+        (re-search-forward regexp nil t)
+        (skip-chars-forward chars))))))
 
 (defun evil-move-forward-end (move &optional count count-current)
   "Moves point the the COUNT next end of the object specified by
-move MOVE. If there are no COUNT objects move the point to the
-end of the last object. If there no next object raises
+move MOVE. If there are no COUNT objects, move the point to the
+end of the last object. If there no next object, raises
 'end-of-buffer. If COUNT-CURRENT is non-nil, the current object
 counts as one move, otherwise the end of the current object is
-*not* counted."
+NOT counted."
   (setq count (or count 1))
   (when (evil-eobp)
     (signal 'end-of-buffer nil))
@@ -366,10 +405,10 @@ counts as one move, otherwise the end of the current object is
   count)
 
 (defun evil-move-forward-begin (move count)
-  "Moves point the the COUNT next beginning of the object
-specified by move MOVE. If there are no COUNT objects move the
-point to the beginning of the last object. If there no next
-object raises 'end-of-buffer."
+  "Moves point to the COUNT next beginning of the object
+specified by move MOVE. If there are no COUNT objects, move the
+point to the beginning of the last object. If there is no next
+object, raises 'end-of-buffer."
   (setq count (or count 1))
   (when (evil-eobp)
     (signal 'end-of-buffer nil))
@@ -390,10 +429,10 @@ object raises 'end-of-buffer."
   count)
 
 (defun evil-move-backward-begin (move &optional count)
-  "Moves point the the COUNT previous beginning of the object
-specified by move MOVE. If there are no COUNT objects move the
-point to the beginning of the first object. If there no previous
-object raises 'beginning-of-buffer."
+  "Moves point to the COUNT previous beginning of the object
+specified by move MOVE. If there are no COUNT objects, move the
+point to the beginning of the first object. If there is no previous
+object, raises 'beginning-of-buffer."
   (setq count (- (or count 1)))
   (when (bobp)
     (signal 'beginning-of-buffer nil))
@@ -404,9 +443,9 @@ object raises 'beginning-of-buffer."
   (- count))
 
 (defun evil-move-backward-end (move count)
-  "Moves point the the COUNT previous end of the object specified
-by move MOVE. If there are no COUNT objects move the point to
-the end of the first object. If there no previous object raises
+  "Moves point to the COUNT previous end of the object specified
+by move MOVE. If there are no COUNT objects, move the point to
+the end of the first object. If there is no previous object, raises
 'beginning-of-buffer."
   (setq count (- (or count 1)))
   (when (bobp)
@@ -427,29 +466,28 @@ the end of the first object. If there no previous object raises
       (goto-char (point-min))))
   (- count))
 
-(defun evil-move-empty-lines (count)
+(evil-define-motion evil-move-empty-lines (count)
   "Moves to the next or previous empty line, repeated COUNT times."
-  (setq count (or count 1))
-  (cond
-   ((> count 0)
-    (while (and (> count 0)
-                (re-search-forward "^$" nil t)
-                (not (eobp)))
-      (forward-char)
-      (setq count (1- count))))
-   ((< count 0)
-    (while (and (< count 0)
-                (not (bobp))
-                (or (backward-char) t)
-                (re-search-backward "^$" nil t))
-      (setq count (1+ count)))))
-  count)
+  :type exclusive
+  (catch 'done
+    (evil-motion-loop (var (or count 1))
+      (cond
+       ((< var 0)
+        (goto-char (or (save-excursion
+                         (unless (bobp)
+                           (backward-char)
+                           (re-search-backward "^$" nil t)))
+                       (point))))
+       (t
+        (when (and (re-search-forward "^$" nil t)
+                   (not (eobp)))
+          (forward-char)))))))
 
-(evil-define-union-move evil-move-word
+(evil-define-union-move evil-move-word (count)
   "Move by words."
-  (evil-move-chars evil-word)
-  (evil-move-chars (concat "^ \t\r\n" evil-word))
-  (evil-move-empty-lines))
+  (evil-move-chars evil-word count)
+  (evil-move-chars (concat "^ \t\r\n" evil-word) count)
+  (evil-move-empty-lines count))
 
 (evil-define-motion evil-forward-word-begin (count)
   "Move the cursor the beginning of the COUNT-th next word."
@@ -474,10 +512,10 @@ the end of the first object. If there no previous object raises
   :type inclusive
   (evil-move-backward-end #'evil-move-word count))
 
-(evil-define-union-move evil-move-WORD
+(evil-define-union-move evil-move-WORD (count)
   "Move by WORDs."
-  (evil-move-chars "^ \t\r\n")
-  (evil-move-empty-lines))
+  (evil-move-chars "^ \t\r\n" count)
+  (evil-move-empty-lines count))
 
 (evil-define-motion evil-forward-WORD-begin (count)
   "Move the cursor the beginning of the COUNT-th next WORD."

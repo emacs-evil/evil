@@ -1,5 +1,6 @@
 ;;;; Insert state
 
+(require 'evil-digraphs)
 (require 'evil-states)
 (require 'evil-repeat)
 (require 'evil-motions)
@@ -129,6 +130,16 @@ The insertion will be repeated COUNT times."
                                       #'end-of-line
                                       vcount)))
   (evil-insert-state 1))
+
+(defun evil-insert-digraph (count)
+  "Inserts a digraph.
+The insertion is repeated COUNT times."
+  (interactive "p")
+  (condition-case nil
+      (let ((digraph (evil-digraph-find (read-char) (read-char))))
+        (dotimes (var count)
+          (insert digraph)))
+    (error nil)))
 
 (provide 'evil-insert)
 

@@ -1053,6 +1053,12 @@ KEYS is used."
      '("world\\n\");ABCABC" "" nil eolp)
      '("EXIT_SUCCESS;ABCABC" "" nil eolp))))
 
+(ert-deftest evil-test-insert-digraph ()
+  "Test insertion of digraph"
+  :tags '(evil)
+  (evil-test-buffer-edit ("i\C-kaa")
+    "å" ""))
+
 (defun evil-test-dummy-complete ()
   "Test function for change-base repeation.
 Removes 5 characters, insert BEGIN\\n\\nEND\\nplaces

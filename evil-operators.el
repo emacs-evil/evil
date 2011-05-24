@@ -43,8 +43,8 @@
 
 (defmacro evil-define-operator (operator args &rest body)
   "Define an operator command OPERATOR.
-ARGS is the argument list, which must contain at least two
-arguments: the beginning and end of the range."
+
+\(fn OPERATOR (BEG END ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
            (debug (&define name lambda-list
                            [&optional stringp]
