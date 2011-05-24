@@ -47,6 +47,8 @@ TARGET the command to call."
 (define-key evil-normal-state-map "N" 'evil-search-previous)
 (define-key evil-normal-state-map "#" 'evil-search-symbol-backward)
 (define-key evil-normal-state-map "*" 'evil-search-symbol-forward)
+(define-key evil-normal-state-map "g8" 'what-cursor-position)
+(define-key evil-normal-state-map "ga" 'what-cursor-position)
 (define-key evil-normal-state-map "gd" 'evil-goto-definition)
 (define-key evil-normal-state-map "." 'evil-repeat)
 (define-key evil-normal-state-map (kbd "C-.") 'evil-repeat-pop)
