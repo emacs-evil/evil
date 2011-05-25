@@ -119,12 +119,14 @@ Unless `this-command' is a motion, expand the region
 to the selection."
   (when (evil-visual-state-p)
     (setq evil-this-type (evil-visual-type))
-    (unless (evil-keep-visual-p this-command)
+    (unless (evil-get-command-property
+             this-command :keep-visual)
       (evil-visual-expand-region
-       ;; don't include final newline in linewise selection
+       ;; exclude final newline from linewise selection
        ;; unless the command has real need of it
        (and (eq (evil-visual-type) 'line)
-            (not (evil-operator-p this-command)))))))
+            (evil-get-command-property
+             this-command :exclude-newline))))))
 
 (defun evil-visual-post-command ()
   "Run after each command in Visual state.

@@ -41,17 +41,15 @@
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive `(append ,interactive ,@(cdr (pop body)))))
     ;; macro expansion
-    `(progn
-       (add-to-list 'evil-motions ',motion t)
-       (evil-define-command ,motion (,@args)
-         ,@(when doc `(,doc)) ; avoid nil before `interactive'
-         ,@keys
-         :keep-visual t
-         :repeatable nil
-         (interactive
-          ,@(when interactive
-              `(,interactive)))
-         ,@body))))
+    `(evil-define-command ,motion (,@args)
+       ,@(when doc `(,doc)) ; avoid nil before `interactive'
+       ,@keys
+       :keep-visual t
+       :repeatable nil
+       (interactive
+        ,@(when interactive
+            `(,interactive)))
+       ,@body)))
 
 (defmacro evil-signal-without-movement (&rest body)
   "Catches errors point has not changed within this scope."

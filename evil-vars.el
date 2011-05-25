@@ -111,12 +111,6 @@ describing it, etc.")
   "Current motion count.")
 (make-variable-buffer-local 'evil-mode-map-alist)
 
-(defvar evil-motions nil
-  "List of movement commands.")
-
-(defvar evil-operators nil
-  "List of operator commands.")
-
 (defvar evil-inhibit-operator nil
   "Inhibit current operator.
 If an operator calls a motion and the motion sets this variable

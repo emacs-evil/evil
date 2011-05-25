@@ -86,42 +86,41 @@
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive (cdr (pop body))))
     ;; macro expansion
-    `(progn
-       (add-to-list 'evil-operators ',operator t)
-       (evil-define-command ,operator (,beg ,end &optional ,type ,@args)
-         ,@(when doc `(,doc))
-         ,@keys
-         :keep-visual t
-         (interactive
-          (let* ((orig (point))
-                 (range (evil-operator-range ',motion))
-                 (beg (pop range))
-                 (end (pop range))
-                 (type (pop range)))
-            (unwind-protect
-                (setq range (append (list beg end type)
-                                    (progn ,@interactive)))
-              (setq orig (point))
-              (when ,move-point
-                (if (and ',motion (not (evil-visual-state-p)))
-                    (goto-char (max beg (1- end)))
-                  (if (eq type 'block)
-                      (evil-visual-block-rotate 'upper-left beg end)
-                    (goto-char beg))))
-              (if ,keep-visual
-                  (when (evil-visual-state-p)
-                    (evil-visual-expand-region))
+    `(evil-define-command ,operator (,beg ,end &optional ,type ,@args)
+       ,@(when doc `(,doc))
+       ,@keys
+       :exclude-newline t
+       :keep-visual t
+       (interactive
+        (let* ((orig (point))
+               (range (evil-operator-range ',motion))
+               (beg (pop range))
+               (end (pop range))
+               (type (pop range)))
+          (unwind-protect
+              (setq range (append (list beg end type)
+                                  (progn ,@interactive)))
+            (setq orig (point))
+            (when ,move-point
+              (if (and ',motion (not (evil-visual-state-p)))
+                  (goto-char (max beg (1- end)))
+                (if (eq type 'block)
+                    (evil-visual-block-rotate 'upper-left beg end)
+                  (goto-char beg))))
+            (if ,keep-visual
                 (when (evil-visual-state-p)
-                  (evil-normal-state))
-                (when (region-active-p)
-                  (evil-active-region -1)))
-              (unless ,move-point
-                (goto-char orig)))
-            range))
-         (if (and evil-inhibit-operator
-                  (evil-called-interactively-p))
-             (setq evil-inhibit-operator nil)
-           ,@body)))))
+                  (evil-visual-expand-region))
+              (when (evil-visual-state-p)
+                (evil-normal-state))
+              (when (region-active-p)
+                (evil-active-region -1)))
+            (unless ,move-point
+              (goto-char orig)))
+          range))
+       (if (and evil-inhibit-operator
+                (evil-called-interactively-p))
+           (setq evil-inhibit-operator nil)
+         ,@body))))
 
 (defun evil-operator-range (&optional motion)
   "Read a motion from the keyboard and return its buffer positions.

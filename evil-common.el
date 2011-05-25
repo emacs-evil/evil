@@ -3,14 +3,6 @@
 (require 'evil-vars)
 (require 'evil-compatibility)
 
-(defun evil-motion-p (cmd)
-  "Return non-nil if CMD is a motion."
-  (memq cmd evil-motions))
-
-(defun evil-operator-p (cmd)
-  "Return non-nil if CMD is an operator."
-  (memq cmd evil-operators))
-
 (defun evil-add-to-alist (list-var key val &rest elements)
   "Add the assocation of KEY and VAL to the value of LIST-VAR.
 If the list already contains an entry for KEY, update that entry;
@@ -522,10 +514,6 @@ They are stored as a plist in the COMMAND symbol's
 (defun evil-repeatable-p (command)
   "Whether COMMAND is repeatable."
   (evil-get-command-property command :repeatable))
-
-(defun evil-keep-visual-p (command)
-  "Whether COMMAND should not exit Visual state."
-  (evil-get-command-property command :keep-visual))
 
 (dolist (cmd '(backward-char
                backward-list
