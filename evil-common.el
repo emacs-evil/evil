@@ -71,39 +71,44 @@ To concatenate regular lists, see `evil-concat-lists'."
         (apply 'evil-concat-lists result sequences)
       result)))
 
-(defun evil-get-property (alist key prop)
+(defun evil-get-property (alist key &optional prop)
   "Return property PROP for KEY in ALIST.
 ALIST is an association list with entries in the form
 \(KEY . PLIST), where PLIST is a property list.
-If KEY is nil, return an association list of states and
-their PROP values."
-  (let (result val)
-    (unless (keywordp prop)
-      (setq prop (intern (format ":%s" prop))))
-    (if key
-        (plist-get (cdr (assq key alist)) prop)
+If PROP is nil, return all properties for KEY.
+If KEY is nil, return an association list of states
+and their PROP values."
+  (when (and prop (not (keywordp prop)))
+    (setq prop (intern (format ":%s" prop))))
+  (cond
+   ((and key prop)
+    (plist-get (cdr (assq key alist)) prop))
+   (key ; PROP is nil
+    (cdr (assq key alist)))
+   (prop ; KEY is nil
+    (let (result val)
       (dolist (entry alist result)
         (setq key (car entry)
               val (plist-get (cdr entry) prop))
         (when val
-          (add-to-list 'result (cons key val) t))))))
+          (add-to-list 'result (cons key val) t)))))))
 
 (defun evil-put-property (alist-var key prop val &rest properties)
   "Set PROP to VAL for KEY in ALIST-VAR.
 ALIST-VAR points to an association list with entries in the form
 \(KEY . PLIST), where PLIST is a property list storing PROP and VAL."
-  (let* ((alist (symbol-value alist-var))
-         (plist (cdr (assq key alist))))
-    (while
-        (progn
-          (unless (keywordp prop)
-            (setq prop (intern (format ":%s" prop))))
-          (setq plist (plist-put plist prop val))
-          (when properties
-            (setq prop (pop properties)
-                  val (pop properties)))))
-    (set alist-var (assq-delete-all key alist))
-    (add-to-list alist-var (cons key plist) t)))
+  (set alist-var
+       (let* ((alist (symbol-value alist-var))
+              (plist (cdr (assq key alist))))
+         (while (progn
+                  (unless (keywordp prop)
+                    (setq prop (intern (format ":%s" prop))))
+                  (setq plist (plist-put plist prop val))
+                  (when properties
+                    (setq prop (pop properties)
+                          val (pop properties)))))
+         (setq alist (assq-delete-all key alist))
+         (add-to-list 'alist (cons key plist) t))))
 
 (defmacro evil-swap (this that &rest vars)
   "Swap the values of variables THIS and THAT.

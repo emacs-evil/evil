@@ -2389,6 +2389,29 @@ if no previous selection")
 
 ;;; Utilities
 
+(ert-deftest evil-test-properties ()
+  "Test `evil-get-property' and `evil-put-property'"
+  :tags '(evil)
+  (let (alist)
+    (ert-info ("Set properties")
+      (evil-put-property 'alist 'foo :bar 'baz)
+      (should (equal alist '((foo . (:bar baz)))))
+      (evil-put-property 'alist 'foo 'qux 'quux)
+      (should (equal alist '((foo . (:bar baz :qux quux)))))
+      (evil-put-property 'alist 'corge :bar 'grault)
+      (should (equal alist '((foo   . (:bar baz :qux quux))
+                             (corge . (:bar grault))))))
+    (ert-info ("Get properties")
+      (should (eq (evil-get-property alist 'foo :bar) 'baz))
+      (should (eq (evil-get-property alist 'foo 'qux) 'quux))
+      (should (eq (evil-get-property alist 'corge :bar) 'grault))
+      (should (equal (evil-get-property alist nil :bar)
+                     '((foo . baz) (corge . grault))))
+      (should-not (evil-get-property alist 'foo :grault))
+      (should-not (evil-get-property alist 'waldo :fred))
+      (should-not (evil-get-property alist 'waldo nil))
+      (should-not (evil-get-property alist nil :fred)))))
+
 (ert-deftest evil-test-concat-lists ()
   "Test `evil-concat-lists' and `evil-concat-alists'"
   :tags '(evil)
