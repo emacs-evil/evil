@@ -50,7 +50,7 @@
                            [&optional stringp]
                            [&rest keywordp sexp]
                            def-body)))
-  (let ((move-point nil) ; should be t
+  (let ((move-point t)
         (keep-visual nil)
         (whole-lines nil)
         (motion nil)
@@ -318,6 +318,7 @@ Both COUNT and CMD may be nil."
 
 (evil-define-operator evil-yank (begin end type register)
   "Saves the characters in motion into the kill-ring."
+  :move-point nil
   (cond
    ((eq type 'block)
     (evil-yank-rectangle begin end register))
