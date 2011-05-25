@@ -113,11 +113,11 @@ current buffer only.")
 
 (defun evil-state-property (state prop)
   "Return property PROP for STATE."
-  (evil-get-property evil-states-alist state prop))
+  (evil-get-property evil-state-properties state prop))
 
 (defun evil-state-p (sym)
   "Whether SYM is the name of a state."
-  (assq sym evil-states-alist))
+  (assq sym evil-state-properties))
 
 (defun evil-initialize-state (&optional buffer)
   "Initialize Evil state in BUFFER."
@@ -480,7 +480,7 @@ The basic keymap of this state will then be
 
     ;; macro expansion
     `(progn
-       ;; Save the state's properties in `evil-states-alist' for
+       ;; Save the state's properties in `evil-state-properties' for
        ;; runtime lookup. Among other things, this information is used
        ;; to determine what keymaps should be activated by the state
        ;; (and, when processing :enable, what keymaps are activated by
@@ -489,7 +489,7 @@ The basic keymap of this state will then be
        ;; (to which we may have assigned state bindings), as well as
        ;; states whose definitions may not have been processed yet.
        (evil-put-property
-        'evil-states-alist ',state
+        'evil-state-properties ',state
         :toggle (defvar ,toggle nil
                   ,(format "Non-nil if %s state is enabled.
 Use the command `%s' to change this variable.\n\n%s" state toggle doc))

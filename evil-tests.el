@@ -240,7 +240,7 @@ unchanged test-buffer in Normal state."
   (ert-info ("Set `evil-state' to nil")
     (should-not evil-state))
   (ert-info ("Disable all state keymaps")
-    (dolist (state (mapcar 'car evil-states-alist) t)
+    (dolist (state (mapcar 'car evil-state-properties) t)
       (should-not (symbol-value (evil-state-property state :toggle)))
       (should-not (memq (symbol-value (evil-state-property state :keymap))
                         (current-active-maps)))

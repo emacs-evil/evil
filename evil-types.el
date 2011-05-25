@@ -258,11 +258,11 @@ If no description is available, return the empty string."
 
 (defun evil-type-property (type prop)
   "Return property PROP for TYPE."
-  (evil-get-property evil-types-alist type prop))
+  (evil-get-property evil-type-properties type prop))
 
 (defun evil-type-p (sym)
   "Whether SYM is the name of a type."
-  (assq sym evil-types-alist))
+  (assq sym evil-type-properties))
 
 (defmacro evil-define-type (type doc &rest body)
   "Define type TYPE.
@@ -359,7 +359,7 @@ with PROPERTIES.\n\n%s%s" sym type string doc)
                                      (pop range) (pop range))))
                   (append (list beg end type) properties))))))) t))
     `(progn
-       (evil-put-property 'evil-types-alist ',type ,@plist)
+       (evil-put-property 'evil-type-properties ',type ,@plist)
        ,@defun-forms
        ',type)))
 

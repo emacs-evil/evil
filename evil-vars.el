@@ -69,7 +69,7 @@ reinitialized in each buffer. Entries have the form
 \(MODE . KEYMAP), where KEYMAP is the variable containing
 the keymap for MODE.")
 
-(defvar evil-states-alist nil
+(defvar evil-state-properties nil
   "Specifications made by `evil-define-state'.
 Entries have the form (STATE . PLIST), where PLIST is a property
 list specifying various aspects of the state. To access a property,
@@ -89,7 +89,7 @@ having higher priority.")
 Entries have the form (VARIABLE VALUE LOCAL), where LOCAL is
 whether the variable was previously buffer-local.")
 
-(defvar evil-types-alist nil
+(defvar evil-type-properties nil
   "Specifications made by `evil-define-type'.
 Entries have the form (TYPE . PLIST), where PLIST is a property
 list specifying functions for handling the type: expanding it,
