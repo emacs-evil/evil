@@ -471,34 +471,36 @@ recursively."
             arg (pop body))
       (unless nil ; TODO: add keyword check
         (plist-put keys key arg)))
-    `(progn
-       (apply 'evil-set-command-properties ',command ',keys)
-       ,@(when body
-           `((defun ,command (,@args)
-               ,@(when doc `(,doc))
-               ,@body)))
-       ,(when doc-form
+    `(let ((func
+            ,(cond
+              ;; no body: set command properties
+              ((null body)
+               `',command)
+              ;; no name: return lambda function
+              ((null command)
+               `(lambda (,@args) ,@body))
+              ;; default: define command
+              (t
+               `(defun ,command (,@args)
+                  ,@(when doc `(,doc))
+                  ,@body)))))
+       (apply 'evil-set-command-properties func ',keys)
+       ,(when (and doc-form command)
           `(put ',command 'function-documentation ,doc-form))
-       ',command)))
+       func)))
 
 (defun evil-add-command-properties (command &rest properties)
   "Add Evil PROPERTIES to COMMAND.
 PROPERTIES should be a list of an even number of values, the
-first of a pair considered as a key, the second as the value.
-They are stored as a plist in the COMMAND symbol's
-`evil-properties' property."
-  (let ((plist (get command 'evil-properties)))
-    (while properties
-      (setq plist (plist-put plist (pop properties) (pop properties))))
-    (put command 'evil-properties plist)))
+first of a pair considered as a key, the second as the value."
+  (apply 'evil-put-property 'evil-command-properties command properties))
 
 (defun evil-set-command-properties (command &rest properties)
   "Set Evil PROPERTIES of COMMAND.
 PROPERTIES should be a list of an even number of values, the
-first of a pair considered as a key, the second as the value.
-They are stored as a plist in the COMMAND symbol's
-`evil-properties' property."
-  (put command 'evil-properties nil)
+first of a pair considered as a key, the second as the value."
+  (setq evil-command-properties
+        (assq-delete-all command evil-command-properties))
   (apply #'evil-add-command-properties command properties))
 
 ;; If no evil-properties are defined for the command, several parts of
@@ -506,15 +508,16 @@ They are stored as a plist in the COMMAND symbol's
 ;; whether the command is repeatable by monitoring buffer changes.
 (defun evil-has-properties-p (command)
   "Whether Evil properties are defined for COMMAND."
-  (get command 'evil-properties))
+  (evil-get-property evil-command-properties command))
 
 (defun evil-has-property (command property)
   "Whether COMMAND has Evil PROPERTY."
-  (plist-member (get command 'evil-properties) property))
+  (plist-member (evil-get-property evil-command-properties command)
+                property))
 
 (defun evil-get-command-property (command property)
   "Returns the value of Evil PROPERTY of COMMAND."
-  (plist-get (get command 'evil-properties) property))
+  (evil-get-property evil-command-properties command property))
 
 (defun evil-repeatable-p (command)
   "Whether COMMAND is repeatable."

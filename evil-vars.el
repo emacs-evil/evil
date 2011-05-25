@@ -81,6 +81,9 @@ Elements have the form (MODE . KEYMAP), with the first keymaps
 having higher priority.")
 (make-variable-buffer-local 'evil-mode-map-alist)
 
+(defvar evil-command-properties nil
+  "Specifications made by `evil-define-command'.")
+
 (defvar evil-transient-vars '(transient-mark-mode)
   "List of variables pertaining to Transient Mark mode.")
 
