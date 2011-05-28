@@ -13,13 +13,21 @@
 (require 'evil)
 
 (defvar evil-tests-run nil
-  "Run Evil tests.")
+  "*Run Evil tests.")
 
-(defun evil-tests-run (&optional arg)
+(defun evil-tests-run (&optional tests)
   "Run Evil tests."
   (interactive '(t))
-  (if arg (ert-run-tests-interactively '(tag evil))
-    (ert-run-tests-batch '(tag evil))))
+  (if (not (listp tests))
+      (ert-run-tests-interactively t)
+    (ert-run-tests-batch-and-exit
+     (or (null tests)
+         `(or ,@(mapcar (lambda (test)
+                          (or (null test)
+                              (and (memq test '(evil t)) t)
+                              `(or (tag ,test)
+                                   ,(format "^%s$" test))))
+                        tests))))))
 
 (defmacro evil-test-buffer (&rest body)
   "Execute BODY in a temporary buffer.
@@ -252,7 +260,7 @@ unchanged test-buffer in Normal state."
 
 (ert-deftest evil-test-toggle-local-mode ()
   "Toggle `evil-local-mode'"
-  :tags '(evil)
+  :tags '(evil state)
   (with-temp-buffer
     (ert-info ("Enable `evil-local-mode'")
       (evil-local-mode 1)
@@ -312,7 +320,7 @@ unchanged test-buffer in Normal state."
 
 (ert-deftest evil-test-exit-normal-state ()
   "Enter Normal state and then disable all states"
-  :tags '(evil)
+  :tags '(evil state)
   (with-temp-buffer
     (evil-test-change-state 'normal)
     (evil-normal-state -1)
@@ -320,7 +328,7 @@ unchanged test-buffer in Normal state."
 
 (ert-deftest evil-test-change-states ()
   "Change between Normal state, Emacs state and Operator-Pending state"
-  :tags '(evil)
+  :tags '(evil state)
   (with-temp-buffer
     (evil-test-change-state 'normal)
     (evil-test-change-state 'emacs)
@@ -333,7 +341,7 @@ unchanged test-buffer in Normal state."
 
 (ert-deftest evil-test-enter-normal-state-disabled ()
   "Enter Normal state even if `evil-local-mode' is disabled"
-  :tags '(evil)
+  :tags '(evil state)
   (with-temp-buffer
     (evil-local-mode -1)
     (evil-test-local-mode-disabled)
@@ -360,23 +368,23 @@ suppression keymap comes first")
 
 (ert-deftest evil-test-emacs-state-suppress-keymap ()
   "`self-insert-command' works in emacs-state"
-  :tags '(evil)
+  :tags '(evil state)
   (should-error (evil-test-suppress-keymap 'emacs)))
 
 (ert-deftest evil-test-normal-state-suppress-keymap ()
   "No `self-insert-command' in normal-state"
-  :tags '(evil)
+  :tags '(evil state)
   (evil-test-suppress-keymap 'normal))
 
 (ert-deftest evil-test-operator-state-suppress-keymap ()
   "Operator-Pending state should inherit suppression
 of `self-insert-command' from Normal state"
-  :tags '(evil)
+  :tags '(evil state)
   (evil-test-suppress-keymap 'operator))
 
 (ert-deftest evil-test-operator-state-shortcut-keymap ()
   "Enable shortcut keymap in Operator-Pending state"
-  :tags '(evil)
+  :tags '(evil state)
   (evil-test-buffer
     (ert-info ("Activate `evil-operator-shortcut-map' in
 Operator-Pending state")
@@ -412,7 +420,7 @@ when exiting Operator-Pending state")
 
 (ert-deftest evil-test-auxiliary-maps ()
   "Test auxiliary keymaps."
-  :tags '(evil)
+  :tags '(evil state)
   (let ((map (make-sparse-keymap)) aux)
     (ert-info ("Create a new auxiliary keymap")
       (evil-define-key 'normal map "f" 'foo)
@@ -428,7 +436,7 @@ when exiting Operator-Pending state")
 
 (ert-deftest evil-test-exclusive-type ()
   "Expand and contract the `line' type"
-  :tags '(evil)
+  :tags '(evil type)
   (evil-test-buffer
     (let* ((first-line 1)
            (second-line (progn
@@ -484,7 +492,7 @@ and the beginning")
 
 (ert-deftest evil-test-inclusive-type ()
   "Expand and contract the `inclusive' type"
-  :tags '(evil)
+  :tags '(evil type)
   (evil-test-buffer
     (let ((overlay (make-overlay 1 1)))
       (ert-info ("Include the ending character")
@@ -519,7 +527,7 @@ and the beginning")
 
 (ert-deftest evil-test-line-type ()
   "Expand the `line' type"
-  :tags '(evil)
+  :tags '(evil type)
   (evil-test-buffer
     (let* ((first-line 1)
            (second-line (progn
@@ -553,7 +561,7 @@ and the beginning")
 
 (ert-deftest evil-test-block-type ()
   "Expand and contract the `block' type"
-  :tags '(evil)
+  :tags '(evil type)
   (evil-test-buffer
     (let* ((first-line 1)
            (second-line (progn
@@ -589,7 +597,7 @@ and the beginning")
 
 (ert-deftest evil-test-type-transform ()
   "Test `evil-transform'"
-  :tags '(evil)
+  :tags '(evil type)
   (evil-test-buffer
     (ert-info ("Return positions unchanged when passed nil for
 TYPE or TRANSFORM")
@@ -609,7 +617,7 @@ TYPE or TRANSFORM")
 
 (ert-deftest evil-test-type-modifiers ()
   "Test type modifiers like \"dv}\""
-  :tags '(evil)
+  :tags '(evil type)
   (let ((text "Above some line\n\nBelow some empty line"))
     (ert-info ("Change `inclusive' motions to `exclusive'")
       (evil-test-buffer
@@ -630,11 +638,77 @@ TYPE or TRANSFORM")
         (evil-test-macro "wdV}"
           'bobp "Below some empty line")))))
 
+;;; Insertion
+
+(ert-deftest evil-test-insert-before ()
+  "Test insertion of text before point"
+  :tags '(evil insert)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (should (and (looking-at "This") (looking-back ";; ")))
+    (evil-test-macro ("ievil rulz " (kbd "ESC"))
+      ";; evil rulz" " This" 'bobp)))
+
+(ert-deftest evil-test-insert-after ()
+  "Test insertion of text after point"
+  :tags '(evil insert)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (evil-test-text ";; " "This" 'bobp)
+    (evil-test-macro ("aevil rulz " (kbd "ESC"))
+      ";; Tevil rulz" " his" 'bobp)))
+
+(ert-deftest evil-test-insert-above ()
+  "Test insertion of text above point"
+  :tags '(evil insert)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (forward-line)
+    (evil-test-macro ("Oabc\ndef" (kbd "ESC"))
+      "evaluation.\nabc\nde"
+      "f\n;; If you")))
+
+(ert-deftest evil-test-insert-below ()
+  "Test insertion of text below point"
+  :tags '(evil insert)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (evil-test-macro ("oabc\ndef" (kbd "ESC"))
+      "evaluation.\nabc\nde" "f\n;; If you")))
+
+(ert-deftest evil-test-insert-beginning-of-line ()
+  "Test insertion of text at beginning of line"
+  :tags '(evil insert)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (should (and (looking-at "This") (looking-back ";; ")))
+    (evil-test-macro ("Ievil rulz " (kbd "ESC"))
+      "evil rulz" " ;; This" 'bobp)))
+
+(ert-deftest evil-test-insert-end-of-line ()
+  "Test insertion of text at end of line"
+  :tags '(evil insert)
+  (evil-test-buffer
+    (evil-local-mode 1)
+    (goto-char (+ 3 (point-min)))
+    (evil-test-text ";; " "This" 'bobp)
+    (evil-test-macro ("Aevil rulz " (kbd "ESC"))
+      "evaluation.evil rulz" " " nil 'eolp)))
+
+(ert-deftest evil-test-insert-digraph ()
+  "Test insertion of digraph"
+  :tags '(evil insert)
+  (evil-test-buffer-edit ("i\C-kaa")
+    "å"))
+
 ;;; Repeat system
 
 (ert-deftest evil-test-normalize-repeat-info ()
   "Verify normalize-repeat-info"
-  :tags '(evil)
+  :tags '(evil repeat)
   (ert-info ("Single array")
     (should (equal (evil-normalize-repeat-info
                     '("abc"))
@@ -682,7 +756,7 @@ KEYS is used."
 
 (ert-deftest evil-test-normal-repeat-info-simple-command ()
   "Save key-sequence after simple editing command in vi-state"
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-buffer
     (evil-test-change-state 'normal)
     (ert-info ("Call simple command without count")
@@ -692,7 +766,7 @@ KEYS is used."
 
 (ert-deftest evil-test-normal-repeat-info-char-command ()
   "Save key-sequence after editing command with character in vi-state"
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-buffer
     (evil-test-change-state 'normal)
     (ert-info ("Call command with character argument without count")
@@ -702,7 +776,7 @@ KEYS is used."
 
 (ert-deftest evil-test-insert-repeat-info ()
   "Save key-sequence after insertion mode"
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-buffer
     (evil-test-change-state 'normal)
     (ert-info ("Insert text without count")
@@ -712,7 +786,7 @@ KEYS is used."
 
 (ert-deftest evil-test-repeat ()
   "Repeat several editing commands."
-  :tags '(evil)
+  :tags '(evil repeat)
   (ert-info ("Repeat replace")
     (evil-test-buffer-edit ("rX" [right right] ".")
       "X;" "XThis" 'bobp))
@@ -735,25 +809,15 @@ KEYS is used."
 
 (ert-deftest evil-test-cmd-replace-char ()
   "Calling `evil-replace-char' should replace characters."
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-buffer-edit "r5"
     'bobp "5; This")
   (evil-test-buffer-edit "3rX"
     "XX" "XThis" 'bobp))
 
-(ert-deftest evil-test-insert-before ()
-  "Test insertion of text before point"
-  :tags '(evil)
-  (evil-test-buffer
-    (evil-local-mode 1)
-    (goto-char (+ 3 (point-min)))
-    (should (and (looking-at "This") (looking-back ";; ")))
-    (evil-test-macro ("ievil rulz " (kbd "ESC"))
-      ";; evil rulz" " This" 'bobp)))
-
 (ert-deftest evil-test-insert-before-with-count ()
   "Test insertion of text before point with repeat count"
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-buffer
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
@@ -763,7 +827,7 @@ KEYS is used."
 
 (ert-deftest evil-test-repeat-insert-before ()
   "Test repeating of insert-before command."
-  :tags '(evil)
+  :tags '(evil repeat)
   (ert-info ("Repeat insert")
     (evil-test-buffer-edit ("iABC" (kbd "ESC") "..")
       "ABABAB" "CCC;; This"))
@@ -784,7 +848,7 @@ KEYS is used."
 
 (ert-deftest evil-test-insert-before-vcount ()
   "Test `evil-insert-before' with vertical repeation."
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-buffer
     (forward-word)
     (define-key evil-normal-state-local-map "i"
@@ -799,19 +863,9 @@ KEYS is used."
      '("       ABCAB" "C" bolp eolp)
      '("Below tABCAB" "Che empty" bolp))))
 
-(ert-deftest evil-test-insert-after ()
-  "Test insertion of text after point"
-  :tags '(evil)
-  (evil-test-buffer
-    (evil-local-mode 1)
-    (goto-char (+ 3 (point-min)))
-    (evil-test-text ";; " "This" 'bobp)
-    (evil-test-macro ("aevil rulz " (kbd "ESC"))
-      ";; Tevil rulz" " his" 'bobp)))
-
 (ert-deftest evil-test-insert-after-with-count ()
   "Test insertion of text after point with repeat count"
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-buffer
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
@@ -820,7 +874,7 @@ KEYS is used."
 
 (ert-deftest evil-test-repeat-insert-after ()
   "Test repeating of insert-after command."
-  :tags '(evil)
+  :tags '(evil repeat)
   (ert-info ("Repeat insert")
     (evil-test-buffer-edit ("aABC" (kbd "ESC") "..")
       ";ABCABCAB" "C; This"))
@@ -841,7 +895,7 @@ KEYS is used."
 
 (ert-deftest evil-test-insert-after-vcount ()
   "Test `evil-insert-after' with vertical repeation."
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-buffer
     (forward-word)
     (define-key evil-normal-state-local-map "a"
@@ -856,19 +910,9 @@ KEYS is used."
      '((lambda () (looking-back "\\(        \\|\t\\)ABCAB")) "C")
      '("Below thABCAB" "Ce empty" bolp))))
 
-(ert-deftest evil-test-insert-above ()
-  "Test insertion of text above point"
-  :tags '(evil)
-  (evil-test-buffer
-    (evil-local-mode 1)
-    (forward-line)
-    (evil-test-macro ("Oabc\ndef" (kbd "ESC"))
-      "evaluation.\nabc\nde"
-      "f\n;; If you")))
-
 (ert-deftest evil-test-insert-above-with-count ()
   "Test insertion of text above point with repeat count"
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-buffer
     (evil-local-mode 1)
     (forward-line)
@@ -878,7 +922,7 @@ KEYS is used."
 
 (ert-deftest evil-test-repeat-insert-above ()
   "Test repeating of insert-above command."
-  :tags '(evil)
+  :tags '(evil repeat)
   (ert-info ("Repeat insert")
     (evil-test-buffer-edit ("Oevil\nrulz" (kbd "ESC") "..")
       "evil\nevil\nevil\nrul"
@@ -902,17 +946,9 @@ KEYS is used."
       "z\nrulz\n;; This"
       'bobp)))
 
-(ert-deftest evil-test-insert-below ()
-  "Test insertion of text below point"
-  :tags '(evil)
-  (evil-test-buffer
-    (evil-local-mode 1)
-    (evil-test-macro ("oabc\ndef" (kbd "ESC"))
-      "evaluation.\nabc\nde" "f\n;; If you")))
-
 (ert-deftest evil-test-insert-below-with-count ()
   "Test insertion of text below point with repeat count"
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-buffer
     (evil-local-mode 1)
     (evil-test-macro ("2oevil\nrulz" (kbd "ESC"))
@@ -920,7 +956,7 @@ KEYS is used."
 
 (ert-deftest evil-test-repeat-insert-below ()
   "Test repeating of insert-below command."
-  :tags '(evil)
+  :tags '(evil repeat)
   (ert-info ("Repeat insert")
     (evil-test-buffer-edit ("oevil\nrulz" (kbd "ESC") "..")
       "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrul"
@@ -941,19 +977,9 @@ KEYS is used."
       "evaluation.\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul"
       "z\n;; If you")))
 
-(ert-deftest evil-test-insert-beginning-of-line ()
-  "Test insertion of text at beginning of line"
-  :tags '(evil)
-  (evil-test-buffer
-    (evil-local-mode 1)
-    (goto-char (+ 3 (point-min)))
-    (should (and (looking-at "This") (looking-back ";; ")))
-    (evil-test-macro ("Ievil rulz " (kbd "ESC"))
-      "evil rulz" " ;; This" 'bobp)))
-
 (ert-deftest evil-test-insert-beginning-of-line-with-count ()
   "Test insertion of text at beginning of line with repeat count"
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-buffer
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
@@ -963,7 +989,7 @@ KEYS is used."
 
 (ert-deftest evil-test-repeat-insert-beginning-of-line ()
   "Test repeating of insertion at beginning of line."
-  :tags '(evil)
+  :tags '(evil repeat)
   (ert-info ("Repeat insert")
     (evil-test-buffer-edit ("$IABC" (kbd "ESC") "..")
       "AB" "CABCABC;; This"))
@@ -982,7 +1008,7 @@ KEYS is used."
 
 (ert-deftest evil-test-insert-beginning-of-line-vcount ()
   "Test `evil-insert-beginning-of-line' with vertical repeation."
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-code-buffer
     (forward-line 3)
     (forward-word)
@@ -997,19 +1023,9 @@ KEYS is used."
      '("  ABC" "ABCprintf" bolp)
      '("  ABC" "ABCreturn" bolp))))
 
-(ert-deftest evil-test-insert-end-of-line ()
-  "Test insertion of text at end of line"
-  :tags '(evil)
-  (evil-test-buffer
-    (evil-local-mode 1)
-    (goto-char (+ 3 (point-min)))
-    (evil-test-text ";; " "This" 'bobp)
-    (evil-test-macro ("Aevil rulz " (kbd "ESC"))
-      "evaluation.evil rulz" " " nil 'eolp)))
-
 (ert-deftest evil-test-insert-end-of-line-with-count ()
   "Test insertion of text at end of line with repeat count"
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-buffer
     (evil-local-mode 1)
     (goto-char (+ 3 (point-min)))
@@ -1018,7 +1034,7 @@ KEYS is used."
 
 (ert-deftest evil-test-repeat-insert-end-of-line ()
   "Test repeating of insert-after command."
-  :tags '(evil)
+  :tags '(evil repeat)
   (ert-info ("Repeat insert")
     (evil-test-buffer-edit ("AABC" (kbd "ESC") "..")
       "evaluation.ABCABCAB" "C" nil 'eolp))
@@ -1038,7 +1054,7 @@ KEYS is used."
 
 (ert-deftest evil-test-insert-end-of-line-vcount ()
   "Test `evil-insert-end-of-line' with vertical repeation."
-  :tags '(evil)
+  :tags '(evil repeat)
   (evil-test-code-buffer
     (forward-line 3)
     (forward-word)
@@ -1053,12 +1069,6 @@ KEYS is used."
      '("world\\n\");ABCABC" "" nil eolp)
      '("EXIT_SUCCESS;ABCABC" "" nil eolp))))
 
-(ert-deftest evil-test-insert-digraph ()
-  "Test insertion of digraph"
-  :tags '(evil)
-  (evil-test-buffer-edit ("i\C-kaa")
-    "å" ""))
-
 (defun evil-test-dummy-complete ()
   "Test function for change-base repeation.
 Removes 5 characters, insert BEGIN\\n\\nEND\\nplaces
@@ -1071,7 +1081,7 @@ cursor on the new line."
 
 (ert-deftest evil-test-repeat-by-change ()
   "Test repeation by tracking changes for completion commands."
-  :tags '(evil)
+  :tags '(evil repeat)
   (let (line-move-visual)
     (define-key evil-insert-state-map (kbd "C-c C-p") 'evil-test-dummy-complete)
     (evil-set-insert-repeat-type 'evil-test-dummy-complete 'change)
@@ -1088,7 +1098,7 @@ cursor on the new line."
 (ert-deftest evil-test-repeat-kill-buffer ()
   "Test safe-guard preventing buffers from being deleted
 when repeating a command."
-  :tags '(evil)
+  :tags '(evil repeat)
   (ert-info ("Test killing works for direct calls
 to `evil-execute-repeat-info'")
     (evil-test-buffer
@@ -1109,7 +1119,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-keypress-parser ()
   "Test `evil-keypress-parser'"
-  :tags '(evil)
+  :tags '(evil operator)
   (evil-test-buffer
     (evil-test-change-state 'operator)
     (ert-info ("Read from the keyboard unless INPUT is given")
@@ -1138,13 +1148,13 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-operator ()
   "Test operator."
-  :tags '(evil)
+  :tags '(evil operator)
   (evil-test-buffer-edit ([right right right] "g?" [M-right])
     ";; " "Guvf buffer"))
 
 (ert-deftest evil-test-operator-with-count ()
   "Test operator with count argument."
-  :tags '(evil)
+  :tags '(evil operator)
   (ert-info ("Count before operator")
     (evil-test-buffer-edit ([right right right] "2g?" [M-right])
       ";; " "Guvf ohssre is"))
@@ -1163,13 +1173,13 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-operator-repeat ()
   "Test repeating of an operator."
-  :tags '(evil)
+  :tags '(evil operator)
   (evil-test-buffer-edit ([right right right] "g?" [M-right] [M-right] ".")
     ";; Guvf" " ohssre is"))
 
 (ert-deftest evil-test-operator-repeat-with-count ()
   "Test repeating of an operator with new count."
-  :tags '(evil)
+  :tags '(evil operator)
   (ert-info ("Count before operator")
     (evil-test-buffer-edit ([right right right] "2g?" [M-right] "3.")
       ";; " "This buffer vf for notes"))
@@ -1184,7 +1194,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-operator-delete ()
   "Test deleting text."
-  :tags '(evil)
+  :tags '(evil operator)
   (ert-info ("Delete characters")
     (evil-test-buffer-edit "dl"
       'bobp "; This buffer is for notes")
@@ -1233,7 +1243,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-yank ()
   "Test yanking of text"
-  :tags '(evil)
+  :tags '(evil operator)
   (ert-info ("Yank characters")
     (evil-test-buffer
       (execute-kbd-macro "wy2e")
@@ -1268,9 +1278,111 @@ to `evil-execute-repeat-info'")
       (should (eq (car-safe (get-text-property 0 'yank-handler (current-kill 0)))
                   'evil-yank-block-handler)))))
 
+(ert-deftest evil-test-delete ()
+  "Test `evil-delete'"
+  :tags '(evil operator)
+  (ert-info ("Delete characters")
+    (evil-test-buffer
+      (evil-test-macro "wd2e" ";; " " is for" 'bobp)
+      (should (string= (current-kill 0) "This buffer"))
+      (evil-test-macro "P" ";; " "This buffer is for" 'bobp)))
+
+  (ert-info ("Delete lines")
+    (evil-test-buffer
+      (evil-test-macro "2dd" 'bobp ";; then enter")
+      (evil-test-macro "P" 'bobp ";; This buffer")))
+
+  (ert-info ("Delete last line")
+    (evil-test-buffer
+      (evil-test-macro "Gk2dd" "buffer" "." nil 'eobp)))
+
+  (ert-info ("Delete rectangle")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro "wd3s")
+      (evil-test-text-lines
+       '(";; " "s buffer" bobp)
+       '(";; " "you want" bolp)
+       '(";; " "n enter" bolp)
+       '(bolp eolp)))))
+
+(ert-deftest evil-test-change ()
+  "Test `evil-change'"
+  :tags '(evil operator)
+  (ert-info ("Change characters")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "wc2eABC" (kbd "ESC")))
+      (evil-test-text ";; AB" "C is for" 'bobp)
+      (should (string= (current-kill 0) "This buffer"))
+      (evil-test-macro "p" ";; ABCThis buffe" "r is for" 'bobp)))
+
+  (ert-info ("Change lines")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "2ccABCLINE\nDEFLINE" (kbd "ESC")))
+      (evil-test-text "ABCLINE\nDEFLIN" "E\n;; then enter" 'bobp)
+      (evil-test-macro "p" "DEFLINE\n" ";; This buffer")))
+
+  (ert-info ("Change last line")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "Gk2ccABC" (kbd "ESC")))
+      (evil-test-text "buffer.\nAB" "C" nil 'eobp)))
+
+  (ert-info ("Change rectangle")
+    (evil-test-buffer
+      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (execute-kbd-macro (vconcat "wc3sABC" (kbd "ESC")))
+      (evil-test-text-lines
+       '(";; AB" "Cs buffer" bobp)
+       '(";; AB" "Cyou want" bolp)
+       '(";; AB" "Cn enter" bolp)
+       '(bolp eolp)))))
+
+(ert-deftest evil-change-word ()
+  "Test change of word."
+  :tags '(evil operator)
+  (ert-info ("Non-word")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "cwABC" (kbd "ESC")))
+      (evil-test-text "AB" "C This buffer" 'bobp)))
+  (ert-info ("Word")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "wcwABC" (kbd "ESC")))
+      (evil-test-text ";; AB" "C buffer" 'bobp)))
+  (ert-info ("Single character")
+    (evil-test-buffer
+      (delete-char 1)
+      (execute-kbd-macro (vconcat "cwABC" (kbd "ESC")))
+      (evil-test-text "AB" "C This buffer" 'bobp))))
+
+(ert-deftest evil-join-lines ()
+  "Test `evil-join-lines'."
+  :tags '(evil operator)
+  (ert-info ("Simple")
+    (evil-test-buffer-edit "J"
+      "evaluation." " ;; If you"))
+
+  (ert-info ("Visual")
+    (evil-test-buffer-edit "VjJ"
+      "evaluation." " ;; If you")))
+
+(ert-deftest evil-test-change-chars ()
+  "Test `evil-change-chars'."
+  :tags '(evil operator)
+  (ert-info ("Simple")
+    (evil-test-buffer
+      (execute-kbd-macro (vconcat "5sABC" (kbd "ESC")))
+      (evil-test-text "AB" "Cis buffer" 'bobp)))
+  (ert-info ("On empty ine")
+    (evil-test-buffer
+      (forward-line 3)
+      (execute-kbd-macro (vconcat "5sABC" (kbd "ESC")))
+      (evil-test-text "own buffer.\nAB" "C\nBelow"))))
+
+;;; Paste
+
 (ert-deftest evil-test-paste-before ()
   "Test `evil-paste-before'"
-  :tags '(evil)
+  :tags '(evil operator)
   (ert-info ("Paste characters")
     (evil-test-buffer
       (execute-kbd-macro "wy2e^jP")
@@ -1358,7 +1470,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-paste-behind ()
   "Test `evil-paste-before'"
-  :tags '(evil)
+  :tags '(evil operator)
   (ert-info ("Paste characters")
     (evil-test-buffer
       (execute-kbd-macro "wy2e^jp")
@@ -1453,7 +1565,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-paste-pop-before ()
   "Test `evil-paste-pop' after `evil-paste-before'"
-  :tags '(evil)
+  :tags '(evil operator)
   (ert-info ("Yank")
     (evil-test-buffer
       (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
@@ -1510,6 +1622,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-paste-pop-without-undo ()
   "Text `evil-paste-pop' with undo disabled."
+  :tags '(evil operator)
   (ert-info ("Pop-next with count without undo")
     (evil-test-buffer
       (setq buffer-undo-list t)
@@ -1527,7 +1640,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-paste-pop-behind ()
   "Test `evil-paste-pop' after `evil-paste-behind'"
-  :tags '(evil)
+  :tags '(evil operator)
   (ert-info ("Paste")
     (evil-test-buffer
       (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
@@ -1582,110 +1695,11 @@ to `evil-execute-repeat-info'")
          '("Be" "          low the empty" bolp)
          '("  " "ow thow th" bolp eobp))))))
 
-(ert-deftest evil-test-delete ()
-  "Test `evil-delete'"
-  :tags '(evil)
-  (ert-info ("Delete characters")
-    (evil-test-buffer
-      (evil-test-macro "wd2e" ";; " " is for" 'bobp)
-      (should (string= (current-kill 0) "This buffer"))
-      (evil-test-macro "P" ";; " "This buffer is for" 'bobp)))
-
-  (ert-info ("Delete lines")
-    (evil-test-buffer
-      (evil-test-macro "2dd" 'bobp ";; then enter")
-      (evil-test-macro "P" 'bobp ";; This buffer")))
-
-  (ert-info ("Delete last line")
-    (evil-test-buffer
-      (evil-test-macro "Gk2dd" "buffer" "." nil 'eobp)))
-
-  (ert-info ("Delete rectangle")
-    (evil-test-buffer
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-      (execute-kbd-macro "wd3s")
-      (evil-test-text-lines
-       '(";; " "s buffer" bobp)
-       '(";; " "you want" bolp)
-       '(";; " "n enter" bolp)
-       '(bolp eolp)))))
-
-(ert-deftest evil-test-change ()
-  "Test `evil-change'"
-  :tags '(evil)
-  (ert-info ("Change characters")
-    (evil-test-buffer
-      (execute-kbd-macro (vconcat "wc2eABC" (kbd "ESC")))
-      (evil-test-text ";; AB" "C is for" 'bobp)
-      (should (string= (current-kill 0) "This buffer"))
-      (evil-test-macro "p" ";; ABCThis buffe" "r is for" 'bobp)))
-
-  (ert-info ("Change lines")
-    (evil-test-buffer
-      (execute-kbd-macro (vconcat "2ccABCLINE\nDEFLINE" (kbd "ESC")))
-      (evil-test-text "ABCLINE\nDEFLIN" "E\n;; then enter" 'bobp)
-      (evil-test-macro "p" "DEFLINE\n" ";; This buffer")))
-
-  (ert-info ("Change last line")
-    (evil-test-buffer
-      (execute-kbd-macro (vconcat "Gk2ccABC" (kbd "ESC")))
-      (evil-test-text "buffer.\nAB" "C" nil 'eobp)))
-
-  (ert-info ("Change rectangle")
-    (evil-test-buffer
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-      (execute-kbd-macro (vconcat "wc3sABC" (kbd "ESC")))
-      (evil-test-text-lines
-       '(";; AB" "Cs buffer" bobp)
-       '(";; AB" "Cyou want" bolp)
-       '(";; AB" "Cn enter" bolp)
-       '(bolp eolp)))))
-
-(ert-deftest evil-change-word ()
-  "Test change of word."
-  (ert-info ("Non-word")
-    (evil-test-buffer
-      (execute-kbd-macro (vconcat "cwABC" (kbd "ESC")))
-      (evil-test-text "AB" "C This buffer" 'bobp)))
-  (ert-info ("Word")
-    (evil-test-buffer
-      (execute-kbd-macro (vconcat "wcwABC" (kbd "ESC")))
-      (evil-test-text ";; AB" "C buffer" 'bobp)))
-  (ert-info ("Single character")
-    (evil-test-buffer
-      (delete-char 1)
-      (execute-kbd-macro (vconcat "cwABC" (kbd "ESC")))
-      (evil-test-text "AB" "C This buffer" 'bobp))))
-
-(ert-deftest evil-join-lines ()
-  "Test `evil-join-lines'."
-  :tags '(evil)
-  (ert-info ("Simple")
-    (evil-test-buffer-edit "J"
-      "evaluation." " ;; If you"))
-
-  (ert-info ("Visual")
-    (evil-test-buffer-edit "VjJ"
-      "evaluation." " ;; If you")))
-
-(ert-deftest evil-test-change-chars ()
-  "Test `evil-change-chars'."
-  :tags '(evil)
-  (ert-info ("Simple")
-    (evil-test-buffer
-      (execute-kbd-macro (vconcat "5sABC" (kbd "ESC")))
-      (evil-test-text "AB" "Cis buffer" 'bobp)))
-  (ert-info ("On empty ine")
-    (evil-test-buffer
-      (forward-line 3)
-      (execute-kbd-macro (vconcat "5sABC" (kbd "ESC")))
-      (evil-test-text "own buffer.\nAB" "C\nBelow"))))
-
 ;;; Motions
 
 (ert-deftest evil-test-forward-char ()
   "Test `evil-forward-char' motion."
-  :tags '(evil)
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-buffer-edit "l"
       ";" "; This" 'bobp))
@@ -1712,7 +1726,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-backward-char ()
   "Test `evil-backward-char' motion."
-  :tags '(evil)
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-buffer
       (evil-test-macro (forward-word)
@@ -1752,7 +1766,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-previous-line ()
   "Test `evil-previous-line' motion."
-  :tags '(evil)
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-buffer
       (forward-line 4)
@@ -1785,7 +1799,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-next-line ()
   "Test `evil-next-line' motion."
-  :tags '(evil)
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-buffer
       (evil-test-macro (forward-word)
@@ -1815,7 +1829,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-beginning-of-line ()
   "Test `evil-beginning-line' motion."
-  :tags '(evil)
+  :tags '(evil motion)
   (evil-test-buffer
     (forward-line)
     (forward-word)
@@ -1826,7 +1840,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-end-of-line ()
   "Test `evil-end-line' motion."
-  :tags '(evil)
+  :tags '(evil motion)
   (evil-test-buffer
     (forward-line)
     (forward-word)
@@ -1841,7 +1855,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-first-non-blank ()
   "Test `evil-first-non-blank' motion."
-  :tags '(evil)
+  :tags '(evil motion)
   (evil-test-code-buffer
     (forward-line 5)
     (end-of-line)
@@ -1857,7 +1871,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-last-non-blank ()
   "Test `evil-last-non-blank' motion."
-  :tags '(evil)
+  :tags '(evil motion)
   (evil-test-code-buffer
     (evil-test-macro (forward-line 3)
       "\n" "int main")
@@ -1872,7 +1886,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-first-non-blank-beg ()
   "Test `evil-first-non-blank-beg' motion."
-  :tags '(evil)
+  :tags '(evil motion)
   (evil-test-code-buffer
     (evil-test-macro "6gg"
       "{\n  " "printf")
@@ -1888,7 +1902,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-first-non-blank-end ()
   "Test `evil-first-non-blank-beg' motion."
-  :tags '(evil)
+  :tags '(evil motion)
   (evil-test-code-buffer
     (evil-test-macro "6G"
       "{\n  " "printf")
@@ -1907,13 +1921,12 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-operator-0 ()
   "Test motion \"0\" with an operator."
-  :tags '(evil))
+  :tags '(evil motion))
 
 ;; TODO: I don't know how to test the visual motions or window motions.
-
 (ert-deftest evil-test-move-chars ()
   "Test `evil-test-move-chars'."
-  :tags '(evil)
+  :tags '(evil motion)
   (evil-test-code-buffer
     (ert-info ("Simple forward")
       (evil-move-chars "{" 1)
@@ -1934,7 +1947,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-forward-word-end ()
   "Test `evil-test-forward-word-end'"
-  :tags '(evil)
+  :tags '(evil motion)
   (evil-test-buffer
     (ert-info ("Non-word")
       (evil-test-macro "e" ";" "; This" 'bobp))
@@ -1956,7 +1969,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-forward-word-begin ()
   "Test `evil-test-forward-word-begin'"
-  :tags '(evil)
+  :tags '(evil motion)
   (evil-test-buffer
     (ert-info ("Simple")
       (evil-test-macro "w" ";; " "This"))
@@ -1978,7 +1991,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-backward-word-end ()
   "Test `evil-test-backward-word-end'"
-  :tags '(evil)
+  :tags '(evil motion)
   (evil-test-buffer
     (goto-char (1- (point-max)))
     (ert-info ("Simple")
@@ -1999,7 +2012,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-backward-word-begin ()
   "Test `evil-test-backward-word-begin'"
-  :tags '(evil)
+  :tags '(evil motion)
   (evil-test-buffer
     (goto-char (1- (point-max)))
     (ert-info ("Simple")
@@ -2020,7 +2033,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-move-paragraph ()
   "Test `evil-move-paragraph'"
-  :tags '(evil)
+  :tags '(evil motion)
   (evil-test-paragraph-buffer
     (ert-info ("Simple forward")
       (should (= (evil-move-paragraph 1) 0))
@@ -2076,7 +2089,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-forward-paragraph ()
   "Test `evil-test-forward-paragraph'"
-  :tags '(evil)
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-paragraph-buffer
       (evil-test-macro "}" "own buffer.\n" 'bolp)))
@@ -2096,7 +2109,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-backward-paragraph ()
   "Test `evil-test-backward-paragraph'"
-  :tags '(evil)
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-paragraph-buffer
       (goto-char (1- (point-max)))
@@ -2120,7 +2133,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-forward-sentence ()
   "Test `evil-test-forward-sentence'"
-  :tags '(evil)
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-paragraph-buffer
       (evil-test-macro ")" 'bolp  ";; If you")
@@ -2145,7 +2158,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-backward-sentence ()
   "Test `evil-test-backward-sentence'"
-  :tags '(evil)
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-paragraph-buffer
       (goto-char (1- (point-max)))
@@ -2174,7 +2187,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-find-char ()
   "Test `evil-find-char'."
-  :tags '(evil)
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-buffer-edit "fT" ";; " "This buffer" 'bobp))
   (ert-info ("With count")
@@ -2193,7 +2206,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-find-char-to ()
   "Test `evil-find-char'."
-  :tags '(evil)
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-buffer-edit "tT" ";;" " This buffer" 'bobp))
   (ert-info ("With count")
@@ -2213,7 +2226,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-find-char-backward ()
   "Test `evil-find-char'."
-  :tags '(evil)
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-buffer-edit "$FT" ";; " "This buffer" 'bobp))
   (ert-info ("With count")
@@ -2232,7 +2245,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-find-char-to-backward ()
   "Test `evil-find-char'."
-  :tags '(evil)
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-buffer-edit "$TT" ";; T" "his buffer" 'bobp))
   (ert-info ("With count")
@@ -2252,6 +2265,7 @@ to `evil-execute-repeat-info'")
 
 (ert-deftest evil-test-jump-item ()
   "Test `evil-jump-item'."
+  :tags '(evil motion)
   (ert-info ("Simple")
     (evil-test-code-buffer
       (forward-line 3)
@@ -2310,7 +2324,7 @@ unless TYPE is `block'")
 
 (ert-deftest evil-test-visual-char ()
   "Test Visual character selection"
-  :tags '(evil)
+  :tags '(evil visual)
   (evil-test-buffer
     (evil-test-visual-select evil-visual-char))
   (ert-info ("Move to other end")
@@ -2328,7 +2342,7 @@ unless TYPE is `block'")
 
 (ert-deftest evil-test-visual-line ()
   "Test Visual line selection"
-  :tags '(evil)
+  :tags '(evil visual)
   (evil-test-buffer
     (evil-test-visual-select evil-visual-line))
   (ert-info ("Move to other end")
@@ -2346,7 +2360,7 @@ unless TYPE is `block'")
 
 (ert-deftest evil-test-visual-block ()
   "Test Visual line selection"
-  :tags '(evil)
+  :tags '(evil visual)
   (evil-test-buffer
     (evil-test-visual-select evil-visual-block))
   (ert-info ("Move to other corner")
@@ -2368,7 +2382,7 @@ unless TYPE is `block'")
 
 (ert-deftest evil-test-visual-restore ()
   "Test restoring a previous selection"
-  :tags '(evil)
+  :tags '(evil visual)
   (ert-info ("Start a characterwise selection
 if no previous selection")
     (evil-test-buffer-edit ("wgved")
@@ -2391,7 +2405,7 @@ if no previous selection")
 
 (ert-deftest evil-test-properties ()
   "Test `evil-get-property' and `evil-put-property'"
-  :tags '(evil)
+  :tags '(evil util)
   (let (alist)
     (ert-info ("Set properties")
       (evil-put-property 'alist 'foo :bar 'baz)
@@ -2414,7 +2428,7 @@ if no previous selection")
 
 (ert-deftest evil-test-concat-lists ()
   "Test `evil-concat-lists' and `evil-concat-alists'"
-  :tags '(evil)
+  :tags '(evil util)
   (ert-info ("Remove duplicates across lists")
     (should (equal (evil-concat-lists
                     nil '(a b) '(b c))
@@ -2433,7 +2447,7 @@ if no previous selection")
 
 (ert-deftest evil-test-read-key ()
   "Test `evil-read-key'"
-  :tags '(evil)
+  :tags '(evil util)
   (let ((unread-command-events '(?A)))
     (ert-info ("Prevent downcasing in `this-command-keys'")
       (should (eq (evil-read-key) ?A))
@@ -2441,7 +2455,7 @@ if no previous selection")
 
 (ert-deftest evil-test-extract-count ()
   "Test `evil-extract-count'"
-  :tags '(evil)
+  :tags '(evil util)
   (evil-test-buffer
     (ert-info ("Exact without count")
       (should (equal (evil-extract-count "x")
