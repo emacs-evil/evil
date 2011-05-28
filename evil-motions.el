@@ -362,7 +362,7 @@ not be performed.
                                (when (zerop ,move)
                                  (point))))
                         moves)))
-    `(defun ,name (count)
+    `(evil-define-motion ,name (count)
        ,@(when doc `(,doc))
        (let (bounds)
          (evil-motion-loop (,var (or count 1))
