@@ -19,7 +19,7 @@
                            [&optional stringp]
                            [&rest keywordp sexp]
                            def-body)))
-  (let (arg interactive key keys type)
+  (let (arg doc interactive key keys type)
     (when args
       (setq args `(&optional ,@(delq '&optional args))
             interactive

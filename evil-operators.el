@@ -54,7 +54,7 @@
         (keep-visual nil)
         (whole-lines nil)
         (motion nil)
-        arg beg end interactive key keys type)
+        arg doc beg end interactive key keys type)
     ;; collect BEG, END and TYPE
     (setq args (delq '&optional args)
           beg (or (pop args) 'beg)
