@@ -18,25 +18,6 @@
 (require 'evil-states)
 (require 'evil-types)
 
-(evil-define-state visual
-  "Visual state."
-  :tag " <V> "
-  :enable (motion normal)
-  (cond
-   ((evil-visual-state-p)
-    (evil-transient-save)
-    (evil-visual-select (point) (point) evil-visual-char
-                        (evil-called-interactively-p))
-    (add-hook 'pre-command-hook 'evil-visual-pre-command nil t)
-    (add-hook 'post-command-hook 'evil-visual-post-command nil t)
-    (add-hook 'evil-normal-state-entry-hook
-              'evil-visual-deactivate-hook nil t))
-   (t
-    (setq evil-visual-region-expanded nil)
-    (remove-hook 'pre-command-hook 'evil-visual-pre-command t)
-    (remove-hook 'post-command-hook 'evil-visual-post-command t)
-    (evil-visual-highlight -1))))
-
 (defmacro evil-define-visual-selection (selection doc &rest body)
   "Define a Visual selection SELECTION.
 Creates a command evil-visual-SELECTION for enabling the selection.
@@ -112,6 +93,25 @@ the selection is enabled.
   (evil-transient-mark -1)
   (overlay-put evil-visual-overlay :corner nil)
   (overlay-put evil-visual-overlay :corner (evil-visual-block-corner)))
+
+(evil-define-state visual
+  "Visual state."
+  :tag " <V> "
+  :enable (motion normal)
+  (cond
+   ((evil-visual-state-p)
+    (evil-transient-save)
+    (evil-visual-select (point) (point) evil-visual-char
+                        (evil-called-interactively-p))
+    (add-hook 'pre-command-hook 'evil-visual-pre-command nil t)
+    (add-hook 'post-command-hook 'evil-visual-post-command nil t)
+    (add-hook 'evil-normal-state-entry-hook
+              'evil-visual-deactivate-hook nil t))
+   (t
+    (setq evil-visual-region-expanded nil)
+    (remove-hook 'pre-command-hook 'evil-visual-pre-command t)
+    (remove-hook 'post-command-hook 'evil-visual-post-command t)
+    (evil-visual-highlight -1))))
 
 (defun evil-visual-pre-command ()
   "Run before each command in Visual state.
