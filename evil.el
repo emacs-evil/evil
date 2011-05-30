@@ -61,6 +61,7 @@
 (require 'evil-operators)
 (require 'evil-search)
 (require 'evil-repeat)
+(require 'evil-integration)
 (require 'evil-maps)
 
 (provide 'evil)

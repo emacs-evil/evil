@@ -69,14 +69,14 @@ the current buffer, the undo information is stored in
        ,@body
        (setq evil-temporary-undo (cons nil buffer-undo-list)))
      (unless (eq buffer-undo-list t)
-       ;; Undo is enabled, so update the global buffer undo list.
+       ;; undo is enabled, so update the global buffer undo list
        (setq buffer-undo-list (append evil-temporary-undo buffer-undo-list)
              evil-temporary-undo nil))))
 
 (defun evil-undo-pop ()
   "Undos the last buffer change and removes the last undo
 information from `buffer-undo-list'. If undo is disabled in the
-current buffer, use the information of `evil-temporary-undo'
+current buffer, use the information in `evil-temporary-undo'
 instead."
   (let ((paste-undo (list nil)))
     (let ((undo-list (if (eq buffer-undo-list t)
@@ -84,7 +84,7 @@ instead."
                        buffer-undo-list)))
       (when (or (not undo-list) (car undo-list))
         (error "Can't undo previous paste"))
-      (pop undo-list) ;; remove 'nil
+      (pop undo-list) ; remove nil
       (while (and undo-list
                   (car undo-list))
         (push (pop undo-list) paste-undo))
@@ -96,16 +96,6 @@ instead."
       (if (eq buffer-undo-list t)
           (setq evil-temporary-undo nil)
         (setq buffer-undo-list undo-list)))))
-
-;;; Undo tree visualizer
-
-(add-to-list 'evil-motion-state-modes 'undo-tree-visualizer-mode)
-
-(when (boundp 'undo-tree-visualizer-map)
-  (define-key undo-tree-visualizer-map [remap evil-backward-char] 'undo-tree-visualize-switch-branch-left)
-  (define-key undo-tree-visualizer-map [remap evil-forward-char] 'undo-tree-visualize-switch-branch-right)
-  (define-key undo-tree-visualizer-map [remap evil-next-line] 'undo-tree-visualize-redo)
-  (define-key undo-tree-visualizer-map [remap evil-previous-line] 'undo-tree-visualize-undo))
 
 (provide 'evil-undo)
 
