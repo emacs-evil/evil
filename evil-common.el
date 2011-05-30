@@ -3,6 +3,8 @@
 (require 'evil-vars)
 (require 'evil-compatibility)
 
+;;; List functions
+
 (defun evil-add-to-alist (list-var key val &rest elements)
   "Add the assocation of KEY and VAL to the value of LIST-VAR.
 If the list already contains an entry for KEY, update that entry;
@@ -471,23 +473,20 @@ recursively."
             arg (pop body))
       (unless nil ; TODO: add keyword check
         (plist-put keys key arg)))
-    `(let ((func
-            ,(cond
-              ;; no body: set command properties
-              ((null body)
-               `',command)
-              ;; no name: return lambda function
-              ((null command)
-               `(lambda (,@args) ,@body))
-              ;; default: define command
-              (t
-               `(defun ,command (,@args)
-                  ,@(when doc `(,doc))
-                  ,@body)))))
-       (apply 'evil-set-command-properties func ',keys)
-       ,(when (and doc-form command)
+    `(progn
+       ;; the compiler does not recognize `defun' inside `let'
+       ,(when (and command body)
+          `(defun ,command (,@args)
+             ,@(when doc `(,doc))
+             ,@body))
+       ,(when (and command doc-form)
           `(put ',command 'function-documentation ,doc-form))
-       func)))
+       ;; set command properties for symbol or lambda function
+       (let ((func ',(if (and (null command) body)
+                         `(lambda (,@args) ,@body)
+                       command)))
+         (apply 'evil-set-command-properties func ',keys)
+         func))))
 
 (defun evil-add-command-properties (command &rest properties)
   "Add Evil PROPERTIES to COMMAND.
