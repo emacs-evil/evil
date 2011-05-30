@@ -1,13 +1,9 @@
 ;;;; Operator-Pending state
 
-(require 'evil-vars)
-(require 'evil-common)
 (require 'evil-states)
-(require 'evil-types)
-(require 'evil-undo)
 (require 'evil-visual)
 (require 'evil-motions)
-(require 'evil-compatibility)
+(require 'evil-insert)
 
 (require 'rect)
 

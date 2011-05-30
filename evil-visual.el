@@ -13,10 +13,8 @@
 ;; "transient" behavior of many commands without overriding the user's
 ;; preferences in other states.
 
-(require 'evil-vars)
-(require 'evil-common)
-(require 'evil-states)
 (require 'evil-types)
+(require 'evil-states)
 
 (defmacro evil-define-visual-selection (selection doc &rest body)
   "Define a Visual selection SELECTION.

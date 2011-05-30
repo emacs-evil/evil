@@ -1,3 +1,5 @@
+(require 'evil-vars)
+
 (defgroup evil-digraphs nil
   "Digraph support based on RFC 1345."
   :group 'evil

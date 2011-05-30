@@ -1,7 +1,7 @@
 ;;;; Search
 
-(require 'evil-vars)
 (require 'evil-common)
+(require 'evil-motions)
 
 (evil-define-motion evil-search-forward ()
   (format "Search forward for user-entered text.

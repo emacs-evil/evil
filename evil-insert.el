@@ -1,10 +1,8 @@
 ;;;; Insert state
 
-(require 'evil-digraphs)
 (require 'evil-states)
-(require 'evil-repeat)
 (require 'evil-motions)
-(require 'evil-undo)
+(require 'evil-digraphs)
 
 (evil-define-state insert
   "Insert state."

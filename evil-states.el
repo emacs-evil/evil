@@ -44,10 +44,8 @@
 ;; according to the current state (pushing Visual keymaps to the top
 ;; when the user enters Visual state, etc.).
 
-(require 'evil-vars)
 (require 'evil-common)
 (require 'evil-repeat)
-(require 'evil-compatibility)
 
 (define-minor-mode evil-local-mode
   "Minor mode for setting up Evil in a single buffer."

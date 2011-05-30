@@ -1,10 +1,7 @@
 ;;;; Motions
 
-(require 'evil-vars)
 (require 'evil-common)
-(require 'evil-states)
-(require 'evil-types)
-(require 'evil-compatibility)
+(require 'evil-visual)
 
 (evil-define-state motion
   "Motion state"

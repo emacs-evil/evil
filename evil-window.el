@@ -1,5 +1,7 @@
 ;;;; Window and scrolling commands
 
+(require 'evil-common)
+(require 'evil-states)
 (require 'evil-motions)
 
 (condition-case nil

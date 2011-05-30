@@ -24,7 +24,6 @@
 ;; Types are defined at the end of this file using the macro
 ;; `evil-define-type'.
 
-(require 'evil-vars)
 (require 'evil-common)
 
 (defun evil-type (object &optional default)

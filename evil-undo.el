@@ -1,8 +1,6 @@
 ;;;; Undo
 
-(require 'evil-vars)
 (require 'evil-common)
-(require 'evil-motions)
 
 ;; load undo-tree.el if available
 (unless (featurep 'undo-tree)

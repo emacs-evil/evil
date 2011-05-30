@@ -39,7 +39,7 @@
 ;; `negative-argument' and prepending the count as a string to the
 ;; vector of the remaining key-sequence.
 
-(require 'evil-vars)
+(require 'evil-undo)
 
 (defun evil-add-repeat-info (repeat-info)
   "Adds a repeat-information to `evil-repeat-info-ring'
