@@ -1,13 +1,21 @@
-SHELL = /bin/sh
+SHELL = /bin/bash
 EMACS = emacs
+FILES = evil*.el
 TAG =
 
-.PHONY: all compile clean tests test emacs term terminal indent
+.PHONY: all compile compile-batch clean tests test emacs term terminal indent
 
 # Byte-compile Evil.
 all: compile
 compile: clean
-	$(EMACS) --batch -Q -L . -f batch-byte-compile evil*.el
+	for f in ${FILES}; do \
+  $(EMACS) --batch -Q -L . -f batch-byte-compile $$f; \
+done
+
+# Byte-compile all files in one batch. This is faster than
+# compiling each file in isolation, but also less stringent.
+compile-batch: clean
+	$(EMACS) --batch -Q -L . -f batch-byte-compile ${FILES}
 
 # Delete byte-compiled files.
 clean:
@@ -15,25 +23,25 @@ clean:
 	rm -f \#*\#
 	rm -f *.elc
 
-# Run all tests.
-# The TAG variable may specify a test tag or a test name, e.g.:
+# Run tests.
+# The TAG variable may specify a test tag or a test name:
 #       make test TAG=repeat
 # This will only run tests pertaining to the repeat system.
 tests: clean
 	$(EMACS) --batch -Q -L . -l evil-tests.el \
 --eval "(evil-tests-run '(${TAG}))"
 
-# Byte-compile Evil and run all tests.
+# Byte-compile Evil and run tests.
 test: compile tests
 
-# Load Evil in a fresh instance of Emacs and run tests.
+# Load Evil in a fresh instance of Emacs and run all tests.
 emacs: clean
 	$(EMACS) -Q -L . -l evil-tests.el --eval "(evil-mode 1)" \
 --eval "(if (y-or-n-p-with-timeout \"Run tests? \" 2 t) \
 (evil-tests-run t) \
 (message \"You can run the tests at any time with \`M-x evil-tests-run\'\"))" &
 
-# Load Evil in the terminal and run tests.
+# Load Evil in a terminal Emacs and run all tests.
 term: terminal
 terminal: clean
 	$(EMACS) -nw -Q -L . -l evil-tests.el --eval "(evil-mode 1)" \
@@ -45,7 +53,7 @@ terminal: clean
 # Loads Evil into memory in order to indent macros properly.
 # Also removes trailing whitespace, tabs and extraneous blank lines.
 indent: clean
-	$(EMACS) --batch evil*.el -Q -L . -l evil-tests.el \
+	$(EMACS) --batch ${FILES} -Q -L . -l evil-tests.el \
 --eval "(dolist (buffer (reverse (buffer-list))) \
 (when (buffer-file-name buffer) \
 (set-buffer buffer) \
