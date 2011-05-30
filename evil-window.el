@@ -168,10 +168,12 @@
       (save-window-excursion
         (while (not (zerop count))
           (if (> count 0)
-              (progn (enlarge-window 1 horizontal) (decf count))
+              (progn
+                (enlarge-window 1 horizontal)
+                (setq count (1- count)))
             (progn
               (shrink-window 1 horizontal)
-              (incf count)))
+              (setq count (1+ count))))
           (if (= nwins (length (window-list)))
               (setq wincfg (current-window-configuration))
             (throw 'done t)))))
@@ -248,37 +250,35 @@
   "Move the cursor to bottom-right window."
   :repeatable nil
   (interactive)
-  (do ((success t))
-      ((not success))
-    (setq success nil)
-    (condition-case nil
-        (progn
-          (windmove-right)
-          (setq success t))
-      (error nil))
-    (condition-case nil
-        (progn
-          (windmove-down)
-          (setq success t))
-      (error nil))))
+  (while (let (success)
+           (condition-case nil
+               (progn
+                 (windmove-right)
+                 (setq success t))
+             (error nil))
+           (condition-case nil
+               (progn
+                 (windmove-down)
+                 (setq success t))
+             (error nil))
+           success)))
 
 (evil-define-command evil-window-top-left ()
   "Move the cursor to top-left window."
   :repeatable nil
   (interactive)
-  (do ((success t))
-      ((not success))
-    (setq success nil)
-    (condition-case nil
-        (progn
-          (windmove-left)
-          (setq success t))
-      (error nil))
-    (condition-case nil
-        (progn
-          (windmove-up)
-          (setq success t))
-      (error nil))))
+  (while (let (success)
+           (condition-case nil
+               (progn
+                 (windmove-left)
+                 (setq success t))
+             (error nil))
+           (condition-case nil
+               (progn
+                 (windmove-up)
+                 (setq success t))
+             (error nil))
+           success)))
 
 (evil-define-command evil-window-lru ()
   "Move the cursor to the previous (last accessed) window."
