@@ -127,14 +127,13 @@ E.g., (evil-swap A B C) sets A to B, B to C, and C to A."
 If three or more arguments are given, place the smallest
 value in the first argument and the largest in the last,
 sorting in between."
-  `(let ((sorted (sort (list ,min ,max ,@vars) '<)))
-     (setq ,min (pop sorted)
-           ,max (pop sorted)
-           ,@(let (forms)
-               (while vars
-                 (add-to-list 'forms (pop vars) t)
-                 (add-to-list 'forms '(pop sorted) t))
-               forms))))
+  (let ((sorted (make-symbol "sortvar")))
+    `(let ((,sorted (sort (list ,min ,max ,@vars) '<)))
+       (setq ,min (pop ,sorted)
+             ,max (pop ,sorted)
+             ,@(apply 'append (mapcar (lambda (var)
+                                        (list var `(pop ,sorted)))
+                                      vars))))))
 
 (defmacro evil-loop (spec &rest body)
   "Loop with countdown variable.
