@@ -198,11 +198,16 @@ The return value is a list (BEG END TYPE)."
                      (setq evil-write-echo-area t)
                      (message (error-message-string err)))))
           (cond
-           ;; if text has been selected (i.e., it's a text object),
-           ;; return the selection
-           ((or (evil-visual-state-p)
-                (region-active-p))
-            (evil-expand (region-beginning) (region-end) evil-this-type))
+           ;; the motion made a Visual selection: use that
+           ((evil-visual-state-p)
+            (list (evil-visual-beginning) (evil-visual-end)
+                  (evil-visual-type)))
+           ;; the motion made an active region
+           ((region-active-p)
+            (evil-expand (region-beginning) (region-end)
+                         evil-this-type))
+           ;; default case: use range from previous position
+           ;; to current position
            (t
             (apply 'evil-expand
                    (evil-normalize

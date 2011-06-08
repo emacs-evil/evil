@@ -107,6 +107,7 @@ The overlay equivalent is `evil-transform-overlay'."
          (type (or type (evil-type properties)))
          (transform (when (and type transform)
                       (evil-type-property type transform))))
+    (evil-sort beg end)
     (cond
      (transform
       (apply transform beg end properties))

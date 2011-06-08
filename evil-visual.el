@@ -51,30 +51,19 @@ the selection is enabled.
        (add-to-list 'evil-visual-alist (cons ',selection ',name))
        (defvar ,name ',type ,doc)
        (defvar ,message ,string ,doc)
-       (evil-define-command ,name (&optional mark point message)
+       (evil-define-command ,name (&optional mark point type message)
          ,@(when doc `(,doc))
          :keep-visual t
-         (interactive (list nil nil t))
-         (if (and (eq (evil-visual-type) ,name)
-                  message)
-             (evil-normal-state)
-           (setq point (or point (point))
-                 mark  (or mark
-                           (when (evil-visual-state-p)
-                             (mark t))
-                           point))
-           (unless (evil-visual-state-p)
-             (evil-visual-state))
-           (evil-active-region 1)
-           (evil-move-mark mark)
-           (goto-char point)
-           (evil-visual-refresh ,name mark point)
-           (unless (stringp message)
-             (setq message (and message ,message)))
-           (when message
-             (evil-echo message))
-           ,@body))
-       ',selection)))
+         (interactive (list nil nil nil t))
+         (let ((type (or type ,name)))
+           (if (and (evil-called-interactively-p)
+                    (eq (evil-visual-type) type))
+               (evil-normal-state)
+             (unless (stringp message)
+               (setq message (and message ,message)))
+             (evil-visual-set-region mark point type message)
+             ,@body)
+           ',selection)))))
 
 (evil-define-visual-selection char
   "Characterwise selection."
@@ -116,7 +105,6 @@ the selection is enabled.
 Unless `this-command' is a motion, expand the region
 to the selection."
   (when (evil-visual-state-p)
-    (setq evil-this-type (evil-visual-type))
     (unless (evil-get-command-property
              this-command :keep-visual)
       (evil-visual-expand-region
@@ -145,24 +133,35 @@ otherwise exit Visual state."
                'evil-visual-deactivate-hook t))
 
 (defun evil-visual-select (&optional mark point type message)
-  "Create a Visual selection with MARK, POINT and TYPE.
-If MESSAGE is a string, echo MESSAGE; if MESSAGE is non-nil,
-echo a pre-defined message."
-  (let* ((type (or type (evil-visual-type) evil-visual-char))
-         (func (or (cdr (assq type evil-visual-alist))
-                   (cdr (assq type (evil-visual-alist))))))
-    ;; if TYPE has a selection function, use that;
-    ;; otherwise enable the selection in a generic way
-    (if func
-        (funcall func mark point message)
-      (unless (evil-visual-state-p)
-        (evil-visual-state 1))
-      (evil-active-region 1)
-      (evil-move-mark mark)
-      (goto-char point)
-      (evil-visual-refresh type mark point)
-      (when (stringp message)
-        (evil-echo message)))))
+  "Create a Visual selection of type TYPE from MARK to POINT.
+If there exists a specific selection function for TYPE, use that;
+otherwise use `evil-visual-set-region'."
+  (setq type (or type (evil-visual-type) evil-visual-char))
+  (funcall (evil-visual-selection-function type) mark point type message))
+
+;; the generic selection function, on which all other
+;; selections are based
+(defun evil-visual-set-region (mark point &optional type message)
+  "Create an active region from MARK to POINT.
+If TYPE is given, update the Visual type.
+If MESSAGE is given, display it in the echo area."
+  (interactive)
+  (let* ((point (or point (point)))
+         (mark (or mark
+                   (when (or (evil-visual-state-p)
+                             (region-active-p))
+                     (mark t))
+                   point)))
+    (unless (evil-visual-state-p)
+      (evil-visual-state 1))
+    (evil-active-region 1)
+    (evil-move-mark mark)
+    (goto-char point)
+    (when type
+      (setq evil-visual-region-expanded nil)
+      (evil-visual-refresh type mark point))
+    (when (stringp message)
+      (evil-echo message))))
 
 (defun evil-visual-expand-region (&optional no-trailing-newline)
   "Expand the region to the Visual selection.
@@ -176,14 +175,16 @@ exclude that newline from the region."
           (goto-char end)
           (when (and (bolp) (not (bobp)))
             (setq end (max beg (1- (point)))))))
-      (setq evil-visual-region-expanded t)
-      (evil-set-region beg end))))
+      (when (< (evil-visual-direction) 0)
+        (evil-swap beg end))
+      (evil-visual-set-region beg end)
+      (setq evil-visual-region-expanded t))))
 
 (defun evil-visual-refresh (&optional type mark point)
   "Refresh `evil-visual-overlay'."
   (let* ((point (or point (point)))
          (mark  (or mark (mark t) point))
-         (dir   (if (< point mark) -1 1))
+         (dir   (evil-visual-direction))
          (type  (or type (evil-visual-type) evil-visual-char)))
     (if (null evil-visual-overlay)
         (setq evil-visual-overlay (make-overlay mark point))
@@ -191,6 +192,7 @@ exclude that newline from the region."
       (move-overlay evil-visual-overlay mark point))
     (overlay-put evil-visual-overlay 'direction dir)
     (evil-set-type evil-visual-overlay type)
+    (setq evil-this-type (evil-visual-type))
     (evil-expand-overlay evil-visual-overlay)
     (evil-visual-highlight)))
 
@@ -335,6 +337,13 @@ FORCE returns the previous Visual type if not in Visual state."
   (when (or force (evil-visual-state-p))
     (evil-type evil-visual-overlay)))
 
+(defun evil-visual-direction ()
+  "Return direction of Visual selection.
+The direction is -1 if point precedes mark and 1 otherwise."
+  (let* ((point (point))
+         (mark (or (mark t) point)))
+    (if (< point mark) -1 1)))
+
 ;; recognizes user changes, e.g., customizing
 ;; `evil-visual-char' to `exclusive'
 (defun evil-visual-alist ()
@@ -342,6 +351,15 @@ FORCE returns the previous Visual type if not in Visual state."
   (mapcar (lambda (e)
             (cons (symbol-value (cdr-safe e)) (cdr-safe e)))
           evil-visual-alist))
+
+(defun evil-visual-selection-function (type)
+  "Return a selection function for TYPE.
+For example, `evil-visual-set-region'."
+  (or (cdr (assq type evil-visual-alist))
+      (cdr (assq type (evil-visual-alist)))
+      ;; unless TYPE has a selection function,
+      ;; enable the selection in a generic way
+      'evil-visual-set-region))
 
 (evil-define-command evil-visual-restore ()
   "Restore previous selection."

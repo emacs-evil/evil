@@ -339,20 +339,6 @@ Execute BODY, then restore those things."
            ,@body)
        (evil-transient-restore))))
 
-(defun evil-set-region (beg end &optional dir)
-  "Set Emacs region to BEG and END.
-Preserves the order of point and mark, unless specified by DIR:
-a positive number means mark goes before or is equal to point,
-a negative number means point goes before mark."
-  (let* ((point (point))
-         (mark (or (mark t) point))
-         (dir (or dir (if (< point mark) -1 1))))
-    (evil-sort beg end)
-    (when (< dir 0)
-      (evil-swap beg end))
-    (evil-move-mark beg)
-    (goto-char end)))
-
 ;; `set-mark' does too much at once
 (defun evil-move-mark (pos)
   "Set buffer's mark to POS."
