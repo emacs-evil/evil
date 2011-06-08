@@ -2291,6 +2291,60 @@ to `evil-execute-repeat-info'")
     (evil-test-buffer
       (should-error (execute-kbd-macro "%")))))
 
+;;; Text objects
+
+(ert-deftest evil-test-text-object ()
+  "Test `evil-define-text-object'."
+  :tags '(evil text-object)
+  (let ((object (evil-define-text-object nil (count)
+                  (if (< count 0)
+                      (list (- (point) 3) (point))
+                    (list (point) (+ (point) 3))))))
+    (ert-info ("Select three characters after point")
+      (evil-test-buffer
+        (goto-char 10)
+        (funcall object 1)
+        (should (evil-visual-state-p))
+        (should (eq (evil-visual-type) evil-visual-char))
+        (should (= (evil-visual-beginning) 10))
+        (should (= (evil-visual-end) 13))
+        (should (= (mark) 10))
+        (should (= (point) 12))))
+    (ert-info ("Select three characters before point")
+      (evil-test-buffer
+        (goto-char 10)
+        (funcall object -1)
+        (should (evil-visual-state-p))
+        (should (eq (evil-visual-type) evil-visual-char))
+        (should (= (evil-visual-beginning) 7))
+        (should (= (evil-visual-end) 10))
+        (should (= (mark) 7))
+        (should (= (point) 9))))
+    (ert-info ("Select three characters after selection")
+      (evil-test-buffer
+        (evil-visual-select 10 11 'inclusive)
+        (funcall object 1)
+        (should (evil-visual-state-p))
+        (should (eq (evil-visual-type) evil-visual-char))
+        (should (= (evil-visual-beginning) 10))
+        (should (= (evil-visual-end) 15))
+        (should (= (mark) 10))
+        (should (= (point) 14))))
+    (ert-info ("Select three characters before selection")
+      (evil-test-buffer
+        (evil-visual-select 11 10 'inclusive)
+        (funcall object 1)
+        (should (evil-visual-state-p))
+        (should (eq (evil-visual-type) evil-visual-char))
+        (should (= (evil-visual-beginning) 7))
+        (should (= (evil-visual-end) 12))
+        (should (= (mark) 11))
+        (should (= (point) 7))))
+    (ert-info ("Delete three characters after point")
+      (evil-test-buffer
+        (define-key evil-operator-state-local-map "io" object)
+        (evil-test-macro "dio"
+          'bobp "This buffer")))))
 ;;; Visual state
 
 (defun evil-test-visual-select (type &optional mark point)
@@ -2362,7 +2416,7 @@ unless TYPE is `block'")
       'bobp ";; then enter the text in that file")))
 
 (ert-deftest evil-test-visual-block ()
-  "Test Visual line selection"
+  "Test Visual block selection"
   :tags '(evil visual)
   (evil-test-buffer
     (evil-test-visual-select evil-visual-block))

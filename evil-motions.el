@@ -771,6 +771,85 @@ and jump to the corresponding one."
           (goto-char (1+ pos))
           (backward-list))))))
 
+(defmacro evil-define-text-object (object args &rest body)
+  "Define a text object command OBJECT.
+BODY should return a range (BEG END) to the right of point
+if COUNT is positive, and to the left of it if negative.
+
+\(fn OBJECT (COUNT) DOC [[KEY VALUE]...] BODY...)"
+  (declare (indent defun)
+           (debug (&define name lambda-list
+                           [&optional stringp]
+                           [&rest keywordp sexp]
+                           def-body)))
+  (let ((count (or (pop args) 'count))
+        arg doc key keys type)
+    ;; collect docstring
+    (when (stringp (car-safe body))
+      (setq doc (pop body)))
+    ;; collect keywords
+    (while (keywordp (car-safe body))
+      (setq key (pop body)
+            arg (pop body))
+      (cond
+       ((eq key :type)
+        (setq type arg))
+       (t
+        (setq keys (append keys (list key arg))))))
+    ;; macro expansion
+    `(evil-define-command ,object (,count)
+       ,@(when doc `(,doc)) ; avoid nil before `interactive'
+       ,@keys
+       :type ,type
+       :keep-visual t
+       :repeatable nil
+       (interactive "p")
+       (let* ((dir (evil-visual-direction))
+              (type (or ,type evil-visual-char))
+              ;; if a Visual selection already exists, save the
+              ;; unexpanded positions of point and mark for later
+              (point (point))
+              (mark (or (mark t) point))
+              beg end range)
+         ;; if we are at the beginning of the Visual selection,
+         ;; go to the left (negative); if at the end, go to
+         ;; the right (positive)
+         (when (or (evil-visual-state-p)
+                   (region-active-p))
+           (setq ,count (* ,count dir)))
+         ;; expand Visual selection so that point
+         ;; is outside already selected text
+         (when (evil-visual-state-p)
+           (evil-visual-expand-region))
+         ;; execute object code
+         (setq range (progn ,@body)
+               beg (pop range)
+               end (pop range)
+               ;; Did the range override the default type?
+               type (or (pop range) type))
+         ;; contract the range so it can be compared to
+         ;; the unexpanded positions of point and mark
+         (setq range (evil-contract beg end type)
+               beg (pop range)
+               end (pop range))
+         ;; if a Visual selection already exists,
+         ;; find the union of the selection and the range
+         (when (evil-visual-state-p)
+           (evil-sort beg point mark end))
+         ;; if we are stuck (nothing was selected, or
+         ;; the selection didn't increase), enlarge
+         ;; the selection by one character
+         (when (and (= beg point) (= end mark))
+           (if (< count 0)
+               (setq beg (max (1- beg) (point-min)))
+             (setq end (min (1+ beg) (point-max)))))
+         ;; `beg' is mark and `end' is point unless
+         ;; the selection goes the other way
+         (when (< dir 0)
+           (evil-swap beg end))
+         (evil-visual-select beg end type
+                             (evil-visual-state-p))))))
+
 (provide 'evil-motions)
 
 ;;; evil-motions.el ends here
