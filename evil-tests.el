@@ -701,8 +701,11 @@ TYPE or TRANSFORM")
 (ert-deftest evil-test-insert-digraph ()
   "Test insertion of digraph"
   :tags '(evil insert)
-  (evil-test-buffer-edit ("i\C-kaa")
-    "å"))
+  (ert-info ("Predefined digraph")
+    (evil-test-buffer-edit ("i\C-kae") "æ"))
+  (ert-info ("Custom digraph")
+    (let ((evil-digraphs-table-user '(((?a ?o) . ?å))))
+      (evil-test-buffer-edit ("i\C-kao") "å"))))
 
 ;;; Repeat system
 
