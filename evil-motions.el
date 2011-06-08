@@ -71,6 +71,26 @@
              (1- (line-end-position)))))
      (evil-signal-without-movement ,@body)))
 
+(defun evil-goto-min (&rest positions)
+  "Go to the smallest position in POSITIONS.
+Non-numerical elements are ignored.
+See also `evil-goto-max'."
+  (when (setq positions (evil-filter-list
+                         positions
+                         (lambda (elt)
+                           (not (number-or-marker-p elt)))))
+    (goto-char (apply #'min positions))))
+
+(defun evil-goto-max (&rest positions)
+  "Go to the largest position in POSITIONS.
+Non-numerical elements are ignored.
+See also `evil-goto-min'."
+  (when (setq positions (evil-filter-list
+                         positions
+                         (lambda (elt)
+                           (not (number-or-marker-p elt)))))
+    (goto-char (apply #'max positions))))
+
 (defun evil-eobp ()
   "Whether point is at end-of-buffer w.r.t. end-of-line."
   (or (eobp)
@@ -342,7 +362,9 @@ further, the return value is the number of iterations that could
 not be performed.
 
 \(fn NAME (COUNT) MOVES...)"
-  (declare (debug (&define name def-body))
+  (declare (debug (&define name lambda-list
+                           [&optional stringp]
+                           def-body))
            (indent defun))
   (let* ((var (or (car-safe args) 'var))
          (doc (when (stringp (car-safe moves))
@@ -357,9 +379,9 @@ not be performed.
        ,@(when doc `(,doc))
        (let (bounds)
          (evil-motion-loop (,var (or count 1))
-           (when (setq bounds (remq nil (list ,@moves)))
-             (goto-char (apply (if (> ,var 0) #'min #'max)
-                               bounds))))))))
+           (if (> , var 0)
+               (evil-goto-min ,@moves)
+             (evil-goto-max ,@moves)))))))
 
 (defun evil-move-chars (chars count)
   "Moves point to the end or beginning of a sequence of CHARS.
