@@ -45,6 +45,7 @@
            (debug (&define name lambda-list
                            [&optional stringp]
                            [&rest keywordp sexp]
+                           [&optional ("interactive" interactive)]
                            def-body)))
   (let ((move-point t)
         (keep-visual nil)

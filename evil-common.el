@@ -454,6 +454,7 @@ recursively."
                            [&optional lambda-list]
                            [&optional stringp]
                            [&rest keywordp sexp]
+                           [&optional ("interactive" interactive)]
                            def-body)))
   (let ((keys (plist-put nil :repeatable t))
         arg args doc doc-form key)
@@ -475,14 +476,14 @@ recursively."
     `(progn
        ;; the compiler does not recognize `defun' inside `let'
        ,(when (and command body)
-          `(defun ,command (,@args)
+          `(defun ,command ,args
              ,@(when doc `(,doc))
              ,@body))
        ,(when (and command doc-form)
           `(put ',command 'function-documentation ,doc-form))
        ;; set command properties for symbol or lambda function
        (let ((func ',(if (and (null command) body)
-                         `(lambda (,@args) ,@body)
+                         `(lambda ,args ,@body)
                        command)))
          (apply 'evil-set-command-properties func ',keys)
          func))))

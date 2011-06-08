@@ -15,6 +15,7 @@
            (debug (&define name lambda-list
                            [&optional stringp]
                            [&rest keywordp sexp]
+                           [&optional ("interactive" interactive)]
                            def-body)))
   (let (arg doc interactive key keys type)
     (when args
