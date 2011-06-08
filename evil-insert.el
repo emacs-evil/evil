@@ -1,7 +1,6 @@
 ;;;; Insert state
 
 (require 'evil-states)
-(require 'evil-motions)
 (require 'evil-digraphs)
 
 (evil-define-state insert
@@ -105,7 +104,7 @@ The insertion will be repeated COUNT times."
   "Switches to insert-state just before the first non-blank character on the current line.
 The insertion will be repeated COUNT times."
   (interactive "p")
-  (evil-first-non-blank)
+  (back-to-indentation)
   (setq evil-insert-count count
         evil-insert-lines nil
         evil-insert-vcount (and vcount

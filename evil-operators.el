@@ -2,7 +2,6 @@
 
 (require 'evil-states)
 (require 'evil-visual)
-(require 'evil-motions)
 (require 'evil-insert)
 
 (require 'rect)
@@ -394,7 +393,7 @@ Both COUNT and CMD may be nil."
                   (mark t)
                   (point)))))
     (exchange-point-and-mark)
-    (evil-first-non-blank)))
+    (back-to-indentation)))
 
 (defun evil-yank-block-handler (lines)
   "Inserts the current text as block."

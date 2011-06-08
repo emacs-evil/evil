@@ -2,6 +2,7 @@
 
 (require 'evil-common)
 (require 'evil-visual)
+(require 'evil-operators)
 
 (evil-define-state motion
   "Motion state"
