@@ -145,9 +145,9 @@ See also `evil-goto-min'."
   (let (line-move-visual)
     (evil-line-move (or count 1))))
 
-;; This motion can be used for repeated commands like "dd"
+;; used for repeated commands like "dd"
 (evil-define-motion evil-line (count)
-  "Moves count - 1 lines down."
+  "Moves COUNT - 1 lines down."
   :type line
   (let (line-move-visual)
     (evil-line-move (1- (or count 1)))))
@@ -397,86 +397,102 @@ CHARS is a character set as inside [...] in a regular expression."
         (re-search-forward regexp nil t)
         (skip-chars-forward chars))))))
 
-(defun evil-move-forward-end (move &optional count count-current)
-  "Moves point the the COUNT next end of the object specified by
-move MOVE. If there are no COUNT objects, move the point to the
-end of the last object. If there no next object, raises
-'end-of-buffer. If COUNT-CURRENT is non-nil, the current object
-counts as one move, otherwise the end of the current object is
-NOT counted."
-  (setq count (or count 1))
-  (when (evil-eobp)
-    (signal 'end-of-buffer nil))
-  (unless count-current (forward-char))
-  (setq count (funcall move count))
-  (backward-char)
-  (unless (or (zerop count) (evil-eobp))
-    (setq count (1- count))
-    (goto-char (point-max)))
-  (evil-adjust-eol)
-  count)
-
-(defun evil-move-forward-begin (move count)
-  "Moves point to the COUNT next beginning of the object
-specified by move MOVE. If there are no COUNT objects, move the
-point to the beginning of the last object. If there is no next
-object, raises 'end-of-buffer."
-  (setq count (or count 1))
-  (when (evil-eobp)
-    (signal 'end-of-buffer nil))
-  (let ((opoint (point)))
-    ;; goto to the end of the current or the next object
-    (when (zerop (funcall move 1))
-      ;; check if point we started at the first object
-      (when (> (save-excursion (funcall move -1) (point)) opoint)
-        ;; no
-        (setq count (1- count)))
-      (setq count (funcall move count))
-      ;; go back to beginning of object
-      (funcall move -1))
-    (unless (or (zerop count) (evil-eobp))
-      (setq count (1- count))
-      (goto-char (point-max))))
-  (evil-adjust-eol)
-  count)
-
-(defun evil-move-backward-begin (move &optional count)
-  "Moves point to the COUNT previous beginning of the object
-specified by move MOVE. If there are no COUNT objects, move the
-point to the beginning of the first object. If there is no previous
-object, raises 'beginning-of-buffer."
-  (setq count (- (or count 1)))
-  (when (bobp)
-    (signal 'beginning-of-buffer nil))
-  (setq count (funcall move count))
-  (unless (or (zerop count) (bobp))
-    (setq count (1+ count))
-    (goto-char (point-min)))
-  (- count))
-
-(defun evil-move-backward-end (move count)
-  "Moves point to the COUNT previous end of the object specified
-by move MOVE. If there are no COUNT objects, move the point to
-the end of the first object. If there is no previous object, raises
-'beginning-of-buffer."
-  (setq count (- (or count 1)))
-  (when (bobp)
-    (signal 'beginning-of-buffer nil))
-  (let ((opoint (point)))
-    ;; goto to the beginning of the current or the previous object
-    (when (zerop (funcall move -1))
-      ;; check if point we started at the first object
-      (when (<= (save-excursion (funcall move 1) (point)) opoint)
-        ;; no
+(defun evil-move-beginning (count forward &optional backward)
+  "Move to the beginning of the COUNT next object.
+If COUNT is negative, move to the COUNT previous object.
+FORWARD is a function which moves to the end of the object, and
+BACKWARD is a function which moves to the beginning;
+if unspecified, then FORWARD is used with a negative argument."
+  (let ((count (or count 1))
+        (backward (or backward
+                      (lambda (count)
+                        (funcall forward (- count)))))
+        (forward (or forward
+                     (lambda (count)
+                       (funcall backward (- count)))))
+        (opoint (point)))
+    (cond
+     ((< count 0)
+      (when (bobp)
+        (signal 'beginning-of-buffer nil))
+      (unwind-protect
+          (evil-motion-loop (nil count count)
+            (funcall backward 1))
+        (unless (zerop count)
+          (goto-char (point-min)))))
+     ((> count 0)
+      (when (evil-eobp)
+        (signal 'end-of-buffer nil))
+      ;; Do we need to move past the current object?
+      (when (<= (save-excursion
+                  (funcall forward 1)
+                  (funcall backward 1)
+                  (point))
+                opoint)
         (setq count (1+ count)))
-      (setq count (funcall move count))
-      ;; go to end of object
-      (funcall move 1)
-      (backward-char))
-    (unless (or (zerop count) (bobp))
-      (setq count (1+ count))
-      (goto-char (point-min))))
-  (- count))
+      (unwind-protect
+          (evil-motion-loop (nil count count)
+            (funcall forward 1))
+        (if (zerop count)
+            ;; go back to beginning of object
+            (funcall backward 1)
+          (goto-char (point-max)))))
+     (t
+      count))))
+
+(defun evil-move-end (count forward &optional backward inclusive)
+  "Move to the end of the COUNT next object.
+If COUNT is negative, move to the COUNT previous object.
+FORWARD is a function which moves to the end of the object, and
+BACKWARD is a function which moves to the beginning;
+if unspecified, then FORWARD is used with a negative argument.
+If INCLUSIVE is non-nil, then point is placed at the last character
+of the object; otherwise it is placed at the end of the object."
+  (let ((count (or count 1))
+        (backward (or backward
+                      (lambda (count)
+                        (funcall forward (- count)))))
+        (forward (or forward
+                     (lambda (count)
+                       (funcall backward (- count)))))
+        (opoint (point)))
+    (cond
+     ((< count 0)
+      (when (bobp)
+        (signal 'beginning-of-buffer nil))
+      ;; Do we need to move past the current object?
+      (when (>= (save-excursion
+                  (funcall backward 1)
+                  (funcall forward 1)
+                  (point))
+                (if inclusive
+                    (1+ opoint)
+                  opoint))
+        (setq count (1- count)))
+      (unwind-protect
+          (evil-motion-loop (nil count count)
+            (funcall backward 1))
+        (if (not (zerop count))
+            (goto-char (point-min))
+          (funcall forward 1)
+          (when inclusive
+            (unless (bobp) (backward-char)))
+          (evil-adjust-eol))))
+     ((> count 0)
+      (when (evil-eobp)
+        (signal 'end-of-buffer nil))
+      (when inclusive
+        (forward-char))
+      (unwind-protect
+          (evil-motion-loop (nil count count)
+            (funcall forward 1))
+        (if (not (zerop count))
+            (goto-char (point-max))
+          (when inclusive
+            (unless (bobp) (backward-char)))
+          (evil-adjust-eol))))
+     (t
+      count))))
 
 (evil-define-motion evil-move-empty-lines (count)
   "Moves to the next or previous empty line, repeated COUNT times."
@@ -501,102 +517,102 @@ the end of the first object. If there is no previous object, raises
   (evil-move-chars (concat "^ \t\r\n" evil-word) count)
   (evil-move-empty-lines count))
 
-(evil-define-motion evil-forward-word-begin (count)
-  "Move the cursor the beginning of the COUNT-th next word."
-  :type exclusive
-  (if (not (eq this-command 'evil-change))
-      (evil-move-forward-begin #'evil-move-word count)
-    (evil-move-forward-end #'evil-move-word count t)
-    (setq evil-this-type 'inclusive)))
-
-(evil-define-motion evil-forward-word-end (count)
-  "Move the cursor the end of the COUNT-th next word."
-  :type inclusive
-  (evil-move-forward-end #'evil-move-word count))
-
-(evil-define-motion evil-backward-word-begin (count)
-  "Move the cursor the beginning of the COUNT-th previous word."
-  :type exclusive
-  (evil-move-backward-begin #'evil-move-word count))
-
-(evil-define-motion evil-backward-word-end (count)
-  "Move the cursor the end of the COUNT-th previous word."
-  :type inclusive
-  (evil-move-backward-end #'evil-move-word count))
-
 (evil-define-union-move evil-move-WORD (count)
   "Move by WORDs."
   (evil-move-chars "^ \t\r\n" count)
   (evil-move-empty-lines count))
 
-(evil-define-motion evil-forward-WORD-begin (count)
-  "Move the cursor the beginning of the COUNT-th next WORD."
+(evil-define-motion evil-forward-word-begin (count bigword)
+  "Move the cursor to the beginning of the COUNT-th next word.
+If BIGWORD is non-nil, move by WORDS."
   :type exclusive
-  (if (not (eq this-command 'evil-change))
-      (evil-move-forward-begin #'evil-move-WORD count)
-    (evil-move-forward-end #'evil-move-WORD count t)
-    (setq evil-this-type 'inclusive)))
+  (setq bigword (if bigword #'evil-move-WORD #'evil-move-word))
+  (if (eq this-command 'evil-change)
+      (evil-move-end count bigword)
+    (evil-move-beginning count bigword)))
+
+(evil-define-motion evil-forward-word-end (count bigword)
+  "Move the cursor to the end of the COUNT-th next word.
+If BIGWORD is non-nil, move by WORDS."
+  :type inclusive
+  (setq bigword (if bigword #'evil-move-WORD #'evil-move-word))
+  (if (evil-operator-state-p)
+      ;; if changing a one-letter word, don't move point at all
+      (prog1 (evil-move-end count bigword)
+        (unless (bobp) (backward-char)))
+    (evil-move-end count bigword nil t)))
+
+(evil-define-motion evil-backward-word-begin (count bigword)
+  "Move the cursor to the beginning of the COUNT-th previous word.
+If BIGWORD is non-nil, move by WORDS."
+  :type exclusive
+  (setq bigword (if bigword #'evil-move-WORD #'evil-move-word))
+  (evil-move-beginning (- (or count 1)) bigword))
+
+(evil-define-motion evil-backward-word-end (count bigword)
+  "Move the cursor to the end of the COUNT-th previous word.
+If BIGWORD is non-nil, move by WORDS."
+  :type inclusive
+  (setq bigword (if bigword #'evil-move-WORD #'evil-move-word))
+  (evil-move-end (- (or count 1)) bigword nil t))
+
+(evil-define-motion evil-forward-WORD-begin (count)
+  "Move the cursor to the beginning of the COUNT-th next WORD."
+  :type exclusive
+  (evil-forward-word-begin count t))
 
 (evil-define-motion evil-forward-WORD-end (count)
-  "Move the cursor the end of the COUNT-th next WORD."
+  "Move the cursor to the end of the COUNT-th next WORD."
   :type inclusive
-  (evil-move-forward-end #'evil-move-WORD count))
+  (evil-forward-word-end count t))
 
 (evil-define-motion evil-backward-WORD-begin (count)
-  "Move the cursor the beginning of the COUNT-th previous WORD."
+  "Move the cursor to the beginning of the COUNT-th previous WORD."
   :type exclusive
-  (evil-move-backward-begin #'evil-move-WORD count))
+  (evil-backward-word-begin count t))
 
 (evil-define-motion evil-backward-WORD-end (count)
-  "Move the cursor the end of the COUNT-th previous WORD."
+  "Move the cursor to the end of the COUNT-th previous WORD."
   :type inclusive
-  (evil-move-backward-end #'evil-move-WORD count))
+  (evil-backward-word-end count t))
 
-;; This function is slightly adapted from paragraphs.el
+;; this function is slightly adapted from paragraphs.el
 (defun evil-move-sentence (count)
   "Move by sentence."
-  (setq count (or count 1))
-  (catch 'done
-    (let ((opoint (point))
-          (sentence-end (sentence-end)))
-      ;; backward
-      (while (and (< count 0) (not (bobp)))
-        (let ((pos (point))
-              (par-beg (save-excursion
-                         (and (zerop (evil-move-paragraph -1))
-                              (point)))))
-          (cond
-           ((and (re-search-backward sentence-end par-beg t)
+  (let ((count (or count 1))
+        (opoint (point))
+        (sentence-end (sentence-end))
+        pos par-beg par-end)
+    (evil-motion-loop (var count)
+      (cond
+       ;; backward
+       ((< var 0)
+        (setq pos (point)
+              par-beg (save-excursion
+                        (and (zerop (evil-move-paragraph -1))
+                             (point))))
+        (if (and (re-search-backward sentence-end par-beg t)
                  (or (< (match-end 0) pos)
                      (re-search-backward sentence-end par-beg t)))
-            (goto-char (match-end 0)))
-           (par-beg
-            (goto-char par-beg))
-           (t
-            (goto-char pos)
-            (throw 'done count))))
-        (setq count (1+ count)))
-      ;; forward
-      (while (and (> count 0) (not (eobp)))
-        (let ((par-end (save-excursion
-                         (and (zerop (evil-move-paragraph +1)) (point)))))
-          (cond
-           ((re-search-forward sentence-end par-end t)
-            (skip-chars-backward " \t\n"))
-           (par-end
-            (goto-char par-end))
-           (t
-            (throw 'done count))))
-        (setq count (1- count)))
-      (constrain-to-field nil opoint t)
-      count)))
+            (goto-char (match-end 0))
+          (goto-char (or par-beg pos))))
+       ;; forward
+       (t
+        (setq par-end (save-excursion
+                        (and (zerop (evil-move-paragraph 1))
+                             (point))))
+        (if (re-search-forward sentence-end par-end t)
+            (skip-chars-backward " \t\n")
+          (goto-char (or par-end (point)))))))))
 
 (defun evil-move-paragraph (count)
   "Move by paragraph."
-  (setq count (or count 1))
-  (catch 'done
-    (while (and (< count 0) (not (bobp)))
-      (let ((opoint (point)) npoint)
+  (let ((count (or count 1))
+        npoint opoint)
+    (evil-motion-loop (var count)
+      (setq opoint (point))
+      (cond
+       ((< var 0)
         (forward-paragraph -1)
         (setq npoint (point))
         (skip-chars-forward " \t\n")
@@ -605,80 +621,69 @@ the end of the first object. If there is no previous object, raises
           (forward-paragraph -1)
           (skip-chars-forward " \t\n")
           (when (and (>= (point) opoint) (< npoint opoint))
-            (goto-char opoint)
-            (throw 'done count))))
-      (setq count (1+ count)))
-    (while (and (> count 0) (not (eobp)))
-      (let ((opoint (point)) npoint)
-        (forward-paragraph +1)
+            (goto-char opoint))))
+       (t
+        (forward-paragraph 1)
         (setq npoint (point))
         (skip-chars-backward " \t\n")
         (when (<= (point) opoint)
           (goto-char npoint)
-          (forward-paragraph +1)
+          (forward-paragraph 1)
           (skip-chars-backward " \t\n")
           (when (<= (point) opoint)
-            (goto-char opoint)
-            (throw 'done count))))
-      (setq count (1- count)))
-    count))
+            (goto-char opoint))))))))
 
 (evil-define-motion evil-forward-sentence (count)
   :type exclusive
   "Moves to the next COUNT-th beginning of a sentence or end of a paragraph."
-  (setq count (or count 1))
-  (if (evil-eobp)
-      (signal 'end-of-buffer nil)
-    (while (and (> count 0)
-                (not (evil-eobp)))
-      (let ((beg-sentence
-             (save-excursion
-               (and (zerop (evil-move-forward-begin #'evil-move-sentence 1))
-                    (point))))
-            (end-par
-             (save-excursion
-               (forward-paragraph)
-               (point))))
-        (goto-char (apply #'min
-                          (remq nil (list beg-sentence end-par))))
-        (setq count (1- count))))))
+  (let ((count (or count 1))
+        beg-sentence end-paragraph)
+    (when (evil-eobp)
+      (signal 'end-of-buffer nil))
+    (evil-motion-loop (nil count)
+      (unless (eobp)
+        (setq beg-sentence
+              (save-excursion
+                (and (zerop (evil-move-beginning 1 #'evil-move-sentence))
+                     (point)))
+              end-paragraph
+              (save-excursion
+                (forward-paragraph)
+                (point)))
+        (evil-goto-min beg-sentence end-paragraph)))))
 
 (evil-define-motion evil-backward-sentence (count)
   :type exclusive
   "Moves to the previous COUNT-th beginning of a sentence or paragraph."
-  (setq count (or count 1))
-  (if (bobp)
-      (signal 'beginning-of-buffer nil)
-    (while (and (> count 0)
-                (not (bobp)))
-      (let ((beg-sentence
-             (save-excursion
-               (and (zerop (evil-move-backward-begin #'evil-move-sentence 1))
-                    (point))))
-            (beg-par
-             (save-excursion
-               (backward-paragraph)
-               (point))))
-        (goto-char (apply #'max
-                          (remq nil (list beg-sentence beg-par))))
-        (setq count (1- count))))))
+  (let ((count (or count 1))
+        beg-sentence beg-paragraph)
+    (when (bobp)
+      (signal 'beginning-of-buffer nil))
+    (evil-motion-loop (nil count)
+      (unless (bobp)
+        (setq beg-sentence
+              (save-excursion
+                (and (zerop (evil-move-beginning -1 #'evil-move-sentence))
+                     (point)))
+              beg-paragraph
+              (save-excursion
+                (backward-paragraph)
+                (point)))
+        (evil-goto-max beg-sentence beg-paragraph)))))
 
 (evil-define-motion evil-forward-paragraph (count)
   "Moves to the end of the COUNT-th next paragraph."
   :type exclusive
-  (if (evil-eobp)
-      (signal 'end-of-buffer nil)
-    (forward-paragraph count)))
+  (evil-move-end count 'forward-paragraph 'backward-paragraph))
 
 (evil-define-motion evil-backward-paragraph (count)
   "Moves to the beginning of the COUNT-th previous paragraph."
   :type exclusive
-  (if (bobp)
-      (signal 'beginning-of-buffer nil)
-    (backward-paragraph count)))
+  (evil-move-beginning (- (or count 1))
+                       'forward-paragraph 'backward-paragraph))
 
 (evil-define-motion evil-find-char (count char)
-  "Move the cursor to the next COUNT'th occurrence of character CHAR."
+  "Move to the next COUNT'th occurrence of CHAR."
   :type inclusive
   (interactive (list (read-char)))
   (setq count (or count 1))
@@ -697,13 +702,13 @@ the end of the first object. If there is no previous object, raises
         (error "Can't find %c" char)))))
 
 (evil-define-motion evil-find-char-backward (count char)
-  "Move the cursor to the next COUNT'th occurrence of character CHAR."
+  "Move to the previous COUNT'th occurrence of CHAR."
   :type exclusive
   (interactive (list (read-char)))
   (evil-find-char (- (or count 1)) char))
 
 (evil-define-motion evil-find-char-to (count char)
-  "Move the cursor to the character before the next COUNT'th occurence of arg."
+  "Move before the next COUNT'th occurence of CHAR."
   :type inclusive
   (interactive (list (read-char)))
   (unwind-protect
@@ -715,7 +720,7 @@ the end of the first object. If there is no previous object, raises
     (setcar evil-last-find #'evil-find-char-to)))
 
 (evil-define-motion evil-find-char-to-backward (count char)
-  "Move the cursor to the character before the previous COUNT'th occurence of arg."
+  "Move before the previous COUNT'th occurence of CHAR."
   :type exclusive
   (interactive (list (read-char)))
   (evil-find-char-to (- (or count 1)) char))
@@ -739,11 +744,11 @@ the end of the first object. If there is no previous object, raises
   :type inclusive
   (evil-repeat-find-char (- (or count 1))))
 
-;; TODO: this is a very basic implementation considering only (),[],{}
-;; and not blocks like #if #endif.
+;; TODO: this is a very basic implementation considering only
+;; (), [], {}, and not blocks like #if ... #endif
 (evil-define-motion evil-jump-item (count)
-  "Find the next item in this line after or under the cursor and
-jumps to the corresponding one."
+  "Find the next item in this line after or under the cursor
+and jump to the corresponding one."
   :type inclusive
   (let ((next-open
          (condition-case err
@@ -752,7 +757,7 @@ jumps to the corresponding one."
             (point-max))))
         (next-close
          (condition-case nil
-             (1- (scan-lists (point) 1 +1))
+             (1- (scan-lists (point) 1 1))
            (error (point-max)))))
     (let ((pos (min next-open next-close)))
       (when (>= pos (line-end-position))
