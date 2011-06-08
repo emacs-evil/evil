@@ -72,16 +72,11 @@
      (evil-signal-without-movement ,@body)))
 
 (defun evil-eobp ()
-  "Returns t iff (point) is at end-of-buffer w.r.t. end-of-line."
+  "Whether point is at end-of-buffer w.r.t. end-of-line."
   (or (eobp)
       (and (not (evil-visual-state-p))
            (= (point) (1- (point-max)))
            (not (eolp)))))
-
-(defun evil-adjust-eol ()
-  "Move (point) one character back if at eol on an non-empty line."
-  (when (and (eolp) (not (bolp)))
-    (backward-char)))
 
 (evil-define-motion evil-forward-char (count)
   "Move cursor to the right by COUNT characters."
@@ -196,9 +191,8 @@ if it is not the first event."
 If COUNT is given, move COUNT - 1 lines downward first."
   :type inclusive
   (end-of-line count)
-  (unless (or (evil-visual-state-p)
-              (bolp))
-    (backward-char)))
+  (unless (evil-visual-state-p)
+    (evil-adjust-eol)))
 
 (evil-define-motion evil-last-non-blank (count)
   "Move the cursor to the last non-blank character of the current line.
@@ -247,9 +241,8 @@ of the current screen line."
 If COUNT is given, move COUNT - 1 screen lines downward first."
   :type inclusive
   (end-of-visual-line count)
-  (unless (or (evil-visual-state-p)
-              (bolp))
-    (backward-char)))
+  (unless (evil-visual-state-p)
+    (evil-adjust-eol)))
 
 ;;; Text object and movement framework
 

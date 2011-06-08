@@ -246,8 +246,7 @@ is non-nil) and returns point."
   (unless force
     (when (or (not dir) (and (numberp dir) (< dir 1)))
       (when (> (current-column) column)
-        (unless (bolp)
-          (backward-char)))))
+        (evil-adjust))))
   (point))
 
 ;;; Region
@@ -349,6 +348,16 @@ a negative number means point goes before mark."
 (defun evil-move-mark (pos)
   "Set buffer's mark to POS."
   (set-marker (mark-marker) pos))
+
+(defun evil-adjust-eol ()
+  "Move (point) one character back if at eol on an non-empty line."
+  (when (eolp)
+    (evil-adjust)))
+
+(defun evil-adjust ()
+  "Move point one character back within the current line."
+  (unless (bolp)
+    (backward-char)))
 
 (defun evil-apply-on-block (func beg end &rest args)
   "Call FUNC for each line of Visual Block selection.

@@ -19,7 +19,7 @@
     (unless evil-want-fine-undo
       (evil-end-undo-step))
     (when evil-move-cursor-back
-      (unless (bolp) (backward-char))))))
+      (evil-adjust)))))
 
 (defun evil-cleanup-insert-state ()
   "Called when Insert state is about to be exited.

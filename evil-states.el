@@ -594,8 +594,7 @@ cursor, or a list of the above.\n\n%s" state doc))
 (defun evil-normal-post-command ()
   "Prevent point from reaching the end of the line."
   (when (evil-normal-state-p)
-    (when (and (eolp) (not (bolp)))
-      (backward-char))))
+    (evil-adjust-eol)))
 
 (evil-define-state emacs
   "Emacs state."

@@ -140,7 +140,7 @@
         (goto-char (point-min))
         (forward-line (1- count)))
     (goto-char (window-end))
-    (unless (bobp) (backward-char)))
+    (evil-adjust))
   (recenter 0)
   (evil-first-non-blank))
 
