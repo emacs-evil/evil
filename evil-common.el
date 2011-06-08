@@ -139,18 +139,27 @@ sorting in between."
   "Loop with countdown variable.
 Evaluate BODY with VAR counting down from COUNT to 0.
 COUNT can be negative, in which case VAR counts up instead.
+RESULT specifies a variable for storing the current value
+of VAR if the loop does not complete successfully. Otherwise,
+the return value is 0.
 
-\(fn (VAR COUNT) BODY...)"
+\(fn (VAR COUNT [RESULT]) BODY...)"
   (declare (debug dolist)
            (indent defun))
-  (let* ((var (pop spec))
-         (count (pop spec)))
+  (let* ((i (make-symbol "loopvar"))
+         (var (pop spec))
+         (count (pop spec))
+         (result (pop spec)))
+    (setq var (or (unless (eq var result) var) i)
+          result (or result var))
     `(let ((,var ,count))
+       (setq ,result ,var)
        (while (/= ,var 0)
          ,@body
          (if (> ,var 0)
              (setq ,var (1- ,var))
-           (setq ,var (1+ ,var))))
+           (setq ,var (1+ ,var)))
+         (setq ,result ,var))
        ,var)))
 
 ;; toggleable version of `with-temp-message'

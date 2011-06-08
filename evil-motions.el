@@ -247,8 +247,8 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
 ;;; Text object and movement framework
 
 ;; Usual text objects like words, WORDS, paragraphs and sentences are
-;; defined via a corresponding move-function. The move function must
-;; have the following properties:
+;; defined via a corresponding move-function. This function must have
+;; the following properties:
 ;;
 ;;   1. Take exactly one argument, the count.
 ;;   2. When the count is positive, move point forward to the first
@@ -268,9 +268,9 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
 ;;
 ;; A useful macro in this regard is `evil-motion-loop', which quits
 ;; when point does not move further and returns the count difference.
-;; It also facilitates negative counts by providing a "unit value" of
-;; 1 or -1 for use in each iteration. For example, a hypothetical
-;; "foo-bar" move could be written as such:
+;; It also provides a "unit value" of 1 or -1 for use in each
+;; iteration. For example, a hypothetical "foo-bar" move could be
+;; written as such:
 ;;
 ;;     (defun foo-bar (count)
 ;;       (evil-motion-loop (var count)
@@ -290,9 +290,6 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
 ;;           (forward-foo 1)
 ;;           (forward-bar 1)))))
 ;;
-;; A higher-level macro, `evil-define-union-move', is defined
-;; in terms of `evil-motion-loop'.
-;;
 ;; After a forward motion, point has to be placed on the first
 ;; character after some object, unless no motion was possible at all.
 ;; Similarly, after a backward motion, point has to be placed on the
@@ -306,28 +303,31 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
 (defmacro evil-motion-loop (spec &rest body)
   "Loop a certain number of times.
 Evaluate BODY repeatedly COUNT times with VAR bound to 1 or -1,
-depending on the sign of COUNT. RESULT is bound to decreasing
-values from COUNT to 0, and the return value is 0 if the loop
-completes successfully. Each iteration must move point; if point
-does not change, the loop immediately quits, and the return value
-is the current value of RESULT. See also `evil-loop'.
+depending on the sign of COUNT. RESULT, if specified, holds
+the number of unsuccessful iterations, which is 0 if the loop
+completes successfully. This is also the return value.
+
+Each iteration must move point; if point does not change,
+the loop immediately quits. See also `evil-loop'.
 
 \(fn (VAR COUNT [RESULT]) BODY...)"
   (declare (indent defun)
            (debug ((symbolp form &optional symbolp) body)))
-  (let* ((var (pop spec))
-         (countval (pop spec))
-         (done (make-symbol "donevar"))
+  (let* ((var (or (pop spec) (make-symbol "unitvar")))
+         (countval (or (pop spec) 0))
+         (result (pop spec))
+         (i (make-symbol "loopvar"))
          (count (make-symbol "countvar"))
-         (result (or (pop spec) (make-symbol "resultvar"))))
+         (done (make-symbol "donevar"))
+         (orig (make-symbol "origvar")))
     `(let* ((,count ,countval)
             (,var (if (< ,count 0) -1 1)))
        (catch ',done
-         (evil-loop (,result ,count)
-           (let ((orig (point)))
+         (evil-loop (,i ,count ,result)
+           (let ((,orig (point)))
              ,@body
-             (when (= (point) orig)
-               (throw ',done ,result))))))))
+             (when (= (point) ,orig)
+               (throw ',done ,i))))))))
 
 (defmacro evil-define-union-move (name args &rest moves)
   "Create a movement function named NAME.
