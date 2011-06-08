@@ -1,6 +1,11 @@
 ;;;; Integrate Evil with other modules
 
+(require 'evil-states)
 (require 'evil-motions)
+
+;;; ERT
+
+(add-to-list 'evil-emacs-state-modes 'ert-results-mode)
 
 ;;; Undo tree visualizer
 
