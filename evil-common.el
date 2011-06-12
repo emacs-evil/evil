@@ -194,7 +194,17 @@ Does not restore if `evil-write-echo-area' is non-nil."
 That is, the message is not logged in the *Messages* buffer.
 \(To log the message, just use `message'.)"
   (let (message-log-max)
-    (apply 'message string args)))
+    (unless evil-locked-display
+      (apply 'message string args))))
+
+(defmacro evil-with-locked-display (&rest body)
+  "Execute BODY with locked display.
+State changes will not change the cursor, refresh the modeline
+or display a message in the echo area."
+  (declare (indent defun)
+           (debug t))
+  `(let ((evil-locked-display t))
+     ,@body))
 
 (defmacro evil-save-state (&rest body)
   "Save the current state; execute BODY; restore the state."
@@ -206,12 +216,14 @@ That is, the message is not logged in the *Messages* buffer.
        (evil-change-state old-state))))
 
 (defmacro evil-with-state (state &rest body)
-  "Change to STATE; execute BODY; restore previous state."
+  "Change to STATE and execute BODY without refreshing the display.
+Restore the previous state afterwards."
   (declare (indent defun)
            (debug t))
-  `(evil-save-state
-     (evil-change-state ',state)
-     ,@body))
+  `(evil-with-locked-display
+     (evil-save-state
+       (evil-change-state ',state)
+       ,@body)))
 
 (defun evil-set-cursor (specs)
   "Change the cursor's apperance according to SPECS.
@@ -232,8 +244,7 @@ If SPECS is nil, make the cursor a black filled box."
      ((stringp spec)
       (set-cursor-color spec))
      (t
-      (setq cursor-type spec))))
-  (redisplay))
+      (setq cursor-type spec)))))
 
 (defmacro evil-save-cursor (&rest body)
   "Save the current cursor; execute BODY; restore the cursor."

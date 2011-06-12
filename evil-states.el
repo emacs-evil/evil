@@ -128,7 +128,7 @@ Disable all states if nil."
   (let ((func (evil-state-property (or state evil-state) :toggle)))
     (when (and (functionp func)
                (not (eq state evil-state)))
-      (funcall func (if state 1 -1)))))
+      (funcall func (unless state -1)))))
 
 (defun evil-state-keymaps (state &rest excluded)
   "Return an ordered list of keymaps activated by STATE.
@@ -535,7 +535,8 @@ cursor, or a list of the above.\n\n%s" state doc))
 
        ;; define state function
        (defun ,toggle (&optional arg)
-         ,(format "Enable %s state. Disable with negative ARG.\n\n%s"
+         ,(format "Enable %s state. Disable with negative ARG.
+If ARG is nil, don't display a message in the echo area.\n\n%s"
                   state doc)
          (interactive "p")
          (cond
@@ -554,12 +555,15 @@ cursor, or a list of the above.\n\n%s" state doc))
            (unwind-protect
                (let ((evil-state ',state))
                  (evil-normalize-keymaps)
-                 (setq evil-modeline-tag ,tag)
-                 (force-mode-line-update)
-                 (evil-set-cursor ,cursor)
+                 (unless evil-locked-display
+                   (setq evil-modeline-tag ,tag)
+                   (evil-set-cursor ,cursor)
+                   (when (evil-called-interactively-p)
+                     (force-mode-line-update)
+                     (redisplay)))
                  ,@body
                  (run-hooks ',entry-hook)
-                 (when (and arg ,message)
+                 (when (and arg (not evil-locked-display) ,message)
                    (if (functionp ,message)
                        (funcall ,message)
                      (evil-echo ,message))))

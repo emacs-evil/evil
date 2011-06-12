@@ -166,13 +166,14 @@ in the `interactive' specification of an operator command."
                   (* (prefix-numeric-value count)
                      (prefix-numeric-value current-prefix-arg)))))
           (when motion
-            (setq range (evil-motion-range
-                         motion
-                         count
-                         type)
-                  beg (pop range)
-                  end (pop range)
-                  type (pop range)))
+            (evil-with-state operator
+              (setq range (evil-motion-range
+                           motion
+                           count
+                           type)
+                    beg (pop range)
+                    end (pop range)
+                    type (pop range))))
           ;; update global variables
           (setq evil-this-motion motion
                 evil-this-motion-count count

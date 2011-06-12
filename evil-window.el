@@ -325,7 +325,8 @@ top-left."
   (split-window (selected-window) count)
   (let ((buffer (generate-new-buffer "*new*")))
     (set-window-buffer (selected-window) buffer)
-    (with-current-buffer buffer (evil-normal-state))))
+    (with-current-buffer buffer
+      (evil-normal-state))))
 
 ;; (defun evil-window-vnew (count (argument:file file) nonrepeatable)
 ;;   "Splits the current window vertically and opens a new buffer name or edits a certain `file'."

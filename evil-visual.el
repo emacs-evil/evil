@@ -153,7 +153,7 @@ If MESSAGE is given, display it in the echo area."
                      (mark t))
                    point)))
     (unless (evil-visual-state-p)
-      (evil-visual-state 1))
+      (evil-visual-state))
     (evil-active-region 1)
     (evil-move-mark mark)
     (goto-char point)
