@@ -275,21 +275,27 @@ and only if `count' is non-nil."
      ;; repeat with original count
      (t (evil-execute-repeat-info repeat-info)))))
 
-(evil-define-command evil-repeat (count)
-  "Repeat the last editing command with count replaced by `count'."
+(evil-define-command evil-repeat (count &optional save-point)
+  "Repeat the last editing command with count replaced by COUNT.
+If SAVE-POINT is non-nil, do not move point."
   :repeatable nil
-  (interactive "P")
-  (let ((confirm-kill-emacs t)
-        (kill-buffer-hook
-         (cons #'(lambda ()
-                   (error "Cannot delete buffer in repeat command."))
-               kill-buffer-hook))
-        (evil-repeat-info-ring (ring-copy evil-repeat-info-ring))
-        (this-command this-command)
-        (last-command last-command))
-    (setq evil-last-repeat (list (point) count))
-    (evil-with-undo
-      (evil-execute-repeat-info-with-count count (ring-ref evil-repeat-info-ring 0)))))
+  (interactive (list current-prefix-arg
+                     (not evil-repeat-move-cursor)))
+  (if save-point
+      (save-excursion
+        (evil-repeat count))
+    (let ((confirm-kill-emacs t)
+          (kill-buffer-hook
+           (cons #'(lambda ()
+                     (error "Cannot delete buffer in repeat command."))
+                 kill-buffer-hook))
+          (evil-repeat-info-ring (ring-copy evil-repeat-info-ring))
+          (this-command this-command)
+          (last-command last-command))
+      (setq evil-last-repeat (list (point) count))
+      (evil-with-undo
+        (evil-execute-repeat-info-with-count
+         count (ring-ref evil-repeat-info-ring 0))))))
 
 ;; TODO: the same issue concering disabled undos as for `evil-paste-pop'
 (defun evil-repeat-pop (count)

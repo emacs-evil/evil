@@ -41,7 +41,6 @@
 
 (evil-define-operator evil-replace (beg end type char)
   "Replace text from BEG to END with CHAR."
-  :move-point t ; TODO: remove
   :motion evil-forward-char
   (interactive (list (evil-save-cursor
                        (evil-set-cursor evil-replace-state-cursor)
