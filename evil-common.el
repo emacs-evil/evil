@@ -140,8 +140,8 @@ sorting in between."
 Evaluate BODY with VAR counting down from COUNT to 0.
 COUNT can be negative, in which case VAR counts up instead.
 RESULT specifies a variable for storing the current value
-of VAR if the loop does not complete successfully. Otherwise,
-the return value is 0.
+of VAR if the loop does not complete successfully.
+Otherwise, the return value is 0.
 
 \(fn (VAR COUNT [RESULT]) BODY...)"
   (declare (debug dolist)
@@ -432,7 +432,7 @@ recursively."
           (cond
            ((memq cmd '(undefined nil))
             (error "No command bound to %s" (substring keys beg end)))
-           ((arrayp cmd) ; a keyboard macro, replace the command with the macro
+           ((arrayp cmd) ; keyboard macro, replace command with macro
             (setq keys (vconcat (substring keys 0 beg)
                                 cmd
                                 (substring keys end))
@@ -441,9 +441,10 @@ recursively."
            ((functionp cmd)
             (if (or (memq cmd '(digit-argument negative-argument))
                     (and found-prefix
-                         (get cmd 'evil-digit-argument-redirection)))
+                         (evil-get-command-property
+                          cmd :digit-argument-redirection)))
                 ;; skip those commands
-                (setq found-prefix t ; we found at least one prefix argument
+                (setq found-prefix t ; found at least one prefix argument
                       beg end
                       end (1+ end))
               ;; a real command, finish

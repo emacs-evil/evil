@@ -8,23 +8,25 @@
 (require 'evil-replace)
 
 (defmacro evil-redirect-digit-argument (map keys target)
-  "Bind a special wrapper function which calles either `target' or `digit-argument'.
-`digit-argument' is only called if a prefix-argument has already been started, otherwise `target' is called.
-MAP    the keymap where the command should be bound
-KEYS   the key-sequence to which the command should be bound
-TARGET the command to call."
-  (let ((wrapper (intern (concat "evil-digit-argument-or-"
-                                 (symbol-name (eval target))))))
+  "Bind a wrapper function calling TARGET or `digit-argument'.
+MAP is a keymap for binding KEYS to the wrapper for TARGET.
+The wrapper only calls `digit-argument' if a prefix-argument
+has already been started; otherwise TARGET is called."
+  (let* ((target (eval target))
+         (wrapper (intern (format "evil-digit-argument-or-%s"
+                                  target))))
     `(progn
-       (defun ,wrapper ()
+       (evil-define-command ,wrapper ()
+         :digit-argument-redirection ,target
+         :keep-visual t
+         :repeatable nil
          (interactive)
          (if current-prefix-arg
              (progn
                (setq this-command 'digit-argument)
                (call-interactively 'digit-argument))
-           (setq this-command ,target)
-           (call-interactively ,target)))
-       (put ',wrapper 'evil-digit-argument-redirection t)
+           (setq this-command ',target)
+           (call-interactively ',target)))
        (define-key ,map ,keys ',wrapper))))
 
 (define-key evil-emacs-state-map "\C-z" 'evil-normal-state)
