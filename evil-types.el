@@ -28,24 +28,25 @@
 
 (defun evil-type (object &optional default)
   "Return the type of OBJECT, or DEFAULT if none."
-  (or (cond
-       ((overlayp object)
-        (overlay-get object :type))
-       ((listp object)
-        ;; (BEG END TYPE)
-        (if (and (>= (length object) 3)
-                 (numberp (nth 0 object))
-                 (numberp (nth 1 object))
-                 (symbolp (nth 2 object)))
-            (nth 2 object)
-          ;; property list
-          (plist-get object :type)))
-       ;; command
-       ((commandp object)
-        (evil-get-command-property object :type))
-       ((symbolp object)
-        (get object 'type)))
-      default))
+  (let (type)
+    (cond
+     ((overlayp object)
+      (setq type (overlay-get object :type)))
+     ((listp object)
+      ;; (BEG END TYPE)
+      (if (and (>= (length object) 3)
+               (numberp (nth 0 object))
+               (numberp (nth 1 object))
+               (symbolp (nth 2 object)))
+          (setq type (nth 2 object))
+        ;; property list
+        (setq type (plist-get object :type))))
+     ;; command
+     ((commandp object)
+      (setq type (evil-get-command-property object :type)))
+     ((symbolp object)
+      (setq type (get object 'type))))
+    (or (and (evil-type-p type) type) default)))
 
 (defun evil-set-type (object type)
   "Set the type of OBJECT to TYPE.
@@ -66,6 +67,30 @@ will make `line' the type of the `next-line' command."
    ((symbolp object)
     (put object 'type type)))
   object)
+
+(defun evil-type-property (type prop)
+  "Return property PROP for TYPE."
+  (evil-get-property evil-type-properties type prop))
+
+(defun evil-type-p (sym)
+  "Whether SYM is the name of a type."
+  (assq sym evil-type-properties))
+
+(defun evil-range (beg end &optional type &rest properties)
+  "Return a list (BEG END [TYPE] PROPERTIES...).
+BEG and END are buffer positions (numbers or markers),
+TYPE is a type as per `evil-type-p', and PROPERTIES is
+a property list."
+  (let ((beg (if (markerp beg) (marker-position beg) beg))
+        (end (if (markerp end) (marker-position end) end))
+        (point-min (point-min))
+        (point-max (point-max)))
+    ;; BEG and END may not exceed the buffer boundaries
+    (evil-sort point-min beg end point-max)
+    (append (list beg end)
+            (when (evil-type-p type)
+              (list type))
+            properties)))
 
 (defun evil-expand (beg end type &rest properties)
   "Expand BEG and END as TYPE with PROPERTIES.
@@ -102,19 +127,12 @@ may contain a property list. If TRANSFORM is undefined,
 return positions unchanged.
 
 The overlay equivalent is `evil-transform-overlay'."
-  (let* ((beg (if (markerp beg) (marker-position beg) beg))
-         (end (if (markerp end) (marker-position end) end))
-         (type (or type (evil-type properties)))
+  (let* ((type (or type (evil-type properties)))
          (transform (when (and type transform)
                       (evil-type-property type transform))))
-    (evil-sort beg end)
-    (cond
-     (transform
-      (apply transform beg end properties))
-     (type
-      (append (list beg end type) properties))
-     (t
-      (append (list beg end) properties)))))
+    (if transform
+        (apply transform beg end properties)
+      (apply 'evil-range beg end type properties))))
 
 (defun evil-describe (beg end type &rest properties)
   "Return description of BEG and END with PROPERTIES.
@@ -256,14 +274,6 @@ If no description is available, return the empty string."
         (apply 'evil-describe
                beg end type properties)))))
 
-(defun evil-type-property (type prop)
-  "Return property PROP for TYPE."
-  (evil-get-property evil-type-properties type prop))
-
-(defun evil-type-p (sym)
-  "Whether SYM is the name of a type."
-  (assq sym evil-type-properties))
-
 (defmacro evil-define-type (type doc &rest body)
   "Define type TYPE.
 DOC is a general description and shows up in all docstrings.
@@ -333,31 +343,28 @@ with PROPERTIES.\n\n%s%s" sym type string doc)
             (let ((type ',type) range)
               (when (and beg end)
                 (save-excursion
-                  (when (markerp beg)
-                    (setq beg (marker-position beg)))
-                  (when (markerp end)
-                    (setq end (marker-position end)))
-                  (evil-sort beg end)
                   (when (memq ,key '(:expand :contract))
                     (setq properties
                           (plist-put properties
                                      :expanded
                                      ,(eq key :expand))))
+                  (setq range (apply 'evil-range beg end type properties)
+                        beg (car range)
+                        end (cadr range))
                   (setq range (or (apply ',func beg end
                                          (when ,(> (length args) 2)
                                            properties))
-                                  (append (list beg end type)
-                                          properties))
+                                  range)
                         beg  (or (pop range) beg)
                         end  (or (pop range) end)
                         type (if (evil-type-p (car-safe range))
                                  (pop range) type))
-                  (evil-sort beg end)
                   (while range
                     (setq properties
                           (plist-put properties
                                      (pop range) (pop range))))
-                  (append (list beg end type) properties))))))) t))
+                  (apply 'evil-range beg end type properties)))))))
+       t))
     `(progn
        (evil-put-property 'evil-type-properties ',type ,@plist)
        ,@defun-forms
@@ -389,7 +396,7 @@ If the end position is at the beginning of a line, then:
                    (setq end (max beg (1- end)))
                    (evil-expand beg end 'inclusive))))
                 (t
-                 (list beg end))))
+                 (evil-range beg end))))
   :string (lambda (beg end)
             (let ((width (- end beg)))
               (format "%s character%s" width
@@ -398,14 +405,14 @@ If the end position is at the beginning of a line, then:
 (evil-define-type inclusive
   "Include the character under point."
   :expand (lambda (beg end)
-            (list beg (min (1+ end) (point-max))))
+            (evil-range beg (1+ end)))
   :contract (lambda (beg end)
-              (list beg (max beg (1- end))))
+              (evil-range beg (max beg (1- end))))
   :normalize (lambda (beg end)
                (goto-char end)
                (when (eq (char-after) ?\n)
                  (setq end (max beg (1- end))))
-               (list beg end))
+               (evil-range beg end))
   :string (lambda (beg end)
             (let ((width (- end beg)))
               (format "%s character%s" width
@@ -414,7 +421,7 @@ If the end position is at the beginning of a line, then:
 (evil-define-type line
   "Include whole lines."
   :expand (lambda (beg end)
-            (list
+            (evil-range
              (progn
                (goto-char beg)
                (line-beginning-position))
@@ -437,6 +444,13 @@ the last column is included."
                               (goto-char end)
                               (current-column)))
                    (corner (plist-get properties :corner)))
+              ;; Because blocks are implemented as a pair of buffer
+              ;; positions, expansion is restricted to what the buffer
+              ;; allows. In the case of a one-column block, there are
+              ;; two ways to expand it (either increase the upper
+              ;; corner beyond the lower corner, or increase the lower
+              ;; beyond the upper), so we try out both possibilities
+              ;; when we encounter the end of the line.
               (cond
                ((= beg-col end-col)
                 (goto-char end)
@@ -444,22 +458,22 @@ the last column is included."
                  ((eolp)
                   (goto-char beg)
                   (if (eolp)
-                      (list beg end)
-                    (list (1+ beg) end)))
+                      (evil-range beg end)
+                    (evil-range (1+ beg) end)))
                  ((memq corner '(lower-right upper-right right))
-                  (list (1+ beg) end))
+                  (evil-range (1+ beg) end))
                  (t
-                  (list beg (1+ end)))))
+                  (evil-range beg (1+ end)))))
                ((< beg-col end-col)
                 (goto-char end)
                 (if (eolp)
-                    (list beg end)
-                  (list beg (1+ end))))
+                    (evil-range beg end)
+                  (evil-range beg (1+ end))))
                (t
                 (goto-char beg)
                 (if (eolp)
-                    (list beg end)
-                  (list (1+ beg) end))))))
+                    (evil-range beg end)
+                  (evil-range (1+ beg) end))))))
   :contract (lambda (beg end)
               (let* ((beg-col (progn
                                 (goto-char beg)
@@ -468,8 +482,8 @@ the last column is included."
                                 (goto-char end)
                                 (current-column))))
                 (if (> beg-col end-col)
-                    (list (1- beg) end)
-                  (list beg (max beg (1- end))))))
+                    (evil-range (1- beg) end)
+                  (evil-range beg (max beg (1- end))))))
   :string (lambda (beg end)
             (let ((height (count-lines
                            beg
@@ -514,7 +528,7 @@ and `lower-right'."
               (setq end (point))
               (setq properties (plist-put properties
                                           :corner corner))
-              (append (list beg end) properties))))
+              (apply 'evil-range beg end properties))))
 
 (provide 'evil-types)
 
