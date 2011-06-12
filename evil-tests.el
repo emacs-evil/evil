@@ -121,7 +121,7 @@ is executed at the end."
         (setq before-predicate before
               before nil)
       (should (string= (buffer-substring
-                        (- (point) (length before))
+                        (max (point-min) (- (point) (length before)))
                         (point))
                        before))))
   (when after
@@ -130,7 +130,7 @@ is executed at the end."
               after nil)
       (should (string= (buffer-substring
                         (point)
-                        (+ (point) (length after)))
+                        (min (point-max) (+ (point) (length after))))
                        after))))
   (when before-predicate
     (ert-info ((format "Expect `%s' at the beginning" before-predicate))
@@ -144,11 +144,11 @@ is executed at the end."
         (should (funcall after-predicate))))))
 
 (defun evil-test-text-lines (&rest line-tests)
-  "Calls `evil-test-text' once for each element of `line-tests' on successive lines.
-The first element of `line-tests' is the test for the
-current-line. The other elements are tested on the successive
-line while (point) as always moved to the same column as in the
-first line via `move-to-column'."
+  "Calls `evil-test-text' once for each element of `line-tests'
+on successive lines. The first element of `line-tests' is the test
+for the current-line. The other elements are tested on the successive
+line while (point) as always moved to the same column as in the first
+line via `move-to-column'."
   (let ((col (current-column)))
     (save-excursion
       (dolist (test line-tests)
@@ -582,7 +582,8 @@ and the beginning")
                          "2 rows and 1 column")))
       (ert-info ("Expand to a 3x2 block")
         (should (equal (evil-expand first-line (1+ third-line) 'block)
-                       (list first-line (1+ (1+ third-line)) 'block :expanded t)))
+                       (list first-line (1+ (1+ third-line))
+                             'block :expanded t)))
         (should (string= (evil-describe first-line (1+ third-line) 'block)
                          "3 rows and 2 columns")))
       (ert-info ("Contract to a 0x0 rectangle")
@@ -593,7 +594,8 @@ and the beginning")
                        (list first-line second-line 'block :expanded nil))))
       (ert-info ("Contract to a 3x1 rectangle")
         (should (equal (evil-contract first-line (1+ (1+ third-line)) 'block)
-                       (list first-line (1+ third-line) 'block :expanded nil)))))))
+                       (list first-line (1+ third-line)
+                             'block :expanded nil)))))))
 
 (ert-deftest evil-test-type-transform ()
   "Test `evil-transform'"
@@ -1286,7 +1288,8 @@ to `evil-execute-repeat-info'")
   :tags '(evil operator)
   (ert-info ("Delete characters")
     (evil-test-buffer
-      (evil-test-macro "wd2e" ";; " " is for" 'bobp)
+      (evil-test-macro "$x" "Lisp evaluatio" "n")
+      (evil-test-macro "0wd2e" ";; " " is for" 'bobp)
       (should (string= (current-kill 0) "This buffer"))
       (evil-test-macro "P" ";; " "This buffer is for" 'bobp)))
 
@@ -2450,7 +2453,7 @@ unless TYPE is `block'")
   (ert-info ("Start a characterwise selection
 if no previous selection")
     (evil-test-buffer-edit ("wgved")
-      ";; " " buffer" 'bobp))           ;
+      ";; " " buffer" 'bobp))
   (ert-info ("Restore characterwise selection")
     (evil-test-buffer-edit ("wve" (kbd "ESC") "gvd")
       ";; " " buffer" 'bobp)
@@ -2550,13 +2553,13 @@ if no previous selection")
   (evil-test-buffer
     (ert-info ("Exact without count")
       (should (equal (evil-extract-count "x")
-                     (list nil 'delete-char "x" nil)))
+                     (list nil 'evil-delete-char "x" nil)))
       (should (equal (evil-extract-count "g0")
                      (list nil 'evil-beginning-of-visual-line "g0" nil))))
 
     (ert-info ("Exact with count")
       (should (equal (evil-extract-count "420x")
-                     (list 420 'delete-char "x" nil)))
+                     (list 420 'evil-delete-char "x" nil)))
       (should (equal (evil-extract-count "420\M-f")
                      (list 420 'forward-word "\M-f" nil)))
       (should (equal (evil-extract-count "2301g0")
@@ -2564,13 +2567,13 @@ if no previous selection")
 
     (ert-info ("Extra elements without count")
       (should (equal (evil-extract-count "xAB")
-                     (list nil 'delete-char "x" "AB")))
+                     (list nil 'evil-delete-char "x" "AB")))
       (should (equal (evil-extract-count "g0CD")
                      (list nil 'evil-beginning-of-visual-line "g0" "CD"))))
 
     (ert-info ("Extra elements with count")
       (should (equal (evil-extract-count "420xAB")
-                     (list 420 'delete-char "x" "AB")))
+                     (list 420 'evil-delete-char "x" "AB")))
       (should (equal (evil-extract-count "2301g0CD")
                      (list 2301 'evil-beginning-of-visual-line "g0" "CD"))))
 

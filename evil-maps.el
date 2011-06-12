@@ -38,7 +38,8 @@ has already been started; otherwise TARGET is called."
 (define-key evil-normal-state-map "o" 'evil-insert-below)
 (define-key evil-normal-state-map "I" 'evil-insert-beginning-of-line)
 (define-key evil-normal-state-map "A" 'evil-insert-end-of-line)
-(define-key evil-normal-state-map "x" 'delete-char)
+(define-key evil-normal-state-map "x" 'evil-delete-char)
+(define-key evil-normal-state-map "X" 'evil-delete-backward-char)
 (define-key evil-normal-state-map "r" 'evil-replace)
 (define-key evil-normal-state-map "R" 'evil-replace-state)
 (define-key evil-normal-state-map "s" 'evil-change-chars)
@@ -76,7 +77,6 @@ has already been started; otherwise TARGET is called."
 (define-key evil-visual-state-map "S" 'evil-change)
 (define-key evil-visual-state-map "o" 'exchange-point-and-mark)
 (define-key evil-visual-state-map "s" 'evil-change)
-(define-key evil-visual-state-map "x" 'evil-delete)
 
 ;; "0" is a special command when called first
 (evil-redirect-digit-argument evil-motion-state-map "0" 'evil-beginning-of-line)

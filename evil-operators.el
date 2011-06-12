@@ -593,6 +593,16 @@ the block."
      (t
       (evil-insert-before 1)))))
 
+(evil-define-operator evil-delete-char (beg end)
+  "Delete next character."
+  :motion evil-forward-char
+  (evil-delete beg end))
+
+(evil-define-operator evil-delete-backward-char (beg end)
+  "Delete previous character."
+  :motion evil-backward-char
+  (evil-delete beg end))
+
 (evil-define-operator evil-join-lines (beg end)
   "Join lines covered by region (BEG . END) with a minimum of two
 lines."
