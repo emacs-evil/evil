@@ -3,6 +3,9 @@
 (require 'evil-states)
 (require 'evil-motions)
 
+(dolist (cmd evil-motions)
+  (evil-set-command-properties cmd :keep-visual t :repeatable nil))
+
 ;;; Custom
 
 (add-to-list 'evil-emacs-state-modes 'Custom-mode)

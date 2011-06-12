@@ -615,11 +615,6 @@ lines."
                       (line-end-position)))
   (evil-insert-before 1))
 
-;;; Undo
-
-(evil-define-command undo :repeatable nil)
-(evil-define-command redo :repeatable nil)
-
 (provide 'evil-operators)
 
 ;;; evil-operators.el ends here

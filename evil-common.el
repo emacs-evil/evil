@@ -538,45 +538,6 @@ first of a pair considered as a key, the second as the value."
   "Whether COMMAND is repeatable."
   (evil-get-command-property command :repeatable))
 
-(dolist (cmd '(backward-char
-               backward-list
-               backward-paragraph
-               backward-sentence
-               backward-sexp
-               backward-up-list
-               backward-word
-               beginning-of-buffer
-               beginning-of-defun
-               beginning-of-line
-               beginning-of-visual-line
-               down-list
-               end-of-buffer
-               end-of-defun
-               end-of-line
-               end-of-visual-line
-               exchange-point-and-mark
-               forward-char
-               forward-list
-               forward-paragraph
-               forward-sentence
-               forward-sexp
-               forward-word
-               keyboard-quit
-               mouse-drag-region
-               mouse-save-then-kill
-               mouse-set-point
-               mouse-set-region
-               move-beginning-of-line
-               move-end-of-line
-               next-line
-               previous-line
-               scroll-down
-               scroll-up
-               undo
-               universal-argument
-               up-list))
-  (evil-set-command-properties cmd :keep-visual t))
-
 ;;; Macro helpers
 
 (eval-and-compile

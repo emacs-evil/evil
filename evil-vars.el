@@ -52,6 +52,52 @@ moves the cursor."
   :type  'boolean
   :group 'evil)
 
+(defcustom evil-motions
+  '(backward-char
+    backward-list
+    backward-paragraph
+    backward-sentence
+    backward-sexp
+    backward-up-list
+    backward-word
+    beginning-of-buffer
+    beginning-of-defun
+    beginning-of-line
+    beginning-of-visual-line
+    digit-argument
+    down-list
+    end-of-buffer
+    end-of-defun
+    end-of-line
+    end-of-visual-line
+    exchange-point-and-mark
+    forward-char
+    forward-list
+    forward-paragraph
+    forward-sentence
+    forward-sexp
+    forward-word
+    keyboard-quit
+    mouse-drag-region
+    mouse-save-then-kill
+    mouse-set-point
+    mouse-set-region
+    move-beginning-of-line
+    move-end-of-line
+    next-line
+    previous-line
+    scroll-down
+    scroll-up
+    undo
+    universal-argument
+    universal-argument-minus
+    universal-argument-more
+    universal-argument-other-key
+    up-list)
+  "Non-Evil commands to initialize to motions."
+  :type  '(repeat symbol)
+  :group 'evil)
+
 ;;; Variables
 
 (defvar evil-state nil
