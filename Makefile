@@ -27,12 +27,14 @@ clean:
 # The TAG variable may specify a test tag or a test name:
 #       make test TAG=repeat
 # This will only run tests pertaining to the repeat system.
-tests: clean
+test: clean
 	$(EMACS) --batch -Q -L . -l evil-tests.el \
 --eval "(evil-tests-run '(${TAG}))"
 
-# Byte-compile Evil and run tests.
-test: compile tests
+# Byte-compile Evil and run all tests.
+tests: compile-batch
+	$(EMACS) --batch -Q -L . -l evil-tests.el \
+--eval "(evil-tests-run '(${TAG}))"
 
 # Load Evil in a fresh instance of Emacs and run all tests.
 emacs: clean
