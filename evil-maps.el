@@ -132,6 +132,11 @@ has already been started; otherwise TARGET is called."
 (define-key evil-motion-state-map ";" 'evil-repeat-find-char)
 (define-key evil-motion-state-map "," 'evil-repeat-find-char-reverse)
 
+(define-key evil-motion-state-map "iw" 'evil-inner-word)
+(define-key evil-motion-state-map "iW" 'evil-inner-WORD)
+(define-key evil-motion-state-map "is" 'evil-inner-sentence)
+(define-key evil-motion-state-map "ip" 'evil-inner-paragraph)
+
 (define-key evil-normal-state-map "p" 'evil-paste-behind)
 (define-key evil-normal-state-map "P" 'evil-paste-before)
 (define-key evil-normal-state-map "\C-p" 'evil-paste-pop)

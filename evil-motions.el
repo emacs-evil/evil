@@ -407,16 +407,16 @@ CHARS is a character set as inside [...] in a regular expression."
   "Move to the beginning of the COUNT next object.
 If COUNT is negative, move to the COUNT previous object.
 FORWARD is a function which moves to the end of the object, and
-BACKWARD is a function which moves to the beginning;
-if unspecified, then FORWARD is used with a negative argument."
-  (let ((count (or count 1))
-        (backward (or backward
+BACKWARD is a function which moves to the beginning.
+If one is unspecified, the other is used with a negative argument."
+  (let* ((count (or count 1))
+         (backward (or backward
+                       (lambda (count)
+                         (funcall forward (- count)))))
+         (forward (or forward
                       (lambda (count)
-                        (funcall forward (- count)))))
-        (forward (or forward
-                     (lambda (count)
-                       (funcall backward (- count)))))
-        (opoint (point)))
+                        (funcall backward (- count)))))
+         (opoint (point)))
     (cond
      ((< count 0)
       (when (bobp)
@@ -450,18 +450,18 @@ if unspecified, then FORWARD is used with a negative argument."
   "Move to the end of the COUNT next object.
 If COUNT is negative, move to the COUNT previous object.
 FORWARD is a function which moves to the end of the object, and
-BACKWARD is a function which moves to the beginning;
-if unspecified, then FORWARD is used with a negative argument.
+BACKWARD is a function which moves to the beginning.
+If one is unspecified, the other is used with a negative argument.
 If INCLUSIVE is non-nil, then point is placed at the last character
 of the object; otherwise it is placed at the end of the object."
-  (let ((count (or count 1))
-        (backward (or backward
+  (let* ((count (or count 1))
+         (backward (or backward
+                       (lambda (count)
+                         (funcall forward (- count)))))
+         (forward (or forward
                       (lambda (count)
-                        (funcall forward (- count)))))
-        (forward (or forward
-                     (lambda (count)
-                       (funcall backward (- count)))))
-        (opoint (point)))
+                        (funcall backward (- count)))))
+         (opoint (point)))
     (cond
      ((< count 0)
       (when (bobp)
@@ -833,8 +833,8 @@ if COUNT is positive, and to the left of it if negative.
                end (pop range)
                ;; Did the range override the default type?
                type (or (pop range) type))
-         ;; contract the range so it can be compared to
-         ;; the unexpanded positions of point and mark
+         ;; since a Visual selection expands the positions of point
+         ;; and mark, we need the unexpanded positions
          (setq range (evil-contract beg end type)
                beg (pop range)
                end (pop range))
@@ -855,6 +855,51 @@ if COUNT is positive, and to the left of it if negative.
            (evil-swap beg end))
          (evil-visual-select beg end type
                              (evil-visual-state-p))))))
+
+(defun evil-inner-object-range (count forward &optional backward type)
+  "Return an inner text object range (BEG END) of COUNT objects.
+If COUNT is positive, return objects following point;
+if COUNT is negative, return objects preceding point.
+FORWARD is a function which moves to the end of an object, and
+BACKWARD is a function which moves to the beginning.
+If one is unspecified, the other is used with a negative argument."
+  (let* ((count (or count 1))
+         (forward-func forward)
+         (backward-func backward)
+         (forward  (or forward
+                       (lambda (count)
+                         (funcall backward-func (- count)))))
+         (backward (or backward
+                       (lambda (count)
+                         (funcall forward-func (- count)))))
+         beg end)
+    (when (< count 0)
+      (evil-swap forward backward)
+      (setq count (abs count)))
+    (setq beg (save-excursion
+                (funcall forward 1)
+                (funcall backward 1)
+                (point))
+          end (save-excursion
+                (funcall forward 1)
+                (point)))
+    (evil-range beg end type)))
+
+(evil-define-text-object evil-inner-word (count)
+  "Select inner word."
+  (evil-inner-object-range count 'evil-move-word))
+
+(evil-define-text-object evil-inner-WORD (count)
+  "Select inner WORD."
+  (evil-inner-object-range count 'evil-move-WORD))
+
+(evil-define-text-object evil-inner-sentence (count)
+  "Select inner sentence."
+  (evil-inner-object-range count 'evil-move-sentence))
+
+(evil-define-text-object evil-inner-paragraph (count)
+  "Select inner paragraph."
+  (evil-inner-object-range count 'evil-move-paragraph))
 
 (provide 'evil-motions)
 
