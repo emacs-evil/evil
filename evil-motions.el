@@ -66,11 +66,17 @@
   `(save-restriction
      (narrow-to-region
       (line-beginning-position)
-      (if (evil-visual-state-p)
-          (line-end-position)
-        (max (line-beginning-position)
-             (1- (line-end-position)))))
-     (evil-signal-without-movement ,@body)))
+      (if (evil-normal-state-p)
+          (max (line-beginning-position)
+               (1- (line-end-position)))
+        (line-end-position)))
+     (evil-signal-without-movement
+       (condition-case nil
+           (progn ,@body)
+         (beginning-of-buffer
+          (error "Beginning of line"))
+         (end-of-buffer
+          (error "End of line"))))))
 
 (defun evil-goto-min (&rest positions)
   "Go to the smallest position in POSITIONS.
