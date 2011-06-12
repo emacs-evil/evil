@@ -1968,7 +1968,14 @@ to `evil-execute-repeat-info'")
     (ert-info ("End of buffer")
       (evil-test-macro "1000e" "empty line" ".")
       (should-error (execute-kbd-macro "e"))
-      (should-error (execute-kbd-macro "10e")))))
+      (should-error (execute-kbd-macro "10e")))
+    ;; In Vim, "de" may delete two words rather than one
+    ;; if the first word is only one letter. In Evil,
+    ;; "de" always deletes one word.
+    (ert-info ("Delete a single-letter word")
+      (save-excursion
+        (insert "a b c"))
+      (evil-test-macro "wde" "a " " c"))))
 
 (ert-deftest evil-test-forward-word-begin ()
   "Test `evil-test-forward-word-begin'"
