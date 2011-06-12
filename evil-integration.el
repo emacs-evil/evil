@@ -3,6 +3,10 @@
 (require 'evil-states)
 (require 'evil-motions)
 
+;;; Custom
+
+(add-to-list 'evil-emacs-state-modes 'Custom-mode)
+
 ;;; ERT
 
 (add-to-list 'evil-emacs-state-modes 'ert-results-mode)
