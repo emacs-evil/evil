@@ -80,7 +80,7 @@ ALIST is an association list with entries in the form
 If PROP is nil, return all properties for KEY.
 If KEY is nil, return an association list of states
 and their PROP values."
-  (when (and prop (not (keywordp prop)))
+  (unless (or (keywordp prop) (null prop))
     (setq prop (intern (format ":%s" prop))))
   (cond
    ((and key prop)
@@ -91,8 +91,9 @@ and their PROP values."
     (let (result val)
       (dolist (entry alist result)
         (setq key (car entry)
-              val (plist-get (cdr entry) prop))
-        (when val
+              val (cdr entry))
+        (when (plist-member val prop)
+          (setq val (plist-get val prop))
           (add-to-list 'result (cons key val) t)))))))
 
 (defun evil-put-property (alist-var key prop val &rest properties)
@@ -102,13 +103,12 @@ ALIST-VAR points to an association list with entries in the form
   (set alist-var
        (let* ((alist (symbol-value alist-var))
               (plist (cdr (assq key alist))))
-         (while (progn
-                  (unless (keywordp prop)
-                    (setq prop (intern (format ":%s" prop))))
-                  (setq plist (plist-put plist prop val))
-                  (when properties
-                    (setq prop (pop properties)
-                          val (pop properties)))))
+         (while prop
+           (unless (keywordp prop)
+             (setq prop (intern (format ":%s" prop))))
+           (setq plist (plist-put plist prop val)
+                 prop (pop properties)
+                 val (pop properties)))
          (setq alist (assq-delete-all key alist))
          (add-to-list 'alist (cons key plist) t))))
 
