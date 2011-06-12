@@ -184,7 +184,7 @@ in the `interactive' specification of an operator command."
   "Execute a motion and return the buffer positions.
 The return value is a list (BEG END TYPE)."
   (evil-save-region
-    (transient-mark-mode 1)
+    (evil-transient-mark 1)
     (setq evil-motion-marker (move-marker (make-marker) (point))
           type (or type (evil-type motion 'exclusive)))
     (unwind-protect

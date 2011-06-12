@@ -315,6 +315,7 @@ Enable with positive ARG, disable with negative ARG."
       (transient-mark-mode -1)))
    (t
     (unless transient-mark-mode
+      (evil-active-region -1)
       (transient-mark-mode 1)))))
 
 (defun evil-active-region (&optional arg)
