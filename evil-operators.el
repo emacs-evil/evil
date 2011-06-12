@@ -10,7 +10,7 @@
   "Operator-Pending state"
   :tag " <O> "
   :cursor evil-half-cursor
-  :enable (evil-operator-shortcut-map operator normal))
+  :enable (evil-operator-shortcut-map operator motion normal))
 
 (evil-define-keymap evil-operator-shortcut-map
   "Keymap for Operator-Pending shortcuts like \"dd\" and \"gqq\"."
