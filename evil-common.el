@@ -231,8 +231,8 @@ SPECS may be a cursor type as per `cursor-type', a color
 string as passed to `set-cursor-color', a zero-argument
 function for changing the cursor, or a list of the above.
 If SPECS is nil, make the cursor a black filled box."
-  (set-cursor-color "black")
-  (setq cursor-type 'box)
+  (setq cursor-type t)
+  (evil-set-cursor-color "black")
   (unless (and (listp specs) (not (consp specs)))
     (setq specs (list specs)))
   (dolist (spec specs)
@@ -242,16 +242,23 @@ If SPECS is nil, make the cursor a black filled box."
           (funcall spec)
         (error nil)))
      ((stringp spec)
-      (set-cursor-color spec))
+      (evil-set-cursor-color spec))
      (t
       (setq cursor-type spec)))))
+
+(defun evil-set-cursor-color (color)
+  "Set the cursor color to COLOR."
+  (unless (equal (frame-parameter nil 'cursor-color) color)
+    ;; `set-cursor-color' forces a redisplay, so only
+    ;; call it when the color actually changes
+    (set-cursor-color color)))
 
 (defmacro evil-save-cursor (&rest body)
   "Save the current cursor; execute BODY; restore the cursor."
   (declare (indent defun)
            (debug t))
   `(let ((cursor cursor-type)
-         (color (cdr (assq 'cursor-color (frame-parameters)))))
+         (color (frame-parameter (selected-frame) 'cursor-color)))
      (unwind-protect
          (progn ,@body)
        (evil-set-cursor cursor)
