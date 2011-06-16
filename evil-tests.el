@@ -2368,6 +2368,36 @@ to `evil-execute-repeat-info'")
         (define-key evil-operator-state-local-map "io" object)
         (evil-test-macro "dio"
           'bobp "This buffer")))))
+
+(ert-deftest evil-test-word-objects ()
+  "Test `evil-inner-word' and `evil-a-word'"
+  :tags '(evil text-object)
+  (ert-info ("Select a word")
+    (evil-test-buffer
+      (execute-kbd-macro "wviw")
+      (evil-test-selection "This"))
+    (evil-test-buffer
+      (execute-kbd-macro "wvaw")
+      (evil-test-selection "This ")))
+  (ert-info ("Select two words")
+    (ert-info ("Include whitespace on this side")
+      (evil-test-buffer
+        (execute-kbd-macro "whveaw")
+        (evil-test-selection " This buffer"))
+      (evil-test-buffer
+        (execute-kbd-macro "weelvbaw")
+        (evil-test-selection "This buffer ")))
+    (ert-info ("Include whitespace on the other side")
+      (evil-test-buffer
+        (execute-kbd-macro "wvaw")
+        (evil-test-selection "This "))
+      (evil-test-buffer
+        (execute-kbd-macro "wvawaw")
+        (evil-test-selection "This buffer "))
+      (evil-test-buffer
+        (execute-kbd-macro "weevbhaw")
+        (evil-test-selection " This buffer")))))
+
 ;;; Visual state
 
 (defun evil-test-visual-select (type &optional mark point)

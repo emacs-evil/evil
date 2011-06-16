@@ -906,6 +906,83 @@ If one is unspecified, the other is used with a negative argument."
                 (point)))
     (evil-range beg end type)))
 
+(defun evil-an-object-range (count forward &optional backward type newlines)
+  "Return a text object range (BEG END) of COUNT objects with whitespace.
+See `evil-inner-object-range' for more details."
+  (let ((range (evil-inner-object-range count forward backward type)))
+    (if newlines
+        (evil-add-whitespace-to-range range count)
+      (save-restriction
+        (narrow-to-region
+         (save-excursion
+           (goto-char (evil-range-beginning range))
+           (line-beginning-position))
+         (save-excursion
+           (goto-char (evil-range-end range))
+           (line-end-position)))
+        (evil-add-whitespace-to-range range count)))))
+
+(defun evil-add-whitespace-to-range (range &optional dir pos regexp)
+  "Add whitespace at one side of RANGE, depending on POS.
+If POS is before the range, add trailing whitespace;
+if POS is after the range, add leading whitespace.
+If POS is inside the range, add trailing if DIR is positive
+and leading if DIR is negative. If there is no trailing whitespace,
+add leading whitespace and vice versa. POS defaults to point.
+REGEXP is a regular expression for matching whitespace;
+the default is \"[ \\f\\t\\n\\r\\v]+\"."
+  (let* ((pos (or pos (point)))
+         (dir (or (when (<= pos (evil-range-beginning range)) 1)
+                  (when (>= pos (evil-range-end range)) -1)
+                  dir 1))
+         (regexp (or regexp "[ \f\t\n\r\v]+")))
+    (save-excursion
+      (save-match-data
+        (goto-char pos)
+        (cond
+         ((< dir 0)
+          (if (looking-back regexp)
+              (evil-add-whitespace-after-range range regexp)
+            (or (evil-add-whitespace-before-range range regexp)
+                (evil-add-whitespace-after-range range regexp))))
+         (t
+          (if (looking-at regexp)
+              (evil-add-whitespace-before-range range regexp)
+            (or (evil-add-whitespace-after-range range regexp)
+                (evil-add-whitespace-before-range range regexp)))))
+        range))))
+
+(defun evil-add-whitespace-before-range (range &optional regexp)
+  "Add whitespace at the beginning of RANGE.
+REGEXP is a regular expression for matching whitespace;
+the default is \"[ \\f\\t\\n\\r\\v]+\".
+Return t if RANGE was successfully increased and nil otherwise."
+  (let ((orig (evil-copy-range range)))
+    (save-excursion
+      (save-match-data
+        (setq regexp (or regexp "[ \f\t\n\r\v]+"))
+        (goto-char (evil-range-beginning range))
+        (when (looking-back regexp nil t)
+          ;; exclude the newline on the preceding line
+          (goto-char (match-beginning 0))
+          (when (eolp) (forward-char))
+          (evil-set-range-beginning range (point)))
+        (not (evil-subrange-p range orig))))))
+
+(defun evil-add-whitespace-after-range (range &optional regexp)
+  "Add whitespace at the end of RANGE.
+REGEXP is a regular expression for matching whitespace;
+the default is \"[ \\f\\t\\n\\r\\v]+\".
+Return t if RANGE was successfully increased and nil otherwise."
+  (let ((orig (evil-copy-range range)))
+    (save-excursion
+      (save-match-data
+        (setq regexp (or regexp "[ \f\t\n\r\v]+"))
+        (goto-char (evil-range-end range))
+        (when (looking-at regexp)
+          (evil-set-range-end range (match-end 0)))
+        (not (evil-subrange-p range orig))))))
+
 (evil-define-text-object evil-inner-word (count)
   "Select inner word."
   (evil-inner-object-range count 'evil-move-word))
@@ -920,7 +997,25 @@ If one is unspecified, the other is used with a negative argument."
 
 (evil-define-text-object evil-inner-paragraph (count)
   "Select inner paragraph."
+  :type line
   (evil-inner-object-range count 'evil-move-paragraph))
+
+(evil-define-text-object evil-a-word (count)
+  "Select a word."
+  (evil-an-object-range count 'evil-move-word))
+
+(evil-define-text-object evil-a-WORD (count)
+  "Select a WORD."
+  (evil-an-object-range count 'evil-move-WORD))
+
+(evil-define-text-object evil-a-sentence (count)
+  "Select a sentence."
+  (evil-an-object-range count 'evil-move-sentence nil nil t))
+
+(evil-define-text-object evil-a-paragraph (count)
+  "Select a paragraph."
+  :type line
+  (evil-an-object-range count 'evil-move-paragraph nil nil t))
 
 (provide 'evil-motions)
 
