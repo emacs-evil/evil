@@ -284,10 +284,10 @@ Return a new overlay if COPY is non-nil."
 
 (defun evil-contract-overlay (overlay &optional copy)
   "Contract OVERLAY according to its `type' property.
-If the type cannot be contracted, restore original positions.
+If the type isn't injective, restore original positions.
 Return a new overlay if COPY is non-nil."
   (let ((type (evil-type overlay)))
-    (if (and type (evil-type-property type 'contract))
+    (if (and type (evil-type-property type 'injective))
         (setq overlay (evil-reset-overlay overlay copy)
               overlay (evil-transform-overlay 'contract overlay))
       (setq overlay (evil-restore-overlay overlay copy)))
@@ -402,13 +402,16 @@ It is followed by a list of keywords and functions:
 :expand FUNC    Expansion function. This function should accept
                 two positions in the current buffer, BEG and END,
                 and return a pair of expanded buffer positions.
-:contract FUNC  Contraction function, optional. This is the opposite
-                of :expand (provided the expansion is reversible).
+:contract FUNC  The opposite of :expand, optional.
+:injective BOOL Whether expansion is one-to-one. This means that
+                :expand followed by :contract always returns the
+                original range.
 :normalize FUNC Normalization function, optional. This function should
                 accept two unexpanded positions and adjust them before
-                expansion.
+                expansion. May be used to deal with buffer boundaries.
 :string FUNC    Description function. This takes two buffer positions
-                and returns a human-readable string.
+                and returns a human-readable string, for example,
+                \"2 lines\".
 
 Further keywords and functions may be specified. These are assumed to
 be transformations on buffer positions, like :expand and :contract.
@@ -418,32 +421,69 @@ be transformations on buffer positions, like :expand and :contract.
                            [&optional stringp]
                            [&rest [keywordp function-form]]))
            (indent defun))
-  (let (args defun-forms func key name plist string sym)
+  (let (args defun-forms func key name plist string sym val)
+    ;; standard values
+    (setq plist (plist-put plist :injective t))
+    ;; keywords
     (while (keywordp (car-safe body))
       (setq key (pop body)
-            func (pop body)
-            sym (intern (replace-regexp-in-string
-                         "^:" "" (symbol-name key)))
-            name (intern (format "evil-%s-%s" type sym))
-            args (car (cdr-safe func))
-            string (car (cdr (cdr-safe func)))
-            string (if (stringp string)
-                       (format "%s\n\n" string) "")
-            plist (plist-put plist key `',name))
-      (add-to-list
-       'defun-forms
-       (cond
-        ((eq key :string)
-         `(defun ,name (beg end &rest properties)
-            ,(format "Return size of %s from BEG to END \
+            val (pop body))
+      (if (plist-member plist key) ; not a function
+          (setq plist (plist-put plist key val))
+        (setq func val
+              sym (intern (replace-regexp-in-string
+                           "^:" "" (symbol-name key)))
+              name (intern (format "evil-%s-%s" type sym))
+              args (car (cdr-safe func))
+              string (car (cdr (cdr-safe func)))
+              string (if (stringp string)
+                         (format "%s\n\n" string) "")
+              plist (plist-put plist key `',name))
+        (add-to-list
+         'defun-forms
+         (cond
+          ((eq key :string)
+           `(defun ,name (beg end &rest properties)
+              ,(format "Return size of %s from BEG to END \
 with PROPERTIES.\n\n%s%s" type string doc)
-            (let (type range)
-              (when (and beg end)
-                (save-excursion
-                  (evil-sort beg end)
-                  (unless (plist-get properties :expanded)
-                    (setq range (evil-expand
-                                 beg end ',type properties)
+              (let (type range)
+                (when (and beg end)
+                  (save-excursion
+                    (evil-sort beg end)
+                    (unless (plist-get properties :expanded)
+                      (setq range (evil-expand
+                                   beg end ',type properties)
+                            beg  (or (pop range) beg)
+                            end  (or (pop range) end)
+                            type (if (evil-type-p (car-safe range))
+                                     (pop range) type))
+                      (while range
+                        (setq properties
+                              (plist-put properties
+                                         (pop range) (pop range)))))
+                    (or (apply ',func beg end
+                               (when ,(> (length args) 2)
+                                 properties))
+                        ""))))))
+          (t
+           `(defun ,name (beg end &rest properties)
+              ,(format "Perform %s transformation on %s from BEG to END \
+with PROPERTIES.\n\n%s%s" sym type string doc)
+              (let ((type ',type) range)
+                (when (and beg end)
+                  (save-excursion
+                    (when (memq ,key '(:expand :contract))
+                      (setq properties
+                            (plist-put properties
+                                       :expanded
+                                       ,(eq key :expand))))
+                    (setq range (apply 'evil-range beg end type properties)
+                          beg (car range)
+                          end (cadr range))
+                    (setq range (or (apply ',func beg end
+                                           (when ,(> (length args) 2)
+                                             properties))
+                                    range)
                           beg  (or (pop range) beg)
                           end  (or (pop range) end)
                           type (if (evil-type-p (car-safe range))
@@ -451,40 +491,14 @@ with PROPERTIES.\n\n%s%s" type string doc)
                     (while range
                       (setq properties
                             (plist-put properties
-                                       (pop range) (pop range)))))
-                  (or (apply ',func beg end
-                             (when ,(> (length args) 2)
-                               properties))
-                      ""))))))
-        (t
-         `(defun ,name (beg end &rest properties)
-            ,(format "Perform %s transformation on %s from BEG to END \
-with PROPERTIES.\n\n%s%s" sym type string doc)
-            (let ((type ',type) range)
-              (when (and beg end)
-                (save-excursion
-                  (when (memq ,key '(:expand :contract))
-                    (setq properties
-                          (plist-put properties
-                                     :expanded
-                                     ,(eq key :expand))))
-                  (setq range (apply 'evil-range beg end type properties)
-                        beg (car range)
-                        end (cadr range))
-                  (setq range (or (apply ',func beg end
-                                         (when ,(> (length args) 2)
-                                           properties))
-                                  range)
-                        beg  (or (pop range) beg)
-                        end  (or (pop range) end)
-                        type (if (evil-type-p (car-safe range))
-                                 (pop range) type))
-                  (while range
-                    (setq properties
-                          (plist-put properties
-                                     (pop range) (pop range))))
-                  (apply 'evil-range beg end type properties)))))))
-       t))
+                                       (pop range) (pop range))))
+                    (apply 'evil-range beg end type properties)))))))
+         t)))
+    ;; :injective presupposes both or neither of :expand and :contract
+    (when (plist-get plist :expand)
+      (setq plist (plist-put plist :injective
+                             (and (plist-get plist :contract)
+                                  (plist-get plist :injective)))))
     `(progn
        (evil-put-property 'evil-type-properties ',type ,@plist)
        ,@defun-forms
@@ -540,6 +554,7 @@ If the end position is at the beginning of a line, then:
 
 (evil-define-type line
   "Include whole lines."
+  :injective nil
   :expand (lambda (beg end)
             (evil-range
              (progn
@@ -548,6 +563,8 @@ If the end position is at the beginning of a line, then:
              (progn
                (goto-char end)
                (line-beginning-position 2))))
+  :contract (lambda (beg end)
+              (evil-range beg (max beg (1- end))))
   :string (lambda (beg end)
             (let ((height (count-lines beg end)))
               (format "%s line%s" height
