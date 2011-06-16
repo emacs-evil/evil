@@ -55,13 +55,14 @@ will make `line' the type of the `next-line' command."
   (cond
    ((overlayp object)
     (overlay-put object :type type))
+   ((evil-range-p object)
+    (evil-set-range object
+                    (evil-range-beginning object)
+                    (evil-range-end object)
+                    type
+                    (evil-range-properties object)))
    ((listp object)
-    (if (and (>= (length object) 3)
-             (numberp (nth 0 object))
-             (numberp (nth 1 object))
-             (symbolp (nth 2 object)))
-        (setcar (nthcdr 2 object) type)
-      (plist-put object :type type)))
+    (plist-put object :type type))
    ((commandp object)
     (evil-add-command-properties object :type type))
    ((symbolp object)
@@ -91,6 +92,95 @@ a property list."
             (when (evil-type-p type)
               (list type))
             properties)))
+
+(defun evil-range-p (object)
+  "Whether OBJECT is a range."
+  (and (listp object)
+       (>= (length object) 2)
+       (numberp (nth 0 object))
+       (numberp (nth 1 object))))
+
+(defun evil-range-beginning (range)
+  "Return beginning of RANGE."
+  (let ((beg (nth 0 range))
+        (end (nth 1 range))
+        (point-min (point-min))
+        (point-max (point-max)))
+    ;; BEG and END may not exceed the buffer boundaries
+    (evil-sort point-min beg end point-max)
+    beg))
+
+(defun evil-range-end (range)
+  "Return end of RANGE."
+  (let ((beg (nth 0 range))
+        (end (nth 1 range))
+        (point-min (point-min))
+        (point-max (point-max)))
+    ;; BEG and END may not exceed the buffer boundaries
+    (evil-sort point-min beg end point-max)
+    end))
+
+(defun evil-range-properties (range)
+  "Return properties of RANGE."
+  (if (evil-type range)
+      (nthcdr 3 range)
+    (nthcdr 2 range)))
+
+(defun evil-copy-range (range)
+  "Return a copy of RANGE."
+  (copy-sequence range))
+
+(defun evil-set-range (range beg end &optional type &rest properties)
+  "Set RANGE to have beginning BEG and end END.
+The TYPE and PROPERTIES may also be specified."
+  (let ((beg (or beg (evil-range-beginning range)))
+        (end (or end (evil-range-end range)))
+        (type (or type (evil-type range)))
+        (plist (evil-range-properties range))
+        (point-min (point-min))
+        (point-max (point-max)))
+    (evil-sort point-min beg end point-max)
+    (while properties
+      (setq plist (plist-put plist (pop properties) (pop properties))))
+    (setcar range beg)
+    (setcar (cdr range) end)
+    (setcdr (cdr range)
+            (append (when (evil-type-p type) (list type))
+                    plist))
+    range))
+
+(defun evil-set-range-beginning (range beg &optional copy)
+  "Set RANGE's beginning to BEG.
+If COPY is non-nil, return a copy of RANGE."
+  (when copy
+    (setq range (evil-copy-range range)))
+  (evil-set-range range beg nil))
+
+(defun evil-set-range-end (range end &optional copy)
+  "Set RANGE's end to END.
+If COPY is non-nil, return a copy of RANGE."
+  (when copy
+    (setq range (evil-copy-range range)))
+  (evil-set-range range nil end))
+
+(defun evil-range-union (range1 range2 &optional type)
+  "Return the union of the ranges RANGE1 and RANGE2.
+If the ranges have conflicting types, use RANGE1's type.
+Alternatively, use TYPE."
+  (let ((beg1 (evil-range-beginning range1))
+        (end1 (evil-range-end range1))
+        (beg2 (evil-range-beginning range2))
+        (end2 (evil-range-end range2))
+        (type (or type (evil-type range1) (evil-type range2))))
+    (evil-sort beg1 end1 beg2 end2)
+    (evil-range beg1 end2 type)))
+
+(defun evil-subrange-p (range1 range2)
+  "Whether RANGE1 is contained within RANGE2."
+  (and (<= (evil-range-beginning range2)
+           (evil-range-beginning range1))
+       (>= (evil-range-end range2)
+           (evil-range-end range1))))
 
 (defun evil-expand (beg end type &rest properties)
   "Expand BEG and END as TYPE with PROPERTIES.
@@ -145,6 +235,36 @@ The overlay equivalent is `evil-describe-overlay'."
     (or (when describe
           (apply describe beg end properties))
         "")))
+
+(defun evil-expand-range (range &optional copy)
+  "Expand RANGE according to its type.
+Return a new range if COPY is non-nil."
+  (evil-transform-range 'expand range copy))
+
+(defun evil-contract-range (range &optional copy)
+  "Contract RANGE according to its type.
+Return a new range if COPY is non-nil."
+  (evil-transform-range 'contract range copy))
+
+(defun evil-normalize-range (range &optional copy)
+  "Normalize RANGE according to its type.
+Return a new range if COPY is non-nil."
+  (evil-transform-range 'normalize range copy))
+
+(defun evil-transform-range (transform range &optional copy)
+  "Apply TRANSFORM to RANGE according to its type.
+Return a new range if COPY is non-nil."
+  (when copy
+    (setq range (evil-copy-range range)))
+  (when (evil-type range)
+    (apply 'evil-set-range range
+           (apply 'evil-transform transform range)))
+  range)
+
+(defun evil-describe-range (range)
+  "Return description of RANGE.
+If no description is available, return the empty string."
+  (apply 'evil-describe range))
 
 (defun evil-expand-overlay (overlay &optional copy)
   "Expand OVERLAY according to its `type' property.
