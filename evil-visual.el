@@ -88,8 +88,7 @@ the selection is enabled.
   (cond
    ((evil-visual-state-p)
     (evil-transient-save)
-    (evil-visual-select (point) (point) evil-visual-char
-                        (evil-called-interactively-p))
+    (evil-visual-set-region (point) (point) evil-visual-char)
     (add-hook 'pre-command-hook 'evil-visual-pre-command nil t)
     (add-hook 'post-command-hook 'evil-visual-post-command nil t)
     (add-hook 'evil-normal-state-entry-hook
@@ -132,12 +131,17 @@ otherwise exit Visual state."
   (remove-hook 'evil-normal-state-entry-hook
                'evil-visual-deactivate-hook t))
 
-(defun evil-visual-select (&optional mark point type message)
+(defun evil-visual-select (&optional mark point type)
   "Create a Visual selection of type TYPE from MARK to POINT.
 If there exists a specific selection function for TYPE, use that;
 otherwise use `evil-visual-set-region'."
+  (unless (evil-visual-state-p)
+    (evil-visual-state))
   (setq type (or type (evil-visual-type) evil-visual-char))
-  (funcall (evil-visual-selection-function type) mark point type message))
+  (funcall (evil-visual-selection-function type)
+           mark point type
+           (or (evil-normal-state-p)
+               (not (eq type (evil-visual-type))))))
 
 ;; the generic selection function, on which all other
 ;; selections are based
@@ -167,7 +171,8 @@ If MESSAGE is given, display it in the echo area."
   "Expand the region to the Visual selection.
 If NO-TRAILING-NEWLINE is t and the selection ends with a newline,
 exclude that newline from the region."
-  (unless evil-visual-region-expanded
+  (when (and (evil-visual-state-p)
+             (not evil-visual-region-expanded))
     (let ((beg (evil-visual-beginning))
           (end (evil-visual-end)))
       (when no-trailing-newline
@@ -377,7 +382,7 @@ For example, `evil-visual-set-region'."
               dir (overlay-get evil-visual-overlay 'direction))
         (when (< dir 0)
           (evil-swap mark point)))
-      (evil-visual-select mark point type t))))
+      (evil-visual-select mark point type))))
 
 (evil-define-command evil-visual-exchange-corners ()
   "Rearrange corners in Visual Block mode.
