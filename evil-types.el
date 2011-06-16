@@ -98,10 +98,10 @@ Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list.
 
 The overlay equivalent is `evil-expand-overlay'."
-  (apply 'evil-transform beg end type
+  (apply 'evil-transform
          ;; don't expand if already expanded
          (unless (plist-get properties :expanded) 'expand)
-         properties))
+         beg end type properties))
 
 (defun evil-contract (beg end type &rest properties)
   "Contract BEG and END as TYPE with PROPERTIES.
@@ -109,7 +109,7 @@ Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list.
 
 The overlay equivalent is `evil-contract-overlay'."
-  (apply 'evil-transform beg end type 'contract properties))
+  (apply 'evil-transform 'contract beg end type properties))
 
 (defun evil-normalize (beg end type &rest properties)
   "Normalize BEG and END as TYPE with PROPERTIES.
@@ -117,10 +117,10 @@ Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list.
 
 The overlay equivalent is `evil-normalize-overlay'."
-  (apply 'evil-transform beg end type 'normalize properties))
+  (apply 'evil-transform 'normalize beg end type properties))
 
 (defun evil-transform
-  (beg end type transform &rest properties)
+  (transform beg end type &rest properties)
   "Apply TRANSFORM on BEG and END with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list. If TRANSFORM is undefined,
@@ -159,7 +159,7 @@ Return a new overlay if COPY is non-nil."
         ;; if the overlay is restored
         (overlay-put overlay :expanded nil)
         (setq overlay (evil-backup-overlay overlay)
-              overlay (evil-transform-overlay overlay 'expand))))
+              overlay (evil-transform-overlay 'expand overlay))))
     overlay))
 
 (defun evil-contract-overlay (overlay &optional copy)
@@ -169,16 +169,16 @@ Return a new overlay if COPY is non-nil."
   (let ((type (evil-type overlay)))
     (if (and type (evil-type-property type 'contract))
         (setq overlay (evil-reset-overlay overlay copy)
-              overlay (evil-transform-overlay overlay 'contract))
+              overlay (evil-transform-overlay 'contract overlay))
       (setq overlay (evil-restore-overlay overlay copy)))
     overlay))
 
 (defun evil-normalize-overlay (overlay &optional copy)
   "Normalize OVERLAY according to its `type' property.
 Return a new overlay if COPY is non-nil."
-  (evil-transform-overlay overlay 'normalize copy))
+  (evil-transform-overlay 'normalize overlay copy))
 
-(defun evil-transform-overlay (overlay transform &optional copy)
+(defun evil-transform-overlay (transform overlay &optional copy)
   "Apply TRANSFORM to OVERLAY according to its `type' property.
 Return a new overlay if COPY is non-nil."
   (let* ((beg (overlay-start overlay))
@@ -189,7 +189,7 @@ Return a new overlay if COPY is non-nil."
          (range (save-excursion
                   (with-current-buffer (or buffer (current-buffer))
                     (apply 'evil-transform
-                           beg end type transform properties))))
+                           transform beg end type properties))))
          (beg (pop range))
          (end (pop range))
          (type (if (evil-type-p (car-safe range)) (pop range) type)))

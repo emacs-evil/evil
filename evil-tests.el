@@ -603,18 +603,19 @@ and the beginning")
   (evil-test-buffer
     (ert-info ("Return positions unchanged when passed nil for
 TYPE or TRANSFORM")
-      (should (equal (evil-transform 1 2 'block nil)
+      (should (equal (evil-transform nil 1 2 'block)
                      '(1 2 block)))
-      (should (equal (evil-transform 1 2 nil 'expand)
+      (should (equal (evil-transform 'expand 1 2 nil)
                      '(1 2)))
-      (should (equal (evil-transform 1 2 nil nil)
+      (should (equal (evil-transform nil 1 2 nil)
                      '(1 2))))
     (ert-info ("Accept markers, but return positions")
-      (should (equal (evil-transform (move-marker (make-marker) 1) 1
-                                     'inclusive 'expand)
+      (should (equal (evil-transform 'expand
+                                     (move-marker (make-marker) 1) 1
+                                     'inclusive)
                      '(1 2 inclusive :expanded t)))
-      (should (equal (evil-transform (move-marker (make-marker) 1) 2
-                                     nil nil)
+      (should (equal (evil-transform nil (move-marker (make-marker) 1) 2
+                                     nil)
                      '(1 2))))))
 
 (ert-deftest evil-test-type-modifiers ()
