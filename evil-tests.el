@@ -15,19 +15,19 @@
 (defvar evil-tests-run nil
   "*Run Evil tests.")
 
-(defun evil-tests-run (&optional tests)
+(defun evil-tests-run (&optional tests interactive)
   "Run Evil tests."
-  (interactive '(t))
-  (if (not (listp tests))
-      (ert-run-tests-interactively t)
-    (ert-run-tests-batch-and-exit
-     (or (null tests)
-         `(or ,@(mapcar (lambda (test)
-                          (or (null test)
-                              (and (memq test '(evil t)) t)
-                              `(or (tag ,test)
-                                   ,(format "^%s$" test))))
-                        tests))))))
+  (interactive '(nil t))
+  (setq tests (or (null tests)
+                  `(or ,@(mapcar (lambda (test)
+                                   (or (null test)
+                                       (and (memq test '(evil t)) t)
+                                       `(or (tag ,test)
+                                            ,(format "^%s$" test))))
+                                 tests))))
+  (if interactive
+      (ert-run-tests-interactively tests)
+    (ert-run-tests-batch-and-exit tests)))
 
 (defmacro evil-test-buffer (&rest body)
   "Execute BODY in a temporary buffer.

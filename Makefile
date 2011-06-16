@@ -40,7 +40,7 @@ tests: compile-batch
 emacs: clean
 	$(EMACS) -Q -L . -l evil-tests.el --eval "(evil-mode 1)" \
 --eval "(if (y-or-n-p-with-timeout \"Run tests? \" 2 t) \
-(evil-tests-run t) \
+(evil-tests-run '(${TAG}) t) \
 (message \"You can run the tests at any time with \`M-x evil-tests-run\'\"))" &
 
 # Load Evil in a terminal Emacs and run all tests.
@@ -48,7 +48,7 @@ term: terminal
 terminal: clean
 	$(EMACS) -nw -Q -L . -l evil-tests.el --eval "(evil-mode 1)" \
 --eval "(if (y-or-n-p-with-timeout \"Run tests? \" 2 t) \
-(evil-tests-run t) \
+(evil-tests-run '(${TAG}) t) \
 (message \"You can run the tests at any time with \`M-x evil-tests-run\'\"))"
 
 # Re-indent all Evil code.
