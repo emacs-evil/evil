@@ -60,7 +60,7 @@ repeated by tracking the buffer changed."
   (puthash command type evil-insert-repeat-types))
 
 (defun evil-repeat-normal-command-p ()
-  "Return non-nil iff the current command should be recored for repeation."
+  "Whether the current command should be recorded for repeating."
   (and evil-state
        (if (evil-has-properties-p this-command)
            (evil-repeatable-p this-command)
@@ -112,8 +112,8 @@ global variable `evil-repeat-info-ring' if the command is repeatable."
   (remove-hook 'post-command-hook 'evil-normal-post-repeat t))
 
 (defun evil-insert-pre-repeat ()
-  "Called from `pre-command-hook' in insert mode. Decides how the
-  current command show be recorded for repeation."
+  "Called from `pre-command-hook' in insert mode.
+Decides how the current command should be recorded for repeating."
   (when (functionp this-command)
     ;; we ignore keyboard-macros
     (setq evil-insert-repeat-type
@@ -254,7 +254,7 @@ the first command replaced by `count'. The count is replaced if
 and only if `count' is non-nil."
   (let ((evil-repeating-command t))
     (cond
-     ;; do nothing (zero repeation)
+     ;; do nothing (zero repeating)
      ((and count (zerop count)))
 
      ;; replace count

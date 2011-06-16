@@ -224,7 +224,7 @@ ignored.")
 (defvar evil-command-modified-buffer nil
   "Non-nil if the current command modified the buffer, i.e., it
   is an editing command. This variable is used to detect editing
-  command for repeation.")
+  command for repeating.")
 
 (defvar evil-repeat-count nil
   "The explicit count when repeating a command.")

@@ -51,7 +51,7 @@
        ,@body)))
 
 (defmacro evil-signal-without-movement (&rest body)
-  "Catches errors point has not changed within this scope."
+  "Catches errors provided point moves within this scope."
   (declare (indent defun))
   `(let ((p (point)))
      (condition-case err

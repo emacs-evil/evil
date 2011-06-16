@@ -139,9 +139,9 @@ sorting in between."
   "Loop with countdown variable.
 Evaluate BODY with VAR counting down from COUNT to 0.
 COUNT can be negative, in which case VAR counts up instead.
-RESULT specifies a variable for storing the current value
-of VAR if the loop does not complete successfully.
-Otherwise, the return value is 0.
+The return value is the value of VAR when the loop
+terminates, which is 0 if the loop completes successfully.
+RESULT specifies a variable for storing this value.
 
 \(fn (VAR COUNT [RESULT]) BODY...)"
   (declare (debug dolist)
