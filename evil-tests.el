@@ -171,6 +171,18 @@ line via `move-to-column'."
        (goto-char (region-end))
        (evil-test-text (or ,end-string ,string) nil nil ,after-predicate))))
 
+(defmacro evil-test-selection
+  (string &optional end-string before-predicate after-predicate)
+  "Verify that the Visual selection corresponds to STRING."
+  (declare (indent defun))
+  `(progn
+     (save-excursion
+       (goto-char (or (evil-visual-beginning) (region-beginning)))
+       (evil-test-text nil (or ,string ,end-string) ,before-predicate))
+     (save-excursion
+       (goto-char (or (evil-visual-end) (region-end)))
+       (evil-test-text (or ,end-string ,string) nil nil ,after-predicate))))
+
 (defmacro evil-test-overlay
   (overlay string &optional end-string before-predicate after-predicate)
   "Verify that OVERLAY corresponds to STRING."
@@ -2333,24 +2345,24 @@ to `evil-execute-repeat-info'")
         (should (= (point) 9))))
     (ert-info ("Select three characters after selection")
       (evil-test-buffer
-        (evil-visual-select 10 11 'inclusive)
+        (evil-visual-select 10 12 'inclusive)
         (funcall object 1)
         (should (evil-visual-state-p))
         (should (eq (evil-visual-type) evil-visual-char))
         (should (= (evil-visual-beginning) 10))
-        (should (= (evil-visual-end) 15))
+        (should (= (evil-visual-end) 16))
         (should (= (mark) 10))
-        (should (= (point) 14))))
+        (should (= (point) 15))))
     (ert-info ("Select three characters before selection")
       (evil-test-buffer
-        (evil-visual-select 11 10 'inclusive)
+        (evil-visual-select 11 9 'inclusive)
         (funcall object 1)
         (should (evil-visual-state-p))
         (should (eq (evil-visual-type) evil-visual-char))
-        (should (= (evil-visual-beginning) 7))
+        (should (= (evil-visual-beginning) 6))
         (should (= (evil-visual-end) 12))
         (should (= (mark) 11))
-        (should (= (point) 7))))
+        (should (= (point) 6))))
     (ert-info ("Delete three characters after point")
       (evil-test-buffer
         (define-key evil-operator-state-local-map "io" object)

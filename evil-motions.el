@@ -803,58 +803,79 @@ if COUNT is positive, and to the left of it if negative.
        (t
         (setq keys (append keys (list key arg))))))
     ;; macro expansion
-    `(evil-define-command ,object (,count)
-       ,@(when doc `(,doc)) ; avoid nil before `interactive'
+    `(evil-define-motion ,object (,count ,@args)
+       ,@(when doc `(,doc))
        ,@keys
        :type ,type
-       :keep-visual t
-       :repeatable nil
-       (interactive "p")
-       (let* ((dir (evil-visual-direction))
-              (type (or ,type evil-visual-char))
-              ;; if a Visual selection already exists, save the
-              ;; unexpanded positions of point and mark for later
-              (point (point))
-              (mark (or (mark t) point))
-              beg end range)
-         ;; if we are at the beginning of the Visual selection,
-         ;; go to the left (negative); if at the end, go to
-         ;; the right (positive)
-         (when (or (evil-visual-state-p)
-                   (region-active-p))
-           (setq ,count (* ,count dir)))
-         ;; expand Visual selection so that point
-         ;; is outside already selected text
-         (when (evil-visual-state-p)
-           (evil-visual-expand-region))
-         ;; execute object code
-         (setq range (progn ,@body)
-               beg (pop range)
-               end (pop range)
-               ;; Did the range override the default type?
-               type (or (pop range) type))
-         ;; since a Visual selection expands the positions of point
-         ;; and mark, we need the unexpanded positions
-         (setq range (evil-contract beg end type)
-               beg (pop range)
-               end (pop range))
-         ;; if a Visual selection already exists,
-         ;; find the union of the selection and the range
-         (when (evil-visual-state-p)
-           (evil-sort beg point mark end))
-         ;; if we are stuck (nothing was selected, or
-         ;; the selection didn't increase), enlarge
-         ;; the selection by one character
-         (when (and (= beg point) (= end mark))
-           (if (< count 0)
-               (setq beg (max (1- beg) (point-min)))
-             (setq end (min (1+ beg) (point-max)))))
-         ;; `beg' is mark and `end' is point unless
-         ;; the selection goes the other way
-         (when (< dir 0)
-           (evil-swap beg end))
-         (evil-visual-select beg end type
-                             (evil-visual-state-p))))))
+       (setq ,count (or ,count 1))
+       (when (/= count 0)
+         (let* ((dir (evil-visual-direction))
+                (type (or ',type evil-visual-char))
+                (point (point))
+                (mark (or (when (evil-visual-state-p) (mark t)) point))
+                (region (evil-range mark point))
+                (selection
+                 (if (evil-visual-state-p)
+                     (evil-range (evil-visual-beginning)
+                                 (evil-visual-end) type)
+                   region))
+                range)
+           ;; if we are at the beginning of the Visual selection,
+           ;; go to the left (negative COUNT); if at the end,
+           ;; go to the right (positive COUNT)
+           (when (or (evil-visual-state-p)
+                     (region-active-p))
+             (setq ,count (* ,count dir))
+             ;; expand Visual selection so that point
+             ;; is outside already selected text
+             (evil-visual-select mark point type)
+             (evil-visual-expand-region)
+             (setq selection (evil-range (evil-visual-beginning)
+                                         (evil-visual-end) type))
+             ;; the preceding selection should contain
+             ;; at least one object; if not, add it now
+             (let ((count (- dir)))
+               (setq range (progn ,@body)))
+             (when (and (not (evil-subrange-p range selection))
+                        (if (< dir 0)
+                            (= (evil-range-beginning range)
+                               (evil-range-beginning selection))
+                          (= (evil-range-end range)
+                             (evil-range-end selection))))
+               ;; found an unselected preceding object:
+               ;; decrease COUNT and adjust selection boundaries
+               (setq count (if (< count 0) (1+ count) (1- count))
+                     selection (evil-range-union range selection)
+                     region (evil-contract-range selection t))))
+           (when (/= count 0)
+             ;; main attempt: find range from current position
+             (setq range (progn ,@body))
+             ;; fall-back: enlarge selection by one character
+             (when (evil-subrange-p range selection)
+               (if (< count 0)
+                   (evil-set-range
+                    selection (1- (evil-range-beginning selection)) nil)
+                 (evil-set-range
+                  selection nil (1+ (evil-range-end selection))))
+               (setq region (evil-contract-range selection t))))
+           ;; Did the range specify a type of its own?
+           (evil-set-type range (evil-type range type))
+           (cond
+            ((evil-visual-state-p)
+             (setq range (evil-contract-range range)
+                   range (evil-range-union range region)))
+            (t
+             (setq range (evil-range-union range region)
+                   range (evil-contract-range range))))
+           ;; the beginning is mark and the end is point
+           ;; unless the selection goes the other way
+           (setq mark  (evil-range-beginning range)
+                 point (evil-range-end range)
+                 type  (evil-type range type))
+           (when (< dir 0)
+             (evil-swap mark point))
+           ;; select the range
+           (evil-visual-select mark point type))))))
 
 (defun evil-inner-object-range (count forward &optional backward type)
   "Return an inner text object range (BEG END) of COUNT objects.
