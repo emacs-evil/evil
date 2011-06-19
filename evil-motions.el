@@ -509,11 +509,12 @@ of the object; otherwise it is placed at the end of the object."
     (evil-motion-loop (var (or count 1))
       (cond
        ((< var 0)
-        (goto-char (or (save-excursion
-                         (unless (bobp)
-                           (backward-char)
-                           (re-search-backward "^$" nil t)))
-                       (point))))
+        (goto-char
+         (or (save-excursion
+               (unless (bobp)
+                 (backward-char)
+                 (re-search-backward "^$" nil t)))
+             (point))))
        (t
         (when (and (re-search-forward "^$" nil t)
                    (not (eobp)))
@@ -838,7 +839,8 @@ if COUNT is positive, and to the left of it if negative.
              ;; at least one object; if not, add it now
              (let ((count (- dir)))
                (setq range (progn ,@body)))
-             (when (and (not (evil-subrange-p range selection))
+             (when (and (evil-range-p range)
+                        (not (evil-subrange-p range selection))
                         (if (< dir 0)
                             (= (evil-range-beginning range)
                                (evil-range-beginning selection))
@@ -852,32 +854,36 @@ if COUNT is positive, and to the left of it if negative.
            (when (/= count 0)
              ;; main attempt: find range from current position
              (setq range (progn ,@body))
-             ;; fall-back: enlarge selection by one character
-             (when (evil-subrange-p range selection)
-               (if (< count 0)
-                   (evil-set-range
-                    selection (1- (evil-range-beginning selection)) nil)
-                 (evil-set-range
-                  selection nil (1+ (evil-range-end selection))))
-               (setq region (evil-contract-range selection t))))
-           ;; Did the range specify a type of its own?
-           (evil-set-type range (evil-type range type))
-           (cond
-            ((evil-visual-state-p)
-             (setq range (evil-contract-range range)
-                   range (evil-range-union range region)))
-            (t
-             (setq range (evil-range-union range region)
-                   range (evil-contract-range range))))
-           ;; the beginning is mark and the end is point
-           ;; unless the selection goes the other way
-           (setq mark  (evil-range-beginning range)
-                 point (evil-range-end range)
-                 type  (evil-type range type))
-           (when (< dir 0)
-             (evil-swap mark point))
-           ;; select the range
-           (evil-visual-select mark point type))))))
+             ;; Visual fall-back: enlarge selection by one character
+             (when (evil-visual-state-p)
+               (when (or (not (evil-range-p range))
+                         (evil-subrange-p range selection))
+                 (if (< count 0)
+                     (setq range (evil-range
+                                  (1- (evil-range-beginning selection))
+                                  (evil-range-end selection)))
+                   (setq range (evil-range
+                                (evil-range-beginning selection)
+                                (1+ (evil-range-end selection))))))))
+           (when (evil-range-p range)
+             ;; Did the range specify a type of its own?
+             (evil-set-type range (evil-type range type))
+             (cond
+              ((evil-visual-state-p)
+               (setq range (evil-contract-range range)
+                     range (evil-range-union range region)))
+              (t
+               (setq range (evil-range-union range region)
+                     range (evil-contract-range range))))
+             ;; the beginning is mark and the end is point
+             ;; unless the selection goes the other way
+             (setq mark  (evil-range-beginning range)
+                   point (evil-range-end range)
+                   type  (evil-type range type))
+             (when (< dir 0)
+               (evil-swap mark point))
+             ;; select the range
+             (evil-visual-select mark point type)))))))
 
 (defun evil-inner-object-range (count forward &optional backward type)
   "Return an inner text object range (BEG END) of COUNT objects.
