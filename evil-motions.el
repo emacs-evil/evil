@@ -930,6 +930,120 @@ See `evil-inner-object-range' for more details."
            (line-end-position)))
         (evil-add-whitespace-to-range range count)))))
 
+(defun evil-paren-range (count open close &optional exclusive)
+  "Return a range (BEG END) of COUNT delimited text objects.
+OPEN is an opening character and CLOSE is a closing character.
+If EXCLUSIVE is non-nil, OPEN and CLOSE are excluded from
+the range; otherwise they are included.
+
+This function uses Emacs' syntax table and can therefore only
+handle single-character delimiters. To match whole strings,
+use `evil-regexp-range'."
+  (let ((open-regexp (regexp-quote (string open)))
+        (close-regexp (regexp-quote (string close)))
+        (count (or count 1))
+        level beg end range)
+    (if (or (evil-in-comment-p)
+            (and (evil-in-string-p) (not (eq open close))))
+        ;; if inside a comment, don't use the syntax table
+        (evil-regexp-range count open-regexp close-regexp exclusive)
+      (save-excursion
+        (with-syntax-table (copy-syntax-table (syntax-table))
+          (cond
+           ((= count 0))
+           ;; if OPEN is equal to CLOSE, handle as string delimiters
+           ((eq open close)
+            (modify-syntax-entry open "\"")
+            (while (not (or (eobp) (evil-in-string-p)))
+              (forward-char))
+            (when (evil-in-string-p)
+              (setq range (evil-range
+                           (if exclusive
+                               (1+ (evil-string-beginning))
+                             (evil-string-beginning))
+                           (if exclusive
+                               (1- (evil-string-end))
+                             (evil-string-end))))))
+           (t
+            ;; otherwise handle as open and close parentheses
+            (modify-syntax-entry open (format "(%c" close))
+            (modify-syntax-entry close (format ")%c" open))
+            ;; handle edge cases
+            (if (< count 0)
+                (when (if exclusive (looking-back open-regexp)
+                        (looking-back close-regexp))
+                  (backward-char))
+              (when (if exclusive (looking-at close-regexp)
+                      (looking-at open-regexp))
+                (forward-char)))
+            ;; find OPEN
+            (evil-motion-loop (nil count level)
+              (condition-case nil
+                  (while (progn
+                           (backward-up-list 1)
+                           (not (looking-at open-regexp))))
+                (error nil)))
+            (when (/= level count)
+              (setq beg (if exclusive (1+ (point)) (point)))
+              ;; find CLOSE
+              (forward-sexp)
+              (setq end (if exclusive (1- (point)) (point)))
+              (setq range (evil-range beg end))
+              (when exclusive
+                (evil-adjust-whitespace-inside-range
+                 range (not (eq this-command 'evil-delete)))))))
+          range)))))
+
+;; This simpler, but more general function can be used when
+;; `evil-paren-range' is insufficient. Note that as it doesn't use
+;; the syntax table, it is unaware of escaped characters (unless
+;; such a check is built into the regular expressions).
+(defun evil-regexp-range (count open close &optional exclusive)
+  "Return a range (BEG END) of COUNT delimited text objects.
+OPEN is a regular expression matching the opening sequence,
+and CLOSE is a regular expression matching the closing sequence.
+If EXCLUSIVE is non-nil, OPEN and CLOSE are excluded from
+the range; otherwise they are included. See also `evil-paren-range'."
+  (let ((either (format "\\(%s\\)\\|\\(%s\\)" open close))
+        (count (or count 1))
+        (level 0)
+        beg end range)
+    (save-excursion
+      (save-match-data
+        (evil-narrow-to-comment
+          ;; find beginning of range: handle edge cases
+          (if (< count 0)
+              (when (if exclusive (looking-back open) (looking-back close))
+                (goto-char (match-beginning 0)))
+            (when (if exclusive (looking-at close) (looking-at open))
+              (goto-char (match-end 0))))
+          ;; then loop over remainder
+          (while (and (< level (abs count))
+                      (re-search-backward either nil t))
+            (if (looking-at open)
+                (setq level (1+ level))
+              ;; found a CLOSE, so need to find another OPEN first
+              (setq level (1- level))))
+          ;; find end of range
+          (when (> level 0)
+            (forward-char)
+            (setq level 1
+                  beg (if exclusive
+                          (match-end 0)
+                        (match-beginning 0)))
+            (while (and (> level 0)
+                        (re-search-forward either nil t))
+              (if (looking-back close)
+                  (setq level (1- level))
+                ;; found an OPEN, so need to find another CLOSE first
+                (setq level (1+ level))))
+            (when (= level 0)
+              (setq end (if exclusive
+                            (match-beginning 0)
+                          (match-end 0)))
+              (setq range (evil-range beg end))))
+          range)))))
+
 (defun evil-add-whitespace-to-range (range &optional dir pos regexp)
   "Add whitespace at one side of RANGE, depending on POS.
 If POS is before the range, add trailing whitespace;
@@ -966,9 +1080,9 @@ REGEXP is a regular expression for matching whitespace;
 the default is \"[ \\f\\t\\n\\r\\v]+\".
 Returns t if RANGE was successfully increased and nil otherwise."
   (let ((orig (evil-copy-range range))
+        (regexp (or regexp "[ \f\t\n\r\v]+")))
     (save-excursion
       (save-match-data
-        (setq regexp (or regexp "[ \f\t\n\r\v]+"))
         (goto-char (evil-range-beginning range))
         (when (looking-back regexp nil t)
           ;; exclude the newline on the preceding line
@@ -982,13 +1096,37 @@ Returns t if RANGE was successfully increased and nil otherwise."
 REGEXP is a regular expression for matching whitespace;
 the default is \"[ \\f\\t\\n\\r\\v]+\".
 Returns t if RANGE was successfully increased and nil otherwise."
+  (let ((orig (evil-copy-range range))
+        (regexp (or regexp "[ \f\t\n\r\v]+")))
     (save-excursion
       (save-match-data
-        (setq regexp (or regexp "[ \f\t\n\r\v]+"))
         (goto-char (evil-range-end range))
         (when (looking-at regexp)
           (evil-set-range-end range (match-end 0)))
         (not (evil-subrange-p range orig))))))
+
+(defun evil-adjust-whitespace-inside-range (range &optional shrink regexp)
+  "Adjust whitespace inside RANGE.
+Leading whitespace at the end of the line is excluded.
+If SHRINK is non-nil, indentation may also be excluded,
+and the trailing whitespace is adjusted as well.
+REGEXP is a regular expression for matching whitespace;
+the default is \"[ \\f\\t\\n\\r\\v]*\".
+Returns t if RANGE was successfully adjusted and nil otherwise."
+  (let ((orig (evil-copy-range range))
+        (regexp (or regexp "[ \f\t\n\r\v]*")))
+    (save-excursion
+      (goto-char (evil-range-beginning range))
+      (when (looking-at (concat regexp "$"))
+        (forward-line)
+        (if (and shrink evil-auto-indent)
+            (back-to-indentation)
+          (beginning-of-line))
+        (evil-set-range range (point) nil))
+      (goto-char (evil-range-end range))
+      (when (and shrink (looking-back (concat "^" regexp)))
+        (evil-set-range range nil (line-end-position 0)))
+      (not (evil-subrange-p orig range)))))
 
 (evil-define-text-object evil-inner-word (count)
   "Select inner word."
