@@ -419,6 +419,74 @@ each line. Extra arguments to FUNC may be passed via ARGS."
       (set-marker beg-marker nil)
       (set-marker end-marker nil))))
 
+(defun evil-in-comment-p (&optional pos)
+  "Whether POS is inside a comment.
+POS defaults to the current position of point."
+  (setq pos (or pos (point)))
+  (and (nth 4 (parse-partial-sexp
+               (save-excursion (beginning-of-defun) (point))
+               pos)) t))
+
+(defun evil-in-string-p (&optional pos)
+  "Whether POS is inside a string.
+POS defaults to the current position of point."
+  (setq pos (or pos (point)))
+  (and (nth 3 (parse-partial-sexp
+               (save-excursion (beginning-of-defun) (point))
+               pos)) t))
+
+(defun evil-comment-beginning (&optional pos)
+  "Return beginning of comment containing POS.
+POS defaults to the current position of point."
+  (save-excursion
+    (goto-char (or pos (point)))
+    (when (evil-in-comment-p)
+      (while (and (evil-in-comment-p) (not (bobp)))
+        (backward-char))
+      (point))))
+
+(defun evil-comment-end (&optional pos)
+  "Return end of comment containing POS.
+POS defaults to the current position of point."
+  (save-excursion
+    (goto-char (or pos (point)))
+    (when (evil-in-comment-p)
+      (while (and (evil-in-comment-p) (not (eobp)))
+        (forward-char))
+      (point))))
+
+(defun evil-string-beginning (&optional pos)
+  "Return beginning of string containing POS.
+POS defaults to the current position of point."
+  (save-excursion
+    (goto-char (or pos (point)))
+    (when (evil-in-string-p)
+      (while (and (evil-in-string-p) (not (bobp)))
+        (backward-char))
+      (point))))
+
+(defun evil-string-end (&optional pos)
+  "Return end of string containing POS.
+POS defaults to the current position of point."
+  (save-excursion
+    (goto-char (or pos (point)))
+    (when (evil-in-string-p)
+      (while (and (evil-in-string-p) (not (eobp)))
+        (forward-char))
+      (point))))
+
+(defmacro evil-narrow-to-comment (&rest body)
+  "Narrow to the current comment or docstring, if any."
+  (declare (debug t)
+           (indent defun))
+  `(save-restriction
+     (cond
+      ((evil-in-comment-p)
+       (narrow-to-region (evil-comment-beginning) (evil-comment-end)))
+      ((evil-in-string-p)
+       (narrow-to-region (evil-string-beginning) (evil-string-end))))
+     ,@body))
+
 ;;; Key sequences
 
 (defun evil-extract-count (keys)
@@ -589,7 +657,7 @@ has already been started; otherwise TARGET is called."
 \\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
       (1 font-lock-keyword-face)
       (2 font-lock-function-name-face nil t))
-     ("(\\(evil-\\(?:with\\|save\\)-[-[:word:]]+\\)\\>"
+     ("(\\(evil-\\(?:narrow\\|save\\|with\\)-[-[:word:]]+\\)\\>"
       1 font-lock-keyword-face)
      ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>"
       1 font-lock-keyword-face))))
