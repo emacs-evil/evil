@@ -166,14 +166,14 @@ If COPY is non-nil, return a copy of RANGE."
 (defun evil-range-union (range1 range2 &optional type)
   "Return the union of the ranges RANGE1 and RANGE2.
 If the ranges have conflicting types, use RANGE1's type.
-Alternatively, use TYPE."
-  (let ((beg1 (evil-range-beginning range1))
-        (end1 (evil-range-end range1))
-        (beg2 (evil-range-beginning range2))
-        (end2 (evil-range-end range2))
-        (type (or type (evil-type range1) (evil-type range2))))
-    (evil-sort beg1 end1 beg2 end2)
-    (evil-range beg1 end2 type)))
+This can be overridden with TYPE."
+  (evil-range (min (evil-range-beginning range1)
+                   (evil-range-beginning range2))
+              (max (evil-range-end range1)
+                   (evil-range-end range2))
+              (or type
+                  (evil-type range1)
+                  (evil-type range2))))
 
 (defun evil-subrange-p (range1 range2)
   "Whether RANGE1 is contained within RANGE2."
