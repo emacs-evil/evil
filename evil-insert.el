@@ -86,7 +86,8 @@ The insertion will be repeated COUNT times."
   (setq evil-insert-count count
         evil-insert-lines t
         evil-insert-vcount nil)
-  (indent-according-to-mode)
+  (when evil-auto-indent
+    (indent-according-to-mode))
   (evil-insert-state 1))
 
 (defun evil-insert-below (count)
@@ -97,14 +98,17 @@ The insertion will be repeated COUNT times."
   (setq evil-insert-count count
         evil-insert-lines t
         evil-insert-vcount nil)
-  (indent-according-to-mode)
+  (when evil-auto-indent
+    (indent-according-to-mode))
   (evil-insert-state 1))
 
 (defun evil-insert-beginning-of-line (count &optional vcount)
   "Switches to insert-state just before the first non-blank character on the current line.
 The insertion will be repeated COUNT times."
   (interactive "p")
-  (back-to-indentation)
+  (if evil-auto-indent
+      (back-to-indentation)
+    (beginning-of-line))
   (setq evil-insert-count count
         evil-insert-lines nil
         evil-insert-vcount (and vcount

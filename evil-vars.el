@@ -52,6 +52,11 @@ moves the cursor."
   :type  'boolean
   :group 'evil)
 
+(defcustom evil-auto-indent t
+  "Whether to auto-indent when entering Insert state."
+  :type  'boolean
+  :group 'evil)
+
 (defcustom evil-motions
   '(backward-char
     backward-list
