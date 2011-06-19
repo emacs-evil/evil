@@ -7,28 +7,6 @@
 (require 'evil-operators)
 (require 'evil-replace)
 
-(defmacro evil-redirect-digit-argument (map keys target)
-  "Bind a wrapper function calling TARGET or `digit-argument'.
-MAP is a keymap for binding KEYS to the wrapper for TARGET.
-The wrapper only calls `digit-argument' if a prefix-argument
-has already been started; otherwise TARGET is called."
-  (let* ((target (eval target))
-         (wrapper (intern (format "evil-digit-argument-or-%s"
-                                  target))))
-    `(progn
-       (evil-define-command ,wrapper ()
-         :digit-argument-redirection ,target
-         :keep-visual t
-         :repeatable nil
-         (interactive)
-         (if current-prefix-arg
-             (progn
-               (setq this-command 'digit-argument)
-               (call-interactively 'digit-argument))
-           (setq this-command ',target)
-           (call-interactively ',target)))
-       (define-key ,map ,keys ',wrapper))))
-
 (define-key evil-emacs-state-map "\C-z" 'evil-normal-state)
 
 (define-key evil-normal-state-map "\C-z" 'evil-emacs-state)

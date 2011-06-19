@@ -546,6 +546,28 @@ first of a pair considered as a key, the second as the value."
   "Whether COMMAND is repeatable."
   (evil-get-command-property command :repeatable))
 
+(defmacro evil-redirect-digit-argument (map keys target)
+  "Bind a wrapper function calling TARGET or `digit-argument'.
+MAP is a keymap for binding KEYS to the wrapper for TARGET.
+The wrapper only calls `digit-argument' if a prefix-argument
+has already been started; otherwise TARGET is called."
+  (let* ((target (eval target))
+         (wrapper (intern (format "evil-digit-argument-or-%s"
+                                  target))))
+    `(progn
+       (evil-define-command ,wrapper ()
+         :digit-argument-redirection ,target
+         :keep-visual t
+         :repeatable nil
+         (interactive)
+         (if current-prefix-arg
+             (progn
+               (setq this-command 'digit-argument)
+               (call-interactively 'digit-argument))
+           (setq this-command ',target)
+           (call-interactively ',target)))
+       (define-key ,map ,keys ',wrapper))))
+
 ;;; Macro helpers
 
 (eval-and-compile
