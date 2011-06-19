@@ -34,6 +34,7 @@
 (define-key evil-normal-state-map "." 'evil-repeat)
 (define-key evil-normal-state-map (kbd "C-.") 'evil-repeat-pop)
 (define-key evil-normal-state-map (kbd "M-.") 'evil-repeat-pop-next)
+(define-key evil-normal-state-map (kbd "ESC") 'evil-normal-state)
 
 (define-key evil-normal-state-map "v" 'evil-visual-char)
 (define-key evil-normal-state-map "V" 'evil-visual-line)
