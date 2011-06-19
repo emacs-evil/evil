@@ -1162,6 +1162,70 @@ Returns t if RANGE was successfully adjusted and nil otherwise."
   :type line
   (evil-an-object-range count 'evil-move-paragraph nil nil t))
 
+(evil-define-text-object evil-a-paren (count)
+  "Select a parenthesis."
+  (evil-paren-range count ?\( ?\)))
+
+(evil-define-text-object evil-inner-paren (count)
+  "Select inner parenthesis."
+  (evil-paren-range count ?\( ?\) t))
+
+(evil-define-text-object evil-a-bracket (count)
+  "Select a square bracket."
+  (evil-paren-range count ?\[ ?\]))
+
+(evil-define-text-object evil-inner-bracket (count)
+  "Select inner square bracket."
+  (evil-paren-range count ?\[ ?\] t))
+
+(evil-define-text-object evil-a-curly (count)
+  "Select a curly bracket (\"brace\")."
+  (evil-paren-range count ?{ ?}))
+
+(evil-define-text-object evil-inner-curly (count)
+  "Select inner curly bracket (\"brace\")."
+  (evil-paren-range count ?{ ?} t))
+
+(evil-define-text-object evil-an-angle (count)
+  "Select an angle bracket."
+  (evil-paren-range count ?< ?> t))
+
+(evil-define-text-object evil-inner-angle (count)
+  "Select inner angle bracket."
+  (evil-paren-range count ?< ?>))
+
+(evil-define-text-object evil-a-single-quote (count)
+  "Select a single-quoted expression."
+  (evil-paren-range count ?' ?'))
+
+(evil-define-text-object evil-inner-single-quote (count)
+  "Select inner single-quoted expression."
+  (evil-paren-range count ?' ?' t))
+
+(evil-define-text-object evil-a-double-quote (count)
+  "Select a double-quoted expression."
+  (evil-paren-range count ?\" ?\"))
+
+(evil-define-text-object evil-inner-double-quote (count)
+  "Select inner double-quoted expression."
+  (evil-paren-range count ?\" ?\" t))
+
+(evil-define-text-object evil-a-back-quote (count)
+  "Select a back-quoted expression."
+  (evil-paren-range count ?\` ?\`))
+
+(evil-define-text-object evil-inner-back-quote (count)
+  "Select inner back-quoted expression."
+  (evil-paren-range count ?\` ?\` t))
+
+(evil-define-text-object evil-a-tag (count)
+  "Select a tag block."
+  (evil-regexp-range count "<[^/>]+?>" "</[^/>]+?>"))
+
+(evil-define-text-object evil-inner-tag (count)
+  "Select inner tag block."
+  (evil-regexp-range count "<[^/>]+?>" "</[^/>]+?>" t))
+
 (provide 'evil-motions)
 
 ;;; evil-motions.el ends here
