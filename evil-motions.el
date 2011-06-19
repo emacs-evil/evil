@@ -61,8 +61,9 @@
           (signal (car err) (cdr err)))))))
 
 (defmacro evil-narrow-to-line (&rest body)
-  "Narrows to the current line."
-  (declare (indent defun))
+  "Narrow to the current line."
+  (declare (debug t)
+           (indent defun))
   `(save-restriction
      (narrow-to-region
       (line-beginning-position)
@@ -153,7 +154,7 @@ See also `evil-goto-min'."
 
 ;; used for repeated commands like "dd"
 (evil-define-motion evil-line (count)
-  "Moves COUNT - 1 lines down."
+  "Move COUNT - 1 lines down."
   :type line
   (let (line-move-visual)
     (evil-line-move (1- (or count 1)))))
@@ -171,21 +172,21 @@ See also `evil-goto-min'."
     (evil-line-move (or count 1))))
 
 (evil-define-motion evil-move-to-window-line (count)
-  "Moves the cursor to line COUNT from the top of the window
+  "Move the cursor to line COUNT from the top of the window
 on the first non-blank character."
   :type line
   (move-to-window-line (or count 0))
   (back-to-indentation))
 
 (evil-define-motion evil-move-to-middle-window-line ()
-  "Moves the cursor to the middle line of the current window
+  "Move the cursor to the middle line of the current window
 on the first non-blank character."
   :type line
   (move-to-window-line (/ (window-body-height) 2))
   (back-to-indentation))
 
 (evil-define-motion evil-move-to-last-window-line (count)
-  "Moves the cursor to line COUNT from the bottom of the window
+  "Move the cursor to line COUNT from the bottom of the window
 on the first non-blank character."
   :type line
   (move-to-window-line (- (window-body-height) (or count 0) 1))
@@ -234,7 +235,7 @@ If COUNT is given, move COUNT - 1 lines downward first."
        (line-beginning-position)))))
 
 (evil-define-motion evil-move-to-first-non-blank-beg (count)
-  "Moves the cursor to the first non-blank character of line COUNT.
+  "Move the cursor to the first non-blank character of line COUNT.
 By default the first line."
   :type line
   (goto-char (point-min))
@@ -243,7 +244,7 @@ By default the first line."
   (evil-first-non-blank))
 
 (evil-define-motion evil-move-to-first-non-blank-end (count)
-  "Moves the cursor to the first non-blank character of line
+  "Move the cursor to the first non-blank character of line
 COUNT, default the last line."
   :type line
   (if count
@@ -391,7 +392,7 @@ not be performed.
              (evil-goto-max ,@moves)))))))
 
 (defun evil-move-chars (chars count)
-  "Moves point to the end or beginning of a sequence of CHARS.
+  "Move point to the end or beginning of a sequence of CHARS.
 CHARS is a character set as inside [...] in a regular expression."
   (let ((regexp (format "[%s]" chars)))
     (evil-motion-loop (var count)
@@ -480,6 +481,7 @@ of the object; otherwise it is placed at the end of the object."
             (funcall backward 1))
         (if (not (zerop count))
             (goto-char (point-min))
+          ;; go to end of object
           (funcall forward 1)
           (when inclusive
             (unless (bobp) (backward-char)))
@@ -501,7 +503,7 @@ of the object; otherwise it is placed at the end of the object."
       count))))
 
 (evil-define-motion evil-move-empty-lines (count)
-  "Moves to the next or previous empty line, repeated COUNT times."
+  "Move to the next or previous empty line, repeated COUNT times."
   :type exclusive
   (catch 'done
     (evil-motion-loop (var (or count 1))
@@ -641,7 +643,7 @@ If BIGWORD is non-nil, move by WORDS."
 
 (evil-define-motion evil-forward-sentence (count)
   :type exclusive
-  "Moves to the next COUNT-th beginning of a sentence or end of a paragraph."
+  "Move to the next COUNT-th beginning of a sentence or end of a paragraph."
   (let ((count (or count 1))
         beg-sentence end-paragraph)
     (when (evil-eobp)
@@ -660,7 +662,7 @@ If BIGWORD is non-nil, move by WORDS."
 
 (evil-define-motion evil-backward-sentence (count)
   :type exclusive
-  "Moves to the previous COUNT-th beginning of a sentence or paragraph."
+  "Move to the previous COUNT-th beginning of a sentence or paragraph."
   (let ((count (or count 1))
         beg-sentence beg-paragraph)
     (when (bobp)
@@ -678,12 +680,12 @@ If BIGWORD is non-nil, move by WORDS."
         (evil-goto-max beg-sentence beg-paragraph)))))
 
 (evil-define-motion evil-forward-paragraph (count)
-  "Moves to the end of the COUNT-th next paragraph."
+  "Move to the end of the COUNT-th next paragraph."
   :type exclusive
   (evil-move-end count 'forward-paragraph 'backward-paragraph))
 
 (evil-define-motion evil-backward-paragraph (count)
-  "Moves to the beginning of the COUNT-th previous paragraph."
+  "Move to the beginning of the COUNT-th previous paragraph."
   :type exclusive
   (evil-move-beginning (- (or count 1))
                        'forward-paragraph 'backward-paragraph))
@@ -956,8 +958,8 @@ the default is \"[ \\f\\t\\n\\r\\v]+\"."
   "Add whitespace at the beginning of RANGE.
 REGEXP is a regular expression for matching whitespace;
 the default is \"[ \\f\\t\\n\\r\\v]+\".
-Return t if RANGE was successfully increased and nil otherwise."
-  (let ((orig (evil-copy-range range)))
+Returns t if RANGE was successfully increased and nil otherwise."
+  (let ((orig (evil-copy-range range))
     (save-excursion
       (save-match-data
         (setq regexp (or regexp "[ \f\t\n\r\v]+"))
@@ -973,8 +975,7 @@ Return t if RANGE was successfully increased and nil otherwise."
   "Add whitespace at the end of RANGE.
 REGEXP is a regular expression for matching whitespace;
 the default is \"[ \\f\\t\\n\\r\\v]+\".
-Return t if RANGE was successfully increased and nil otherwise."
-  (let ((orig (evil-copy-range range)))
+Returns t if RANGE was successfully increased and nil otherwise."
     (save-excursion
       (save-match-data
         (setq regexp (or regexp "[ \f\t\n\r\v]+"))

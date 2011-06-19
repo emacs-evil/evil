@@ -219,7 +219,8 @@ The return value is a list (BEG END TYPE)."
 
 (defun evil-read-motion (&optional motion count type modifier)
   "Read a MOTION, motion COUNT and motion TYPE from the keyboard.
-The type may be overridden with MODIFIER.
+The type may be overridden with MODIFIER, which may be a type
+or a Visual selection as defined by `evil-define-visual-selection'.
 Return a list (MOTION COUNT TYPE)."
   (let ((modifiers '((evil-visual-char . char)
                      (evil-visual-line . line)
@@ -245,6 +246,7 @@ Return a list (MOTION COUNT TYPE)."
     (when modifier
       (cond
        ((eq modifier 'char)
+        ;; TODO: this behavior could be less hard-coded
         (if (eq type 'exclusive)
             (setq type 'inclusive)
           (setq type 'exclusive)))
@@ -340,7 +342,7 @@ Both COUNT and CMD may be nil."
   "Saves the lines in the region BEGIN and END into the kill-ring."
   (let ((txt (buffer-substring begin end))
         (yinfo (list #'evil-yank-line-handler)))
-    ;; Ensure the text ends with newline.  This is required if the
+    ;; Ensure the text ends with newline. This is required if the
     ;; deleted lines were the last lines in the buffer.
     (when (or (zerop (length txt))
               (/= (aref txt (1- (length txt))) ?\n))
@@ -356,15 +358,16 @@ Both COUNT and CMD may be nil."
     (apply-on-rectangle #'extract-rectangle-line begin end lines)
     ;; We remove spaces from the beginning and the end of the next.
     ;; Spaces are inserted explicitly in the yank-handler in order to
-    ;; *not* insert lines full of spaces.
+    ;; NOT insert lines full of spaces.
     (setq lines (nreverse (cdr lines)))
-    ;; txt is used as default insert text when pasting this rectangle
+    ;; `txt' is used as default insert text when pasting this rectangle
     ;; in another program, e.g., using the X clipboard.
     (let* ((yinfo (list #'evil-yank-block-handler
                         lines
                         nil
                         #'evil-delete-yanked-rectangle))
-           (txt (propertize (mapconcat #'identity lines "\n") 'yank-handler yinfo)))
+           (txt (propertize (mapconcat #'identity lines "\n")
+                            'yank-handler yinfo)))
       (if register
           (set-register register txt)
         (kill-new txt)))))
@@ -373,7 +376,8 @@ Both COUNT and CMD may be nil."
   "Inserts the current text linewise."
   (let ((text (apply #'concat (make-list (or evil-paste-count 1) text)))
         (opoint (point)))
-    (remove-list-of-text-properties 0 (length text) yank-excluded-properties text)
+    (remove-list-of-text-properties
+     0 (length text) yank-excluded-properties text)
     (cond
      ((eq this-command 'evil-paste-behind)
       (end-of-line)
@@ -428,10 +432,9 @@ Both COUNT and CMD may be nil."
         (unless (and (< (save-excursion
                           (goto-char (line-end-position))
                           (current-column))
-                        col)                    ; nothing in this line
-                     (zerop (length txt)))      ; and nothing to insert
-          ;; If we paste behind eol it may be sufficient to insert
-          ;; tabs.
+                        col)               ; nothing in this line
+                     (zerop (length txt))) ; and nothing to insert
+          ;; if we paste behind eol, it may be sufficient to insert tabs
           (if (< (save-excursion
                    (goto-char (line-end-position))
                    (current-column))
@@ -439,7 +442,8 @@ Both COUNT and CMD may be nil."
               (move-to-column (+ col begextra) t)
             (move-to-column col t)
             (insert (make-string begextra ? )))
-          (remove-list-of-text-properties 0 (length txt) yank-excluded-properties txt)
+          (remove-list-of-text-properties 0 (length txt)
+                                          yank-excluded-properties txt)
           (insert txt)
           (unless (eolp)
             ;; text follows, so we have to insert spaces
@@ -491,8 +495,8 @@ Both COUNT and CMD may be nil."
                 (list 'evil-paste-before
                       count
                       opoint
-                      opoint            ; begin
-                      (point)))         ; end
+                      opoint    ; begin
+                      (point))) ; end
           (exchange-point-and-mark)))
       ;; no paste pop after pasting a register
       (when register
@@ -510,9 +514,10 @@ Both COUNT and CMD may be nil."
             (insert-for-yank txt))
         ;; no yank-handler, default
         (let ((opoint (point)))
-          ;; TODO: Perhaps it is better to collect a list of all (point . mark) pairs
-          ;; to undo the yanking for count > 1. The reason is that this yanking could
-          ;; very well use 'yank-handler.
+          ;; TODO: Perhaps it is better to collect a list of all
+          ;; (point . mark) pairs to undo the yanking for count > 1.
+          ;; The reason is that this yanking could very well use
+          ;; `yank-handler'.
           (unless (eolp) (forward-char))
           (let ((begin (point)))
             (dotimes (i (or count 1))
@@ -521,8 +526,8 @@ Both COUNT and CMD may be nil."
                   (list 'evil-paste-behind
                         count
                         opoint
-                        begin           ; begin
-                        (point)))       ; end
+                        begin     ; begin
+                        (point))) ; end
             (backward-char))))
       (when register
         (setq evil-last-paste nil)))))
@@ -576,9 +581,9 @@ is negative this is a more recent kill."
 
 (evil-define-operator evil-change (beg end type register)
   "Delete region and change to insert state.
-If the region is linewise insertion starts on an empty line. If
-region is a block, the inserted text in inserted at each line of
-the block."
+If the region is linewise insertion starts on an empty line.
+If region is a block, the inserted text in inserted at each line
+of the block."
   (let ((nlines (1+ (- (line-number-at-pos end)
                        (line-number-at-pos beg))))
         (at-eob (= (point-max) end)))
@@ -604,8 +609,7 @@ the block."
   (evil-delete beg end type))
 
 (evil-define-operator evil-join-lines (beg end)
-  "Join lines covered by region (BEG . END) with a minimum of two
-lines."
+  "Join lines from BEG to END, with a minimum of two lines."
   (goto-char beg)
   (evil-join-successive-lines
    (1+ (- (line-number-at-pos end)
