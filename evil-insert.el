@@ -58,7 +58,7 @@ w.r.t. indentation."
   (back-to-indentation))
 
 (defun evil-insert-before (count &optional vcount)
-  "Switches to insert-state just before point.
+  "Switch to Insert state just before point.
 The insertion will be repeated COUNT times and repeated once for
 the next VCOUNT-1 lines starting at the same column."
   (interactive "p")
@@ -72,14 +72,14 @@ the next VCOUNT-1 lines starting at the same column."
   (evil-insert-state 1))
 
 (defun evil-insert-after (count &optional vcount)
-  "Switches to insert-state just after point.
+  "Switch to Insert state just after point.
 The insertion will be repeated COUNT times."
   (interactive "p")
   (unless (eolp) (forward-char))
   (evil-insert-before count vcount))
 
 (defun evil-insert-above (count)
-  "Inserts a new line above point and switches to insert mode.
+  "Insert a new line above point and switch to Insert state.
 The insertion will be repeated COUNT times."
   (interactive "p")
   (evil-insert-newline-above)
@@ -91,7 +91,7 @@ The insertion will be repeated COUNT times."
   (evil-insert-state 1))
 
 (defun evil-insert-below (count)
-  "Inserts a new line below point and switches to insert mode.
+  "Insert a new line below point and switch to Insert state.
 The insertion will be repeated COUNT times."
   (interactive "p")
   (evil-insert-newline-below)
@@ -103,8 +103,8 @@ The insertion will be repeated COUNT times."
   (evil-insert-state 1))
 
 (defun evil-insert-beginning-of-line (count &optional vcount)
-  "Switches to insert-state just before the first non-blank character on the current line.
-The insertion will be repeated COUNT times."
+  "Switch to Insert state just before the first non-blank character
+on the current line. The insertion will be repeated COUNT times."
   (interactive "p")
   (if evil-auto-indent
       (back-to-indentation)
@@ -119,7 +119,7 @@ The insertion will be repeated COUNT times."
   (evil-insert-state 1))
 
 (defun evil-insert-end-of-line (count &optional vcount)
-  "Switches to insert-state at the end of the current line.
+  "Switch to Insert state at the end of the current line.
 The insertion will be repeated COUNT times."
   (interactive "p")
   (end-of-line)

@@ -11,12 +11,12 @@
 ;; specific usually using pre-/post-command-hook and
 ;; after-change-function hooks.
 ;;
-;; In normal-state after-change-function hook is used to check whether
-;; the current command changed the buffer. If this happend the
-;; corresponding key-sequence (this-command-events) is recorded as
-;; repeat-information.
+;; In Normal state, the `after-change-function' hook is used to check
+;; whether the current command changed the buffer. If this happened,
+;; the corresponding key-sequence (`this-command-events') is recorded
+;; as repeat-information.
 ;;
-;; Insert-state accumulates repeat-information for each command
+;; Insert state accumulates repeat-information for each command
 ;; executed. Most commands are recorded by the key-sequence used to
 ;; call them in the post-command-hook `evil-insert-post-repeat'. Some
 ;; commands if the corresponding repeat-type (set via
@@ -67,8 +67,8 @@ repeated by tracking the buffer changed."
          evil-command-modified-buffer)))
 
 (defun evil-normal-pre-repeat ()
-  "Called from `pre-command-hook' in vi-state. Initializes
-recording of repeat-information for the current command."
+  "Called from `pre-command-hook' in Normal state.
+Initializes recording of repeat-information for the current command."
   ;; prefix arguments always preceed the actual commands and they are
   ;; part of the key sequence of the actual command, therefore they
   ;; can be safely ignored
@@ -76,16 +76,17 @@ recording of repeat-information for the current command."
         evil-normal-repeat-info nil))
 
 (defun evil-normal-change-repeat (beg end len)
-  "Called from `after-change-functions' in vi-state. Records that
-the current command is an editing command, i.e., it modified the
-buffer."
+  "Called from `after-change-functions' in Normal state.
+Records that the current command is an editing command,
+i.e., it modified the buffer."
   (when evil-state
     (setq evil-command-modified-buffer t)))
 
 (defun evil-normal-post-repeat ()
-  "Called from `post-command-hook' in vi-state. Finishes
-recording of repeat-information and eventually stores it in the
-global variable `evil-repeat-info-ring' if the command is repeatable."
+  "Called from `post-command-hook' in Normal state.
+Finishes recording of repeat-information and eventually stores it
+in the global variable `evil-repeat-info-ring' if the command
+is repeatable."
   (when (and (functionp this-command)
              (evil-repeat-normal-command-p))
     (unless (memq this-command '(digit-argument
@@ -99,20 +100,20 @@ global variable `evil-repeat-info-ring' if the command is repeatable."
                                              evil-normal-repeat-info)))))))
 
 (defun evil-setup-normal-repeat ()
-  "Initializes recording of repeat-information in vi-state."
+  "Initializes recording of repeat-information in Normal state."
   (setq evil-command-modified-buffer nil)
   (add-hook 'pre-command-hook 'evil-normal-pre-repeat nil t)
   (add-hook 'after-change-functions 'evil-normal-change-repeat nil t)
   (add-hook 'post-command-hook 'evil-normal-post-repeat nil t))
 
 (defun evil-teardown-normal-repeat ()
-  "Stops recording of repeat-information in vi-state."
+  "Stops recording of repeat-information in Normal state."
   (remove-hook 'pre-command-hook 'evil-normal-pre-repeat t)
   (remove-hook 'after-change-functions 'evil-normal-change-repeat t)
   (remove-hook 'post-command-hook 'evil-normal-post-repeat t))
 
 (defun evil-insert-pre-repeat ()
-  "Called from `pre-command-hook' in insert mode.
+  "Called from `pre-command-hook' in Insert state.
 Decides how the current command should be recorded for repeating."
   (when (functionp this-command)
     ;; we ignore keyboard-macros
@@ -123,9 +124,9 @@ Decides how the current command should be recorded for repeating."
             evil-insert-repeat-changes nil))))
 
 (defun evil-insert-change-repeat (beg end len)
-  "Called from `after-change-functions' in insert mode. When the
-current command should be repeated by change the change
-information is recorded."
+  "Called from `after-change-functions' in Insert state.
+When the current command should be repeated by change,
+the change information is recorded."
   (when (eq evil-insert-repeat-type 'change)
     (push (list (- beg evil-insert-repeat-point)
                 (buffer-substring beg end)
@@ -163,7 +164,7 @@ variable `evil-insert-repeat-info'."
   (add-hook 'after-change-functions 'evil-insert-change-repeat nil t)
 
   ;; Note that this will automatically add the key-sequence
-  ;; that just activated insert-mode to `evil-insert-repeat-info',
+  ;; that just activated Insert state to `evil-insert-repeat-info',
   ;; because this post-command-hook is run for the current command.
   (add-hook 'post-command-hook 'evil-insert-post-repeat nil t)
   (setq evil-insert-repeat-info 'startup))
@@ -172,7 +173,7 @@ variable `evil-insert-repeat-info'."
   "Stops recording of repeat-information in insert-state. The
 repeat-information collected during insert-state is merged with
 the repeat-information of the commands that entered and left
-insert-mode."
+Insert state."
   (remove-hook 'pre-command-hook 'evil-insert-pre-repeat t)
   (remove-hook 'after-change-functions 'evil-insert-change-repeat t)
   (remove-hook 'post-command-hook 'evil-insert-post-repeat t)

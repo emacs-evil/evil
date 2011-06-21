@@ -183,7 +183,7 @@ If an operator calls a motion and the motion sets this variable
 to t, the operator code is not executed.")
 
 (defconst evil-suppress-map (make-keymap)
-  "Full keymap disabling default bindings to self-insert-command.")
+  "Full keymap disabling default bindings to `self-insert-command'.")
 (suppress-keymap evil-suppress-map t)
 
 ;; TODO: customize size of ring
@@ -200,10 +200,10 @@ the count-argument of the latest repeat command.")
   "This variable is non-nil if a command is currently being repeated.")
 
 (defvar evil-normal-repeat-info nil
-  "Repeat information accumulated during normal mode.")
+  "Repeat information accumulated during Normal state.")
 
 (defvar evil-insert-repeat-info nil
-  "Repeat information accumulated during insert mode.")
+  "Repeat information accumulated during Insert state.")
 
 (defvar evil-insert-repeat-type nil
   "The repeat-type of the current command. If set to 'change the
@@ -235,7 +235,7 @@ ignored.")
   "The explicit count when repeating a command.")
 
 (defvar evil-insert-count nil
-  "The explicit count passed to an command starting insert mode.")
+  "The explicit count passed to an command starting Insert state.")
 (make-variable-buffer-local 'evil-insert-count)
 
 (defvar evil-insert-vcount nil

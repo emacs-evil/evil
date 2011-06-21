@@ -379,12 +379,12 @@ suppression keymap comes first")
       (should (string= (buffer-substring 1 4) ";; ")))))
 
 (ert-deftest evil-test-emacs-state-suppress-keymap ()
-  "`self-insert-command' works in emacs-state"
+  "`self-insert-command' works in Emacs state"
   :tags '(evil state)
   (should-error (evil-test-suppress-keymap 'emacs)))
 
 (ert-deftest evil-test-normal-state-suppress-keymap ()
-  "No `self-insert-command' in normal-state"
+  "No `self-insert-command' in Normal state"
   :tags '(evil state)
   (evil-test-suppress-keymap 'normal))
 
@@ -773,7 +773,7 @@ KEYS is used."
                  (list (vconcat (or recorded keys))))))
 
 (ert-deftest evil-test-normal-repeat-info-simple-command ()
-  "Save key-sequence after simple editing command in vi-state"
+  "Save key-sequence after simple editing command in Normal state"
   :tags '(evil repeat)
   (evil-test-buffer
     (evil-test-change-state 'normal)
@@ -783,7 +783,7 @@ KEYS is used."
       (evil-test-repeat-info "3x"))))
 
 (ert-deftest evil-test-normal-repeat-info-char-command ()
-  "Save key-sequence after editing command with character in vi-state"
+  "Save key-sequence after editing command with character in Normal state"
   :tags '(evil repeat)
   (evil-test-buffer
     (evil-test-change-state 'normal)
