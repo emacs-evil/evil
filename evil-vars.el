@@ -82,6 +82,34 @@ moves the cursor."
     forward-sentence
     forward-sexp
     forward-word
+    isearch-abort
+    isearch-cancel
+    isearch-complete
+    isearch-del-char
+    isearch-delete-char
+    isearch-edit-string
+    isearch-exit
+    isearch-highlight-regexp
+    isearch-occur
+    isearch-other-control-char
+    isearch-other-meta-char
+    isearch-printing-char
+    isearch-query-replace
+    isearch-query-replace-regexp
+    isearch-quote-char
+    isearch-repeat-backward
+    isearch-repeat-forward
+    isearch-ring-advance
+    isearch-ring-retreat
+    isearch-toggle-case-fold
+    isearch-toggle-input-method
+    isearch-toggle-regexp
+    isearch-toggle-specified-input-method
+    isearch-toggle-word
+    isearch-yank-char
+    isearch-yank-kill
+    isearch-yank-line
+    isearch-yank-word-or-char
     keyboard-quit
     mouse-drag-region
     mouse-save-then-kill
