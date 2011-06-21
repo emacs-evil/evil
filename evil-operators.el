@@ -325,27 +325,28 @@ Both COUNT and CMD may be nil."
   "ROT13 encrypt text."
   (rot13-region beg end))
 
-(evil-define-operator evil-yank (begin end type register)
+(evil-define-operator evil-yank (beg end type register)
   "Saves the characters in motion into the kill-ring."
   :move-point nil
+  (interactive (list evil-this-register))
   (cond
    ((eq type 'block)
-    (evil-yank-rectangle begin end register))
+    (evil-yank-rectangle beg end register))
    ((eq type 'line)
-    (evil-yank-lines begin end register))
+    (evil-yank-lines beg end register))
    (t
-    (evil-yank-characters begin end register))))
+    (evil-yank-characters beg end register))))
 
-(defun evil-yank-characters (begin end register)
-  "Saves the characters defined by the region BEGIN and END in the kill-ring."
-  (let ((text (buffer-substring begin end)))
-    (if register
-        (set-register register text)
-      (kill-new text))))
+(defun evil-yank-characters (beg end register)
+  "Saves the characters defined by the region BEG and END in the kill-ring."
+  (let ((text (buffer-substring beg end)))
+    (when register
+      (set-register register text))
+    (kill-new text)))
 
-(defun evil-yank-lines (begin end register)
-  "Saves the lines in the region BEGIN and END into the kill-ring."
-  (let ((txt (buffer-substring begin end))
+(defun evil-yank-lines (beg end register)
+  "Saves the lines in the region BEG and END into the kill-ring."
+  (let ((txt (buffer-substring beg end))
         (yinfo (list #'evil-yank-line-handler)))
     ;; Ensure the text ends with newline. This is required if the
     ;; deleted lines were the last lines in the buffer.
@@ -353,14 +354,14 @@ Both COUNT and CMD may be nil."
               (/= (aref txt (1- (length txt))) ?\n))
       (setq txt (concat txt "\n")))
     (setq txt (propertize txt 'yank-handler yinfo))
-    (if register
-        (set-register register txt)
-      (kill-new txt))))
+    (when register
+      (set-register register txt))
+    (kill-new txt)))
 
-(defun evil-yank-rectangle (begin end register)
-  "Stores the rectangle defined by region BEGIN and END into the kill-ring."
+(defun evil-yank-rectangle (beg end register)
+  "Stores the rectangle defined by region BEG and END into the kill-ring."
   (let ((lines (list nil)))
-    (apply-on-rectangle #'extract-rectangle-line begin end lines)
+    (apply-on-rectangle #'extract-rectangle-line beg end lines)
     ;; We remove spaces from the beginning and the end of the next.
     ;; Spaces are inserted explicitly in the yank-handler in order to
     ;; NOT insert lines full of spaces.
@@ -373,9 +374,9 @@ Both COUNT and CMD may be nil."
                         #'evil-delete-yanked-rectangle))
            (txt (propertize (mapconcat #'identity lines "\n")
                             'yank-handler yinfo)))
-      (if register
-          (set-register register txt)
-        (kill-new txt)))))
+      (when register
+        (set-register register txt))
+      (kill-new txt))))
 
 (defun evil-yank-line-handler (text)
   "Inserts the current text linewise."
@@ -483,7 +484,7 @@ Both COUNT and CMD may be nil."
 
 (defun evil-paste-before (count &optional register)
   "Pastes the latest yanked text before the cursor position."
-  (interactive "P")
+  (interactive (list current-prefix-arg evil-this-register))
   (evil-with-undo
     (let* ((txt (if register (get-register register) (current-kill 0)))
            (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
@@ -500,7 +501,7 @@ Both COUNT and CMD may be nil."
                 (list 'evil-paste-before
                       count
                       opoint
-                      opoint    ; begin
+                      opoint    ; beg
                       (point))) ; end
           (exchange-point-and-mark)))
       ;; no paste pop after pasting a register
@@ -509,7 +510,7 @@ Both COUNT and CMD may be nil."
 
 (defun evil-paste-behind (count &optional register)
   "Pastes the latest yanked text behind point."
-  (interactive "P")
+  (interactive (list current-prefix-arg evil-this-register))
   (evil-with-undo
     (let* ((txt (if register (get-register register) (current-kill 0)))
            (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
@@ -524,14 +525,14 @@ Both COUNT and CMD may be nil."
           ;; The reason is that this yanking could very well use
           ;; `yank-handler'.
           (unless (eolp) (forward-char))
-          (let ((begin (point)))
+          (let ((beg (point)))
             (dotimes (i (or count 1))
               (insert-for-yank txt))
             (setq evil-last-paste
                   (list 'evil-paste-behind
                         count
                         opoint
-                        begin     ; begin
+                        beg       ; beg
                         (point))) ; end
             (backward-char))))
       (when register
@@ -603,6 +604,12 @@ of the block."
      (t
       (evil-insert-before 1)))))
 
+(evil-define-command evil-use-register (register)
+  "Use REGISTER for the next command."
+  :keep-visual t
+  (interactive (list (read-char)))
+  (setq evil-this-register register))
+
 (evil-define-operator evil-delete-char (beg end type)
   "Delete next character."
   :motion evil-forward-char
@@ -627,8 +634,9 @@ of the block."
 
 ;; TODO: register
 (defun evil-change-chars (count &optional register)
-  "Remove the next COUNT characters and switch to insert-state."
-  (interactive "p")
+  "Remove the next COUNT characters and switch to Insert state."
+  (interactive (list (prefix-numeric-value current-prefix-arg)
+                     evil-this-register))
   (delete-region (point)
                  (min (+ (point) count)
                       (line-end-position)))

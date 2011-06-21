@@ -148,6 +148,7 @@
 (define-key evil-motion-state-map "at" 'evil-a-tag)
 (define-key evil-motion-state-map "it" 'evil-inner-tag)
 
+(define-key evil-normal-state-map "\"" 'evil-use-register)
 (define-key evil-normal-state-map "p" 'evil-paste-behind)
 (define-key evil-normal-state-map "P" 'evil-paste-before)
 (define-key evil-normal-state-map "\C-p" 'evil-paste-pop)

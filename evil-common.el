@@ -276,6 +276,13 @@ is non-nil) and returns point."
         (evil-adjust))))
   (point))
 
+(defun evil-get-register (register)
+  "Return contents of REGISTER.
+Signal an error if empty."
+  (when (characterp register)
+    (or (get-register register)
+        (error "Register `%c' is empty" register))))
+
 ;;; Region
 
 (defun evil-transient-save ()

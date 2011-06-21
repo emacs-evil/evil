@@ -197,6 +197,10 @@ describing it, etc.")
   "Current motion type.")
 (make-variable-buffer-local 'evil-this-type)
 
+(defvar evil-this-register nil
+  "Current register.")
+(make-variable-buffer-local 'evil-this-register)
+
 (defvar evil-this-operator nil
   "Current operator.")
 (make-variable-buffer-local 'evil-this-operator)

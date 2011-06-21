@@ -602,6 +602,8 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
           evil-this-operator nil
           evil-this-motion nil
           evil-this-motion-count nil)
+    (unless (eq this-command 'evil-use-register)
+      (setq evil-this-register nil))
     (evil-adjust-eol)))
 
 (evil-define-state emacs
