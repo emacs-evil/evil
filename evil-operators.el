@@ -89,12 +89,16 @@
        :keep-visual t
        (interactive
         (let* ((orig (point))
-               (range (evil-operator-range ',motion))
-               (beg (pop range))
-               (end (pop range))
-               (type (pop range)))
+               (beg orig)
+               (end orig)
+               range type)
           (unwind-protect
-              (setq range (append (list beg end type)
+              (setq evil-this-operator this-command
+                    range (evil-operator-range ',motion)
+                    beg (evil-range-beginning range)
+                    end (evil-range-end range)
+                    type (evil-type range)
+                    range (append (evil-range beg end type)
                                   (progn ,@interactive)))
             (setq orig (point))
             (when ,move-point
@@ -178,7 +182,7 @@ in the `interactive' specification of an operator command."
           (setq evil-this-motion motion
                 evil-this-motion-count count
                 evil-this-type type))))
-      (list beg end type))))
+      (evil-range beg end type))))
 
 (defun evil-motion-range (motion &optional count type)
   "Execute a motion and return the buffer positions.
@@ -196,17 +200,18 @@ The return value is a list (BEG END TYPE)."
           (condition-case err
               (call-interactively motion)
             (error (prog1 nil
-                     (setq evil-write-echo-area t)
+                     (setq evil-this-type 'exclusive
+                           evil-write-echo-area t)
                      (message (error-message-string err)))))
           (cond
            ;; the motion made a Visual selection: use that
            ((evil-visual-state-p)
-            (list (evil-visual-beginning) (evil-visual-end)
-                  (evil-visual-type)))
+            (evil-range (evil-visual-beginning) (evil-visual-end)
+                        (evil-visual-type)))
            ;; the motion made an active region
            ((region-active-p)
-            (evil-expand (region-beginning) (region-end)
-                         evil-this-type))
+            (evil-range (region-beginning) (region-end)
+                        evil-this-type))
            ;; default case: use range from previous position
            ;; to current position
            (t
