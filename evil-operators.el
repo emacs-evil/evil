@@ -179,6 +179,7 @@ in the `interactive' specification of an operator command."
                     end (pop range)
                     type (pop range))))
           ;; update global variables
+          (evil-set-marker ?. end t)
           (setq evil-this-motion motion
                 evil-this-motion-count count
                 evil-this-type type))))

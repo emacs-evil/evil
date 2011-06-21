@@ -140,6 +140,40 @@ See also `evil-goto-min'."
           (line-move-finish (or goal-column temporary-goal-column)
                             opoint t)))))))
 
+(evil-define-command evil-goto-mark (char)
+  "Go to marker denoted by CHAR."
+  :keep-visual t
+  :repeatable nil
+  :type exclusive
+  (interactive (list (read-char)))
+  (let ((mark (evil-get-marker char)))
+    (cond
+     ((and (markerp mark)
+           (marker-position mark))
+      (switch-to-buffer (marker-buffer mark))
+      (goto-char (marker-position mark)))
+     ((functionp mark)
+      (funcall mark))
+     ((consp mark)
+      (when (or (find-buffer-visiting (car mark))
+                (and (y-or-n-p (format "Visit file %s again? "
+                                       (car mark)))
+                     (find-file (car mark))))
+        (goto-char (cdr mark))))
+     (t
+      (error "Marker `%c' is not set%s" char
+             (if (evil-global-marker-p char) ""
+               " in this buffer"))))))
+
+(evil-define-command evil-goto-mark-line (char)
+  "Go to line of marker denoted by CHAR."
+  :keep-visual t
+  :repeatable nil
+  :type line
+  (interactive (list (read-char)))
+  (evil-goto-mark char)
+  (evil-first-non-blank))
+
 (evil-define-motion evil-previous-line (count)
   "Move the cursor COUNT lines up."
   :type line

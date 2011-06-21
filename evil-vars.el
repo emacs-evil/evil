@@ -226,6 +226,21 @@ describing it, etc.")
 If an operator calls a motion and the motion sets this variable
 to t, the operator code is not executed.")
 
+(defvar evil-markers-alist
+  '((?\( . evil-backward-sentence)
+    (?\) . evil-forward-sentence)
+    (?{ . evil-backward-paragraph)
+    (?} . evil-forward-paragraph))
+  "Association list for markers.
+Entries have the form (CHAR . DATA), where CHAR is the marker's
+name and DATA is either a marker object as returned by
+`make-marker', a movement function, or a cons cell (STRING NUMBER),
+where STRING is a file path and NUMBER is a buffer position.
+The global value of this variable holds markers available from every
+buffer, while the buffer-local value holds markers available only in
+the current buffer.")
+(make-variable-buffer-local 'evil-markers-alist)
+
 (defconst evil-suppress-map (make-keymap)
   "Full keymap disabling default bindings to `self-insert-command'.")
 (suppress-keymap evil-suppress-map t)

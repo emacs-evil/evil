@@ -200,7 +200,9 @@ exclude that newline from the region."
     (overlay-put evil-visual-overlay 'direction dir)
     (evil-set-type evil-visual-overlay type)
     (setq evil-this-type (evil-visual-type))
-    (evil-expand-overlay evil-visual-overlay)))
+    (evil-expand-overlay evil-visual-overlay)
+    (evil-set-marker ?< (evil-visual-beginning))
+    (evil-set-marker ?> (evil-visual-end) t)))
 
 (defun evil-visual-highlight (&optional arg)
   "Highlight Visual selection, depending on the Visual type.

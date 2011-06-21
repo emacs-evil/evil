@@ -276,6 +276,55 @@ is non-nil) and returns point."
         (evil-adjust))))
   (point))
 
+;;; Markers
+
+(defun evil-global-marker-p (char)
+  "Whether CHAR denotes a global marker."
+  (or (and (>= char ?A) (<= char ?Z))
+      (assq char (default-value 'evil-markers-alist))))
+
+(defun evil-set-marker (char &optional pos advance)
+  "Set the marker denoted by CHAR to position POS.
+POS defaults to the current position of point.
+If ADVANCE is t, the marker advances when inserting text at it;
+otherwise, it stays behind."
+  (interactive (list (read-char)))
+  (let ((marker (evil-get-marker char)) alist)
+    (if (functionp marker)
+        (error "Cannot set special marker `%c'" char)
+      (unless (markerp marker)
+        (cond
+         ((evil-global-marker-p char)
+          (setq alist (default-value 'evil-markers-alist)
+                marker (make-marker))
+          (evil-add-to-alist 'alist char marker)
+          (setq-default evil-markers-alist alist))
+         (t
+          (setq marker (make-marker))
+          (evil-add-to-alist 'evil-markers-alist char marker))))
+      (add-hook 'kill-buffer-hook 'evil-swap-out-markers nil t)
+      (set-marker-insertion-type marker advance)
+      (set-marker marker (or pos (point))))))
+
+(defun evil-get-marker (char)
+  "Return the marker denoted by CHAR.
+This is either a marker object as returned by `make-marker',
+a movement function, or a cons cell (FILE . POS), where
+FILE is a string and POS is a number."
+  (cdr-safe
+   (if (evil-global-marker-p char)
+       (assq char (default-value 'evil-markers-alist))
+     (assq char evil-markers-alist))))
+
+(defun evil-swap-out-markers ()
+  "Turn markers into file references when the buffer is killed."
+  (and buffer-file-name
+       (dolist (entry evil-markers-alist)
+         (and (markerp (cdr entry))
+              (eq (marker-buffer (cdr entry)) (current-buffer))
+              (setcdr entry (cons buffer-file-name
+                                  (marker-position (cdr entry))))))))
+
 (defun evil-get-register (register)
   "Return contents of REGISTER.
 Signal an error if empty."
