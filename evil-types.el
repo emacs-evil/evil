@@ -102,29 +102,32 @@ a property list."
 
 (defun evil-range-beginning (range)
   "Return beginning of RANGE."
-  (let ((beg (nth 0 range))
-        (end (nth 1 range))
-        (point-min (point-min))
-        (point-max (point-max)))
-    ;; BEG and END may not exceed the buffer boundaries
-    (evil-sort point-min beg end point-max)
-    beg))
+  (when (evil-range-p range)
+    (let ((beg (nth 0 range))
+          (end (nth 1 range))
+          (point-min (point-min))
+          (point-max (point-max)))
+      ;; BEG and END may not exceed the buffer boundaries
+      (evil-sort point-min beg end point-max)
+      beg)))
 
 (defun evil-range-end (range)
   "Return end of RANGE."
-  (let ((beg (nth 0 range))
-        (end (nth 1 range))
-        (point-min (point-min))
-        (point-max (point-max)))
-    ;; BEG and END may not exceed the buffer boundaries
-    (evil-sort point-min beg end point-max)
-    end))
+  (when (evil-range-p range)
+    (let ((beg (nth 0 range))
+          (end (nth 1 range))
+          (point-min (point-min))
+          (point-max (point-max)))
+      ;; BEG and END may not exceed the buffer boundaries
+      (evil-sort point-min beg end point-max)
+      end)))
 
 (defun evil-range-properties (range)
   "Return properties of RANGE."
-  (if (evil-type range)
-      (nthcdr 3 range)
-    (nthcdr 2 range)))
+  (when (evil-range-p range)
+    (if (evil-type range)
+        (nthcdr 3 range)
+      (nthcdr 2 range))))
 
 (defun evil-copy-range (range)
   "Return a copy of RANGE."
@@ -133,21 +136,22 @@ a property list."
 (defun evil-set-range (range beg end &optional type &rest properties)
   "Set RANGE to have beginning BEG and end END.
 The TYPE and PROPERTIES may also be specified."
-  (let ((beg (or beg (evil-range-beginning range)))
-        (end (or end (evil-range-end range)))
-        (type (or type (evil-type range)))
-        (plist (evil-range-properties range))
-        (point-min (point-min))
-        (point-max (point-max)))
-    (evil-sort point-min beg end point-max)
-    (while properties
-      (setq plist (plist-put plist (pop properties) (pop properties))))
-    (setcar range beg)
-    (setcar (cdr range) end)
-    (setcdr (cdr range)
-            (append (when (evil-type-p type) (list type))
-                    plist))
-    range))
+  (when (evil-range-p range)
+    (let ((beg (or beg (evil-range-beginning range)))
+          (end (or end (evil-range-end range)))
+          (type (or type (evil-type range)))
+          (plist (evil-range-properties range))
+          (point-min (point-min))
+          (point-max (point-max)))
+      (evil-sort point-min beg end point-max)
+      (while properties
+        (setq plist (plist-put plist (pop properties) (pop properties))))
+      (setcar range beg)
+      (setcar (cdr range) end)
+      (setcdr (cdr range)
+              (append (when (evil-type-p type) (list type))
+                      plist))
+      range)))
 
 (defun evil-set-range-beginning (range beg &optional copy)
   "Set RANGE's beginning to BEG.
@@ -167,17 +171,21 @@ If COPY is non-nil, return a copy of RANGE."
   "Return the union of the ranges RANGE1 and RANGE2.
 If the ranges have conflicting types, use RANGE1's type.
 This can be overridden with TYPE."
-  (evil-range (min (evil-range-beginning range1)
-                   (evil-range-beginning range2))
-              (max (evil-range-end range1)
-                   (evil-range-end range2))
-              (or type
-                  (evil-type range1)
-                  (evil-type range2))))
+  (when (and (evil-range-p range1)
+             (evil-range-p range2))
+    (evil-range (min (evil-range-beginning range1)
+                     (evil-range-beginning range2))
+                (max (evil-range-end range1)
+                     (evil-range-end range2))
+                (or type
+                    (evil-type range1)
+                    (evil-type range2)))))
 
 (defun evil-subrange-p (range1 range2)
   "Whether RANGE1 is contained within RANGE2."
-  (and (<= (evil-range-beginning range2)
+  (and (evil-range-p range1)
+       (evil-range-p range2)
+       (<= (evil-range-beginning range2)
            (evil-range-beginning range1))
        (>= (evil-range-end range2)
            (evil-range-end range1))))
