@@ -122,7 +122,8 @@ otherwise exit Visual state."
             (eq this-command 'keyboard-quit)
             evil-visual-region-expanded)
         (evil-normal-state)
-      (evil-visual-refresh))))
+      (evil-visual-refresh)
+      (evil-visual-highlight))))
 
 (defun evil-visual-deactivate-hook ()
   "Deactivate the region and restore Transient Mark mode."
@@ -192,14 +193,14 @@ exclude that newline from the region."
          (dir   (evil-visual-direction))
          (type  (or type (evil-visual-type) evil-visual-char)))
     (if (null evil-visual-overlay)
-        (setq evil-visual-overlay (make-overlay mark point))
+        (setq evil-visual-overlay
+              (make-overlay mark point nil nil t))
       (evil-contract-overlay evil-visual-overlay)
       (move-overlay evil-visual-overlay mark point))
     (overlay-put evil-visual-overlay 'direction dir)
     (evil-set-type evil-visual-overlay type)
     (setq evil-this-type (evil-visual-type))
-    (evil-expand-overlay evil-visual-overlay)
-    (evil-visual-highlight)))
+    (evil-expand-overlay evil-visual-overlay)))
 
 (defun evil-visual-highlight (&optional arg)
   "Highlight Visual selection, depending on the Visual type.

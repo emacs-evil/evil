@@ -2528,16 +2528,7 @@ to `evil-execute-repeat-info'")
     (should (eq (evil-type evil-visual-overlay) type))
     (should (eq (overlay-get evil-visual-overlay 'direction)
                 (if (< (point) (mark)) -1 1)))
-    (should (eq (overlay-get evil-visual-overlay :expanded) t)))
-  (ert-info ("Use `evil-visual-overlay' for highlighting
-unless TYPE is `block'")
-    (cond
-     ((eq type 'block)
-      (should evil-visual-block-overlays)
-      (should-not (overlay-get evil-visual-overlay 'face)))
-     (t
-      (should-not evil-visual-block-overlays)
-      (should (overlay-get evil-visual-overlay 'face))))))
+    (should (eq (overlay-get evil-visual-overlay :expanded) t))))
 
 (ert-deftest evil-test-visual-char ()
   "Test Visual character selection"
