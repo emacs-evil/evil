@@ -610,6 +610,38 @@ of the block."
   (interactive (list (read-char)))
   (setq evil-this-register register))
 
+(evil-define-command evil-record-macro (register)
+  "Record a keyboard macro into REGISTER."
+  :keep-visual t
+  (interactive (list (unless evil-this-macro
+                       (or evil-this-register (read-char)))))
+  (cond
+   (evil-this-macro
+    (end-kbd-macro)
+    (when last-kbd-macro
+      (setq evil-last-macro evil-this-macro)
+      (set-register evil-last-macro last-kbd-macro))
+    (setq evil-this-macro nil))
+   (t
+    (setq evil-this-macro register)
+    (start-kbd-macro nil))))
+
+(evil-define-command evil-execute-macro (count macro)
+  "Execute keyboard macro MACRO, COUNT times.
+When called interactively, MACRO is read from a register."
+  :keep-visual t
+  (interactive
+   (let (register)
+     (setq register (or evil-this-register (read-char)))
+     (when (eq register ?@)
+       (setq register nil))
+     (setq evil-last-macro (or register evil-last-macro))
+     (list (prefix-numeric-value current-prefix-arg)
+           (evil-get-register evil-last-macro))))
+  (if (member macro '("" [] nil))
+      (error "No previous macro")
+    (execute-kbd-macro macro count)))
+
 (evil-define-operator evil-delete-char (beg end type)
   "Delete next character."
   :motion evil-forward-char

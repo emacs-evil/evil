@@ -32,6 +32,8 @@
 (define-key evil-normal-state-map "ga" 'what-cursor-position)
 (define-key evil-normal-state-map "gd" 'evil-goto-definition)
 (define-key evil-normal-state-map "." 'evil-repeat)
+(define-key evil-normal-state-map "q" 'evil-record-macro)
+(define-key evil-normal-state-map "@" 'evil-execute-macro)
 (define-key evil-normal-state-map (kbd "C-.") 'evil-repeat-pop)
 (define-key evil-normal-state-map (kbd "M-.") 'evil-repeat-pop-next)
 (define-key evil-normal-state-map (kbd "ESC") 'evil-normal-state)

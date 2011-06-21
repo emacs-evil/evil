@@ -201,6 +201,14 @@ describing it, etc.")
   "Current register.")
 (make-variable-buffer-local 'evil-this-register)
 
+(defvar evil-this-macro nil
+  "Current macro register.")
+(make-variable-buffer-local 'evil-this-macro)
+
+(defvar evil-last-macro nil
+  "Last macro register.")
+(make-variable-buffer-local 'evil-this-macro)
+
 (defvar evil-this-operator nil
   "Current operator.")
 (make-variable-buffer-local 'evil-this-operator)
