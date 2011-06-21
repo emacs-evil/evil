@@ -598,6 +598,10 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
 (defun evil-normal-post-command ()
   "Prevent point from reaching the end of the line."
   (when (evil-normal-state-p)
+    (setq evil-this-type nil
+          evil-this-operator nil
+          evil-this-motion nil
+          evil-this-motion-count nil)
     (evil-adjust-eol)))
 
 (evil-define-state emacs

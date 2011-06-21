@@ -191,19 +191,23 @@ describing it, etc.")
 
 (defvar evil-motion-marker nil
   "Marker for storing the starting position of a motion.")
-(make-variable-buffer-local 'evil-mode-map-alist)
+(make-variable-buffer-local 'evil-motion-marker)
 
 (defvar evil-this-type nil
   "Current motion type.")
-(make-variable-buffer-local 'evil-mode-map-alist)
+(make-variable-buffer-local 'evil-this-type)
+
+(defvar evil-this-operator nil
+  "Current operator.")
+(make-variable-buffer-local 'evil-this-operator)
 
 (defvar evil-this-motion nil
   "Current motion.")
-(make-variable-buffer-local 'evil-mode-map-alist)
+(make-variable-buffer-local 'evil-this-motion)
 
 (defvar evil-this-motion-count nil
   "Current motion count.")
-(make-variable-buffer-local 'evil-mode-map-alist)
+(make-variable-buffer-local 'evil-this-motion-count)
 
 (defvar evil-inhibit-operator nil
   "Inhibit current operator.

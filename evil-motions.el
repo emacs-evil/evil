@@ -536,7 +536,7 @@ of the object; otherwise it is placed at the end of the object."
 If BIGWORD is non-nil, move by WORDS."
   :type exclusive
   (setq bigword (if bigword #'evil-move-WORD #'evil-move-word))
-  (if (eq this-command 'evil-change)
+  (if (eq evil-this-operator 'evil-change)
       (evil-move-end count bigword)
     (evil-move-beginning count bigword)))
 
@@ -991,7 +991,7 @@ use `evil-regexp-range'."
               (setq range (evil-range beg end))
               (when exclusive
                 (evil-adjust-whitespace-inside-range
-                 range (not (eq this-command 'evil-delete)))))))
+                 range (not (eq evil-this-operator 'evil-delete)))))))
           range)))))
 
 ;; This simpler, but more general function can be used when
