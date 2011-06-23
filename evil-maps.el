@@ -101,6 +101,8 @@
 (define-key evil-operator-state-map "X" 'evil-delete-backward-char)
 (define-key evil-operator-state-map "y" 'evil-yank)
 (define-key evil-operator-state-map "Y" 'evil-yank-line)
+(define-key evil-operator-state-map "gJ" 'evil-join-whitespace)
+(define-key evil-operator-state-map "gq" 'evil-fill)
 (define-key evil-operator-state-map "g?" 'evil-rot13)
 
 ;;; Motion state

@@ -711,6 +711,28 @@ When called interactively, MACRO is read from a register."
     (dotimes (var count)
       (join-line 1))))
 
+(evil-define-operator evil-join-whitespace (beg end)
+  "Join the selected lines without changing whitespace.
+\\<evil-normal-state-map>Like \\[evil-join], \
+but doesn't insert or remove any spaces."
+  :motion evil-line
+  (let ((count (count-lines beg end)))
+    (when (> count 1)
+      (setq count (1- count)))
+    (dotimes (var count)
+      (move-end-of-line 1)
+      (unless (eobp)
+        (delete-char 1)))))
+
+(evil-define-operator evil-fill (beg end)
+  "Fill text."
+  :move-point nil
+  :type line
+  (save-excursion
+    (condition-case nil
+        (fill-region beg end)
+      (error nil))))
+
 (provide 'evil-operators)
 
 ;;; evil-operators.el ends here
