@@ -250,6 +250,8 @@
 ;;; Insert state
 
 (define-key evil-insert-state-map "\C-k" 'evil-insert-digraph)
+(define-key evil-insert-state-map "\C-y" 'evil-copy-from-above)
+(define-key evil-insert-state-map "\C-e" 'evil-copy-from-below)
 (define-key evil-insert-state-map "\C-p" 'evil-complete)
 (define-key evil-insert-state-map "\C-n" 'evil-complete)
 (define-key evil-insert-state-map "\C-x\C-p" 'evil-complete-line)

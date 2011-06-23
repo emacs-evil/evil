@@ -171,6 +171,64 @@ The insertion is repeated COUNT times."
     (dotimes (var count)
       (insert digraph))))
 
+(defun evil-copy-from-above (arg)
+  "Copy characters from preceding non-blank line.
+The copied text is inserted before point.
+ARG is the number of lines to move backward."
+  (interactive
+   (cond
+    ;; if a prefix argument was given, repeat it for subsequent calls
+    ((and (null current-prefix-arg)
+          (eq last-command 'evil-copy-from-above))
+     (setq current-prefix-arg last-prefix-arg)
+     (list (prefix-numeric-value current-prefix-arg)))
+    (t
+     (list (prefix-numeric-value current-prefix-arg)))))
+  (insert (evil-copy-chars-from-line 1 (- arg))))
+
+(defun evil-copy-from-below (arg)
+  "Copy characters from following non-blank line.
+The copied text is inserted before point.
+ARG is the number of lines to move forward."
+  (interactive
+   (cond
+    ((and (null current-prefix-arg)
+          (eq last-command 'evil-copy-from-below))
+     (setq current-prefix-arg last-prefix-arg)
+     (list (prefix-numeric-value current-prefix-arg)))
+    (t
+     (list (prefix-numeric-value current-prefix-arg)))))
+  (insert (evil-copy-chars-from-line 1 arg)))
+
+;; adapted from `copy-from-above-command' in misc.el
+(defun evil-copy-chars-from-line (n num &optional col)
+  "Return N characters from line NUM, starting at column COL.
+NUM is relative to the current line and can be negative.
+COL defaults to the current column."
+  (interactive "p")
+  (let ((col (or col (current-column))) prefix)
+    (save-excursion
+      (forward-line num)
+      (when (looking-at "[[:space:]]*$")
+        (if (< num 0)
+            (skip-chars-backward " \t\n")
+          (skip-chars-forward " \t\n")))
+      (beginning-of-line)
+      (move-to-column col)
+      ;; if the column winds up in middle of a tab,
+      ;; return the appropriate number of spaces
+      (when (< col (current-column))
+        (if (eq (preceding-char) ?\t)
+            (let ((len (min n (- (current-column) col))))
+              (setq prefix (make-string len ?\s)
+                    n (- n len)))
+          ;; if in middle of a control char, return the whole char
+          (backward-char 1)))
+      (concat prefix
+              (buffer-substring (point)
+                                (min (line-end-position)
+                                     (+ n (point))))))))
+
 ;;; Completion
 
 (defun evil-complete ()
