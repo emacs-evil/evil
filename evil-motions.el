@@ -1122,7 +1122,7 @@ Returns t if RANGE was successfully increased and nil otherwise."
           ;; exclude the newline on the preceding line
           (goto-char (match-beginning 0))
           (when (eolp) (forward-char))
-          (evil-set-range-beginning range (point)))
+          (evil-set-range range (point)))
         (not (evil-subrange-p range orig))))))
 
 (defun evil-add-whitespace-after-range (range &optional regexp)
@@ -1136,7 +1136,7 @@ Returns t if RANGE was successfully increased and nil otherwise."
       (save-match-data
         (goto-char (evil-range-end range))
         (when (looking-at regexp)
-          (evil-set-range-end range (match-end 0)))
+          (evil-set-range range nil (match-end 0)))
         (not (evil-subrange-p range orig))))))
 
 (defun evil-adjust-whitespace-inside-range (range &optional shrink regexp)

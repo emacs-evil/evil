@@ -32,21 +32,17 @@
     (cond
      ((overlayp object)
       (setq type (overlay-get object :type)))
+     ((evil-range-p object)
+      (setq type (nth 2 object)))
      ((listp object)
-      ;; (BEG END TYPE)
-      (if (and (>= (length object) 3)
-               (numberp (nth 0 object))
-               (numberp (nth 1 object))
-               (symbolp (nth 2 object)))
-          (setq type (nth 2 object))
-        ;; property list
-        (setq type (plist-get object :type))))
+      (setq type (plist-get object :type)))
      ;; command
      ((commandp object)
       (setq type (evil-get-command-property object :type)))
      ((symbolp object)
       (setq type (get object 'type))))
-    (or (and (evil-type-p type) type) default)))
+    (setq type (or type default))
+    (and (evil-type-p type) type)))
 
 (defun evil-set-type (object type)
   "Set the type of OBJECT to TYPE.
@@ -56,11 +52,7 @@ will make `line' the type of the `next-line' command."
    ((overlayp object)
     (overlay-put object :type type))
    ((evil-range-p object)
-    (evil-set-range object
-                    (evil-range-beginning object)
-                    (evil-range-end object)
-                    type
-                    (evil-range-properties object)))
+    (evil-set-range-type object type))
    ((listp object)
     (plist-put object :type type))
    ((commandp object)
@@ -107,7 +99,7 @@ a property list."
           (end (nth 1 range))
           (point-min (point-min))
           (point-max (point-max)))
-      ;; BEG and END may not exceed the buffer boundaries
+      ;; `beg' may not exceed the buffer boundaries
       (evil-sort point-min beg end point-max)
       beg)))
 
@@ -118,7 +110,7 @@ a property list."
           (end (nth 1 range))
           (point-min (point-min))
           (point-max (point-max)))
-      ;; BEG and END may not exceed the buffer boundaries
+      ;; `end' may not exceed the buffer boundaries
       (evil-sort point-min beg end point-max)
       end)))
 
@@ -133,9 +125,12 @@ a property list."
   "Return a copy of RANGE."
   (copy-sequence range))
 
-(defun evil-set-range (range beg end &optional type &rest properties)
+(defun evil-set-range (range &optional beg end type &rest properties)
   "Set RANGE to have beginning BEG and end END.
-The TYPE and PROPERTIES may also be specified."
+The TYPE and additional PROPERTIES may also be specified.
+If an argument is nil, it's not used; the previous value is retained.
+See also `evil-set-range-beginning', `evil-set-range-end',
+`evil-set-range-type' and `evil-set-range-properties'."
   (when (evil-range-p range)
     (let ((beg (or beg (evil-range-beginning range)))
           (end (or end (evil-range-end range)))
@@ -146,11 +141,10 @@ The TYPE and PROPERTIES may also be specified."
       (evil-sort point-min beg end point-max)
       (while properties
         (setq plist (plist-put plist (pop properties) (pop properties))))
-      (setcar range beg)
-      (setcar (cdr range) end)
-      (setcdr (cdr range)
-              (append (when (evil-type-p type) (list type))
-                      plist))
+      (evil-set-range-beginning range beg)
+      (evil-set-range-end range end)
+      (evil-set-range-type range type)
+      (evil-set-range-properties range plist)
       range)))
 
 (defun evil-set-range-beginning (range beg &optional copy)
@@ -158,14 +152,37 @@ The TYPE and PROPERTIES may also be specified."
 If COPY is non-nil, return a copy of RANGE."
   (when copy
     (setq range (evil-copy-range range)))
-  (evil-set-range range beg nil))
+  (setcar range beg)
+  range)
 
 (defun evil-set-range-end (range end &optional copy)
   "Set RANGE's end to END.
 If COPY is non-nil, return a copy of RANGE."
   (when copy
     (setq range (evil-copy-range range)))
-  (evil-set-range range nil end))
+  (setcar (cdr range) end)
+  range)
+
+(defun evil-set-range-type (range type &optional copy)
+  "Set RANGE's type to TYPE.
+If COPY is non-nil, return a copy of RANGE."
+  (when copy
+    (setq range (evil-copy-range range)))
+  (if type
+      (setcdr (cdr range)
+              (append (list type) (evil-range-properties range)))
+    (setcdr (cdr range) (evil-range-properties range)))
+  range)
+
+(defun evil-set-range-properties (range properties &optional copy)
+  "Set RANGE's properties to PROPERTIES.
+If COPY is non-nil, return a copy of RANGE."
+  (when copy
+    (setq range (evil-copy-range range)))
+  (if (evil-type range)
+      (setcdr (cdr (cdr range)) properties)
+    (setcdr (cdr range) properties))
+  range)
 
 (defun evil-range-union (range1 range2 &optional type)
   "Return the union of the ranges RANGE1 and RANGE2.
