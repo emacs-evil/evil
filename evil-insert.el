@@ -171,6 +171,17 @@ The insertion is repeated COUNT times."
     (dotimes (var count)
       (insert digraph))))
 
+(defun evil-execute-in-normal-state ()
+  "Execute the next command in Normal state."
+  (interactive)
+  (evil-normal-state)
+  (if (eq this-command 'evil-execute-in-normal-state)
+      (add-hook 'post-command-hook
+                'evil-execute-in-normal-state nil t)
+    (remove-hook 'post-command-hook
+                 'evil-execute-in-normal-state t)
+    (evil-insert-state)))
+
 (defun evil-copy-from-above (arg)
   "Copy characters from preceding non-blank line.
 The copied text is inserted before point.
