@@ -108,6 +108,9 @@
 (define-key evil-operator-state-map "g?" 'evil-rot13)
 (define-key evil-operator-state-map "g~" 'evil-invert-case)
 (define-key evil-operator-state-map "~" 'evil-invert-char)
+(define-key evil-operator-state-map "=" 'evil-indent)
+(define-key evil-operator-state-map "<" 'evil-shift-left)
+(define-key evil-operator-state-map ">" 'evil-shift-right)
 
 ;;; Motion state
 

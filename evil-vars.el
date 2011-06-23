@@ -5,6 +5,12 @@
   :group 'emulations
   :prefix 'evil-)
 
+(defcustom evil-shift-width 4
+  "The offset used by \\<evil-normal-state-map>\\[evil-shift-right] \
+and \\[evil-shift-left]."
+  :type 'integer
+  :group 'evil)
+
 (defcustom evil-move-cursor-back t
   "Whether the cursor is moved backwards when exiting Insert state."
   :type 'boolean

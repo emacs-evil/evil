@@ -765,6 +765,22 @@ but doesn't insert or remove any spaces."
         (fill-region beg end)
       (error nil))))
 
+(evil-define-operator evil-indent (beg end)
+  "Indent text."
+  :type line
+  (indent-region beg end)
+  (back-to-indentation))
+
+(evil-define-operator evil-shift-left (beg end)
+  "Shift text to the left."
+  :type line
+  (indent-rigidly beg end (- evil-shift-width)))
+
+(evil-define-operator evil-shift-right (beg end)
+  "Shift text to the right."
+  :type line
+  (indent-rigidly beg end evil-shift-width))
+
 (provide 'evil-operators)
 
 ;;; evil-operators.el ends here
