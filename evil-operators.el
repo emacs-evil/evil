@@ -50,12 +50,14 @@
         (keep-visual nil)
         (whole-lines nil)
         (motion nil)
-        arg doc beg end interactive key keys type)
+        arg doc beg end interactive key keys overriding-type type)
     ;; collect BEG, END and TYPE
     (setq args (delq '&optional args)
           beg (or (pop args) 'beg)
           end (or (pop args) 'end)
-          type (or (pop args) 'type))
+          type (pop args)
+          args (when type (append (list '&optional type) args))
+          type (or type 'type))
     ;; collect docstring
     (when (and (> (length body) 1)
                (or (eq (car-safe (car-safe body)) 'format)
@@ -74,39 +76,38 @@
         (setq keep-visual arg))
        ((eq key :move-point)
         (setq move-point arg))
-       ((eq key :whole-lines)
-        (setq whole-lines arg))
+       ((eq key :type)
+        (setq overriding-type arg))
        (t
         (setq keys (append keys (list key arg))))))
     ;; collect `interactive' specification
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive (cdr (pop body))))
     ;; macro expansion
-    `(evil-define-command ,operator (,beg ,end &optional ,type ,@args)
+    `(evil-define-command ,operator (,beg ,end ,@args)
        ,@(when doc `(,doc))
        ,@keys
        :exclude-newline t
        :keep-visual t
        (interactive
         (let* ((orig (point))
-               (beg orig)
-               (end orig)
-               range type)
+               (,beg orig)
+               (,end orig)
+               range ,type)
           (unwind-protect
               (setq evil-this-operator this-command
-                    range (evil-operator-range ',motion)
-                    beg (evil-range-beginning range)
-                    end (evil-range-end range)
-                    type (evil-type range)
-                    range (append (evil-range beg end type)
+                    range (evil-operator-range
+                           ,(and args t) ',motion ',overriding-type)
+                    ,beg (evil-range-beginning range)
+                    ,end (evil-range-end range)
+                    ,type (evil-type range)
+                    range (append (evil-range ,beg ,end ,type)
                                   (progn ,@interactive)))
             (setq orig (point))
             (when ,move-point
-              (if (and ',motion (not (evil-visual-state-p)))
-                  (goto-char (max beg (1- end)))
-                (if (eq type 'block)
-                    (evil-visual-block-rotate 'upper-left beg end)
-                  (goto-char beg))))
+              (if (eq ,type 'block)
+                  (evil-visual-block-rotate 'upper-left ,beg ,end)
+                (goto-char ,beg)))
             (if ,keep-visual
                 (when (evil-visual-state-p)
                   (evil-visual-expand-region))
@@ -122,25 +123,29 @@
            (setq evil-inhibit-operator nil)
          ,@body))))
 
-(defun evil-operator-range (&optional motion)
+;; this is used in the `interactive' specification of an operator command
+(defun evil-operator-range (&optional return-type motion type)
   "Read a motion from the keyboard and return its buffer positions.
-The return value is a list (BEG END TYPE), which can be used
-in the `interactive' specification of an operator command."
-  (let ((beg (point)) (end (point))
-        command count modifier range type)
+The return value is a list (BEG END) or (BEG END TYPE),
+depending on RETURN-TYPE. Insteaf of reading from the keyboard,
+a predefined motion may be specified with MOTION. Likewise,
+a predefined type may be specified with TYPE."
+  (let ((range (evil-range (point) (point)))
+        command count modifier)
     (evil-save-echo-area
       (cond
        ;; Visual selection
        ((evil-visual-state-p)
-        (setq beg (evil-visual-beginning)
-              end (evil-visual-end)
-              type (evil-visual-type)))
+        (setq range (evil-range (evil-visual-beginning)
+                                (evil-visual-end)
+                                (evil-visual-type))))
+       ;; active region
        ((region-active-p)
-        (setq beg (region-beginning)
-              end (region-end)
-              type (or evil-this-type 'exclusive)))
+        (setq range (evil-range (region-beginning)
+                                (region-end)
+                                (or evil-this-type 'exclusive))))
        (t
-        ;; read motion from keyboard
+        ;; motion
         (evil-save-state
           (unless motion
             (evil-operator-state)
@@ -151,10 +156,11 @@ in the `interactive' specification of an operator command."
               (dotimes (var (length keys))
                 (define-key evil-operator-shortcut-map
                   (vconcat (nthcdr var keys)) 'evil-line)))
+            ;; read motion from keyboard
             (setq command (evil-read-motion motion)
                   motion (pop command)
                   count (pop command)
-                  type (pop command)))
+                  type (or type (pop command))))
           (cond
            ((null motion)
             (setq quit-flag t))
@@ -171,57 +177,69 @@ in the `interactive' specification of an operator command."
                      (prefix-numeric-value current-prefix-arg)))))
           (when motion
             (evil-with-state operator
+              ;; calculate motion range
               (setq range (evil-motion-range
                            motion
                            count
-                           type)
-                    beg (pop range)
-                    end (pop range)
-                    type (pop range))))
+                           type))
+              (evil-set-marker ?. (evil-range-end range) t)))
           ;; update global variables
-          (evil-set-marker ?. end t)
           (setq evil-this-motion motion
                 evil-this-motion-count count
+                type (evil-type range type)
                 evil-this-type type))))
-      (evil-range beg end type))))
+      (unless (or (null type) (eq (evil-type range) type))
+        (evil-set-type range type)
+        (evil-expand-range range)
+        (evil-set-range-properties range nil))
+      (unless return-type
+        (evil-set-type range nil))
+      range)))
 
 (defun evil-motion-range (motion &optional count type)
   "Execute a motion and return the buffer positions.
 The return value is a list (BEG END TYPE)."
-  (evil-save-region
-    (evil-transient-mark 1)
-    (setq evil-motion-marker (move-marker (make-marker) (point))
-          type (or type (evil-type motion 'exclusive)))
-    (unwind-protect
-        (let ((current-prefix-arg count)
-              ;; Store the type in global variable `evil-this-type'.
-              ;; Motions can change their type during execution
-              ;; by setting this variable.
-              (evil-this-type type))
-          (condition-case err
-              (call-interactively motion)
-            (error (prog1 nil
-                     (setq evil-this-type 'exclusive
-                           evil-write-echo-area t)
-                     (message (error-message-string err)))))
-          (cond
-           ;; the motion made a Visual selection: use that
-           ((evil-visual-state-p)
-            (evil-range (evil-visual-beginning) (evil-visual-end)
-                        (evil-visual-type)))
-           ;; the motion made an active region
-           ((region-active-p)
-            (evil-range (region-beginning) (region-end)
-                        evil-this-type))
-           ;; default case: use range from previous position
-           ;; to current position
-           (t
-            (apply 'evil-expand
-                   (evil-normalize
-                    evil-motion-marker (point) evil-this-type)))))
-      ;; delete marker so it doesn't slow down editing
-      (move-marker evil-motion-marker nil)
-      (setq evil-motion-marker nil))))
+  (let (range)
+    (evil-save-region
+      (evil-transient-mark 1)
+      (setq evil-motion-marker (move-marker (make-marker) (point)))
+      (unwind-protect
+          (let ((current-prefix-arg count)
+                ;; Store the type in global variable `evil-this-type'.
+                ;; Motions can change their type during execution
+                ;; by setting this variable.
+                (evil-this-type (or type
+                                    (evil-type motion 'exclusive))))
+            (condition-case err
+                (call-interactively motion)
+              (error (prog1 nil
+                       (setq evil-this-type 'exclusive
+                             evil-write-echo-area t)
+                       (message (error-message-string err)))))
+            (cond
+             ;; the motion made a Visual selection
+             ((evil-visual-state-p)
+              (setq range (evil-range (evil-visual-beginning)
+                                      (evil-visual-end)
+                                      (evil-visual-type))))
+             ;; the motion made an active region
+             ((region-active-p)
+              (setq range (evil-range (region-beginning)
+                                      (region-end)
+                                      evil-this-type)))
+             ;; default case: range from previous position to current
+             (t
+              (setq range (evil-expand-range
+                           (evil-normalize
+                            evil-motion-marker (point) evil-this-type)))))
+            (unless (or (null type) (eq (evil-type range) type))
+              (evil-set-type range type)
+              (evil-expand-range range)
+              (evil-set-range-properties range nil))
+            range)
+        ;; delete marker so it doesn't slow down editing
+        (move-marker evil-motion-marker nil)
+        (setq evil-motion-marker nil)))))
 
 (defun evil-read-motion (&optional motion count type modifier)
   "Read a MOTION, motion COUNT and motion TYPE from the keyboard.

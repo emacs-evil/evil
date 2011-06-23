@@ -45,17 +45,16 @@
   (interactive (list (evil-save-cursor
                        (evil-set-cursor evil-replace-state-cursor)
                        (evil-read-key))))
-  (let ((opoint (point))) ; `save-excursion' doesn't work reliably
-    (unwind-protect
-        (if (eq type 'block)
-            (evil-apply-on-block 'evil-replace beg end nil char)
-          (goto-char beg)
-          (while (< (point) end)
-            (if (eq (char-after) ?\n)
-                (forward-char)
-              (delete-char 1)
-              (insert-char char 1))))
-      (goto-char opoint))))
+  (unwind-protect
+      (if (eq type 'block)
+          (evil-apply-on-block 'evil-replace beg end nil char)
+        (goto-char beg)
+        (while (< (point) end)
+          (if (eq (char-after) ?\n)
+              (forward-char)
+            (delete-char 1)
+            (insert-char char 1))))
+    (goto-char (max beg (1- end)))))
 
 (provide 'evil-replace)
 
