@@ -696,6 +696,38 @@ When called interactively, MACRO is read from a register."
       (error "No previous macro")
     (execute-kbd-macro macro count)))
 
+(evil-define-operator evil-upcase (beg end type)
+  "Convert text to upper case."
+  (if (eq type 'block)
+      (evil-apply-on-block 'evil-upcase beg end)
+    (upcase-region beg end)))
+
+(evil-define-operator evil-downcase (beg end type)
+  "Convert text to lower case."
+  (if (eq type 'block)
+      (evil-apply-on-block 'evil-downcase beg end)
+    (downcase-region beg end)))
+
+(evil-define-operator evil-invert-case (beg end type)
+  "Invert case of text."
+  (let (char)
+    (if (eq type 'block)
+        (evil-apply-on-block 'evil-invert-case beg end)
+      (save-excursion
+        (goto-char beg)
+        (while (< beg end)
+          (setq char (following-char))
+          (delete-char 1 nil)
+          (if (eq (upcase char) char)
+              (insert-char (downcase char) 1)
+            (insert-char (upcase char) 1))
+          (setq beg (1+ beg)))))))
+
+(evil-define-operator evil-invert-char (beg end type)
+  "Invert case of character."
+  :motion evil-forward-char
+  (evil-invert-case beg end type))
+
 (evil-define-operator evil-rot13 (beg end type)
   "ROT13 encrypt text."
   (if (eq type 'block)

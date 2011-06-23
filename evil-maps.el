@@ -103,7 +103,11 @@
 (define-key evil-operator-state-map "Y" 'evil-yank-line)
 (define-key evil-operator-state-map "gJ" 'evil-join-whitespace)
 (define-key evil-operator-state-map "gq" 'evil-fill)
+(define-key evil-operator-state-map "gu" 'evil-downcase)
+(define-key evil-operator-state-map "gU" 'evil-upcase)
 (define-key evil-operator-state-map "g?" 'evil-rot13)
+(define-key evil-operator-state-map "g~" 'evil-invert-case)
+(define-key evil-operator-state-map "~" 'evil-invert-char)
 
 ;;; Motion state
 
@@ -232,6 +236,8 @@
 (define-key evil-visual-state-map "R" 'evil-change)
 (define-key evil-visual-state-map "S" 'evil-change)
 (define-key evil-visual-state-map "o" 'exchange-point-and-mark)
+(define-key evil-visual-state-map "u" 'evil-downcase)
+(define-key evil-visual-state-map "U" 'evil-upcase)
 (define-key evil-visual-state-map (kbd "ESC") 'evil-normal-state)
 
 ;;; Insert state
