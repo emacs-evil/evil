@@ -171,6 +171,24 @@ The insertion is repeated COUNT times."
     (dotimes (var count)
       (insert digraph))))
 
+;;; Completion
+
+(defun evil-complete ()
+  "Complete to the nearest preceding word.
+Search forward if a match isn't found."
+  (interactive)
+  (if (minibufferp)
+      (minibuffer-complete)
+    (dabbrev-expand nil)))
+
+(defun evil-complete-line (&optional arg)
+  "Complete a whole line."
+  (interactive "P")
+  (let ((hippie-expand-try-functions-list
+         '(try-expand-line
+           try-expand-line-all-buffers)))
+    (hippie-expand arg)))
+
 (provide 'evil-insert)
 
 ;;; evil-insert.el ends here
