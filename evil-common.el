@@ -325,6 +325,16 @@ FILE is a string and POS is a number."
               (setcdr entry (cons buffer-file-name
                                   (marker-position (cdr entry))))))))
 
+(defun evil-set-jump (&optional pos)
+  "Set jump point at POS."
+  (unless (region-active-p)
+    (evil-save-echo-area
+      (mapc (lambda (marker)
+              (set-marker marker nil))
+            evil-jump-list)
+      (setq evil-jump-list nil)
+      (push-mark pos))))
+
 (defun evil-get-register (register)
   "Return contents of REGISTER.
 Signal an error if empty."

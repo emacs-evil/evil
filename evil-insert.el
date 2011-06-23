@@ -15,7 +15,7 @@
     (unless evil-want-fine-undo
       (evil-start-undo-step)))
    (t
-    (evil-set-marker ?^)
+    (evil-set-marker ?^ nil t)
     (unless evil-want-fine-undo
       (evil-end-undo-step))
     (when evil-move-cursor-back

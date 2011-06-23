@@ -38,6 +38,11 @@ moves the cursor."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-want-C-i-jump t
+  "Whether \"C-i\" jumps forward like in Vim."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-want-C-u-scroll nil
   "Whether \"C-u\" scrolls like in Vim."
   :type 'boolean
@@ -236,7 +241,9 @@ to t, the operator code is not executed.")
   '((?\( . evil-backward-sentence)
     (?\) . evil-forward-sentence)
     (?{ . evil-backward-paragraph)
-    (?} . evil-forward-paragraph))
+    (?} . evil-forward-paragraph)
+    (?' . evil-jump-backward)
+    (?` . evil-jump-backward))
   "Association list for markers.
 Entries have the form (CHAR . DATA), where CHAR is the marker's
 name and DATA is either a marker object as returned by
@@ -246,6 +253,10 @@ The global value of this variable holds markers available from every
 buffer, while the buffer-local value holds markers available only in
 the current buffer.")
 (make-variable-buffer-local 'evil-markers-alist)
+
+(defvar evil-jump-list nil
+  "Jump list.")
+(make-variable-buffer-local 'evil-jump-list)
 
 (defconst evil-suppress-map (make-keymap)
   "Full keymap disabling default bindings to `self-insert-command'.")

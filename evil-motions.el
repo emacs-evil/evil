@@ -50,6 +50,35 @@
             `(,interactive)))
        ,@body)))
 
+(defmacro evil-motion-loop (spec &rest body)
+  "Loop a certain number of times.
+Evaluate BODY repeatedly COUNT times with VAR bound to 1 or -1,
+depending on the sign of COUNT. RESULT, if specified, holds
+the number of unsuccessful iterations, which is 0 if the loop
+completes successfully. This is also the return value.
+
+Each iteration must move point; if point does not change,
+the loop immediately quits. See also `evil-loop'.
+
+\(fn (VAR COUNT [RESULT]) BODY...)"
+  (declare (indent defun)
+           (debug ((symbolp form &optional symbolp) body)))
+  (let* ((var (or (pop spec) (make-symbol "unitvar")))
+         (countval (or (pop spec) 0))
+         (result (pop spec))
+         (i (make-symbol "loopvar"))
+         (count (make-symbol "countvar"))
+         (done (make-symbol "donevar"))
+         (orig (make-symbol "origvar")))
+    `(let* ((,count ,countval)
+            (,var (if (< ,count 0) -1 1)))
+       (catch ',done
+         (evil-loop (,i ,count ,result)
+           (let ((,orig (point)))
+             ,@body
+             (when (= (point) ,orig)
+               (throw ',done ,i))))))))
+
 (defmacro evil-signal-without-movement (&rest body)
   "Catches errors provided point moves within this scope."
   (declare (indent defun))
@@ -173,6 +202,44 @@ See also `evil-goto-min'."
   (interactive (list (read-char)))
   (evil-goto-mark char)
   (evil-first-non-blank))
+
+(evil-define-motion evil-jump-backward (count)
+  "Go to older position in jump list.
+To go the other way, press \
+\\<evil-motion-state-map>\\[evil-jump-forward]."
+  (let ((current-pos (make-marker))
+        (count (or count 1)) i)
+    (unless evil-jump-list
+      (move-marker current-pos (point))
+      (add-to-list 'evil-jump-list current-pos))
+    (evil-motion-loop (nil count)
+      (setq current-pos (make-marker))
+      ;; skip past duplicate entries in the mark ring
+      (setq i (length mark-ring))
+      (while (progn (move-marker current-pos (point))
+                    (set-mark-command 0)
+                    (setq i (1- i))
+                    (and (= (point) current-pos) (> i 0))))
+      ;; Already there?
+      (move-marker current-pos (point))
+      (unless (= current-pos (car-safe evil-jump-list))
+        (add-to-list 'evil-jump-list current-pos)))))
+
+(evil-define-motion evil-jump-forward (count)
+  "Go to newer position in jump list.
+To go the other way, press \
+\\<evil-motion-state-map>\\[evil-jump-backward]."
+  (let ((count (or count 1))
+        current-pos next-pos)
+    (evil-motion-loop (nil count)
+      (setq current-pos (car-safe evil-jump-list)
+            next-pos (car (cdr-safe evil-jump-list)))
+      (when next-pos
+        (push-mark current-pos t nil)
+        (unless (eq (marker-buffer next-pos) (current-buffer))
+          (switch-to-buffer (marker-buffer next-pos)))
+        (goto-char next-pos)
+        (pop evil-jump-list)))))
 
 (evil-define-motion evil-previous-line (count)
   "Move the cursor COUNT lines up."
@@ -378,35 +445,6 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
 ;; But we want to use the motion-function to identify certain objects
 ;; in the buffer, and thus exact movement to object boundaries is
 ;; required.)
-
-(defmacro evil-motion-loop (spec &rest body)
-  "Loop a certain number of times.
-Evaluate BODY repeatedly COUNT times with VAR bound to 1 or -1,
-depending on the sign of COUNT. RESULT, if specified, holds
-the number of unsuccessful iterations, which is 0 if the loop
-completes successfully. This is also the return value.
-
-Each iteration must move point; if point does not change,
-the loop immediately quits. See also `evil-loop'.
-
-\(fn (VAR COUNT [RESULT]) BODY...)"
-  (declare (indent defun)
-           (debug ((symbolp form &optional symbolp) body)))
-  (let* ((var (or (pop spec) (make-symbol "unitvar")))
-         (countval (or (pop spec) 0))
-         (result (pop spec))
-         (i (make-symbol "loopvar"))
-         (count (make-symbol "countvar"))
-         (done (make-symbol "donevar"))
-         (orig (make-symbol "origvar")))
-    `(let* ((,count ,countval)
-            (,var (if (< ,count 0) -1 1)))
-       (catch ',done
-         (evil-loop (,i ,count ,result)
-           (let ((,orig (point)))
-             ,@body
-             (when (= (point) ,orig)
-               (throw ',done ,i))))))))
 
 (defmacro evil-define-union-move (name args &rest moves)
   "Create a movement function named NAME.

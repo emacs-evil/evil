@@ -214,6 +214,7 @@
 (define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down)
 (define-key evil-motion-state-map (kbd "C-e") 'evil-scroll-line-down)
 (define-key evil-motion-state-map (kbd "C-f") 'evil-scroll-page-down)
+(define-key evil-motion-state-map (kbd "C-o") 'evil-jump-backward)
 (define-key evil-motion-state-map (kbd "C-y") 'evil-scroll-line-up)
 (define-key evil-motion-state-map "z^" 'evil-scroll-top-line-to-bottom)
 (define-key evil-motion-state-map "z+" 'evil-scroll-bottom-line-to-top)
@@ -227,6 +228,9 @@
 (define-key evil-motion-state-map "z." "zz^")
 (define-key evil-motion-state-map "zb" 'evil-scroll-line-to-bottom)
 (define-key evil-motion-state-map "z-" "zb^")
+
+(when evil-want-C-i-jump
+  (define-key evil-motion-state-map (kbd "C-i") 'evil-jump-forward))
 
 (when evil-want-C-u-scroll
   (define-key evil-motion-state-map (kbd "C-u") 'evil-scroll-up))
