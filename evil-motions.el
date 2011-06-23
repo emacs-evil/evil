@@ -268,6 +268,18 @@ If COUNT is given, move COUNT - 1 lines downward first."
               (1- (match-beginning 0)))
        (line-beginning-position)))))
 
+(evil-define-motion evil-previous-line-first-non-blank (count)
+  "Move the cursor COUNT lines up on the first non-blank character."
+  :type line
+  (evil-previous-line (or count 1))
+  (evil-first-non-blank))
+
+(evil-define-motion evil-next-line-first-non-blank (count)
+  "Move the cursor COUNT lines down on the first non-blank character."
+  :type line
+  (evil-next-line (or count 1))
+  (evil-first-non-blank))
+
 (evil-define-motion evil-goto-first-line (count)
   "Move the cursor to the first non-blank character of line COUNT.
 By default the first line."
@@ -305,6 +317,11 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
   (end-of-visual-line count)
   (unless (evil-visual-state-p)
     (evil-adjust-eol)))
+
+(evil-define-motion evil-jump-to-tag ()
+  "Jump to tag under point."
+  (let ((tag (thing-at-point 'word)))
+    (find-tag tag)))
 
 ;;; Text object and movement framework
 
