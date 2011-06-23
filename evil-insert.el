@@ -58,7 +58,7 @@ w.r.t. indentation."
   (newline)
   (back-to-indentation))
 
-(defun evil-insert-before (count &optional vcount)
+(defun evil-insert (count &optional vcount)
   "Switch to Insert state just before point.
 The insertion will be repeated COUNT times and repeated once for
 the next VCOUNT-1 lines starting at the same column."
@@ -72,14 +72,23 @@ the next VCOUNT-1 lines starting at the same column."
                                       vcount)))
   (evil-insert-state 1))
 
-(defun evil-insert-after (count &optional vcount)
+(defun evil-insert-resume (count &optional vcount)
+  "Switch to Insert state at previous insertion point.
+The insertion will be repeated COUNT times and repeated once for
+the next VCOUNT-1 lines starting at the same column."
+  (interactive "p")
+  (when (evil-get-marker ?^)
+    (goto-char (evil-get-marker ?^)))
+  (evil-insert count vcount))
+
+(defun evil-append (count &optional vcount)
   "Switch to Insert state just after point.
 The insertion will be repeated COUNT times."
   (interactive "p")
   (unless (eolp) (forward-char))
-  (evil-insert-before count vcount))
+  (evil-insert count vcount))
 
-(defun evil-insert-above (count)
+(defun evil-open-above (count)
   "Insert a new line above point and switch to Insert state.
 The insertion will be repeated COUNT times."
   (interactive "p")
@@ -91,7 +100,7 @@ The insertion will be repeated COUNT times."
     (indent-according-to-mode))
   (evil-insert-state 1))
 
-(defun evil-insert-below (count)
+(defun evil-open-below (count)
   "Insert a new line below point and switch to Insert state.
 The insertion will be repeated COUNT times."
   (interactive "p")
@@ -103,7 +112,7 @@ The insertion will be repeated COUNT times."
     (indent-according-to-mode))
   (evil-insert-state 1))
 
-(defun evil-insert-beginning-of-line (count &optional vcount)
+(defun evil-insert-line (count &optional vcount)
   "Switch to Insert state just before the first non-blank character
 on the current line. The insertion will be repeated COUNT times."
   (interactive "p")
@@ -119,7 +128,7 @@ on the current line. The insertion will be repeated COUNT times."
                                       vcount)))
   (evil-insert-state 1))
 
-(defun evil-insert-end-of-line (count &optional vcount)
+(defun evil-append-line (count &optional vcount)
   "Switch to Insert state at the end of the current line.
 The insertion will be repeated COUNT times."
   (interactive "p")

@@ -585,7 +585,7 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
   "Normal state, AKA \"Command\" state."
   :tag " <N> "
   :suppress-keymap t
-  :enable (motion operator)
+  :enable (operator motion)
   (cond
    ((evil-normal-state-p)
     (evil-setup-normal-repeat)

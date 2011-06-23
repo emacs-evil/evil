@@ -322,10 +322,6 @@ Both COUNT and CMD may be nil."
 
 ;;; Operator commands
 
-(evil-define-operator evil-rot13 (beg end)
-  "ROT13 encrypt text."
-  (rot13-region beg end))
-
 (evil-define-operator evil-yank (beg end type register)
   "Saves the characters in motion into the kill-ring."
   :move-point nil
@@ -337,6 +333,13 @@ Both COUNT and CMD may be nil."
     (evil-yank-lines beg end register))
    (t
     (evil-yank-characters beg end register))))
+
+(evil-define-operator evil-yank-line (beg end type register)
+  "Saves whole lines into the kill-ring."
+  :motion evil-line
+  :move-point nil
+  (interactive (list evil-this-register))
+  (evil-yank beg end type register))
 
 (defun evil-yank-characters (beg end register)
   "Saves the characters defined by the region BEG and END in the kill-ring."
@@ -575,6 +578,7 @@ is negative this is a more recent kill."
 
 (evil-define-operator evil-delete (beg end type register)
   "Delete and save in kill-ring or REGISTER."
+  (interactive (list evil-this-register))
   (evil-yank beg end type register)
   (cond
    ((eq type 'block)
@@ -586,24 +590,55 @@ is negative this is a more recent kill."
    (t
     (delete-region beg end))))
 
+(evil-define-operator evil-delete-line (beg end type register)
+  "Delete to end of line."
+  :motion evil-end-of-line
+  (interactive (list evil-this-register))
+  (evil-delete beg end type register))
+
+(evil-define-operator evil-delete-char (beg end type register)
+  "Delete next character."
+  :motion evil-forward-char
+  (interactive (list evil-this-register))
+  (evil-delete beg end type register))
+
+(evil-define-operator evil-delete-backward-char (beg end type register)
+  "Delete previous character."
+  :motion evil-backward-char
+  (interactive (list evil-this-register))
+  (evil-delete beg end type register))
+
 (evil-define-operator evil-change (beg end type register)
   "Delete region and change to insert state.
 If the region is linewise insertion starts on an empty line.
 If region is a block, the inserted text in inserted at each line
 of the block."
+  (interactive (list evil-this-register))
   (let ((nlines (1+ (- (line-number-at-pos end)
                        (line-number-at-pos beg))))
-        (at-eob (= (point-max) end)))
+        (at-eob (= end (buffer-end 1))))
     (evil-delete beg end type register)
     (cond
      ((eq type 'line)
       (if at-eob
-          (evil-insert-below 1)
-        (evil-insert-above 1)))
+          (evil-open-below 1)
+        (evil-open-above 1)))
      ((eq type 'block)
-      (evil-insert-before 1 nlines))
+      (evil-insert 1 nlines))
      (t
-      (evil-insert-before 1)))))
+      (evil-insert 1)))))
+
+(evil-define-operator evil-change-line (beg end type register)
+  "Change to end of line."
+  :motion evil-end-of-line
+  (interactive (list evil-this-register))
+  (evil-change beg end type register))
+
+(evil-define-operator evil-substitute (beg end type register)
+  "Change a character."
+  :motion evil-forward-char
+  (interactive (list evil-this-register))
+  (evil-change beg end type register))
 
 (evil-define-command evil-use-register (register)
   "Use REGISTER for the next command."
@@ -643,37 +678,20 @@ When called interactively, MACRO is read from a register."
       (error "No previous macro")
     (execute-kbd-macro macro count)))
 
-(evil-define-operator evil-delete-char (beg end type)
-  "Delete next character."
-  :motion evil-forward-char
-  (evil-delete beg end type))
+(evil-define-operator evil-rot13 (beg end type)
+  "ROT13 encrypt text."
+  (if (eq type 'block)
+      (evil-apply-on-block 'evil-rot13 beg end)
+    (rot13-region beg end)))
 
-(evil-define-operator evil-delete-backward-char (beg end type)
-  "Delete previous character."
-  :motion evil-backward-char
-  (evil-delete beg end type))
-
-(evil-define-operator evil-join-lines (beg end)
-  "Join lines from BEG to END, with a minimum of two lines."
-  (goto-char beg)
-  (evil-join-successive-lines
-   (1+ (- (line-number-at-pos end)
-          (line-number-at-pos)))))
-
-(defun evil-join-successive-lines (count)
-  "Join COUNT lines with a minimum of two lines."
-  (interactive "p")
-  (join-line 1))
-
-;; TODO: register
-(defun evil-change-chars (count &optional register)
-  "Remove the next COUNT characters and switch to Insert state."
-  (interactive (list (prefix-numeric-value current-prefix-arg)
-                     evil-this-register))
-  (delete-region (point)
-                 (min (+ (point) count)
-                      (line-end-position)))
-  (evil-insert-before 1))
+(evil-define-operator evil-join (beg end)
+  "Join the selected lines."
+  :motion evil-line
+  (let ((count (count-lines beg end)))
+    (when (> count 1)
+      (setq count (1- count)))
+    (dotimes (var count)
+      (join-line 1))))
 
 (provide 'evil-operators)
 

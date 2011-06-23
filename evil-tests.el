@@ -865,14 +865,14 @@ KEYS is used."
       "CC;; This")))
 
 (ert-deftest evil-test-insert-before-vcount ()
-  "Test `evil-insert-before' with vertical repeating"
+  "Test `evil-insert' with vertical repeating"
   :tags '(evil repeat)
   (evil-test-buffer
     (forward-word)
     (define-key evil-normal-state-local-map "i"
       #'(lambda (count)
           (interactive "p")
-          (evil-insert-before count 5)))
+          (evil-insert count 5)))
     (execute-kbd-macro (vconcat "2iABC" (kbd "ESC")))
     (evil-test-text-lines
      '(";; ThisABCAB" "C buffer" bobp)
@@ -912,14 +912,14 @@ KEYS is used."
       "C; This")))
 
 (ert-deftest evil-test-insert-after-vcount ()
-  "Test `evil-insert-after' with vertical repeating"
+  "Test `evil-append' with vertical repeating"
   :tags '(evil repeat)
   (evil-test-buffer
     (forward-word)
     (define-key evil-normal-state-local-map "a"
       #'(lambda (count)
           (interactive "p")
-          (evil-insert-after count 5)))
+          (evil-append count 5)))
     (execute-kbd-macro (vconcat "2aABC" (kbd "ESC")))
     (evil-test-text-lines
      '(";; This ABCAB" "Cbuffer" bobp)
@@ -1025,7 +1025,7 @@ KEYS is used."
       "ABCABCABCABCABCABCABCABCABCABCAB" "CABCABCABCABCABCABCABCABCABCABC;; This")))
 
 (ert-deftest evil-test-insert-beginning-of-line-vcount ()
-  "Test `evil-insert-beginning-of-line' with vertical repeating"
+  "Test `evil-insert-line' with vertical repeating"
   :tags '(evil repeat)
   (evil-test-code-buffer
     (forward-line 3)
@@ -1033,7 +1033,7 @@ KEYS is used."
     (define-key evil-normal-state-local-map "I"
       #'(lambda (count)
           (interactive "p")
-          (evil-insert-beginning-of-line count 4)))
+          (evil-insert-line count 4)))
     (execute-kbd-macro (vconcat "2IABC" (kbd "ESC")))
     (evil-test-text-lines
      '("ABCAB" "Cint main" bolp)
@@ -1071,7 +1071,7 @@ KEYS is used."
       "C" nil 'eolp)))
 
 (ert-deftest evil-test-insert-end-of-line-vcount ()
-  "Test `evil-insert-end-of-line' with vertical repeating"
+  "Test `evil-append-line' with vertical repeating"
   :tags '(evil repeat)
   (evil-test-code-buffer
     (forward-line 3)
@@ -1079,7 +1079,7 @@ KEYS is used."
     (define-key evil-normal-state-local-map "A"
       #'(lambda (count)
           (interactive "p")
-          (evil-insert-end-of-line count 4)))
+          (evil-append-line count 4)))
     (execute-kbd-macro (vconcat "2AABC" (kbd "ESC")))
     (evil-test-text-lines
      '("argv)     ABCAB" "C" nil eolp)
@@ -1385,7 +1385,7 @@ to `evil-execute-repeat-info'")
       "evaluation." " ;; If you")))
 
 (ert-deftest evil-test-change-chars ()
-  "Test `evil-change-chars'"
+  "Test `evil-substitute'"
   :tags '(evil operator)
   (ert-info ("Simple")
     (evil-test-buffer

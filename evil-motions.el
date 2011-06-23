@@ -205,21 +205,21 @@ See also `evil-goto-min'."
   (let ((line-move-visual t))
     (evil-line-move (or count 1))))
 
-(evil-define-motion evil-move-to-window-line (count)
+(evil-define-motion evil-window-top (count)
   "Move the cursor to line COUNT from the top of the window
 on the first non-blank character."
   :type line
   (move-to-window-line (or count 0))
   (back-to-indentation))
 
-(evil-define-motion evil-move-to-middle-window-line ()
+(evil-define-motion evil-window-middle ()
   "Move the cursor to the middle line of the current window
 on the first non-blank character."
   :type line
   (move-to-window-line (/ (window-body-height) 2))
   (back-to-indentation))
 
-(evil-define-motion evil-move-to-last-window-line (count)
+(evil-define-motion evil-window-bottom (count)
   "Move the cursor to line COUNT from the bottom of the window
 on the first non-blank character."
   :type line
@@ -268,7 +268,7 @@ If COUNT is given, move COUNT - 1 lines downward first."
               (1- (match-beginning 0)))
        (line-beginning-position)))))
 
-(evil-define-motion evil-move-to-first-non-blank-beg (count)
+(evil-define-motion evil-goto-first-line (count)
   "Move the cursor to the first non-blank character of line COUNT.
 By default the first line."
   :type line
@@ -277,12 +277,12 @@ By default the first line."
     (forward-line (1- count)))
   (evil-first-non-blank))
 
-(evil-define-motion evil-move-to-first-non-blank-end (count)
+(evil-define-motion evil-goto-line (count)
   "Move the cursor to the first non-blank character of line
 COUNT, default the last line."
   :type line
   (if count
-      (evil-move-to-first-non-blank-beg count)
+      (evil-goto-first-line count)
     (goto-char (point-max))
     (evil-first-non-blank)))
 
