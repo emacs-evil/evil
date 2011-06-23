@@ -18,7 +18,7 @@
                            [&rest keywordp sexp]
                            [&optional ("interactive" interactive)]
                            def-body)))
-  (let (arg doc interactive key keys type)
+  (let (arg doc interactive jump key keys type)
     (when args
       (setq args `(&optional ,@(delq '&optional args))
             interactive
@@ -35,7 +35,11 @@
     (while (keywordp (car-safe body))
       (setq key (pop body)
             arg (pop body))
-      (setq keys (append keys (list key arg))))
+      (cond
+       ((eq key :jump)
+        (setq jump arg))
+       (t
+        (setq keys (append keys (list key arg))))))
     ;; collect `interactive' specification
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive `(append ,interactive ,@(cdr (pop body)))))
@@ -46,8 +50,13 @@
        :keep-visual t
        :repeatable nil
        (interactive
-        ,@(when interactive
-            `(,interactive)))
+        ,@(when (or jump interactive)
+            `((progn
+                ,(when jump
+                   '(unless (or (evil-visual-state-p)
+                                (evil-operator-state-p))
+                      (evil-set-jump)))
+                ,interactive))))
        ,@body)))
 
 (defmacro evil-motion-loop (spec &rest body)
@@ -771,17 +780,20 @@ If BIGWORD is non-nil, move by WORDS."
 
 (evil-define-motion evil-forward-paragraph (count)
   "Move to the end of the COUNT-th next paragraph."
+  :jump t
   :type exclusive
   (evil-move-end count 'forward-paragraph 'backward-paragraph))
 
 (evil-define-motion evil-backward-paragraph (count)
   "Move to the beginning of the COUNT-th previous paragraph."
+  :jump t
   :type exclusive
   (evil-move-beginning (- (or count 1))
                        'forward-paragraph 'backward-paragraph))
 
 (evil-define-motion evil-find-char (count char)
   "Move to the next COUNT'th occurrence of CHAR."
+  :jump t
   :type inclusive
   (interactive (list (read-char)))
   (setq count (or count 1))
@@ -801,12 +813,14 @@ If BIGWORD is non-nil, move by WORDS."
 
 (evil-define-motion evil-find-char-backward (count char)
   "Move to the previous COUNT'th occurrence of CHAR."
+  :jump t
   :type exclusive
   (interactive (list (read-char)))
   (evil-find-char (- (or count 1)) char))
 
 (evil-define-motion evil-find-char-to (count char)
   "Move before the next COUNT'th occurence of CHAR."
+  :jump t
   :type inclusive
   (interactive (list (read-char)))
   (unwind-protect
@@ -819,12 +833,14 @@ If BIGWORD is non-nil, move by WORDS."
 
 (evil-define-motion evil-find-char-to-backward (count char)
   "Move before the previous COUNT'th occurence of CHAR."
+  :jump t
   :type exclusive
   (interactive (list (read-char)))
   (evil-find-char-to (- (or count 1)) char))
 
 (evil-define-motion evil-repeat-find-char (count)
   "Repeat the last find COUNT times."
+  :jump t
   :type inclusive
   (setq count (or count 1))
   (if evil-last-find
@@ -839,6 +855,7 @@ If BIGWORD is non-nil, move by WORDS."
 
 (evil-define-motion evil-repeat-find-char-reverse (count)
   "Repeat the last find COUNT times in the opposite direction."
+  :jump t
   :type inclusive
   (evil-repeat-find-char (- (or count 1))))
 
@@ -847,6 +864,7 @@ If BIGWORD is non-nil, move by WORDS."
 (evil-define-motion evil-jump-item (count)
   "Find the next item in this line after or under the cursor
 and jump to the corresponding one."
+  :jump t
   :type inclusive
   (let ((next-open
          (condition-case err

@@ -22,11 +22,13 @@ Searches for regular expression if `evil-regexp-search' is t.%s"
               (format "\n\nBelow is the documentation string \
 for `isearch-forward',\nwhich lists available keys:\n\n%s"
                       (documentation 'isearch-forward)) ""))
+  :jump t
   :type exclusive
   (evil-search-incrementally nil evil-regexp-search))
 
 (evil-define-motion evil-search-next (count)
   "Repeat the last search."
+  :jump t
   :type exclusive
   (dotimes (var (or count 1))
     (evil-search (if evil-regexp-search
@@ -36,6 +38,7 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
 
 (evil-define-motion evil-search-previous (count)
   "Repeat the last search in the opposite direction."
+  :jump t
   :type exclusive
   (dotimes (var (or count 1))
     (evil-search (if evil-regexp-search
@@ -45,18 +48,21 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
 
 (evil-define-motion evil-search-symbol-backward (count)
   "Search backward for symbol under point."
+  :jump t
   :type exclusive
   (dotimes (var (or count 1))
     (evil-search-symbol nil)))
 
 (evil-define-motion evil-search-symbol-forward (count)
   "Search forward for symbol under point."
+  :jump t
   :type exclusive
   (dotimes (var (or count 1))
     (evil-search-symbol t)))
 
 (evil-define-motion evil-goto-definition ()
   "Go to definition or first occurrence of symbol under point."
+  :jump t
   :type exclusive
   (let* ((string (or (thing-at-point 'symbol) ""))
          (search (if evil-regexp-search (regexp-quote string) string))
