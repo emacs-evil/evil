@@ -393,6 +393,9 @@ They are reused to prevent flicker.")
 (defvar evil-search-prompt nil
   "String to use for search prompt.")
 
+(defvar evil-window-map (make-sparse-keymap)
+  "Keymap for window-related commands.")
+
 (defconst evil-version "0.1"
   "The current version of Evil")
 
