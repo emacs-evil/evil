@@ -163,6 +163,7 @@ Disable anyway if FORCE is t."
     (isearch-dehighlight)
     (setq isearch-lazy-highlight-last-string nil)
     (lazy-highlight-cleanup t)
+    (isearch-clean-overlays)
     (when evil-flash-timer
       (cancel-timer evil-flash-timer)))
   (remove-hook 'pre-command-hook 'evil-flash-hook))
@@ -227,6 +228,9 @@ one more than the current position."
                 string (if regexp-p "pattern" "string"))))
       (setq isearch-string string)
       (isearch-update-ring string regexp-p)
+      ;; handle opening and closing of invisible area
+      (funcall isearch-filter-predicate
+               (match-beginning 0) (match-end 0))
       ;; always position point at the beginning of the match
       (goto-char (match-beginning 0))
       ;; determine message for echo area
