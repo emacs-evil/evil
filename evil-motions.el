@@ -877,7 +877,7 @@ and jump to the corresponding one."
            (error (point-max)))))
     (let ((pos (min next-open next-close)))
       (when (>= pos (line-end-position))
-        (error "No matching item found on the current line."))
+        (error "No matching item found on the current line"))
       (if (= pos next-open)
           (progn
             (goto-char pos)

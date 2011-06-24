@@ -288,7 +288,7 @@ If SAVE-POINT is non-nil, do not move point."
     (let ((confirm-kill-emacs t)
           (kill-buffer-hook
            (cons #'(lambda ()
-                     (error "Cannot delete buffer in repeat command."))
+                     (error "Cannot delete buffer in repeat command"))
                  kill-buffer-hook))
           (evil-repeat-info-ring (ring-copy evil-repeat-info-ring))
           (this-command this-command)
