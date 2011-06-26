@@ -1,5 +1,6 @@
 ;;;; Operator-Pending state
 
+(require 'evil-undo)
 (require 'evil-states)
 (require 'evil-visual)
 (require 'evil-insert)
@@ -343,6 +344,7 @@ Both COUNT and CMD may be nil."
 (evil-define-operator evil-yank (beg end type register)
   "Saves the characters in motion into the kill-ring."
   :move-point nil
+  :repeat nil
   (interactive (list evil-this-register))
   (cond
    ((eq type 'block)

@@ -1,6 +1,7 @@
 ;;;; Replace state
 
 (require 'evil-states)
+(require 'evil-repeat)
 (require 'evil-operators)
 
 (evil-define-state replace

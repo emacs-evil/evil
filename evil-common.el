@@ -614,7 +614,7 @@ recursively."
                            [&rest keywordp sexp]
                            [&optional ("interactive" interactive)]
                            def-body)))
-  (let ((keys (plist-put nil :repeatable t))
+  (let ((keys (plist-put nil :repeat t))
         arg args doc doc-form key)
     ;; collect arguments
     (when (listp (car-safe body))
@@ -648,14 +648,21 @@ recursively."
 
 (defun evil-add-command-properties (command &rest properties)
   "Add Evil PROPERTIES to COMMAND.
-PROPERTIES should be a list of an even number of values, the
-first of a pair considered as a key, the second as the value."
+PROPERTIES should be a list of :keywords and values, e.g.:
+
+    (evil-add-command-properties 'my-command :repeat t)
+
+See also `evil-set-command-properties'."
   (apply 'evil-put-property 'evil-command-properties command properties))
 
 (defun evil-set-command-properties (command &rest properties)
   "Set Evil PROPERTIES of COMMAND.
-PROPERTIES should be a list of an even number of values, the
-first of a pair considered as a key, the second as the value."
+PROPERTIES should be a list of :keywords and values, e.g.:
+
+    (evil-set-command-properties 'my-command :repeat t)
+
+This erases all previous properties. To only add properties,
+use `evil-add-command-properties'."
   (setq evil-command-properties
         (assq-delete-all command evil-command-properties))
   (apply #'evil-add-command-properties command properties))
@@ -676,10 +683,6 @@ first of a pair considered as a key, the second as the value."
   "Returns the value of Evil PROPERTY of COMMAND."
   (evil-get-property evil-command-properties command property))
 
-(defun evil-repeatable-p (command)
-  "Whether COMMAND is repeatable."
-  (evil-get-command-property command :repeatable))
-
 (defmacro evil-redirect-digit-argument (map keys target)
   "Bind a wrapper function calling TARGET or `digit-argument'.
 MAP is a keymap for binding KEYS to the wrapper for TARGET.
@@ -692,7 +695,7 @@ has already been started; otherwise TARGET is called."
        (evil-define-command ,wrapper ()
          :digit-argument-redirection ,target
          :keep-visual t
-         :repeatable nil
+         :repeat nil
          (interactive)
          (if current-prefix-arg
              (progn

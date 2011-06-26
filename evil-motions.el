@@ -48,7 +48,7 @@
        ,@(when doc `(,doc)) ; avoid nil before `interactive'
        ,@keys
        :keep-visual t
-       :repeatable nil
+       :repeat nil
        (interactive
         ,@(when (or jump interactive)
             `((progn
@@ -181,7 +181,7 @@ See also `evil-goto-min'."
 (evil-define-command evil-goto-mark (char)
   "Go to marker denoted by CHAR."
   :keep-visual t
-  :repeatable nil
+  :repeat nil
   :type exclusive
   (interactive (list (read-char)))
   (let ((mark (evil-get-marker char)))
@@ -206,7 +206,7 @@ See also `evil-goto-min'."
 (evil-define-command evil-goto-mark-line (char)
   "Go to line of marker denoted by CHAR."
   :keep-visual t
-  :repeatable nil
+  :repeat nil
   :type line
   (interactive (list (read-char)))
   (evil-goto-mark char)

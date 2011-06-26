@@ -45,7 +45,6 @@
 ;; when the user enters Visual state, etc.).
 
 (require 'evil-common)
-(require 'evil-repeat)
 
 (define-minor-mode evil-local-mode
   "Minor mode for setting up Evil in a single buffer."
@@ -70,7 +69,10 @@
     ;; re-determine the initial state in `post-command-hook' since the
     ;; major mode may not be initialized yet, and some modes neglect
     ;; to run `after-change-major-mode-hook'
-    (add-hook 'post-command-hook 'evil-initialize-state t t))
+    (add-hook 'post-command-hook 'evil-initialize-state t t)
+    (add-hook 'after-change-functions 'evil-repeat-change-hook nil t)
+    (add-hook 'pre-command-hook 'evil-repeat-pre-hook nil t)
+    (add-hook 'post-command-hook 'evil-repeat-post-hook nil t))
    (t
     (let (new-global-mode-string)
       (while global-mode-string
@@ -586,13 +588,11 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
   :tag " <N> "
   :suppress-keymap t
   :enable (operator motion)
+  :exit-hook (evil-repeat-start-hook)
   (cond
    ((evil-normal-state-p)
-    (evil-setup-normal-repeat)
     (add-hook 'post-command-hook 'evil-normal-post-command nil t))
    (t
-    (unless evil-state
-      (evil-teardown-normal-repeat))
     (remove-hook 'post-command-hook 'evil-normal-post-command t))))
 
 (defun evil-normal-post-command ()

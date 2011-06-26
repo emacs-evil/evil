@@ -764,12 +764,12 @@ TYPE or TRANSFORM")
                    '(BEG [?a ?b ?c XX YY] MID [?d ?e ?f] END)))))
 
 (defun evil-test-repeat-info (keys &optional recorded)
-  "Executes a sequence of keys and verifies that `evil-repeat-info-ring'
+  "Executes a sequence of keys and verifies that `evil-repeat-ring'
 records them correctly. KEYS is the sequence of keys to execute.
 RECORDED is the expected sequence of recorded events. If nil,
 KEYS is used."
   (execute-kbd-macro keys)
-  (should (equal (evil-normalize-repeat-info (ring-ref evil-repeat-info-ring 0))
+  (should (equal (evil-normalize-repeat-info (ring-ref evil-repeat-ring 0))
                  (list (vconcat (or recorded keys))))))
 
 (ert-deftest evil-test-normal-repeat-info-simple-command ()
@@ -1102,7 +1102,7 @@ cursor on the new line."
   :tags '(evil repeat)
   (let (line-move-visual)
     (define-key evil-insert-state-map (kbd "C-c C-p") 'evil-test-dummy-complete)
-    (evil-set-insert-repeat-type 'evil-test-dummy-complete 'change)
+    (evil-add-command-properties 'evil-test-dummy-complete :repeat 'change)
     (evil-test-buffer
       (forward-char 3)
       (execute-kbd-macro (vconcat "iABC " (kbd "C-c C-p") "BODY" (kbd "ESC")))
@@ -1121,16 +1121,16 @@ when repeating a command"
 to `evil-execute-repeat-info'")
     (evil-test-buffer
       (evil-local-mode 1)
-      (setq evil-repeat-info-ring (make-ring 10))
-      (ring-insert evil-repeat-info-ring '((kill-buffer nil)))
-      (evil-execute-repeat-info (ring-ref evil-repeat-info-ring 0))
+      (setq evil-repeat-ring (make-ring 10))
+      (ring-insert evil-repeat-ring '((kill-buffer nil)))
+      (evil-execute-repeat-info (ring-ref evil-repeat-ring 0))
       (should (not (looking-at ";; This")))))
 
   (ert-info ("Verify an error is raised when using `evil-repeat' command")
     (evil-test-buffer
-      (setq evil-repeat-info-ring (make-ring 10))
-      (ring-insert evil-repeat-info-ring '((kill-buffer nil)))
-      (evil-execute-repeat-info (ring-ref evil-repeat-info-ring 0))
+      (setq evil-repeat-ring (make-ring 10))
+      (ring-insert evil-repeat-ring '((kill-buffer nil)))
+      (evil-execute-repeat-info (ring-ref evil-repeat-ring 0))
       (should-error (call-interactively 'evil-repeat)))))
 
 ;;; Operators

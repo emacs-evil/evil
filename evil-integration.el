@@ -4,7 +4,10 @@
 (require 'evil-motions)
 
 (dolist (cmd evil-motions)
-  (evil-set-command-properties cmd :keep-visual t :repeatable nil))
+  (evil-add-command-properties cmd :keep-visual t :repeat nil))
+
+(dolist (cmd '(dabbrev-expand hippie-expand))
+  (evil-add-command-properties cmd :repeat 'change))
 
 ;;; Custom
 

@@ -1,6 +1,9 @@
 ;;;; Insert state
 
+(require 'evil-undo)
 (require 'evil-states)
+(require 'evil-repeat)
+(require 'evil-visual)
 (require 'evil-digraphs)
 
 (evil-define-state insert
@@ -11,24 +14,30 @@
   :exit-hook (evil-cleanup-insert-state)
   (cond
    ((evil-insert-state-p)
-    (evil-setup-insert-repeat)
+    (add-hook 'pre-command-hook 'evil-insert-repeat-hook nil t)
     (unless evil-want-fine-undo
       (evil-start-undo-step)))
    (t
+    (remove-hook 'pre-command-hook 'evil-insert-repeat-hook t)
+    (setq evil-insert-repeat-info evil-repeat-info)
     (evil-set-marker ?^ nil t)
     (unless evil-want-fine-undo
       (evil-end-undo-step))
     (when evil-move-cursor-back
       (evil-adjust)))))
 
+(defun evil-insert-repeat-hook ()
+  "Record insertion keys in `evil-insert-repeat-info'."
+  (setq evil-insert-repeat-info (last evil-repeat-info))
+  (remove-hook 'pre-command-hook 'evil-insert-repeat-hook t))
+
 (defun evil-cleanup-insert-state ()
   "Called when Insert state is about to be exited.
 Handles the repeat-count of the insertion command."
-  (evil-teardown-insert-repeat)
   (dotimes (i (1- evil-insert-count))
     (when evil-insert-lines
       (evil-insert-newline-below))
-    (evil-execute-repeat-info evil-insert-repeat-info))
+    (evil-execute-repeat-info (cdr evil-insert-repeat-info)))
   (when evil-insert-vcount
     (let ((line (nth 0 evil-insert-vcount))
           (col (nth 1 evil-insert-vcount))
@@ -41,22 +50,8 @@ Handles the repeat-count of the insertion command."
               (move-to-column col t)
             (funcall col))
           (dotimes (i (or evil-insert-count 1))
-            (evil-execute-repeat-info evil-insert-repeat-info)))))))
-
-(defun evil-insert-newline-above ()
-  "Inserts a new line above point and places point in that line
-w.r.t. indentation."
-  (beginning-of-line)
-  (newline)
-  (forward-line -1)
-  (back-to-indentation))
-
-(defun evil-insert-newline-below ()
-  "Inserts a new line below point and places point in that line
-w.r.t. indentation."
-  (end-of-line)
-  (newline)
-  (back-to-indentation))
+            (evil-execute-repeat-info
+             (cdr evil-insert-repeat-info))))))))
 
 (defun evil-insert (count &optional vcount)
   "Switch to Insert state just before point.
@@ -72,21 +67,34 @@ the next VCOUNT-1 lines starting at the same column."
                                       vcount)))
   (evil-insert-state 1))
 
-(defun evil-insert-resume (count &optional vcount)
-  "Switch to Insert state at previous insertion point.
-The insertion will be repeated COUNT times and repeated once for
-the next VCOUNT-1 lines starting at the same column."
-  (interactive "p")
-  (when (evil-get-marker ?^)
-    (goto-char (evil-get-marker ?^)))
-  (evil-insert count vcount))
-
 (defun evil-append (count &optional vcount)
   "Switch to Insert state just after point.
 The insertion will be repeated COUNT times."
   (interactive "p")
   (unless (eolp) (forward-char))
   (evil-insert count vcount))
+
+(defun evil-insert-resume (count)
+  "Switch to Insert state at previous insertion point."
+  (interactive "p")
+  (when (evil-get-marker ?^)
+    (goto-char (evil-get-marker ?^)))
+  (evil-insert count))
+
+(defun evil-insert-newline-above ()
+  "Inserts a new line above point and places point in that line
+w.r.t. indentation."
+  (beginning-of-line)
+  (newline)
+  (forward-line -1)
+  (back-to-indentation))
+
+(defun evil-insert-newline-below ()
+  "Inserts a new line below point and places point in that line
+w.r.t. indentation."
+  (end-of-line)
+  (newline)
+  (back-to-indentation))
 
 (defun evil-open-above (count)
   "Insert a new line above point and switch to Insert state.
@@ -242,16 +250,18 @@ COL defaults to the current column."
 
 ;;; Completion
 
-(defun evil-complete ()
+(evil-define-command evil-complete ()
   "Complete to the nearest preceding word.
 Search forward if a match isn't found."
+  :repeat change
   (interactive)
   (if (minibufferp)
       (minibuffer-complete)
     (dabbrev-expand nil)))
 
-(defun evil-complete-line (&optional arg)
+(evil-define-command evil-complete-line (&optional arg)
   "Complete a whole line."
+  :repeat change
   (interactive "P")
   (let ((hippie-expand-try-functions-list
          '(try-expand-line

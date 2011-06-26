@@ -130,9 +130,12 @@ moves the cursor."
     move-end-of-line
     next-line
     previous-line
+    redo
     scroll-down
     scroll-up
     undo
+    undo-tree-redo
+    undo-tree-undo
     universal-argument
     universal-argument-minus
     universal-argument-more
@@ -263,49 +266,40 @@ the current buffer.")
 (suppress-keymap evil-suppress-map t)
 
 ;; TODO: customize size of ring
-(defvar evil-repeat-info-ring (make-ring 10)
+(defvar evil-repeat-ring (make-ring 10)
   "A ring of repeat-informations to repeat the last command.")
+
+(defvar evil-recording-repeat nil
+  "Whether we are recording a repeat.")
+
+(defvar evil-repeating-command nil
+  "Whether a command is currently being repeated.")
+
+(defvar evil-repeat-changes nil
+  "Accumulated buffer changes for changed-based commands.")
+(make-variable-buffer-local 'evil-repeat-changes)
+
+(defvar evil-repeat-info nil
+  "Information accumulated during current repeat.")
+
+(defvar evil-insert-repeat-info nil
+  "Repeat information accumulated during an insertion.")
+(make-variable-buffer-local 'evil-insert-repeat-info)
+
+(defvar evil-repeat-marker nil
+  "The position of point at the beginning of an change-tracking
+  editing command.")
+(make-variable-buffer-local 'evil-repeat-marker)
+
+(defvar evil-repeat-keys nil
+  "The keys that invoked the current command.")
+(make-variable-buffer-local 'evil-repeat-keys)
 
 (defvar evil-last-repeat nil
   "Information about the latest repeat command.
 This is a list of two elements (POINT COUNT), where POINT is
 the position of point before the latest repeat, and COUNT
 the count-argument of the latest repeat command.")
-
-(defvar evil-repeating-command nil
-  "This variable is non-nil if a command is currently being repeated.")
-
-(defvar evil-normal-repeat-info nil
-  "Repeat information accumulated during Normal state.")
-
-(defvar evil-insert-repeat-info nil
-  "Repeat information accumulated during Insert state.")
-
-(defvar evil-insert-repeat-type nil
-  "The repeat-type of the current command. If set to 'change the
-command will be recorded by tracking the changes, if set to nil
-by tracking the key-sequences, if set to 'ignore the command is
-ignored.")
-(make-variable-buffer-local 'evil-insert-repeat-type)
-
-(defvar evil-insert-repeat-point nil
-  "The position of point at the beginning of an change-tracking
-  editing command.")
-(make-variable-buffer-local 'evil-insert-repeat-point)
-
-(defvar evil-insert-repeat-changes nil
-  "Accumulated buffer changes for changed based commands in
-  insert-state.")
-(make-variable-buffer-local 'evil-insert-repeat-changes)
-
-(defvar evil-insert-repeat-types (make-hash-table :test 'eq)
-  "The hash-table to hold the insert repeat type for each
-  command.")
-
-(defvar evil-command-modified-buffer nil
-  "Non-nil if the current command modified the buffer, i.e., it
-  is an editing command. This variable is used to detect editing
-  command for repeating.")
 
 (defvar evil-repeat-count nil
   "The explicit count when repeating a command.")
