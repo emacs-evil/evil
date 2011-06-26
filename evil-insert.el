@@ -57,7 +57,15 @@ Handles the repeat-count of the insertion command."
   "Switch to Insert state just before point.
 The insertion will be repeated COUNT times and repeated once for
 the next VCOUNT-1 lines starting at the same column."
-  (interactive "p")
+  (interactive
+   (list (prefix-numeric-value current-prefix-arg)
+         (when (evil-visual-state-p)
+           (if (eq (evil-visual-type) 'block)
+               (evil-visual-block-rotate 'upper-left)
+             (goto-char (evil-visual-beginning)))
+           (when (eq (evil-visual-type) 'block)
+             (count-lines (evil-visual-beginning)
+                          (evil-visual-end))))))
   (setq evil-insert-count count
         evil-insert-lines nil
         evil-insert-vcount (and vcount
@@ -70,8 +78,20 @@ the next VCOUNT-1 lines starting at the same column."
 (defun evil-append (count &optional vcount)
   "Switch to Insert state just after point.
 The insertion will be repeated COUNT times."
-  (interactive "p")
-  (unless (eolp) (forward-char))
+  (interactive
+   (list (prefix-numeric-value current-prefix-arg)
+         (when (evil-visual-state-p)
+           (if (eq (evil-visual-type) 'block)
+               ;; go to upper-left corner first so that
+               ;; `count-lines' yields accurate results
+               (evil-visual-block-rotate 'upper-left)
+             (goto-char (evil-visual-end)))
+           (when (eq (evil-visual-type) 'block)
+             (prog1 (count-lines (evil-visual-beginning)
+                                 (evil-visual-end))
+               (evil-visual-block-rotate 'upper-right))))))
+  (unless (or (eolp) (evil-visual-state-p))
+    (forward-char))
   (evil-insert count vcount))
 
 (defun evil-insert-resume (count)
