@@ -153,6 +153,15 @@ To change the state, use `evil-change-state'
 or call the state function (e.g., `evil-normal-state').")
 (make-variable-buffer-local 'evil-state)
 
+;; these may be used inside `evil-define-state'
+(defvar evil-next-state nil
+  "The Evil state being switched to.")
+(make-variable-buffer-local 'evil-next-state)
+
+(defvar evil-previous-state nil
+  "The Evil state being switched from.")
+(make-variable-buffer-local 'evil-previous-state)
+
 (defvar evil-modeline-tag nil
   "Modeline indicator for the current state.")
 (make-variable-buffer-local 'evil-modeline-tag)

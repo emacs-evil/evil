@@ -543,33 +543,36 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
          (interactive "p")
          (cond
           ((and (numberp arg) (< arg 1))
-           (unwind-protect
-               (let ((evil-state evil-state))
-                 (run-hooks ',exit-hook)
-                 (setq evil-state nil)
-                 (evil-normalize-keymaps)
-                 ,@body)
-             (setq evil-state nil)))
+           (let ((evil-previous-state ',state))
+             (unwind-protect
+                 (let ((evil-state evil-previous-state))
+                   (run-hooks ',exit-hook)
+                   (setq evil-state nil)
+                   (evil-normalize-keymaps)
+                   ,@body)
+               (setq evil-state nil))))
           (t
-           (unless evil-local-mode
-             (evil-initialize))
-           (evil-change-state nil)
-           (unwind-protect
-               (let ((evil-state ',state))
-                 (evil-normalize-keymaps)
-                 (unless evil-locked-display
-                   (setq evil-modeline-tag ,tag)
-                   (evil-set-cursor ,cursor)
-                   (force-mode-line-update)
-                   (when (evil-called-interactively-p)
-                     (redisplay)))
-                 ,@body
-                 (run-hooks ',entry-hook)
-                 (when (and arg (not evil-locked-display) ,message)
-                   (if (functionp ,message)
-                       (funcall ,message)
-                     (evil-echo ,message))))
-             (setq evil-state ',state)))))
+           (let ((evil-next-state ',state)
+                 (evil-previous-state evil-state))
+             (unless evil-local-mode
+               (evil-initialize))
+             (evil-change-state nil)
+             (unwind-protect
+                 (let ((evil-state evil-next-state))
+                   (evil-normalize-keymaps)
+                   (unless evil-locked-display
+                     (setq evil-modeline-tag ,tag)
+                     (evil-set-cursor ,cursor)
+                     (force-mode-line-update)
+                     (when (evil-called-interactively-p)
+                       (redisplay)))
+                   ,@body
+                   (run-hooks ',entry-hook)
+                   (when (and arg (not evil-locked-display) ,message)
+                     (if (functionp ,message)
+                         (funcall ,message)
+                       (evil-echo ,message))))
+               (setq evil-state evil-next-state))))))
        (evil-set-command-properties ',toggle :keep-visual t)
 
        (evil-define-keymap ,keymap nil
