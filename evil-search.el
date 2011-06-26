@@ -143,8 +143,21 @@ to display in the echo area."
         (unless isearch-lazy-highlight-overlays
           (isearch-lazy-highlight-update)))
       (add-hook 'pre-command-hook 'evil-flash-hook)
+      (add-hook 'pre-command-hook 'evil-clean-isearch-overlays)
       (setq evil-flash-timer
             (run-at-time evil-flash-delay nil disable)))))
+
+(defun evil-clean-isearch-overlays ()
+  "Clean isearch overlays unless `this-command' is search."
+  (remove-hook 'pre-command-hook 'evil-clean-isearch-overlays)
+  (unless (memq this-command
+                '(evil-search-backward
+                  evil-search-forward
+                  evil-search-next
+                  evil-search-previous
+                  evil-search-symbol-backward
+                  evil-search-symbol-forward))
+    (isearch-clean-overlays)))
 
 (defun evil-flash-hook (&optional force)
   "Disable hightlighting if `this-command' is not search.
@@ -163,7 +176,6 @@ Disable anyway if FORCE is t."
     (isearch-dehighlight)
     (setq isearch-lazy-highlight-last-string nil)
     (lazy-highlight-cleanup t)
-    (isearch-clean-overlays)
     (when evil-flash-timer
       (cancel-timer evil-flash-timer)))
   (remove-hook 'pre-command-hook 'evil-flash-hook))
