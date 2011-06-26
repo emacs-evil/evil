@@ -90,10 +90,16 @@ the selection is enabled.
     (evil-transient-save)
     (evil-visual-set-region (point) (point) evil-visual-char)
     (add-hook 'pre-command-hook 'evil-visual-pre-command nil t)
-    (add-hook 'post-command-hook 'evil-visual-post-command nil t)
-    (add-hook 'evil-normal-state-entry-hook
-              'evil-visual-deactivate-hook nil t))
+    (add-hook 'post-command-hook 'evil-visual-post-command nil t))
    (t
+    ;; Postpone deactivation of region if next state is Insert.
+    ;; This gives certain insertion commands (auto-pairing characters,
+    ;; for example) an opportunity to access the region.
+    (if (and (eq evil-next-state 'insert)
+             (eq (evil-visual-type t) evil-visual-char))
+        (add-hook 'evil-normal-state-entry-hook
+                  'evil-visual-deactivate-hook nil t)
+      (evil-visual-deactivate-hook))
     (setq evil-visual-region-expanded nil)
     (remove-hook 'pre-command-hook 'evil-visual-pre-command t)
     (remove-hook 'post-command-hook 'evil-visual-post-command t)
