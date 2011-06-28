@@ -35,6 +35,7 @@ test: clean
 tests: compile-batch
 	$(EMACS) --batch -Q -L . -l evil-tests.el \
 --eval "(evil-tests-run '(${TAG}))"
+	rm -f *.elc
 
 # Load Evil in a fresh instance of Emacs and run all tests.
 emacs: clean
