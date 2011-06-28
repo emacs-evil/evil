@@ -44,20 +44,25 @@
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive `(append ,interactive ,@(cdr (pop body)))))
     ;; macro expansion
-    `(evil-define-command ,motion (,@args)
-       ,@(when doc `(,doc)) ; avoid nil before `interactive'
-       ,@keys
-       :keep-visual t
-       :repeat nil
-       (interactive
-        ,@(when (or jump interactive)
-            `((progn
-                ,(when jump
-                   '(unless (or (evil-visual-state-p)
-                                (evil-operator-state-p))
-                      (evil-set-jump)))
-                ,interactive))))
-       ,@body)))
+    `(progn
+       ;; refresh echo area in Eldoc mode
+       (when ',motion
+         (eval-after-load 'eldoc
+           '(eldoc-add-command ',motion)))
+       (evil-define-command ,motion (,@args)
+         ,@(when doc `(,doc))          ; avoid nil before `interactive'
+         ,@keys
+         :keep-visual t
+         :repeat nil
+         (interactive
+          ,@(when (or jump interactive)
+              `((progn
+                  ,(when jump
+                     '(unless (or (evil-visual-state-p)
+                                  (evil-operator-state-p))
+                        (evil-set-jump)))
+                  ,interactive))))
+         ,@body))))
 
 (defmacro evil-motion-loop (spec &rest body)
   "Loop a certain number of times.
