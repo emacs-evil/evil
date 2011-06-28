@@ -88,7 +88,6 @@
     `(evil-define-command ,operator (,beg ,end ,@args)
        ,@(when doc `(,doc))
        ,@keys
-       :exclude-newline t
        :keep-visual t
        (interactive
         (let* ((orig (point))

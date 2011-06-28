@@ -116,8 +116,8 @@ to the selection."
        ;; exclude final newline from linewise selection
        ;; unless the command has real need of it
        (and (eq (evil-visual-type) 'line)
-            (evil-get-command-property
-             this-command :exclude-newline))))))
+            (not (evil-get-command-property
+                  this-command :include-newline)))))))
 
 (defun evil-visual-post-command ()
   "Run after each command in Visual state.
