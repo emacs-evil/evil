@@ -384,6 +384,10 @@ Enable with positive ARG, disable with negative ARG."
   (cond
    ((< arg 1)
     (evil-active-region -1)
+    ;; Transient Mark mode cannot be disabled
+    ;; while CUA mode is enabled
+    (when (fboundp 'cua-mode)
+      (cua-mode -1))
     (when transient-mark-mode
       (transient-mark-mode -1)))
    (t
