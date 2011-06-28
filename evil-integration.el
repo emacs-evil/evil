@@ -35,6 +35,35 @@
   (define-key undo-tree-visualizer-map [remap evil-previous-line]
     'undo-tree-visualize-undo))
 
+(defadvice show-paren-function (around evil)
+  "Match parentheses in Normal state."
+  (if (or (evil-insert-state-p)
+          (evil-replace-state-p)
+          (evil-emacs-state-p))
+      ad-do-it
+    (let ((pos (point)) syntax)
+      (setq pos
+            (catch 'end
+              (dotimes (var (1+ (* 2 evil-show-paren-range)))
+                (if (evenp var)
+                    (setq pos (+ pos var))
+                  (setq pos (- pos var)))
+                (setq syntax (syntax-class (syntax-after pos)))
+                (cond
+                 ((eq syntax 4)
+                  (throw 'end pos))
+                 ((eq syntax 5)
+                  (throw 'end (1+ pos)))))))
+      (if pos
+          (save-excursion
+            (goto-char pos)
+            ad-do-it)
+        ;; prevent the preceding pair from being highlighted
+        (when (overlayp show-paren-overlay)
+          (delete-overlay show-paren-overlay))
+        (when (overlayp show-paren-overlay-1)
+          (delete-overlay show-paren-overlay-1))))))
+
 (provide 'evil-integration)
 
 ;;; evil-integration.el ends here
