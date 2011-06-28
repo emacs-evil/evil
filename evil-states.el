@@ -190,7 +190,7 @@ Its order reflects the state in the current buffer."
     (when state
       (dolist (map (evil-state-keymaps state))
         (if (evil-auxiliary-keymap-p map)
-            (evil-add-to-alist 'alist t map)
+            (add-to-list 'alist (cons t map) t)
           (when (setq mode (evil-keymap-mode map))
             ;; enable non-state modes
             (when (and (fboundp mode)
@@ -204,8 +204,10 @@ Its order reflects the state in the current buffer."
             (evil-add-to-alist 'alist mode map)))))
     ;; move the enabled modes to the front of the list
     (setq evil-mode-map-alist
-          (evil-concat-alists
-           alist evil-mode-map-alist))))
+          (evil-filter-list (lambda (elt)
+                              (assq (car-safe elt) alist))
+                            evil-mode-map-alist))
+    (setq evil-mode-map-alist (append alist evil-mode-map-alist))))
 
 (defun evil-refresh-global-keymaps ()
   "Refresh the global value of `evil-mode-map-alist'.
