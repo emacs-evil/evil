@@ -454,7 +454,6 @@ Both COUNT and CMD may be nil."
                (current-column)))
         (current-line (line-number-at-pos (point)))
         (opoint (point)))
-
     (dolist (line lines)
       ;; concat multiple copies according to count
       (setq line (apply #'concat (make-list count line)))
@@ -520,58 +519,90 @@ Both COUNT and CMD may be nil."
 (defun evil-paste-before (count &optional register)
   "Pastes the latest yanked text before the cursor position."
   (interactive (list current-prefix-arg evil-this-register))
-  (evil-with-undo
-    (let* ((txt (if register (get-register register) (current-kill 0)))
-           (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
-      (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
-          (let ((evil-paste-count count)
-                (this-command 'evil-paste-before)) ; for non-interactive use
-            (insert-for-yank txt))
-        ;; no yank-handler, default
-        (let ((opoint (point)))
-          (dotimes (i (or count 1))
-            (insert-for-yank txt))
-          (set-mark opoint)
-          (setq evil-last-paste
-                (list 'evil-paste-before
-                      count
-                      opoint
-                      opoint    ; beg
-                      (point))) ; end
-          (exchange-point-and-mark)))
-      ;; no paste pop after pasting a register
-      (when register
-        (setq evil-last-paste nil)))))
+  (if (evil-visual-state-p)
+      (evil-visual-paste count register)
+    (evil-with-undo
+      (let* ((txt (if register (get-register register) (current-kill 0)))
+             (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
+        (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
+            (let ((evil-paste-count count)
+                  (this-command 'evil-paste-before)) ; for non-interactive use
+              (insert-for-yank txt))
+          ;; no yank-handler, default
+          (let ((opoint (point)))
+            (dotimes (i (or count 1))
+              (insert-for-yank txt))
+            (set-mark opoint)
+            (setq evil-last-paste
+                  (list 'evil-paste-before
+                        count
+                        opoint
+                        opoint         ; beg
+                        (point)))      ; end
+            (exchange-point-and-mark)))
+        ;; no paste pop after pasting a register
+        (when register
+          (setq evil-last-paste nil))))))
 
 (defun evil-paste-behind (count &optional register)
   "Pastes the latest yanked text behind point."
   (interactive (list current-prefix-arg evil-this-register))
-  (evil-with-undo
-    (let* ((txt (if register (get-register register) (current-kill 0)))
-           (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
-      (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
-          (let ((evil-paste-count count)
-                (this-command 'evil-paste-behind)) ; for non-interactive use
-            (insert-for-yank txt))
-        ;; no yank-handler, default
-        (let ((opoint (point)))
-          ;; TODO: Perhaps it is better to collect a list of all
-          ;; (point . mark) pairs to undo the yanking for count > 1.
-          ;; The reason is that this yanking could very well use
-          ;; `yank-handler'.
-          (unless (eolp) (forward-char))
-          (let ((beg (point)))
-            (dotimes (i (or count 1))
+  (if (evil-visual-state-p)
+      (evil-visual-paste count register)
+    (evil-with-undo
+      (let* ((txt (if register (get-register register) (current-kill 0)))
+             (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
+
+        (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
+            (let ((evil-paste-count count)
+                  (this-command 'evil-paste-behind)) ; for non-interactive use
               (insert-for-yank txt))
-            (setq evil-last-paste
-                  (list 'evil-paste-behind
-                        count
-                        opoint
-                        beg       ; beg
-                        (point))) ; end
-            (backward-char))))
-      (when register
-        (setq evil-last-paste nil)))))
+          ;; no yank-handler, default
+          (let ((opoint (point)))
+            ;; TODO: Perhaps it is better to collect a list of all
+            ;; (point . mark) pairs to undo the yanking for count > 1.
+            ;; The reason is that this yanking could very well use
+            ;; `yank-handler'.
+            (unless (eolp) (forward-char))
+            (let ((beg (point)))
+              (dotimes (i (or count 1))
+                (insert-for-yank txt))
+              (setq evil-last-paste
+                    (list 'evil-paste-behind
+                          count
+                          opoint
+                          beg          ; beg
+                          (point)))    ; end
+              (backward-char))))
+        (when register
+          (setq evil-last-paste nil))))))
+
+(defun evil-visual-paste (count &optional register)
+  "Paste over Visual selection."
+  (interactive (list current-prefix-arg evil-this-register))
+  (let* ((txt (if register (get-register register) (current-kill 0)))
+         (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
+    (evil-with-undo
+      (when (evil-visual-state-p)
+        ;; add replaced text to the kill-ring
+        (unless register
+          ;; if pasting from the kill-ring,
+          ;; add replaced text before the current kill
+          (setq kill-ring (delete txt kill-ring)))
+        (setq kill-ring-yank-pointer kill-ring)
+        (if (eq (evil-visual-type) 'block)
+            (evil-visual-block-rotate 'upper-left)
+          (goto-char (evil-visual-beginning)))
+        (evil-delete (evil-visual-beginning)
+                     (evil-visual-end)
+                     (evil-visual-type))
+        (unless register
+          (kill-new txt))
+        (when (and (eq yhandler 'evil-yank-line-handler)
+                   (not (eq (evil-visual-type) 'line)))
+          (newline))
+        (evil-normal-state))
+      (evil-paste-before count register))))
 
 ;; TODO: if undoing is disabled in the current buffer paste pop won't
 ;; work. Although this is probably not a big problem because usually
