@@ -2635,6 +2635,34 @@ if no previous selection")
       (should (equal (evil-get-property alist nil :baz)
                      '((wobble . t)))))))
 
+(ert-deftest evil-test-filter-list ()
+  "Test `evil-filter-list'"
+  :tags '(evil util)
+  (ert-info ("Return filtered list")
+    (should (equal (evil-filter-list 'null '(nil)) nil))
+    (should (equal (evil-filter-list 'null '(nil 1)) '(1)))
+    (should (equal (evil-filter-list 'null '(nil 1 2 nil)) '(1 2)))
+    (should (equal (evil-filter-list 'null '(nil nil 1)) '(1)))
+    (should (equal (evil-filter-list 'null '(nil 1 nil 2 nil 3))
+                   '(1 2 3))))
+  (ert-info ("Remove matches by side-effect when possible")
+    (let (list)
+      (setq list '(1 nil))
+      (evil-filter-list 'null list)
+      (should (equal list '(1)))
+
+      (setq list '(1 nil nil))
+      (evil-filter-list 'null list)
+      (should (equal list '(1)))
+
+      (setq list '(1 nil nil 2))
+      (evil-filter-list 'null list)
+      (should (equal list '(1 2)))
+
+      (setq list '(1 nil 2 nil 3))
+      (evil-filter-list 'null list)
+      (should (equal list '(1 2 3))))))
+
 (ert-deftest evil-test-concat-lists ()
   "Test `evil-concat-lists' and `evil-concat-alists'"
   :tags '(evil util)

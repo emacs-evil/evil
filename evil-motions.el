@@ -122,9 +122,9 @@ the loop immediately quits. See also `evil-loop'.
 Non-numerical elements are ignored.
 See also `evil-goto-max'."
   (when (setq positions (evil-filter-list
-                         positions
                          (lambda (elt)
-                           (not (number-or-marker-p elt)))))
+                           (not (number-or-marker-p elt)))
+                         positions))
     (goto-char (apply #'min positions))))
 
 (defun evil-goto-max (&rest positions)
@@ -132,9 +132,9 @@ See also `evil-goto-max'."
 Non-numerical elements are ignored.
 See also `evil-goto-min'."
   (when (setq positions (evil-filter-list
-                         positions
                          (lambda (elt)
-                           (not (number-or-marker-p elt)))))
+                           (not (number-or-marker-p elt)))
+                         positions))
     (goto-char (apply #'max positions))))
 
 (defun evil-eobp ()

@@ -19,16 +19,26 @@ otherwise add at the end of the list."
         (apply 'evil-add-to-alist list-var elements)
       (symbol-value list-var))))
 
-(defun evil-filter-list (list predicate &optional pointer)
-  "Filter LIST for entries matching PREDICATE, until POINTER.
-Returns a new list."
-  (let ((rest list) elt result)
-    (while (and rest (not (eq rest pointer)))
-      (setq elt  (car rest)
-            rest (cdr rest))
-      (unless (funcall predicate elt)
-        (setq result (append result (list elt)))))
-    (append result rest)))
+;; custom version of `delete-if'
+(defun evil-filter-list (predicate list &optional pointer)
+  "Delete by side-effect all items satisfying PREDICATE in LIST.
+Stop when reaching POINTER. If the first item satisfies PREDICATE,
+there is no way to remove it by side-effect; therefore, write
+\(setq foo (evil-delete-if 'predicate foo)) to be sure of
+changing the value of `foo'."
+  (let ((tail list) elt head)
+    (while (and tail (not (eq tail pointer)))
+      (setq elt (car tail))
+      (cond
+       ((funcall predicate elt)
+        (setq tail (cdr tail))
+        (if head
+            (setcdr head tail)
+          (setq list tail)))
+       (t
+        (setq head tail
+              tail (cdr tail)))))
+    list))
 
 (defun evil-concat-lists (&rest sequences)
   "Concatenate lists, removing duplicates.

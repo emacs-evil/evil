@@ -51,8 +51,9 @@ Undo boundaries until `evil-undo-list-pointer' are removed
 to make the entries undoable as a single action.
 See `evil-start-undo-step'."
   (setq buffer-undo-list
-        (evil-filter-list buffer-undo-list 'null
-                          evil-undo-list-pointer)))
+        (evil-filter-list 'null buffer-undo-list
+                          evil-undo-list-pointer)
+        evil-undo-list-pointer buffer-undo-list))
 
 ;;; Undo ring
 
