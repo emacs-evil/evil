@@ -34,10 +34,11 @@
 (defun evil-cleanup-insert-state ()
   "Called when Insert state is about to be exited.
 Handles the repeat-count of the insertion command."
-  (dotimes (i (1- evil-insert-count))
-    (when evil-insert-lines
-      (evil-insert-newline-below))
-    (evil-execute-repeat-info (cdr evil-insert-repeat-info)))
+  (when evil-insert-count
+    (dotimes (i (1- evil-insert-count))
+      (when evil-insert-lines
+        (evil-insert-newline-below))
+      (evil-execute-repeat-info (cdr evil-insert-repeat-info))))
   (when evil-insert-vcount
     (let ((line (nth 0 evil-insert-vcount))
           (col (nth 1 evil-insert-vcount))
