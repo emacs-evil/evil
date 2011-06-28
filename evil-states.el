@@ -531,9 +531,9 @@ cursor, or a list of the above.\n\n%s" state doc))
        (dolist (func ',exit-hook-value)
          (add-hook ',exit-hook func))
 
-       (defun ,predicate ()
-         ,(format "Whether the current state is %s." state)
-         (eq evil-state ',state))
+       (defun ,predicate (&optional state)
+         ,(format "Whether the current STATE is %s." state)
+         (eq (or state evil-state) ',state))
 
        ;; define state function
        (defun ,toggle (&optional arg)

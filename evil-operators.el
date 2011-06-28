@@ -94,6 +94,7 @@
         (let* ((orig (point))
                (,beg orig)
                (,end orig)
+               (state evil-state)
                range ,type)
           (unwind-protect
               (setq evil-this-operator this-command
@@ -105,10 +106,6 @@
                     range (append (evil-range ,beg ,end ,type)
                                   (progn ,@interactive)))
             (setq orig (point))
-            (when ,move-point
-              (if (eq ,type 'block)
-                  (evil-visual-block-rotate 'upper-left ,beg ,end)
-                (goto-char ,beg)))
             (if ,keep-visual
                 (when (evil-visual-state-p)
                   (evil-visual-expand-region))
@@ -116,7 +113,11 @@
                 (evil-normal-state))
               (when (region-active-p)
                 (evil-active-region -1)))
-            (unless ,move-point
+            (if (or ,move-point
+                    (evil-visual-state-p state))
+                (if (eq ,type 'block)
+                    (evil-visual-block-rotate 'upper-left ,beg ,end)
+                  (goto-char ,beg))
               (goto-char orig)))
           range))
        (unwind-protect
