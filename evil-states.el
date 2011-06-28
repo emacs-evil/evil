@@ -587,13 +587,13 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
 
        ',state)))
 
-;; Define states
+;;; Define Normal state and Emacs state
 
 (evil-define-state normal
   "Normal state, AKA \"Command\" state."
   :tag " <N> "
   :suppress-keymap t
-  :enable (operator motion)
+  :enable (motion)
   :exit-hook (evil-repeat-start-hook)
   (cond
    ((evil-normal-state-p)
