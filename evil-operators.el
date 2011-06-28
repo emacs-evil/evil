@@ -119,10 +119,11 @@
             (unless ,move-point
               (goto-char orig)))
           range))
-       (if (and evil-inhibit-operator
-                (evil-called-interactively-p))
-           (setq evil-inhibit-operator nil)
-         ,@body))))
+       (unwind-protect
+           (unless (and evil-inhibit-operator
+                        (evil-called-interactively-p))
+             ,@body)
+         (setq evil-inhibit-operator nil)))))
 
 ;; this is used in the `interactive' specification of an operator command
 (defun evil-operator-range (&optional return-type motion type)
@@ -200,8 +201,12 @@ a predefined type may be specified with TYPE."
 (defun evil-motion-range (motion &optional count type)
   "Execute a motion and return the buffer positions.
 The return value is a list (BEG END TYPE)."
-  (let (range)
-    (evil-save-region
+  (let ((opoint   (point))
+        (omark    (mark t))
+        (omactive (and (boundp 'mark-active) mark-active))
+        (obuffer  (current-buffer))
+        range)
+    (evil-save-transient-mark
       (evil-transient-mark 1)
       (setq evil-motion-marker (move-marker (make-marker) (point)))
       (unwind-protect
@@ -238,6 +243,12 @@ The return value is a list (BEG END TYPE)."
               (evil-expand-range range)
               (evil-set-range-properties range nil))
             range)
+        ;; restore point and mark like `save-excursion',
+        ;; but only if the motion hasn't disabled the operator
+        (unless evil-inhibit-operator
+          (set-buffer obuffer)
+          (evil-move-mark omark)
+          (goto-char opoint))
         ;; delete marker so it doesn't slow down editing
         (move-marker evil-motion-marker nil)
         (setq evil-motion-marker nil)))))

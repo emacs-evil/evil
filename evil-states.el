@@ -604,7 +604,8 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
     (setq evil-this-type nil
           evil-this-operator nil
           evil-this-motion nil
-          evil-this-motion-count nil)
+          evil-this-motion-count nil
+          evil-inhibit-operator nil)
     (unless (eq this-command 'evil-use-register)
       (setq evil-this-register nil))
     (evil-adjust-eol)))

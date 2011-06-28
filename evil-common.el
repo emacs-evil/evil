@@ -416,17 +416,25 @@ Enable with positive ARG, disable with negative ARG."
     (unless (region-active-p)
       (set-mark (mark t))))))
 
+(defmacro evil-save-transient-mark (&rest body)
+  "Save Transient Mark mode; execute BODY; then restore it."
+  (declare (indent defun)
+           (debug t))
+  `(let (evil-transient-vals)
+     (unwind-protect
+         (progn
+           (evil-transient-save)
+           ,@body)
+       (evil-transient-restore))))
+
 (defmacro evil-save-region (&rest body)
   "Save Transient Mark mode, mark activation, mark and point.
 Execute BODY, then restore those things."
   (declare (indent defun)
            (debug t))
-  `(let (evil-transient-vals)
-     (unwind-protect
-         (save-excursion
-           (evil-transient-save)
-           ,@body)
-       (evil-transient-restore))))
+  `(evil-save-transient-mark
+     (save-excursion
+       ,@body)))
 
 ;; `set-mark' does too much at once
 (defun evil-move-mark (pos)
