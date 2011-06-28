@@ -2526,7 +2526,7 @@ to `evil-execute-repeat-info'")
     (should (= (overlay-end evil-visual-overlay)
                (cadr (evil-expand (point) (mark) type))))
     (should (eq (evil-type evil-visual-overlay) type))
-    (should (eq (overlay-get evil-visual-overlay 'direction)
+    (should (eq (overlay-get evil-visual-overlay :direction)
                 (if (< (point) (mark)) -1 1)))
     (should (eq (overlay-get evil-visual-overlay :expanded) t))))
 

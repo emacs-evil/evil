@@ -215,7 +215,7 @@ may contain a property list.
 The overlay equivalent is `evil-expand-overlay'."
   (apply 'evil-transform
          ;; don't expand if already expanded
-         (unless (plist-get properties :expanded) 'expand)
+         (unless (plist-get properties :expanded) :expand)
          beg end type properties))
 
 (defun evil-contract (beg end type &rest properties)
@@ -264,7 +264,7 @@ The overlay equivalent is `evil-describe-overlay'."
 (defun evil-expand-range (range &optional copy)
   "Expand RANGE according to its type.
 Return a new range if COPY is non-nil."
-  (evil-transform-range 'expand range copy))
+  (evil-transform-range :expand range copy))
 
 (defun evil-contract-range (range &optional copy)
   "Contract RANGE according to its type.
@@ -298,13 +298,13 @@ Return a new overlay if COPY is non-nil."
     (when copy
       (setq overlay (copy-overlay overlay)))
     (unless (overlay-get overlay :expanded)
-      (when (and type (evil-type-property type 'expand))
+      (when (and type (evil-type-property type :expand))
         ;; explicitly set :expanded to nil before expanding,
         ;; so that it is guaranteed to change back to nil
         ;; if the overlay is restored
         (overlay-put overlay :expanded nil)
         (setq overlay (evil-backup-overlay overlay)
-              overlay (evil-transform-overlay 'expand overlay))))
+              overlay (evil-transform-overlay :expand overlay))))
     overlay))
 
 (defun evil-contract-overlay (overlay &optional copy)
@@ -312,7 +312,7 @@ Return a new overlay if COPY is non-nil."
 If the type isn't injective, restore original positions.
 Return a new overlay if COPY is non-nil."
   (let ((type (evil-type overlay)))
-    (if (and type (evil-type-property type 'injective))
+    (if (and type (evil-type-property type :injective))
         (setq overlay (evil-reset-overlay overlay copy)
               overlay (evil-transform-overlay 'contract overlay))
       (setq overlay (evil-restore-overlay overlay copy)))
@@ -348,7 +348,7 @@ Return a new overlay if COPY is non-nil."
 
 (defun evil-backup-overlay (overlay &optional copy)
   "Back up current OVERLAY positions and properties.
-The information is stored in a `backup' property.
+The information is stored in a :backup property.
 Return a new overlay if COPY is non-nil."
   (let* ((beg (overlay-start overlay))
          (end (overlay-end overlay))
@@ -359,18 +359,19 @@ Return a new overlay if COPY is non-nil."
     (setq overlay (evil-reset-overlay overlay copy))
     (set-marker-insertion-type beg-marker t)
     (set-marker-insertion-type end-marker nil)
-    (overlay-put overlay 'backup
+    (overlay-put overlay :backup
                  (append (list beg-marker end-marker) properties))
     overlay))
 
 (defun evil-restore-overlay (overlay &optional copy)
   "Restore previous OVERLAY positions and properties.
-The information is retrieved from the `backup' property.
+The information is retrieved from the :backup property.
 Return a new overlay if COPY is non-nil."
-  (let ((backup (overlay-get overlay 'backup))
+  (let ((backup (overlay-get overlay :backup))
         beg end beg-marker end-marker properties buffer)
-    (cond
-     (backup
+    (when copy
+      (setq overlay (copy-overlay overlay)))
+    (when backup
       (setq beg-marker (pop backup)
             end-marker (pop backup)
             properties backup
@@ -385,14 +386,12 @@ Return a new overlay if COPY is non-nil."
       (move-overlay overlay beg end buffer)
       (while properties
         (overlay-put overlay (pop properties) (pop properties))))
-     (copy
-      (setq overlay (copy-overlay overlay))))
     overlay))
 
 (defun evil-reset-overlay (overlay &optional copy)
   "Reset back-up information for OVERLAY.
 Return a new overlay if COPY is non-nil."
-  (let* ((backup (overlay-get overlay 'backup))
+  (let* ((backup (overlay-get overlay :backup))
          (beg (pop backup))
          (end (pop backup)))
     (cond
@@ -403,7 +402,7 @@ Return a new overlay if COPY is non-nil."
      (backup
       (set-marker beg nil)
       (set-marker end nil)))
-    (overlay-put overlay 'backup nil)
+    (overlay-put overlay :backup nil)
     overlay))
 
 (defun evil-describe-overlay (overlay)
