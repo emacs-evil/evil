@@ -276,6 +276,12 @@ is non-nil) and returns point."
         (evil-adjust))))
   (point))
 
+(defun evil-set-keymap-prompt (map prompt)
+  "Set the prompt-string of MAP to PROMPT."
+  (delq (keymap-prompt map) map)
+  (when prompt
+    (setcdr map (append (list prompt) (cdr map)))))
+
 ;;; Markers
 
 (defun evil-global-marker-p (char)

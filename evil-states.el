@@ -268,7 +268,6 @@ See also `evil-keymap-mode'."
 (defun evil-state-auxiliary-keymaps (state)
   "Return an ordered list of auxiliary keymaps for STATE."
   (let* ((state (or state evil-state))
-         (alist (symbol-value (evil-state-property state :aux)))
          aux result)
     (dolist (map (current-active-maps) result)
       (when (setq aux (evil-get-auxiliary-keymap map state))
@@ -305,7 +304,9 @@ which will be active whenever `foo-mode-map' is active."
                  (or (evil-get-auxiliary-keymap keymap state)
                      (evil-set-auxiliary-keymap keymap state))
                keymap)))
-    (define-key-after aux key def)))
+    (define-key aux key def)
+    ;; ensure the prompt string comes first
+    (evil-set-keymap-prompt aux (keymap-prompt aux))))
 
 (put 'evil-define-key 'lisp-indent-function 'defun)
 
