@@ -299,7 +299,7 @@ on the first non-blank character."
   "Move the cursor to line COUNT from the bottom of the window
 on the first non-blank character."
   :type line
-  (move-to-window-line (- (window-body-height) (or count 0) 1))
+  (move-to-window-line (- (or count 1)))
   (back-to-indentation))
 
 (evil-define-motion evil-beginning-of-line ()
