@@ -124,12 +124,15 @@ to the selection."
 If `this-command' was a motion, refresh the selection;
 otherwise exit Visual state."
   (when (evil-visual-state-p)
-    (if (or quit-flag
-            (eq this-command 'keyboard-quit)
-            evil-visual-region-expanded)
-        (evil-normal-state)
+    (cond
+     ((or quit-flag
+          (eq this-command 'keyboard-quit)
+          evil-visual-region-expanded)
+      (evil-visual-contract-region)
+      (evil-normal-state))
+     (t
       (evil-visual-refresh)
-      (evil-visual-highlight))))
+      (evil-visual-highlight)))))
 
 (defun evil-visual-deactivate-hook ()
   "Deactivate the region and restore Transient Mark mode."
@@ -191,6 +194,23 @@ exclude that newline from the region."
         (evil-swap beg end))
       (evil-visual-set-region beg end)
       (setq evil-visual-region-expanded t))))
+
+(defun evil-visual-contract-region ()
+  "The inverse of `evil-visual-expand-region'."
+  (let ((overlay (copy-overlay evil-visual-overlay))
+        mark point dir)
+    (unwind-protect
+        (progn
+          (when (overlay-get overlay :expanded)
+            (evil-contract-overlay overlay))
+          (setq mark (overlay-start overlay)
+                point (overlay-end overlay)
+                dir (overlay-get overlay :direction))
+          (when (< dir 0)
+            (evil-swap mark point))
+          (evil-move-mark mark)
+          (goto-char point))
+      (delete-overlay overlay))))
 
 (defun evil-visual-refresh (&optional type mark point)
   "Refresh `evil-visual-overlay'."
