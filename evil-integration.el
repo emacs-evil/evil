@@ -12,6 +12,10 @@
 (dolist (cmd '(dabbrev-expand hippie-expand))
   (evil-add-command-properties cmd :repeat 'change))
 
+;;; Apropos
+
+(add-to-list 'evil-motion-state-modes 'apropos-mode)
+
 ;;; Custom
 
 (add-to-list 'evil-emacs-state-modes 'Custom-mode)
@@ -20,9 +24,17 @@
 
 (add-to-list 'evil-emacs-state-modes 'debugger-mode)
 
+;;; Dired
+
+(add-to-list 'evil-emacs-state-modes 'dired-mode)
+
 ;;; ERT
 
 (add-to-list 'evil-emacs-state-modes 'ert-results-mode)
+
+;;; Help
+
+(add-to-list 'evil-motion-state-modes 'help-mode)
 
 ;;; Undo tree visualizer
 
