@@ -177,6 +177,7 @@
 (define-key evil-motion-state-map "/" 'evil-search-forward)
 (define-key evil-motion-state-map ";" 'evil-repeat-find-char)
 (define-key evil-motion-state-map "?" 'evil-search-backward)
+(define-key evil-motion-state-map "|" 'evil-goto-column)
 (define-key evil-motion-state-map "^" 'evil-first-non-blank)
 (define-key evil-motion-state-map "+" 'evil-next-line-first-non-blank)
 (define-key evil-motion-state-map "_" 'evil-next-line-first-non-blank)

@@ -899,6 +899,13 @@ If BIGWORD is non-nil, move by WORDS."
   :type inclusive
   (evil-repeat-find-char (- (or count 1))))
 
+;; ceci n'est pas une pipe
+(evil-define-motion evil-goto-column (count)
+  "Go to column COUNT on the current line.
+Columns are counted from zero."
+  :type exclusive
+  (move-to-column (or count 0)))
+
 ;; TODO: this is a very basic implementation considering only
 ;; (), [], {}, and not blocks like #if ... #endif
 (evil-define-motion evil-jump-item (count)
