@@ -205,10 +205,10 @@ The return value is a list (BEG END TYPE)."
         (omark    (mark t))
         (omactive (and (boundp 'mark-active) mark-active))
         (obuffer  (current-buffer))
+        (evil-motion-marker (move-marker (make-marker) (point)))
         range)
     (evil-save-transient-mark
       (evil-transient-mark 1)
-      (setq evil-motion-marker (move-marker (make-marker) (point)))
       (unwind-protect
           (let ((current-prefix-arg count)
                 ;; Store the type in global variable `evil-this-type'.
@@ -250,8 +250,7 @@ The return value is a list (BEG END TYPE)."
           (evil-move-mark omark)
           (goto-char opoint))
         ;; delete marker so it doesn't slow down editing
-        (move-marker evil-motion-marker nil)
-        (setq evil-motion-marker nil)))))
+        (move-marker evil-motion-marker nil)))))
 
 (defun evil-read-motion (&optional motion count type modifier)
   "Read a MOTION, motion COUNT and motion TYPE from the keyboard.
