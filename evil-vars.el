@@ -288,23 +288,20 @@ the current buffer.")
 
 (defvar evil-repeat-changes nil
   "Accumulated buffer changes for changed-based commands.")
-(make-variable-buffer-local 'evil-repeat-changes)
 
 (defvar evil-repeat-info nil
   "Information accumulated during current repeat.")
 
-(defvar evil-insert-repeat-info nil
-  "Repeat information accumulated during an insertion.")
-(make-variable-buffer-local 'evil-insert-repeat-info)
+(defvar evil-repeat-buffer nil
+  "The buffer in which the repeat started.
+If the buffer is changed, the repeat is cancelled.")
 
 (defvar evil-repeat-marker nil
   "The position of point at the beginning of an change-tracking
   editing command.")
-(make-variable-buffer-local 'evil-repeat-marker)
 
 (defvar evil-repeat-keys nil
   "The keys that invoked the current command.")
-(make-variable-buffer-local 'evil-repeat-keys)
 
 (defvar evil-last-repeat nil
   "Information about the latest repeat command.
@@ -333,6 +330,10 @@ number of repeats (including the original insertion).")
 command o or O.")
 (make-variable-buffer-local 'evil-insert-lines)
 
+(defvar evil-insert-repeat-info nil
+  "Repeat information accumulated during an insertion.")
+(make-variable-buffer-local 'evil-insert-repeat-info)
+
 (defvar evil-replace-alist nil
   "Association list of characters overwritten in Replace state.
 The format is (POS . CHAR).")
@@ -356,9 +357,9 @@ is not restored.")
 (defvar evil-last-paste nil
   "Information about the latest paste.
 This should be a list (CMD POINT BEG END) where CMD is the last
-paste-command (either `evil-paste-before' or
-`evil-paste-behind'), POINT is the position of point before the
-paste, BEG end END are the region of the inserted text.")
+paste-command (either `evil-paste-before' or `evil-paste-after'),
+POINT is the position of point before the paste,
+BEG end END are the region of the inserted text.")
 
 (defvar evil-paste-count nil
   "The count argument of the current paste command.")

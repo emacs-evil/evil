@@ -6,6 +6,9 @@
 (dolist (cmd evil-motions)
   (evil-add-command-properties cmd :keep-visual t :repeat nil))
 
+(dolist (cmd '(save-buffer))
+  (evil-add-command-properties cmd :repeat nil))
+
 (dolist (cmd '(dabbrev-expand hippie-expand))
   (evil-add-command-properties cmd :repeat 'change))
 
