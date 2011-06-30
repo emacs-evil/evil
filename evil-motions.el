@@ -906,26 +906,39 @@ If BIGWORD is non-nil, move by WORDS."
 and jump to the corresponding one."
   :jump t
   :type inclusive
-  (let ((next-open
-         (condition-case err
-             (1- (scan-lists (point) 1 -1))
-           (error
-            (point-max))))
-        (next-close
-         (condition-case nil
-             (1- (scan-lists (point) 1 1))
-           (error (point-max)))))
-    (let ((pos (min next-open next-close)))
-      (when (>= pos (line-end-position))
+  (cond
+   ;; COUNT% jumps to a line COUNT percentage down the file
+   (count
+    (goto-char
+     (evil-normalize-position
+      (let ((size (- (point-max) (point-min))))
+        (+ (point-min)
+           (if (> size 80000)
+               (* count (/ size 100))
+             (/ (* count size) 100))))))
+    (back-to-indentation)
+    (setq evil-this-type 'line))
+   (t
+    (let* ((next-open
+            (condition-case err
+                (1- (scan-lists (point) 1 -1))
+              (error
+               (point-max))))
+           (next-close
+            (condition-case nil
+                (1- (scan-lists (point) 1 1))
+              (error (point-max))))
+           (pos (min next-open next-close)))
+      (cond
+       ((>= pos (line-end-position))
         (error "No matching item found on the current line"))
-      (if (= pos next-open)
-          (progn
-            (goto-char pos)
-            (forward-list)
-            (backward-char))
-        (progn
-          (goto-char (1+ pos))
-          (backward-list))))))
+       ((= pos next-open)
+        (goto-char pos)
+        (forward-list)
+        (backward-char))
+       (t
+        (goto-char (1+ pos))
+        (backward-list)))))))
 
 (defmacro evil-define-text-object (object args &rest body)
   "Define a text object command OBJECT.
