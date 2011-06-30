@@ -267,6 +267,41 @@ To go the other way, press \
   (let (line-move-visual)
     (evil-line-move (or count 1))))
 
+(evil-define-motion evil-ret (count)
+  "Move the cursor COUNT lines down.
+If point is on a widget or a button, click on it.
+In Insert state, insert a newline."
+  :type line
+  (let* ((field  (get-char-property (point) 'field))
+         (button (get-char-property (point) 'button))
+         (doc    (get-char-property (point) 'widget-doc))
+         (widget (or field button doc)))
+    (cond
+     ((and widget
+           (fboundp 'widget-type)
+           (fboundp 'widget-button-press)
+           (or (and (symbolp widget)
+                    (get widget 'widget-type))
+               (and (consp widget)
+                    (get (widget-type widget) 'widget-type))))
+      (when (evil-operator-state-p)
+        (setq evil-inhibit-operator t))
+      (widget-button-press (point)))
+     ((and (fboundp 'button-at)
+           (fboundp 'push-button)
+           (button-at (point)))
+      (when (evil-operator-state-p)
+        (setq evil-inhibit-operator t))
+      (push-button))
+     ((evil-insert-state-p)
+      (if (not evil-auto-indent)
+          (newline count)
+        (delete-horizontal-space t)
+        (newline count)
+        (indent-according-to-mode)))
+     (t
+      (evil-next-line count)))))
+
 ;; used for repeated commands like "dd"
 (evil-define-motion evil-line (count)
   "Move COUNT - 1 lines down."

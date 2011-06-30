@@ -57,6 +57,7 @@
 (define-key evil-normal-state-map "=" 'evil-indent)
 (define-key evil-normal-state-map "<" 'evil-shift-left)
 (define-key evil-normal-state-map ">" 'evil-shift-right)
+(define-key evil-normal-state-map (kbd "<backspace>") 'evil-backward-char)
 (define-key evil-normal-state-map (kbd "ESC") 'evil-normal-state)
 
 ;; undo
@@ -224,6 +225,7 @@
 (define-key evil-motion-state-map (kbd "C-o") 'evil-jump-backward)
 (define-key evil-motion-state-map (kbd "C-y") 'evil-scroll-line-up)
 (define-key evil-motion-state-map (kbd "C-z") 'evil-emacs-state)
+(define-key evil-motion-state-map (kbd "RET") 'evil-ret)
 (define-key evil-motion-state-map "z^" 'evil-scroll-top-line-to-bottom)
 (define-key evil-motion-state-map "z+" 'evil-scroll-bottom-line-to-top)
 (define-key evil-motion-state-map "zt" 'evil-scroll-line-to-top)
@@ -267,10 +269,8 @@
 (define-key evil-insert-state-map "\C-n" 'evil-complete)
 (define-key evil-insert-state-map "\C-x\C-p" 'evil-complete-line)
 (define-key evil-insert-state-map "\C-x\C-n" 'evil-complete-line)
+(define-key evil-insert-state-map (kbd "RET") 'evil-ret)
 (define-key evil-insert-state-map (kbd "ESC") 'evil-normal-state)
-
-(when evil-auto-indent
-  (define-key evil-insert-state-map (kbd "RET") 'newline-and-indent))
 
 ;;; Replace state
 
