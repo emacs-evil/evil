@@ -677,11 +677,12 @@ of the block."
   (interactive (list evil-this-register))
   (let ((nlines (1+ (- (line-number-at-pos end)
                        (line-number-at-pos beg))))
-        (at-eob (= end (buffer-end 1))))
+        (bop (= beg (buffer-end -1)))
+        (eob (= end (buffer-end 1))))
     (evil-delete beg end type register)
     (cond
      ((eq type 'line)
-      (if at-eob
+      (if (and eob (not bop))
           (evil-open-below 1)
         (evil-open-above 1)))
      ((eq type 'block)
