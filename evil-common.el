@@ -361,6 +361,158 @@ Signal an error if empty."
     (or (get-register register)
         (error "Register `%c' is empty" register))))
 
+;;; Key sequences
+
+(defun evil-extract-count (keys)
+  "Splits the key-sequence KEYS into prefix-argument and the rest.
+Returns the list (PREFIX CMD SEQ REST), where PREFIX is the
+prefix count, CMD the command to be executed, SEQ the subsequence
+calling CMD, and REST is all remaining events in the
+key-sequence. PREFIX and REST may be nil if they do not exist.
+If a command is bound to some keyboard macro, it is expanded
+recursively."
+  (catch 'done
+    (let* ((len (length keys))
+           (beg 0)
+           (end 1)
+           (found-prefix nil))
+      (while (and (<= end len))
+        (let ((cmd (key-binding (substring keys beg end))))
+          (cond
+           ((memq cmd '(undefined nil))
+            (error "No command bound to %s" (substring keys beg end)))
+           ((arrayp cmd) ; keyboard macro, replace command with macro
+            (setq keys (vconcat (substring keys 0 beg)
+                                cmd
+                                (substring keys end))
+                  end (1+ beg)
+                  len (length keys)))
+           ((functionp cmd)
+            (if (or (memq cmd '(digit-argument negative-argument))
+                    (and found-prefix
+                         (evil-get-command-property
+                          cmd :digit-argument-redirection)))
+                ;; skip those commands
+                (setq found-prefix t ; found at least one prefix argument
+                      beg end
+                      end (1+ end))
+              ;; a real command, finish
+              (throw 'done
+                     (list (unless (zerop beg)
+                             (string-to-number
+                              (concat (substring keys 0 beg))))
+                           cmd
+                           (substring keys beg end)
+                           (when (< end len)
+                             (substring keys end))))))
+           (t ;; append a further event
+            (setq end (1+ end))))))
+      (error "Key sequence contains no complete binding"))))
+
+;;; Command properties
+
+(defmacro evil-define-command (command &rest body)
+  "Define a command COMMAND.
+
+\(fn COMMAND (ARGS...) DOC [[KEY VALUE]...] BODY...)"
+  (declare (indent defun)
+           (debug (&define name
+                           [&optional lambda-list]
+                           [&optional stringp]
+                           [&rest keywordp sexp]
+                           [&optional ("interactive" interactive)]
+                           def-body)))
+  (let ((keys (plist-put nil :repeat t))
+        arg args doc doc-form key)
+    ;; collect arguments
+    (when (listp (car-safe body))
+      (setq args (pop body)))
+    ;; collect docstring
+    (when (> (length body) 1)
+      (if (eq (car-safe (car-safe body)) 'format)
+          (setq doc-form (pop body))
+        (when (stringp (car-safe body))
+          (setq doc (pop body)))))
+    ;; collect keywords
+    (while (keywordp (car-safe body))
+      (setq key (pop body)
+            arg (pop body))
+      (unless nil ; TODO: add keyword check
+        (plist-put keys key arg)))
+    `(progn
+       ;; the compiler does not recognize `defun' inside `let'
+       ,(when (and command body)
+          `(defun ,command ,args
+             ,@(when doc `(,doc))
+             ,@body))
+       ,(when (and command doc-form)
+          `(put ',command 'function-documentation ,doc-form))
+       ;; set command properties for symbol or lambda function
+       (let ((func ',(if (and (null command) body)
+                         `(lambda ,args ,@body)
+                       command)))
+         (apply 'evil-set-command-properties func ',keys)
+         func))))
+
+(defun evil-add-command-properties (command &rest properties)
+  "Add Evil PROPERTIES to COMMAND.
+PROPERTIES should be a list of :keywords and values, e.g.:
+
+    (evil-add-command-properties 'my-command :repeat t)
+
+See also `evil-set-command-properties'."
+  (apply 'evil-put-property 'evil-command-properties command properties))
+
+(defun evil-set-command-properties (command &rest properties)
+  "Set Evil PROPERTIES of COMMAND.
+PROPERTIES should be a list of :keywords and values, e.g.:
+
+    (evil-set-command-properties 'my-command :repeat t)
+
+This erases all previous properties. To only add properties,
+use `evil-add-command-properties'."
+  (setq evil-command-properties
+        (assq-delete-all command evil-command-properties))
+  (apply #'evil-add-command-properties command properties))
+
+;; If no evil-properties are defined for the command, several parts of
+;; Evil apply certain default rules, e.g., the repeat-system decides
+;; whether the command is repeatable by monitoring buffer changes.
+(defun evil-has-properties-p (command)
+  "Whether Evil properties are defined for COMMAND."
+  (evil-get-property evil-command-properties command))
+
+(defun evil-has-property (command property)
+  "Whether COMMAND has Evil PROPERTY."
+  (plist-member (evil-get-property evil-command-properties command)
+                property))
+
+(defun evil-get-command-property (command property)
+  "Returns the value of Evil PROPERTY of COMMAND."
+  (evil-get-property evil-command-properties command property))
+
+(defmacro evil-redirect-digit-argument (map keys target)
+  "Bind a wrapper function calling TARGET or `digit-argument'.
+MAP is a keymap for binding KEYS to the wrapper for TARGET.
+The wrapper only calls `digit-argument' if a prefix-argument
+has already been started; otherwise TARGET is called."
+  (let* ((target (eval target))
+         (wrapper (intern (format "evil-digit-argument-or-%s"
+                                  target))))
+    `(progn
+       (evil-define-command ,wrapper ()
+         :digit-argument-redirection ,target
+         :keep-visual t
+         :repeat nil
+         (interactive)
+         (if current-prefix-arg
+             (progn
+               (setq this-command 'digit-argument)
+               (call-interactively 'digit-argument))
+           (setq this-command ',target)
+           (call-interactively ',target)))
+       (define-key ,map ,keys ',wrapper))))
+
 ;;; Region
 
 (defun evil-transient-save ()
@@ -583,158 +735,6 @@ POS defaults to the current position of point."
       ((evil-in-string-p)
        (narrow-to-region (evil-string-beginning) (evil-string-end))))
      ,@body))
-
-;;; Key sequences
-
-(defun evil-extract-count (keys)
-  "Splits the key-sequence KEYS into prefix-argument and the rest.
-Returns the list (PREFIX CMD SEQ REST), where PREFIX is the
-prefix count, CMD the command to be executed, SEQ the subsequence
-calling CMD, and REST is all remaining events in the
-key-sequence. PREFIX and REST may be nil if they do not exist.
-If a command is bound to some keyboard macro, it is expanded
-recursively."
-  (catch 'done
-    (let* ((len (length keys))
-           (beg 0)
-           (end 1)
-           (found-prefix nil))
-      (while (and (<= end len))
-        (let ((cmd (key-binding (substring keys beg end))))
-          (cond
-           ((memq cmd '(undefined nil))
-            (error "No command bound to %s" (substring keys beg end)))
-           ((arrayp cmd) ; keyboard macro, replace command with macro
-            (setq keys (vconcat (substring keys 0 beg)
-                                cmd
-                                (substring keys end))
-                  end (1+ beg)
-                  len (length keys)))
-           ((functionp cmd)
-            (if (or (memq cmd '(digit-argument negative-argument))
-                    (and found-prefix
-                         (evil-get-command-property
-                          cmd :digit-argument-redirection)))
-                ;; skip those commands
-                (setq found-prefix t ; found at least one prefix argument
-                      beg end
-                      end (1+ end))
-              ;; a real command, finish
-              (throw 'done
-                     (list (unless (zerop beg)
-                             (string-to-number
-                              (concat (substring keys 0 beg))))
-                           cmd
-                           (substring keys beg end)
-                           (when (< end len)
-                             (substring keys end))))))
-           (t ;; append a further event
-            (setq end (1+ end))))))
-      (error "Key sequence contains no complete binding"))))
-
-;;; Command properties
-
-(defmacro evil-define-command (command &rest body)
-  "Define a command COMMAND.
-
-\(fn COMMAND (ARGS...) DOC [[KEY VALUE]...] BODY...)"
-  (declare (indent defun)
-           (debug (&define name
-                           [&optional lambda-list]
-                           [&optional stringp]
-                           [&rest keywordp sexp]
-                           [&optional ("interactive" interactive)]
-                           def-body)))
-  (let ((keys (plist-put nil :repeat t))
-        arg args doc doc-form key)
-    ;; collect arguments
-    (when (listp (car-safe body))
-      (setq args (pop body)))
-    ;; collect docstring
-    (when (> (length body) 1)
-      (if (eq (car-safe (car-safe body)) 'format)
-          (setq doc-form (pop body))
-        (when (stringp (car-safe body))
-          (setq doc (pop body)))))
-    ;; collect keywords
-    (while (keywordp (car-safe body))
-      (setq key (pop body)
-            arg (pop body))
-      (unless nil ; TODO: add keyword check
-        (plist-put keys key arg)))
-    `(progn
-       ;; the compiler does not recognize `defun' inside `let'
-       ,(when (and command body)
-          `(defun ,command ,args
-             ,@(when doc `(,doc))
-             ,@body))
-       ,(when (and command doc-form)
-          `(put ',command 'function-documentation ,doc-form))
-       ;; set command properties for symbol or lambda function
-       (let ((func ',(if (and (null command) body)
-                         `(lambda ,args ,@body)
-                       command)))
-         (apply 'evil-set-command-properties func ',keys)
-         func))))
-
-(defun evil-add-command-properties (command &rest properties)
-  "Add Evil PROPERTIES to COMMAND.
-PROPERTIES should be a list of :keywords and values, e.g.:
-
-    (evil-add-command-properties 'my-command :repeat t)
-
-See also `evil-set-command-properties'."
-  (apply 'evil-put-property 'evil-command-properties command properties))
-
-(defun evil-set-command-properties (command &rest properties)
-  "Set Evil PROPERTIES of COMMAND.
-PROPERTIES should be a list of :keywords and values, e.g.:
-
-    (evil-set-command-properties 'my-command :repeat t)
-
-This erases all previous properties. To only add properties,
-use `evil-add-command-properties'."
-  (setq evil-command-properties
-        (assq-delete-all command evil-command-properties))
-  (apply #'evil-add-command-properties command properties))
-
-;; If no evil-properties are defined for the command, several parts of
-;; Evil apply certain default rules, e.g., the repeat-system decides
-;; whether the command is repeatable by monitoring buffer changes.
-(defun evil-has-properties-p (command)
-  "Whether Evil properties are defined for COMMAND."
-  (evil-get-property evil-command-properties command))
-
-(defun evil-has-property (command property)
-  "Whether COMMAND has Evil PROPERTY."
-  (plist-member (evil-get-property evil-command-properties command)
-                property))
-
-(defun evil-get-command-property (command property)
-  "Returns the value of Evil PROPERTY of COMMAND."
-  (evil-get-property evil-command-properties command property))
-
-(defmacro evil-redirect-digit-argument (map keys target)
-  "Bind a wrapper function calling TARGET or `digit-argument'.
-MAP is a keymap for binding KEYS to the wrapper for TARGET.
-The wrapper only calls `digit-argument' if a prefix-argument
-has already been started; otherwise TARGET is called."
-  (let* ((target (eval target))
-         (wrapper (intern (format "evil-digit-argument-or-%s"
-                                  target))))
-    `(progn
-       (evil-define-command ,wrapper ()
-         :digit-argument-redirection ,target
-         :keep-visual t
-         :repeat nil
-         (interactive)
-         (if current-prefix-arg
-             (progn
-               (setq this-command 'digit-argument)
-               (call-interactively 'digit-argument))
-           (setq this-command ',target)
-           (call-interactively ',target)))
-       (define-key ,map ,keys ',wrapper))))
 
 ;;; Macro helpers
 
