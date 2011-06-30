@@ -16,6 +16,13 @@
 
 (add-to-list 'evil-motion-state-modes 'apropos-mode)
 
+;;; Buffer-menu
+
+(add-to-list 'evil-motion-state-modes 'Buffer-menu-mode)
+(eval-after-load "buff-menu"
+  '(evil-define-key 'motion Buffer-menu-mode-map (kbd "RET")
+     'Buffer-menu-this-window))
+
 ;;; Custom
 
 (add-to-list 'evil-emacs-state-modes 'Custom-mode)
