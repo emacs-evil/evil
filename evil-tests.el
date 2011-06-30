@@ -1658,7 +1658,7 @@ to `evil-execute-repeat-info'")
          '(" " "ow thow th" bolp eobp))))))
 
 (ert-deftest evil-test-paste-pop-behind ()
-  "Test `evil-paste-pop' after `evil-paste-behind'"
+  "Test `evil-paste-pop' after `evil-paste-after'"
   :tags '(evil operator)
   (ert-info ("Paste")
     (evil-test-buffer

@@ -419,14 +419,14 @@ Both COUNT and CMD may be nil."
     (remove-list-of-text-properties
      0 (length text) yank-excluded-properties text)
     (cond
-     ((eq this-command 'evil-paste-behind)
+     ((eq this-command 'evil-paste-after)
       (end-of-line)
       (evil-move-mark (point))
       (newline)
       (insert text)
       (delete-char -1) ; delete the last newline
       (setq evil-last-paste
-            (list 'evil-paste-behind
+            (list 'evil-paste-after
                   evil-paste-count
                   opoint
                   (mark t)
@@ -448,7 +448,7 @@ Both COUNT and CMD may be nil."
 (defun evil-yank-block-handler (lines)
   "Inserts the current text as block."
   (let ((count (or evil-paste-count 1))
-        (col (if (eq this-command 'evil-paste-behind)
+        (col (if (eq this-command 'evil-paste-after)
                  (1+ (current-column))
                (current-column)))
         (current-line (line-number-at-pos (point)))
@@ -495,14 +495,14 @@ Both COUNT and CMD may be nil."
                 (length lines)                   ; number of rows
                 (* count (length (car lines))))) ; number of colums
     (goto-char opoint)
-    (when (and (eq this-command 'evil-paste-behind)
+    (when (and (eq this-command 'evil-paste-after)
                (not (eolp)))
       (forward-char))))
 
 (defun evil-delete-yanked-rectangle (nrows ncols)
   "Special function to delete the block yanked by a previous paste command."
   (let ((opoint (point))
-        (col (if (eq last-command 'evil-paste-behind)
+        (col (if (eq last-command 'evil-paste-after)
                  (1+ (current-column))
                (current-column))))
     (dotimes (i nrows)
@@ -543,7 +543,7 @@ Both COUNT and CMD may be nil."
         (when register
           (setq evil-last-paste nil))))))
 
-(defun evil-paste-behind (count &optional register)
+(defun evil-paste-after (count &optional register)
   "Pastes the latest yanked text behind point."
   (interactive (list current-prefix-arg evil-this-register))
   (if (evil-visual-state-p)
@@ -554,7 +554,7 @@ Both COUNT and CMD may be nil."
 
         (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
             (let ((evil-paste-count count)
-                  (this-command 'evil-paste-behind)) ; for non-interactive use
+                  (this-command 'evil-paste-after)) ; for non-interactive use
               (insert-for-yank txt))
           ;; no yank-handler, default
           (let ((opoint (point)))
@@ -567,7 +567,7 @@ Both COUNT and CMD may be nil."
               (dotimes (i (or count 1))
                 (insert-for-yank txt))
               (setq evil-last-paste
-                    (list 'evil-paste-behind
+                    (list 'evil-paste-after
                           count
                           opoint
                           beg          ; beg
@@ -612,16 +612,16 @@ Both COUNT and CMD may be nil."
 (defun evil-paste-pop (count)
   "Replace the just-yanked stretch of killed text with a different stretch.
 This command is allowed only immediatly after a `yank',
-`evil-paste-before', `evil-paste-behind' or `evil-paste-pop'.
+`evil-paste-before', `evil-paste-after' or `evil-paste-pop'.
 This command uses the same paste command as before, i.e., when
-used after `evil-paste-behind' the new text is also yanked using
-`evil-paste-behind', used with the same paste-count argument.
+used after `evil-paste-after' the new text is also yanked using
+`evil-paste-after', used with the same paste-count argument.
 
 The COUNT argument inserts the COUNTth previous kill.  If COUNT
 is negative this is a more recent kill."
   (interactive "p")
   (unless (memq last-command
-                '(evil-paste-behind
+                '(evil-paste-after
                   evil-paste-before))
     (error "Previous command was not an evil-paste: %s" last-command))
   (unless evil-last-paste
