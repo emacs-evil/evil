@@ -603,7 +603,10 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
           evil-inhibit-operator nil)
     (unless (eq this-command 'evil-use-register)
       (setq evil-this-register nil))
-    (evil-adjust-eol)))
+    (evil-adjust-eol)
+    (when (region-active-p)
+      (and (fboundp 'evil-visual-state)
+           (evil-visual-state)))))
 
 (evil-define-state emacs
   "Emacs state."

@@ -2345,7 +2345,7 @@ to `evil-execute-repeat-info'")
         (should (= (point) 9))))
     (ert-info ("Select three characters after selection")
       (evil-test-buffer
-        (evil-visual-select 10 12 'inclusive)
+        (evil-visual-make-selection 10 12 'inclusive)
         (funcall object 1)
         (should (evil-visual-state-p))
         (should (eq (evil-visual-type) evil-visual-char))
@@ -2355,7 +2355,7 @@ to `evil-execute-repeat-info'")
         (should (= (point) 15))))
     (ert-info ("Select three characters before selection")
       (evil-test-buffer
-        (evil-visual-select 11 9 'inclusive)
+        (evil-visual-make-selection 11 9 'inclusive)
         (funcall object 1)
         (should (evil-visual-state-p))
         (should (eq (evil-visual-type) evil-visual-char))
@@ -2509,7 +2509,7 @@ to `evil-execute-repeat-info'")
 
 (defun evil-test-visual-select (type &optional mark point)
   "Verify that TYPE is selected correctly"
-  (evil-visual-select mark point type)
+  (evil-visual-make-selection mark point type)
   (ert-info ("Activate region unless TYPE is `block'")
     (cond
      ((eq type 'block)

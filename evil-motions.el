@@ -943,7 +943,7 @@ if COUNT is positive, and to the left of it if negative.
              (setq ,count (* ,count dir))
              ;; expand Visual selection so that point
              ;; is outside already selected text
-             (evil-visual-select mark point type)
+             (evil-visual-make-selection mark point type)
              (evil-visual-expand-region)
              (setq selection (evil-range (evil-visual-beginning)
                                          (evil-visual-end) type))
@@ -995,7 +995,7 @@ if COUNT is positive, and to the left of it if negative.
              (when (< dir 0)
                (evil-swap mark point))
              ;; select the range
-             (evil-visual-select mark point type)))))))
+             (evil-visual-make-selection mark point type)))))))
 
 (defun evil-inner-object-range (count forward &optional backward type)
   "Return an inner text object range (BEG END) of COUNT objects.

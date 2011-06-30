@@ -607,9 +607,26 @@ Execute BODY, then restore those things."
      (save-excursion
        ,@body)))
 
+(defun evil-normalize-position (pos)
+  "Return POS if it does not exceed the buffer boundaries.
+If POS is less than `point-min', return `point-min'.
+Is POS is more than `point-max', return `point-max'."
+  (cond
+   ((not (number-or-marker-p pos))
+    pos)
+   ((< pos (point-min))
+    (point-min))
+   ((> pos (point-max))
+    (point-max))
+   (t
+    pos)))
+
 ;; `set-mark' does too much at once
 (defun evil-move-mark (pos)
-  "Set buffer's mark to POS."
+  "Set buffer's mark to POS.
+If POS is nil, delete the mark."
+  (when pos
+    (setq pos (evil-normalize-position pos)))
   (set-marker (mark-marker) pos))
 
 (evil-define-command evil-exchange-point-and-mark ()
