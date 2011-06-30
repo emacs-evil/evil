@@ -282,6 +282,13 @@
 
 (define-key evil-emacs-state-map "\C-z" 'evil-change-to-default-state)
 
+;;; Minibuffer
+
+(define-key minibuffer-local-map "\C-p" 'evil-complete)
+(define-key minibuffer-local-map "\C-n" 'evil-complete)
+(define-key minibuffer-local-map "\C-x\C-p" 'evil-complete)
+(define-key minibuffer-local-map "\C-x\C-n" 'evil-complete)
+
 (provide 'evil-maps)
 
 ;;; evil-maps.el ends here
