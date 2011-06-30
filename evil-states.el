@@ -121,8 +121,22 @@ current buffer only.")
 
 (defun evil-initialize-state (&optional buffer)
   "Initialize Evil state in BUFFER."
-  (evil-change-state (evil-buffer-state buffer 'normal))
-  (remove-hook 'post-command-hook 'evil-initialize-state t))
+  (with-current-buffer (or buffer (current-buffer))
+    (evil-change-to-default-state buffer)
+    (remove-hook 'post-command-hook 'evil-initialize-state t)))
+
+(defun evil-change-to-default-state (&optional buffer)
+  "Change state to the default state for BUFFER.
+This is the state the buffer initially comes up in."
+  (interactive)
+  (with-current-buffer (or buffer (current-buffer))
+    (evil-change-state (evil-buffer-state buffer 'normal))))
+
+(defun evil-change-to-previous-state (&optional buffer)
+  "Change the state of BUFFER to its previous state."
+  (interactive)
+  (with-current-buffer (or buffer (current-buffer))
+    (evil-change-state (or evil-previous-state evil-state 'normal))))
 
 (defun evil-change-state (state)
   "Change state to STATE.

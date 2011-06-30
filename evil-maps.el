@@ -48,7 +48,6 @@
 (define-key evil-normal-state-map "\C-t" 'pop-tag-mark)
 (define-key evil-normal-state-map "\C-v" 'evil-visual-block)
 (define-key evil-normal-state-map "\C-w" 'evil-window-map)
-(define-key evil-normal-state-map "\C-z" 'evil-emacs-state)
 (define-key evil-normal-state-map (kbd "C-.") 'evil-repeat-pop)
 (define-key evil-normal-state-map (kbd "M-.") 'evil-repeat-pop-next)
 (define-key evil-normal-state-map "." 'evil-repeat)
@@ -224,6 +223,7 @@
 (define-key evil-motion-state-map (kbd "C-f") 'evil-scroll-page-down)
 (define-key evil-motion-state-map (kbd "C-o") 'evil-jump-backward)
 (define-key evil-motion-state-map (kbd "C-y") 'evil-scroll-line-up)
+(define-key evil-motion-state-map (kbd "C-z") 'evil-emacs-state)
 (define-key evil-motion-state-map "z^" 'evil-scroll-top-line-to-bottom)
 (define-key evil-motion-state-map "z+" 'evil-scroll-bottom-line-to-top)
 (define-key evil-motion-state-map "zt" 'evil-scroll-line-to-top)
@@ -279,7 +279,7 @@
 
 ;;; Emacs state
 
-(define-key evil-emacs-state-map "\C-z" 'evil-normal-state)
+(define-key evil-emacs-state-map "\C-z" 'evil-change-to-default-state)
 
 (provide 'evil-maps)
 
