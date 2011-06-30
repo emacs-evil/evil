@@ -64,7 +64,7 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
   "Go to definition or first occurrence of symbol under point."
   :jump t
   :type exclusive
-  (let* ((string (or (thing-at-point 'symbol) ""))
+  (let* ((string (evil-find-symbol t))
          (search (if evil-regexp-search (regexp-quote string) string))
          ientry ipos)
     ;; load imenu if available
@@ -72,30 +72,31 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
       (condition-case nil
           (require 'imenu)
         (error nil)))
-    (cond
-     ((string= string "")
-      (error "No string under cursor"))
-     ;; if imenu is available, try it
-     ((fboundp 'imenu--make-index-alist)
-      (condition-case nil
-          (setq ientry (imenu--make-index-alist))
-        (error nil))
-      (setq ientry (assoc string ientry))
-      (setq ipos (cdr ientry))
-      (unless (markerp ipos)
-        (setq ipos (cadr ientry)))
+    (if (null string)
+        (error "No symbol under cursor")
+      (setq isearch-forward t)
+      ;; if imenu is available, try it
       (cond
-       ;; imenu found a position, so go there and
-       ;; highlight the occurrence
-       ((and (markerp ipos)
-             (eq (marker-buffer ipos) (current-buffer)))
-        (evil-search search t evil-regexp-search ipos))
-       ;; imenu failed, so just go to first occurrence in buffer
+       ((fboundp 'imenu--make-index-alist)
+        (condition-case nil
+            (setq ientry (imenu--make-index-alist))
+          (error nil))
+        (setq ientry (assoc string ientry))
+        (setq ipos (cdr ientry))
+        (unless (markerp ipos)
+          (setq ipos (cadr ientry)))
+        (cond
+         ;; imenu found a position, so go there and
+         ;; highlight the occurrence
+         ((and (markerp ipos)
+               (eq (marker-buffer ipos) (current-buffer)))
+          (evil-search search t evil-regexp-search ipos))
+         ;; imenu failed, so just go to first occurrence in buffer
+         (t
+          (evil-search search t evil-regexp-search (point-min)))))
+       ;; no imenu, so just go to first occurrence in buffer
        (t
-        (evil-search search t evil-regexp-search (point-min)))))
-     ;; no imenu, so just go to first occurrence in buffer
-     (t
-      (evil-search search t evil-regexp-search (point-min))))))
+        (evil-search search t evil-regexp-search (point-min)))))))
 
 (defun evil-search-incrementally (forward regexp-p)
   "Search incrementally for user-entered text."
@@ -270,16 +271,30 @@ If FORWARD is nil, search backward, otherwise forward."
            (not (string= string "")))
       (evil-search string forward evil-search-wrap))
      (t
-      (save-excursion
-        (setq string (or (thing-at-point 'symbol) ""))
-        ;; if there's nothing under point, go forwards
-        ;; (or backwards) to find it
-        (while (and (null string)
-                    (not (funcall end)))
-          (funcall move)
-          (setq string (thing-at-point 'symbol)))
+      (setq string (evil-find-symbol forward))
+      (if (null string)
+          (error "No symbol under point")
         (setq string (format "\\_<%s\\_>" (regexp-quote string))))
       (evil-search string forward evil-search-wrap)))))
+
+(defun evil-find-symbol (forward)
+  "Return symbol near point as a string.
+If FORWARD is nil, search backward, otherwise forward.
+Returns nil if nothing is found."
+  (let ((move (if forward 'forward-char 'backward-char))
+        (end (if forward 'eobp 'bobp))
+        string)
+    (save-excursion
+      (setq string (thing-at-point 'symbol))
+      ;; if there's nothing under point, go forwards
+      ;; (or backwards) to find it
+      (while (and (null string) (not (funcall end)))
+        (funcall move)
+        (setq string (thing-at-point 'symbol)))
+      (when (stringp string)
+        (set-text-properties 0 (length string) nil string))
+      (when (> (length string) 0)
+        string))))
 
 (defun evil-search-prompt (forward)
   "Return the search prompt for the given direction."
