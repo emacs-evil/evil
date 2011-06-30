@@ -5,21 +5,22 @@
   :group 'emulations
   :prefix 'evil-)
 
+(defcustom evil-auto-indent t
+  "Whether to auto-indent when entering Insert state."
+  :type  'boolean
+  :group 'evil)
+(make-variable-buffer-local 'evil-auto-indent)
+
 (defcustom evil-shift-width 4
   "The offset used by \\<evil-normal-state-map>\\[evil-shift-right] \
 and \\[evil-shift-left]."
   :type 'integer
   :group 'evil)
 
-(defcustom evil-move-cursor-back t
-  "Whether the cursor is moved backwards when exiting Insert state."
+(defcustom evil-repeat-move-cursor t
+  "Whether \"\\<evil-normal-state-map>\\[evil-repeat]\" \
+moves the cursor."
   :type 'boolean
-  :group 'evil)
-
-(defcustom evil-show-paren-range 0
-  "The minimal distance between point and a parenthesis
-which causes the parenthesis to be highlighted."
-  :type 'integer
   :group 'evil)
 
 (defcustom evil-find-skip-newlines nil
@@ -27,15 +28,35 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
-(defcustom evil-want-fine-undo nil
-  "Whether commands like \"cw\" are undone in several steps."
+(defcustom evil-move-cursor-back t
+  "Whether the cursor is moved backwards when exiting Insert state."
   :type 'boolean
   :group 'evil)
 
-(defcustom evil-repeat-move-cursor t
-  "Whether \"\\<evil-normal-state-map>\\[evil-repeat]\" \
-moves the cursor."
+(defcustom evil-want-fine-undo nil
+  "Whether actions like \"cw\" are undone in several steps."
   :type 'boolean
+  :group 'evil)
+
+(defcustom evil-regexp-search t
+  "Whether to use regular expressions for searching."
+  :type  'boolean
+  :group 'evil)
+
+(defcustom evil-search-wrap t
+  "Whether search wraps around."
+  :type  'boolean
+  :group 'evil)
+
+(defcustom evil-flash-delay 2
+  "Number of seconds to flash search matches."
+  :type  'integer
+  :group 'evil)
+
+(defcustom evil-show-paren-range 0
+  "The minimal distance between point and a parenthesis
+which causes the parenthesis to be highlighted."
+  :type 'integer
   :group 'evil)
 
 (defcustom evil-want-C-i-jump t
@@ -46,26 +67,6 @@ moves the cursor."
 (defcustom evil-want-C-u-scroll nil
   "Whether \"C-u\" scrolls like in Vim."
   :type 'boolean
-  :group 'evil)
-
-(defcustom evil-flash-delay 2
-  "Number of seconds to flash search matches."
-  :type  'integer
-  :group 'evil)
-
-(defcustom evil-search-wrap t
-  "Whether search wraps around."
-  :type  'boolean
-  :group 'evil)
-
-(defcustom evil-regexp-search t
-  "Whether to use regular expressions for searching."
-  :type  'boolean
-  :group 'evil)
-
-(defcustom evil-auto-indent t
-  "Whether to auto-indent when entering Insert state."
-  :type  'boolean
   :group 'evil)
 
 (defcustom evil-motions
