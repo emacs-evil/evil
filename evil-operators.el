@@ -57,7 +57,7 @@
           beg (or (pop args) 'beg)
           end (or (pop args) 'end)
           type (pop args)
-          args (when type (append (list '&optional type) args))
+          args (when type `(&optional ,type ,@args))
           type (or type 'type))
     ;; collect docstring
     (when (and (> (length body) 1)
@@ -133,7 +133,7 @@ depending on RETURN-TYPE. Insteaf of reading from the keyboard,
 a predefined motion may be specified with MOTION. Likewise,
 a predefined type may be specified with TYPE."
   (let ((range (evil-range (point) (point)))
-        command count modifier)
+        command count modifier yank-handler)
     (evil-save-echo-area
       (cond
        ;; Visual selection
@@ -160,9 +160,10 @@ a predefined type may be specified with TYPE."
                   (vconcat (nthcdr var keys)) 'evil-line)))
             ;; read motion from keyboard
             (setq command (evil-read-motion motion)
-                  motion (pop command)
-                  count (pop command)
-                  type (or type (pop command))))
+                  motion (nth 0 command)
+                  count (nth 1 command)
+                  type (or type (nth 2 command))
+                  yank-handler (nth 3 command)))
           (cond
            ((null motion)
             (setq quit-flag t))
@@ -178,6 +179,8 @@ a predefined type may be specified with TYPE."
                   (* (prefix-numeric-value count)
                      (prefix-numeric-value current-prefix-arg)))))
           (when motion
+            (setq evil-this-type type
+                  evil-this-yank-handler yank-handler)
             (evil-with-state operator
               ;; calculate motion range
               (setq range (evil-motion-range
@@ -256,11 +259,11 @@ The return value is a list (BEG END TYPE)."
   "Read a MOTION, motion COUNT and motion TYPE from the keyboard.
 The type may be overridden with MODIFIER, which may be a type
 or a Visual selection as defined by `evil-define-visual-selection'.
-Return a list (MOTION COUNT TYPE)."
+Return a list (MOTION COUNT TYPE YANK-HANDLER)."
   (let ((modifiers '((evil-visual-char . char)
                      (evil-visual-line . line)
                      (evil-visual-block . block)))
-        command prefix)
+        command prefix yank-handler)
     (unless motion
       (while (progn
                (setq command (evil-keypress-parser)
@@ -278,6 +281,7 @@ Return a list (MOTION COUNT TYPE)."
                        (or modifier
                            (car (rassq motion evil-visual-alist))))))))
     (setq type (or type (evil-type motion 'exclusive)))
+    (setq yank-handler (evil-get-command-property motion :yank-handler))
     (when modifier
       (cond
        ((eq modifier 'char)
@@ -287,7 +291,7 @@ Return a list (MOTION COUNT TYPE)."
           (setq type 'exclusive)))
        (t
         (setq type modifier))))
-    (list motion count type)))
+    (list motion count type yank-handler)))
 
 (defun evil-keypress-parser (&optional input)
   "Read from keyboard or INPUT and build a command description.
@@ -351,18 +355,19 @@ Both COUNT and CMD may be nil."
 
 ;;; Operator commands
 
-(evil-define-operator evil-yank (beg end type register)
+(evil-define-operator evil-yank (beg end type register yank-handler)
   "Saves the characters in motion into the kill-ring."
   :move-point nil
   :repeat nil
-  (interactive (list evil-this-register))
+  (interactive (list evil-this-register
+                     evil-this-yank-handler))
   (cond
    ((eq type 'block)
-    (evil-yank-rectangle beg end register))
+    (evil-yank-rectangle beg end register yank-handler))
    ((eq type 'line)
-    (evil-yank-lines beg end register))
+    (evil-yank-lines beg end register yank-handler))
    (t
-    (evil-yank-characters beg end register))))
+    (evil-yank-characters beg end register yank-handler))))
 
 (evil-define-operator evil-yank-line (beg end type register)
   "Saves whole lines into the kill-ring."
@@ -371,28 +376,31 @@ Both COUNT and CMD may be nil."
   (interactive (list evil-this-register))
   (evil-yank beg end type register))
 
-(defun evil-yank-characters (beg end register)
+(defun evil-yank-characters (beg end &optional register yank-handler)
   "Saves the characters defined by the region BEG and END in the kill-ring."
   (let ((text (buffer-substring beg end)))
+    (when yank-handler
+      (setq text (propertize text 'yank-handler (list yank-handler))))
     (when register
       (set-register register text))
     (kill-new text)))
 
-(defun evil-yank-lines (beg end register)
+(defun evil-yank-lines (beg end &optional register yank-handler)
   "Saves the lines in the region BEG and END into the kill-ring."
-  (let ((txt (buffer-substring beg end))
-        (yinfo (list #'evil-yank-line-handler)))
-    ;; Ensure the text ends with newline. This is required if the
-    ;; deleted lines were the last lines in the buffer.
-    (when (or (zerop (length txt))
-              (/= (aref txt (1- (length txt))) ?\n))
-      (setq txt (concat txt "\n")))
-    (setq txt (propertize txt 'yank-handler yinfo))
+  (let* ((text (buffer-substring beg end))
+         (yank-handler (list (or yank-handler
+                                 #'evil-yank-line-handler))))
+    ;; Ensure the text ends with a newline. This is required
+    ;; if the deleted lines were the last lines in the buffer.
+    (when (or (zerop (length text))
+              (/= (aref text (1- (length text))) ?\n))
+      (setq text (concat text "\n")))
+    (setq text (propertize text 'yank-handler yank-handler))
     (when register
-      (set-register register txt))
-    (kill-new txt)))
+      (set-register register text))
+    (kill-new text)))
 
-(defun evil-yank-rectangle (beg end register)
+(defun evil-yank-rectangle (beg end &optional register yank-handler)
   "Stores the rectangle defined by region BEG and END into the kill-ring."
   (let ((lines (list nil)))
     (apply-on-rectangle #'extract-rectangle-line beg end lines)
@@ -400,17 +408,18 @@ Both COUNT and CMD may be nil."
     ;; Spaces are inserted explicitly in the yank-handler in order to
     ;; NOT insert lines full of spaces.
     (setq lines (nreverse (cdr lines)))
-    ;; `txt' is used as default insert text when pasting this rectangle
+    ;; `text' is used as default insert text when pasting this rectangle
     ;; in another program, e.g., using the X clipboard.
-    (let* ((yinfo (list #'evil-yank-block-handler
-                        lines
-                        nil
-                        #'evil-delete-yanked-rectangle))
-           (txt (propertize (mapconcat #'identity lines "\n")
-                            'yank-handler yinfo)))
+    (let* ((yank-handler (list (or yank-handler
+                                   #'evil-yank-block-handler)
+                               lines
+                               nil
+                               #'evil-delete-yanked-rectangle))
+           (text (propertize (mapconcat #'identity lines "\n")
+                             'yank-handler yank-handler)))
       (when register
-        (set-register register txt))
-      (kill-new txt))))
+        (set-register register text))
+      (kill-new text))))
 
 (defun evil-yank-line-handler (text)
   "Inserts the current text linewise."
@@ -458,7 +467,7 @@ Both COUNT and CMD may be nil."
       (setq line (apply #'concat (make-list count line)))
       ;; strip whitespaces at beginning and end
       (string-match "^ *\\(.*?\\) *$" line)
-      (let ((txt (match-string 1 line))
+      (let ((text (match-string 1 line))
             (begextra (match-beginning 1))
             (endextra (- (match-end 0) (match-end 1))))
         ;; maybe we have to insert a new line at eob
@@ -472,7 +481,7 @@ Both COUNT and CMD may be nil."
                           (goto-char (line-end-position))
                           (current-column))
                         col)               ; nothing in this line
-                     (zerop (length txt))) ; and nothing to insert
+                     (zerop (length text))) ; and nothing to insert
           ;; if we paste behind eol, it may be sufficient to insert tabs
           (if (< (save-excursion
                    (goto-char (line-end-position))
@@ -481,9 +490,9 @@ Both COUNT and CMD may be nil."
               (move-to-column (+ col begextra) t)
             (move-to-column col t)
             (insert (make-string begextra ? )))
-          (remove-list-of-text-properties 0 (length txt)
-                                          yank-excluded-properties txt)
-          (insert txt)
+          (remove-list-of-text-properties 0 (length text)
+                                          yank-excluded-properties text)
+          (insert text)
           (unless (eolp)
             ;; text follows, so we have to insert spaces
             (insert (make-string endextra ? ))))
@@ -521,17 +530,21 @@ Both COUNT and CMD may be nil."
   (if (evil-visual-state-p)
       (evil-visual-paste count register)
     (evil-with-undo
-      (let* ((txt (if register (get-register register) (current-kill 0)))
-             (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
-        (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
+      (let* ((text (if register
+                       (get-register register)
+                     (current-kill 0)))
+             (yank-handler (car-safe (get-text-property
+                                      0 'yank-handler text))))
+        (if (memq yank-handler '(evil-yank-line-handler
+                                 evil-yank-block-handler))
             (let ((evil-paste-count count)
                   (this-command 'evil-paste-before)) ; for non-interactive use
-              (insert-for-yank txt))
+              (insert-for-yank text))
           ;; no yank-handler, default
           (let ((opoint (point)))
             (dotimes (i (or count 1))
-              (insert-for-yank txt))
-            (set-mark opoint)
+              (insert-for-yank text))
+            (evil-move-mark opoint)
             (setq evil-last-paste
                   (list 'evil-paste-before
                         count
@@ -549,13 +562,16 @@ Both COUNT and CMD may be nil."
   (if (evil-visual-state-p)
       (evil-visual-paste count register)
     (evil-with-undo
-      (let* ((txt (if register (get-register register) (current-kill 0)))
-             (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
-
-        (if (memq yhandler '(evil-yank-line-handler evil-yank-block-handler))
+      (let* ((text (if register
+                       (get-register register)
+                     (current-kill 0)))
+             (yank-handler (car-safe (get-text-property
+                                      0 'yank-handler text))))
+        (if (memq yank-handler '(evil-yank-line-handler
+                                 evil-yank-block-handler))
             (let ((evil-paste-count count)
                   (this-command 'evil-paste-after)) ; for non-interactive use
-              (insert-for-yank txt))
+              (insert-for-yank text))
           ;; no yank-handler, default
           (let ((opoint (point)))
             ;; TODO: Perhaps it is better to collect a list of all
@@ -565,7 +581,7 @@ Both COUNT and CMD may be nil."
             (unless (eolp) (forward-char))
             (let ((beg (point)))
               (dotimes (i (or count 1))
-                (insert-for-yank txt))
+                (insert-for-yank text))
               (setq evil-last-paste
                     (list 'evil-paste-after
                           count
@@ -579,15 +595,18 @@ Both COUNT and CMD may be nil."
 (defun evil-visual-paste (count &optional register)
   "Paste over Visual selection."
   (interactive (list current-prefix-arg evil-this-register))
-  (let* ((txt (if register (get-register register) (current-kill 0)))
-         (yhandler (car-safe (get-text-property 0 'yank-handler txt))))
+  (let* ((text (if register
+                   (get-register register)
+                 (current-kill 0)))
+         (yank-handler (car-safe (get-text-property
+                                  0 'yank-handler text))))
     (evil-with-undo
       (when (evil-visual-state-p)
         ;; add replaced text to the kill-ring
         (unless register
           ;; if pasting from the kill-ring,
           ;; add replaced text before the current kill
-          (setq kill-ring (delete txt kill-ring)))
+          (setq kill-ring (delete text kill-ring)))
         (setq kill-ring-yank-pointer kill-ring)
         (if (eq (evil-visual-type) 'block)
             (evil-visual-block-rotate 'upper-left)
@@ -596,8 +615,8 @@ Both COUNT and CMD may be nil."
                      (evil-visual-end)
                      (evil-visual-type))
         (unless register
-          (kill-new txt))
-        (when (and (eq yhandler 'evil-yank-line-handler)
+          (kill-new text))
+        (when (and (eq yank-handler 'evil-yank-line-handler)
                    (not (eq (evil-visual-type) 'line)))
           (newline))
         (evil-normal-state))
@@ -637,10 +656,11 @@ is negative this is a more recent kill."
   (interactive "p")
   (evil-paste-pop (- count)))
 
-(evil-define-operator evil-delete (beg end type register)
+(evil-define-operator evil-delete (beg end type register yank-handler)
   "Delete and save in kill-ring or REGISTER."
-  (interactive (list evil-this-register))
-  (evil-yank beg end type register)
+  (interactive (list evil-this-register
+                     evil-this-yank-handler))
+  (evil-yank beg end type register yank-handler)
   (cond
    ((eq type 'block)
     (delete-rectangle beg end))
@@ -669,17 +689,18 @@ is negative this is a more recent kill."
   (interactive (list evil-this-register))
   (evil-delete beg end type register))
 
-(evil-define-operator evil-change (beg end type register)
+(evil-define-operator evil-change (beg end type register yank-handler)
   "Delete region and change to insert state.
 If the region is linewise insertion starts on an empty line.
 If region is a block, the inserted text in inserted at each line
 of the block."
-  (interactive (list evil-this-register))
+  (interactive (list evil-this-register
+                     evil-this-yank-handler))
   (let ((nlines (1+ (- (line-number-at-pos end)
                        (line-number-at-pos beg))))
         (bop (= beg (buffer-end -1)))
         (eob (= end (buffer-end 1))))
-    (evil-delete beg end type register)
+    (evil-delete beg end type register yank-handler)
     (cond
      ((eq type 'line)
       (if (and eob (not bop))

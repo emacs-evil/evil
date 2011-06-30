@@ -225,6 +225,11 @@ describing it, etc.")
   "Current register.")
 (make-variable-buffer-local 'evil-this-register)
 
+(defvar evil-this-yank-handler nil
+  "The yank-handler for the current change, delete or yank command.
+The yank-handler will be called by `insert-for-yank'.")
+(make-variable-buffer-local 'evil-this-register)
+
 (defvar evil-this-macro nil
   "Current macro register.")
 (make-variable-buffer-local 'evil-this-macro)
