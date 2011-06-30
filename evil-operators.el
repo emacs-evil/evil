@@ -717,8 +717,7 @@ of the block."
    (evil-this-macro
     (end-kbd-macro)
     (when last-kbd-macro
-      (setq evil-last-macro evil-this-macro)
-      (set-register evil-last-macro last-kbd-macro))
+      (set-register evil-this-macro last-kbd-macro))
     (setq evil-this-macro nil))
    (t
     (setq evil-this-macro register)
@@ -729,13 +728,13 @@ of the block."
 When called interactively, MACRO is read from a register."
   :keep-visual t
   (interactive
-   (let (register)
-     (setq register (or evil-this-register (read-char)))
-     (when (eq register ?@)
-       (setq register nil))
-     (setq evil-last-macro (or register evil-last-macro))
-     (list (prefix-numeric-value current-prefix-arg)
-           (evil-get-register evil-last-macro))))
+   (let (count macro register)
+     (setq count (prefix-numeric-value current-prefix-arg)
+           register (or evil-this-register (read-char)))
+     (if (eq register ?@)
+         (setq macro last-kbd-macro)
+       (setq macro (evil-get-register register)))
+     (list count macro)))
   (if (member macro '("" [] nil))
       (error "No previous macro")
     (execute-kbd-macro macro count)))
