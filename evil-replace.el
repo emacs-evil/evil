@@ -15,7 +15,9 @@
     (add-hook 'pre-command-hook 'evil-replace-pre-command nil t))
    (t
     (overwrite-mode -1)
-    (remove-hook 'pre-command-hook 'evil-replace-pre-command t)))
+    (remove-hook 'pre-command-hook 'evil-replace-pre-command t)
+    (when evil-move-cursor-back
+      (evil-adjust))))
   (setq evil-replace-alist nil))
 
 (defun evil-replace-pre-command ()
