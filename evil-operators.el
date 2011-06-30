@@ -421,7 +421,7 @@ Both COUNT and CMD may be nil."
     (cond
      ((eq this-command 'evil-paste-behind)
       (end-of-line)
-      (set-mark (point))
+      (evil-move-mark (point))
       (newline)
       (insert text)
       (delete-char -1) ; delete the last newline
@@ -431,10 +431,10 @@ Both COUNT and CMD may be nil."
                   opoint
                   (mark t)
                   (point)))
-      (set-mark (1+ (mark t))))
+      (evil-move-mark (1+ (mark t))))
      (t
       (beginning-of-line)
-      (set-mark (point))
+      (evil-move-mark (point))
       (insert text)
       (setq evil-last-paste
             (list 'evil-paste-before
@@ -442,7 +442,7 @@ Both COUNT and CMD may be nil."
                   opoint
                   (mark t)
                   (point)))))
-    (exchange-point-and-mark)
+    (evil-exchange-point-and-mark)
     (back-to-indentation)))
 
 (defun evil-yank-block-handler (lines)
@@ -538,7 +538,7 @@ Both COUNT and CMD may be nil."
                         opoint
                         opoint         ; beg
                         (point)))      ; end
-            (exchange-point-and-mark)))
+            (evil-exchange-point-and-mark)))
         ;; no paste pop after pasting a register
         (when register
           (setq evil-last-paste nil))))))

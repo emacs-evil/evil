@@ -612,6 +612,16 @@ Execute BODY, then restore those things."
   "Set buffer's mark to POS."
   (set-marker (mark-marker) pos))
 
+(evil-define-command evil-exchange-point-and-mark ()
+  "Exchange point and mark without activating the region."
+  :keep-visual t
+  :repeat nil
+  (interactive)
+  (let* ((point (point))
+         (mark  (or (mark t) point)))
+    (set-marker (mark-marker) point)
+    (goto-char mark)))
+
 (defun evil-adjust-eol ()
   "Move (point) one character back if at eol on an non-empty line."
   (when (eolp)
