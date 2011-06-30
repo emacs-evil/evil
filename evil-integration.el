@@ -43,6 +43,26 @@
 
 (add-to-list 'evil-motion-state-modes 'help-mode)
 
+;;; Info
+
+(add-to-list 'evil-motion-state-modes 'Info-mode)
+(eval-after-load 'info
+  '(progn
+     (evil-define-key 'motion Info-mode-map "\C-t"
+       'Info-history-back) ; l
+     (evil-define-key 'motion Info-mode-map "\C-o"
+       'Info-history-back)
+     (evil-define-key 'motion Info-mode-map (kbd "\M-h")
+       'Info-help) ; h
+     (evil-define-key 'motion Info-mode-map " "
+       'Info-scroll-up)
+     (evil-define-key 'motion Info-mode-map (kbd "RET")
+       'Info-follow-nearest-node)
+     (evil-define-key 'motion Info-mode-map "\C-]"
+       'Info-follow-nearest-node)
+     (evil-define-key 'motion Info-mode-map [backspace]
+       'Info-scroll-down)))
+
 ;;; Undo tree visualizer
 
 (add-to-list 'evil-motion-state-modes 'undo-tree-visualizer-mode)
