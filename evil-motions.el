@@ -324,6 +324,7 @@ In Insert state, insert a newline."
 (evil-define-motion evil-window-top (count)
   "Move the cursor to line COUNT from the top of the window
 on the first non-blank character."
+  :jump t
   :type line
   (move-to-window-line (or count 0))
   (back-to-indentation))
@@ -331,6 +332,7 @@ on the first non-blank character."
 (evil-define-motion evil-window-middle ()
   "Move the cursor to the middle line of the current window
 on the first non-blank character."
+  :jump t
   :type line
   (move-to-window-line (/ (window-body-height) 2))
   (back-to-indentation))
@@ -338,6 +340,7 @@ on the first non-blank character."
 (evil-define-motion evil-window-bottom (count)
   "Move the cursor to line COUNT from the bottom of the window
 on the first non-blank character."
+  :jump t
   :type line
   (move-to-window-line (- (or count 1)))
   (back-to-indentation))
@@ -399,6 +402,7 @@ If COUNT is given, move COUNT - 1 lines downward first."
 (evil-define-motion evil-goto-first-line (count)
   "Move the cursor to the first non-blank character of line COUNT.
 By default the first line."
+  :jump t
   :type line
   (goto-char (point-min))
   (when count
@@ -408,6 +412,7 @@ By default the first line."
 (evil-define-motion evil-goto-line (count)
   "Move the cursor to the first non-blank character of line
 COUNT, default the last line."
+  :jump t
   :type line
   (if count
       (evil-goto-first-line count)
@@ -436,6 +441,7 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
 
 (evil-define-motion evil-jump-to-tag ()
   "Jump to tag under point."
+  :jump t
   (let ((tag (thing-at-point 'word)))
     (find-tag tag)))
 
