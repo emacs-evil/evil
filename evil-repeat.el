@@ -240,8 +240,8 @@ Disallow repeat if the command specifies :repeat nil."
 
 (defmacro evil-save-repeat-info (&rest body)
   "Execute BODY, protecting the values of repeat variables."
-  (declare (debug t)
-           (indent defun))
+  (declare (indent defun)
+           (debug t))
   `(let ((evil-repeat-ring (ring-copy evil-repeat-ring))
          evil-repeating-command
          evil-recording-repeat

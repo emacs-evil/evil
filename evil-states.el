@@ -366,11 +366,11 @@ may be specified before the body code:
 :func BOOLEAN   Create a toggle function even if BODY is empty.
 
 \(fn KEYMAP DOC [[KEY VAL]...] BODY...)"
-  (declare (debug (&define name
+  (declare (indent defun)
+           (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp sexp]]
-                           def-body))
-           (indent defun))
+                           def-body)))
   (let (arg func key local mode)
     (while (keywordp (car-safe body))
       (setq key (pop body)
@@ -445,11 +445,11 @@ The basic keymap of this state will then be
 `evil-test-state-map', and so on.
 
 \(fn STATE DOC [[KEY VAL]...] BODY...)"
-  (declare (debug (&define name
+  (declare (indent defun)
+           (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp sexp]]
-                           def-body))
-           (indent defun))
+                           def-body)))
   (let* ((toggle (intern (format "evil-%s-state" state)))
          (mode (intern (format "%s-minor-mode" toggle)))
          (keymap (intern (format "%s-map" toggle)))

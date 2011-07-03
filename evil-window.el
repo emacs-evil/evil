@@ -28,7 +28,8 @@
 
 (defmacro evil-save-column (&rest body)
   "Restores the column after execution of BODY."
-  (declare (indent defun))
+  (declare (indent defun)
+           (debug t))
   `(let ((ocolumn (current-column)))
      ,@body
      (move-to-column ocolumn)))

@@ -441,10 +441,10 @@ Further keywords and functions may be specified. These are assumed to
 be transformations on buffer positions, like :expand and :contract.
 
 \(fn TYPE DOC [[KEY FUNC]...])"
-  (declare (debug (&define name
+  (declare (indent defun)
+           (debug (&define name
                            [&optional stringp]
-                           [&rest [keywordp function-form]]))
-           (indent defun))
+                           [&rest [keywordp function-form]])))
   (let (args defun-forms func key name plist string sym val)
     ;; standard values
     (setq plist (plist-put plist :injective t))

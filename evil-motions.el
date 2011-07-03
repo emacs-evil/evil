@@ -95,7 +95,8 @@ the loop immediately quits. See also `evil-loop'.
 
 (defmacro evil-signal-without-movement (&rest body)
   "Catches errors provided point moves within this scope."
-  (declare (indent defun))
+  (declare (indent defun)
+           (debug t))
   `(let ((p (point)))
      (condition-case err
          (progn ,@body)
@@ -105,8 +106,8 @@ the loop immediately quits. See also `evil-loop'.
 
 (defmacro evil-narrow-to-line (&rest body)
   "Narrow to the current line."
-  (declare (debug t)
-           (indent defun))
+  (declare (indent defun)
+           (debug t))
   `(save-restriction
      (narrow-to-region
       (line-beginning-position)
@@ -355,12 +356,13 @@ on the first non-blank character."
 This function passes its command to `digit-argument' (usually a 0)
 if it is not the first event."
   :type exclusive
-  (if current-prefix-arg
-      (progn
-        (setq this-command 'digit-argument)
-        (call-interactively 'digit-argument))
+  (cond
+   (current-prefix-arg
+    (setq this-command 'digit-argument)
+    (call-interactively 'digit-argument))
+   (t
     (setq this-command 'evil-beginning-of-line)
-    (call-interactively 'evil-beginning-of-line)))
+    (call-interactively 'evil-beginning-of-line))))
 
 (evil-define-motion evil-first-non-blank ()
   "Move the cursor to the first non-blank character of the current line."
@@ -514,10 +516,10 @@ further, the return value is the number of iterations that could
 not be performed.
 
 \(fn NAME (COUNT) MOVES...)"
-  (declare (debug (&define name lambda-list
+  (declare (indent defun)
+           (debug (&define name lambda-list
                            [&optional stringp]
-                           def-body))
-           (indent defun))
+                           def-body)))
   (let* ((var (or (car-safe args) 'var))
          (doc (when (stringp (car-safe moves))
                 (pop moves)))

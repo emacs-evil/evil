@@ -154,8 +154,8 @@ terminates, which is 0 if the loop completes successfully.
 RESULT specifies a variable for storing this value.
 
 \(fn (VAR COUNT [RESULT]) BODY...)"
-  (declare (debug dolist)
-           (indent defun))
+  (declare (indent defun)
+           (debug dolist))
   (let* ((i (make-symbol "loopvar"))
          (var (pop spec))
          (count (pop spec))
@@ -500,18 +500,19 @@ has already been started; otherwise TARGET is called."
          (wrapper (intern (format "evil-digit-argument-or-%s"
                                   target))))
     `(progn
+       (define-key ,map ,keys ',wrapper)
        (evil-define-command ,wrapper ()
          :digit-argument-redirection ,target
          :keep-visual t
          :repeat nil
          (interactive)
-         (if current-prefix-arg
-             (progn
-               (setq this-command 'digit-argument)
-               (call-interactively 'digit-argument))
+         (cond
+          (current-prefix-arg
+           (setq this-command 'digit-argument)
+           (call-interactively 'digit-argument))
+          (t
            (setq this-command ',target)
-           (call-interactively ',target)))
-       (define-key ,map ,keys ',wrapper))))
+           (call-interactively ',target)))))))
 
 ;;; Region
 
@@ -753,8 +754,8 @@ POS defaults to the current position of point."
 
 (defmacro evil-narrow-to-comment (&rest body)
   "Narrow to the current comment or docstring, if any."
-  (declare (debug t)
-           (indent defun))
+  (declare (indent defun)
+           (debug t))
   `(save-restriction
      (cond
       ((evil-in-comment-p)

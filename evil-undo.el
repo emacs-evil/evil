@@ -13,7 +13,7 @@
 
 (defmacro evil-single-undo (&rest body)
   "Execute BODY as a single undo step."
-  (declare (indent 0)
+  (declare (indent defun)
            (debug t))
   `(unwind-protect
        (progn
