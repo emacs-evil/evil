@@ -78,8 +78,8 @@ the selection is enabled.
   "Blockwise selection."
   :message "-- VISUAL BLOCK --"
   (evil-transient-mark -1)
-  (overlay-put evil-visual-overlay :corner nil)
-  (overlay-put evil-visual-overlay :corner (evil-visual-block-corner)))
+  (overlay-put evil-visual-overlay :corner
+               (evil-visual-block-corner 'upper-left)))
 
 (evil-define-state visual
   "Visual state."
@@ -157,9 +157,13 @@ Point and mark are positioned so that the resulting selection
 has the specified boundaries. If DIR is negative, point precedes mark,
 otherwise it succedes it. To specify point and mark directly,
 use `evil-visual-make-selection'."
-  (let* ((type (or type evil-visual-char))
+  (let* ((type (or (evil-visual-selection-type type)
+                   evil-visual-char))
          (dir (or dir 1))
-         (range (evil-contract beg end type)))
+         (range (evil-contract beg end type))
+         (beg (evil-range-beginning range))
+         (end (evil-range-end range))
+         (type (evil-type range type)))
     (when (< dir 0)
       (evil-swap beg end))
     (evil-visual-make-selection beg end type)))
@@ -169,15 +173,16 @@ use `evil-visual-make-selection'."
 The boundaries of the selection are inferred from these
 and the current TYPE. To specify the boundaries and infer
 mark and point, use `evil-visual-select' instead."
-  (unless (evil-visual-state-p)
-    (evil-visual-state))
-  (setq type (or type (evil-visual-type) evil-visual-char))
-  ;; if there exists a specific selection function for TYPE,
-  ;; use that, otherwise use `evil-visual-make-region'
-  (funcall (evil-visual-selection-function type)
-           mark point type
-           (or (evil-normal-state-p)
-               (not (eq type (evil-visual-type))))))
+  (let* ((visual-type (prog1 (evil-visual-type)
+                        (unless (evil-visual-state-p)
+                          (evil-visual-state))))
+         (type (or type (evil-visual-type) evil-visual-char)))
+    ;; if there exists a specific selection function for TYPE,
+    ;; use that, otherwise use `evil-visual-make-region'
+    (funcall (evil-visual-selection-function type)
+             mark point type
+             (or (evil-normal-state-p)
+                 (not (eq type visual-type))))))
 
 ;; the generic selection function, on which all other
 ;; selections are based
@@ -197,11 +202,8 @@ If MESSAGE is given, display it in the echo area."
     (unless (evil-visual-state-p)
       (evil-visual-state))
     (evil-active-region 1)
-    (evil-move-mark mark)
-    (goto-char point)
-    (when type
-      (setq evil-visual-region-expanded nil)
-      (evil-visual-refresh type mark point))
+    (setq evil-visual-region-expanded nil)
+    (evil-visual-refresh type mark point)
     (when (stringp message)
       (evil-echo message))))
 
@@ -211,17 +213,17 @@ If NO-TRAILING-NEWLINE is t and the selection ends with a newline,
 exclude that newline from the region."
   (when (and (evil-visual-state-p)
              (not evil-visual-region-expanded))
-    (let ((beg (evil-visual-beginning))
-          (end (evil-visual-end)))
+    (let ((mark (evil-visual-beginning))
+          (point (evil-visual-end)))
       (when no-trailing-newline
         (save-excursion
-          (goto-char end)
+          (goto-char point)
           (when (and (bolp) (not (bobp)))
-            (setq end (max beg (1- (point)))))))
+            (setq point (max mark (1- (point)))))))
       (when (< (evil-visual-direction) 0)
-        (evil-swap beg end))
-      (evil-visual-make-region beg end)
-      (setq evil-visual-region-expanded t))))
+        (evil-swap mark point))
+      (setq evil-visual-region-expanded t)
+      (evil-visual-refresh nil mark point))))
 
 (defun evil-visual-contract-region ()
   "The inverse of `evil-visual-expand-region'."
@@ -236,25 +238,32 @@ exclude that newline from the region."
                 dir (overlay-get overlay :direction))
           (when (< dir 0)
             (evil-swap mark point))
-          (evil-move-mark mark)
-          (goto-char point))
+          (setq evil-visual-region-expanded nil)
+          (evil-visual-refresh nil mark point))
       (delete-overlay overlay))))
 
-(defun evil-visual-refresh (&optional type mark point)
-  "Refresh `evil-visual-overlay'."
+(defun evil-visual-refresh (&optional type mark point &rest properties)
+  "Refresh mark, point and `evil-visual-overlay'."
   (let* ((point (or point (point)))
          (mark  (or mark (mark t) point))
          (dir   (evil-visual-direction))
-         (type  (or type (evil-visual-type) evil-visual-char)))
-    (if (null evil-visual-overlay)
-        (setq evil-visual-overlay
-              (make-overlay mark point nil nil t))
+         (type  (or type (evil-visual-type) evil-visual-char))
+         (properties (plist-put properties :direction dir)))
+    (evil-move-mark mark)
+    (goto-char point)
+    (unless evil-visual-overlay
+      (setq evil-visual-overlay (make-overlay mark point nil nil t)))
+    (unless evil-visual-region-expanded
       (evil-contract-overlay evil-visual-overlay)
       (move-overlay evil-visual-overlay mark point))
-    (overlay-put evil-visual-overlay :direction dir)
+    (while properties
+      (overlay-put evil-visual-overlay
+                   (pop properties) (pop properties)))
     (evil-set-type evil-visual-overlay type)
     (setq evil-this-type (evil-visual-type))
-    (evil-expand-overlay evil-visual-overlay)
+    (if evil-visual-region-expanded
+        (move-overlay evil-visual-overlay mark point)
+      (evil-expand-overlay evil-visual-overlay))
     (evil-set-marker ?< (evil-visual-beginning))
     (evil-set-marker ?> (evil-visual-end) t)))
 
@@ -417,13 +426,17 @@ The direction is -1 if point precedes mark and 1 otherwise."
             (cons (symbol-value (cdr-safe e)) (cdr-safe e)))
           evil-visual-alist))
 
+(defun evil-visual-selection-type (selection)
+  "Return the type of SELECTION."
+  (or (symbol-value (cdr-safe (assq selection evil-visual-alist)))
+      selection))
+
 (defun evil-visual-selection-function (type)
   "Return a selection function for TYPE.
 For example, `evil-visual-make-region'."
   (or (cdr (assq type evil-visual-alist))
       (cdr (assq type (evil-visual-alist)))
-      ;; unless TYPE has a selection function,
-      ;; enable the selection in a generic way
+      ;; generic selection function
       'evil-visual-make-region))
 
 (evil-define-command evil-visual-restore ()
@@ -457,22 +470,27 @@ corner and point in the lower left."
   :keep-visual t
   (interactive)
   (cond
-   ((eq (evil-visual-type) 'block)
+   ((eq (evil-visual-type) evil-visual-block)
     (let* ((point (point))
            (mark (or (mark t) point))
            (point-col (current-column))
            (mark-col (save-excursion
                        (goto-char mark)
-                       (current-column))))
-      (evil-move-mark (save-excursion
-                        (goto-char mark)
-                        (evil-move-to-column point-col)
-                        (point)))
-      (evil-move-to-column mark-col)))
+                       (current-column)))
+           (mark (save-excursion
+                   (goto-char mark)
+                   (evil-move-to-column point-col)
+                   (point)))
+           (point (save-excursion
+                    (goto-char point)
+                    (evil-move-to-column mark-col)
+                    (point))))
+      (evil-visual-refresh evil-visual-block mark point)))
    (t
-    (exchange-point-and-mark))))
+    (evil-exchange-point-and-mark)
+    (evil-visual-refresh))))
 
-(defun evil-visual-block-corner (&optional point mark corner)
+(defun evil-visual-block-corner (&optional corner point mark)
   "Block corner corresponding to POINT, with MARK in opposite corner.
 Depending on POINT and MARK, the return value is `upper-left',
 `upper-right', `lower-left' or `lower-right':
@@ -542,13 +560,12 @@ When called interactively, the selection is rotated blockwise."
          (range (evil-block-rotate beg end :corner corner)))
     (setq beg (pop range)
           end (pop range))
-    (unless (eq corner (evil-visual-block-corner beg end corner))
+    (unless (eq corner (evil-visual-block-corner corner beg end))
       (evil-swap beg end))
     (goto-char beg)
     (evil-move-mark end)
     (when (evil-visual-state-p)
-      (evil-visual-refresh)
-      (overlay-put evil-visual-overlay :corner corner))))
+      (evil-visual-refresh evil-visual-block nil nil :corner corner))))
 
 (provide 'evil-visual)
 
