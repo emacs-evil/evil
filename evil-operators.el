@@ -220,12 +220,14 @@ The return value is a list (BEG END TYPE)."
                 (evil-this-type (or type
                                     (evil-type motion 'exclusive))))
             (condition-case err
-                (call-interactively motion)
+                (setq range (call-interactively motion))
               (error (prog1 nil
                        (setq evil-this-type 'exclusive
                              evil-write-echo-area t)
                        (message (error-message-string err)))))
             (cond
+             ;; the motion returned a range
+             ((evil-range-p range))
              ;; the motion made a Visual selection
              ((evil-visual-state-p)
               (setq range (evil-range (evil-visual-beginning)

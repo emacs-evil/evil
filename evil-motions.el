@@ -903,8 +903,10 @@ if COUNT is positive, and to the left of it if negative.
                            [&optional stringp]
                            [&rest keywordp sexp]
                            def-body)))
-  (let ((count (or (pop args) 'count))
-        arg doc key keys type)
+  (let* ((args (delq '&optional args))
+         (count (or (pop args) 'count))
+         (args (when args `(&optional ,@args)))
+         arg doc key keys type)
     ;; collect docstring
     (when (stringp (car-safe body))
       (setq doc (pop body)))
@@ -923,79 +925,80 @@ if COUNT is positive, and to the left of it if negative.
        ,@keys
        :type ,type
        (setq ,count (or ,count 1))
-       (when (/= count 0)
+       (when (/= ,count 0)
          (let* ((dir (evil-visual-direction))
                 (type (or ',type evil-visual-char))
-                (point (point))
-                (mark (or (when (evil-visual-state-p) (mark t)) point))
-                (region (evil-range mark point))
-                (selection
-                 (if (evil-visual-state-p)
-                     (evil-range (evil-visual-beginning)
-                                 (evil-visual-end) type)
-                   region))
-                range)
-           ;; if we are at the beginning of the Visual selection,
-           ;; go to the left (negative COUNT); if at the end,
-           ;; go to the right (positive COUNT)
-           (when (or (evil-visual-state-p)
-                     (region-active-p))
-             (setq ,count (* ,count dir))
+                mark point range region selection temp)
+           (cond
+            ((and (evil-visual-state-p)
+                  (evil-called-interactively-p))
+             ;; if we are at the beginning of the Visual selection,
+             ;; go to the left (negative COUNT); if at the end,
+             ;; go to the right (positive COUNT)
+             (setq dir (evil-visual-direction)
+                   ,count (* ,count dir)
+                   range (evil-range (point) (point) type)
+                   region (evil-range (mark t) (point))
+                   selection (evil-range (evil-visual-beginning)
+                                         (evil-visual-end)))
              ;; expand Visual selection so that point
              ;; is outside already selected text
-             (evil-visual-make-selection mark point type)
+             (evil-visual-make-selection (mark t) (point) type)
              (evil-visual-expand-region)
              (setq selection (evil-range (evil-visual-beginning)
-                                         (evil-visual-end) type))
+                                         (evil-visual-end)))
              ;; the preceding selection should contain
              ;; at least one object; if not, add it now
-             (let ((count (- dir)))
-               (setq range (progn ,@body)))
-             (when (and (evil-range-p range)
-                        (not (evil-subrange-p range selection))
+             (let ((,count (- dir)))
+               (setq temp (progn ,@body)))
+             (when (and (evil-range-p temp)
+                        (not (evil-subrange-p temp selection))
                         (if (< dir 0)
-                            (= (evil-range-beginning range)
+                            (= (evil-range-beginning temp)
                                (evil-range-beginning selection))
-                          (= (evil-range-end range)
+                          (= (evil-range-end temp)
                              (evil-range-end selection))))
                ;; found an unselected preceding object:
                ;; decrease COUNT and adjust selection boundaries
-               (setq count (if (< count 0) (1+ count) (1- count))
-                     selection (evil-range-union range selection)
-                     region (evil-contract-range selection t))))
-           (when (/= count 0)
-             ;; main attempt: find range from current position
-             (setq range (progn ,@body))
-             ;; Visual fall-back: enlarge selection by one character
-             (when (evil-visual-state-p)
-               (when (or (not (evil-range-p range))
-                         (evil-subrange-p range selection))
-                 (if (< count 0)
-                     (setq range (evil-range
-                                  (1- (evil-range-beginning selection))
-                                  (evil-range-end selection)))
-                   (setq range (evil-range
-                                (evil-range-beginning selection)
-                                (1+ (evil-range-end selection))))))))
-           (when (evil-range-p range)
-             ;; Did the range specify a type of its own?
-             (evil-set-type range (evil-type range type))
+               (setq ,count (if (< ,count 0) (1+ ,count) (1- ,count))
+                     range (evil-range-union temp range)))
+             (when (/= ,count 0)
+               ;; main attempt: find range from current position
+               (setq temp (progn ,@body))
+               (when (evil-range-p temp)
+                 (setq range (evil-range-union temp range))))
              (cond
-              ((evil-visual-state-p)
-               (setq range (evil-contract-range range)
-                     range (evil-range-union range region)))
+              ((evil-subrange-p range selection)
+               ;; Visual fall-back: enlarge selection by one character
+               (if (< ,count 0)
+                   (evil-visual-select (1- (evil-visual-beginning))
+                                       (evil-visual-end)
+                                       type)
+                 (evil-visual-select (evil-visual-beginning)
+                                     (1+ (evil-visual-end))
+                                     type)))
               (t
-               (setq range (evil-range-union range region)
-                     range (evil-contract-range range))))
-             ;; the beginning is mark and the end is point
-             ;; unless the selection goes the other way
-             (setq mark  (evil-range-beginning range)
-                   point (evil-range-end range)
-                   type  (evil-type range type))
-             (when (< dir 0)
-               (evil-swap mark point))
-             ;; select the range
-             (evil-visual-make-selection mark point type)))))))
+               ;; Find the union of the range and the selection.
+               ;; Actually, this uses the region (point and mark)
+               ;; rather than the selection to prevent the object
+               ;; from unnecessarily overwriting the position of
+               ;; the mark at the other end of the selection.
+               (setq range (evil-contract-range range)
+                     range (evil-range-union range region))
+               ;; the beginning is mark and the end is point
+               ;; unless the selection goes the other way
+               (setq mark  (evil-range-beginning range)
+                     point (evil-range-end range)
+                     type  (evil-type range type))
+               (when (< dir 0)
+                 (evil-swap mark point))
+               ;; select the range
+               (evil-visual-make-selection mark point type))))
+            (t
+             (setq selection (evil-range (point) (point) type)
+                   range (progn ,@body))
+             (when (evil-range-p range)
+               (evil-range-union range selection)))))))))
 
 (defun evil-inner-object-range (count forward &optional backward type)
   "Return an inner text object range (BEG END) of COUNT objects.
@@ -1240,39 +1243,45 @@ Returns t if RANGE was successfully adjusted and nil otherwise."
         (evil-set-range range nil (line-end-position 0)))
       (not (evil-subrange-p orig range)))))
 
-(evil-define-text-object evil-inner-word (count)
-  "Select inner word."
-  (evil-inner-object-range count 'evil-move-word))
+(evil-define-text-object evil-a-word (count bigword)
+  "Select a word.
+If BIGWORD is non-nil, select a WORD."
+  (evil-an-object-range count (if bigword
+                                  'evil-move-WORD
+                                'evil-move-word)))
 
-(evil-define-text-object evil-inner-WORD (count)
-  "Select inner WORD."
-  (evil-inner-object-range count 'evil-move-WORD))
-
-(evil-define-text-object evil-inner-sentence (count)
-  "Select inner sentence."
-  (evil-inner-object-range count 'evil-move-sentence))
-
-(evil-define-text-object evil-inner-paragraph (count)
-  "Select inner paragraph."
-  :type line
-  (evil-inner-object-range count 'evil-move-paragraph))
-
-(evil-define-text-object evil-a-word (count)
-  "Select a word."
-  (evil-an-object-range count 'evil-move-word))
+(evil-define-text-object evil-inner-word (count bigword)
+  "Select inner word.
+If BIGWORD is non-nil, select inner WORD."
+  (evil-inner-object-range count (if bigword
+                                     'evil-move-WORD
+                                   'evil-move-word)))
 
 (evil-define-text-object evil-a-WORD (count)
   "Select a WORD."
-  (evil-an-object-range count 'evil-move-WORD))
+  (evil-a-word count t))
+
+(evil-define-text-object evil-inner-WORD (count)
+  "Select inner WORD."
+  (evil-inner-word count t))
 
 (evil-define-text-object evil-a-sentence (count)
   "Select a sentence."
   (evil-an-object-range count 'evil-move-sentence nil nil t))
 
+(evil-define-text-object evil-inner-sentence (count)
+  "Select inner sentence."
+  (evil-inner-object-range count 'evil-move-sentence))
+
 (evil-define-text-object evil-a-paragraph (count)
   "Select a paragraph."
   :type line
   (evil-an-object-range count 'evil-move-paragraph nil nil t))
+
+(evil-define-text-object evil-inner-paragraph (count)
+  "Select inner paragraph."
+  :type line
+  (evil-inner-object-range count 'evil-move-paragraph))
 
 (evil-define-text-object evil-a-paren (count)
   "Select a parenthesis."
