@@ -220,7 +220,10 @@ or display a message in the echo area."
   "Save the current state; execute BODY; restore the state."
   (declare (indent defun)
            (debug t))
-  `(let ((old-state evil-state))
+  `(let* ((evil-state evil-state)
+          (evil-previous-state evil-previous-state)
+          (evil-next-state evil-next-state)
+          (old-state evil-state))
      (unwind-protect
          (progn ,@body)
        (evil-change-state old-state))))

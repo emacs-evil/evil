@@ -171,19 +171,13 @@ Skip states listed in EXCLUDED."
   "Create a buffer-local value for `evil-mode-map-alist'.
 Its order reflects the state in the current buffer."
   (let ((state (or state evil-state))
-        (states (evil-concat-lists
-                 (mapcar 'cdr (evil-state-property nil :toggle))
-                 (mapcar 'cdr (evil-state-property nil :local))))
         alist mode)
     (evil-refresh-global-keymaps)
     (evil-refresh-local-keymaps)
     ;; disable all modes
     (dolist (mode (mapcar 'car (append evil-mode-map-alist
                                        evil-local-keymaps-alist)))
-      ;; modes not defined by a state are disabled
-      ;; with their toggle function (if any)
-      (when (and (fboundp mode)
-                 (not (memq mode states)))
+      (when (fboundp mode)
         (funcall mode -1))
       (set mode nil))
     ;; enable modes for current state
@@ -192,9 +186,7 @@ Its order reflects the state in the current buffer."
         (if (evil-auxiliary-keymap-p map)
             (add-to-list 'alist (cons t map) t)
           (when (setq mode (evil-keymap-mode map))
-            ;; enable non-state modes
-            (when (and (fboundp mode)
-                       (not (memq mode states)))
+            (when (fboundp mode)
               (funcall mode 1))
             (set mode t)
             ;; refresh the keymap in case it has changed
@@ -445,8 +437,9 @@ The basic keymap of this state will then be
                            def-body))
            (indent defun))
   (let* ((toggle (intern (format "evil-%s-state" state)))
+         (mode (intern (format "%s-minor-mode" toggle)))
          (keymap (intern (format "%s-map" toggle)))
-         (local (intern (format "%s-local" toggle)))
+         (local (intern (format "%s-local-minor-mode" toggle)))
          (local-keymap (intern (format "%s-local-map" toggle)))
          (tag (intern (format "%s-tag" toggle)))
          (message (intern (format "%s-message" toggle)))
@@ -493,8 +486,9 @@ The basic keymap of this state will then be
        ;; states whose definitions may not have been processed yet.
        (evil-put-property
         'evil-state-properties ',state
-        :toggle (defvar ,toggle nil
-                  ,(format "Non-nil if %s state is enabled.
+        :toggle ',toggle
+        :mode (defvar ,mode nil
+                ,(format "Non-nil if %s state is enabled.
 Use the command `%s' to change this variable.\n\n%s" state toggle doc))
         :keymap (defvar ,keymap (make-sparse-keymap)
                   ,(format "Keymap for %s state.\n\n%s" state doc))
@@ -539,47 +533,44 @@ cursor, or a list of the above.\n\n%s" state doc))
          (eq (or state evil-state) ',state))
 
        ;; define state function
-       (defun ,toggle (&optional arg)
+       (evil-define-command ,toggle (&optional arg)
+         :keep-visual t
          ,(format "Enable %s state. Disable with negative ARG.
 If ARG is nil, don't display a message in the echo area.\n\n%s"
                   state doc)
          (interactive "p")
          (cond
           ((and (numberp arg) (< arg 1))
-           (let ((evil-previous-state ',state))
-             (unwind-protect
-                 (let ((evil-state evil-previous-state))
-                   (run-hooks ',exit-hook)
-                   (setq evil-state nil)
-                   (evil-normalize-keymaps)
-                   ,@body)
-               (setq evil-state nil))))
+           (setq evil-previous-state evil-state
+                 evil-state nil)
+           (let ((evil-state ',state))
+             (run-hooks ',exit-hook)
+             (setq evil-state nil)
+             (evil-normalize-keymaps)
+             ,@body))
           (t
-           (let ((evil-next-state ',state)
-                 (evil-previous-state evil-state))
-             (unless evil-local-mode
-               (evil-initialize))
-             (evil-change-state nil)
-             (unwind-protect
-                 (let ((evil-state evil-next-state))
-                   (evil-normalize-keymaps)
-                   (unless evil-locked-display
-                     (setq evil-modeline-tag ,tag)
-                     (evil-set-cursor ,cursor)
-                     (force-mode-line-update)
-                     (when (evil-called-interactively-p)
-                       (redisplay)))
-                   ,@body
-                   (run-hooks ',entry-hook)
-                   (when (and arg (not evil-locked-display) ,message)
-                     (if (functionp ,message)
-                         (funcall ,message)
-                       (evil-echo ,message))))
-               (setq evil-state evil-next-state))))))
-       (evil-set-command-properties ',toggle :keep-visual t)
+           (unless evil-local-mode
+             (evil-initialize))
+           (evil-change-state nil)
+           (setq evil-state ',state)
+           (let ((evil-state ',state)
+                 (evil-next-state ',state))
+             (evil-normalize-keymaps)
+             (unless evil-locked-display
+               (setq evil-modeline-tag ,tag)
+               (evil-set-cursor ,cursor)
+               (force-mode-line-update)
+               (when (evil-called-interactively-p)
+                 (redisplay)))
+             ,@body
+             (run-hooks ',entry-hook)
+             (when (and arg (not evil-locked-display) ,message)
+               (if (functionp ,message)
+                   (funcall ,message)
+                 (evil-echo ,message)))))))
 
        (evil-define-keymap ,keymap nil
-         :mode ,toggle)
+         :mode ,mode)
 
        (evil-define-keymap ,local-keymap nil
          :mode ,local

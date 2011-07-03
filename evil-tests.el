@@ -261,7 +261,7 @@ unchanged test-buffer in Normal state."
     (should-not evil-state))
   (ert-info ("Disable all state keymaps")
     (dolist (state (mapcar 'car evil-state-properties) t)
-      (should-not (symbol-value (evil-state-property state :toggle)))
+      (should-not (symbol-value (evil-state-property state :mode)))
       (should-not (memq (symbol-value (evil-state-property state :keymap))
                         (current-active-maps)))
       (should-not (symbol-value (evil-state-property state :local)))
@@ -285,7 +285,7 @@ unchanged test-buffer in Normal state."
   "Change state to STATE and check keymaps"
   (let (mode keymap local-mode local-keymap tag)
     (evil-change-state state)
-    (setq mode (evil-state-property state :toggle)
+    (setq mode (evil-state-property state :mode)
           keymap (symbol-value (evil-state-property
                                 state :keymap))
           local-mode (evil-state-property state :local)
@@ -366,10 +366,10 @@ unchanged test-buffer in Normal state."
     ;; TODO: this must be done better
     (ert-info ("Disable the state's own keymaps so that the
 suppression keymap comes first")
-      (setq evil-motion-state nil
-            evil-motion-state-local nil
-            evil-operator-state nil
-            evil-operator-state-local nil))
+      (setq evil-motion-state-minor-mode nil
+            evil-motion-state-local-minor-mode nil
+            evil-operator-state-minor-mode nil
+            evil-operator-state-local-minor-mode nil))
     (should (eq (key-binding "Q") 'undefined))
     (ert-info ("Don't insert text")
       ;; may or may not signal an error, depending on batch mode
