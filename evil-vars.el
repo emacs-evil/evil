@@ -264,8 +264,8 @@ name and DATA is either a marker object as returned by
 `make-marker', a movement function, or a cons cell (STRING NUMBER),
 where STRING is a file path and NUMBER is a buffer position.
 The global value of this variable holds markers available from every
-buffer, while the buffer-local value holds markers available only in
-the current buffer.")
+buffer, while the buffer-local value holds markers available only
+in the current buffer.")
 (make-variable-buffer-local 'evil-markers-alist)
 
 (defvar evil-jump-list nil

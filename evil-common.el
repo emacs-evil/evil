@@ -308,32 +308,55 @@ POS defaults to the current position of point.
 If ADVANCE is t, the marker advances when inserting text at it;
 otherwise, it stays behind."
   (interactive (list (read-char)))
-  (let ((marker (evil-get-marker char)) alist)
-    (if (functionp marker)
-        (error "Cannot set special marker `%c'" char)
-      (unless (markerp marker)
-        (cond
-         ((evil-global-marker-p char)
-          (setq alist (default-value 'evil-markers-alist)
-                marker (make-marker))
-          (evil-add-to-alist 'alist char marker)
-          (setq-default evil-markers-alist alist))
-         (t
-          (setq marker (make-marker))
-          (evil-add-to-alist 'evil-markers-alist char marker))))
-      (add-hook 'kill-buffer-hook 'evil-swap-out-markers nil t)
-      (set-marker-insertion-type marker advance)
-      (set-marker marker (or pos (point))))))
+  (let ((marker (evil-get-marker char t)) alist)
+    (unless (markerp marker)
+      (cond
+       ((and marker (symbolp marker) (boundp marker))
+        (set marker (or (symbol-value marker) (make-marker)))
+        (setq marker (symbol-value marker)))
+       ((functionp marker)
+        (error "Cannot set special marker `%c'" char))
+       ((evil-global-marker-p char)
+        (setq alist (default-value 'evil-markers-alist)
+              marker (make-marker))
+        (evil-add-to-alist 'alist char marker)
+        (setq-default evil-markers-alist alist))
+       (t
+        (setq marker (make-marker))
+        (evil-add-to-alist 'evil-markers-alist char marker))))
+    (add-hook 'kill-buffer-hook 'evil-swap-out-markers nil t)
+    (set-marker-insertion-type marker advance)
+    (set-marker marker (or pos (point)))))
 
-(defun evil-get-marker (char)
+(defun evil-get-marker (char &optional raw)
   "Return the marker denoted by CHAR.
 This is either a marker object as returned by `make-marker',
-a movement function, or a cons cell (FILE . POS), where
-FILE is a string and POS is a number."
-  (cdr-safe
-   (if (evil-global-marker-p char)
-       (assq char (default-value 'evil-markers-alist))
-     (assq char evil-markers-alist))))
+a number, a cons cell (FILE . POS) with FILE being a string
+and POS a number, or nil. If RAW is non-nil, then the
+return value may also be a variable, a movement function,
+or a marker object pointing nowhere."
+  (let ((marker (if (evil-global-marker-p char)
+                    (cdr-safe (assq char (default-value
+                                           'evil-markers-alist)))
+                  (cdr-safe (assq char evil-markers-alist)))))
+    (save-excursion
+      (if raw
+          marker
+        (when (and (symbolp marker) (boundp marker))
+          (setq marker (symbol-value marker)))
+        (when (functionp marker)
+          (funcall marker)
+          (setq marker (point)))
+        (when (markerp marker)
+          (if (eq (marker-buffer marker) (current-buffer))
+              (setq marker (marker-position marker))
+            (setq marker (and (marker-buffer marker) marker))))
+        (when (or (numberp marker)
+                  (markerp marker)
+                  (and (consp marker)
+                       (stringp (car marker))
+                       (numberp (cdr marker))))
+          marker)))))
 
 (defun evil-swap-out-markers ()
   "Turn markers into file references when the buffer is killed."

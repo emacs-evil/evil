@@ -190,20 +190,19 @@ See also `evil-goto-min'."
   :repeat nil
   :type exclusive
   (interactive (list (read-char)))
-  (let ((mark (evil-get-marker char)))
+  (let ((marker (evil-get-marker char)))
     (cond
-     ((and (markerp mark)
-           (marker-position mark))
-      (switch-to-buffer (marker-buffer mark))
-      (goto-char (marker-position mark)))
-     ((functionp mark)
-      (funcall mark))
-     ((consp mark)
-      (when (or (find-buffer-visiting (car mark))
+     ((markerp marker)
+      (switch-to-buffer (marker-buffer marker))
+      (goto-char (marker-position marker)))
+     ((numberp marker)
+      (goto-char marker))
+     ((consp marker)
+      (when (or (find-buffer-visiting (car marker))
                 (and (y-or-n-p (format "Visit file %s again? "
-                                       (car mark)))
-                     (find-file (car mark))))
-        (goto-char (cdr mark))))
+                                       (car marker)))
+                     (find-file (car marker))))
+        (goto-char (cdr marker))))
      (t
       (error "Marker `%c' is not set%s" char
              (if (evil-global-marker-p char) ""
