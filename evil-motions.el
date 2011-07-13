@@ -401,24 +401,22 @@ If COUNT is given, move COUNT - 1 lines downward first."
   (evil-first-non-blank))
 
 (evil-define-motion evil-goto-first-line (count)
-  "Move the cursor to the first non-blank character of line COUNT.
+  "Go to the first non-blank character of line COUNT.
 By default the first line."
   :jump t
   :type line
-  (goto-char (point-min))
-  (when count
-    (forward-line (1- count)))
-  (evil-first-non-blank))
+  (evil-goto-line (or count 1)))
 
 (evil-define-motion evil-goto-line (count)
-  "Move the cursor to the first non-blank character of line
-COUNT, default the last line."
+  "Go to the first non-blank character of line COUNT.
+By default the last line."
   :jump t
   :type line
-  (if count
-      (evil-goto-first-line count)
-    (goto-char (point-max))
-    (evil-first-non-blank)))
+  (if (null count)
+      (goto-char (point-max))
+    (goto-char (point-min))
+    (forward-line (1- count)))
+  (evil-first-non-blank))
 
 (evil-define-motion evil-beginning-of-visual-line ()
   "Move the cursor to the first character of the current screen line."
