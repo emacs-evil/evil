@@ -375,7 +375,10 @@ If COUNT is given, move COUNT - 1 lines downward first."
   :type inclusive
   (end-of-line count)
   (unless (evil-visual-state-p)
-    (evil-adjust-eol)))
+    (evil-adjust-eol)
+    (when (eolp)
+      ;; prevent "c$" and "d$" from deleting blank lines
+      (setq evil-this-type 'exclusive))))
 
 (evil-define-motion evil-last-non-blank (count)
   "Move the cursor to the last non-blank character of the current line.

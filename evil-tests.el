@@ -2348,12 +2348,22 @@ Below some empty line"
 (ert-deftest evil-test-end-of-line ()
   "Test `evil-end-of-line' motion"
   :tags '(evil motion)
-  (evil-test-buffer
-    ";; [T]his buffer is for notes you don't want to save."
-    ("$")
-    ";; This buffer is for notes you don't want to save[.]"
-    ("$")
-    ";; This buffer is for notes you don't want to save[.]"))
+  (ert-info ("Simple")
+    (evil-test-buffer
+      ";; [T]his buffer is for notes you don't want to save."
+      ("$")
+      ";; This buffer is for notes you don't want to save[.]"
+      ("$")
+      ";; This buffer is for notes you don't want to save[.]"))
+  (ert-info ("Don't delete blank lines")
+    (evil-test-buffer
+      "Above some line
+\[]
+Below some empty line"
+      ("d$")
+      "Above some line
+\[]
+Below some empty line")))
 
 (ert-deftest evil-test-first-non-blank ()
   "Test `evil-first-non-blank' motion"
