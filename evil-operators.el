@@ -98,7 +98,7 @@
           (unwind-protect
               (setq evil-this-operator this-command
                     range (evil-operator-range
-                           ,(and args t) ',motion ',overriding-type)
+                           ',args ',motion ',overriding-type)
                     ,beg (evil-range-beginning range)
                     ,end (evil-range-end range)
                     ,type (evil-type range)
@@ -133,7 +133,7 @@ depending on RETURN-TYPE. Insteaf of reading from the keyboard,
 a predefined motion may be specified with MOTION. Likewise,
 a predefined type may be specified with TYPE."
   (let ((range (evil-range (point) (point)))
-        command count modifier yank-handler)
+        command count modifier)
     (evil-save-echo-area
       (cond
        ;; Visual selection
@@ -162,8 +162,7 @@ a predefined type may be specified with TYPE."
             (setq command (evil-read-motion motion)
                   motion (nth 0 command)
                   count (nth 1 command)
-                  type (or type (nth 2 command))
-                  yank-handler (nth 3 command)))
+                  type (or type (nth 2 command))))
           (cond
            ((null motion)
             (setq quit-flag t))
@@ -179,8 +178,6 @@ a predefined type may be specified with TYPE."
                   (* (prefix-numeric-value count)
                      (prefix-numeric-value current-prefix-arg)))))
           (when motion
-            (setq evil-this-type type
-                  evil-this-yank-handler yank-handler)
             (evil-with-state operator
               ;; calculate motion range
               (setq range (evil-motion-range
@@ -261,11 +258,11 @@ The return value is a list (BEG END TYPE)."
   "Read a MOTION, motion COUNT and motion TYPE from the keyboard.
 The type may be overridden with MODIFIER, which may be a type
 or a Visual selection as defined by `evil-define-visual-selection'.
-Return a list (MOTION COUNT TYPE YANK-HANDLER)."
+Return a list (MOTION COUNT [TYPE])."
   (let ((modifiers '((evil-visual-char . char)
                      (evil-visual-line . line)
                      (evil-visual-block . block)))
-        command prefix yank-handler)
+        command prefix)
     (unless motion
       (while (progn
                (setq command (evil-keypress-parser)
@@ -282,9 +279,8 @@ Return a list (MOTION COUNT TYPE YANK-HANDLER)."
                  (setq modifier
                        (or modifier
                            (car (rassq motion evil-visual-alist))))))))
-    (setq type (or type (evil-type motion 'exclusive)))
-    (setq yank-handler (evil-get-command-property motion :yank-handler))
     (when modifier
+      (setq type (or type (evil-type motion 'exclusive)))
       (cond
        ((eq modifier 'char)
         ;; TODO: this behavior could be less hard-coded
@@ -293,7 +289,7 @@ Return a list (MOTION COUNT TYPE YANK-HANDLER)."
           (setq type 'exclusive)))
        (t
         (setq type modifier))))
-    (list motion count type yank-handler)))
+    (list motion count type)))
 
 (defun evil-keypress-parser (&optional input)
   "Read from keyboard or INPUT and build a command description.
@@ -361,8 +357,7 @@ Both COUNT and CMD may be nil."
   "Saves the characters in motion into the kill-ring."
   :move-point nil
   :repeat nil
-  (interactive (list evil-this-register
-                     evil-this-yank-handler))
+  (interactive (list evil-this-register (evil-yank-handler)))
   (cond
    ((eq type 'block)
     (evil-yank-rectangle beg end register yank-handler))
@@ -660,8 +655,7 @@ is negative this is a more recent kill."
 
 (evil-define-operator evil-delete (beg end type register yank-handler)
   "Delete and save in kill-ring or REGISTER."
-  (interactive (list evil-this-register
-                     evil-this-yank-handler))
+  (interactive (list evil-this-register (evil-yank-handler)))
   (evil-yank beg end type register yank-handler)
   (cond
    ((eq type 'block)
@@ -696,8 +690,7 @@ is negative this is a more recent kill."
 If the region is linewise insertion starts on an empty line.
 If region is a block, the inserted text in inserted at each line
 of the block."
-  (interactive (list evil-this-register
-                     evil-this-yank-handler))
+  (interactive (list evil-this-register (evil-yank-handler)))
   (let ((nlines (1+ (- (line-number-at-pos end)
                        (line-number-at-pos beg))))
         (bop (= beg (buffer-end -1)))

@@ -537,6 +537,12 @@ has already been started; otherwise TARGET is called."
            (setq this-command ',target)
            (call-interactively ',target)))))))
 
+(defun evil-yank-handler (&optional motion)
+  "Return the yank handler for MOTION.
+MOTION defaults to the current motion."
+  (setq motion (or motion evil-this-motion))
+  (evil-get-command-property motion :yank-handler))
+
 ;;; Region
 
 (defun evil-transient-save ()
