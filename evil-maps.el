@@ -59,6 +59,8 @@
 (define-key evil-normal-state-map ">" 'evil-shift-right)
 (define-key evil-normal-state-map (kbd "<backspace>") 'evil-backward-char)
 (define-key evil-normal-state-map (kbd "ESC") 'evil-normal-state)
+(define-key evil-normal-state-map [remap cua-paste-pop] 'evil-paste-pop)
+(define-key evil-normal-state-map [remap yank-pop] 'evil-paste-pop)
 
 ;; undo
 (define-key evil-normal-state-map "u" 'undo)
