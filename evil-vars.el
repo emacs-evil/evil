@@ -278,9 +278,6 @@ in the current buffer.")
 (defvar evil-recording-repeat nil
   "Whether we are recording a repeat.")
 
-(defvar evil-repeating-command nil
-  "Whether a command is currently being repeated.")
-
 (defvar evil-repeat-changes nil
   "Accumulated buffer changes for changed-based commands.")
 

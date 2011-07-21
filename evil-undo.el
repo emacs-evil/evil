@@ -63,13 +63,14 @@ the current buffer, the undo information is stored in
 `evil-temporary-undo' instead of `buffer-undo-list'."
   (declare (indent defun)
            (debug t))
-  `(let ((orig-buffer-undo-list t))
-     (let (buffer-undo-list)
-       ,@body
-       (setq evil-temporary-undo (cons nil buffer-undo-list)))
+  `(unwind-protect
+       (let (buffer-undo-list)
+         ,@body
+         (setq evil-temporary-undo (cons nil buffer-undo-list)))
      (unless (eq buffer-undo-list t)
        ;; undo is enabled, so update the global buffer undo list
-       (setq buffer-undo-list (append evil-temporary-undo buffer-undo-list)
+       (setq buffer-undo-list
+             (append evil-temporary-undo buffer-undo-list)
              evil-temporary-undo nil))))
 
 (defun evil-undo-pop ()

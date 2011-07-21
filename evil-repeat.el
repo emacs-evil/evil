@@ -74,7 +74,7 @@ in `evil-repeat-info' and clear variables."
       (progn
         (setq evil-repeat-info
               (evil-normalize-repeat-info evil-repeat-info))
-        (when evil-repeat-info
+        (when (and evil-repeat-info evil-repeat-ring)
           (ring-insert evil-repeat-ring evil-repeat-info)))
     (evil-repeat-reset)))
 
@@ -242,8 +242,7 @@ Disallow repeat if the command specifies :repeat nil."
   "Execute BODY, protecting the values of repeat variables."
   (declare (indent defun)
            (debug t))
-  `(let ((evil-repeat-ring (ring-copy evil-repeat-ring))
-         evil-repeating-command
+  `(let (evil-repeat-ring
          evil-recording-repeat
          evil-repeat-info
          evil-repeat-changes
@@ -302,56 +301,54 @@ position before insertion.
 REL-POINT is the relative position to point before the changed
 where point should be placed after all changes."
   (evil-save-repeat-info
-    (let ((p (point)))
+    (let ((point (point)))
       (dolist (change changes)
-        (goto-char (+ p (nth 0 change)))
+        (goto-char (+ point (nth 0 change)))
         (delete-char (nth 2 change))
         (insert (nth 1 change)))
-      (goto-char (+ p rel-point)))))
+      (goto-char (+ point rel-point)))))
 
 (defun evil-execute-repeat-info (repeat-info)
   "Executes a repeat-information REPEAT-INFO."
-  (let ((evil-repeating-command t))
-    (evil-save-repeat-info
-      (dolist (rep (copy-sequence repeat-info))
-        (cond
-         ((arrayp rep)
-          (execute-kbd-macro rep))
-         ((consp rep)
-          (apply (car rep) (cdr rep)))
-         (t
-          (error "Unexpected repeat-info: %S" rep)))))))
+  (evil-save-repeat-info
+    (dolist (rep repeat-info)
+      (cond
+       ((or (arrayp rep) (stringp rep))
+        (execute-kbd-macro rep))
+       ((consp rep)
+        (apply (car rep) (cdr rep)))
+       (t
+        (error "Unexpected repeat-info: %S" rep))))))
 
 ;; TODO: currently we prepend the replacing count before the
 ;; key-sequence that calls the command. Can we use direct
 ;; modification of prefix-arg instead? Does it work in
-;; conjunction with execute-kbd-macro?
+;; conjunction with `execute-kbd-macro'?
 (defun evil-execute-repeat-info-with-count (count repeat-info)
   "Repeat the repeat-information REPEAT-INFO with the count of
 the first command replaced by COUNT. The count is replaced if
 and only if COUNT is non-nil."
-  (let ((evil-repeating-command t))
-    (evil-save-repeat-info
-      (cond
-       ;; do nothing (zero repeating)
-       ((and count (zerop count)))
-       ;; replace count
-       (count
-        (let ((evil-repeat-count count)
-              done)
-          (while (and repeat-info
-                      (arrayp (car repeat-info))
-                      (not done))
-            (let* ((count-and-cmd (evil-extract-count (pop repeat-info))))
-              (push (vconcat (number-to-string count)
-                             (nth 2 count-and-cmd)
-                             (nth 3 count-and-cmd))
-                    repeat-info)
-              (setq done t)))
-          (evil-execute-repeat-info repeat-info)))
-       ;; repeat with original count
-       (t
-        (evil-execute-repeat-info repeat-info))))))
+  (evil-save-repeat-info
+    (cond
+     ;; do nothing (zero repeating)
+     ((and count (zerop count)))
+     ;; replace count
+     (count
+      (let ((evil-repeat-count count)
+            done)
+        (while (and repeat-info
+                    (arrayp (car repeat-info))
+                    (not done))
+          (let* ((count-and-cmd (evil-extract-count (pop repeat-info))))
+            (push (vconcat (number-to-string count)
+                           (nth 2 count-and-cmd)
+                           (nth 3 count-and-cmd))
+                  repeat-info)
+            (setq done t)))
+        (evil-execute-repeat-info repeat-info)))
+     ;; repeat with original count
+     (t
+      (evil-execute-repeat-info repeat-info)))))
 
 (evil-define-command evil-repeat (count &optional save-point)
   "Repeat the last editing command with count replaced by COUNT.
@@ -360,7 +357,7 @@ If SAVE-POINT is non-nil, do not move point."
   (interactive (list current-prefix-arg
                      (not evil-repeat-move-cursor)))
   (cond
-   (evil-repeating-command
+   ((null evil-repeat-ring)
     (error "Already executing repeat"))
    (save-point
     (save-excursion
@@ -371,11 +368,10 @@ If SAVE-POINT is non-nil, do not move point."
            (cons #'(lambda ()
                      (error "Cannot delete buffer in repeat command"))
                  kill-buffer-hook)))
-      (setq evil-last-repeat (list (point) count))
-      (evil-save-repeat-info
-        (evil-with-undo
-          (evil-execute-repeat-info-with-count
-           count (ring-ref evil-repeat-ring 0))))))))
+      (evil-with-undo
+        (setq evil-last-repeat (list (point) count))
+        (evil-execute-repeat-info-with-count
+         count (ring-ref evil-repeat-ring 0)))))))
 
 ;; TODO: the same issue concering disabled undos as for `evil-paste-pop'
 (defun evil-repeat-pop (count)
@@ -394,8 +390,9 @@ is negative this is a more recent kill."
   (goto-char (car evil-last-repeat))
   ;; rotate the repeat-ring
   (while (> count 0)
-    (ring-insert-at-beginning evil-repeat-ring
-                              (ring-remove evil-repeat-ring 0))
+    (when evil-repeat-ring
+      (ring-insert-at-beginning evil-repeat-ring
+                                (ring-remove evil-repeat-ring 0)))
     (setq count (1- count)))
   (setq this-command 'evil-repeat)
   (evil-repeat (cadr evil-last-repeat)))
