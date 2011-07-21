@@ -1,9 +1,10 @@
 SHELL = /bin/bash
 EMACS = emacs
+DOC = doc
 FILES = evil*.el
 TAG =
 
-.PHONY: all compile compile-batch clean tests test emacs term terminal indent
+.PHONY: all compile compile-batch info pdf clean tests test emacs term terminal indent
 
 # Byte-compile Evil.
 all: compile
@@ -17,11 +18,19 @@ done
 compile-batch: clean
 	$(EMACS) --batch -Q -L . -f batch-byte-compile ${FILES}
 
+# Documentation.
+info: clean pdf
+	cd $(DOC) && makeinfo evil.texi
+
+pdf: clean
+	cd $(DOC) && texi2pdf evil.texi
+
 # Delete byte-compiled files.
 clean:
 	rm -f *~
 	rm -f \#*\#
 	rm -f *.elc
+	cd $(DOC) && rm -f *.aux *.cp *.fn *.info *.ky *.log *.pg *.toc *.tp *.vr
 
 # Run tests.
 # The TAG variable may specify a test tag or a test name:
