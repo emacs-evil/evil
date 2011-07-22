@@ -2563,7 +2563,19 @@ Below some empty line"
       ("w")
       "Above some line
 
-\[B]elow some empty line"))
+\[B]elow some empty line")
+    (evil-test-buffer
+      "[A]bove
+
+Below some empty line"
+      ("dw")
+      "[]
+
+Below some empty line")
+    (evil-test-buffer
+      "[A]\n"
+      ("dw")
+      "[]\n"))
   (ert-info ("End of buffer")
     (evil-test-buffer
       ";; [T]his buffer is for notes."
