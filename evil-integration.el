@@ -23,22 +23,6 @@
   '(evil-define-key 'motion Buffer-menu-mode-map (kbd "RET")
      'Buffer-menu-this-window))
 
-;;; Custom
-
-(add-to-list 'evil-emacs-state-modes 'Custom-mode)
-
-;;; Debugger
-
-(add-to-list 'evil-emacs-state-modes 'debugger-mode)
-
-;;; Dired
-
-(add-to-list 'evil-emacs-state-modes 'dired-mode)
-
-;;; ERT
-
-(add-to-list 'evil-emacs-state-modes 'ert-results-mode)
-
 ;;; Help
 
 (add-to-list 'evil-motion-state-modes 'help-mode)

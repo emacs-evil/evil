@@ -69,6 +69,46 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-emacs-state-modes
+  '(bookmark-bmenu-mode
+    bookmark-edit-annotation-mode
+    browse-kill-ring-mode
+    Buffer-menu-mode
+    compilation-mode
+    completion-list-mode
+    Custom-mode
+    debugger-mode
+    dired-mode
+    efs-mode
+    ert-results-mode
+    gnus-group-mode
+    gnus-summary-mode
+    help-mode
+    jde-javadoc-checker-report-mode
+    mh-folder-mode
+    occur-mode
+    rcirc-mode
+    recentf-dialog-mode
+    recentf-mode
+    tar-mode
+    view-mode
+    vm-mode
+    vm-summary-mode)
+  "Modes that should come up in Emacs state."
+  :type  '(repeat symbol)
+  :group 'evil)
+
+(defcustom evil-insert-state-modes
+  '(comint-mode
+    erc-mode
+    eshell-mode
+    gud-mode
+    inferior-emacs-lisp-mode
+    internal-ange-ftp-mode)
+  "Modes that should come up in Insert state."
+  :type  '(repeat symbol)
+  :group 'evil)
+
 (defcustom evil-motions
   '(backward-char
     backward-list

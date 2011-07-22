@@ -529,7 +529,8 @@ cursor, or a list of the above.\n\n%s" state doc))
                      ,(format "Hooks to run when exiting %s state.\n\n%s"
                               state doc))
         :modes (defvar ,modes nil
-                 ,(format "Modes that require %s state." state))
+                 ,(format "Modes that should come up in %s state."
+                          state))
         :predicate ',predicate
         :enable ',enable)
 
