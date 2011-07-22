@@ -543,6 +543,23 @@ MOTION defaults to the current motion."
   (setq motion (or motion evil-this-motion))
   (evil-get-command-property motion :yank-handler))
 
+(defun evil-declare-motion (command)
+  "Declare COMMAND to be a movement function.
+This ensures that it behaves correctly in Visual state."
+  (evil-add-command-properties command :keep-visual t :repeat nil))
+
+(defun evil-declare-repeat (command)
+  "Declare COMMAND to be repeatable."
+  (evil-add-command-properties command :repeat t))
+
+(defun evil-declare-not-repeat (command)
+  "Declare COMMAND to be nonrepeatable."
+  (evil-add-command-properties command :repeat nil))
+
+(defun evil-declare-change-repeat (command)
+  "Declare COMMAND to be repeatable by buffer changes."
+  (evil-add-command-properties command :repeat 'change))
+
 ;;; Region
 
 (defun evil-transient-save ()
