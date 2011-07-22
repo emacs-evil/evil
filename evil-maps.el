@@ -282,7 +282,7 @@
 
 ;;; Emacs state
 
-(define-key evil-emacs-state-map "\C-z" 'evil-change-to-default-state)
+(define-key evil-emacs-state-map "\C-z" 'evil-exit-emacs-state)
 
 ;;; Minibuffer
 

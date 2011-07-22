@@ -14,22 +14,22 @@
 
 ;;; Apropos
 
-(add-to-list 'evil-motion-state-modes 'apropos-mode)
+(evil-set-initial-state 'apropos-mode 'motion)
 
 ;;; Buffer-menu
 
-(add-to-list 'evil-motion-state-modes 'Buffer-menu-mode)
+(evil-set-initial-state 'Buffer-menu-mode 'motion)
 (eval-after-load "buff-menu"
   '(evil-define-key 'motion Buffer-menu-mode-map (kbd "RET")
      'Buffer-menu-this-window))
 
 ;;; Help
 
-(add-to-list 'evil-motion-state-modes 'help-mode)
+(evil-set-initial-state 'help-mode 'motion)
 
 ;;; Info
 
-(add-to-list 'evil-motion-state-modes 'Info-mode)
+(evil-set-initial-state 'Info-mode 'motion)
 (eval-after-load 'info
   '(progn
      (evil-define-key 'motion Info-mode-map "\C-t"
@@ -49,7 +49,7 @@
 
 ;;; Undo tree visualizer
 
-(add-to-list 'evil-motion-state-modes 'undo-tree-visualizer-mode)
+(evil-set-initial-state 'undo-tree-visualizer-mode 'motion)
 
 (when (boundp 'undo-tree-visualizer-map)
   (define-key undo-tree-visualizer-map [remap evil-backward-char]

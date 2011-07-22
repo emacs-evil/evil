@@ -122,29 +122,39 @@ current buffer only.")
 (defun evil-initialize-state (&optional buffer)
   "Initialize Evil state in BUFFER."
   (with-current-buffer (or buffer (current-buffer))
-    (evil-change-to-default-state buffer)
+    (evil-change-to-initial-state buffer)
     (remove-hook 'post-command-hook 'evil-initialize-state t)))
 
-(defun evil-change-to-default-state (&optional buffer)
-  "Change state to the default state for BUFFER.
-This is the state the buffer initially comes up in."
+(defun evil-change-to-initial-state (&optional buffer message)
+  "Change state to the initial state for BUFFER.
+This is the state the buffer comes up in."
   (interactive)
   (with-current-buffer (or buffer (current-buffer))
-    (evil-change-state (evil-buffer-state buffer 'normal))))
+    (evil-change-state (evil-initial-state-for-buffer buffer 'normal)
+                       message)))
 
-(defun evil-change-to-previous-state (&optional buffer)
+(defun evil-change-to-previous-state (&optional buffer message)
   "Change the state of BUFFER to its previous state."
   (interactive)
   (with-current-buffer (or buffer (current-buffer))
-    (evil-change-state (or evil-previous-state evil-state 'normal))))
+    (evil-change-state (or evil-previous-state evil-state 'normal)
+                       message)))
 
-(defun evil-change-state (state)
+(defun evil-exit-emacs-state (&optional buffer message)
+  "Change from Emacs state to the previous state."
+  (interactive '(nil t))
+  (with-current-buffer (or buffer (current-buffer))
+    (evil-change-to-previous-state buffer message)
+    (when (evil-emacs-state-p)
+      (evil-normal-state (and message 1)))))
+
+(defun evil-change-state (state &optional message)
   "Change state to STATE.
 Disable all states if nil."
   (let ((func (evil-state-property (or state evil-state) :toggle)))
     (when (and (functionp func)
                (not (eq state evil-state)))
-      (funcall func (unless state -1)))))
+      (funcall func (if state (and message 1) -1)))))
 
 (defun evil-state-keymaps (state &rest excluded)
   "Return an ordered list of keymaps activated by STATE.
@@ -329,8 +339,23 @@ which will be active whenever `foo-mode-map' is active."
   (define-key (symbol-value (evil-state-property state :local-keymap))
     key def))
 
-(defun evil-mode-state (mode &optional default)
-  "Return Evil state to use for MODE, or DEFAULT if none."
+(defun evil-initial-state-for-buffer (&optional buffer default)
+  "Return initial Evil state to use for BUFFER, or DEFAULT if none.
+BUFFER defaults to the current buffer."
+  (let (state)
+    (with-current-buffer (or buffer (current-buffer))
+      (or (catch 'loop
+            (dolist (mode (append (mapcar 'car minor-mode-map-alist)
+                                  (list major-mode)))
+              (when (and (or (not (boundp mode)) (symbol-value mode))
+                         (setq state (evil-initial-state mode)))
+                (throw 'loop state))))
+          default))))
+
+(defun evil-initial-state (mode &optional default)
+  "Return Evil state to use for MODE, or DEFAULT if none.
+The initial state for a mode can be set with
+`evil-set-initial-state'."
   (let (state modes)
     (or (catch 'loop
           (dolist (entry (evil-state-property nil :modes))
@@ -340,16 +365,14 @@ which will be active whenever `foo-mode-map' is active."
               (throw 'loop state))))
         default)))
 
-(defun evil-buffer-state (&optional buffer default)
-  "Return Evil state to use for BUFFER, or DEFAULT if none."
-  (let (state)
-    (with-current-buffer (or buffer (current-buffer))
-      (or (catch 'loop
-            (dolist (mode (append (mapcar 'car minor-mode-map-alist)
-                                  (list major-mode)))
-              (when (setq state (evil-mode-state mode))
-                (throw 'loop state))))
-          default))))
+(defun evil-set-initial-state (mode state)
+  "Set the initial state for MODE to STATE.
+This is the state the buffer comes up in."
+  (dolist (modes (evil-state-property nil :modes))
+    (setq modes (cdr-safe modes))
+    (set modes (delq mode (symbol-value modes))))
+  (when state
+    (add-to-list (evil-state-property state :modes) mode t)))
 
 (defmacro evil-define-keymap (keymap doc &rest body)
   "Define a keymap KEYMAP listed in `evil-mode-map-alist'.
