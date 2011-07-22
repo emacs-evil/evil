@@ -264,7 +264,11 @@ The overlay equivalent is `evil-describe-overlay'."
 (defun evil-expand-range (range &optional copy)
   "Expand RANGE according to its type.
 Return a new range if COPY is non-nil."
-  (evil-transform-range :expand range copy))
+  (when copy
+    (setq range (evil-copy-range range)))
+  (unless (plist-get (evil-range-properties range) :expanded)
+    (setq range (evil-transform-range :expand range)))
+  range)
 
 (defun evil-contract-range (range &optional copy)
   "Contract RANGE according to its type.
