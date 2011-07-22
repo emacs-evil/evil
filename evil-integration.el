@@ -42,6 +42,11 @@
      (evil-define-key 'motion Info-mode-map [backspace]
        'Info-scroll-down)))
 
+;;; Shell
+
+(eval-after-load 'comint
+  '(define-key comint-mode-map [remap evil-ret] 'comint-send-input))
+
 ;;; Undo tree visualizer
 
 (evil-set-initial-state 'undo-tree-visualizer-mode 'motion)

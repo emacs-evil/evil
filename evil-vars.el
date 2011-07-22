@@ -104,7 +104,8 @@ which causes the parenthesis to be highlighted."
     eshell-mode
     gud-mode
     inferior-emacs-lisp-mode
-    internal-ange-ftp-mode)
+    internal-ange-ftp-mode
+    shell-mode)
   "Modes that should come up in Insert state."
   :type  '(repeat symbol)
   :group 'evil)
