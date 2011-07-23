@@ -27,8 +27,7 @@
       (add-to-list 'evil-replace-alist
                    (cons (point)
                          (unless (eolp)
-                           (char-after)))
-                   t))))
+                           (char-after)))))))
 
 (defun evil-replace-backspace ()
   "Restore character under cursor."

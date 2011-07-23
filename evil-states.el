@@ -375,7 +375,7 @@ This is the state the buffer comes up in."
     (setq modes (cdr-safe modes))
     (set modes (delq mode (symbol-value modes))))
   (when state
-    (add-to-list (evil-state-property state :modes) mode t)))
+    (add-to-list (evil-state-property state :modes) mode)))
 
 (defmacro evil-define-keymap (keymap doc &rest body)
   "Define a keymap KEYMAP listed in `evil-mode-map-alist'.

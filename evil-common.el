@@ -104,7 +104,7 @@ and their PROP values."
               val (cdr entry))
         (when (plist-member val prop)
           (setq val (plist-get val prop))
-          (add-to-list 'result (cons key val) t)))))))
+          (add-to-list 'result (cons key val))))))))
 
 (defun evil-put-property (alist-var key prop val &rest properties)
   "Set PROP to VAL for KEY in ALIST-VAR.
@@ -120,7 +120,7 @@ ALIST-VAR points to an association list with entries in the form
                  prop (pop properties)
                  val (pop properties)))
          (setq alist (assq-delete-all key alist))
-         (add-to-list 'alist (cons key plist) t))))
+         (add-to-list 'alist (cons key plist)))))
 
 (defmacro evil-swap (this that &rest vars)
   "Swap the values of variables THIS and THAT.
@@ -569,9 +569,9 @@ Their values are stored in `evil-transient-vals'."
   (dolist (var evil-transient-vars)
     (when (and (boundp var)
                (not (assq var evil-transient-vals)))
-      (add-to-list 'evil-transient-vals
-                   (list var (symbol-value var)
-                         (and (assq var (buffer-local-variables)) t)))
+      (push (list var (symbol-value var)
+                  (and (assq var (buffer-local-variables)) t))
+            evil-transient-vals)
       (make-variable-buffer-local var))))
 
 (defun evil-transient-restore ()
