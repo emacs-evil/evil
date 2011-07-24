@@ -77,7 +77,6 @@ which causes the parenthesis to be highlighted."
     completion-list-mode
     Custom-mode
     debugger-mode
-    dired-mode
     efs-mode
     ert-results-mode
     gnus-group-mode
@@ -102,7 +101,8 @@ which causes the parenthesis to be highlighted."
     gud-mode
     inferior-emacs-lisp-mode
     internal-ange-ftp-mode
-    shell-mode)
+    shell-mode
+    wdired-mode)
   "Modes that should come up in Insert state."
   :type  '(repeat symbol)
   :group 'evil)

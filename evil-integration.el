@@ -13,6 +13,25 @@
   '(evil-define-key 'motion Buffer-menu-mode-map (kbd "RET")
      'Buffer-menu-this-window))
 
+;;; Dired
+
+(eval-after-load 'dired
+  '(progn
+     (evil-define-key 'normal dired-mode-map "h" 'evil-backward-char)
+     (evil-define-key 'normal dired-mode-map "j" 'evil-next-line)
+     (evil-define-key 'normal dired-mode-map "k" 'evil-previous-line)
+     (evil-define-key 'normal dired-mode-map "l" 'evil-forward-char)
+     ;; use the standard Dired bindings as a base
+     (set-keymap-parent
+      (evil-get-auxiliary-keymap dired-mode-map 'normal)
+      (assq-delete-all 'menu-bar (copy-keymap dired-mode-map)))))
+
+(eval-after-load 'wdired
+  '(progn
+     (add-hook 'wdired-mode-hook 'evil-change-to-initial-state)
+     (defadvice wdired-change-to-dired-mode (after evil activate)
+       (evil-change-to-initial-state))))
+
 ;;; Info
 
 (eval-after-load 'info
