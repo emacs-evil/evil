@@ -123,7 +123,8 @@
            (unless (and evil-inhibit-operator
                         (evil-called-interactively-p))
              ,@body)
-         (setq evil-inhibit-operator nil)))))
+         (when (evil-called-interactively-p)
+           (setq evil-inhibit-operator nil))))))
 
 ;; this is used in the `interactive' specification of an operator command
 (defun evil-operator-range (&optional return-type motion type)
