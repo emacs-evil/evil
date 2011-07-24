@@ -295,8 +295,10 @@ See also `evil-keymap-mode'."
   "Set the auxiliary keymap for MAP in STATE to AUX.
 If AUX is nil, create a new auxiliary keymap."
   (unless (keymapp aux)
-    (setq aux (make-sparse-keymap
-               (format "Auxiliary keymap for %s state" state))))
+    (setq aux (make-sparse-keymap)))
+  (unless (evil-auxiliary-keymap-p aux)
+    (evil-set-keymap-prompt
+     aux (format "Auxiliary keymap for %s state" state)))
   (define-key map
     (vconcat (list (intern (format "%s-state" state)))) aux)
   aux)
@@ -327,6 +329,7 @@ which will be active whenever `foo-mode-map' is active."
     (evil-set-keymap-prompt aux (keymap-prompt aux))))
 
 (put 'evil-define-key 'lisp-indent-function 'defun)
+(put 'evil-set-auxiliary-keymap 'lisp-indent-function 'defun)
 
 ;; these may be useful for programmatic purposes
 (defun evil-global-set-key (state key def)
