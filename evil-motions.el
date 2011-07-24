@@ -6,7 +6,8 @@
 
 (evil-define-state motion
   "Motion state"
-  :tag " <M> ")
+  :tag " <M> "
+  :suppress-keymap t)
 
 (defmacro evil-define-motion (motion args &rest body)
   "Define an motion command MOTION.

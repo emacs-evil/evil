@@ -490,9 +490,7 @@ is executed at the end."
     ;; TODO: this should be done better
     (ert-info ("Disable the state's own keymaps so that the
 suppression keymap comes first")
-      (setq evil-motion-state-minor-mode nil
-            evil-motion-state-local-minor-mode nil
-            evil-operator-state-minor-mode nil
+      (setq evil-operator-state-minor-mode nil
             evil-operator-state-local-minor-mode nil))
     (should (eq (key-binding "Q") 'undefined))
     (ert-info ("Don't insert text")
