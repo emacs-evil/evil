@@ -73,7 +73,6 @@ which causes the parenthesis to be highlighted."
   '(bookmark-bmenu-mode
     bookmark-edit-annotation-mode
     browse-kill-ring-mode
-    Buffer-menu-mode
     compilation-mode
     completion-list-mode
     Custom-mode
@@ -83,7 +82,6 @@ which causes the parenthesis to be highlighted."
     ert-results-mode
     gnus-group-mode
     gnus-summary-mode
-    help-mode
     jde-javadoc-checker-report-mode
     mh-folder-mode
     occur-mode
@@ -91,7 +89,6 @@ which causes the parenthesis to be highlighted."
     recentf-dialog-mode
     recentf-mode
     tar-mode
-    view-mode
     vm-mode
     vm-summary-mode)
   "Modes that should come up in Emacs state."
@@ -107,6 +104,16 @@ which causes the parenthesis to be highlighted."
     internal-ange-ftp-mode
     shell-mode)
   "Modes that should come up in Insert state."
+  :type  '(repeat symbol)
+  :group 'evil)
+
+(defcustom evil-motion-state-modes
+  '(apropos-mode
+    Buffer-menu-mode
+    Info-mode
+    help-mode
+    view-mode)
+  "Modes that should come up in Motion state."
   :type  '(repeat symbol)
   :group 'evil)
 

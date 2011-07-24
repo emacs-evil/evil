@@ -7,24 +7,14 @@
 (mapc 'evil-declare-not-repeat '(save-buffer))
 (mapc 'evil-declare-change-repeat '(dabbrev-expand hippie-expand))
 
-;;; Apropos
-
-(evil-set-initial-state 'apropos-mode 'motion)
-
 ;;; Buffer-menu
 
-(evil-set-initial-state 'Buffer-menu-mode 'motion)
 (eval-after-load "buff-menu"
   '(evil-define-key 'motion Buffer-menu-mode-map (kbd "RET")
      'Buffer-menu-this-window))
 
-;;; Help
-
-(evil-set-initial-state 'help-mode 'motion)
-
 ;;; Info
 
-(evil-set-initial-state 'Info-mode 'motion)
 (eval-after-load 'info
   '(progn
      (evil-define-key 'motion Info-mode-map "\C-t"
