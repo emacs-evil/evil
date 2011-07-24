@@ -3240,6 +3240,22 @@ Below some empty line."))
         ("aw")
         ";;<[ ]This buffer> is for notes."))))
 
+(ert-deftest evil-test-paren-objects ()
+  "Test `evil-inner-paren' and `evil-a-paren'"
+  :tags '(evil text-object)
+  (ert-info ("Select parentheses inside strings")
+    (evil-test-buffer
+      "(aaa \"b(b[b]b)\" aa)"
+      (emacs-lisp-mode) ; syntax
+      ("va(")
+      "(aaa \"b<(bbb[)]>\" aa)"))
+  (ert-info ("Break out of empty strings")
+    (evil-test-buffer
+      "(aaa \"bb[b]b\" aa)"
+      (emacs-lisp-mode)
+      ("va(")
+      "<(aaa \"bbbb\" aa[)]>")))
+
 (ert-deftest evil-test-paren-range ()
   "Test `evil-paren-range'"
   :tags '(evil text-object)

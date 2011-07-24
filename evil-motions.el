@@ -1140,8 +1140,13 @@ use `evil-regexp-range'."
         level beg end range)
     (if (or (evil-in-comment-p)
             (and (evil-in-string-p) (not (eq open close))))
-        ;; if inside a comment, don't use the syntax table
-        (evil-regexp-range count open-regexp close-regexp exclusive)
+        ;; if in a comment, first look inside the comment only;
+        ;; failing that, look outside it
+        (or (evil-regexp-range count open-regexp close-regexp exclusive)
+            (progn
+              (evil-goto-min (evil-string-beginning)
+                             (evil-comment-beginning))
+              (evil-paren-range count open close exclusive)))
       (save-excursion
         (with-syntax-table (copy-syntax-table (syntax-table))
           (cond
