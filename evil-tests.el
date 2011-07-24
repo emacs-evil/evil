@@ -91,46 +91,48 @@ Remaining forms are used as-is.
     (when (stringp (car-safe body))
       (setq string (pop body)))
     ;; macro expansion
-    `(let ((kill-ring kill-ring)
+    `(let ((buffer (evil-test-buffer-from-string
+                    ,string ',state
+                    ,point-start ,point-end
+                    ',visual ,visual-start ,visual-end))
+           (kill-ring kill-ring)
            (kill-ring-yank-pointer kill-ring-yank-pointer)
            x-select-enable-clipboard
            message-log-max)
-       (save-window-excursion
-         (with-current-buffer (evil-test-buffer-from-string
-                               ,string ',state
-                               ,point-start ,point-end
-                               ',visual ,visual-start ,visual-end)
-           ;; necessary for keyboard macros to work
-           (switch-to-buffer-other-window (current-buffer))
-           (buffer-enable-undo)
-           ;; parse remaining forms
-           ,@(mapcar
-              (lambda (form)
-                (cond
-                 ((stringp form)
-                  `(evil-test-buffer-string
-                    ,form
-                    ',point-start ',point-end
-                    ',visual-start ',visual-end))
-                 ((or (stringp (car-safe form))
-                      (vectorp (car-safe form))
-                      (memq (car-safe (car-safe form))
-                            '(kbd vconcat)))
-                  ;; list of strings and vectors:
-                  ;; it would be more intuitive to do
-                  ;; (mapc 'execute-kbd-macro form),
-                  ;; but we need to execute everything
-                  ;; as a single sequence for hooks
-                  ;; to work properly
-                  `(execute-kbd-macro
-                    (apply 'vconcat
-                           (mapcar 'listify-key-sequence
-                                   (mapcar 'eval ',form)))))
-                 ((memq (car-safe form) '(kbd vconcat))
-                  `(execute-kbd-macro ,form))
-                 (t
-                  form)))
-              body))))))
+       (unwind-protect
+           (save-window-excursion
+             (with-current-buffer buffer
+               ;; necessary for keyboard macros to work
+               (switch-to-buffer-other-window (current-buffer))
+               (buffer-enable-undo)
+               ;; parse remaining forms
+               ,@(mapcar
+                  (lambda (form)
+                    (cond
+                     ((stringp form)
+                      `(evil-test-buffer-string
+                        ,form
+                        ',point-start ',point-end
+                        ',visual-start ',visual-end))
+                     ((or (stringp (car-safe form))
+                          (vectorp (car-safe form))
+                          (memq (car-safe (car-safe form))
+                                '(kbd vconcat)))
+                      ;; list of strings and vectors: it would be more
+                      ;; intuitive to do (mapc 'execute-kbd-macro form),
+                      ;; but we need to execute everything as a single
+                      ;; sequence for command loop hooks to work properly
+                      `(execute-kbd-macro
+                        (apply 'vconcat
+                               (mapcar 'listify-key-sequence
+                                       (mapcar 'eval ',form)))))
+                     ((memq (car-safe form) '(kbd vconcat))
+                      `(execute-kbd-macro ,form))
+                     (t
+                      form)))
+                  body)))
+         (and (buffer-name buffer)
+              (kill-buffer buffer))))))
 
 (when (fboundp 'font-lock-add-keywords)
   (font-lock-add-keywords 'emacs-lisp-mode
@@ -190,6 +192,9 @@ VISUAL is the Visual selection: it defaults to `evil-visual-char'."
     (with-current-buffer buffer
       (prog1 buffer
         (evil-change-state state)
+        ;; let the buffer change its major mode
+        ;; without disabling Evil
+        (add-hook 'after-change-major-mode-hook 'evil-initialize)
         (when (and (markerp evil-test-visual-start)
                    (markerp evil-test-visual-end))
           (evil-visual-select
