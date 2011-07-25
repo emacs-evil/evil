@@ -89,6 +89,7 @@
        ,@(when doc `(,doc))
        ,@keys
        :keep-visual t
+       :suppress-operator t
        (interactive
         (let* ((orig (point))
                (,beg orig)
@@ -166,6 +167,8 @@ a predefined type may be specified with TYPE."
                   type (or type (nth 2 command))))
           (cond
            ((null motion)
+            (setq quit-flag t))
+           ((evil-get-command-property motion :suppress-operator)
             (setq quit-flag t))
            ((eq motion 'undefined)
             (setq motion nil))
