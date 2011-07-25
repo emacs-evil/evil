@@ -293,6 +293,10 @@ describing it, etc.")
 If an operator calls a motion and the motion sets this variable
 to t, the operator code is not executed.")
 
+(defvar evil-inhibit-operator-value nil
+  "This variable is used to transfer the value
+of `evil-inhibit-operator' from one local scope to another.")
+
 (defvar evil-markers-alist
   '((?\( . evil-backward-sentence)
     (?\) . evil-forward-sentence)

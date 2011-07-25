@@ -95,9 +95,11 @@
                (,beg orig)
                (,end orig)
                (state evil-state)
-               range ,type)
+               range ,type
+               evil-inhibit-operator)
           (unwind-protect
-              (setq evil-this-operator this-command
+              (setq evil-inhibit-operator-value nil
+                    evil-this-operator this-command
                     range (evil-operator-range
                            ',args ',motion ',overriding-type)
                     ,beg (evil-range-beginning range)
@@ -105,7 +107,8 @@
                     ,type (evil-type range)
                     range (append (evil-range ,beg ,end ,type)
                                   (progn ,@interactive)))
-            (setq orig (point))
+            (setq orig (point)
+                  evil-inhibit-operator-value evil-inhibit-operator)
             (if ,keep-visual
                 (when (evil-visual-state-p)
                   (evil-visual-expand-region))
@@ -121,11 +124,11 @@
               (goto-char orig)))
           range))
        (unwind-protect
-           (unless (and evil-inhibit-operator
-                        (evil-called-interactively-p))
-             ,@body)
-         (when (evil-called-interactively-p)
-           (setq evil-inhibit-operator nil))))))
+           (let ((evil-inhibit-operator evil-inhibit-operator-value))
+             (unless (and evil-inhibit-operator
+                          (evil-called-interactively-p))
+               ,@body))
+         (setq evil-inhibit-operator-value nil)))))
 
 ;; this is used in the `interactive' specification of an operator command
 (defun evil-operator-range (&optional return-type motion type)
