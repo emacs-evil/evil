@@ -215,15 +215,17 @@ exclude that newline from the region."
              (not evil-visual-region-expanded))
     (let ((mark (evil-visual-beginning))
           (point (evil-visual-end)))
-      (when no-trailing-newline
-        (save-excursion
-          (goto-char point)
-          (when (and (bolp) (not (bobp)))
-            (setq point (max mark (1- (point)))))))
       (when (< (evil-visual-direction) 0)
         (evil-swap mark point))
       (setq evil-visual-region-expanded t)
-      (evil-visual-refresh nil mark point))))
+      (evil-visual-refresh nil mark point)
+      (when (and no-trailing-newline
+                 (save-excursion
+                   (goto-char (evil-visual-end))
+                   (and (bolp) (not (bobp)))))
+        (if (< (evil-visual-direction) 0)
+            (evil-move-mark (max point (1- (mark))))
+          (goto-char (max mark (1- (point)))))))))
 
 (defun evil-visual-contract-region ()
   "The inverse of `evil-visual-expand-region'."
