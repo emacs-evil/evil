@@ -85,8 +85,6 @@ which causes the parenthesis to be highlighted."
     mh-folder-mode
     occur-mode
     rcirc-mode
-    recentf-dialog-mode
-    recentf-mode
     tar-mode
     vm-mode
     vm-summary-mode)
@@ -112,6 +110,7 @@ which causes the parenthesis to be highlighted."
     Buffer-menu-mode
     Info-mode
     help-mode
+    recentf-dialog-mode
     view-mode)
   "Modes that should come up in Motion state."
   :type  '(repeat symbol)
