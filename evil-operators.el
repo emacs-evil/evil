@@ -716,6 +716,12 @@ of the block."
   (interactive (list evil-this-register))
   (evil-change beg end type register))
 
+(evil-define-operator evil-change-whole-line (beg end type register)
+  "Change whole line."
+  :motion evil-line
+  (interactive (list evil-this-register))
+  (evil-change beg end type register))
+
 (evil-define-operator evil-substitute (beg end type register)
   "Change a character."
   :motion evil-forward-char

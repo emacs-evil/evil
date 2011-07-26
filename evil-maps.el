@@ -27,6 +27,7 @@
 (define-key evil-normal-state-map "r" 'evil-replace)
 (define-key evil-normal-state-map "R" 'evil-replace-state)
 (define-key evil-normal-state-map "s" 'evil-substitute)
+(define-key evil-normal-state-map "S" 'evil-change-whole-line)
 (define-key evil-normal-state-map "v" 'evil-visual-char)
 (define-key evil-normal-state-map "V" 'evil-visual-line)
 (define-key evil-normal-state-map "x" 'evil-delete-char)
