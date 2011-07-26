@@ -465,6 +465,26 @@ recursively."
             (setq end (1+ end))))))
       (error "Key sequence contains no complete binding"))))
 
+(defun evil-read-key (&optional prompt)
+  "Read a key from the keyboard.
+Translates it according to the input method."
+  (let ((old-global-map (current-global-map))
+        (new-global-map (make-sparse-keymap))
+        (overriding-terminal-local-map (make-sparse-keymap))
+        overriding-local-map)
+    (unwind-protect
+        (progn
+          (define-key new-global-map [menu-bar]
+            (lookup-key global-map [menu-bar]))
+          (define-key new-global-map [tool-bar]
+            (lookup-key global-map [tool-bar]))
+          (add-to-list 'new-global-map
+                       (make-char-table 'display-table
+                                        'self-insert-command) t)
+          (use-global-map new-global-map)
+          (aref (read-key-sequence prompt nil t) 0))
+      (use-global-map old-global-map))))
+
 ;;; Command properties
 
 (defmacro evil-define-command (command &rest body)
