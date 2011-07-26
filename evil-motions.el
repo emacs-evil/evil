@@ -1188,10 +1188,16 @@ use `evil-regexp-range'."
             (modify-syntax-entry close (format ")%c" open))
             ;; handle edge cases
             (if (< count 0)
-                (when (if exclusive (looking-back open-regexp)
+                (when (if exclusive
+                          (or (looking-back open-regexp)
+                              (and (looking-back close-regexp)
+                                   (not (looking-at close-regexp))))
                         (looking-back close-regexp))
                   (backward-char))
-              (when (if exclusive (looking-at close-regexp)
+              (when (if exclusive
+                        (or (looking-at close-regexp)
+                            (and (looking-at open-regexp)
+                                 (not (looking-back open-regexp))))
                       (looking-at open-regexp))
                 (forward-char)))
             ;; find OPEN
@@ -1230,12 +1236,29 @@ the range; otherwise they are included. See also `evil-paren-range'."
       (save-match-data
         (evil-narrow-to-comment
           ;; find beginning of range: handle edge cases
+          (unless (or (looking-at either)
+                      (looking-back either nil t))
+            ;; Is point inside a delimiter?
+            (if (< count 0)
+                (when (re-search-backward either nil t)
+                  (goto-char (match-end 0))
+                  (re-search-forward either nil t))
+              (when (re-search-forward either nil t)
+                (goto-char (match-beginning 0))
+                (re-search-backward either nil t))))
+          ;; Is point next to a delimiter?
           (if (< count 0)
-              (when (if exclusive (looking-back open) (looking-back close))
+              (when (if exclusive
+                        (looking-back open)
+                      (looking-back close))
                 (goto-char (match-beginning 0)))
-            (when (if exclusive (looking-at close) (looking-at open))
+            (when (if exclusive
+                      (or (looking-at close)
+                          (and (looking-at open)
+                               (not (looking-back open))))
+                    (looking-at open))
               (goto-char (match-end 0))))
-          ;; then loop over remainder
+          ;; now loop over remainder
           (while (and (< level (abs count))
                       (re-search-backward either nil t))
             (if (looking-at open)
