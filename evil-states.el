@@ -71,9 +71,10 @@
     ;; to run `after-change-major-mode-hook'
     (add-hook 'post-command-hook 'evil-initialize-state t t)
     (add-hook 'after-change-functions 'evil-repeat-change-hook nil t)
-    (add-hook 'pre-command-hook 'evil-repeat-pre-hook nil t)
-    (add-hook 'post-command-hook 'evil-repeat-post-hook nil t)
-    (add-hook 'post-command-hook 'evil-refresh-cursor))
+    (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
+    (add-hook 'post-command-hook 'evil-repeat-post-hook)
+    (add-hook 'post-command-hook 'evil-refresh-cursor)
+    (add-hook 'minibuffer-setup-hook 'evil-repeat-record-command))
    (t
     (let (new-global-mode-string)
       (while global-mode-string
