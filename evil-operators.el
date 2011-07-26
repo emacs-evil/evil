@@ -621,7 +621,9 @@ Both COUNT and CMD may be nil."
                    (not (eq (evil-visual-type) 'line)))
           (newline))
         (evil-normal-state))
-      (evil-paste-before count register))))
+      (if (eobp)
+          (evil-paste-after count register)
+        (evil-paste-before count register)))))
 
 ;; TODO: if undoing is disabled in the current buffer paste pop won't
 ;; work. Although this is probably not a big problem because usually

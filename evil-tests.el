@@ -1763,7 +1763,7 @@ Below some empty line")))
 
 (ert-deftest evil-test-paste-before ()
   "Test `evil-paste-before'"
-  :tags '(evil operator)
+  :tags '(evil paste)
   (ert-info ("Paste characters")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
@@ -1903,7 +1903,7 @@ Below some empty line")))
 
 (ert-deftest evil-test-paste-after ()
   "Test `evil-paste-after'"
-  :tags '(evil operator)
+  :tags '(evil paste)
   (ert-info ("Paste characters")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
@@ -2044,7 +2044,7 @@ This bufferThis buffe[r]"))
 
 (ert-deftest evil-test-paste-pop-before ()
   "Test `evil-paste-pop' after `evil-paste-before'"
-  :tags '(evil operator)
+  :tags '(evil paste)
   (ert-info ("Paste")
     (evil-test-buffer
       "[;]; This buffer is for notes you don't want to save.
@@ -2118,7 +2118,7 @@ This bufferThis buffe[r]"))
 
 (ert-deftest evil-test-paste-pop-after ()
   "Test `evil-paste-pop' after `evil-paste-after'"
-  :tags '(evil operator)
+  :tags '(evil paste)
   (ert-info ("Paste")
     (evil-test-buffer
       "[;]; This buffer is for notes you don't want to save.
@@ -2191,8 +2191,8 @@ This bufferThis buffe[r]"))
  ;;")))
 
 (ert-deftest evil-test-paste-pop-without-undo ()
-  "Text `evil-paste-pop' with undo disabled"
-  :tags '(evil operator)
+  "Test `evil-paste-pop' with undo disabled"
+  :tags '(evil paste)
   (ert-info ("Pop-next with count without undo")
     (evil-test-buffer
       "[;]; This buffer is for notes you don't want to save.
@@ -2205,6 +2205,28 @@ This bufferThis buffe[r]"))
 \[;]; ;; If you want to create a file, visit that file with C-x C-f,
 ;; ;; then enter the text in that file's own buffer.
 ;;")))
+
+(ert-deftest evil-test-visual-paste ()
+  "Test `evil-paste-before' and `evil-paste-after' in Visual state"
+  :tags '(evil paste)
+  (evil-test-buffer
+    ";; This buffer is for notes you don't want to save.
+;; [I]f you want to create a file, visit that file with C-x C-f."
+    ("yyk")
+    ";; [T]his buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f."
+    ("VP")
+    "[;]; If you want to create a file, visit that file with C-x C-f.
+;; If you want to create a file, visit that file with C-x C-f.")
+  (evil-test-buffer
+    ";; [T]his buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f."
+    ("yyj")
+    ";; This buffer is for notes you don't want to save.
+;; [I]f you want to create a file, visit that file with C-x C-f."
+    ("Vp")
+    ";; This buffer is for notes you don't want to save.
+;; This buffer is for notes you don't want to save."))
 
 ;;; Motions
 
