@@ -21,9 +21,10 @@
      (evil-define-key 'normal dired-mode-map "j" 'evil-next-line)
      (evil-define-key 'normal dired-mode-map "k" 'evil-previous-line)
      (evil-define-key 'normal dired-mode-map "l" 'evil-forward-char)
+     (evil-define-key 'normal dired-mode-map "r" 'dired-do-redisplay) ; "l"
      ;; use the standard Dired bindings as a base
      (set-keymap-parent
-      (evil-get-auxiliary-keymap dired-mode-map 'normal)
+      (evil-get-auxiliary-keymap dired-mode-map 'normal t)
       (assq-delete-all 'menu-bar (copy-keymap dired-mode-map)))))
 
 (eval-after-load 'wdired
@@ -37,11 +38,11 @@
 (eval-after-load 'info
   '(progn
      (evil-define-key 'motion Info-mode-map "\C-t"
-       'Info-history-back) ; l
+       'Info-history-back) ; "l"
      (evil-define-key 'motion Info-mode-map "\C-o"
        'Info-history-back)
      (evil-define-key 'motion Info-mode-map (kbd "\M-h")
-       'Info-help) ; h
+       'Info-help) ; "h"
      (evil-define-key 'motion Info-mode-map " "
        'Info-scroll-up)
      (evil-define-key 'motion Info-mode-map (kbd "RET")
