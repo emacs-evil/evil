@@ -30,7 +30,7 @@ clean:
 	rm -f *~
 	rm -f \#*\#
 	rm -f *.elc
-	cd $(DOC) && rm -f *.aux *.cp *.fn *.info *.ky *.log *.pg *.toc *.tp *.vr
+	cd $(DOC) && rm -f *.aux *.cp *.fn *.fns *.info *.ky *.log *.pg *.toc *.tp *.vr *.vrs
 
 # Run tests.
 # The TAG variable may specify a test tag or a test name:
