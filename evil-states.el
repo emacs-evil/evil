@@ -303,26 +303,35 @@ If AUX is nil, create a new auxiliary keymap."
     (vconcat (list (intern (format "%s-state" state)))) aux)
   aux)
 
-(defun evil-get-auxiliary-keymap (map state)
-  "Get the auxiliary keymap for MAP in STATE."
-  (lookup-key map (vconcat (list (intern (format "%s-state" state))))))
+(defun evil-get-auxiliary-keymap (map state &optional create)
+  "Get the auxiliary keymap for MAP in STATE.
+If CREATE is non-nil, create an auxiliary keymap
+if MAP does not have one."
+  (when state
+    (let* ((key (vconcat (list (intern (format "%s-state" state)))))
+           (aux (lookup-key map key)))
+      (cond
+       ((evil-auxiliary-keymap-p aux)
+        aux)
+       (create
+        (evil-set-auxiliary-keymap map state))))))
 
 (defun evil-auxiliary-keymap-p (map)
   "Whether MAP is an auxiliary keymap."
   (and (keymapp map)
-       (string-match "Auxiliary keymap" (or (keymap-prompt map) "")) t))
+       (string-match "Auxiliary keymap"
+                     (or (keymap-prompt map) "")) t))
 
 (defun evil-define-key (state keymap key def)
   "Create a STATE binding from KEY to DEF for KEYMAP.
-The syntax is equivalent to that of `define-key'. For example:
+The syntax is similar to that of `define-key'. For example:
 
-    (evil-define-key 'normal foo-mode-map \"a\" 'bar)
+    (evil-define-key 'normal foo-map \"a\" 'bar)
 
-This will create a binding from \"a\" to `bar' in Normal state,
-which will be active whenever `foo-mode-map' is active."
+This creates a binding from \"a\" to `bar' in Normal state,
+which is active whenever `foo-map' is active."
   (let ((aux (if state
-                 (or (evil-get-auxiliary-keymap keymap state)
-                     (evil-set-auxiliary-keymap keymap state))
+                 (evil-get-auxiliary-keymap keymap state t)
                keymap)))
     (define-key aux key def)
     ;; ensure the prompt string comes first
