@@ -62,6 +62,11 @@ moves the cursor."
   :type  'integer
   :group 'evil)
 
+(defcustom evil-fold-level 0
+  "Default fold level."
+  :type  'integer
+  :group 'evil)
+
 (defcustom evil-show-paren-range 0
   "The minimal distance between point and a parenthesis
 which causes the parenthesis to be highlighted."
