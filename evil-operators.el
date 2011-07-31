@@ -537,25 +537,27 @@ Both COUNT and CMD may be nil."
       (let* ((text (if register
                        (get-register register)
                      (current-kill 0)))
-             (yank-handler (car-safe (get-text-property
-                                      0 'yank-handler text))))
-        (if (memq yank-handler '(evil-yank-line-handler
-                                 evil-yank-block-handler))
-            (let ((evil-paste-count count)
-                  (this-command 'evil-paste-before)) ; for non-interactive use
-              (insert-for-yank text))
-          ;; no yank-handler, default
-          (let ((opoint (point)))
-            (dotimes (i (or count 1))
-              (insert-for-yank text))
-            (evil-move-mark opoint)
-            (setq evil-last-paste
-                  (list 'evil-paste-before
-                        count
-                        opoint
-                        opoint         ; beg
-                        (point)))      ; end
-            (evil-exchange-point-and-mark)))
+             (yank-handler (when (stringp text)
+                             (car-safe (get-text-property
+                                        0 'yank-handler text)))))
+        (when text
+          (if (memq yank-handler '(evil-yank-line-handler
+                                   evil-yank-block-handler))
+              (let ((evil-paste-count count)
+                    (this-command 'evil-paste-before)) ; for non-interactive use
+                (insert-for-yank text))
+            ;; no yank-handler, default
+            (let ((opoint (point)))
+              (dotimes (i (or count 1))
+                (insert-for-yank text))
+              (evil-move-mark opoint)
+              (setq evil-last-paste
+                    (list 'evil-paste-before
+                          count
+                          opoint
+                          opoint        ; beg
+                          (point)))     ; end
+              (evil-exchange-point-and-mark))))
         ;; no paste pop after pasting a register
         (when register
           (setq evil-last-paste nil))))))
@@ -569,30 +571,33 @@ Both COUNT and CMD may be nil."
       (let* ((text (if register
                        (get-register register)
                      (current-kill 0)))
-             (yank-handler (car-safe (get-text-property
-                                      0 'yank-handler text))))
-        (if (memq yank-handler '(evil-yank-line-handler
-                                 evil-yank-block-handler))
-            (let ((evil-paste-count count)
-                  (this-command 'evil-paste-after)) ; for non-interactive use
-              (insert-for-yank text))
-          ;; no yank-handler, default
-          (let ((opoint (point)))
-            ;; TODO: Perhaps it is better to collect a list of all
-            ;; (point . mark) pairs to undo the yanking for count > 1.
-            ;; The reason is that this yanking could very well use
-            ;; `yank-handler'.
-            (unless (eolp) (forward-char))
-            (let ((beg (point)))
-              (dotimes (i (or count 1))
+             (yank-handler (when (stringp text)
+                             (car-safe (get-text-property
+                                        0 'yank-handler text)))))
+        (when text
+          (if (memq yank-handler '(evil-yank-line-handler
+                                   evil-yank-block-handler))
+              (let ((evil-paste-count count)
+                    (this-command 'evil-paste-after)) ; for non-interactive use
                 (insert-for-yank text))
-              (setq evil-last-paste
-                    (list 'evil-paste-after
-                          count
-                          opoint
-                          beg          ; beg
-                          (point)))    ; end
-              (backward-char))))
+            ;; no yank-handler, default
+            (let ((opoint (point)))
+              ;; TODO: Perhaps it is better to collect a list of all
+              ;; (point . mark) pairs to undo the yanking for count > 1.
+              ;; The reason is that this yanking could very well use
+              ;; `yank-handler'.
+              (unless (eolp) (forward-char))
+              (let ((beg (point)))
+                (dotimes (i (or count 1))
+                  (insert-for-yank text))
+                (setq evil-last-paste
+                      (list 'evil-paste-after
+                            count
+                            opoint
+                            beg         ; beg
+                            (point)))   ; end
+                (when (evil-normal-state-p)
+                  (evil-adjust))))))
         (when register
           (setq evil-last-paste nil))))))
 

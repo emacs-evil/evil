@@ -289,6 +289,22 @@ Search forward if a match isn't found."
            try-expand-line-all-buffers)))
     (hippie-expand arg)))
 
+(defun evil-paste-from-register (register)
+  "Paste from REGISTER."
+  (interactive
+   (let ((overlay (make-overlay (point) (point)))
+         (string "\""))
+     (unwind-protect
+         (progn
+           ;; display " in the buffer while reading register
+           (put-text-property 0 1 'face 'minibuffer-prompt string)
+           (put-text-property 0 1 'cursor t string)
+           (overlay-put overlay 'after-string string)
+           (list (or evil-this-register (read-char))))
+       (delete-overlay overlay))))
+  (and (fboundp 'evil-paste-after)
+       (evil-paste-after nil register)))
+
 (provide 'evil-insert)
 
 ;;; evil-insert.el ends here
