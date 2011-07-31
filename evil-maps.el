@@ -42,6 +42,7 @@
 (define-key evil-normal-state-map "gu" 'evil-downcase)
 (define-key evil-normal-state-map "gU" 'evil-upcase)
 (define-key evil-normal-state-map "gv" 'evil-visual-restore)
+(define-key evil-normal-state-map "gf" 'find-file-at-point)
 (define-key evil-normal-state-map "g?" 'evil-rot13)
 (define-key evil-normal-state-map "g~" 'evil-invert-case)
 (define-key evil-normal-state-map "\C-n" 'evil-paste-pop-next)
