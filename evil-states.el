@@ -52,8 +52,8 @@
   (cond
    (evil-local-mode
     (setq emulation-mode-map-alists
-          (evil-concat-alists '(evil-mode-map-alist)
-                              emulation-mode-map-alists))
+          (evil-concat-lists '(evil-mode-map-alist)
+                             emulation-mode-map-alists))
     (evil-refresh-local-keymaps)
     (unless (memq 'evil-modeline-tag global-mode-string)
       (setq global-mode-string
