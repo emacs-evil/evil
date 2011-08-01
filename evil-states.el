@@ -608,6 +608,7 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
              (evil-normalize-keymaps)
              (unless evil-locked-display
                (setq evil-modeline-tag ,tag)
+               (evil-set-cursor evil-default-cursor)
                (evil-set-cursor ,cursor)
                (force-mode-line-update)
                (when (evil-called-interactively-p)

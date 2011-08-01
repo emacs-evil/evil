@@ -17,6 +17,15 @@ and \\[evil-shift-left]."
   :type 'integer
   :group 'evil)
 
+(defcustom evil-default-cursor
+  (list (or (frame-parameter nil 'cursor-color) "black") t)
+  "The default cursor.
+May be a cursor type as per `cursor-type', a color string as passed
+to `set-cursor-color', a zero-argument function for changing the
+cursor, or a list of the above."
+  :type '(set symbol (cons symbol symbol) string function)
+  :group 'evil)
+
 (defcustom evil-repeat-move-cursor t
   "Whether \"\\<evil-normal-state-map>\\[evil-repeat]\" \
 moves the cursor."

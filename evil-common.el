@@ -242,11 +242,9 @@ Restore the previous state afterwards."
   "Change the cursor's apperance according to SPECS.
 SPECS may be a cursor type as per `cursor-type', a color
 string as passed to `set-cursor-color', a zero-argument
-function for changing the cursor, or a list of the above.
-If SPECS is nil, make the cursor a black filled box."
-  (setq cursor-type t)
-  (evil-set-cursor-color "black")
-  (unless (and (listp specs) (not (consp specs)))
+function for changing the cursor, or a list of the above."
+  (unless (and (listp specs)
+               (null (cdr-safe (last specs))))
     (setq specs (list specs)))
   (dolist (spec specs)
     (cond
