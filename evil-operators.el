@@ -535,7 +535,7 @@ Both COUNT and CMD may be nil."
       (evil-visual-paste count register)
     (evil-with-undo
       (let* ((text (if register
-                       (get-register register)
+                       (evil-get-register register)
                      (current-kill 0)))
              (yank-handler (when (stringp text)
                              (car-safe (get-text-property
@@ -569,7 +569,7 @@ Both COUNT and CMD may be nil."
       (evil-visual-paste count register)
     (evil-with-undo
       (let* ((text (if register
-                       (get-register register)
+                       (evil-get-register register)
                      (current-kill 0)))
              (yank-handler (when (stringp text)
                              (car-safe (get-text-property
@@ -605,7 +605,7 @@ Both COUNT and CMD may be nil."
   "Paste over Visual selection."
   (interactive (list current-prefix-arg evil-this-register))
   (let* ((text (if register
-                   (get-register register)
+                   (evil-get-register register)
                  (current-kill 0)))
          (yank-handler (car-safe (get-text-property
                                   0 'yank-handler text))))

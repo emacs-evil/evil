@@ -379,7 +379,9 @@ or a marker object pointing nowhere."
   "Return contents of REGISTER.
 Signal an error if empty."
   (when (characterp register)
-    (or (get-register register)
+    (or (if (eq register ?\")
+            (current-kill 0)
+          (get-register register))
         (error "Register `%c' is empty" register))))
 
 ;;; Key sequences
