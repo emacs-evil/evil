@@ -1,5 +1,8 @@
 ;;; Ex-mode
 
+(require 'evil-common)
+(require 'evil-vars)
+
 (define-key evil-ex-keymap "\t" 'evil-ex-complete)
 (define-key evil-ex-keymap [return] 'exit-minibuffer)
 (define-key evil-ex-keymap (kbd "RET") 'exit-minibuffer)
@@ -19,14 +22,17 @@
   "Returns non-nil iff the comman CMD checks for a ex-force argument in its interactive list.
 The test for the force-argument should be done by checking the
 value of the variable `evil-ex-current-cmd-force'."
-  (labels ((find-force (lst)
-                       (cond
-                        ((null lst) nil)
-                        ((eq (car lst) 'evil-ex-current-cmd-force) t)
-                        (t (or (and (listp (car lst))
-                                    (find-force (car lst)))
-                               (find-force (cdr lst)))))))
-    (find-force (interactive-form cmd))))
+  ;; this is a little bit cheating to get a local recursive function
+  (let (find-force)
+    (setq find-force
+          #'(lambda (lst)
+              (cond
+               ((null lst) nil)
+               ((eq (car lst) 'evil-ex-current-cmd-force) t)
+               (t (or (and (listp (car lst))
+                           (funcall find-force (car lst)))
+                      (funcall find-force (cdr lst)))))))
+    (funcall find-force (interactive-form cmd))))
 
 (defun evil-ex-message (info)
   "Shows an INFO message after the current minibuffer content."
@@ -195,26 +201,26 @@ FORCE is non-nil if and only if an exclamation followed the command."
 
 (defun evil-ex-complete-command (cmd force predicate flag)
   "Called to complete a command."
-  (labels ((has-force (x)
-                      (let ((bnd (evil-ex-binding x)))
-                        (and bnd (evil-ex-has-force bnd)))))
+  (let ((has-force #'(lambda (x)
+                       (let ((bnd (evil-ex-binding x)))
+                         (and bnd (evil-ex-has-force bnd))))))
     (cond
      (force
-      (labels ((pred (x)
-                     (and (or (null predicate) (funcall predicate x))
-                          (has-force x))))
+      (let ((pred #'(lambda (x)
+                      (and (or (null predicate) (funcall predicate x))
+                           (funcall has-force x)))))
         (cond
          ((eq flag nil)
-          (try-completion cmd evil-ex-commands predicate))
+          (try-completion cmd evil-ex-commands pred))
          ((eq flag t)
-          (all-completions cmd evil-ex-commands predicate))
+          (all-completions cmd evil-ex-commands pred))
          ((eq flag 'lambda)
-          (test-completion cmd evil-ex-commands predicate)))))
+          (test-completion cmd evil-ex-commands pred)))))
      (t
         (cond
          ((eq flag nil)
           (let ((result (try-completion cmd evil-ex-commands predicate)))
-            (if (and (eq result t) (has-force cmd))
+            (if (and (eq result t) (funcall has-force cmd))
                 cmd
               result)))
          ((eq flag t)
@@ -222,7 +228,7 @@ FORCE is non-nil if and only if an exclamation followed the command."
                 new-result)
             (mapc #'(lambda (x)
                       (push x new-result)
-                      (when (has-force cmd) (push (concat x "!") new-result)))
+                      (when (funcall has-force cmd) (push (concat x "!") new-result)))
                   result)
             new-result))
          ((eq flag 'lambda)
@@ -251,11 +257,11 @@ FORCE is non-nil if and only if an exclamation followed the command."
                (= (aref evil-ex-current-arg 0) ? ))
       (setq evil-ex-current-arg (substring evil-ex-current-arg 1)))
     (when (and cmd (not (equal cmd oldcmd)))
-      (let ((compl (or (if (assoc cmd evil-ex-commands)
-                           (list t))
-                       (delete-duplicates
-                        (mapcar #'evil-ex-binding
-                                (all-completions evil-ex-current-cmd evil-ex-commands))))))
+      (let (compl)
+        (if (assoc cmd evil-ex-commands)
+            (setq compl (list t))
+          (dolist (c (all-completions evil-ex-current-cmd evil-ex-commands))
+            (add-to-list 'compl (evil-ex-binding c))))
         (cond
          ((null compl) (evil-ex-message "Unknown command"))
          ((cdr compl) (evil-ex-message "Incomplete command")))))))
@@ -298,10 +304,10 @@ FORCE is non-nil if and only if an exclamation followed the command."
   (let ((rng (evil-ex-get-current-range)))
     (if rng
         (list (save-excursion
-                (goto-line (car rng))
+                (goto-char (point-min)) (forward-line (1- (car rng)))
                 (line-beginning-position))
               (save-excursion
-                (goto-line (cdr rng))
+                (goto-char (point-min)) (forward-line (1- (cdr rng)))
                 (min (point-max) (1+ (line-end-position)))))
       (list nil nil))))
 
@@ -316,7 +322,8 @@ FORCE is non-nil if and only if an exclamation followed the command."
     (let ((beg (evil-ex-get-line (car evil-ex-current-range))))
       (save-excursion
         (when (equal (cadr evil-ex-current-range) ?\;)
-          (goto-line beg))
+          (goto-char (point-min))
+          (forward-line (1- beg)))
         (cons beg (evil-ex-get-line (nth 2 evil-ex-current-range))))))))
 
 (defun evil-ex-get-line (address)
@@ -327,29 +334,36 @@ FORCE is non-nil if and only if an exclamation followed the command."
           (offset (or (cdr address) 0)))
       (+ (or offset 0)
          (if (integerp base) base
-           (case base
-             ((nil) (line-number-at-pos))
-             (abs (cdr base))
+           (cond
+            ((eq base nil) (line-number-at-pos))
+            ((eq base 'abs) (cdr base))
 
              ;; TODO: (1- ...) may be wrong if the match is the empty string
-             (re-fwd (save-excursion
-                       (beginning-of-line 2)
-                       (and (re-search-forward (cdr base))
-                            (line-number-at-pos (1- (match-end 0))))))
+            ((eq base 're-fwd)
+             (save-excursion
+               (beginning-of-line 2)
+               (and (re-search-forward (cdr base))
+                    (line-number-at-pos (1- (match-end 0))))))
 
-             (re-bwd (save-excursion
-                       (beginning-of-line 0)
-                       (and (re-search-backward (cdr base))
-                            (line-number-at-pos (match-beginning 0)))))
+            ((eq base 're-bwd)
+             (save-excursion
+               (beginning-of-line 0)
+               (and (re-search-backward (cdr base))
+                    (line-number-at-pos (match-beginning 0)))))
 
-             (current-line (line-number-at-pos (point)))
-             (first-line (line-number-at-pos (point-min)))
-             (last-line (line-number-at-pos (point-max)))
-             (mark (line-number-at-pos (vim:get-local-mark (cadr base))))
-             (next-of-prev-search (error "Next-of-prev-search not yet implemented."))
-             (prev-of-prev-search (error "Prev-of-prev-search not yet implemented."))
-             (next-of-prev-subst (error "Next-of-prev-subst not yet implemented."))
-             (t (error "Invalid address: %s" address))))))))
+            ((eq base 'current-line) (line-number-at-pos (point)))
+            ((eq base 'first-line) (line-number-at-pos (point-min)))
+            ((eq base 'last-line) (line-number-at-pos (point-max)))
+            ((eq base 'mark)
+             (let ((m (evil-get-marker (cadr base))))
+               (cond
+                ((eq m nil) (error "Marker <%c> not defined" (cadr base)))
+                ((consp m) (error "Ex-mode ranges do not support markers in other files"))
+                (t (line-number-at-pos m)))))
+            ((eq base 'next-of-prev-search) (error "Next-of-prev-search not yet implemented."))
+            ((eq base 'prev-of-prev-search) (error "Prev-of-prev-search not yet implemented."))
+            ((eq base 'next-of-prev-subst) (error "Next-of-prev-subst not yet implemented."))
+            (t (error "Invalid address: %s" address))))))))
 
 
 (defun evil-ex-read (prompt
