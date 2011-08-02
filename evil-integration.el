@@ -49,6 +49,11 @@
        (define-key evil-normal-state-map "zc" 'hs-hide-block))
      (add-hook 'hs-minor-mode-hook 'evil-hs-setup)))
 
+;; load goto-chg.el if available
+(condition-case nil
+    (require 'goto-chg)
+  (error nil))
+
 ;;; Info
 
 (eval-after-load 'info
