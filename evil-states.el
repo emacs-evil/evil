@@ -44,10 +44,7 @@
 ;; according to the current state (pushing Visual keymaps to the top
 ;; when the user enters Visual state, etc.).
 
-(require 'evil-vars)
 (require 'evil-common)
-(require 'evil-repeat)
-(require 'evil-compatibility)
 
 (define-minor-mode evil-local-mode
   "Minor mode for setting up Evil in a single buffer."
@@ -55,14 +52,14 @@
   (cond
    (evil-local-mode
     (setq emulation-mode-map-alists
-          (evil-concat-alists '(evil-mode-map-alist)
-                              emulation-mode-map-alists))
+          (evil-concat-lists '(evil-mode-map-alist)
+                             emulation-mode-map-alists))
     (evil-refresh-local-keymaps)
     (unless (memq 'evil-modeline-tag global-mode-string)
       (setq global-mode-string
             (append '("" evil-modeline-tag)
                     global-mode-string)))
-    (ad-enable-advice 'show-paren-function 'around 'evil-show-paren-function)
+    (ad-enable-advice 'show-paren-function 'around 'evil)
     (ad-activate 'show-paren-function)
     ;; restore the proper value of `major-mode' in Fundamental buffers
     (when (eq major-mode 'evil-local-mode)
@@ -72,7 +69,10 @@
     ;; re-determine the initial state in `post-command-hook' since the
     ;; major mode may not be initialized yet, and some modes neglect
     ;; to run `after-change-major-mode-hook'
-    (add-hook 'post-command-hook 'evil-initialize-state t t))
+    (add-hook 'post-command-hook 'evil-initialize-state t t)
+    (add-hook 'after-change-functions 'evil-repeat-change-hook nil t)
+    (add-hook 'pre-command-hook 'evil-repeat-pre-hook nil t)
+    (add-hook 'post-command-hook 'evil-repeat-post-hook nil t))
    (t
     (let (new-global-mode-string)
       (while global-mode-string
@@ -81,7 +81,7 @@
               (pop new-global-mode-string) ;; remove the ""
             (push next new-global-mode-string))))
       (setq global-mode-string (nreverse new-global-mode-string)))
-    (ad-disable-advice 'show-paren-function 'around 'evil-show-paren-function)
+    (ad-disable-advice 'show-paren-function 'around 'evil)
     (ad-activate 'show-paren-function)
     (evil-change-state nil))))
 
@@ -113,24 +113,48 @@ current buffer only.")
 
 (defun evil-state-property (state prop)
   "Return property PROP for STATE."
-  (evil-get-property evil-states-alist state prop))
+  (evil-get-property evil-state-properties state prop))
 
 (defun evil-state-p (sym)
   "Whether SYM is the name of a state."
-  (assq sym evil-states-alist))
+  (assq sym evil-state-properties))
 
 (defun evil-initialize-state (&optional buffer)
   "Initialize Evil state in BUFFER."
-  (evil-change-state (evil-buffer-state buffer 'normal))
-  (remove-hook 'post-command-hook 'evil-initialize-state t))
+  (with-current-buffer (or buffer (current-buffer))
+    (evil-change-to-initial-state buffer)
+    (remove-hook 'post-command-hook 'evil-initialize-state t)))
 
-(defun evil-change-state (state)
+(defun evil-change-to-initial-state (&optional buffer message)
+  "Change state to the initial state for BUFFER.
+This is the state the buffer comes up in."
+  (interactive)
+  (with-current-buffer (or buffer (current-buffer))
+    (evil-change-state (evil-initial-state-for-buffer buffer 'normal)
+                       message)))
+
+(defun evil-change-to-previous-state (&optional buffer message)
+  "Change the state of BUFFER to its previous state."
+  (interactive)
+  (with-current-buffer (or buffer (current-buffer))
+    (evil-change-state (or evil-previous-state evil-state 'normal)
+                       message)))
+
+(defun evil-exit-emacs-state (&optional buffer message)
+  "Change from Emacs state to the previous state."
+  (interactive '(nil t))
+  (with-current-buffer (or buffer (current-buffer))
+    (evil-change-to-previous-state buffer message)
+    (when (evil-emacs-state-p)
+      (evil-normal-state (and message 1)))))
+
+(defun evil-change-state (state &optional message)
   "Change state to STATE.
 Disable all states if nil."
   (let ((func (evil-state-property (or state evil-state) :toggle)))
     (when (and (functionp func)
                (not (eq state evil-state)))
-      (funcall func (if state 1 -1)))))
+      (funcall func (if state (and message 1) -1)))))
 
 (defun evil-state-keymaps (state &rest excluded)
   "Return an ordered list of keymaps activated by STATE.
@@ -171,30 +195,22 @@ Skip states listed in EXCLUDED."
   "Create a buffer-local value for `evil-mode-map-alist'.
 Its order reflects the state in the current buffer."
   (let ((state (or state evil-state))
-        (states (evil-concat-lists
-                 (mapcar 'cdr (evil-state-property nil :toggle))
-                 (mapcar 'cdr (evil-state-property nil :local))))
         alist mode)
     (evil-refresh-global-keymaps)
     (evil-refresh-local-keymaps)
     ;; disable all modes
     (dolist (mode (mapcar 'car (append evil-mode-map-alist
                                        evil-local-keymaps-alist)))
-      ;; modes not defined by a state are disabled
-      ;; with their toggle function (if any)
-      (when (and (fboundp mode)
-                 (not (memq mode states)))
+      (when (fboundp mode)
         (funcall mode -1))
       (set mode nil))
     ;; enable modes for current state
     (when state
       (dolist (map (evil-state-keymaps state))
         (if (evil-auxiliary-keymap-p map)
-            (evil-add-to-alist 'alist t map)
+            (add-to-list 'alist (cons t map) t)
           (when (setq mode (evil-keymap-mode map))
-            ;; enable non-state modes
-            (when (and (fboundp mode)
-                       (not (memq mode states)))
+            (when (fboundp mode)
               (funcall mode 1))
             (set mode t)
             ;; refresh the keymap in case it has changed
@@ -204,8 +220,10 @@ Its order reflects the state in the current buffer."
             (evil-add-to-alist 'alist mode map)))))
     ;; move the enabled modes to the front of the list
     (setq evil-mode-map-alist
-          (evil-concat-alists
-           alist evil-mode-map-alist))))
+          (evil-filter-list (lambda (elt)
+                              (assq (car-safe elt) alist))
+                            evil-mode-map-alist))
+    (setq evil-mode-map-alist (append alist evil-mode-map-alist))))
 
 (defun evil-refresh-global-keymaps ()
   "Refresh the global value of `evil-mode-map-alist'.
@@ -268,7 +286,6 @@ See also `evil-keymap-mode'."
 (defun evil-state-auxiliary-keymaps (state)
   "Return an ordered list of auxiliary keymaps for STATE."
   (let* ((state (or state evil-state))
-         (alist (symbol-value (evil-state-property state :aux)))
          aux result)
     (dolist (map (current-active-maps) result)
       (when (setq aux (evil-get-auxiliary-keymap map state))
@@ -278,36 +295,50 @@ See also `evil-keymap-mode'."
   "Set the auxiliary keymap for MAP in STATE to AUX.
 If AUX is nil, create a new auxiliary keymap."
   (unless (keymapp aux)
-    (setq aux (make-sparse-keymap
-               (format "Auxiliary keymap for %s state" state))))
+    (setq aux (make-sparse-keymap)))
+  (unless (evil-auxiliary-keymap-p aux)
+    (evil-set-keymap-prompt
+     aux (format "Auxiliary keymap for %s state" state)))
   (define-key map
     (vconcat (list (intern (format "%s-state" state)))) aux)
   aux)
 
-(defun evil-get-auxiliary-keymap (map state)
-  "Get the auxiliary keymap for MAP in STATE."
-  (lookup-key map (vconcat (list (intern (format "%s-state" state))))))
+(defun evil-get-auxiliary-keymap (map state &optional create)
+  "Get the auxiliary keymap for MAP in STATE.
+If CREATE is non-nil, create an auxiliary keymap
+if MAP does not have one."
+  (when state
+    (let* ((key (vconcat (list (intern (format "%s-state" state)))))
+           (aux (lookup-key map key)))
+      (cond
+       ((evil-auxiliary-keymap-p aux)
+        aux)
+       (create
+        (evil-set-auxiliary-keymap map state))))))
 
 (defun evil-auxiliary-keymap-p (map)
   "Whether MAP is an auxiliary keymap."
   (and (keymapp map)
-       (string-match "Auxiliary keymap" (or (keymap-prompt map) "")) t))
+       (string-match "Auxiliary keymap"
+                     (or (keymap-prompt map) "")) t))
 
 (defun evil-define-key (state keymap key def)
   "Create a STATE binding from KEY to DEF for KEYMAP.
-The syntax is equivalent to that of `define-key'. For example:
+The syntax is similar to that of `define-key'. For example:
 
-    (evil-define-key 'normal foo-mode-map \"a\" 'bar)
+    (evil-define-key 'normal foo-map \"a\" 'bar)
 
-This will create a binding from \"a\" to `bar' in Normal state,
-which will be active whenever `foo-mode-map' is active."
+This creates a binding from \"a\" to `bar' in Normal state,
+which is active whenever `foo-map' is active."
   (let ((aux (if state
-                 (or (evil-get-auxiliary-keymap keymap state)
-                     (evil-set-auxiliary-keymap keymap state))
+                 (evil-get-auxiliary-keymap keymap state t)
                keymap)))
-    (define-key-after aux key def)))
+    (define-key aux key def)
+    ;; ensure the prompt string comes first
+    (evil-set-keymap-prompt aux (keymap-prompt aux))))
 
 (put 'evil-define-key 'lisp-indent-function 'defun)
+(put 'evil-set-auxiliary-keymap 'lisp-indent-function 'defun)
 
 ;; these may be useful for programmatic purposes
 (defun evil-global-set-key (state key def)
@@ -320,8 +351,23 @@ which will be active whenever `foo-mode-map' is active."
   (define-key (symbol-value (evil-state-property state :local-keymap))
     key def))
 
-(defun evil-mode-state (mode &optional default)
-  "Return Evil state to use for MODE, or DEFAULT if none."
+(defun evil-initial-state-for-buffer (&optional buffer default)
+  "Return initial Evil state to use for BUFFER, or DEFAULT if none.
+BUFFER defaults to the current buffer."
+  (let (state)
+    (with-current-buffer (or buffer (current-buffer))
+      (or (catch 'loop
+            (dolist (mode (append (mapcar 'car minor-mode-map-alist)
+                                  (list major-mode)))
+              (when (and (or (not (boundp mode)) (symbol-value mode))
+                         (setq state (evil-initial-state mode)))
+                (throw 'loop state))))
+          default))))
+
+(defun evil-initial-state (mode &optional default)
+  "Return Evil state to use for MODE, or DEFAULT if none.
+The initial state for a mode can be set with
+`evil-set-initial-state'."
   (let (state modes)
     (or (catch 'loop
           (dolist (entry (evil-state-property nil :modes))
@@ -331,16 +377,14 @@ which will be active whenever `foo-mode-map' is active."
               (throw 'loop state))))
         default)))
 
-(defun evil-buffer-state (&optional buffer default)
-  "Return Evil state to use for BUFFER, or DEFAULT if none."
-  (let (state)
-    (with-current-buffer (or buffer (current-buffer))
-      (or (catch 'loop
-            (dolist (mode (append (mapcar 'car minor-mode-map-alist)
-                                  (list major-mode)))
-              (when (setq state (evil-mode-state mode))
-                (throw 'loop state))))
-          default))))
+(defun evil-set-initial-state (mode state)
+  "Set the initial state for MODE to STATE.
+This is the state the buffer comes up in."
+  (dolist (modes (evil-state-property nil :modes))
+    (setq modes (cdr-safe modes))
+    (set modes (delq mode (symbol-value modes))))
+  (when state
+    (add-to-list (evil-state-property state :modes) mode)))
 
 (defmacro evil-define-keymap (keymap doc &rest body)
   "Define a keymap KEYMAP listed in `evil-mode-map-alist'.
@@ -357,11 +401,11 @@ may be specified before the body code:
 :func BOOLEAN   Create a toggle function even if BODY is empty.
 
 \(fn KEYMAP DOC [[KEY VAL]...] BODY...)"
-  (declare (debug (&define name
+  (declare (indent defun)
+           (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp sexp]]
-                           def-body))
-           (indent defun))
+                           def-body)))
   (let (arg func key local mode)
     (while (keywordp (car-safe body))
       (setq key (pop body)
@@ -436,14 +480,15 @@ The basic keymap of this state will then be
 `evil-test-state-map', and so on.
 
 \(fn STATE DOC [[KEY VAL]...] BODY...)"
-  (declare (debug (&define name
+  (declare (indent defun)
+           (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp sexp]]
-                           def-body))
-           (indent defun))
+                           def-body)))
   (let* ((toggle (intern (format "evil-%s-state" state)))
+         (mode (intern (format "%s-minor-mode" toggle)))
          (keymap (intern (format "%s-map" toggle)))
-         (local (intern (format "%s-local" toggle)))
+         (local (intern (format "%s-local-minor-mode" toggle)))
          (local-keymap (intern (format "%s-local-map" toggle)))
          (tag (intern (format "%s-tag" toggle)))
          (message (intern (format "%s-message" toggle)))
@@ -480,7 +525,7 @@ The basic keymap of this state will then be
 
     ;; macro expansion
     `(progn
-       ;; Save the state's properties in `evil-states-alist' for
+       ;; Save the state's properties in `evil-state-properties' for
        ;; runtime lookup. Among other things, this information is used
        ;; to determine what keymaps should be activated by the state
        ;; (and, when processing :enable, what keymaps are activated by
@@ -489,9 +534,10 @@ The basic keymap of this state will then be
        ;; (to which we may have assigned state bindings), as well as
        ;; states whose definitions may not have been processed yet.
        (evil-put-property
-        'evil-states-alist ',state
-        :toggle (defvar ,toggle nil
-                  ,(format "Non-nil if %s state is enabled.
+        'evil-state-properties ',state
+        :toggle ',toggle
+        :mode (defvar ,mode nil
+                ,(format "Non-nil if %s state is enabled.
 Use the command `%s' to change this variable.\n\n%s" state toggle doc))
         :keymap (defvar ,keymap (make-sparse-keymap)
                   ,(format "Keymap for %s state.\n\n%s" state doc))
@@ -518,7 +564,8 @@ cursor, or a list of the above.\n\n%s" state doc))
                      ,(format "Hooks to run when exiting %s state.\n\n%s"
                               state doc))
         :modes (defvar ,modes nil
-                 ,(format "Modes that require %s state." state))
+                 ,(format "Modes that should come up in %s state."
+                          state))
         :predicate ',predicate
         :enable ',enable)
 
@@ -531,45 +578,50 @@ cursor, or a list of the above.\n\n%s" state doc))
        (dolist (func ',exit-hook-value)
          (add-hook ',exit-hook func))
 
-       (defun ,predicate ()
-         ,(format "Whether the current state is %s." state)
-         (eq evil-state ',state))
+       (defun ,predicate (&optional state)
+         ,(format "Whether the current STATE is %s." state)
+         (eq (or state evil-state) ',state))
 
        ;; define state function
-       (defun ,toggle (&optional arg)
-         ,(format "Enable %s state. Disable with negative ARG.\n\n%s"
+       (evil-define-command ,toggle (&optional arg)
+         :keep-visual t
+         ,(format "Enable %s state. Disable with negative ARG.
+If ARG is nil, don't display a message in the echo area.\n\n%s"
                   state doc)
          (interactive "p")
          (cond
           ((and (numberp arg) (< arg 1))
-           (unwind-protect
-               (let ((evil-state evil-state))
-                 (run-hooks ',exit-hook)
-                 (setq evil-state nil)
-                 (evil-normalize-keymaps)
-                 ,@body)
-             (setq evil-state nil)))
+           (setq evil-previous-state evil-state
+                 evil-state nil)
+           (let ((evil-state ',state))
+             (run-hooks ',exit-hook)
+             (setq evil-state nil)
+             (evil-normalize-keymaps)
+             ,@body))
           (t
            (unless evil-local-mode
              (evil-initialize))
            (evil-change-state nil)
-           (unwind-protect
-               (let ((evil-state ',state))
-                 (evil-normalize-keymaps)
-                 (setq evil-modeline-tag ,tag)
-                 (force-mode-line-update)
-                 (evil-set-cursor ,cursor)
-                 ,@body
-                 (run-hooks ',entry-hook)
-                 (when (and arg ,message)
-                   (if (functionp ,message)
-                       (funcall ,message)
-                     (evil-echo ,message))))
-             (setq evil-state ',state)))))
-       (evil-set-command-properties ',toggle :keep-visual t)
+           (setq evil-state ',state)
+           (let ((evil-state ',state)
+                 (evil-next-state ',state))
+             (evil-normalize-keymaps)
+             (unless evil-locked-display
+               (setq evil-modeline-tag ,tag)
+               (evil-set-cursor evil-default-cursor)
+               (evil-set-cursor ,cursor)
+               (force-mode-line-update)
+               (when (evil-called-interactively-p)
+                 (redisplay)))
+             ,@body
+             (run-hooks ',entry-hook)
+             (when (and arg (not evil-locked-display) ,message)
+               (if (functionp ,message)
+                   (funcall ,message)
+                 (evil-echo ,message)))))))
 
        (evil-define-keymap ,keymap nil
-         :mode ,toggle)
+         :mode ,mode)
 
        (evil-define-keymap ,local-keymap nil
          :mode ,local
@@ -577,53 +629,39 @@ cursor, or a list of the above.\n\n%s" state doc))
 
        ',state)))
 
-;; Define states
+;;; Define Normal state and Emacs state
 
 (evil-define-state normal
   "Normal state, AKA \"Command\" state."
   :tag " <N> "
-  :suppress-keymap t
-  :enable (motion operator)
+  :enable (motion)
+  :exit-hook (evil-repeat-start-hook)
   (cond
    ((evil-normal-state-p)
-    (evil-setup-normal-repeat)
     (add-hook 'post-command-hook 'evil-normal-post-command nil t))
    (t
-    (unless evil-state
-      (evil-teardown-normal-repeat))
     (remove-hook 'post-command-hook 'evil-normal-post-command t))))
 
 (defun evil-normal-post-command ()
   "Prevent point from reaching the end of the line."
   (when (evil-normal-state-p)
-    (when (and (eolp) (not (bolp)))
-      (backward-char))))
+    (setq evil-this-type nil
+          evil-this-operator nil
+          evil-this-motion nil
+          evil-this-motion-count nil
+          evil-inhibit-operator nil
+          evil-inhibit-operator-value nil)
+    (unless (eq this-command 'evil-use-register)
+      (setq evil-this-register nil))
+    (evil-adjust-eol)
+    (when (region-active-p)
+      (and (fboundp 'evil-visual-state)
+           (evil-visual-state)))))
 
 (evil-define-state emacs
   "Emacs state."
   :tag " <E> "
   :message "-- EMACS --")
-
-;; TODO: this function is not perfect: if (point) is placed behind a
-;; closing parenthesis that pair will be highlighted even if
-;; `evil-show-paren-range' is 0. The problem is to find a position not
-;; adjacent to a parenthesis because otherwise the default-behaviour
-;; of show-parent-function will apply.
-(defadvice show-paren-function (around evil-show-paren-function)
-  "Advices show-paren-function so also parentheses near point are matched."
-  (save-excursion
-    (goto-char
-     (or (catch 'end
-           (save-excursion
-             (dotimes (d (1+ (* 2 evil-show-paren-range)))
-               (forward-char (if (evenp d) d (- d)))
-               (let ((sc (syntax-class (syntax-after (point)))))
-                 (case sc
-                   (4 (throw 'end (point)))
-                   (5 (throw 'end (1+ (point)))))))
-             nil))
-         (point)))
-    ad-do-it))
 
 (provide 'evil-states)
 

@@ -1,5 +1,7 @@
 ;;;; Window and scrolling commands
 
+(require 'evil-common)
+(require 'evil-states)
 (require 'evil-motions)
 
 (condition-case nil
@@ -26,7 +28,8 @@
 
 (defmacro evil-save-column (&rest body)
   "Restores the column after execution of BODY."
-  (declare (indent defun))
+  (declare (indent defun)
+           (debug t))
   `(let ((ocolumn (current-column)))
      ,@body
      (move-to-column ocolumn)))
@@ -35,21 +38,21 @@
 
 (evil-define-command evil-scroll-line-up (count)
   "Scrolls the window COUNT lines upwards."
-  :repeatable nil
+  :repeat nil
   :keep-visual t
   (interactive "p")
   (scroll-down count))
 
 (evil-define-command evil-scroll-line-down (count)
   "Scrolls the window COUNT lines downwards."
-  :repeatable nil
+  :repeat nil
   :keep-visual t
   (interactive "p")
   (scroll-up count))
 
 (evil-define-command evil-scroll-up (count)
   "Scrolls the window and the cursor COUNT lines upwards, default half of the screen."
-  :repeatable nil
+  :repeat nil
   :keep-visual t
   (interactive "P")
   (evil-save-column
@@ -64,7 +67,7 @@
 
 (evil-define-command evil-scroll-down (count)
   "Scrolls the window and the cursor COUNT lines downwards, default half of the screen."
-  :repeatable nil
+  :repeat nil
   :keep-visual t
   (interactive "P")
   (evil-save-column
@@ -79,7 +82,7 @@
 
 (evil-define-command evil-scroll-page-up (count)
   "Scrolls the window COUNT pages upwards."
-  :repeatable nil
+  :repeat nil
   :keep-visual t
   (interactive "p")
   (evil-save-column
@@ -88,7 +91,7 @@
 
 (evil-define-command evil-scroll-page-down (count)
   "Scrolls the window COUNT pages upwards."
-  :repeatable nil
+  :repeat nil
   :keep-visual t
   (interactive "p")
   (evil-save-column
@@ -97,7 +100,7 @@
 
 (evil-define-command evil-scroll-line-to-top (count)
   "Scrolls line number COUNT (or the cursor line) to the top of the window."
-  :repeatable nil
+  :repeat nil
   :keep-visual t
   (interactive "P")
   (evil-save-column
@@ -108,7 +111,7 @@
 
 (evil-define-command evil-scroll-line-to-center (count)
   "Scrolls line number COUNT (or the cursor line) to the center of the window."
-  :repeatable nil
+  :repeat nil
   :keep-visual t
   (interactive "P")
   (evil-save-column
@@ -119,7 +122,7 @@
 
 (evil-define-command evil-scroll-line-to-bottom (count)
   "Scrolls line number COUNT (or the cursor line) to the bottom of the window."
-  :repeatable nil
+  :repeat nil
   :keep-visual t
   (interactive "P")
   (evil-save-column
@@ -130,7 +133,7 @@
 
 (evil-define-command evil-scroll-bottom-line-to-top (count)
   "Scrolls the line right below the window or line COUNT to the top of the window."
-  :repeatable nil
+  :repeat nil
   :keep-visual t
   (interactive "P")
   (if count
@@ -138,13 +141,13 @@
         (goto-char (point-min))
         (forward-line (1- count)))
     (goto-char (window-end))
-    (unless (bobp) (backward-char)))
+    (evil-adjust))
   (recenter 0)
   (evil-first-non-blank))
 
 (evil-define-command evil-scroll-top-line-to-bottom (count)
   "Scrolls the line right below the window or line COUNT to the top of the window."
-  :repeatable nil
+  :repeat nil
   :keep-visual t
   (interactive "P")
   (if count
@@ -168,10 +171,12 @@
       (save-window-excursion
         (while (not (zerop count))
           (if (> count 0)
-              (progn (enlarge-window 1 horizontal) (decf count))
+              (progn
+                (enlarge-window 1 horizontal)
+                (setq count (1- count)))
             (progn
               (shrink-window 1 horizontal)
-              (incf count)))
+              (setq count (1+ count))))
           (if (= nwins (length (window-list)))
               (setq wincfg (current-window-configuration))
             (throw 'done t)))))
@@ -218,71 +223,69 @@
 
 (evil-define-command evil-window-left (count)
   "Move the cursor to new COUNT-th window left of the current one."
-  :repeatable nil
+  :repeat nil
   (interactive "p")
   (dotimes (i count)
     (windmove-left)))
 
 (evil-define-command evil-window-right (count)
   "Move the cursor to new COUNT-th window right of the current one."
-  :repeatable nil
+  :repeat nil
   (interactive "p")
   (dotimes (i count)
     (windmove-right)))
 
 (evil-define-command evil-window-up (count)
   "Move the cursor to new COUNT-th window above the current one."
-  :repeatable nil
+  :repeat nil
   (interactive "p")
   (dotimes (i (or count 1))
     (windmove-up)))
 
 (evil-define-command evil-window-down (count)
   "Move the cursor to new COUNT-th window below the current one."
-  :repeatable nil
+  :repeat nil
   (interactive "p")
   (dotimes (i (or count 1))
     (windmove-down)))
 
 (evil-define-command evil-window-bottom-right ()
   "Move the cursor to bottom-right window."
-  :repeatable nil
+  :repeat nil
   (interactive)
-  (do ((success t))
-      ((not success))
-    (setq success nil)
-    (condition-case nil
-        (progn
-          (windmove-right)
-          (setq success t))
-      (error nil))
-    (condition-case nil
-        (progn
-          (windmove-down)
-          (setq success t))
-      (error nil))))
+  (while (let (success)
+           (condition-case nil
+               (progn
+                 (windmove-right)
+                 (setq success t))
+             (error nil))
+           (condition-case nil
+               (progn
+                 (windmove-down)
+                 (setq success t))
+             (error nil))
+           success)))
 
 (evil-define-command evil-window-top-left ()
   "Move the cursor to top-left window."
-  :repeatable nil
+  :repeat nil
   (interactive)
-  (do ((success t))
-      ((not success))
-    (setq success nil)
-    (condition-case nil
-        (progn
-          (windmove-left)
-          (setq success t))
-      (error nil))
-    (condition-case nil
-        (progn
-          (windmove-up)
-          (setq success t))
-      (error nil))))
+  (while (let (success)
+           (condition-case nil
+               (progn
+                 (windmove-left)
+                 (setq success t))
+             (error nil))
+           (condition-case nil
+               (progn
+                 (windmove-up)
+                 (setq success t))
+             (error nil))
+           success)))
 
 (evil-define-command evil-window-lru ()
   "Move the cursor to the previous (last accessed) window."
-  :repeatable nil
+  :repeat nil
   (interactive)
   (select-window (get-lru-window)))
 
@@ -290,7 +293,7 @@
   "Move the cursor to the next window in the cyclic order.
 With COUNT go to the count-th window in the order starting from
 top-left."
-  :repeatable nil
+  :repeat nil
   (interactive "P")
   (if (not count)
       (select-window (next-window))
@@ -301,7 +304,7 @@ top-left."
   "Move the cursor to the previous window in the cyclic order.
 With COUNT go to the count-th window in the order starting from
 top-left."
-  :repeatable nil
+  :repeat nil
   (interactive "P")
   (if (not count)
       (select-window (previous-window))
@@ -319,11 +322,12 @@ top-left."
 (evil-define-command evil-window-new (count)
   "Splits the current window horizontally and opens a new buffer or edits a certain `file'."
   (interactive "P")
-  :repeatable nil
+  :repeat nil
   (split-window (selected-window) count)
   (let ((buffer (generate-new-buffer "*new*")))
     (set-window-buffer (selected-window) buffer)
-    (with-current-buffer buffer (evil-normal-state))))
+    (with-current-buffer buffer
+      (evil-normal-state))))
 
 ;; (defun evil-window-vnew (count (argument:file file) nonrepeatable)
 ;;   "Splits the current window vertically and opens a new buffer name or edits a certain `file'."
@@ -336,43 +340,43 @@ top-left."
 
 (evil-define-command evil-window-increase-height (count)
   "Increase current window height by COUNT."
-  :repeatable nil
+  :repeat nil
   (interactive "p")
   (evil-resize-window (+ (window-height) count)))
 
 (evil-define-command evil-window-decrease-height (count)
   "Decrease current window height by COUNT."
-  :repeatable nil
+  :repeat nil
   (interactive "p")
   (evil-resize-window (- (window-height) count)))
 
 (evil-define-command evil-window-increase-width (count)
   "Increase current window width by COUNT."
-  :repeatable nil
+  :repeat nil
   (interactive "p")
   (evil-resize-window (+ (window-width) count) t))
 
 (evil-define-command evil-window-decrease-width (count)
   "Decrease current window width by COUNT."
-  :repeatable nil
+  :repeat nil
   (interactive "p")
   (evil-resize-window (- (window-width) count) t))
 
 (evil-define-command evil-window-set-height (count)
   "Sets the height of the current window to COUNT."
-  :repeatable nil
+  :repeat nil
   (interactive "P")
   (evil-resize-window (or count (frame-height)) nil))
 
 (evil-define-command evil-window-set-width (count)
   "Sets the width of the current window to COUNT."
-  :repeatable nil
+  :repeat nil
   (interactive "P")
   (evil-resize-window (or count (frame-width)) t))
 
 (evil-define-command evil-window-rotate-upwards ()
   "Rotates the windows according to the currenty cyclic ordering."
-  :repeatable nil
+  :repeat nil
   (interactive)
   (let ((wlist (window-list))
         (blist (mapcar #'(lambda (w) (window-buffer w))
@@ -386,7 +390,7 @@ top-left."
 
 (evil-define-command evil-window-rotate-downwards ()
   "Rotates the windows according to the currenty cyclic ordering."
-  :repeatable nil
+  :repeat nil
   (interactive)
   (let ((wlist (window-list))
         (blist (mapcar #'(lambda (w) (window-buffer w))
@@ -401,7 +405,7 @@ top-left."
 (evil-define-command evil-window-move-very-top ()
   "Closes the current window, splits the upper-left one horizontally
 and redisplays the current buffer there."
-  :repeatable nil
+  :repeat nil
   (interactive)
   (unless (one-window-p)
     (let ((b (current-buffer)))
@@ -418,7 +422,7 @@ and redisplays the current buffer there."
 (evil-define-command evil-window-move-far-left ()
   "Closes the current window, splits the upper-left one vertically
 and redisplays the current buffer there."
-  :repeatable nil
+  :repeat nil
   (interactive)
   (unless (one-window-p)
     (let ((b (current-buffer)))
@@ -435,7 +439,7 @@ and redisplays the current buffer there."
 (evil-define-command evil-window-move-far-right ()
   "Closes the current window, splits the lower-right one vertically
 and redisplays the current buffer there."
-  :repeatable nil
+  :repeat nil
   (interactive)
   (unless (one-window-p)
     (let ((b (current-buffer)))
@@ -452,7 +456,7 @@ and redisplays the current buffer there."
 (evil-define-command evil-window-move-very-bottom ()
   "Closes the current window, splits the lower-right one horizontally
 and redisplays the current buffer there."
-  :repeatable nil
+  :repeat nil
   (interactive)
   (unless (one-window-p)
     (let ((b (current-buffer)))

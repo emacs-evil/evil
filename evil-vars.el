@@ -5,9 +5,66 @@
   :group 'emulations
   :prefix 'evil-)
 
+(defcustom evil-auto-indent t
+  "Whether to auto-indent when entering Insert state."
+  :type  'boolean
+  :group 'evil)
+(make-variable-buffer-local 'evil-auto-indent)
+
+(defcustom evil-shift-width 4
+  "The offset used by \\<evil-normal-state-map>\\[evil-shift-right] \
+and \\[evil-shift-left]."
+  :type 'integer
+  :group 'evil)
+
+(defcustom evil-default-cursor
+  (list (or (frame-parameter nil 'cursor-color) "black") t)
+  "The default cursor.
+May be a cursor type as per `cursor-type', a color string as passed
+to `set-cursor-color', a zero-argument function for changing the
+cursor, or a list of the above."
+  :type '(set symbol (cons symbol symbol) string function)
+  :group 'evil)
+
+(defcustom evil-repeat-move-cursor t
+  "Whether \"\\<evil-normal-state-map>\\[evil-repeat]\" \
+moves the cursor."
+  :type 'boolean
+  :group 'evil)
+
+(defcustom evil-find-skip-newlines nil
+  "Whether \"f\", \"F\", \"t\" and \"T\" skip over newlines."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-move-cursor-back t
   "Whether the cursor is moved backwards when exiting Insert state."
   :type 'boolean
+  :group 'evil)
+
+(defcustom evil-want-fine-undo nil
+  "Whether actions like \"cw\" are undone in several steps."
+  :type 'boolean
+  :group 'evil)
+
+(defcustom evil-regexp-search t
+  "Whether to use regular expressions for searching."
+  :type  'boolean
+  :group 'evil)
+
+(defcustom evil-search-wrap t
+  "Whether search wraps around."
+  :type  'boolean
+  :group 'evil)
+
+(defcustom evil-flash-delay 2
+  "Number of seconds to flash search matches."
+  :type  'integer
+  :group 'evil)
+
+(defcustom evil-fold-level 0
+  "Default fold level."
+  :type  'integer
   :group 'evil)
 
 (defcustom evil-show-paren-range 0
@@ -16,13 +73,8 @@ which causes the parenthesis to be highlighted."
   :type 'integer
   :group 'evil)
 
-(defcustom evil-find-skip-newlines nil
-  "Whether \"f\", \"F\", \"t\" and \"T\" skip over newlines."
-  :type 'boolean
-  :group 'evil)
-
-(defcustom evil-want-fine-undo nil
-  "Whether commands like \"cw\" are undone in several steps."
+(defcustom evil-want-C-i-jump t
+  "Whether \"C-i\" jumps forward like in Vim."
   :type 'boolean
   :group 'evil)
 
@@ -31,19 +83,128 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
-(defcustom evil-flash-delay 2
-  "Number of seconds to flash search matches."
-  :type  'integer
+(defcustom evil-emacs-state-modes
+  '(bookmark-bmenu-mode
+    bookmark-edit-annotation-mode
+    browse-kill-ring-mode
+    compilation-mode
+    completion-list-mode
+    Custom-mode
+    debugger-mode
+    efs-mode
+    ert-results-mode
+    gnus-group-mode
+    gnus-summary-mode
+    jde-javadoc-checker-report-mode
+    mh-folder-mode
+    occur-mode
+    rcirc-mode
+    tar-mode
+    vm-mode
+    vm-summary-mode)
+  "Modes that should come up in Emacs state."
+  :type  '(repeat symbol)
   :group 'evil)
 
-(defcustom evil-search-wrap t
-  "Whether search wraps around."
-  :type  'boolean
+(defcustom evil-insert-state-modes
+  '(comint-mode
+    erc-mode
+    eshell-mode
+    gud-mode
+    inferior-emacs-lisp-mode
+    internal-ange-ftp-mode
+    shell-mode
+    wdired-mode)
+  "Modes that should come up in Insert state."
+  :type  '(repeat symbol)
   :group 'evil)
 
-(defcustom evil-regexp-search t
-  "Whether to use regular expressions for searching."
-  :type  'boolean
+(defcustom evil-motion-state-modes
+  '(apropos-mode
+    Buffer-menu-mode
+    Info-mode
+    help-mode
+    recentf-dialog-mode
+    view-mode)
+  "Modes that should come up in Motion state."
+  :type  '(repeat symbol)
+  :group 'evil)
+
+(defcustom evil-motions
+  '(backward-char
+    backward-list
+    backward-paragraph
+    backward-sentence
+    backward-sexp
+    backward-up-list
+    backward-word
+    beginning-of-buffer
+    beginning-of-defun
+    beginning-of-line
+    beginning-of-visual-line
+    digit-argument
+    down-list
+    end-of-buffer
+    end-of-defun
+    end-of-line
+    end-of-visual-line
+    exchange-point-and-mark
+    forward-char
+    forward-list
+    forward-paragraph
+    forward-sentence
+    forward-sexp
+    forward-word
+    isearch-abort
+    isearch-cancel
+    isearch-complete
+    isearch-del-char
+    isearch-delete-char
+    isearch-edit-string
+    isearch-exit
+    isearch-highlight-regexp
+    isearch-occur
+    isearch-other-control-char
+    isearch-other-meta-char
+    isearch-printing-char
+    isearch-query-replace
+    isearch-query-replace-regexp
+    isearch-quote-char
+    isearch-repeat-backward
+    isearch-repeat-forward
+    isearch-ring-advance
+    isearch-ring-retreat
+    isearch-toggle-case-fold
+    isearch-toggle-input-method
+    isearch-toggle-regexp
+    isearch-toggle-specified-input-method
+    isearch-toggle-word
+    isearch-yank-char
+    isearch-yank-kill
+    isearch-yank-line
+    isearch-yank-word-or-char
+    keyboard-quit
+    mouse-drag-region
+    mouse-save-then-kill
+    mouse-set-point
+    mouse-set-region
+    move-beginning-of-line
+    move-end-of-line
+    next-line
+    previous-line
+    redo
+    scroll-down
+    scroll-up
+    undo
+    undo-tree-redo
+    undo-tree-undo
+    universal-argument
+    universal-argument-minus
+    universal-argument-more
+    universal-argument-other-key
+    up-list)
+  "Non-Evil commands to initialize to motions."
+  :type  '(repeat symbol)
   :group 'evil)
 
 (defface evil-ex-info '(( ((supports :slant))
@@ -60,6 +221,15 @@ To change the state, use `evil-change-state'
 or call the state function (e.g., `evil-normal-state').")
 (make-variable-buffer-local 'evil-state)
 
+;; these may be used inside `evil-define-state'
+(defvar evil-next-state nil
+  "The Evil state being switched to.")
+(make-variable-buffer-local 'evil-next-state)
+
+(defvar evil-previous-state nil
+  "The Evil state being switched from.")
+(make-variable-buffer-local 'evil-previous-state)
+
 (defvar evil-modeline-tag nil
   "Modeline indicator for the current state.")
 (make-variable-buffer-local 'evil-modeline-tag)
@@ -75,7 +245,7 @@ reinitialized in each buffer. Entries have the form
 \(MODE . KEYMAP), where KEYMAP is the variable containing
 the keymap for MODE.")
 
-(defvar evil-states-alist nil
+(defvar evil-state-properties nil
   "Specifications made by `evil-define-state'.
 Entries have the form (STATE . PLIST), where PLIST is a property
 list specifying various aspects of the state. To access a property,
@@ -87,7 +257,10 @@ Elements have the form (MODE . KEYMAP), with the first keymaps
 having higher priority.")
 (make-variable-buffer-local 'evil-mode-map-alist)
 
-(defvar evil-transient-vars '(transient-mark-mode)
+(defvar evil-command-properties nil
+  "Specifications made by `evil-define-command'.")
+
+(defvar evil-transient-vars '(cua-mode transient-mark-mode)
   "List of variables pertaining to Transient Mark mode.")
 
 (defvar evil-transient-vals nil
@@ -95,7 +268,13 @@ having higher priority.")
 Entries have the form (VARIABLE VALUE LOCAL), where LOCAL is
 whether the variable was previously buffer-local.")
 
-(defvar evil-types-alist nil
+(defvar evil-locked-display nil
+  "If non-nil, state changes are invisible.
+Don't set this directly; use the macro
+`evil-with-locked-display' instead.")
+(make-variable-buffer-local 'evil-locked-display)
+
+(defvar evil-type-properties nil
   "Specifications made by `evil-define-type'.
 Entries have the form (TYPE . PLIST), where PLIST is a property
 list specifying functions for handling the type: expanding it,
@@ -103,38 +282,89 @@ describing it, etc.")
 
 (defvar evil-motion-marker nil
   "Marker for storing the starting position of a motion.")
-(make-variable-buffer-local 'evil-mode-map-alist)
+(make-variable-buffer-local 'evil-motion-marker)
 
 (defvar evil-this-type nil
   "Current motion type.")
-(make-variable-buffer-local 'evil-mode-map-alist)
+(make-variable-buffer-local 'evil-this-type)
+
+(defvar evil-this-register nil
+  "Current register.")
+(make-variable-buffer-local 'evil-this-register)
+
+(defvar evil-this-macro nil
+  "Current macro register.")
+(make-variable-buffer-local 'evil-this-macro)
+
+(defvar evil-this-operator nil
+  "Current operator.")
+(make-variable-buffer-local 'evil-this-operator)
 
 (defvar evil-this-motion nil
   "Current motion.")
-(make-variable-buffer-local 'evil-mode-map-alist)
+(make-variable-buffer-local 'evil-this-motion)
 
 (defvar evil-this-motion-count nil
   "Current motion count.")
-(make-variable-buffer-local 'evil-mode-map-alist)
-
-(defvar evil-motions nil
-  "List of movement commands.")
-
-(defvar evil-operators nil
-  "List of operator commands.")
+(make-variable-buffer-local 'evil-this-motion-count)
 
 (defvar evil-inhibit-operator nil
   "Inhibit current operator.
 If an operator calls a motion and the motion sets this variable
 to t, the operator code is not executed.")
 
+(defvar evil-inhibit-operator-value nil
+  "This variable is used to transfer the value
+of `evil-inhibit-operator' from one local scope to another.")
+
+(defvar evil-markers-alist
+  '((?\( . evil-backward-sentence)
+    (?\) . evil-forward-sentence)
+    (?{ . evil-backward-paragraph)
+    (?} . evil-forward-paragraph)
+    (?' . evil-jump-backward)
+    (?` . evil-jump-backward))
+  "Association list for markers.
+Entries have the form (CHAR . DATA), where CHAR is the marker's
+name and DATA is either a marker object as returned by
+`make-marker', a movement function, or a cons cell (STRING NUMBER),
+where STRING is a file path and NUMBER is a buffer position.
+The global value of this variable holds markers available from every
+buffer, while the buffer-local value holds markers available only
+in the current buffer.")
+(make-variable-buffer-local 'evil-markers-alist)
+
+(defvar evil-jump-list nil
+  "Jump list.")
+(make-variable-buffer-local 'evil-jump-list)
+
 (defconst evil-suppress-map (make-keymap)
-  "Full keymap disabling default bindings to self-insert-command.")
+  "Full keymap disabling default bindings to `self-insert-command'.")
 (suppress-keymap evil-suppress-map t)
 
 ;; TODO: customize size of ring
-(defvar evil-repeat-info-ring (make-ring 10)
+(defvar evil-repeat-ring (make-ring 10)
   "A ring of repeat-informations to repeat the last command.")
+
+(defvar evil-recording-repeat nil
+  "Whether we are recording a repeat.")
+
+(defvar evil-repeat-changes nil
+  "Accumulated buffer changes for changed-based commands.")
+
+(defvar evil-repeat-info nil
+  "Information accumulated during current repeat.")
+
+(defvar evil-repeat-buffer nil
+  "The buffer in which the repeat started.
+If the buffer is changed, the repeat is cancelled.")
+
+(defvar evil-repeat-marker nil
+  "The position of point at the beginning of an change-tracking
+  editing command.")
+
+(defvar evil-repeat-keys nil
+  "The keys that invoked the current command.")
 
 (defvar evil-last-repeat nil
   "Information about the latest repeat command.
@@ -142,46 +372,11 @@ This is a list of two elements (POINT COUNT), where POINT is
 the position of point before the latest repeat, and COUNT
 the count-argument of the latest repeat command.")
 
-(defvar evil-repeating-command nil
-  "This variable is non-nil if a command is currently being repeated.")
-
-(defvar evil-normal-repeat-info nil
-  "Repeat information accumulated during normal mode.")
-
-(defvar evil-insert-repeat-info nil
-  "Repeat information accumulated during insert mode.")
-
-(defvar evil-insert-repeat-type nil
-  "The repeat-type of the current command. If set to 'change the
-command will be recorded by tracking the changes, if set to nil
-by tracking the key-sequences, if set to 'ignore the command is
-ignored.")
-(make-variable-buffer-local 'evil-insert-repeat-type)
-
-(defvar evil-insert-repeat-point nil
-  "The position of point at the beginning of an change-tracking
-  editing command.")
-(make-variable-buffer-local 'evil-insert-repeat-point)
-
-(defvar evil-insert-repeat-changes nil
-  "Accumulated buffer changes for changed based commands in
-  insert-state.")
-(make-variable-buffer-local 'evil-insert-repeat-changes)
-
-(defvar evil-insert-repeat-types (make-hash-table :test 'eq)
-  "The hash-table to hold the insert repeat type for each
-  command.")
-
-(defvar evil-command-modified-buffer nil
-  "Non-nil if the current command modified the buffer, i.e., it
-  is an editing command. This variable is used to detect editing
-  command for repeation.")
-
 (defvar evil-repeat-count nil
   "The explicit count when repeating a command.")
 
 (defvar evil-insert-count nil
-  "The explicit count passed to an command starting insert mode.")
+  "The explicit count passed to an command starting Insert state.")
 (make-variable-buffer-local 'evil-insert-count)
 
 (defvar evil-insert-vcount nil
@@ -197,6 +392,10 @@ number of repeats (including the original insertion).")
   "Non-nil if the current insertion command is a line-insertion
 command o or O.")
 (make-variable-buffer-local 'evil-insert-lines)
+
+(defvar evil-insert-repeat-info nil
+  "Repeat information accumulated during an insertion.")
+(make-variable-buffer-local 'evil-insert-repeat-info)
 
 (defvar evil-replace-alist nil
   "Association list of characters overwritten in Replace state.
@@ -221,9 +420,9 @@ is not restored.")
 (defvar evil-last-paste nil
   "Information about the latest paste.
 This should be a list (CMD POINT BEG END) where CMD is the last
-paste-command (either `evil-paste-before' or
-`evil-paste-behind'), POINT is the position of point before the
-paste, BEG end END are the region of the inserted text.")
+paste-command (either `evil-paste-before' or `evil-paste-after'),
+POINT is the position of point before the paste,
+BEG end END are the region of the inserted text.")
 
 (defvar evil-paste-count nil
   "The count argument of the current paste command.")
@@ -262,6 +461,9 @@ They are reused to prevent flicker.")
 
 (defvar evil-search-prompt nil
   "String to use for search prompt.")
+
+(defvar evil-window-map (make-sparse-keymap)
+  "Keymap for window-related commands.")
 
 ;;; ex-mode
 

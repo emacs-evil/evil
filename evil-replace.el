@@ -1,10 +1,8 @@
 ;;;; Replace state
 
-(require 'evil-vars)
-(require 'evil-common)
 (require 'evil-states)
-(require 'evil-operators)
 (require 'evil-repeat)
+(require 'evil-operators)
 
 (evil-define-state replace
   "Replace state."
@@ -17,7 +15,9 @@
     (add-hook 'pre-command-hook 'evil-replace-pre-command nil t))
    (t
     (overwrite-mode -1)
-    (remove-hook 'pre-command-hook 'evil-replace-pre-command t)))
+    (remove-hook 'pre-command-hook 'evil-replace-pre-command t)
+    (when evil-move-cursor-back
+      (evil-adjust))))
   (setq evil-replace-alist nil))
 
 (defun evil-replace-pre-command ()
@@ -27,8 +27,7 @@
       (add-to-list 'evil-replace-alist
                    (cons (point)
                          (unless (eolp)
-                           (char-after)))
-                   t))))
+                           (char-after)))))))
 
 (defun evil-replace-backspace ()
   "Restore character under cursor."
@@ -44,22 +43,20 @@
 
 (evil-define-operator evil-replace (beg end type char)
   "Replace text from BEG to END with CHAR."
-  :move-point t ; TODO: remove
   :motion evil-forward-char
   (interactive (list (evil-save-cursor
                        (evil-set-cursor evil-replace-state-cursor)
                        (evil-read-key))))
-  (let ((opoint (point))) ; `save-excursion' doesn't work reliably
-    (unwind-protect
-        (if (eq type 'block)
-            (evil-apply-on-block 'evil-replace beg end nil char)
-          (goto-char beg)
-          (while (< (point) end)
-            (if (eq (char-after) ?\n)
-                (forward-char)
-              (delete-char 1)
-              (insert-char char 1))))
-      (goto-char opoint))))
+  (if (eq type 'block)
+      (save-excursion
+        (evil-apply-on-block 'evil-replace beg end nil char))
+    (goto-char beg)
+    (while (< (point) end)
+      (if (eq (char-after) ?\n)
+          (forward-char)
+        (delete-char 1)
+        (insert-char char 1)))
+    (goto-char (max beg (1- end)))))
 
 (provide 'evil-replace)
 

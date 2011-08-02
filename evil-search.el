@@ -1,7 +1,7 @@
 ;;;; Search
 
-(require 'evil-vars)
 (require 'evil-common)
+(require 'evil-motions)
 
 (evil-define-motion evil-search-forward ()
   (format "Search forward for user-entered text.
@@ -22,11 +22,13 @@ Searches for regular expression if `evil-regexp-search' is t.%s"
               (format "\n\nBelow is the documentation string \
 for `isearch-forward',\nwhich lists available keys:\n\n%s"
                       (documentation 'isearch-forward)) ""))
+  :jump t
   :type exclusive
   (evil-search-incrementally nil evil-regexp-search))
 
 (evil-define-motion evil-search-next (count)
   "Repeat the last search."
+  :jump t
   :type exclusive
   (dotimes (var (or count 1))
     (evil-search (if evil-regexp-search
@@ -36,6 +38,7 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
 
 (evil-define-motion evil-search-previous (count)
   "Repeat the last search in the opposite direction."
+  :jump t
   :type exclusive
   (dotimes (var (or count 1))
     (evil-search (if evil-regexp-search
@@ -45,20 +48,23 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
 
 (evil-define-motion evil-search-symbol-backward (count)
   "Search backward for symbol under point."
+  :jump t
   :type exclusive
   (dotimes (var (or count 1))
     (evil-search-symbol nil)))
 
 (evil-define-motion evil-search-symbol-forward (count)
   "Search forward for symbol under point."
+  :jump t
   :type exclusive
   (dotimes (var (or count 1))
     (evil-search-symbol t)))
 
 (evil-define-motion evil-goto-definition ()
   "Go to definition or first occurrence of symbol under point."
+  :jump t
   :type exclusive
-  (let* ((string (or (thing-at-point 'symbol) ""))
+  (let* ((string (evil-find-symbol t))
          (search (if evil-regexp-search (regexp-quote string) string))
          ientry ipos)
     ;; load imenu if available
@@ -66,30 +72,31 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
       (condition-case nil
           (require 'imenu)
         (error nil)))
-    (cond
-     ((string= string "")
-      (error "No string under cursor"))
-     ;; if imenu is available, try it
-     ((fboundp 'imenu--make-index-alist)
-      (condition-case nil
-          (setq ientry (imenu--make-index-alist))
-        (error nil))
-      (setq ientry (assoc string ientry))
-      (setq ipos (cdr ientry))
-      (unless (markerp ipos)
-        (setq ipos (cadr ientry)))
+    (if (null string)
+        (error "No symbol under cursor")
+      (setq isearch-forward t)
+      ;; if imenu is available, try it
       (cond
-       ;; imenu found a position, so go there and
-       ;; highlight the occurrence
-       ((and (markerp ipos)
-             (eq (marker-buffer ipos) (current-buffer)))
-        (evil-search search t evil-regexp-search ipos))
-       ;; imenu failed, so just go to first occurrence in buffer
+       ((fboundp 'imenu--make-index-alist)
+        (condition-case nil
+            (setq ientry (imenu--make-index-alist))
+          (error nil))
+        (setq ientry (assoc string ientry))
+        (setq ipos (cdr ientry))
+        (unless (markerp ipos)
+          (setq ipos (cadr ientry)))
+        (cond
+         ;; imenu found a position, so go there and
+         ;; highlight the occurrence
+         ((and (markerp ipos)
+               (eq (marker-buffer ipos) (current-buffer)))
+          (evil-search search t evil-regexp-search ipos))
+         ;; imenu failed, so just go to first occurrence in buffer
+         (t
+          (evil-search search t evil-regexp-search (point-min)))))
+       ;; no imenu, so just go to first occurrence in buffer
        (t
-        (evil-search search t evil-regexp-search (point-min)))))
-     ;; no imenu, so just go to first occurrence in buffer
-     (t
-      (evil-search search t evil-regexp-search (point-min))))))
+        (evil-search search t evil-regexp-search (point-min)))))))
 
 (defun evil-search-incrementally (forward regexp-p)
   "Search incrementally for user-entered text."
@@ -137,8 +144,21 @@ to display in the echo area."
         (unless isearch-lazy-highlight-overlays
           (isearch-lazy-highlight-update)))
       (add-hook 'pre-command-hook 'evil-flash-hook)
+      (add-hook 'pre-command-hook 'evil-clean-isearch-overlays)
       (setq evil-flash-timer
             (run-at-time evil-flash-delay nil disable)))))
+
+(defun evil-clean-isearch-overlays ()
+  "Clean isearch overlays unless `this-command' is search."
+  (remove-hook 'pre-command-hook 'evil-clean-isearch-overlays)
+  (unless (memq this-command
+                '(evil-search-backward
+                  evil-search-forward
+                  evil-search-next
+                  evil-search-previous
+                  evil-search-symbol-backward
+                  evil-search-symbol-forward))
+    (isearch-clean-overlays)))
 
 (defun evil-flash-hook (&optional force)
   "Disable hightlighting if `this-command' is not search.
@@ -221,6 +241,9 @@ one more than the current position."
                 string (if regexp-p "pattern" "string"))))
       (setq isearch-string string)
       (isearch-update-ring string regexp-p)
+      ;; handle opening and closing of invisible area
+      (funcall isearch-filter-predicate
+               (match-beginning 0) (match-end 0))
       ;; always position point at the beginning of the match
       (goto-char (match-beginning 0))
       ;; determine message for echo area
@@ -248,16 +271,30 @@ If FORWARD is nil, search backward, otherwise forward."
            (not (string= string "")))
       (evil-search string forward evil-search-wrap))
      (t
-      (save-excursion
-        (setq string (or (thing-at-point 'symbol) ""))
-        ;; if there's nothing under point, go forwards
-        ;; (or backwards) to find it
-        (while (and (null string)
-                    (not (funcall end)))
-          (funcall move)
-          (setq string (thing-at-point 'symbol)))
+      (setq string (evil-find-symbol forward))
+      (if (null string)
+          (error "No symbol under point")
         (setq string (format "\\_<%s\\_>" (regexp-quote string))))
       (evil-search string forward evil-search-wrap)))))
+
+(defun evil-find-symbol (forward)
+  "Return symbol near point as a string.
+If FORWARD is nil, search backward, otherwise forward.
+Returns nil if nothing is found."
+  (let ((move (if forward 'forward-char 'backward-char))
+        (end (if forward 'eobp 'bobp))
+        string)
+    (save-excursion
+      (setq string (thing-at-point 'symbol))
+      ;; if there's nothing under point, go forwards
+      ;; (or backwards) to find it
+      (while (and (null string) (not (funcall end)))
+        (funcall move)
+        (setq string (thing-at-point 'symbol)))
+      (when (stringp string)
+        (set-text-properties 0 (length string) nil string))
+      (when (> (length string) 0)
+        string))))
 
 (defun evil-search-prompt (forward)
   "Return the search prompt for the given direction."
