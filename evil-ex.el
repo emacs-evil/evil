@@ -49,38 +49,38 @@ FORCE is non-nil if an exclamation mark follows the command."
   (let* ((range (evil-ex-parse-range text 0))
          (command (evil-ex-parse-command text (pop range)))
          (pos (pop command)))
-    (append (list pos) range command)))
+    (cons pos (append range command))))
 
 (defun evil-ex-parse-range (text pos)
   "Start parsing TEXT at position POS for a range of lines.
-Returns a list (POS START SEP END) where
-POS is the position of the first character after the range,
-START is a pair (base . offset) describing the start position,
-SEP is either ?, or ?;
-END is a pair (base . offset) describing the end position."
+Returns (POS) if no range has been parsed or a pair (POS . (START
+SEP END)) where POS is the position of the first character after
+the range, START is nil or a pair (base . offset) describing the
+start position, SEP is either ?,, ?; or nil and END is nil or a
+pair (base . offset) describing the end position."
   (let* ((start (evil-ex-parse-address text pos))
          (sep (evil-ex-parse-address-sep text (pop start)))
          (end (evil-ex-parse-address text (pop sep)))
          (pos (pop end)))
-    (append (list pos)
-            (and start (list start))
-            sep
-            (and end (list end)))))
+    (cons pos
+          (and (or start sep pos)
+               (list start sep end)))))
 
 (defun evil-ex-parse-address (text pos)
   "Start parsing TEXT at position POS for a line number.
-Returns a list (POS BASE OFFSET) where
-POS is the position of the first character after the range,
-BASE is the base offset of the line,
-OFF is the relative offset of the line from BASE."
+Returns a list (POS) if no address has been parsed or (POS BASE
+OFFSET) where POS is the position of the first character after
+the range, BASE is the base offset of the line, OFF is the
+relative offset of the line from BASE."
   (let* ((base (evil-ex-parse-address-base text pos))
          (off (evil-ex-parse-address-offset text (pop base)))
          (pos (pop off)))
-    (list pos (car-safe base) (car-safe off))))
+    (cons pos (and (or base off) (cons base off)))))
 
 (defun evil-ex-parse-address-base (text pos)
   "Start parsing TEXT at position POS for a base address of a line.
-Returns a list (POS ADDR) where
+Returns a list (POS) if no base address has been parsed or a
+pair (POS . ADDR) where
 POS is the position of the first character after the address,
 ADDR is the number of the line.
 ADDR can be either
@@ -92,74 +92,75 @@ ADDR can be either
 * '(re-bwd RE) a regular expression for backward search,
 * '(mark CHAR) a mark."
   (cond
-   ((>= pos (length text)) (list pos nil))
+   ((>= pos (length text)) (cons pos nil))
 
    ((= pos (or (string-match "[0-9]+" text pos) -1))
-    (list (match-end 0)
+    (cons (match-end 0)
           (string-to-number (match-string 0 text))))
 
    (t
     (let ((c (aref text pos)))
       (cond
        ((= c ?$)
-        (list (1+ pos) 'last-line))
+        (cons (1+ pos) 'last-line))
        ((= c ?\%)
-        (list (1+ pos) 'all))
+        (cons (1+ pos) 'all))
        ((= c ?.)
-        (list (1+ pos) 'current-line))
+        (cons (1+ pos) 'current-line))
        ((and (= c ?')
              (< pos (1- (length text))))
-        (list (+ 2 pos) `(mark ,(aref text (1+ pos)))))
+        (cons (+ 2 pos) `(mark ,(aref text (1+ pos)))))
        ((and (= (aref text pos) ?\\)
              (< pos (1- (length text))))
         (let ((c2 (aref text (1+ pos))))
           (cond
-           ((= c2 ?/) (list (+ 2 pos) 'next-of-prev-search))
-           ((= c2 ??) (list (+ 2 pos) 'prev-of-prev-search))
-           ((= c2 ?&) (list (+ 2 pos) 'next-of-prev-subst))
+           ((= c2 ?/) (cons (+ 2 pos) 'next-of-prev-search))
+           ((= c2 ??) (cons (+ 2 pos) 'prev-of-prev-search))
+           ((= c2 ?&) (cons (+ 2 pos) 'next-of-prev-subst))
            (t (signal 'ex-parse '("Unexpected symbol after ?\\"))))))
        ((= (aref text pos) ?/)
         (if (string-match "\\([^/]+\\|\\\\.\\)\\(?:/\\|$\\)"
                           text (1+ pos))
-            (list (match-end 0)
+            (cons (match-end 0)
                   (cons 're-fwd (match-string 1 text)))
           (signal 'ex-parse '("Invalid regular expression"))))
        ((= (aref text pos) ??)
         (if (string-match "\\([^?]+\\|\\\\.\\)\\(?:?\\|$\\)"
                           text (1+ pos))
-            (list (match-end 0)
+            (cons (match-end 0)
                   (cons 're-bwd (match-string 1 text)))
           (signal 'ex-parse '("Invalid regular expression"))))
        (t
-        (list pos nil)))))))
+        (cons pos nil)))))))
 
 (defun evil-ex-parse-address-sep (text pos)
   "Start parsing TEXT at position POS for an address separator.
-Returns a list (POS SEP) where
+Returns a list (POS) if no separator has been parsed or a
+list (POS SEP) where
 POS is the position of the first character after the separator,
-SEP is either ?; or ?,."
+SEP is either ?;, ?,. or nil if no separator has been parsed"
   (if (>= pos (length text))
-      (list pos nil)
+      (cons pos nil)
     (let ((c (aref text pos)))
       (if (member c '(?\, ?\;))
-          (list (1+ pos) c)
-        (list pos nil)))))
+          (cons (1+ pos) c)
+        (cons pos nil)))))
 
 (defun evil-ex-parse-address-offset (text pos)
-  "Parses `text' starting at `pos' for an offset, returning a two values,
-the offset and the new position."
+  "Parses TEXT starting at POS for an offset.
+Returns a list (POS) if no offset has been parsed or a list (POS
+OFF) where
+POS is the position of the first character after the offset,
+OFF is the numerical offset."
   (let ((off nil))
     (while (= pos (or (string-match "\\([-+]\\)\\([0-9]+\\)?" text pos) -1))
-      (if (string= (match-string 1 text) "+")
-          (setq off (+ (or off 0) (if (match-beginning 2)
-                                      (string-to-number (match-string 2 text))
-                                    1)))
-
-        (setq off (- (or off 0) (if (match-beginning 2)
-                                    (string-to-number (match-string 2 text))
-                                  1))))
+      (setq off (funcall (if (string= (match-string 1 text) "+") #'+ #'-)
+                         (or off 0)
+                         (if (match-beginning 2)
+                             (string-to-number (match-string 2 text))
+                           1)))
       (setq pos (match-end 0)))
-    (list pos off)))
+    (cons pos off)))
 
 (defun evil-ex-parse-command (text pos)
   "Parses TEXT starting at POS for a command.
@@ -229,7 +230,6 @@ FORCE is non-nil if and only if an exclamation followed the command."
 
 (defun evil-ex-update (beg end len)
   "Updates ex-variable in ex-mode when the buffer content changes."
-  (push (list beg end len (buffer-name)) mytest)
   (let* ((result (evil-ex-split (buffer-substring (minibuffer-prompt-end) (point-max))))
          (pos (+ (minibuffer-prompt-end) (pop result)))
          (start (pop result))
@@ -239,10 +239,14 @@ FORCE is non-nil if and only if an exclamation followed the command."
          (force (pop result))
          (oldcmd evil-ex-current-cmd))
     (setq evil-ex-current-cmd cmd
-          evil-ex-current-arg (buffer-substring pos (point-max))
+          evil-ex-current-arg (and (> (point-max) pos) (buffer-substring pos (point-max)))
           evil-ex-current-cmd-end (if force (1- pos) pos)
           evil-ex-current-cmd-begin (- evil-ex-current-cmd-end (length cmd))
-          evil-ex-current-cmd-force force)
+          evil-ex-current-cmd-force force
+          evil-ex-current-range (list start sep end))
+    ;; Ensure `evil-ex-current-range' is nil when no range has been given
+    (unless (or (car start) (cadr end) sep (car end) (cadr end))
+      (setq evil-ex-current-range nil))
     (when (and (> (length evil-ex-current-arg) 0)
                (= (aref evil-ex-current-arg 0) ? ))
       (setq evil-ex-current-arg (substring evil-ex-current-arg 1)))
@@ -270,8 +274,83 @@ FORCE is non-nil if and only if an exclamation followed the command."
       (setq completed-command evil-ex-current-cmd))
     (let ((binding (evil-ex-binding completed-command)))
       (if binding
-          (call-interactively binding)
+          (save-excursion
+            (let ((range (evil-ex-get-current-range))
+                  prefix-arg)
+              (cond
+               ((integerp range) (setq prefix-arg range))
+               ;; TODO: here we may need some code to update region
+               ;;       note that we have to take care of the correct
+               ;;       return value of `evil-ex-range'
+               ;((consp range)
+               ; (goto-line (car range))
+               ; (line-beginning-position)
+               ; (set-mark (save-excursion
+               ;             (goto-line (cdr range))
+               ;             (line-end-position))))))
+               ))
+            (with-current-buffer evil-ex-current-buffer
+              (call-interactively binding)))
         (error "Unknown command %s" evil-ex-current-cmd)))))
+
+(defun evil-ex-range ()
+  "Returns the first and last position of the current range."
+  (let ((rng (evil-ex-get-current-range)))
+    (if rng
+        (list (save-excursion
+                (goto-line (car rng))
+                (line-beginning-position))
+              (save-excursion
+                (goto-line (cdr rng))
+                (min (point-max) (1+ (line-end-position)))))
+      (list nil nil))))
+
+(defun evil-ex-get-current-range ()
+  "Returns the line-numbers of the current range."
+  (cond
+   ((null evil-ex-current-range) nil)
+   ((not (cadr evil-ex-current-range))
+    (let ((beg (evil-ex-get-line (car evil-ex-current-range))))
+      (list beg beg)))
+   (t
+    (let ((beg (evil-ex-get-line (car evil-ex-current-range))))
+      (save-excursion
+        (when (equal (cadr evil-ex-current-range) ?\;)
+          (goto-line beg))
+        (cons beg (evil-ex-get-line (nth 2 evil-ex-current-range))))))))
+
+(defun evil-ex-get-line (address)
+  "Returns the line represented by ADDRESS."
+  (if (not address)
+      (line-number-at-pos)
+    (let ((base (car address))
+          (offset (or (cdr address) 0)))
+      (+ (or offset 0)
+         (if (integerp base) base
+           (case base
+             ((nil) (line-number-at-pos))
+             (abs (cdr base))
+
+             ;; TODO: (1- ...) may be wrong if the match is the empty string
+             (re-fwd (save-excursion
+                       (beginning-of-line 2)
+                       (and (re-search-forward (cdr base))
+                            (line-number-at-pos (1- (match-end 0))))))
+
+             (re-bwd (save-excursion
+                       (beginning-of-line 0)
+                       (and (re-search-backward (cdr base))
+                            (line-number-at-pos (match-beginning 0)))))
+
+             (current-line (line-number-at-pos (point)))
+             (first-line (line-number-at-pos (point-min)))
+             (last-line (line-number-at-pos (point-max)))
+             (mark (line-number-at-pos (vim:get-local-mark (cadr base))))
+             (next-of-prev-search (error "Next-of-prev-search not yet implemented."))
+             (prev-of-prev-search (error "Prev-of-prev-search not yet implemented."))
+             (next-of-prev-subst (error "Next-of-prev-subst not yet implemented."))
+             (t (error "Invalid address: %s" address))))))))
+
 
 (defun evil-ex-read (prompt
                      collection
@@ -284,8 +363,8 @@ FORCE is non-nil if and only if an exclamation followed the command."
                      inherit-input-method)
   "Starts a completing ex minibuffer session.
 The parameters are the same as for `completing-read' but an
-addition UPDATE function can be given which is called as an hook
-of after-change-functions."
+additional UPDATE function can be given which is called as an
+hook of after-change-functions."
   (let ((evil-ex-current-buffer (current-buffer)))
     (let ((minibuffer-local-completion-map evil-ex-keymap)
           (evil-ex-update-function update)
@@ -309,7 +388,8 @@ of after-change-functions."
 (defun evil-ex-read-command (&optional initial-input)
   "Starts ex-mode."
   (interactive)
-  (let ((result (evil-ex-read ":" 'evil-ex-completion 'evil-ex-update nil initial-input  'evil-ex-history)))
+  (let ((evil-ex-current-buffer (current-buffer))
+        (result (evil-ex-read ":" 'evil-ex-completion 'evil-ex-update nil initial-input  'evil-ex-history)))
     (when (and result (not (zerop (length result))))
       (evil-ex-call-current-command))))
 
@@ -318,10 +398,30 @@ of after-change-functions."
   "Returns the current argument as file-name."
   evil-ex-current-arg)
 
-(defun evil-write (file-name &optional force)
-  "Saves the current buffer to FILE-NAME."
-  (interactive (list (evil-ex-file-name) evil-ex-current-cmd-force))
-  (error "Not yet implemened: WRITE <%s>" file-name))
+
+(defun evil-write (file-name &optional beg end force)
+  "Saves the current buffer or the region from BEG to END to FILE-NAME.
+If the argument FORCE is non-nil, the file will be overwritten if
+already existing."
+  (interactive (append
+                (list (evil-ex-file-name))
+                (evil-ex-range)
+                (list evil-ex-current-cmd-force)))
+  "Saves the lines from `begin' to `end' to file `file-name'."
+  (when (null file-name)
+    (setq file-name (buffer-file-name))
+    (unless file-name
+      (error "Please specify a file-name for this buffer!")))
+
+  (cond
+   ((and (null beg)
+         (string= file-name (buffer-file-name)))
+    (save-buffer))
+   ((and (null beg)
+         (null (buffer-file-name)))
+    (write-file file-name (not force)))
+   (t
+    (write-region beg end file-name nil nil nil (not force)))))
 
 (provide 'evil-ex)
 

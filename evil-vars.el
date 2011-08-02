@@ -286,6 +286,9 @@ They are reused to prevent flicker.")
 (defvar evil-ex-current-arg nil
   "The currently parsed argument.")
 
+(defvar evil-ex-current-range nil
+  "The currenty parsed range.")
+
 (defvar evil-ex-history nil
   "History of ex-commands.")
 
