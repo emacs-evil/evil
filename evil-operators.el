@@ -539,26 +539,28 @@ Both COUNT and CMD may be nil."
                      (current-kill 0)))
              (yank-handler (when (stringp text)
                              (car-safe (get-text-property
-                                        0 'yank-handler text)))))
+                                        0 'yank-handler text))))
+             (opoint (point)))
         (when text
           (if (memq yank-handler '(evil-yank-line-handler
                                    evil-yank-block-handler))
               (let ((evil-paste-count count)
-                    (this-command 'evil-paste-before)) ; for non-interactive use
+                    ;; for non-interactive use
+                    (this-command 'evil-paste-before))
+                (push-mark opoint t)
                 (insert-for-yank text))
             ;; no yank-handler, default
-            (let ((opoint (point)))
-              (dotimes (i (or count 1))
-                (insert-for-yank text))
-              (evil-move-mark opoint)
-              (setq evil-last-paste
-                    (list 'evil-paste-before
-                          count
-                          opoint
-                          opoint        ; beg
-                          (point)))     ; end
-              (evil-exchange-point-and-mark))))
-        ;; no paste pop after pasting a register
+            (push-mark opoint t)
+            (dotimes (i (or count 1))
+              (insert-for-yank text))
+            (setq evil-last-paste
+                  (list 'evil-paste-before
+                        count
+                        opoint
+                        opoint          ; beg
+                        (point)))       ; end
+            (evil-exchange-point-and-mark)))
+        ;; no paste-pop after pasting from a register
         (when register
           (setq evil-last-paste nil))))))
 
@@ -573,7 +575,8 @@ Both COUNT and CMD may be nil."
                      (current-kill 0)))
              (yank-handler (when (stringp text)
                              (car-safe (get-text-property
-                                        0 'yank-handler text)))))
+                                        0 'yank-handler text))))
+             (opoint (point)))
         (when text
           (if (memq yank-handler '(evil-yank-line-handler
                                    evil-yank-block-handler))
@@ -581,23 +584,23 @@ Both COUNT and CMD may be nil."
                     (this-command 'evil-paste-after)) ; for non-interactive use
                 (insert-for-yank text))
             ;; no yank-handler, default
-            (let ((opoint (point)))
-              ;; TODO: Perhaps it is better to collect a list of all
-              ;; (point . mark) pairs to undo the yanking for count > 1.
-              ;; The reason is that this yanking could very well use
-              ;; `yank-handler'.
-              (unless (eolp) (forward-char))
-              (let ((beg (point)))
-                (dotimes (i (or count 1))
-                  (insert-for-yank text))
-                (setq evil-last-paste
-                      (list 'evil-paste-after
-                            count
-                            opoint
-                            beg         ; beg
-                            (point)))   ; end
-                (when (evil-normal-state-p)
-                  (evil-adjust))))))
+            (unless (eolp) (forward-char))
+            (push-mark (point) t)
+            ;; TODO: Perhaps it is better to collect a list of all
+            ;; (point . mark) pairs to undo the yanking for COUNT > 1.
+            ;; The reason is that this yanking could very well use
+            ;; `yank-handler'.
+            (let ((beg (point)))
+              (dotimes (i (or count 1))
+                (insert-for-yank text))
+              (setq evil-last-paste
+                    (list 'evil-paste-after
+                          count
+                          opoint
+                          beg           ; beg
+                          (point)))     ; end
+              (when (evil-normal-state-p)
+                (evil-adjust)))))
         (when register
           (setq evil-last-paste nil))))))
 
@@ -633,12 +636,12 @@ Both COUNT and CMD may be nil."
           (evil-paste-after count register)
         (evil-paste-before count register)))))
 
-;; TODO: if undoing is disabled in the current buffer paste pop won't
-;; work. Although this is probably not a big problem because usually
-;; buffers for editing where `evil-paste-pop' may be useful have
-;; undoing enabled. A solution would be to temporarily enable undo
-;; when pasting and storing the undo-information in a special variable
-;; that does not interfere with buffer-undo-list
+;; TODO: if undoing is disabled in the current buffer, paste-pop won't
+;; work. Although this is probably not a big problem, because usually
+;; buffers where `evil-paste-pop' may be useful have undoing enabled.
+;; A solution would be to temporarily enable undo when pasting and
+;; store the undo information in a special variable that does not
+;; interfere with `buffer-undo-list'.
 (defun evil-paste-pop (count)
   "Replace the just-yanked stretch of killed text with a different stretch.
 This command is allowed only immediatly after a `yank',
