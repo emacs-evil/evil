@@ -184,6 +184,13 @@ which causes the parenthesis to be highlighted."
     isearch-yank-line
     isearch-yank-word-or-char
     keyboard-quit
+    mark-defun
+    mark-end-of-sentence
+    mark-page
+    mark-paragraph
+    mark-sexp
+    mark-whole-buffer
+    mark-word
     mouse-drag-region
     mouse-save-then-kill
     mouse-set-point
