@@ -17,22 +17,30 @@
   "Binds the function FUNCTION to the command CMD."
   (evil-add-to-alist 'evil-ex-commands cmd function))
 
+(defun evil-find-symbol (lst symbol)
+  "Returns non-nil if LST contains SYMBOL somewhere in a sublist."
+  (catch 'done
+    (dolist (elm lst)
+      (when (or (eq elm symbol)
+                (and (listp elm)
+                     (evil-find-symbol elm symbol)))
+        (throw 'done t)))
+    nil))
+
 ;; TODO: this test is not very robust, could be done better
 (defun evil-ex-has-force (cmd)
-  "Returns non-nil iff the comman CMD checks for a ex-force argument in its interactive list.
+  "Returns non-nil iff the command CMD checks for a ex-force argument in its interactive list.
 The test for the force-argument should be done by checking the
 value of the variable `evil-ex-current-cmd-force'."
-  ;; this is a little bit cheating to get a local recursive function
-  (let (find-force)
-    (setq find-force
-          #'(lambda (lst)
-              (cond
-               ((null lst) nil)
-               ((eq (car lst) 'evil-ex-current-cmd-force) t)
-               (t (or (and (listp (car lst))
-                           (funcall find-force (car lst)))
-                      (funcall find-force (cdr lst)))))))
-    (funcall find-force (interactive-form cmd))))
+  (evil-find-symbol (interactive-form cmd) 'evil-ex-current-cmd-force))
+
+(defun evil-ex-has-file-argument (cmd)
+  "Returns non-nil iff the command CMD checks for an `evil-ex-file-name' argument in its interactive list."
+  (evil-find-symbol (interactive-form cmd) 'evil-ex-file-name))
+
+(defun evil-ex-has-buffer-argument (cmd)
+  "Returns non-nil iff the command CMD checks for an `evil-ex-buffer-name' argument in its interactive list."
+  (evil-find-symbol (interactive-form cmd) 'evil-ex-buffer-name))
 
 (defun evil-ex-message (info)
   "Shows an INFO message after the current minibuffer content."
@@ -190,14 +198,32 @@ FORCE is non-nil if and only if an exclamation followed the command."
 (defun evil-ex-completion (cmdline predicate flag)
   "Called to complete an object in the ex-buffer."
   (let* ((result (evil-ex-split cmdline))
-         (pos (+ (minibuffer-prompt-end) (pop result)))
+         (pos (pop result))
+         (pnt (+ (minibuffer-prompt-end) pos))
          (start (pop result))
          (sep (pop result))
          (end (pop result))
          (cmd (pop result))
          (force (pop result)))
-    (when (and (= (point) (point-max)) (= (point) pos))
-      (evil-ex-complete-command cmd force predicate flag))))
+    (cond
+     ((and (= (point) (point-max)) (= (point) pnt))
+      (evil-ex-complete-command cmd force predicate flag))
+     ((= (point) (point-max))
+      (let* ((argbeg (+ pos
+                        (if (and (< pos (point-max))
+                                 (= (aref cmdline pos) ?\ ))
+                            1
+                          0)))
+             (begin (substring cmdline 0 argbeg))
+             (arg (substring cmdline argbeg)))
+        (let ((result (evil-ex-complete-argument cmd arg predicate flag)))
+          (cond
+           ((null result) nil)
+           ((eq t result) t)
+           ((stringp result) (if flag result (concat begin result)))
+           ((listp result) (if flag result (mapcar #'(lambda (x) (concat begin x)) result)))
+           (t (error "Completion returned unexpected value.")))))))))
+
 
 (defun evil-ex-complete-command (cmd force predicate flag)
   "Called to complete a command."
@@ -233,6 +259,61 @@ FORCE is non-nil if and only if an exclamation followed the command."
             new-result))
          ((eq flag 'lambda)
           (test-completion cmd evil-ex-commands predicate)))))))
+
+(defun evil-ex-complete-argument (cmd arg predicate flag)
+  "Called to complete the argument of a command.
+CMD is the current command. ARG, PREDICATE and FLAG are the
+arguments for programmable completion."
+  (let ((binding (evil-ex-completed-binding cmd)))
+    (cond
+     ((evil-ex-has-file-argument binding)
+      (evil-ex-complete-file-argument arg predicate flag))
+     ((evil-ex-has-buffer-argument binding)
+      (evil-ex-complete-buffer-argument arg predicate flag))
+     (t
+      ;; do nothing
+      (when arg
+        (cond
+         ((null flag) t)
+         ((eq flag t) (list arg))
+         ((eq flag 'lambda) t)))))))
+
+
+(defun evil-ex-complete-file-argument (arg predicate flag)
+  "Called to complete a file argument."
+  (if (null arg)
+      default-directory
+    (let ((dir (or (file-name-directory arg)
+                   (with-current-buffer evil-ex-current-buffer default-directory)))
+          (fname (file-name-nondirectory arg)))
+      (cond
+       ((null dir) (ding))
+       ((null flag)
+        (let ((result (file-name-completion fname dir)))
+          (cond
+           ((null result) nil)
+           ((eq result t) t)
+           (t (concat dir result)))))
+
+       ((eq t flag)
+        (file-name-all-completions fname dir))
+
+       ((eq 'lambda flag)
+        (eq (file-name-completion fname dir) t))))))
+
+
+(defun evil-ex-complete-buffer-argument (arg predicate flag)
+  "Called to complete a buffer name argument."
+  (when arg
+    (let ((buffers (mapcar #'(lambda (buffer) (cons (buffer-name buffer) nil)) (buffer-list t))))
+      (cond
+       ((null flag)
+        (try-completion arg buffers predicate))
+       ((eq t flag)
+        (all-completions arg buffers predicate))
+       ((eq 'lambda flag)
+        (test-completion arg buffers predicate))))))
+
 
 (defun evil-ex-update (beg end len)
   "Updates ex-variable in ex-mode when the buffer content changes."
@@ -273,24 +354,26 @@ FORCE is non-nil if and only if an exclamation followed the command."
         (setq cmd (assoc (cdr cmd) evil-ex-commands)))
       (and cmd (cdr cmd))))
 
+(defun evil-ex-completed-binding (command)
+  "Returns the final binding of the completion of COMMAND."
+  (let ((completed-command (try-completion command evil-ex-commands nil)))
+    (evil-ex-binding (if (eq completed-command t) command completed-command))))
+
 (defun evil-ex-call-current-command ()
   "Execute the given command COMMAND."
-  (let ((completed-command (try-completion evil-ex-current-cmd evil-ex-commands nil)))
-    (when (eq completed-command t)
-      (setq completed-command evil-ex-current-cmd))
-    (let ((binding (evil-ex-binding completed-command)))
-      (if binding
-          (with-current-buffer evil-ex-current-buffer
-            (save-excursion
-              (let ((range (evil-ex-get-current-range))
-                    prefix-arg)
-                (when (and (not range)
-                           evil-ex-current-range
-                           (car evil-ex-current-range)
-                           (numberp (caar evil-ex-current-range)))
-                  (setq prefix-arg (caar evil-ex-current-range)))
-                (call-interactively binding))))
-        (error "Unknown command %s" evil-ex-current-cmd)))))
+  (let ((binding (evil-ex-completed-binding evil-ex-current-cmd)))
+    (if binding
+        (with-current-buffer evil-ex-current-buffer
+          (save-excursion
+            (let ((range (evil-ex-get-current-range))
+                  prefix-arg)
+              (when (and (not range)
+                         evil-ex-current-range
+                         (car evil-ex-current-range)
+                         (numberp (caar evil-ex-current-range)))
+                (setq prefix-arg (caar evil-ex-current-range)))
+              (call-interactively binding))))
+      (error "Unknown command %s" evil-ex-current-cmd))))
 
 (defun evil-ex-range ()
   "Returns the first and last position of the current range."
@@ -389,7 +472,8 @@ hook of after-change-functions."
   "Deinitializes ex minibuffer."
   (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown)
   (when evil-ex-update-function
-    (remove-hook 'after-change-functions evil-ex-update-function t)))
+    (remove-hook 'after-change-functions evil-ex-update-function t)
+    (funcall evil-ex-update-function (point-min) (point-max) 0)))
 
 (defun evil-ex-read-command (&optional initial-input)
   "Starts ex-mode."
@@ -402,6 +486,10 @@ hook of after-change-functions."
 
 (defun evil-ex-file-name ()
   "Returns the current argument as file-name."
+  evil-ex-current-arg)
+
+(defun evil-ex-buffer-name ()
+  "Returns the current argument as buffer-name."
   evil-ex-current-arg)
 
 
