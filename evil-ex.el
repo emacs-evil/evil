@@ -354,7 +354,7 @@ FORCE is non-nil if and only if an exclamation followed the command."
             ((eq base 'current-line) (line-number-at-pos (point)))
             ((eq base 'first-line) (line-number-at-pos (point-min)))
             ((eq base 'last-line) (line-number-at-pos (point-max)))
-            ((eq base 'mark)
+            ((and (consp base) (eq (car base) 'mark))
              (let ((m (evil-get-marker (cadr base))))
                (cond
                 ((eq m nil) (error "Marker <%c> not defined" (cadr base)))
