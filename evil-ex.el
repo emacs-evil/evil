@@ -280,23 +280,16 @@ FORCE is non-nil if and only if an exclamation followed the command."
       (setq completed-command evil-ex-current-cmd))
     (let ((binding (evil-ex-binding completed-command)))
       (if binding
-          (save-excursion
-            (let ((range (evil-ex-get-current-range))
-                  prefix-arg)
-              (cond
-               ((integerp range) (setq prefix-arg range))
-               ;; TODO: here we may need some code to update region
-               ;;       note that we have to take care of the correct
-               ;;       return value of `evil-ex-range'
-               ;((consp range)
-               ; (goto-line (car range))
-               ; (line-beginning-position)
-               ; (set-mark (save-excursion
-               ;             (goto-line (cdr range))
-               ;             (line-end-position))))))
-               ))
-            (with-current-buffer evil-ex-current-buffer
-              (call-interactively binding)))
+          (with-current-buffer evil-ex-current-buffer
+            (save-excursion
+              (let ((range (evil-ex-get-current-range))
+                    prefix-arg)
+                (when (and (not range)
+                           evil-ex-current-range
+                           (car evil-ex-current-range)
+                           (numberp (caar evil-ex-current-range)))
+                  (setq prefix-arg (caar evil-ex-current-range)))
+                (call-interactively binding))))
         (error "Unknown command %s" evil-ex-current-cmd)))))
 
 (defun evil-ex-range ()
@@ -312,19 +305,18 @@ FORCE is non-nil if and only if an exclamation followed the command."
       (list nil nil))))
 
 (defun evil-ex-get-current-range ()
-  "Returns the line-numbers of the current range."
-  (cond
-   ((null evil-ex-current-range) nil)
-   ((not (cadr evil-ex-current-range))
-    (let ((beg (evil-ex-get-line (car evil-ex-current-range))))
-      (list beg beg)))
-   (t
+  "Returns the line-numbers of the current range. A range is
+returned if and only if a range separator is specified, otherwise
+the number is interpreted as prefix argument (i.e., as numeric
+count) in which case this function returns nil."
+  (when (and evil-ex-current-range
+           (cadr evil-ex-current-range))
     (let ((beg (evil-ex-get-line (car evil-ex-current-range))))
       (save-excursion
         (when (equal (cadr evil-ex-current-range) ?\;)
           (goto-char (point-min))
           (forward-line (1- beg)))
-        (cons beg (evil-ex-get-line (nth 2 evil-ex-current-range))))))))
+        (cons beg (evil-ex-get-line (nth 2 evil-ex-current-range)))))))
 
 (defun evil-ex-get-line (address)
   "Returns the line represented by ADDRESS."
