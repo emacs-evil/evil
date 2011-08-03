@@ -118,9 +118,7 @@
                 (evil-active-region -1)))
             (if (or ,move-point
                     (evil-visual-state-p state))
-                (if (eq ,type 'block)
-                    (evil-visual-block-rotate 'upper-left ,beg ,end)
-                  (goto-char ,beg))
+                (evil-visual-rotate 'upper-left ,beg ,end ,type)
               (goto-char orig)))
           range))
        (unwind-protect
@@ -155,7 +153,7 @@ a predefined type may be specified with TYPE."
         ;; motion
         (evil-save-state
           (unless motion
-            (evil-operator-state)
+            (evil-change-state 'operator)
             ;; Make linewise operator shortcuts. E.g., "d" yields the
             ;; shortcut "dd", and "g?" yields shortcuts "g??" and "g?g?".
             (let ((keys (nth 2 (evil-extract-count (this-command-keys)))))
@@ -620,9 +618,7 @@ Both COUNT and CMD may be nil."
           ;; add replaced text before the current kill
           (setq kill-ring (delete text kill-ring)))
         (setq kill-ring-yank-pointer kill-ring)
-        (if (eq (evil-visual-type) 'block)
-            (evil-visual-block-rotate 'upper-left)
-          (goto-char (evil-visual-beginning)))
+        (evil-visual-rotate 'upper-left)
         (evil-delete (evil-visual-beginning)
                      (evil-visual-end)
                      (evil-visual-type))

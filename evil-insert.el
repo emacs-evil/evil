@@ -61,9 +61,7 @@ the next VCOUNT-1 lines starting at the same column."
   (interactive
    (list (prefix-numeric-value current-prefix-arg)
          (when (evil-visual-state-p)
-           (if (eq (evil-visual-type) 'block)
-               (evil-visual-block-rotate 'upper-left)
-             (goto-char (evil-visual-beginning)))
+           (evil-visual-rotate 'upper-left)
            (when (eq (evil-visual-type) 'block)
              (count-lines (evil-visual-beginning)
                           (evil-visual-end))))))
@@ -82,15 +80,14 @@ The insertion will be repeated COUNT times."
   (interactive
    (list (prefix-numeric-value current-prefix-arg)
          (when (evil-visual-state-p)
-           (if (eq (evil-visual-type) 'block)
-               ;; go to upper-left corner first so that
-               ;; `count-lines' yields accurate results
-               (evil-visual-block-rotate 'upper-left)
-             (goto-char (evil-visual-end)))
+           (evil-visual-rotate 'upper-right)
            (when (eq (evil-visual-type) 'block)
-             (prog1 (count-lines (evil-visual-beginning)
-                                 (evil-visual-end))
-               (evil-visual-block-rotate 'upper-right))))))
+             (save-excursion
+               ;; go to upper-left corner temporarily so
+               ;; `count-lines' yields accurate results
+               (evil-visual-rotate 'upper-left)
+               (count-lines (evil-visual-beginning)
+                            (evil-visual-end)))))))
   (unless (or (eolp) (evil-visual-state-p))
     (forward-char))
   (evil-insert count vcount))

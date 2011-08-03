@@ -542,7 +542,7 @@ CORNER defaults to `upper-left'."
       (setq vertical "lower")))
     (intern (format "%s-%s" vertical horizontal))))
 
-(evil-define-command evil-visual-block-rotate (corner &optional beg end)
+(evil-define-command evil-visual-rotate (corner &optional beg end type)
   "In Visual Block selection, put point in CORNER.
 Corner may be one of `upper-left', `upper-right', `lower-left'
 and `lower-right':
@@ -559,15 +559,25 @@ When called interactively, the selection is rotated blockwise."
                'upper-left))))
   (let* ((beg (or beg (point)))
          (end (or end (mark t) beg))
-         (range (evil-block-rotate beg end :corner corner)))
-    (setq beg (pop range)
-          end (pop range))
-    (unless (eq corner (evil-visual-block-corner corner beg end))
-      (evil-swap beg end))
-    (goto-char beg)
-    (evil-move-mark end)
-    (when (evil-visual-state-p)
-      (evil-visual-refresh evil-visual-block nil nil :corner corner))))
+         (type (or type (evil-visual-type)))
+         range)
+    (cond
+     ((eq type 'block)
+      (setq range (evil-block-rotate beg end :corner corner)
+            beg (pop range)
+            end (pop range))
+      (unless (eq corner (evil-visual-block-corner corner beg end))
+        (evil-swap beg end))
+      (goto-char beg)
+      (evil-move-mark end)
+      (when (evil-visual-state-p)
+        (evil-visual-refresh evil-visual-block nil nil :corner corner)))
+     ((memq corner '(upper-right lower-right))
+      (goto-char (max beg end))
+      (evil-move-mark (min beg end)))
+     (t
+      (goto-char (min beg end))
+      (evil-move-mark (max beg end))))))
 
 (provide 'evil-visual)
 
