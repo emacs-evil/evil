@@ -212,7 +212,7 @@ FORCE is non-nil if and only if an exclamation followed the command."
       (evil-ex-complete-command cmd force predicate flag))
      ((= (point) (point-max))
       (let* ((argbeg (+ pos
-                        (if (and (< pos (point-max))
+                        (if (and (< pos (length cmdline))
                                  (= (aref cmdline pos) ?\ ))
                             1
                           0)))
