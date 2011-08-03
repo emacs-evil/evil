@@ -276,7 +276,7 @@ arguments for programmable completion."
       ;; do nothing
       (when arg
         (cond
-         ((null flag) t)
+         ((null flag) nil)
          ((eq flag t) (list arg))
          ((eq flag 'lambda) t)))))))
 
