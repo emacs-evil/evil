@@ -206,6 +206,8 @@ FORCE is non-nil if and only if an exclamation followed the command."
          (cmd (pop result))
          (force (pop result)))
     (cond
+     ((and (consp flag) (eq (car flag) 'boundaries))
+      (cons 'boundaries (cons 0 (length (cdr flag)))))
      ((and (= (point) (point-max)) (= (point) pnt))
       (evil-ex-complete-command cmd force predicate flag))
      ((= (point) (point-max))
