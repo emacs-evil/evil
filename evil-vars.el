@@ -213,6 +213,65 @@ which causes the parenthesis to be highlighted."
   "Face for the info message in ex mode."
   :group 'evil)
 
+;; Searching
+(defcustom evil-ex-interactive-search-highlight 'all-windows
+  "Determine in which windows the interactive highlighting should be shown."
+  :type '(radio (const :tag "All windows." all-windows)
+                (const :tag "Selected window." selected-window)
+                (const :tag "Disable highlighting." nil))
+  :group 'evil)
+
+(defcustom evil-ex-search-case 'smart
+  "The case behaviour of the search command."
+  :type '(radio (const :tag "Case sensitive." 'sensitive)
+                (const :tag "Case insensitive." 'insensitive)
+                (const :tag "Smart case." 'smart))
+  :group 'evil)
+
+(defcustom evil-ex-substitute-case nil
+  "The case behaviour of the search command."
+  :type '(radio (const :tag "Same as interactive search." nil)
+                (const :tag "Case sensitive." 'sensitive)
+                (const :tag "Case insensitive." 'insensitive)
+                (const :tag "Smart case." 'smart))
+  :group 'evil)
+
+(defcustom evil-ex-search-interactive t
+  "If t search is interactive."
+  :type 'boolean
+  :group 'evil)
+
+(defcustom evil-ex-search-highlight-all t
+  "If t and interactive search is enabled, all matches are
+highlighted."
+  :type 'boolean
+  :group 'evil)
+
+(defcustom evil-ex-substitute-highlight-all t
+  "If t all matches for the substitute pattern are highlighted."
+  :type 'boolean
+  :group 'evil)
+
+(defcustom evil-ex-substitute-interactive-replace t
+  "If t and substitute patterns are highlighted the replacement is shown interactively."
+  :type 'boolean
+  :group 'evil)
+
+(defface evil-ex-search '((t :inherit isearch))
+  "Face for interactive search."
+  :group 'evil)
+
+(defface evil-ex-lazy-highlight '((t :inherit lazy-highlight))
+  "Face for highlighting all matches in interactive search."
+  :group 'evil)
+
+(defface evil-ex-substitute '(( ((supports :underline))
+                            :underline t
+                            :foreground "red"))
+  "Face for interactive replacement text."
+  :group 'evil)
+
+
 ;;; Variables
 
 (defvar evil-state nil
@@ -502,6 +561,49 @@ They are reused to prevent flicker.")
 
 (defvar evil-ex-update-function nil
   "Currently active ex update function.")
+
+
+;; Searching
+(defconst evil-ex-search-keymap (make-sparse-keymap)
+  "Keymap used in search-ex-mode.")
+
+(defvar evil-ex-search-history nil
+  "The history for the search command.")
+
+(defvar evil-ex-search-direction nil
+  "The direction of the current search, either 'forward or 'backward.")
+
+(defvar evil-ex-search-count nil
+  "The count if the current search.")
+
+(defvar evil-ex-search-start-point nil
+  "The point where the search started.")
+
+(defvar evil-ex-search-overlay nil
+  "The overlay for the current search result.")
+
+(defvar evil-ex-search-pattern nil
+  "The actual search pattern.")
+
+(defvar evil-ex-search-match-beg nil
+  "The beginning position of the last match.")
+
+(defvar evil-ex-search-match-end nil
+  "The end position of the last match.")
+
+(defvar evil-ex-substitute-pattern nil
+  "The actual replacement.")
+
+(defvar evil-ex-substitute-replacement nil
+  "The actual replacement.")
+
+;; The lazy-highlighting framework.
+(defvar evil-ex-active-highlights-alist nil
+  "An alist of currently active highlights.")
+
+(defvar evil-ex-hl-update-timer nil
+  "Time used for updating highlights.")
+
 
 
 (defconst evil-version "0.1"

@@ -322,6 +322,298 @@ Returns nil if nothing is found."
   (let (evil-search-wrap)
     ad-do-it))
 
+
+
+;; Ex-Searching
+(define-key evil-ex-search-keymap [return] #'evil-ex-search-exit)
+(define-key evil-ex-search-keymap (kbd "RET") #'evil-ex-search-exit)
+(define-key evil-ex-search-keymap (kbd "C-g") #'evil-ex-search-abort)
+(define-key evil-ex-search-keymap [up] #'previous-history-element)
+(define-key evil-ex-search-keymap [down] #'next-history-element)
+(define-key evil-ex-search-keymap (kbd "ESC ESC ESC") #'evil-ex-search-abort)
+(define-key evil-ex-search-keymap (kbd "\d") #'evil-ex-ex-delete-backward-char)
+
+;; A pattern.
+(defun evil-ex-make-pattern (regex casefold whole-line)
+  "Creates a new search pattern.
+REGEX is the regular expression to be searched for.  CASEFOLD is
+the case-fold property of the search. If WHOLE-LINE is non nil
+all occurences of the pattern on a line will be highlighted,
+otherwise only the first one."
+  (list (evil-ex-regex-without-case regex)
+        (evil-ex-regex-case regex casefold)
+        whole-line))
+
+(defun evil-ex-pattern-regex (pattern)
+  "Returns the regular expression of a search PATTERN."
+  (car pattern))
+
+(defun evil-ex-pattern-case-fold (pattern)
+  "Returns the case-fold property of a search PATTERN."
+  (cadr pattern))
+
+(defun evil-ex-pattern-whole-line (pattern)
+  "Returns the whole-line property of a search PATTERN."
+  (nth 2 pattern))
+
+(defun evil-ex-regex-without-case (re)
+  "Returns the regular expression without all occurrences of \\c and \\C."
+  (replace-regexp-in-string
+   "\\\\."
+   #'(lambda (txt)
+       (if (member (aref txt 1) '(?c ?C))
+           ""
+         txt))
+   re t t))
+
+(defun evil-ex-regex-case (re default-case)
+  "Returns the case as implied by \\c or \\C in regular expression `re'.
+If \\c appears anywhere in the pattern, the pattern is case
+insenstive, if \\C appears the pattern is case sensitive. Only
+the first occurrence of \\c or \\C is used, all others are
+ignored. If neither \\c nor \\C appears in the pattern, the
+case specified by `default-case' is used. `default-case' should be either
+'sensitive, 'insensitive or 'smart. In the latter case the pattern will be
+case-sensitive if and only if it contains an upper-case letter, otherwise it
+will be case-insensitive."
+  (let ((start 0)
+        recase)
+    (while (and (not recase)
+                (string-match "\\\\." re start))
+      (case (aref re (1- (match-end 0)))
+        (?c (setq recase 'insensitive))
+        (?C (setq recase 'sensitive))
+        (t (setq start (match-end 0)))))
+    (or recase
+        (case default-case
+          ((sensitive insensitive) default-case)
+          (smart (if (isearch-no-upper-case-p re t) 'insensitive 'sensitive))
+          (t nil)))))
+
+(defun evil-ex-make-hl (name &rest args)
+  "Creates a new highlight object with name NAME and properties ARGS."
+  (unless (symbolp name) (error "Excepted symbol as name of highlight."))
+  (let ((face 'evil-ex-lazy-highlight)
+        (win (selected-window))
+        min max match-hook)
+    (while args
+      (let ((key (pop args))
+            (val (pop args)))
+        (cond
+         ((eq key :face) (setq face val))
+         ((eq key :win)  (setq win val))
+         ((eq key :min)  (setq min val))
+         ((eq key :max)  (setq max val))
+         ((eq key :match-hook) (setq match-hook val))
+         (t (error "Unexpected keyword: %s" key)))))
+    (when (assoc name evil-ex-active-highlights-alist)
+      (evil-ex-delete-hl name))
+    (when (null evil-ex-active-highlights-alist)
+      (add-hook 'window-scroll-functions #'evil-ex-hl-update-highlights-scroll nil t)
+      (add-hook 'window-size-change-functions #'evil-ex-hl-update-highlights-resize nil))
+    (push (cons name (vector name nil face win min max match-hook nil))
+          evil-ex-active-highlights-alist)))
+
+(defun evil-ex-hl-name (hl)
+  "Returns the name of the highlight HL."
+  (aref hl 0))
+
+(defun evil-ex-hl-pattern (hl)
+  "Returns the pattern of the highlight HL."
+  (aref hl 1))
+
+(defun evil-ex-hl-set-pattern (hl pattern)
+  "Sets the pattern of the highlight HL to PATTERN."
+  (aset hl 1 pattern))
+
+(defun evil-ex-hl-face (hl)
+  "Returns the face of the highlight HL."
+  (aref hl 2))
+
+(defun evil-ex-hl-window (hl)
+  "Returns the window of the highlight HL."
+  (aref hl 3))
+
+(defun evil-ex-hl-min (hl)
+  "Returns the minimal buffer position of the highlight HL."
+  (aref hl 4))
+
+(defun evil-ex-hl-set-min (hl min)
+  "Sets the minimal buffer position of the highlight HL to MIN."
+  (aset hl 4 min))
+
+(defun evil-ex-hl-max (hl)
+  "Returns the maximal buffer position of the highlight HL."
+  (aref hl 5))
+
+(defun evil-ex-hl-set-max (hl max)
+  "Sets the minimal buffer position of the highlight HL to MAX."
+  (aset hl 5 max))
+
+(defun evil-ex-hl-match-hook (hl)
+  "Returns the match-hook of the highlight HL."
+  (aref hl 6))
+
+(defun evil-ex-hl-overlays (hl)
+  "Returns the list of active overlays of the highlight HL."
+  (aref hl 7))
+
+(defun evil-ex-hl-set-overlays (hl overlays)
+  "Sets the list of active overlays of the highlight HL to OVERLAYS."
+  (aset hl 7 overlays))
+
+
+(defun evil-ex-delete-hl (name)
+  "Removes the highlighting object with a certain `name'."
+  (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
+    (when hl
+      (mapc #'delete-overlay (evil-ex-hl-overlays hl))
+      (setq evil-ex-active-highlights-alist
+            (assq-delete-all name evil-ex-active-highlights-alist))
+      (evil-ex-hl-update-highlights))
+    (when (null evil-ex-active-highlights-alist)
+      (remove-hook 'window-scroll-functions #'evil-ex-hl-update-highlights-scroll t)
+      (remove-hook 'window-size-change-functions #'evil-ex-hl-update-highlights-resize))))
+
+
+(defun evil-ex-hl-active-p (name)
+  "Returns t iff the highlight with a certain name is active."
+  (and (assoc name evil-ex-active-highlights-alist) t))
+
+
+(defun evil-ex-hl-change (name new-pattern)
+  "Sets the regular expression of the highlighting object with
+name `name' to `new-regex'."
+  (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
+    (when hl
+      (evil-ex-hl-set-pattern hl
+                              (if (zerop (length new-pattern))
+                                  nil
+                                new-pattern))
+      (evil-ex-hl-idle-update))))
+
+
+(defun evil-ex-hl-set-region (name beg end)
+  (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
+    (when hl
+      (evil-ex-hl-set-min hl beg)
+      (evil-ex-hl-set-max hl end)
+      (evil-ex-hl-idle-update))))
+
+
+(defun evil-ex-hl-update-highlights ()
+  "Updates the overlays of all active highlights."
+  (dolist (hl (mapcar #'cdr evil-ex-active-highlights-alist))
+    (let ((old-ovs (evil-ex-hl-overlays hl))
+          new-ovs
+          (pattern (evil-ex-hl-pattern hl))
+          (face (evil-ex-hl-face hl))
+          (match-hook (evil-ex-hl-match-hook hl))
+          result)
+      (condition-case lossage
+          (progn
+            (when pattern
+              (dolist (win (if (eq evil-ex-interactive-search-highlight 'all-windows)
+                               (get-buffer-window-list (current-buffer) nil t)
+                             (list (evil-ex-hl-window hl))))
+                (let ((begin (max (window-start win)
+                                  (or (evil-ex-hl-min hl) (point-min))))
+                      (end (min (window-end win)
+                                (or (evil-ex-hl-max hl) (point-max))))
+                      last-line)
+                  (when (< begin end)
+                    (save-excursion
+                      (goto-char begin)
+                      ;; set the overlays for the current highlight, reusing old overlays
+                      ;; (if possible)
+                      (while (and (evil-ex-search-find-next-pattern pattern)
+                                  (< (match-beginning 0) (match-end 0))
+                                  (<= (match-end 0) end))
+                        (when (or (evil-ex-pattern-whole-line pattern)
+                                  (not (equal (line-number-at-pos (match-beginning 0)) last-line)))
+                          (setq last-line (line-number-at-pos (match-beginning 0)))
+                          (push (if old-ovs
+                                    (progn
+                                      (move-overlay (car old-ovs)
+                                                    (match-beginning 0)
+                                                    (match-end 0))
+                                      (overlay-put (car old-ovs) 'face face)
+                                      (pop old-ovs))
+                                  (let ((ov (make-overlay (match-beginning 0) (match-end 0))))
+                                    (overlay-put ov 'face face)
+                                    (overlay-put ov 'evil-ex-hl (evil-ex-hl-name hl))
+                                    (overlay-put ov 'priority 1000)
+                                    ov))
+                                new-ovs)
+                          (when match-hook (funcall match-hook (car new-ovs))))))))))
+
+            (mapc #'delete-overlay old-ovs)
+            (evil-ex-hl-set-overlays hl new-ovs)
+            (if (or (null pattern) new-ovs)
+                (setq result t)
+              ;; maybe the match could just not be found somewhere else?
+              (save-excursion
+                (goto-char (evil-ex-hl-min hl))
+                (if (and (evil-ex-search-find-next-pattern pattern)
+                         (< (match-end 0) (evil-ex-hl-max hl)))
+                    (setq result (format "Match in line %d" (line-number-at-pos (match-beginning 0))))
+                  (setq result "No match")))))
+
+        (invalid-regexp
+         (setq result (cadr lossage)))
+
+        (search-failed
+         (setq result (nth 2 lossage)))
+
+        (error
+         (setq result (format "%s" lossage))))
+
+      (when (evil-ex-hl-update-hook hl)
+        (funcall (evil-ex-hl-update-hook hl) result)))))
+
+(defun evil-ex-search-find-next-pattern (pattern &optional direction)
+  "Looks for the next occurrence of pattern in a certain direction."
+  (setq direction (or direction 'forward))
+  (let ((case-fold-search (eq (evil-ex-pattern-case-fold pattern) 'insensitive)))
+    (case direction
+      ('forward (re-search-forward (evil-ex-pattern-regex pattern) nil t))
+      ('backward (re-search-backward (evil-ex-pattern-regex pattern) nil t))
+      (t (error "Unknown search direction: %s" direction)))))
+
+
+(defun evil-ex-hl-idle-update ()
+  "Triggers the timer to update the highlights in the current buffer."
+  (when (and evil-ex-interactive-search-highlight
+             evil-ex-active-highlights-alist)
+    (when evil-ex-hl-update-timer
+      (cancel-timer evil-ex-hl-update-timer))
+    (setq evil-ex-hl-update-timer
+          (run-at-time 0.1 nil
+                       #'evil-ex-hl-do-update-highlight
+                       (current-buffer)))))
+
+
+(defun evil-ex-hl-do-update-highlight (&optional buffer)
+  "Timer function, updating the highlights."
+  (with-current-buffer buffer
+    (evil-ex-hl-update-highlights))
+  (setq evil-ex-hl-update-timer nil))
+
+
+(defun evil-ex-hl-update-highlights-scroll (win begin)
+  "Update highlights after scrolling in some window."
+  (with-current-buffer (window-buffer)
+    (evil-ex-hl-idle-update)))
+
+
+(defun evil-ex-hl-update-highlights-resize (frame)
+  "Updates highlights after resizing a window."
+  (let ((buffers (delete-dups (mapcar #'window-buffer (window-list frame)))))
+    (dolist (buf buffers)
+      (with-current-buffer buf
+        (evil-ex-hl-idle-update)))))
+
+
 (provide 'evil-search)
 
 ;;; evil-search.el ends here
