@@ -72,7 +72,8 @@
     (add-hook 'post-command-hook 'evil-initialize-state t t)
     (add-hook 'after-change-functions 'evil-repeat-change-hook nil t)
     (add-hook 'pre-command-hook 'evil-repeat-pre-hook nil t)
-    (add-hook 'post-command-hook 'evil-repeat-post-hook nil t))
+    (add-hook 'post-command-hook 'evil-repeat-post-hook nil t)
+    (add-hook 'post-command-hook 'evil-refresh-cursor))
    (t
     (let (new-global-mode-string)
       (while global-mode-string
@@ -110,10 +111,6 @@ To enable Evil globally, do (evil-mode 1)."
 Enable with positive ARG and disable with negative ARG.
 See `evil-local-mode' to toggle Evil in the
 current buffer only.")
-
-(defun evil-state-property (state prop)
-  "Return property PROP for STATE."
-  (evil-get-property evil-state-properties state prop))
 
 (defun evil-state-p (sym)
   "Whether SYM is the name of a state."
@@ -607,9 +604,8 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
                  (evil-next-state ',state))
              (evil-normalize-keymaps)
              (unless evil-locked-display
+               (evil-refresh-cursor ',state)
                (setq evil-modeline-tag ,tag)
-               (evil-set-cursor evil-default-cursor)
-               (evil-set-cursor ,cursor)
                (force-mode-line-update)
                (when (evil-called-interactively-p)
                  (redisplay)))

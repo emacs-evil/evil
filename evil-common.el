@@ -40,6 +40,17 @@ changing the value of `foo'."
               tail (cdr tail)))))
     list))
 
+(defun evil-member-if (predicate list &optional pointer)
+  "Find the first item satisfying PREDICATE in LIST.
+Stop when reaching POINTER."
+  (let (elt)
+    (catch 'done
+      (while (and (consp list) (not (eq list pointer)))
+        (setq elt (car list))
+        (if (funcall predicate elt)
+            (throw 'done elt)
+          (setq list (cdr list)))))))
+
 (defun evil-concat-lists (&rest sequences)
   "Concatenate lists, removing duplicates.
 The first occurrence is retained.
@@ -121,6 +132,10 @@ ALIST-VAR points to an association list with entries in the form
                  val (pop properties)))
          (setq alist (assq-delete-all key alist))
          (add-to-list 'alist (cons key plist)))))
+
+(defun evil-state-property (state prop)
+  "Return property PROP for STATE."
+  (evil-get-property evil-state-properties state prop))
 
 (defmacro evil-swap (this that &rest vars)
   "Swap the values of variables THIS and THAT.
@@ -237,6 +252,24 @@ Restore the previous state afterwards."
      (evil-save-state
        (evil-change-state ',state)
        ,@body)))
+
+(defun evil-refresh-cursor (&optional state buffer)
+  "Refresh the cursor for STATE in BUFFER.
+STATE defaults to the current state.
+BUFFER defaults to the current buffer."
+  (let* ((state (or state evil-state 'normal))
+         (default (or evil-default-cursor t))
+         (cursor (symbol-value (evil-state-property state :cursor)))
+         (color (or (and (stringp cursor) cursor)
+                    (and (listp cursor)
+                         (evil-member-if 'stringp cursor)))))
+    (with-current-buffer (or buffer (current-buffer))
+      ;; if both STATE and `evil-default-cursor'
+      ;; specify a color, don't set it twice
+      (when (and color (listp default))
+        (setq default (evil-filter-list 'stringp default)))
+      (evil-set-cursor default)
+      (evil-set-cursor cursor))))
 
 (defun evil-set-cursor (specs)
   "Change the cursor's apperance according to SPECS.
