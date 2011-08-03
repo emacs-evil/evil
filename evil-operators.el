@@ -134,7 +134,7 @@
 (defun evil-operator-range (&optional return-type motion type)
   "Read a motion from the keyboard and return its buffer positions.
 The return value is a list (BEG END) or (BEG END TYPE),
-depending on RETURN-TYPE. Insteaf of reading from the keyboard,
+depending on RETURN-TYPE. Instead of reading from the keyboard,
 a predefined motion may be specified with MOTION. Likewise,
 a predefined type may be specified with TYPE."
   (let ((range (evil-range (point) (point)))
