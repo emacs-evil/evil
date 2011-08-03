@@ -203,17 +203,19 @@
 ;; TODO: window-split, window-new functions may take an file-argument
 ;; when called from ex-mode
 
-;; (defun evil-window-split (count (argument:file file) nonrepeatable)
-;;   "Splits the current window horizontally, COUNT lines height, editing a certain `file'."
-;;   (let ((new-win (split-window (selected-window) count)))
-;;     (when file
-;;       (evil-cmd-edit :argument file))))
+(defun evil-window-split (&optional count file)
+  "Splits the current window horizontally, COUNT lines height, editing a certain `file'."
+  (interactive (list prefix-arg (evil-ex-file-name)))
+  (let ((new-win (split-window (selected-window) count)))
+    (when file
+      (evil-edit file))))
 
-;; (defun evil-window-vsplit (count (argument:file file) nonrepeatable)
-;;   "Splits the current window vertically, COUNT columns width, editing a certain `file'."
-;;   (let ((new-win (split-window (selected-window) count t)))
-;;     (when file
-;;       (evil-cmd-edit :argument file))))
+(defun evil-window-vsplit (&optional count file)
+  "Splits the current window vertically, COUNT columns width, editing a certain `file'."
+  (interactive (list prefix-arg (evil-ex-file-name)))
+  (let ((new-win (split-window (selected-window) count t)))
+    (when file
+      (evil-edit file))))
 
 ;; TODO: the following commands should be unrepeatable:
 ;;    * split-window-vertically

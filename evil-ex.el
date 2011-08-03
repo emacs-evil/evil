@@ -517,6 +517,106 @@ already existing."
    (t
     (write-region beg end file-name nil nil nil (not force)))))
 
+(defun evil-write-all (force)
+  "Saves all buffers."
+  (interactive (list evil-ex-current-cmd-force))
+  (save-some-buffers force))
+
+(defun evil-edit (file)
+  "Visits a certain file."
+  (interactive (list (evil-ex-file-name)))
+  (if file
+      (find-file file)
+    (when (buffer-file-name)
+      (find-file (buffer-file-name)))))
+
+(defun evil-show-buffers ()
+  "Shows the buffer-list."
+  (interactive)
+  (let (message-truncate-lines message-log-max)
+    (message "%s"
+             (mapconcat #'buffer-name (buffer-list) "\n"))))
+
+(defun evil-buffer (buffer)
+  "Switches to another buffer."
+  (interactive (list (evil-ex-buffer-name)))
+  (if buffer
+      (when (or (get-buffer buffer)
+                (y-or-n-p (format "No buffer with name \"%s\" exists. Create new buffer? " buffer)))
+        (switch-to-buffer buffer))
+    (switch-to-buffer (other-buffer))))
+
+(defun evil-next-buffer (&optional count)
+  "Goes to the `count'-th next buffer in the buffer list."
+  (interactive "p")
+  (dotimes (i (or count 1))
+    (next-buffer)))
+
+(defun evil-prev-buffer (&optional count)
+  "Goes to the `count'-th prev buffer in the buffer list."
+  (interactive "p")
+  (dotimes (i (or count 1))
+    (previous-buffer)))
+
+(defun evil-split-buffer (buffer)
+  "Splits window and switches to another buffer."
+  (interactive (list (evil-ex-buffer-name)))
+  (evil-window-split)
+  (evil-buffer buffer))
+
+(defun evil-split-next-buffer (&optional count)
+  "Splits window and goes to the `count'-th next buffer in the buffer list."
+  (interactive "p")
+  (evil-window-split)
+  (evil-next-buffer count))
+
+(defun evil-split-prev-buffer (&optional count)
+  "Splits window and goes to the `count'-th prev buffer in the buffer list."
+  (interactive "p")
+  (evil-window-split)
+  (evil-prev-buffer count))
+
+(defun evil-delete-buffer (buffer &optional force)
+  "Deletes a buffer."
+  (interactive (list (evil-ex-buffer-name) evil-ex-current-cmd-force))
+  (when force
+    (if buffer
+        (with-current-buffer buffer
+          (set-buffer-modified-p nil))
+      (set-buffer-modified-p nil)))
+  (kill-buffer buffer))
+
+(defun evil-quit (&optional force)
+  "Closes the current window, exits Emacs if this is the last window."
+  (interactive (list evil-ex-current-cmd-force))
+  (condition-case nil
+      (delete-window)
+    (error
+     (condition-case nil
+         (delete-frame)
+       (error
+        (if force
+            (kill-emacs)
+          (save-buffers-kill-emacs)))))))
+
+(defun evil-quit-all (&optional force)
+  "Exits Emacs, asking for saving."
+  (interactive (list evil-ex-current-cmd-force))
+  (if force
+      (kill-emacs)
+    (save-buffers-kill-emacs)))
+
+(defun evil-save-and-quit ()
+  "Exits Emacs, without saving."
+  (interactive)
+  (save-buffers-kill-emacs 1))
+
+(defun evil-save-and-close (file &optional force)
+  "Saves the current buffer and closes the window."
+  (interactive (list (evil-ex-file-name) evil-ex-current-cmd-force))
+  (evil-write file force)
+  (evil-quit))
+
 (provide 'evil-ex)
 
 ;;; evil-ex.el ends here
