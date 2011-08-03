@@ -1,5 +1,7 @@
 ;;; Ex-mode
 
+;; TODO: Emacs 22 completion-boundaries
+
 (require 'evil-common)
 (require 'evil-vars)
 
@@ -204,27 +206,30 @@ FORCE is non-nil if and only if an exclamation followed the command."
          (sep (pop result))
          (end (pop result))
          (cmd (pop result))
-         (force (pop result)))
+         (force (pop result))
+         (boundaries (cdr-safe flag)))
     (cond
-     ((and (consp flag) (eq (car flag) 'boundaries))
-      (cons 'boundaries (cons 0 (length (cdr flag)))))
-     ((and (= (point) (point-max)) (= (point) pnt))
-      (evil-ex-complete-command cmd force predicate flag))
+     ((= (point) pnt)
+      (if boundaries
+          (cons 'boundaries (cons (- pos (length cmd)) 0))
+        (evil-ex-complete-command cmd force predicate flag)))
      ((= (point) (point-max))
-      (let* ((argbeg (+ pos
-                        (if (and (< pos (length cmdline))
-                                 (= (aref cmdline pos) ?\ ))
-                            1
-                          0)))
-             (begin (substring cmdline 0 argbeg))
-             (arg (substring cmdline argbeg)))
-        (let ((result (evil-ex-complete-argument cmd arg predicate flag)))
-          (cond
-           ((null result) nil)
-           ((eq t result) t)
-           ((stringp result) (if flag result (concat begin result)))
-           ((listp result) (if flag result (mapcar #'(lambda (x) (concat begin x)) result)))
-           (t (error "Completion returned unexpected value.")))))))))
+      (let ((argbeg (+ pos
+                       (if (and (< pos (length cmdline))
+                                (= (aref cmdline pos) ?\ ))
+                           1
+                         0))))
+        (if boundaries
+            (cons 'boundaries (cons argbeg (length (cdr flag))))
+          (let* ((begin (substring cmdline 0 argbeg))
+                 (arg (substring cmdline argbeg))
+                 (result (evil-ex-complete-argument cmd arg predicate flag)))
+            (cond
+             ((null result) nil)
+             ((eq t result) t)
+             ((stringp result) (if flag result (concat begin result)))
+             ((listp result) (if flag result (mapcar #'(lambda (x) (concat begin x)) result)))
+             (t (error "Completion returned unexpected value."))))))))))
 
 
 (defun evil-ex-complete-command (cmd force predicate flag)
