@@ -31,7 +31,7 @@
   '(progn
      (add-hook 'wdired-mode-hook 'evil-change-to-initial-state)
      (defadvice wdired-change-to-dired-mode (after evil activate)
-       (evil-change-to-initial-state))))
+       (evil-change-to-initial-state nil t))))
 
 ;;; Folding
 
