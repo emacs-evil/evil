@@ -5,15 +5,15 @@
 (require 'evil-common)
 (require 'evil-vars)
 
-(define-key evil-ex-keymap "\t" 'evil-ex-complete)
-(define-key evil-ex-keymap [return] 'exit-minibuffer)
-(define-key evil-ex-keymap (kbd "RET") 'exit-minibuffer)
-(define-key evil-ex-keymap (kbd "C-j") 'exit-minibuffer)
-(define-key evil-ex-keymap (kbd "C-g") 'abort-recursive-edit)
-(define-key evil-ex-keymap [up] 'previous-history-element)
-(define-key evil-ex-keymap [down] 'next-history-element)
-(define-key evil-ex-keymap "\d" 'delete-backward-char)
+(define-key evil-ex-keymap "\d" #'evil-ex-delete-backward-char)
 
+(defun evil-ex-delete-backward-char ()
+  "Closes the minibuffer if called with empty minibuffer content, otherwise behaves like `delete-backward-char'."
+  (interactive)
+  (call-interactively
+   (if (zerop (length (minibuffer-contents)))
+       #'exit-minibuffer
+     #'delete-backward-char)))
 
 (defun evil-ex-define-cmd (cmd function)
   "Binds the function FUNCTION to the command CMD."
