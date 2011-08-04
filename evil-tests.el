@@ -1424,6 +1424,25 @@ the `evil-repeat' command")
                (evil-keypress-parser '(?0))
                '(evil-digit-argument-or-evil-beginning-of-line nil))))))
 
+(ert-deftest evil-test-invert-char ()
+  "Test `evil-invert-char'"
+  :tags '(evil operator)
+  (evil-test-buffer
+    ";; [T]his buffer is for notes."
+    ("~")
+    ";; t[h]is buffer is for notes.")
+  (evil-test-buffer
+    ";; <[T]his> buffer is for notes."
+    ("~")
+    ";; [t]HIS buffer is for notes.")
+  (evil-test-buffer
+    :visual block
+    ";; <[T]his buffer is for notes,
+;; and >for Lisp evaluation."
+    ("~")
+    ";; [t]HIS buffer is for notes,
+;; AND for Lisp evaluation."))
+
 (ert-deftest evil-test-rot13 ()
   "Test `evil-rot13'"
   :tags '(evil operator)
