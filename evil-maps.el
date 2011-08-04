@@ -361,7 +361,7 @@
 (evil-ex-define-cmd "jumps" 'evil-show-jumps)
 (evil-ex-define-cmd "ju" "jumps")
 (evil-ex-define-cmd "noh" "nohlsearch")
-(evil-ex-define-cmd "nohlsearch" 'evil-nohighlight)
+(evil-ex-define-cmd "nohlsearch" 'evil-ex-nohighlight)
 
 (provide 'evil-maps)
 

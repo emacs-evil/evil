@@ -2,6 +2,7 @@
 
 (require 'evil-common)
 (require 'evil-motions)
+(require 'evil-ex)
 
 (evil-define-motion evil-search-forward ()
   (format "Search forward for user-entered text.
@@ -324,14 +325,7 @@ Returns nil if nothing is found."
 
 
 
-;; Ex-Searching
-(define-key evil-ex-search-keymap [return] #'evil-ex-search-exit)
-(define-key evil-ex-search-keymap (kbd "RET") #'evil-ex-search-exit)
-(define-key evil-ex-search-keymap (kbd "C-g") #'evil-ex-search-abort)
-(define-key evil-ex-search-keymap [up] #'previous-history-element)
-(define-key evil-ex-search-keymap [down] #'next-history-element)
-(define-key evil-ex-search-keymap (kbd "ESC ESC ESC") #'evil-ex-search-abort)
-(define-key evil-ex-search-keymap (kbd "\d") #'evil-ex-ex-delete-backward-char)
+;;; Ex-Searching
 
 ;; A pattern.
 (defun evil-ex-make-pattern (regex casefold whole-line)
@@ -566,10 +560,7 @@ name `name' to `new-regex'."
          (setq result (nth 2 lossage)))
 
         (error
-         (setq result (format "%s" lossage))))
-
-      (when (evil-ex-hl-update-hook hl)
-        (funcall (evil-ex-hl-update-hook hl) result)))))
+         (setq result (format "%s" lossage)))))))
 
 (defun evil-ex-search-find-next-pattern (pattern &optional direction)
   "Looks for the next occurrence of pattern in a certain direction."
@@ -613,6 +604,211 @@ name `name' to `new-regex'."
       (with-current-buffer buf
         (evil-ex-hl-idle-update)))))
 
+;; Interactive search.
+
+(defun evil-ex-search-next ()
+  "Search for the next occurrence of pattern."
+  (let ((retry t))
+    (setq isearch-success nil
+          isearch-error nil)
+    (condition-case lossage
+        (progn
+          (while retry
+            (let ((search-result (evil-ex-find-next)))
+              (case search-result
+                ((t) (setq isearch-success t
+                           isearch-wrapped nil))
+                ((nil) (setq isearch-success nil
+                             isearch-wrapped nil))
+                (t (setq isearch-success t
+                         isearch-wrapped t))))
+            (setq isearch-success (evil-ex-find-next))
+            ;; Clear RETRY unless we matched some invisible text
+            ;; and we aren't supposed to do that.
+            (when (or (eq search-invisible t)
+                      (not isearch-success)
+                      (bobp) (eobp)
+                      (= (match-beginning 0) (match-end 0))
+                      (not (isearch-range-invisible
+                            (match-beginning 0) (match-end 0))))
+              (setq retry nil)))
+          (setq isearch-just-started nil))
+
+      (invalid-regexp
+       (setq isearch-error (cadr lossage)))
+
+      (search-failed
+       (setq isearch-error (nth 2 lossage)))
+
+      (error
+       (setq isearch-error (format "%s" lossage))))
+
+    (cond
+     (isearch-success
+      (setq isearch-other-end (if (eq evil-ex-search-direction 'forward) (match-beginning 0) (match-end 0))))
+     ((not isearch-error)
+      (setq isearch-error "No match")))
+    (if isearch-wrapped
+        (if isearch-error
+            (setq isearch-message (concat "Wrapped, " isearch-error))
+          (setq isearch-message "Wrapped"))
+      (setq isearch-message isearch-error))))
+
+
+(defun evil-ex-find-next ()
+  "Searches the next occurrence w.r.t. actual search data,
+possibly wrapping and eob or bob."
+  (if (zerop (length (evil-ex-pattern-regex evil-ex-search-pattern)))
+      (progn
+        (setq evil-ex-search-match-beg nil
+              evil-ex-search-match-end nil)
+        t)
+    (let (wrapped
+          result
+          (retry t))
+      (save-excursion
+        (while retry
+          (setq retry (not wrapped))
+          (cond
+           ;; normal search
+           ((evil-ex-search-find-next-pattern evil-ex-search-pattern
+                                              evil-ex-search-direction)
+            (setq evil-ex-search-match-beg (match-beginning 0)
+                  evil-ex-search-match-end (match-end 0)
+                  result (if wrapped 1 t)
+                  retry nil))
+
+           ;; wrap and eob and bob
+           ((not wrapped)
+            (goto-char (case evil-ex-search-direction
+                         ('forward (point-min))
+                         ('backward (point-max))))
+            (setq wrapped t))
+
+           ;; already wrapped, search failed
+           (t
+            (setq evil-ex-search-match-beg nil evil-ex-search-match-end nil
+                  result nil
+                  retry nil))))
+        result))))
+
+(defun evil-ex-search-update ()
+  "Updates the highlighting and the info-message for the actual search pattern."
+  (evil-ex-message isearch-message)
+  (with-current-buffer evil-ex-current-buffer
+    (when evil-ex-search-interactive
+      (when isearch-success
+        (if (null evil-ex-search-match-beg)
+            (when evil-ex-search-overlay
+              (delete-overlay evil-ex-search-overlay)
+              (setq evil-ex-search-overlay nil))
+          (goto-char evil-ex-search-match-beg)
+          (if evil-ex-search-overlay
+              (move-overlay evil-ex-search-overlay
+                            evil-ex-search-match-beg
+                            evil-ex-search-match-end)
+            (setq evil-ex-search-overlay (make-overlay evil-ex-search-match-beg evil-ex-search-match-end))
+            (overlay-put evil-ex-search-overlay 'priority 1001)
+            (overlay-put evil-ex-search-overlay 'face 'evil-ex-search))))
+      (when evil-ex-search-highlight-all
+        (evil-ex-hl-change 'evil-ex-search (and isearch-success evil-ex-search-pattern))))))
+
+(defun evil-ex-search-start-session ()
+  "Called to initialize ex-mode for interactive search."
+  (remove-hook 'minibuffer-setup-hook #'evil-ex-search-start-session)
+  (add-hook 'after-change-functions #'evil-ex-search-update-pattern nil t)
+  (add-hook 'minibuffer-exit-hook #'evil-ex-search-stop-session)
+  (when (and evil-ex-search-interactive evil-ex-search-highlight-all)
+    (with-current-buffer evil-ex-current-buffer
+      (evil-ex-make-hl 'evil-ex-search))))
+
+(defun evil-ex-search-stop-session ()
+  "Stops interactive search."
+  (with-current-buffer evil-ex-current-buffer
+    ;; TODO: this is a bad fix to remove duplicates.
+    ;;       The duplicates exist because isearch-range-invisible
+    ;;       may add a single overlay multiple times if we are
+    ;;       in an unlucky situation of overlapping overlays. This
+    ;;       happens in our case because of the overlays that are
+    ;;       used for (lazy) highlighting. Perhaps it would be better
+    ;;       to disable those overlays temporarily before calling
+    ;;       isearch-range-invisible.
+    ;;  the following code is equivalent to
+    (setq isearch-opened-overlays (delete-dups isearch-opened-overlays))
+    (isearch-clean-overlays))
+  (remove-hook 'minibuffer-exit-hook #'evil-ex-search-stop-session)
+  (remove-hook 'after-change-functions #'evil-ex-search-update-pattern t)
+  (when evil-ex-search-overlay
+    (delete-overlay evil-ex-search-overlay)
+    (setq evil-ex-search-overlay nil)))
+
+(defun evil-ex-search-update-pattern (beg end range)
+  "Called to update the current search pattern."
+  (setq evil-ex-search-pattern
+        (evil-ex-make-pattern (minibuffer-contents)
+                              evil-ex-search-case
+                              t))
+  (with-current-buffer evil-ex-current-buffer
+    (with-selected-window (minibuffer-selected-window)
+        (goto-char evil-ex-search-start-point)
+        (save-excursion
+          (dotimes (i (or evil-ex-search-count 1))
+            (if (eq evil-ex-search-direction 'backward)
+                (backward-char)
+              (forward-char))
+            (evil-ex-search-next)
+            (when evil-ex-search-match-beg
+              (goto-char evil-ex-search-match-beg))))))
+  (evil-ex-search-update))
+
+
+(defun evil-ex-search-exit ()
+  "Exits interactive search, lazy highlighting keeps active."
+  (interactive)
+  (evil-ex-search-stop-session)
+  (exit-minibuffer))
+
+(defun evil-ex-search-abort ()
+  "Aborts interactive search, disables lazy highlighting."
+  (interactive)
+  (evil-ex-search-stop-session)
+  (evil-ex-delete-hl 'evil-ex-search)
+  (abort-recursive-edit))
+
+(defun evil-ex-start-search (direction count)
+  "Starts a new search in a certain direction."
+  ;; store buffer and window where the search started
+  (let ((evil-ex-current-buffer (current-buffer)))
+    (setq evil-ex-search-count count
+          evil-ex-search-direction direction
+          evil-ex-search-start-point (point)
+          evil-ex-search-match-beg nil
+          evil-ex-search-match-end nil)
+
+    (condition-case err
+        (progn
+          ;; ensure minibuffer is initialized accordingly
+          (add-hook 'minibuffer-setup-hook #'evil-ex-search-start-session)
+          ;; read the search string
+          (let ((minibuffer-local-map evil-ex-keymap))
+            (when (read-string (case evil-ex-search-direction
+                                 ('forward "/")
+                                 ('backward "?"))
+                               nil 'evil-ex-search-history)
+              (goto-char evil-ex-search-start-point)
+              (if evil-ex-search-match-beg
+                  (goto-char evil-ex-search-match-beg)
+                (evil-ex-find-next)))))
+      (quit
+       (evil-ex-search-stop-session)
+       (evil-ex-delete-hl 'evil-ex-search)
+       (goto-char evil-ex-search-start-point)
+       (signal (car err) (cdr err))))))
+
+(defun evil-ex-nohighlight ()
+  "Disables the active search highlightings."
+  (interactive)
+  (evil-ex-delete-hl 'evil-ex-search))
 
 (provide 'evil-search)
 

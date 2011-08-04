@@ -565,9 +565,6 @@ They are reused to prevent flicker.")
 
 
 ;; Searching
-(defconst evil-ex-search-keymap (make-sparse-keymap)
-  "Keymap used in search-ex-mode.")
-
 (defvar evil-ex-search-history nil
   "The history for the search command.")
 
