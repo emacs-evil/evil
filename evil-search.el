@@ -606,7 +606,7 @@ name `name' to `new-regex'."
 
 ;; Interactive search.
 
-(defun evil-ex-search-next ()
+(defun evil-ex-find-next ()
   "Search for the next occurrence of pattern."
   (let ((retry t))
     (setq isearch-success nil
@@ -614,7 +614,7 @@ name `name' to `new-regex'."
     (condition-case lossage
         (progn
           (while retry
-            (let ((search-result (evil-ex-find-next)))
+            (let ((search-result (evil-ex-search-next-pattern)))
               (case search-result
                 ((t) (setq isearch-success t
                            isearch-wrapped nil))
@@ -622,7 +622,7 @@ name `name' to `new-regex'."
                              isearch-wrapped nil))
                 (t (setq isearch-success t
                          isearch-wrapped t))))
-            (setq isearch-success (evil-ex-find-next))
+            (setq isearch-success (evil-ex-search-next-pattern))
             ;; Clear RETRY unless we matched some invisible text
             ;; and we aren't supposed to do that.
             (when (or (eq search-invisible t)
@@ -655,7 +655,7 @@ name `name' to `new-regex'."
       (setq isearch-message isearch-error))))
 
 
-(defun evil-ex-find-next ()
+(defun evil-ex-search-next-pattern ()
   "Searches the next occurrence w.r.t. actual search data,
 possibly wrapping and eob or bob."
   (if (zerop (length (evil-ex-pattern-regex evil-ex-search-pattern)))
@@ -756,7 +756,7 @@ possibly wrapping and eob or bob."
             (if (eq evil-ex-search-direction 'backward)
                 (backward-char)
               (forward-char))
-            (evil-ex-search-next)
+            (evil-ex-find-next)
             (when evil-ex-search-match-beg
               (goto-char evil-ex-search-match-beg))))))
   (evil-ex-search-update))
@@ -804,6 +804,100 @@ possibly wrapping and eob or bob."
        (evil-ex-delete-hl 'evil-ex-search)
        (goto-char evil-ex-search-start-point)
        (signal (car err) (cdr err))))))
+
+
+(evil-define-motion evil-ex-search-next (count)
+  "Goes to the next occurrence."
+  :type exclusive
+  (setq evil-ex-search-start-point (point))
+  (dotimes (i (or count 1))
+    (if (eq evil-ex-search-direction 'backward)
+        (backward-char)
+      (forward-char))
+    (evil-ex-find-next)
+    (if isearch-success
+       (progn
+         (when (and evil-ex-search-highlight-all
+                    (not (evil-ex-hl-active-p 'evil-ex-search)))
+           (evil-ex-make-hl 'evil-ex-search)
+           (evil-ex-hl-change 'evil-ex-search evil-ex-search-pattern))
+         (goto-char evil-ex-search-match-beg))
+      (goto-char evil-ex-search-start-point))
+    (when (or isearch-error isearch-wrapped) (ding))
+    (when isearch-message
+      (let (message-log-max)
+        (message "%s" isearch-message)))))
+
+(evil-define-motion evil-ex-search-previous (count)
+  "Goes the the previous occurrence."
+  :type exclusive
+  (let ((evil-ex-search-direction
+         (if (eq evil-ex-search-direction 'backward) 'forward 'backward)))
+    (evil-ex-search-next count)))
+
+(evil-define-motion evil-ex-search-forward (count)
+  "Starts a forward search."
+  :type exclusive
+  (evil-ex-start-search 'forward count))
+
+(evil-define-motion evil-ex-search-backward (count)
+  "Starts a forward search."
+  (evil-ex-start-search 'backward count))
+
+
+(defun evil-ex-start-symbol-search (unbounded direction count)
+  "Searches for the symbol under point.
+
+If the first argument UNBOUNDED is nil the search matches only
+at symbol boundaries, otherwise it matches anywhere.
+
+The second argument DIRECTION should be either 'forward or
+'backward determining the search direction.
+
+The search matches the COUNT-th occurrence of the word."
+  (let ((string (evil-find-symbol (eq direction 'forward))))
+      (if (null string)
+          (error "No symbol under point")
+        (setq evil-ex-search-count count
+              evil-ex-search-pattern (evil-ex-make-pattern
+                                      (if unbounded
+                                          (regexp-quote (match-string 0))
+                                        (concat "\\_<" (regexp-quote (match-string 0)) "\\_>"))
+                                      (cond
+                                       ((memq evil-ex-search-case '(sensitive smart)) 'sensitive)
+                                       ((eq evil-ex-search-case 'insensitive) 'insensitive))
+                                      t)
+              evil-ex-search-direction direction)
+        (evil-ex-delete-hl 'evil-ex-search)
+        (evil-ex-search-next count))))
+
+
+(evil-define-motion evil-ex-search-symbol-forward (count)
+  "Searches the next occurence of word under the cursor."
+  :type exclusive
+  (evil-ex-start-symbol-search nil 'forward count))
+
+
+(evil-define-motion evil-ex-search-word-backward (count)
+  "Searches the next occurence of word under the cursor."
+  :type exclusive
+  (evil-ex-start-symbol-search nil 'backward count))
+
+
+(evil-define-motion evil-ex-search-unbounded-symbol-forward (count)
+  "Searches the next occurence of word under the cursor."
+  :type exclusive
+  (evil-ex-start-symbol-search t 'forward count))
+
+
+(evil-define-motion evil-ex-search-unbounded-symbol-backward (count)
+  "Searches the next occurence of word under the cursor."
+  :type exclusive
+  (evil-ex-start-symbol-search t 'backward count))
+
+
+
+
 
 (defun evil-ex-nohighlight ()
   "Disables the active search highlightings."
