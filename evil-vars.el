@@ -555,6 +555,7 @@ They are reused to prevent flicker.")
 
 (defvar evil-ex-keymap (make-sparse-keymap)
   "Keymap used in ex-mode.")
+(set-keymap-parent evil-ex-keymap minibuffer-local-map)
 
 (defvar evil-ex-commands nil
   "An alist of command-bindings to functions.")
