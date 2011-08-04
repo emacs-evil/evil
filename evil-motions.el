@@ -980,6 +980,7 @@ if COUNT is positive, and to the left of it if negative.
   (let* ((args (delq '&optional args))
          (count (or (pop args) 'count))
          (args (when args `(&optional ,@args)))
+         (extend t)
          arg doc key keys type)
     ;; collect docstring
     (when (stringp (car-safe body))
@@ -991,6 +992,8 @@ if COUNT is positive, and to the left of it if negative.
       (cond
        ((eq key :type)
         (setq type arg))
+       ((eq key :extend-selection)
+        (setq extend arg))
        (t
         (setq keys (append keys (list key arg))))))
     ;; macro expansion
@@ -1011,12 +1014,13 @@ if COUNT is positive, and to the left of it if negative.
              ;; go to the right (positive COUNT)
              (setq dir (evil-visual-direction)
                    ,count (* ,count dir)
-                   range (evil-range (point) (point) type)
                    region (evil-range (mark t) (point))
                    selection (evil-range (evil-visual-beginning)
                                          (evil-visual-end)))
              ;; expand Visual selection so that point
              ;; is outside already selected text
+             (when ',extend
+               (setq range (evil-range (point) (point) type)))
              (evil-visual-make-selection (mark t) (point) type)
              (evil-visual-expand-region)
              (setq selection (evil-range (evil-visual-beginning)
@@ -1027,22 +1031,30 @@ if COUNT is positive, and to the left of it if negative.
                (setq temp (progn ,@body)))
              (when (and (evil-range-p temp)
                         (not (evil-subrange-p temp selection))
-                        (if (< dir 0)
-                            (= (evil-range-beginning temp)
-                               (evil-range-beginning selection))
-                          (= (evil-range-end temp)
-                             (evil-range-end selection))))
+                        (or (not ',extend)
+                            (if (< dir 0)
+                                (= (evil-range-beginning temp)
+                                   (evil-range-beginning selection))
+                              (= (evil-range-end temp)
+                                 (evil-range-end selection)))))
                ;; found an unselected preceding object:
                ;; decrease COUNT and adjust selection boundaries
-               (setq ,count (if (< ,count 0) (1+ ,count) (1- ,count))
-                     range (evil-range-union temp range)))
+               (setq ,count (if (< ,count 0) (1+ ,count) (1- ,count)))
+               (if ',extend
+                   (setq range (evil-range-union temp range))
+                 (setq range temp)
+                 (evil-set-type range (evil-type range type))))
              (when (/= ,count 0)
                ;; main attempt: find range from current position
                (setq temp (progn ,@body))
                (when (evil-range-p temp)
-                 (setq range (evil-range-union temp range))))
+                 (if ',extend
+                     (setq range (evil-range-union temp range))
+                   (setq range temp)
+                   (evil-set-type range (evil-type range type)))))
+             (evil-visual-contract-region)
              (cond
-              ((evil-subrange-p range selection)
+              ((and ',extend (evil-subrange-p range selection))
                ;; Visual fall-back: enlarge selection by one character
                (if (< ,count 0)
                    (evil-visual-select (1- (evil-visual-beginning))
@@ -1051,14 +1063,15 @@ if COUNT is positive, and to the left of it if negative.
                  (evil-visual-select (evil-visual-beginning)
                                      (1+ (evil-visual-end))
                                      type)))
-              (t
+              ((evil-range-p range)
                ;; Find the union of the range and the selection.
                ;; Actually, this uses the region (point and mark)
                ;; rather than the selection to prevent the object
                ;; from unnecessarily overwriting the position of
                ;; the mark at the other end of the selection.
-               (setq range (evil-contract-range range)
-                     range (evil-range-union range region))
+               (setq range (evil-contract-range range))
+               (when ',extend
+                 (setq range (evil-range-union range region)))
                ;; the beginning is mark and the end is point
                ;; unless the selection goes the other way
                (setq mark  (evil-range-beginning range)
@@ -1069,10 +1082,15 @@ if COUNT is positive, and to the left of it if negative.
                ;; select the range
                (evil-visual-make-selection mark point type))))
             (t
-             (setq selection (evil-range (point) (point) type)
-                   range (progn ,@body))
+             (setq range (progn ,@body))
+             (unless (evil-range-p range)
+               (let ((,count (- ,count)))
+                 (setq range (progn ,@body))))
              (when (evil-range-p range)
-               (setq range (evil-range-union range selection))
+               (setq selection (evil-range (point) (point) type))
+               (if ',extend
+                   (setq range (evil-range-union range selection))
+                 (evil-set-type range (evil-type range type)))
                ;; ensure the range is properly expanded
                (evil-contract-range range)
                (evil-expand-range range)
@@ -1170,10 +1188,16 @@ use `evil-regexp-range'."
             (modify-syntax-entry close (format ")%c" open))
             ;; handle edge cases
             (if (< count 0)
-                (when (if exclusive (looking-back open-regexp)
+                (when (if exclusive
+                          (or (looking-back open-regexp)
+                              (and (looking-back close-regexp)
+                                   (not (looking-at close-regexp))))
                         (looking-back close-regexp))
                   (backward-char))
-              (when (if exclusive (looking-at close-regexp)
+              (when (if exclusive
+                        (or (looking-at close-regexp)
+                            (and (looking-at open-regexp)
+                                 (not (looking-back open-regexp))))
                       (looking-at open-regexp))
                 (forward-char)))
             ;; find OPEN
@@ -1212,12 +1236,29 @@ the range; otherwise they are included. See also `evil-paren-range'."
       (save-match-data
         (evil-narrow-to-comment
           ;; find beginning of range: handle edge cases
+          (unless (or (looking-at either)
+                      (looking-back either nil t))
+            ;; Is point inside a delimiter?
+            (if (< count 0)
+                (when (re-search-backward either nil t)
+                  (goto-char (match-end 0))
+                  (re-search-forward either nil t))
+              (when (re-search-forward either nil t)
+                (goto-char (match-beginning 0))
+                (re-search-backward either nil t))))
+          ;; Is point next to a delimiter?
           (if (< count 0)
-              (when (if exclusive (looking-back open) (looking-back close))
+              (when (if exclusive
+                        (looking-back open)
+                      (looking-back close))
                 (goto-char (match-beginning 0)))
-            (when (if exclusive (looking-at close) (looking-at open))
+            (when (if exclusive
+                      (or (looking-at close)
+                          (and (looking-at open)
+                               (not (looking-back open))))
+                    (looking-at open))
               (goto-char (match-end 0))))
-          ;; then loop over remainder
+          ;; now loop over remainder
           (while (and (< level (abs count))
                       (re-search-backward either nil t))
             (if (looking-at open)
@@ -1370,66 +1411,82 @@ If BIGWORD is non-nil, select inner WORD."
 
 (evil-define-text-object evil-a-paren (count)
   "Select a parenthesis."
+  :extend-selection nil
   (evil-paren-range count ?\( ?\)))
 
 (evil-define-text-object evil-inner-paren (count)
   "Select inner parenthesis."
+  :extend-selection nil
   (evil-paren-range count ?\( ?\) t))
 
 (evil-define-text-object evil-a-bracket (count)
   "Select a square bracket."
+  :extend-selection nil
   (evil-paren-range count ?\[ ?\]))
 
 (evil-define-text-object evil-inner-bracket (count)
   "Select inner square bracket."
+  :extend-selection nil
   (evil-paren-range count ?\[ ?\] t))
 
 (evil-define-text-object evil-a-curly (count)
   "Select a curly bracket (\"brace\")."
+  :extend-selection nil
   (evil-paren-range count ?{ ?}))
 
 (evil-define-text-object evil-inner-curly (count)
   "Select inner curly bracket (\"brace\")."
+  :extend-selection nil
   (evil-paren-range count ?{ ?} t))
 
 (evil-define-text-object evil-an-angle (count)
   "Select an angle bracket."
+  :extend-selection nil
   (evil-paren-range count ?< ?> t))
 
 (evil-define-text-object evil-inner-angle (count)
   "Select inner angle bracket."
+  :extend-selection nil
   (evil-paren-range count ?< ?>))
 
 (evil-define-text-object evil-a-single-quote (count)
   "Select a single-quoted expression."
+  :extend-selection nil
   (evil-paren-range count ?' ?'))
 
 (evil-define-text-object evil-inner-single-quote (count)
   "Select inner single-quoted expression."
+  :extend-selection nil
   (evil-paren-range count ?' ?' t))
 
 (evil-define-text-object evil-a-double-quote (count)
   "Select a double-quoted expression."
+  :extend-selection nil
   (evil-paren-range count ?\" ?\"))
 
 (evil-define-text-object evil-inner-double-quote (count)
   "Select inner double-quoted expression."
+  :extend-selection nil
   (evil-paren-range count ?\" ?\" t))
 
 (evil-define-text-object evil-a-back-quote (count)
   "Select a back-quoted expression."
+  :extend-selection nil
   (evil-paren-range count ?\` ?\`))
 
 (evil-define-text-object evil-inner-back-quote (count)
   "Select inner back-quoted expression."
+  :extend-selection nil
   (evil-paren-range count ?\` ?\` t))
 
 (evil-define-text-object evil-a-tag (count)
   "Select a tag block."
+  :extend-selection nil
   (evil-regexp-range count "<[^/>]+?>" "</[^/>]+?>"))
 
 (evil-define-text-object evil-inner-tag (count)
   "Select inner tag block."
+  :extend-selection nil
   (evil-regexp-range count "<[^/>]+?>" "</[^/>]+?>" t))
 
 (provide 'evil-motions)

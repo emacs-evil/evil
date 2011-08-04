@@ -184,6 +184,13 @@ which causes the parenthesis to be highlighted."
     isearch-yank-line
     isearch-yank-word-or-char
     keyboard-quit
+    mark-defun
+    mark-end-of-sentence
+    mark-page
+    mark-paragraph
+    mark-sexp
+    mark-whole-buffer
+    mark-word
     mouse-drag-region
     mouse-save-then-kill
     mouse-set-point
@@ -446,6 +453,11 @@ started and COLUMN is either a number of function determining the
 column where the repeated insertions should take place. COUNT is
 number of repeats (including the original insertion).")
 (make-variable-buffer-local 'evil-insert-vcount)
+
+(defvar evil-insert-skip-empty-lines nil
+  "Non-nil of the current insertion should not take place on
+  lines at which the insertion point is behind the end of the
+  line.")
 
 (defvar evil-insert-lines nil
   "Non-nil if the current insertion command is a line-insertion
