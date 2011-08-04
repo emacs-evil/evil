@@ -4,6 +4,36 @@
 (require 'evil-motions)
 (require 'evil-ex)
 
+(defun evil-select-search-module (option module)
+  "Changes the search module according to MODULE.
+If MODULE is 'isearch then Emacs isearch module is used.
+If MODULE is 'evil-search the Evil's own interactive search module is used."
+  (let ((search-functions
+         '(forward
+           backward
+           symbol-forward
+           symbol-backward
+           unbounded-symbol-forward
+           unbounded-symbol-backward
+           next
+           previous)))
+    (dolist (fun search-functions)
+      (let ((isearch (intern (concat "evil-search-" (symbol-name fun))))
+            (evil-search (intern (concat "evil-ex-search-" (symbol-name fun)))))
+        (if (eq module 'isearch)
+            (substitute-key-definition evil-search isearch evil-motion-state-map)
+          (substitute-key-definition isearch evil-search evil-motion-state-map)))))
+  (set-default option module))
+
+;; This customization is here because it requires the knowledge of `evil-select-search-mode'
+(defcustom evil-search-module 'isearch
+  "The search module to be used."
+  :type '(radio (const :tag "Emacs built in isearch." :value isearch)
+                (const :tag "Evil interactive search." :value evil-search))
+  :group 'evil
+  :set 'evil-select-search-module)
+
+
 (evil-define-motion evil-search-forward ()
   (format "Search forward for user-entered text.
 Searches for regular expression if `evil-regexp-search' is t.%s"
