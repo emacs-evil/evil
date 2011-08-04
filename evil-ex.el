@@ -19,13 +19,13 @@
   "Binds the function FUNCTION to the command CMD."
   (evil-add-to-alist 'evil-ex-commands cmd function))
 
-(defun evil-find-symbol (lst symbol)
+(defun evil-ex-find-symbol (lst symbol)
   "Returns non-nil if LST contains SYMBOL somewhere in a sublist."
   (catch 'done
     (dolist (elm lst)
       (when (or (eq elm symbol)
                 (and (listp elm)
-                     (evil-find-symbol elm symbol)))
+                     (evil-ex-find-symbol elm symbol)))
         (throw 'done t)))
     nil))
 
@@ -34,15 +34,15 @@
   "Returns non-nil iff the command CMD checks for a ex-force argument in its interactive list.
 The test for the force-argument should be done by checking the
 value of the variable `evil-ex-current-cmd-force'."
-  (evil-find-symbol (interactive-form cmd) 'evil-ex-current-cmd-force))
+  (evil-ex-find-symbol (interactive-form cmd) 'evil-ex-current-cmd-force))
 
 (defun evil-ex-has-file-argument (cmd)
   "Returns non-nil iff the command CMD checks for an `evil-ex-file-name' argument in its interactive list."
-  (evil-find-symbol (interactive-form cmd) 'evil-ex-file-name))
+  (evil-ex-find-symbol (interactive-form cmd) 'evil-ex-file-name))
 
 (defun evil-ex-has-buffer-argument (cmd)
   "Returns non-nil iff the command CMD checks for an `evil-ex-buffer-name' argument in its interactive list."
-  (evil-find-symbol (interactive-form cmd) 'evil-ex-buffer-name))
+  (evil-ex-find-symbol (interactive-form cmd) 'evil-ex-buffer-name))
 
 (defun evil-ex-message (info)
   "Shows an INFO message after the current minibuffer content."
