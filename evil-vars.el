@@ -142,6 +142,9 @@ which causes the parenthesis to be highlighted."
     beginning-of-defun
     beginning-of-line
     beginning-of-visual-line
+    c-beginning-of-defun
+    c-end-of-defun
+    c-mark-function
     digit-argument
     down-list
     end-of-buffer
