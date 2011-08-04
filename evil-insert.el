@@ -47,53 +47,75 @@ Handles the repeat-count of the insertion command."
         (dotimes (v (1- vcount))
           (goto-char (point-min))
           (forward-line (+ line v))
-          (if (numberp col)
-              (move-to-column col t)
-            (funcall col))
-          (dotimes (i (or evil-insert-count 1))
-            (evil-execute-repeat-info
-             (cdr evil-insert-repeat-info))))))))
+          (when (or (not evil-insert-skip-empty-lines)
+                    (not (integerp col))
+                    (save-excursion
+                      (end-of-line)
+                      (>= (current-column) col)))
+            (if (integerp col)
+                (move-to-column col t)
+              (funcall col))
+            (dotimes (i (or evil-insert-count 1))
+              (evil-execute-repeat-info
+               (cdr evil-insert-repeat-info)))))))))
 
-(defun evil-insert (count &optional vcount)
+(defun evil-insert (count &optional vcount skip-empty-lines)
   "Switch to Insert state just before point.
 The insertion will be repeated COUNT times and repeated once for
-the next VCOUNT-1 lines starting at the same column."
+the next VCOUNT-1 lines starting at the same column. If
+SKIP-EMPTY-LINES is non-nil, the insertion will not be performed
+on lines on which the insertion point would be after the end of
+the lines. This is the default behaviour for visual-state
+insertion."
   (interactive
    (list (prefix-numeric-value current-prefix-arg)
          (when (evil-visual-state-p)
-           (if (eq (evil-visual-type) 'block)
-               (evil-visual-block-rotate 'upper-left)
-             (goto-char (evil-visual-beginning)))
-           (when (eq (evil-visual-type) 'block)
+           (evil-visual-rotate 'upper-left)
+           (when (memq (evil-visual-type) '(block line))
              (count-lines (evil-visual-beginning)
-                          (evil-visual-end))))))
-  (setq evil-insert-count count
-        evil-insert-lines nil
-        evil-insert-vcount (and vcount
-                                (> vcount 1)
-                                (list (line-number-at-pos)
-                                      (current-column)
-                                      vcount)))
-  (evil-insert-state 1))
+                          (evil-visual-end))))
+         (evil-visual-state-p)))
+  (if (and (called-interactively-p 'any)
+           (evil-visual-state-p)
+           (and (eq (evil-visual-type) 'line)))
+      (evil-insert-line count vcount)
+    (setq evil-insert-count count
+          evil-insert-lines nil
+          evil-insert-vcount (and vcount
+                                  (> vcount 1)
+                                  (list (line-number-at-pos)
+                                        (current-column)
+                                        vcount))
+          evil-insert-skip-empty-lines skip-empty-lines)
+    (evil-insert-state 1)))
 
-(defun evil-append (count &optional vcount)
+(defun evil-append (count &optional vcount skip-empty-lines)
   "Switch to Insert state just after point.
-The insertion will be repeated COUNT times."
+The insertion will be repeated COUNT times and repeated once for
+the next VCOUNT-1 lines starting at the same column. If
+SKIP-EMPTY-LINES is non-nil, the insertion will not be performed
+on lines on which the insertion point would be after the end of
+the lines."
   (interactive
    (list (prefix-numeric-value current-prefix-arg)
          (when (evil-visual-state-p)
-           (if (eq (evil-visual-type) 'block)
-               ;; go to upper-left corner first so that
+           (evil-visual-rotate (if (eq (evil-visual-type) 'block)
+                                   'upper-right
+                                 'upper-left))
+           (when (memq (evil-visual-type) '(block line))
+             (save-excursion
+               ;; go to upper-left corner temporarily so
                ;; `count-lines' yields accurate results
-               (evil-visual-block-rotate 'upper-left)
-             (goto-char (evil-visual-end)))
-           (when (eq (evil-visual-type) 'block)
-             (prog1 (count-lines (evil-visual-beginning)
-                                 (evil-visual-end))
-               (evil-visual-block-rotate 'upper-right))))))
-  (unless (or (eolp) (evil-visual-state-p))
-    (forward-char))
-  (evil-insert count vcount))
+               (evil-visual-rotate 'upper-left)
+               (count-lines (evil-visual-beginning)
+                            (evil-visual-end)))))))
+  (if (and (called-interactively-p 'any)
+           (evil-visual-state-p)
+           (and (eq (evil-visual-type) 'line)))
+      (evil-append-line count vcount)
+    (unless (or (eolp) (evil-visual-state-p))
+      (forward-char))
+    (evil-insert count vcount skip-empty-lines)))
 
 (defun evil-insert-resume (count)
   "Switch to Insert state at previous insertion point."

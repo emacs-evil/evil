@@ -71,8 +71,10 @@
     ;; to run `after-change-major-mode-hook'
     (add-hook 'post-command-hook 'evil-initialize-state t t)
     (add-hook 'after-change-functions 'evil-repeat-change-hook nil t)
-    (add-hook 'pre-command-hook 'evil-repeat-pre-hook nil t)
-    (add-hook 'post-command-hook 'evil-repeat-post-hook nil t))
+    (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
+    (add-hook 'post-command-hook 'evil-repeat-post-hook)
+    (add-hook 'post-command-hook 'evil-refresh-cursor)
+    (add-hook 'minibuffer-setup-hook 'evil-repeat-record-command))
    (t
     (let (new-global-mode-string)
       (while global-mode-string
@@ -110,10 +112,6 @@ To enable Evil globally, do (evil-mode 1)."
 Enable with positive ARG and disable with negative ARG.
 See `evil-local-mode' to toggle Evil in the
 current buffer only.")
-
-(defun evil-state-property (state prop)
-  "Return property PROP for STATE."
-  (evil-get-property evil-state-properties state prop))
 
 (defun evil-state-p (sym)
   "Whether SYM is the name of a state."
@@ -153,7 +151,7 @@ This is the state the buffer comes up in."
 Disable all states if nil."
   (let ((func (evil-state-property (or state evil-state) :toggle)))
     (when (and (functionp func)
-               (not (eq state evil-state)))
+               (or message (not (eq state evil-state))))
       (funcall func (if state (and message 1) -1)))))
 
 (defun evil-state-keymaps (state &rest excluded)
@@ -199,9 +197,10 @@ Its order reflects the state in the current buffer."
     (evil-refresh-global-keymaps)
     (evil-refresh-local-keymaps)
     ;; disable all modes
-    (dolist (mode (mapcar 'car (append evil-mode-map-alist
-                                       evil-local-keymaps-alist)))
-      (when (fboundp mode)
+    (dolist (mode (mapcar 'car (evil-concat-alists
+                                evil-mode-map-alist
+                                evil-local-keymaps-alist)))
+      (when (and (fboundp mode) (symbol-value mode))
         (funcall mode -1))
       (set mode nil))
     ;; enable modes for current state
@@ -210,7 +209,7 @@ Its order reflects the state in the current buffer."
         (if (evil-auxiliary-keymap-p map)
             (add-to-list 'alist (cons t map) t)
           (when (setq mode (evil-keymap-mode map))
-            (when (fboundp mode)
+            (when (and (fboundp mode) (null (symbol-value mode)))
               (funcall mode 1))
             (set mode t)
             ;; refresh the keymap in case it has changed
@@ -580,7 +579,8 @@ cursor, or a list of the above.\n\n%s" state doc))
 
        (defun ,predicate (&optional state)
          ,(format "Whether the current STATE is %s." state)
-         (eq (or state evil-state) ',state))
+         (and evil-local-mode
+              (eq (or state evil-state) ',state)))
 
        ;; define state function
        (evil-define-command ,toggle (&optional arg)
@@ -601,24 +601,23 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
           (t
            (unless evil-local-mode
              (evil-initialize))
-           (evil-change-state nil)
-           (setq evil-state ',state)
-           (let ((evil-state ',state)
-                 (evil-next-state ',state))
-             (evil-normalize-keymaps)
-             (unless evil-locked-display
-               (setq evil-modeline-tag ,tag)
-               (evil-set-cursor evil-default-cursor)
-               (evil-set-cursor ,cursor)
-               (force-mode-line-update)
-               (when (evil-called-interactively-p)
-                 (redisplay)))
-             ,@body
-             (run-hooks ',entry-hook)
-             (when (and arg (not evil-locked-display) ,message)
-               (if (functionp ,message)
-                   (funcall ,message)
-                 (evil-echo ,message)))))))
+           (let ((evil-next-state ',state))
+             (evil-change-state nil)
+             (setq evil-state ',state)
+             (let ((evil-state ',state))
+               (evil-normalize-keymaps)
+               (unless evil-locked-display
+                 (evil-refresh-cursor ',state)
+                 (setq evil-modeline-tag ,tag)
+                 (force-mode-line-update)
+                 (when (evil-called-interactively-p)
+                   (redisplay)))
+               ,@body
+               (run-hooks ',entry-hook)
+               (when (and arg (not evil-locked-display) ,message)
+                 (if (functionp ,message)
+                     (funcall ,message)
+                   (evil-echo ,message))))))))
 
        (evil-define-keymap ,keymap nil
          :mode ,mode)

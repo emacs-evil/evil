@@ -3263,12 +3263,34 @@ Below some empty line."))
         ";;<[ ]This buffer> is for notes."))))
 
 (ert-deftest evil-test-paren-objects ()
-  "Test `evil-inner-paren' and `evil-a-paren'"
+  "Test `evil-inner-paren', etc."
   :tags '(evil text-object)
+  (ert-info ("Select inner text")
+    (evil-test-buffer
+      "[(]aaa)"
+      (emacs-lisp-mode) ; syntax
+      ("vi(")
+      "(<aa[a]>)")
+    (evil-test-buffer
+      "(aaa[)]"
+      (emacs-lisp-mode)
+      ("vi(")
+      "(<aa[a]>)")
+    (ert-info ("Next to outer delimiter")
+      (evil-test-buffer
+        "([(]aaa))"
+        (emacs-lisp-mode)
+        ("vi(")
+        "(<(aaa[)]>)")
+      (evil-test-buffer
+        "((aaa[)])"
+        (emacs-lisp-mode)
+        ("vi(")
+        "(<(aaa[)]>)")))
   (ert-info ("Select parentheses inside strings")
     (evil-test-buffer
       "(aaa \"b(b[b]b)\" aa)"
-      (emacs-lisp-mode) ; syntax
+      (emacs-lisp-mode)
       ("va(")
       "(aaa \"b<(bbb[)]>\" aa)"))
   (ert-info ("Break out of empty strings")
@@ -3276,7 +3298,20 @@ Below some empty line."))
       "(aaa \"bb[b]b\" aa)"
       (emacs-lisp-mode)
       ("va(")
-      "<(aaa \"bbbb\" aa[)]>")))
+      "<(aaa \"bbbb\" aa[)]>"))
+  (ert-info ("Break out multi-char delimiters")
+    (evil-test-buffer
+      :visual-start "{"
+      :visual-end "}"
+      "<a[a]a>bbbb</aaa>"
+      ("vit")
+      "<aaa>{bbb[b]}</aaa>")
+    (evil-test-buffer
+      :visual-start "{"
+      :visual-end "}"
+      "<a[a]a>bbbb</aaa>"
+      ("vat")
+      "{<aaa>bbbb</aaa[>]}")))
 
 (ert-deftest evil-test-paren-range ()
   "Test `evil-paren-range'"
@@ -3293,7 +3328,7 @@ Below some empty line."))
       (evil-test-buffer
         "[(]234)"
         (should (equal (evil-paren-range 1 ?\( ?\)) '(1 6)))
-        (should-not (evil-paren-range 1 ?\( ?\) t))
+        (should (equal (evil-paren-range 1 ?\( ?\) t) '(2 5)))
         (should-not (evil-paren-range -1 ?\( ?\)))
         (should-not (evil-paren-range -1 ?\( ?\) t))
         (should-not (evil-paren-range 0 ?\( ?\)))
@@ -3322,7 +3357,7 @@ Below some empty line."))
         (should-not (evil-paren-range 1 ?\( ?\)))
         (should-not (evil-paren-range 1 ?\( ?\) t))
         (should (equal (evil-paren-range -1 ?\( ?\)) '(1 6)))
-        (should-not (evil-paren-range -1 ?\( ?\) t))
+        (should (equal (evil-paren-range -1 ?\( ?\) t) '(2 5)))
         (should-not (evil-paren-range 0 ?\( ?\)))
         (should-not (evil-paren-range 0 ?\( ?\) t)))))
   (ert-info ("Select two blocks")
@@ -3346,7 +3381,7 @@ Below some empty line."))
       (evil-test-buffer
         "[(]234)"
         (should (equal (evil-regexp-range 1 "(" ")") '(1 6)))
-        (should-not (evil-regexp-range 1 "(" ")" t))
+        (should (equal (evil-regexp-range 1 "(" ")" t) '(2 5)))
         (should-not (evil-regexp-range -1 "(" ")"))
         (should-not (evil-regexp-range -1 "(" ")" t))
         (should-not (evil-regexp-range 0 "(" ")"))

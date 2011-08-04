@@ -118,9 +118,7 @@
                 (evil-active-region -1)))
             (if (or ,move-point
                     (evil-visual-state-p state))
-                (if (eq ,type 'block)
-                    (evil-visual-block-rotate 'upper-left ,beg ,end)
-                  (goto-char ,beg))
+                (evil-visual-rotate 'upper-left ,beg ,end ,type)
               (goto-char orig)))
           range))
        (unwind-protect
@@ -134,7 +132,7 @@
 (defun evil-operator-range (&optional return-type motion type)
   "Read a motion from the keyboard and return its buffer positions.
 The return value is a list (BEG END) or (BEG END TYPE),
-depending on RETURN-TYPE. Insteaf of reading from the keyboard,
+depending on RETURN-TYPE. Instead of reading from the keyboard,
 a predefined motion may be specified with MOTION. Likewise,
 a predefined type may be specified with TYPE."
   (let ((range (evil-range (point) (point)))
@@ -155,7 +153,7 @@ a predefined type may be specified with TYPE."
         ;; motion
         (evil-save-state
           (unless motion
-            (evil-operator-state)
+            (evil-change-state 'operator)
             ;; Make linewise operator shortcuts. E.g., "d" yields the
             ;; shortcut "dd", and "g?" yields shortcuts "g??" and "g?g?".
             (let ((keys (nth 2 (evil-extract-count (this-command-keys)))))
@@ -539,26 +537,28 @@ Both COUNT and CMD may be nil."
                      (current-kill 0)))
              (yank-handler (when (stringp text)
                              (car-safe (get-text-property
-                                        0 'yank-handler text)))))
+                                        0 'yank-handler text))))
+             (opoint (point)))
         (when text
           (if (memq yank-handler '(evil-yank-line-handler
                                    evil-yank-block-handler))
               (let ((evil-paste-count count)
-                    (this-command 'evil-paste-before)) ; for non-interactive use
+                    ;; for non-interactive use
+                    (this-command 'evil-paste-before))
+                (push-mark opoint t)
                 (insert-for-yank text))
             ;; no yank-handler, default
-            (let ((opoint (point)))
-              (dotimes (i (or count 1))
-                (insert-for-yank text))
-              (evil-move-mark opoint)
-              (setq evil-last-paste
-                    (list 'evil-paste-before
-                          count
-                          opoint
-                          opoint        ; beg
-                          (point)))     ; end
-              (evil-exchange-point-and-mark))))
-        ;; no paste pop after pasting a register
+            (push-mark opoint t)
+            (dotimes (i (or count 1))
+              (insert-for-yank text))
+            (setq evil-last-paste
+                  (list 'evil-paste-before
+                        count
+                        opoint
+                        opoint          ; beg
+                        (point)))       ; end
+            (evil-exchange-point-and-mark)))
+        ;; no paste-pop after pasting from a register
         (when register
           (setq evil-last-paste nil))))))
 
@@ -573,7 +573,8 @@ Both COUNT and CMD may be nil."
                      (current-kill 0)))
              (yank-handler (when (stringp text)
                              (car-safe (get-text-property
-                                        0 'yank-handler text)))))
+                                        0 'yank-handler text))))
+             (opoint (point)))
         (when text
           (if (memq yank-handler '(evil-yank-line-handler
                                    evil-yank-block-handler))
@@ -581,23 +582,23 @@ Both COUNT and CMD may be nil."
                     (this-command 'evil-paste-after)) ; for non-interactive use
                 (insert-for-yank text))
             ;; no yank-handler, default
-            (let ((opoint (point)))
-              ;; TODO: Perhaps it is better to collect a list of all
-              ;; (point . mark) pairs to undo the yanking for count > 1.
-              ;; The reason is that this yanking could very well use
-              ;; `yank-handler'.
-              (unless (eolp) (forward-char))
-              (let ((beg (point)))
-                (dotimes (i (or count 1))
-                  (insert-for-yank text))
-                (setq evil-last-paste
-                      (list 'evil-paste-after
-                            count
-                            opoint
-                            beg         ; beg
-                            (point)))   ; end
-                (when (evil-normal-state-p)
-                  (evil-adjust))))))
+            (unless (eolp) (forward-char))
+            (push-mark (point) t)
+            ;; TODO: Perhaps it is better to collect a list of all
+            ;; (point . mark) pairs to undo the yanking for COUNT > 1.
+            ;; The reason is that this yanking could very well use
+            ;; `yank-handler'.
+            (let ((beg (point)))
+              (dotimes (i (or count 1))
+                (insert-for-yank text))
+              (setq evil-last-paste
+                    (list 'evil-paste-after
+                          count
+                          opoint
+                          beg           ; beg
+                          (point)))     ; end
+              (when (evil-normal-state-p)
+                (evil-adjust)))))
         (when register
           (setq evil-last-paste nil))))))
 
@@ -617,9 +618,7 @@ Both COUNT and CMD may be nil."
           ;; add replaced text before the current kill
           (setq kill-ring (delete text kill-ring)))
         (setq kill-ring-yank-pointer kill-ring)
-        (if (eq (evil-visual-type) 'block)
-            (evil-visual-block-rotate 'upper-left)
-          (goto-char (evil-visual-beginning)))
+        (evil-visual-rotate 'upper-left)
         (evil-delete (evil-visual-beginning)
                      (evil-visual-end)
                      (evil-visual-type))
@@ -633,12 +632,12 @@ Both COUNT and CMD may be nil."
           (evil-paste-after count register)
         (evil-paste-before count register)))))
 
-;; TODO: if undoing is disabled in the current buffer paste pop won't
-;; work. Although this is probably not a big problem because usually
-;; buffers for editing where `evil-paste-pop' may be useful have
-;; undoing enabled. A solution would be to temporarily enable undo
-;; when pasting and storing the undo-information in a special variable
-;; that does not interfere with buffer-undo-list
+;; TODO: if undoing is disabled in the current buffer, paste-pop won't
+;; work. Although this is probably not a big problem, because usually
+;; buffers where `evil-paste-pop' may be useful have undoing enabled.
+;; A solution would be to temporarily enable undo when pasting and
+;; store the undo information in a special variable that does not
+;; interfere with `buffer-undo-list'.
 (defun evil-paste-pop (count)
   "Replace the just-yanked stretch of killed text with a different stretch.
 This command is allowed only immediatly after a `yank',
