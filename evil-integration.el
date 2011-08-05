@@ -26,6 +26,7 @@
      (evil-define-key 'normal dired-mode-map "k" 'evil-previous-line)
      (evil-define-key 'normal dired-mode-map "l" 'evil-forward-char)
      (evil-define-key 'normal dired-mode-map "J" 'dired-goto-file) ; "j"
+     (evil-define-key 'normal dired-mode-map "K" 'dired-do-kill-lines) ; "k"
      (evil-define-key 'normal dired-mode-map "r" 'dired-do-redisplay))) ; "l"
 
 (eval-after-load 'wdired
