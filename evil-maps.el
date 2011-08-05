@@ -60,7 +60,7 @@
 (define-key evil-normal-state-map "<" 'evil-shift-left)
 (define-key evil-normal-state-map ">" 'evil-shift-right)
 (define-key evil-normal-state-map (kbd "<backspace>") 'evil-backward-char)
-(define-key evil-normal-state-map (kbd "ESC") 'evil-normal-state)
+(define-key evil-normal-state-map [escape] 'evil-normal-state)
 (define-key evil-normal-state-map [remap cua-paste-pop] 'evil-paste-pop)
 (define-key evil-normal-state-map [remap yank-pop] 'evil-paste-pop)
 
@@ -269,7 +269,7 @@
 (define-key evil-visual-state-map "S" 'evil-change)
 (define-key evil-visual-state-map "u" 'evil-downcase)
 (define-key evil-visual-state-map "U" 'evil-upcase)
-(define-key evil-visual-state-map (kbd "ESC") 'evil-normal-state)
+(define-key evil-visual-state-map [escape] 'evil-normal-state)
 
 ;;; Insert state
 
@@ -283,12 +283,12 @@
 (define-key evil-insert-state-map "\C-x\C-p" 'evil-complete-line)
 (define-key evil-insert-state-map "\C-x\C-n" 'evil-complete-line)
 (define-key evil-insert-state-map (kbd "RET") 'evil-ret)
-(define-key evil-insert-state-map (kbd "ESC") 'evil-normal-state)
+(define-key evil-insert-state-map [escape] 'evil-normal-state)
 
 ;;; Replace state
 
 (define-key evil-replace-state-map [backspace] 'evil-replace-backspace)
-(define-key evil-replace-state-map (kbd "ESC") 'evil-normal-state)
+(define-key evil-replace-state-map [escape] 'evil-normal-state)
 
 ;;; Emacs state
 

@@ -286,6 +286,37 @@ may be specified before the body code:
              ,@body))
        ',keymap)))
 
+;; Intercept the ESC event when running in the terminal. This allows
+;; keys that use "ESC" as a prefix key, such as "M-x". If "ESC" is
+;; immediately followed by another key, or another key is pressed
+;; within `evil-esc-delay', the prefixed key sequence is sent.
+;; Otherwise only [escape] is sent.
+(evil-define-keymap evil-esc-map
+  "Keymap for intercepting ESC.")
+
+(defun evil-turn-on-esc-mode ()
+  "Enable interception of ESC."
+  (unless (eq this-command 'evil-esc)
+    (evil-esc-mode 1)
+    (remove-hook 'pre-command-hook 'evil-turn-on-esc-mode t)))
+
+(defun evil-esc ()
+  "Wait for further keys within `evil-esc-delay'.
+Otherwise send [escape]."
+  (interactive)
+  (if (sit-for evil-esc-delay t)
+      (push 'escape unread-command-events)
+    (push last-command-event unread-command-events))
+  ;; disable interception for the next key sequence
+  (evil-esc-mode -1)
+  (add-hook 'pre-command-hook 'evil-turn-on-esc-mode nil t))
+
+;; `evil-esc' is bound to (kbd "ESC"), while other commands
+;; are bound to [escape]. That way `evil-esc' is used only when
+;; (kbd "ESC") and [escape] are the same event -- i.e., when
+;; running Emacs in the terminal.
+(define-key evil-esc-map (kbd "ESC") 'evil-esc)
+
 (defun evil-state-keymaps (state &rest excluded)
   "Return an ordered list of keymaps activated by STATE.
 Skip states listed in EXCLUDED."
@@ -295,9 +326,8 @@ Skip states listed in EXCLUDED."
                                    state :local-keymap)))
          (aux-maps (evil-state-auxiliary-keymaps state))
          (enable (evil-state-property state :enable))
-         result)
-    (unless (memq state enable)
-      (add-to-list 'enable state))
+         (result (list evil-esc-map)))
+    (add-to-list 'enable state)
     ;; the keymaps for other states and modes enabled by STATE
     (dolist (entry enable result)
       (cond
@@ -665,7 +695,8 @@ If the region is activated, enter Visual state."
 (evil-define-state emacs
   "Emacs state."
   :tag " <E> "
-  :message "-- EMACS --")
+  :message "-- EMACS --"
+  (evil-esc-mode -1))
 
 (provide 'evil-states)
 

@@ -58,13 +58,18 @@ moves the cursor."
   :group 'evil)
 
 (defcustom evil-flash-delay 2
-  "Number of seconds to flash search matches."
-  :type  'integer
+  "Time in seconds to flash search matches."
+  :type  'number
   :group 'evil)
 
 (defcustom evil-fold-level 0
   "Default fold level."
   :type  'integer
+  :group 'evil)
+
+(defcustom evil-esc-delay 0
+  "Time in seconds to wait for another key after ESC."
+  :type 'number
   :group 'evil)
 
 (defcustom evil-show-paren-range 0
