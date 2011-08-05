@@ -431,7 +431,8 @@ is executed at the end."
 (defun evil-test-state-keymaps (state)
   "Verify that STATE's keymaps are pushed to the top"
   (let ((actual (evil-state-keymaps state))
-        (expected (list (symbol-value (evil-state-property
+        (expected (list evil-esc-map
+                        (symbol-value (evil-state-property
                                        state :local-keymap))
                         (symbol-value (evil-state-property
                                        state :keymap)))))
@@ -439,7 +440,8 @@ is executed at the end."
     (cond
      ((eq state 'operator)
       (setq expected
-            (list evil-operator-shortcut-map
+            (list evil-esc-map
+                  evil-operator-shortcut-map
                   evil-operator-state-local-map
                   evil-operator-state-map
                   evil-motion-state-local-map
@@ -449,7 +451,10 @@ is executed at the end."
     (dotimes (i (length expected))
       (should (keymapp (nth i expected)))
       (should (eq (nth i actual) (nth i expected)))
-      (should (memq (nth i expected) (current-active-maps)))
+      ;; Emacs state disables `evil-esc-map'
+      (unless (and (eq state 'emacs)
+                   (eq (nth i expected) evil-esc-map))
+        (should (memq (nth i expected) (current-active-maps))))
       (should (eq (cdr (nth i evil-mode-map-alist))
                   (nth i expected))))))
 
@@ -798,7 +803,7 @@ Below some empty line"
   :tags '(evil insert)
   (evil-test-buffer
     ";; [T]his buffer is for notes you don't want to save"
-    ("ievil rulz " (kbd "ESC"))
+    ("ievil rulz " [escape])
     ";; evil rulz[ ]This buffer is for notes you don't want to save"))
 
 (ert-deftest evil-test-append ()
@@ -806,7 +811,7 @@ Below some empty line"
   :tags '(evil insert)
   (evil-test-buffer
     ";; [T]his buffer is for notes you don't want to save"
-    ("aevil rulz " (kbd "ESC"))
+    ("aevil rulz " [escape])
     ";; Tevil rulz[ ]his buffer is for notes you don't want to save"))
 
 (ert-deftest evil-test-open-above ()
@@ -815,7 +820,7 @@ Below some empty line"
   (evil-test-buffer
     ";; This buffer is for notes you don't want to save,
 \[;]; and for Lisp evaluation."
-    ("Oabc\ndef" (kbd "ESC"))
+    ("Oabc\ndef" [escape])
     ";; This buffer is for notes you don't want to save,
 abc
 de[f]
@@ -827,7 +832,7 @@ de[f]
   (evil-test-buffer
     "[;]; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
-    ("oabc\ndef" (kbd "ESC"))
+    ("oabc\ndef" [escape])
     ";; This buffer is for notes you don't want to save,
 abc
 de[f]
@@ -838,7 +843,7 @@ de[f]
   :tags '(evil insert)
   (evil-test-buffer
     ";; [T]his buffer is for notes you don't want to save"
-    ("Ievil rulz " (kbd "ESC"))
+    ("Ievil rulz " [escape])
     "evil rulz[ ];; This buffer is for notes you don't want to save"))
 
 (ert-deftest evil-test-append-line ()
@@ -846,7 +851,7 @@ de[f]
   :tags '(evil insert)
   (evil-test-buffer
     ";; [T]his buffer is for notes you don't want to save"
-    ("Aevil rulz " (kbd "ESC"))
+    ("Aevil rulz " [escape])
     ";; This buffer is for notes you don't want to saveevil rulz[ ]"))
 
 (ert-deftest evil-test-insert-digraph ()
@@ -935,9 +940,9 @@ If nil, KEYS is used."
   :tags '(evil repeat)
   (evil-test-buffer
     (ert-info ("Insert text without count")
-      (evil-test-repeat-info (vconcat "iABC" (kbd "ESC"))))
+      (evil-test-repeat-info (vconcat "iABC" [escape])))
     (ert-info ("Insert text with count 42")
-      (evil-test-repeat-info (vconcat "42iABC" (kbd "ESC"))))))
+      (evil-test-repeat-info (vconcat "42iABC" [escape])))))
 
 (ert-deftest evil-test-repeat ()
   "Repeat several editing commands"
@@ -973,7 +978,7 @@ If nil, KEYS is used."
   (ert-info ("Repeat movement in Insert state")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save"
-      ("i(\M-f)" (kbd "ESC"))
+      ("i(\M-f)" [escape])
       ";; (This[)] buffer is for notes you don't want to save"
       ("w.")
       ";; (This) (buffer[)] is for notes you don't want to save")))
@@ -993,7 +998,7 @@ If nil, KEYS is used."
   :tags '(evil repeat)
   (evil-test-buffer
     ";; [T]his buffer is for notes"
-    ("2ievil rulz " (kbd "ESC"))
+    ("2ievil rulz " [escape])
     ";; evil rulz evil rulz[ ]This buffer is for notes"))
 
 (ert-deftest evil-test-repeat-insert ()
@@ -1002,28 +1007,28 @@ If nil, KEYS is used."
   (ert-info ("Repeat insert")
     (evil-test-buffer
       "[;]; This buffer is for notes"
-      ("iABC" (kbd "ESC"))
+      ("iABC" [escape])
       "AB[C];; This buffer is for notes"
       ("..")
       "ABABAB[C]CC;; This buffer is for notes"))
   (ert-info ("Repeat insert with count")
     (evil-test-buffer
       "[;]; This buffer is for notes"
-      ("2iABC" (kbd "ESC"))
+      ("2iABC" [escape])
       "ABCAB[C];; This buffer is for notes"
       ("..")
       "ABCABABCABABCAB[C]CC;; This buffer is for notes"))
   (ert-info ("Repeat insert with repeat count")
     (evil-test-buffer
       "[;]; This buffer is for notes"
-      ("iABC" (kbd "ESC"))
+      ("iABC" [escape])
       "AB[C];; This buffer is for notes"
       ("11.")
       "ABABCABCABCABCABCABCABCABCABCABCAB[C]C;; This buffer is for notes"))
   (ert-info ("Repeat insert with count with repeat with count")
     (evil-test-buffer
       "[;]; This buffer is for notes"
-      ("10iABC" (kbd "ESC"))
+      ("10iABC" [escape])
       "ABCABCABCABCABCABCABCABCABCAB[C];; This buffer is for notes"
       ("11.")
       "ABCABCABCABCABCABCABCABCABCABABCABCABCABCABCABCABCABCABCABCAB[C]C;; \
@@ -1042,7 +1047,7 @@ This buffer is for notes")))
       #'(lambda (count)
           (interactive "p")
           (evil-insert count 5)))
-    ("2iABC" (kbd "ESC"))
+    ("2iABC" [escape])
     "\
 ;; ABCAB[C]This buffer is for notes you don't want to save.
 ;; ABCABCIf you want to create a file, visit that file with C-x C-f,
@@ -1055,7 +1060,7 @@ This buffer is for notes")))
   :tags '(evil repeat)
   (evil-test-buffer
     ";; [T]his buffer is for notes"
-    ("2aevil rulz " (kbd "ESC"))
+    ("2aevil rulz " [escape])
     ";; Tevil rulz evil rulz[ ]his buffer is for notes"))
 
 (ert-deftest evil-test-repeat-append ()
@@ -1064,28 +1069,28 @@ This buffer is for notes")))
   (ert-info ("Repeat insert")
     (evil-test-buffer
       "[;]; This buffer is for notes"
-      ("aABC" (kbd "ESC"))
+      ("aABC" [escape])
       ";AB[C]; This buffer is for notes"
       ("..")
       ";ABCABCAB[C]; This buffer is for notes"))
   (ert-info ("Repeat insert with count")
     (evil-test-buffer
       "[;]; This buffer is for notes"
-      ("2aABC" (kbd "ESC"))
+      ("2aABC" [escape])
       ";ABCAB[C]; This buffer is for notes"
       ("..")
       ";ABCABCABCABCABCAB[C]; This buffer is for notes"))
   (ert-info ("Repeat insert with repeat count")
     (evil-test-buffer
       "[;]; This buffer is for notes"
-      ("aABC" (kbd "ESC"))
+      ("aABC" [escape])
       ";AB[C]; This buffer is for notes"
       ("11.")
       ";ABCABCABCABCABCABCABCABCABCABCABCAB[C]; This buffer is for notes"))
   (ert-info ("Repeat insert with count with repeat with count")
     (evil-test-buffer
       "[;]; This buffer is for notes"
-      ("10aABC" (kbd "ESC"))
+      ("10aABC" [escape])
       ";ABCABCABCABCABCABCABCABCABCAB[C]; This buffer is for notes"
       ("11.")
       ";ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB[C]; \
@@ -1104,7 +1109,7 @@ This buffer is for notes")))
       #'(lambda (count)
           (interactive "p")
           (evil-append count 5)))
-    ("2aABC" (kbd "ESC"))
+    ("2aABC" [escape])
     "\
 ;; TABCAB[C]his buffer is for notes you don't want to save.
 ;; IABCABCf you want to create a file, visit that file with C-x C-f,
@@ -1118,7 +1123,7 @@ This buffer is for notes")))
   (evil-test-buffer
     ";; This buffer is for notes you don't want to save,
 \[;]; and for Lisp evaluation."
-    ("2Oevil\nrulz" (kbd "ESC"))
+    ("2Oevil\nrulz" [escape])
     ";; This buffer is for notes you don't want to save,
 evil\nrulz\nevil\nrul[z]
 ;; and for Lisp evaluation."))
@@ -1129,7 +1134,7 @@ evil\nrulz\nevil\nrul[z]
   (ert-info ("Repeat insert")
     (evil-test-buffer
       "[;]; This buffer is for notes you don't want to save."
-      ("Oevil\nrulz" (kbd "ESC"))
+      ("Oevil\nrulz" [escape])
       "evil\nrul[z]
 ;; This buffer is for notes you don't want to save."
       ("..")
@@ -1138,7 +1143,7 @@ evil\nrulz\nevil\nrul[z]
   (ert-info ("Repeat insert with count")
     (evil-test-buffer
       ";; This buffer is for notes you don't want to save."
-      ("2Oevil\nrulz" (kbd "ESC"))
+      ("2Oevil\nrulz" [escape])
       "evil\nrulz\nevil\nrul[z]
 ;; This buffer is for notes you don't want to save."
       ("..")
@@ -1147,7 +1152,7 @@ evil\nrulz\nevil\nrul[z]
   (ert-info ("Repeat insert with repeat count")
     (evil-test-buffer
       ";; This buffer is for notes you don't want to save."
-      ("Oevil\nrulz" (kbd "ESC"))
+      ("Oevil\nrulz" [escape])
       "evil\nrul[z]\n;; This buffer is for notes you don't want to save."
       ("2.")
       "evil\nevil\nrulz\nevil\nrul[z]\nrulz
@@ -1155,7 +1160,7 @@ evil\nrulz\nevil\nrul[z]
   (ert-info ("Repeat insert with count with repeat with count")
     (evil-test-buffer
       ";; This buffer is for notes you don't want to save."
-      ("2Oevil\nrulz" (kbd "ESC"))
+      ("2Oevil\nrulz" [escape])
       "evil\nrulz\nevil\nrul[z]
 ;; This buffer is for notes you don't want to save."
       ("3.")
@@ -1168,7 +1173,7 @@ evil\nrulz\nevil\nrul[z]
   (evil-test-buffer
     "[;]; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
-    ("2oevil\nrulz" (kbd "ESC"))
+    ("2oevil\nrulz" [escape])
     ";; This buffer is for notes you don't want to save,
 evil\nrulz\nevil\nrul[z]
 ;; and for Lisp evaluation."))
@@ -1180,7 +1185,7 @@ evil\nrulz\nevil\nrul[z]
     (evil-test-buffer
       "[;]; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
-      ("oevil\nrulz" (kbd "ESC"))
+      ("oevil\nrulz" [escape])
       ";; This buffer is for notes you don't want to save,
 evil\nrul[z]\n;; and for Lisp evaluation."
       ("..")
@@ -1191,7 +1196,7 @@ evil\nrulz\nevil\nrulz\nevil\nrul[z]
     (evil-test-buffer
       "[;]; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
-      ("2oevil\nrulz" (kbd "ESC"))
+      ("2oevil\nrulz" [escape])
       ";; This buffer is for notes you don't want to save,
 evil\nrulz\nevil\nrul[z]
 ;; and for Lisp evaluation."
@@ -1203,7 +1208,7 @@ evil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul[z]
     (evil-test-buffer
       "[;]; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
-      ("oevil\nrulz" (kbd "ESC"))
+      ("oevil\nrulz" [escape])
       ";; This buffer is for notes you don't want to save,
 evil\nrul[z]\n;; and for Lisp evaluation."
       ("2.")
@@ -1214,7 +1219,7 @@ evil\nrulz\nevil\nrulz\nevil\nrul[z]
     (evil-test-buffer
       "[;]; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
-      ("2oevil\nrulz" (kbd "ESC"))
+      ("2oevil\nrulz" [escape])
       ";; This buffer is for notes you don't want to save,
 evil\nrulz\nevil\nrul[z]
 ;; and for Lisp evaluation."
@@ -1228,7 +1233,7 @@ evil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul[z]
   :tags '(evil repeat)
   (evil-test-buffer
     ";; [T]his buffer is for notes"
-    ("2Ievil rulz " (kbd "ESC"))
+    ("2Ievil rulz " [escape])
     "evil rulz evil rulz[ ];; This buffer is for notes"))
 
 (ert-deftest evil-test-repeat-insert-line ()
@@ -1237,28 +1242,28 @@ evil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul[z]
   (ert-info ("Repeat insert")
     (evil-test-buffer
       ";; This buffer is for note[s]"
-      ("IABC" (kbd "ESC"))
+      ("IABC" [escape])
       "AB[C];; This buffer is for notes"
       ("..")
       "AB[C]ABCABC;; This buffer is for notes"))
   (ert-info ("Repeat insert with count")
     (evil-test-buffer
       ";; This buffer is for note[s]"
-      ("2IABC" (kbd "ESC"))
+      ("2IABC" [escape])
       "ABCAB[C];; This buffer is for notes"
       ("..")
       "ABCAB[C]ABCABCABCABC;; This buffer is for notes"))
   (ert-info ("Repeat insert with repeat count")
     (evil-test-buffer
       ";; This buffer is for note[s]"
-      ("IABC" (kbd "ESC"))
+      ("IABC" [escape])
       "AB[C];; This buffer is for notes"
       ("11.")
       "ABCABCABCABCABCABCABCABCABCABCAB[C]ABC;; This buffer is for notes"))
   (ert-info ("Repeat insert with count with repeat with count")
     (evil-test-buffer
       ";; This buffer is for note[s]"
-      ("10IABC" (kbd "ESC"))
+      ("10IABC" [escape])
       "ABCABCABCABCABCABCABCABCABCAB[C];; This buffer is for notes"
       ("11.")
       "ABCABCABCABCABCABCABCABCABCABCAB[C]ABCABCABCABCABCABCABCABCABCABC;; This buffer is for notes")))
@@ -1276,7 +1281,7 @@ evil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul[z]
       #'(lambda (count)
           (interactive "p")
           (evil-insert-line count 4)))
-    ("2IABC" (kbd "ESC"))
+    ("2IABC" [escape])
     "ABCABCint main(int argc, char** argv)
 ABCABC{
   ABCABCprintf(\"Hello world\\n\");
@@ -1288,7 +1293,7 @@ ABCABC{
   :tags '(evil repeat)
   (evil-test-buffer
     ";; [T]his buffer is for notes."
-    ("2Aevil rulz " (kbd "ESC"))
+    ("2Aevil rulz " [escape])
     ";; This buffer is for notes.evil rulz evil rulz[ ]"))
 
 (ert-deftest evil-test-repeat-append-line ()
@@ -1297,28 +1302,28 @@ ABCABC{
   (ert-info ("Repeat insert")
     (evil-test-buffer
       ";; [T]his buffer is for notes."
-      ("AABC" (kbd "ESC"))
+      ("AABC" [escape])
       ";; This buffer is for notes.AB[C]"
       ("..")
       ";; This buffer is for notes.ABCABCAB[C]"))
   (ert-info ("Repeat insert with count")
     (evil-test-buffer
       ";; [T]his buffer is for notes."
-      ("2AABC" (kbd "ESC"))
+      ("2AABC" [escape])
       ";; This buffer is for notes.ABCAB[C]"
       ("..")
       ";; This buffer is for notes.ABCABCABCABCABCAB[C]"))
   (ert-info ("Repeat insert with repeat count")
     (evil-test-buffer
       ";; [T]his buffer is for notes."
-      ("AABC" (kbd "ESC"))
+      ("AABC" [escape])
       ";; This buffer is for notes.ABC"
       ("11.")
       ";; This buffer is for notes.ABCABCABCABCABCABCABCABCABCABCABCAB[C]"))
   (ert-info ("Repeat insert with count with repeat with count")
     (evil-test-buffer
       ";; [T]his buffer is for notes."
-      ("10AABC" (kbd "ESC"))
+      ("10AABC" [escape])
       ";; This buffer is for notes.ABCABCABCABCABCABCABCABCABCAB[C]"
       ("11.")
       ";; This buffer is for notes.ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB[C]")))
@@ -1336,7 +1341,7 @@ ABCABC{
       #'(lambda (count)
           (interactive "p")
           (evil-append-line count 4)))
-    ("2AABC" (kbd "ESC"))
+    ("2AABC" [escape])
     "int main(int argc, char** argv)ABCAB[C]
 {ABCABC
   printf(\"Hello world\\n\");ABCABC
@@ -1357,7 +1362,7 @@ ABCABC{
     (evil-test-buffer
       ";; [T]his buffer is for notes."
       (define-key evil-insert-state-local-map (kbd "C-c C-p") change)
-      ("iABC " (kbd "C-c C-p") "BODY" (kbd "ESC"))
+      ("iABC " (kbd "C-c C-p") "BODY" [escape])
       ";; ABC BEGIN
 BOD[Y]
 END
@@ -1423,6 +1428,25 @@ the `evil-repeat' command")
       (should (equal
                (evil-keypress-parser '(?0))
                '(evil-digit-argument-or-evil-beginning-of-line nil))))))
+
+(ert-deftest evil-test-invert-char ()
+  "Test `evil-invert-char'"
+  :tags '(evil operator)
+  (evil-test-buffer
+    ";; [T]his buffer is for notes."
+    ("~")
+    ";; t[h]is buffer is for notes.")
+  (evil-test-buffer
+    ";; <[T]his> buffer is for notes."
+    ("~")
+    ";; [t]HIS buffer is for notes.")
+  (evil-test-buffer
+    :visual block
+    ";; <[T]his buffer is for notes,
+;; and >for Lisp evaluation."
+    ("~")
+    ";; [t]HIS buffer is for notes,
+;; AND for Lisp evaluation."))
 
 (ert-deftest evil-test-rot13 ()
   "Test `evil-rot13'"
@@ -1664,7 +1688,7 @@ then enter the text in that file's own buffer.")))
   (ert-info ("Change characters")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save."
-      ("c2eABC" (kbd "ESC"))
+      ("c2eABC" [escape])
       ";; AB[C] is for notes you don't want to save."
       (should (string= (current-kill 0) "This buffer"))
       ("p")
@@ -1674,7 +1698,7 @@ then enter the text in that file's own buffer.")))
       ";; [T]his buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      ("2ccABCLINE\nDEFLINE" (kbd "ESC"))
+      ("2ccABCLINE\nDEFLINE" [escape])
       "ABCLINE
 DEFLIN[E]
 ;; then enter the text in that file's own buffer."
@@ -1689,7 +1713,7 @@ DEFLINE
       ";; This buffer is for notes you don't want to save.
 ;; [I]f you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      ("2ccABC" (kbd "ESC"))
+      ("2ccABC" [escape])
       ";; This buffer is for notes you don't want to save.
 AB[C]"))
   (ert-info ("Change rectangle")
@@ -1698,7 +1722,7 @@ AB[C]"))
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
       (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
-      ("c3sABC" (kbd "ESC"))
+      ("c3sABC" [escape])
       "AB[C]This buffer is for notes you don't want to save.
 ABCIf you want to create a file, visit that file with C-x C-f,
 ABCthen enter the text in that file's own buffer.")))
@@ -1709,17 +1733,17 @@ ABCthen enter the text in that file's own buffer.")))
   (ert-info ("Non-word")
     (evil-test-buffer
       "[;]; This buffer is for notes."
-      ("cwABC" (kbd "ESC"))
+      ("cwABC" [escape])
       "AB[C] This buffer is for notes."))
   (ert-info ("Word")
     (evil-test-buffer
       ";; [T]his buffer is for notes."
-      ("cwABC" (kbd "ESC"))
+      ("cwABC" [escape])
       ";; AB[C] buffer is for notes."))
   (ert-info ("Single character")
     (evil-test-buffer
       "[;] This buffer is for notes."
-      ("cwABC" (kbd "ESC"))
+      ("cwABC" [escape])
       "AB[C] This buffer is for notes.")))
 
 (ert-deftest evil-test-join ()
@@ -1747,14 +1771,14 @@ ABCthen enter the text in that file's own buffer.")))
   (ert-info ("Simple")
     (evil-test-buffer
       ";; [T]his buffer is for notes."
-      ("5sABC" (kbd "ESC"))
+      ("5sABC" [escape])
       ";; AB[C]buffer is for notes."))
   (ert-info ("On empty line")
     (evil-test-buffer
       "Above some line
 \[]
 Below some empty line"
-      ("5sABC" (kbd "ESC"))
+      ("5sABC" [escape])
       "Above some line
 AB[C]
 Below some empty line")))
@@ -3532,20 +3556,20 @@ if no previous selection")
   (ert-info ("Restore characterwise selection")
     (evil-test-buffer
       ";; <[T]his> buffer is for notes."
-      ((kbd "ESC") "gv")
+      ([escape] "gv")
       ";; <[T]his> buffer is for notes."))
   (ert-info ("Restore linewise selection")
     (evil-test-buffer
       :visual line
       "<;; [T]his buffer is for notes.>"
-      ((kbd "ESC") "gv")
+      ([escape] "gv")
       "<;; [T]his buffer is for notes.>"))
   (ert-info ("Restore blockwise selection")
     (evil-test-buffer
       :visual block
       "<;; This buffer is for notes,
 ;;[ ]>and for Lisp evaluation."
-      ((kbd "ESC") "gv")
+      ([escape] "gv")
       "<;; This buffer is for notes,
 ;;[ ]>and for Lisp evaluation.")))
 
