@@ -841,6 +841,7 @@ possibly wrapping and eob or bob."
 
 (evil-define-motion evil-ex-search-next (count)
   "Goes to the next occurrence."
+  :jump t
   :type exclusive
   (setq evil-ex-search-start-point (point))
   (dotimes (i (or count 1))
@@ -863,6 +864,7 @@ possibly wrapping and eob or bob."
 
 (evil-define-motion evil-ex-search-previous (count)
   "Goes the the previous occurrence."
+  :jump t
   :type exclusive
   (let ((evil-ex-search-direction
          (if (eq evil-ex-search-direction 'backward) 'forward 'backward)))
@@ -870,11 +872,13 @@ possibly wrapping and eob or bob."
 
 (evil-define-motion evil-ex-search-forward (count)
   "Starts a forward search."
+  :jump t
   :type exclusive
   (evil-ex-start-search 'forward count))
 
 (evil-define-motion evil-ex-search-backward (count)
   "Starts a forward search."
+  :jump t
   (evil-ex-start-search 'backward count))
 
 
@@ -907,24 +911,28 @@ The search matches the COUNT-th occurrence of the word."
 
 (evil-define-motion evil-ex-search-symbol-forward (count)
   "Searches the next occurence of word under the cursor."
+  :jump t
   :type exclusive
   (evil-ex-start-symbol-search nil 'forward count))
 
 
 (evil-define-motion evil-ex-search-word-backward (count)
   "Searches the next occurence of word under the cursor."
+  :jump t
   :type exclusive
   (evil-ex-start-symbol-search nil 'backward count))
 
 
 (evil-define-motion evil-ex-search-unbounded-symbol-forward (count)
   "Searches the next occurence of word under the cursor."
+  :jump t
   :type exclusive
   (evil-ex-start-symbol-search t 'forward count))
 
 
 (evil-define-motion evil-ex-search-unbounded-symbol-backward (count)
   "Searches the next occurence of word under the cursor."
+  :jump t
   :type exclusive
   (evil-ex-start-symbol-search t 'backward count))
 
