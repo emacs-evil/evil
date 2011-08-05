@@ -623,7 +623,7 @@ name `name' to `new-regex'."
 
 (defun evil-ex-hl-update-highlights-scroll (win begin)
   "Update highlights after scrolling in some window."
-  (with-current-buffer (window-buffer)
+  (with-current-buffer (window-buffer win)
     (evil-ex-hl-idle-update)))
 
 
@@ -726,7 +726,6 @@ possibly wrapping and eob or bob."
 
 (defun evil-ex-search-update ()
   "Updates the highlighting and the info-message for the actual search pattern."
-  (evil-ex-message isearch-message)
   (with-current-buffer evil-ex-current-buffer
     (with-selected-window (minibuffer-selected-window)
       (when evil-ex-search-interactive
@@ -741,10 +740,11 @@ possibly wrapping and eob or bob."
                               evil-ex-search-match-beg
                               evil-ex-search-match-end)
               (setq evil-ex-search-overlay (make-overlay evil-ex-search-match-beg evil-ex-search-match-end))
-              (overlay-put evil-ex-search-overlay 'priority 1001)
-              (overlay-put evil-ex-search-overlay 'face 'evil-ex-search))))
-        (when evil-ex-search-highlight-all
-          (evil-ex-hl-change 'evil-ex-search (and isearch-success evil-ex-search-pattern)))))))
+            (overlay-put evil-ex-search-overlay 'priority 1001)
+            (overlay-put evil-ex-search-overlay 'face 'evil-ex-search))))
+      (when evil-ex-search-highlight-all
+        (evil-ex-hl-change 'evil-ex-search (and isearch-success evil-ex-search-pattern))))))
+  (evil-ex-message isearch-message))
 
 (defun evil-ex-search-start-session ()
   "Called to initialize ex-mode for interactive search."
@@ -753,7 +753,7 @@ possibly wrapping and eob or bob."
   (add-hook 'minibuffer-exit-hook #'evil-ex-search-stop-session)
   (when (and evil-ex-search-interactive evil-ex-search-highlight-all)
     (with-current-buffer evil-ex-current-buffer
-      (evil-ex-make-hl 'evil-ex-search))))
+      (evil-ex-make-hl 'evil-ex-search :win (minibuffer-selected-window)))))
 
 (defun evil-ex-search-stop-session ()
   "Stops interactive search."

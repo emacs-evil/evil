@@ -611,9 +611,11 @@ They are reused to prevent flicker.")
 ;; The lazy-highlighting framework.
 (defvar evil-ex-active-highlights-alist nil
   "An alist of currently active highlights.")
+(make-variable-buffer-local 'evil-ex-active-highlights-alist)
 
 (defvar evil-ex-hl-update-timer nil
   "Time used for updating highlights.")
+(make-variable-buffer-local 'evil-ex-hl-update-timer)
 
 (defvar evil-ex-search-keymap (make-sparse-keymap)
   "Keymap used in ex-search-mode.")
