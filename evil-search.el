@@ -636,6 +636,8 @@ name `name' to `new-regex'."
 
 ;; Interactive search.
 
+(define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
+
 (defun evil-ex-find-next ()
   "Search for the next occurrence of pattern."
   (let ((retry t))
@@ -820,7 +822,7 @@ possibly wrapping and eob or bob."
           ;; ensure minibuffer is initialized accordingly
           (add-hook 'minibuffer-setup-hook #'evil-ex-search-start-session)
           ;; read the search string
-          (let ((minibuffer-local-map evil-ex-keymap))
+          (let ((minibuffer-local-map evil-ex-search-keymap))
             (when (read-string (case evil-ex-search-direction
                                  ('forward "/")
                                  ('backward "?"))

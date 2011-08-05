@@ -615,6 +615,10 @@ They are reused to prevent flicker.")
 (defvar evil-ex-hl-update-timer nil
   "Time used for updating highlights.")
 
+(defvar evil-ex-search-keymap (make-sparse-keymap)
+  "Keymap used in ex-search-mode.")
+(set-keymap-parent evil-ex-search-keymap minibuffer-local-map)
+
 
 
 (defconst evil-version "0.1"
