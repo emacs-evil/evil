@@ -3,9 +3,14 @@
 ;; TODO: Emacs 22 completion-boundaries
 
 (require 'evil-common)
+(require 'evil-operators)
 (require 'evil-vars)
 
 (define-key evil-ex-keymap "\d" #'evil-ex-delete-backward-char)
+
+(defun evil-ex-state-p ()
+  "Return t iff ex mode is currently active."
+  (and evil-ex-current-buffer t))
 
 (defun evil-ex-delete-backward-char ()
   "Closes the minibuffer if called with empty minibuffer content, otherwise behaves like `delete-backward-char'."
@@ -271,11 +276,12 @@ FORCE is non-nil if and only if an exclamation followed the command."
   "Called to complete the argument of a command.
 CMD is the current command. ARG, PREDICATE and FLAG are the
 arguments for programmable completion."
-  (let ((binding (evil-ex-completed-binding cmd)))
+  (let* ((binding (evil-ex-completed-binding cmd))
+         (arg-type (evil-get-command-property binding :ex-arg)))
     (cond
-     ((evil-ex-has-file-argument binding)
+     ((eq arg-type 'file)
       (evil-ex-complete-file-argument arg predicate flag))
-     ((evil-ex-has-buffer-argument binding)
+     ((eq arg-type 'buffer)
       (evil-ex-complete-buffer-argument arg predicate flag))
      (t
       ;; do nothing
@@ -385,14 +391,15 @@ arguments for programmable completion."
 (defun evil-ex-range ()
   "Returns the first and last position of the current range."
   (let ((rng (evil-ex-get-current-range)))
-    (if rng
-        (list (save-excursion
-                (goto-char (point-min)) (forward-line (1- (car rng)))
-                (line-beginning-position))
-              (save-excursion
-                (goto-char (point-min)) (forward-line (1- (cdr rng)))
-                (min (point-max) (1+ (line-end-position)))))
-      (list nil nil))))
+    (when rng
+      (evil-range
+       (save-excursion
+         (goto-char (point-min)) (forward-line (1- (car rng)))
+         (line-beginning-position))
+       (save-excursion
+         (goto-char (point-min)) (forward-line (1- (cdr rng)))
+         (min (point-max) (1+ (line-end-position))))
+       'line))))
 
 (defun evil-ex-get-current-range ()
   "Returns the line-numbers of the current range. A range is
@@ -500,15 +507,14 @@ hook of after-change-functions."
   evil-ex-current-arg)
 
 
-(defun evil-write (file-name &optional beg end force)
+(evil-define-operator evil-write (beg end type file-name &optional force)
   "Saves the current buffer or the region from BEG to END to FILE-NAME.
 If the argument FORCE is non-nil, the file will be overwritten if
 already existing."
-  (interactive (append
-                (list (evil-ex-file-name))
-                (evil-ex-range)
-                (list evil-ex-current-cmd-force)))
-  "Saves the lines from `begin' to `end' to file `file-name'."
+  :motion mark-whole-buffer
+  :type line
+  :repeat nil
+  (interactive "<f><!>")
   (when (null file-name)
     (setq file-name (buffer-file-name))
     (unless file-name
@@ -524,68 +530,77 @@ already existing."
    (t
     (write-region beg end file-name nil nil nil (not force)))))
 
-(defun evil-write-all (force)
+(evil-define-command evil-write-all (force)
   "Saves all buffers."
-  (interactive (list evil-ex-current-cmd-force))
+  :repeat nil
+  (interactive "<!>")
   (save-some-buffers force))
 
-(defun evil-edit (file)
+(evil-define-command evil-edit (file)
   "Visits a certain file."
-  (interactive (list (evil-ex-file-name)))
+  :repeat nil
+  (interactive "<f>")
   (if file
       (find-file file)
     (when (buffer-file-name)
       (find-file (buffer-file-name)))))
 
-(defun evil-show-buffers ()
+(evil-define-command evil-show-buffers ()
   "Shows the buffer-list."
+  :repeat nil
   (interactive)
   (let (message-truncate-lines message-log-max)
     (message "%s"
              (mapconcat #'buffer-name (buffer-list) "\n"))))
 
-(defun evil-buffer (buffer)
+(evil-define-command evil-buffer (buffer)
   "Switches to another buffer."
-  (interactive (list (evil-ex-buffer-name)))
+  :repeat nil
+  (interactive "<b>")
   (if buffer
       (when (or (get-buffer buffer)
                 (y-or-n-p (format "No buffer with name \"%s\" exists. Create new buffer? " buffer)))
         (switch-to-buffer buffer))
     (switch-to-buffer (other-buffer))))
 
-(defun evil-next-buffer (&optional count)
+(evil-define-command evil-next-buffer (&optional count)
   "Goes to the `count'-th next buffer in the buffer list."
+  :repeat nil
   (interactive "p")
   (dotimes (i (or count 1))
     (next-buffer)))
 
-(defun evil-prev-buffer (&optional count)
+(evil-define-command evil-prev-buffer (&optional count)
   "Goes to the `count'-th prev buffer in the buffer list."
+  :repeat nil
   (interactive "p")
   (dotimes (i (or count 1))
     (previous-buffer)))
 
-(defun evil-split-buffer (buffer)
+(evil-define-command evil-split-buffer (buffer)
   "Splits window and switches to another buffer."
-  (interactive (list (evil-ex-buffer-name)))
+  :repeat nil
+  (interactive "<b>")
   (evil-window-split)
   (evil-buffer buffer))
 
-(defun evil-split-next-buffer (&optional count)
+(evil-define-command evil-split-next-buffer (&optional count)
   "Splits window and goes to the `count'-th next buffer in the buffer list."
+  :repeat nil
   (interactive "p")
   (evil-window-split)
   (evil-next-buffer count))
 
-(defun evil-split-prev-buffer (&optional count)
+(evil-define-command evil-split-prev-buffer (&optional count)
   "Splits window and goes to the `count'-th prev buffer in the buffer list."
+  :repeat nil
   (interactive "p")
   (evil-window-split)
   (evil-prev-buffer count))
 
-(defun evil-delete-buffer (buffer &optional force)
+(evil-define-command evil-delete-buffer (buffer &optional force)
   "Deletes a buffer."
-  (interactive (list (evil-ex-buffer-name) evil-ex-current-cmd-force))
+  (interactive "<b><!>")
   (when force
     (if buffer
         (with-current-buffer buffer
@@ -593,8 +608,9 @@ already existing."
       (set-buffer-modified-p nil)))
   (kill-buffer buffer))
 
-(defun evil-quit (&optional force)
+(evil-define-command evil-quit (&optional force)
   "Closes the current window, exits Emacs if this is the last window."
+  :repeat nil
   (interactive (list evil-ex-current-cmd-force))
   (condition-case nil
       (delete-window)
@@ -606,21 +622,23 @@ already existing."
             (kill-emacs)
           (save-buffers-kill-emacs)))))))
 
-(defun evil-quit-all (&optional force)
+(evil-define-command evil-quit-all (&optional force)
   "Exits Emacs, asking for saving."
-  (interactive (list evil-ex-current-cmd-force))
+  :repeat nil
+  (interactive "<!>")
   (if force
       (kill-emacs)
     (save-buffers-kill-emacs)))
 
-(defun evil-save-and-quit ()
+(evil-define-command evil-save-and-quit ()
   "Exits Emacs, without saving."
   (interactive)
   (save-buffers-kill-emacs 1))
 
-(defun evil-save-and-close (file &optional force)
+(evil-define-command evil-save-and-close (file &optional force)
   "Saves the current buffer and closes the window."
-  (interactive (list (evil-ex-file-name) evil-ex-current-cmd-force))
+  :repeat nil
+  (interactive "<f><!>")
   (evil-write file force)
   (evil-quit))
 

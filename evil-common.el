@@ -552,6 +552,7 @@ ATTRIBUTES is a list of keyword value pairs to be passed to
   (evil-define-interactive-code "<f>" (list (evil-ex-file-name)) :ex-arg file)
   (evil-define-interactive-code "<b>" (list (evil-ex-buffer-name)) :ex-arg buffer)
   (evil-define-interactive-code "<a>" (list evil-ex-current-arg) :ex-arg t)
+  (evil-define-interactive-code "<!>" (list evil-ex-current-cmd-force))
   (evil-define-interactive-code "p" (list (prefix-numeric-value prefix-arg)))
   (evil-define-interactive-code "P" (list prefix-arg))
 
