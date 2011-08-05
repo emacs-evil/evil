@@ -105,8 +105,7 @@
                     ,beg (evil-range-beginning range)
                     ,end (evil-range-end range)
                     ,type (evil-type range)
-                    range (append (evil-range ,beg ,end ,type)
-                                  (progn ,@interactive)))
+                    range (append (evil-range ,beg ,end ,type)))
             (setq orig (point)
                   evil-inhibit-operator-value evil-inhibit-operator)
             (if ,keep-visual
@@ -120,7 +119,8 @@
                     (evil-visual-state-p state))
                 (evil-visual-rotate 'upper-left ,beg ,end ,type)
               (goto-char orig)))
-          range))
+          range)
+        ,@interactive)
        (unwind-protect
            (let ((evil-inhibit-operator evil-inhibit-operator-value))
              (unless (and evil-inhibit-operator
@@ -804,7 +804,11 @@ When called interactively, MACRO is read from a register."
 (evil-define-operator evil-invert-char (beg end type)
   "Invert case of character."
   :motion evil-forward-char
-  (evil-invert-case beg end type))
+  (if (eq type 'block)
+      (evil-apply-on-block 'evil-invert-case beg end)
+    (evil-invert-case beg end)
+    (when evil-this-motion
+      (goto-char end))))
 
 (evil-define-operator evil-rot13 (beg end type)
   "ROT13 encrypt text."
