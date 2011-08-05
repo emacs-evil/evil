@@ -669,6 +669,23 @@ passed to `evil-define-command'."
             arg (pop body))
       (unless nil ; TODO: add keyword check
         (plist-put keys key arg)))
+    ;; collect interactive
+    (when (and body
+               (consp (car body))
+               (eq (car (car body)) 'interactive))
+      (let* ((interactive (pop body))
+             (result (apply #'evil-eval-interactive (cdr interactive)))
+             (form (car result))
+             (attrs (cdr result)))
+        (push (list 'interactive form) body)
+        ;; The next code is a copy of the previous one but does not
+        ;; overwrite properties.
+        (while (keywordp (car-safe attrs))
+          (setq key (pop attrs)
+                arg (pop attrs))
+          (unless (or nil ; TODO: add keyword check
+                      (plist-member keys key))
+            (plist-put keys key arg)))))
     `(progn
        ;; the compiler does not recognize `defun' inside `let'
        ,(when (and command body)

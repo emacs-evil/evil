@@ -105,8 +105,7 @@
                     ,beg (evil-range-beginning range)
                     ,end (evil-range-end range)
                     ,type (evil-type range)
-                    range (append (evil-range ,beg ,end ,type)
-                                  (progn ,@interactive)))
+                    range (append (evil-range ,beg ,end ,type)))
             (setq orig (point)
                   evil-inhibit-operator-value evil-inhibit-operator)
             (if ,keep-visual
@@ -120,7 +119,8 @@
                     (evil-visual-state-p state))
                 (evil-visual-rotate 'upper-left ,beg ,end ,type)
               (goto-char orig)))
-          range))
+          range)
+        ,@interactive)
        (unwind-protect
            (let ((evil-inhibit-operator evil-inhibit-operator-value))
              (unless (and evil-inhibit-operator
