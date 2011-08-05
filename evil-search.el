@@ -728,22 +728,23 @@ possibly wrapping and eob or bob."
   "Updates the highlighting and the info-message for the actual search pattern."
   (evil-ex-message isearch-message)
   (with-current-buffer evil-ex-current-buffer
-    (when evil-ex-search-interactive
-      (when isearch-success
-        (if (null evil-ex-search-match-beg)
-            (when evil-ex-search-overlay
-              (delete-overlay evil-ex-search-overlay)
-              (setq evil-ex-search-overlay nil))
-          (goto-char evil-ex-search-match-beg)
-          (if evil-ex-search-overlay
-              (move-overlay evil-ex-search-overlay
-                            evil-ex-search-match-beg
-                            evil-ex-search-match-end)
-            (setq evil-ex-search-overlay (make-overlay evil-ex-search-match-beg evil-ex-search-match-end))
-            (overlay-put evil-ex-search-overlay 'priority 1001)
-            (overlay-put evil-ex-search-overlay 'face 'evil-ex-search))))
-      (when evil-ex-search-highlight-all
-        (evil-ex-hl-change 'evil-ex-search (and isearch-success evil-ex-search-pattern))))))
+    (with-selected-window (minibuffer-selected-window)
+      (when evil-ex-search-interactive
+        (when isearch-success
+          (if (null evil-ex-search-match-beg)
+              (when evil-ex-search-overlay
+                (delete-overlay evil-ex-search-overlay)
+                (setq evil-ex-search-overlay nil))
+            (goto-char evil-ex-search-match-beg)
+            (if evil-ex-search-overlay
+                (move-overlay evil-ex-search-overlay
+                              evil-ex-search-match-beg
+                              evil-ex-search-match-end)
+              (setq evil-ex-search-overlay (make-overlay evil-ex-search-match-beg evil-ex-search-match-end))
+              (overlay-put evil-ex-search-overlay 'priority 1001)
+              (overlay-put evil-ex-search-overlay 'face 'evil-ex-search))))
+        (when evil-ex-search-highlight-all
+          (evil-ex-hl-change 'evil-ex-search (and isearch-success evil-ex-search-pattern)))))))
 
 (defun evil-ex-search-start-session ()
   "Called to initialize ex-mode for interactive search."
