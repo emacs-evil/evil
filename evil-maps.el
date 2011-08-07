@@ -236,7 +236,7 @@
 (define-key evil-motion-state-map (kbd "C-f") 'evil-scroll-page-down)
 (define-key evil-motion-state-map (kbd "C-o") 'evil-jump-backward)
 (define-key evil-motion-state-map (kbd "C-y") 'evil-scroll-line-up)
-(define-key evil-motion-state-map (kbd "C-z") 'evil-emacs-state)
+(define-key evil-motion-state-map (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
 (define-key evil-motion-state-map (kbd "RET") 'evil-ret)
 (define-key evil-motion-state-map "z^" 'evil-scroll-top-line-to-bottom)
 (define-key evil-motion-state-map "z+" 'evil-scroll-bottom-line-to-top)
@@ -292,7 +292,7 @@
 
 ;;; Emacs state
 
-(define-key evil-emacs-state-map "\C-z" 'evil-exit-emacs-state)
+(define-key evil-emacs-state-map (read-kbd-macro evil-toggle-key) 'evil-exit-emacs-state)
 
 ;;; Minibuffer
 
