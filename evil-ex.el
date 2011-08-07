@@ -351,11 +351,11 @@ arguments for programmable completion."
                (= (aref evil-ex-current-arg 0) ? ))
       (setq evil-ex-current-arg (substring evil-ex-current-arg 1)))
     (when (and cmd (not (equal cmd oldcmd)))
-      (let (compl)
-        (if (assoc cmd evil-ex-commands)
-            (setq compl (list t))
-          (dolist (c (all-completions evil-ex-current-cmd evil-ex-commands))
-            (add-to-list 'compl (evil-ex-binding c))))
+      (let ((compl (if (assoc cmd evil-ex-commands)
+                       (list t)
+                     (mapcar #'evil-ex-binding
+                             (all-completions evil-ex-current-cmd
+                                              evil-ex-commands)))))
         (cond
          ((null compl) (evil-ex-message "Unknown command"))
          ((cdr compl) (evil-ex-message "Incomplete command")))))))
