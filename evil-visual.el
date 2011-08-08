@@ -100,7 +100,8 @@ the selection is enabled.
      (t
       (evil-visual-make-region (point) (point) evil-visual-char)))
     (add-hook 'pre-command-hook 'evil-visual-pre-command nil t)
-    (add-hook 'post-command-hook 'evil-visual-post-command nil t))
+    (add-hook 'post-command-hook 'evil-visual-post-command nil t)
+    (add-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook nil t))
    (t
     ;; Postpone deactivation of region if next state is Insert.
     ;; This gives certain insertion commands (auto-pairing characters,
@@ -113,6 +114,7 @@ the selection is enabled.
     (setq evil-visual-region-expanded nil)
     (remove-hook 'pre-command-hook 'evil-visual-pre-command t)
     (remove-hook 'post-command-hook 'evil-visual-post-command t)
+    (remove-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook t)
     (evil-visual-highlight -1))))
 
 (defun evil-visual-pre-command ()
@@ -135,21 +137,28 @@ If `this-command' was a motion, refresh the selection;
 otherwise exit Visual state."
   (when (evil-visual-state-p)
     (cond
-     ((or quit-flag
-          (eq this-command 'keyboard-quit)
-          evil-visual-region-expanded)
+     ((or quit-flag (eq this-command 'keyboard-quit))
       (evil-visual-contract-region)
       (evil-normal-state))
+     (evil-visual-region-expanded
+      (evil-visual-contract-region)
+      (evil-visual-highlight))
      (t
       (evil-visual-refresh)
       (evil-visual-highlight)))))
 
 (defun evil-visual-deactivate-hook ()
   "Deactivate the region and restore Transient Mark mode."
-  (evil-active-region -1)
-  (evil-transient-restore)
+  (remove-hook 'deactivate-mark-hook
+               'evil-visual-deactivate-hook t)
   (remove-hook 'evil-normal-state-entry-hook
-               'evil-visual-deactivate-hook t))
+               'evil-visual-deactivate-hook t)
+  (when (and (evil-visual-state-p)
+             (not (evil-get-command-property
+                   this-command :keep-visual)))
+    (evil-normal-state))
+  (evil-active-region -1)
+  (evil-transient-restore))
 
 (defun evil-visual-select (beg end &optional type dir)
   "Create a Visual selection of type TYPE from BEG to END.
@@ -229,10 +238,11 @@ exclude that newline from the region."
 
 (defun evil-visual-contract-region ()
   "The inverse of `evil-visual-expand-region'."
-  (let ((overlay (copy-overlay evil-visual-overlay))
-        mark point dir)
+  (let (dir mark point overlay)
     (unwind-protect
         (progn
+          (evil-visual-refresh)
+          (setq overlay (copy-overlay evil-visual-overlay))
           (when (overlay-get overlay :expanded)
             (evil-contract-overlay overlay))
           (setq mark (overlay-start overlay)
@@ -255,17 +265,21 @@ exclude that newline from the region."
     (goto-char point)
     (unless evil-visual-overlay
       (setq evil-visual-overlay (make-overlay mark point nil nil t)))
-    (unless evil-visual-region-expanded
-      (evil-contract-overlay evil-visual-overlay)
+    (evil-contract-overlay evil-visual-overlay)
+    (if evil-visual-region-expanded
+        (let ((range (evil-contract mark point type)))
+          (move-overlay evil-visual-overlay
+                        (evil-range-beginning range)
+                        (evil-range-end range)))
       (move-overlay evil-visual-overlay mark point))
     (while properties
       (overlay-put evil-visual-overlay
                    (pop properties) (pop properties)))
     (evil-set-type evil-visual-overlay type)
     (setq evil-this-type (evil-visual-type))
-    (if evil-visual-region-expanded
-        (move-overlay evil-visual-overlay mark point)
-      (evil-expand-overlay evil-visual-overlay))
+    (evil-expand-overlay evil-visual-overlay)
+    (when evil-visual-region-expanded
+      (move-overlay evil-visual-overlay mark point))
     (evil-set-marker ?< (evil-visual-beginning))
     (evil-set-marker ?> (evil-visual-end) t)))
 
