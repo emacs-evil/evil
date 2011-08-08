@@ -491,7 +491,6 @@ count) in which case this function returns nil."
   "Returns the current argument as buffer-name."
   evil-ex-current-arg)
 
-
 (evil-define-operator evil-write (beg end type file-name &optional force)
   "Saves the current buffer or the region from BEG to END to FILE-NAME.
 If the argument FORCE is non-nil, the file will be overwritten if
@@ -506,10 +505,10 @@ already existing."
       (error "Please specify a file-name for this buffer!")))
 
   (cond
-   ((and (null beg)
+   ((and (= beg (point-min)) (= end (point-max))
          (string= file-name (buffer-file-name)))
     (save-buffer))
-   ((and (null beg)
+   ((and (= beg (point-min)) (= end (point-max))
          (null (buffer-file-name)))
     (write-file file-name (not force)))
    (t
