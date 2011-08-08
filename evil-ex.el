@@ -491,7 +491,7 @@ hook of after-change-functions."
 
 (defun evil-ex-read-command (&optional initial-input)
   "Starts ex-mode."
-  (interactive)
+  (interactive (and (evil-visual-state-p) '("'<,'>")))
   (let ((evil-ex-current-buffer (current-buffer))
         (result (evil-ex-read ":" 'evil-ex-completion 'evil-ex-update nil initial-input  'evil-ex-history)))
     (when (and result (not (zerop (length result))))
