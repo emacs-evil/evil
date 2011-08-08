@@ -27,7 +27,7 @@
 (defmacro evil-ex-define-argument-type (arg-type args &rest body)
   "Defines a new handler for argument-type ARG-TYPE."
   (declare (indent defun)
-           (debug (&define arg-type lambda-list
+           (debug (&define symbolp lambda-list
                            [&optional ("interactive" interactive)]
                            def-body)))
   (let ((name (intern (concat "evil-ex-argument-handler-" (symbol-name arg-type)))))
@@ -382,7 +382,7 @@ arguments for programmable completion."
           (funcall evil-ex-current-arg-handler 'stop))
         (setq evil-ex-current-arg-handler arg-handler)
         (when evil-ex-current-arg-handler
-          (funcall evil-ex-current-arg-handler 'start)))
+          (funcall evil-ex-current-arg-handler 'start evil-ex-current-arg)))
       (when evil-ex-current-arg-handler
         (funcall evil-ex-current-arg-handler 'update evil-ex-current-arg)))))
 
@@ -432,14 +432,18 @@ arguments for programmable completion."
 returned if and only if a range separator is specified, otherwise
 the number is interpreted as prefix argument (i.e., as numeric
 count) in which case this function returns nil."
-  (when (and evil-ex-current-range
-           (cadr evil-ex-current-range))
-    (let ((beg (evil-ex-get-line (car evil-ex-current-range))))
-      (save-excursion
-        (when (equal (cadr evil-ex-current-range) ?\;)
-          (goto-char (point-min))
-          (forward-line (1- beg)))
-        (cons beg (evil-ex-get-line (nth 2 evil-ex-current-range)))))))
+  (when (and evil-ex-current-range)
+    (cond
+     ((and (car evil-ex-current-range)
+           (eq (car (car evil-ex-current-range)) 'all))
+      (cons (point-min) (point-max)))
+     ((cadr evil-ex-current-range)
+      (let ((beg (evil-ex-get-line (car evil-ex-current-range))))
+        (save-excursion
+          (when (equal (cadr evil-ex-current-range) ?\;)
+            (goto-char (point-min))
+            (forward-line (1- beg)))
+          (cons beg (evil-ex-get-line (nth 2 evil-ex-current-range)))))))))
 
 (defun evil-ex-get-line (address)
   "Returns the line represented by ADDRESS."

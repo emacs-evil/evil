@@ -309,6 +309,7 @@
 (evil-ex-define-cmd "wall" 'evil-write-all)
 (evil-ex-define-cmd "w" "write")
 (evil-ex-define-cmd "substitute" 'evil-substitute)
+(evil-ex-define-cmd "s" "substitute")
 (evil-ex-define-cmd "split" 'split-window-horizontally)
 
 (evil-ex-define-cmd "edit" 'evil-edit)

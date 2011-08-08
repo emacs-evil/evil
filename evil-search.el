@@ -419,7 +419,7 @@ will be case-insensitive."
   (unless (symbolp name) (error "Excepted symbol as name of highlight."))
   (let ((face 'evil-ex-lazy-highlight)
         (win (selected-window))
-        min max match-hook)
+        min max match-hook update-hook)
     (while args
       (let ((key (pop args))
             (val (pop args)))
@@ -429,13 +429,14 @@ will be case-insensitive."
          ((eq key :min)  (setq min val))
          ((eq key :max)  (setq max val))
          ((eq key :match-hook) (setq match-hook val))
+         ((eq key :update-hook) (setq update-hook val))
          (t (error "Unexpected keyword: %s" key)))))
     (when (assoc name evil-ex-active-highlights-alist)
       (evil-ex-delete-hl name))
     (when (null evil-ex-active-highlights-alist)
       (add-hook 'window-scroll-functions #'evil-ex-hl-update-highlights-scroll nil t)
       (add-hook 'window-size-change-functions #'evil-ex-hl-update-highlights-resize nil))
-    (push (cons name (vector name nil face win min max match-hook nil))
+    (push (cons name (vector name nil face win min max match-hook update-hook nil))
           evil-ex-active-highlights-alist)))
 
 (defun evil-ex-hl-name (hl)
@@ -478,13 +479,17 @@ will be case-insensitive."
   "Returns the match-hook of the highlight HL."
   (aref hl 6))
 
+(defun evil-ex-hl-update-hook (hl)
+  "Returns the update-hook of the highlight HL."
+  (aref hl 7))
+
 (defun evil-ex-hl-overlays (hl)
   "Returns the list of active overlays of the highlight HL."
-  (aref hl 7))
+  (aref hl 8))
 
 (defun evil-ex-hl-set-overlays (hl overlays)
   "Sets the list of active overlays of the highlight HL to OVERLAYS."
-  (aset hl 7 overlays))
+  (aset hl 8 overlays))
 
 
 (defun evil-ex-delete-hl (name)
@@ -517,7 +522,7 @@ name `name' to `new-regex'."
       (evil-ex-hl-idle-update))))
 
 
-(defun evil-ex-hl-set-region (name beg end)
+(defun evil-ex-hl-set-region (name beg end &optional type)
   (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
     (when hl
       (evil-ex-hl-set-min hl beg)
@@ -590,7 +595,9 @@ name `name' to `new-regex'."
          (setq result (nth 2 lossage)))
 
         (error
-         (setq result (format "%s" lossage)))))))
+         (setq result (format "%s" lossage))))
+      (when (evil-ex-hl-update-hook hl)
+        (funcall (evil-ex-hl-update-hook hl) result)))))
 
 (defun evil-ex-search-find-next-pattern (pattern &optional direction)
   "Looks for the next occurrence of pattern in a certain direction."
@@ -937,12 +944,185 @@ The search matches the COUNT-th occurrence of the word."
   (evil-ex-start-symbol-search t 'backward count))
 
 
+;; Substitute
+(evil-ex-define-argument-type substitution (flag &rest args)
+  (with-selected-window (minibuffer-selected-window)
+    (with-current-buffer evil-ex-current-buffer
+      (cond
+       ((eq flag 'start)
+        (evil-ex-make-hl 'evil-ex-substitute
+                         :update-hook #'evil-ex-pattern-update-ex-info
+                         :match-hook (and evil-ex-substitute-interactive-replace
+                                          #'evil-ex-pattern-update-replacement)
+                         )
+        (setq flag 'update))
+
+       ((eq flag 'stop)
+        (evil-ex-delete-hl 'evil-ex-substitute))))
+
+      (when (and (eq flag 'update) evil-ex-substitute-highlight-all)
+        (let* ((result (evil-ex-parse-substitute (or (car args) "")))
+               (pattern (pop result))
+               (replacement (pop result))
+               (flags (append (pop result) nil)))
+
+          (setq evil-ex-substitute-pattern
+                (and pattern
+                     (evil-ex-make-pattern pattern
+                                           (or (and (memq ?i flags) 'insensitive)
+                                               (and (memq ?I flags) 'sensitive)
+                                               evil-ex-substitute-case
+                                               evil-ex-search-case)
+                                           (memq ?g flags)))
+                evil-ex-substitute-replacement replacement)
+          (apply #'evil-ex-hl-set-region
+                 'evil-ex-substitute
+                 (or (evil-ex-range)
+                     (list (line-beginning-position)
+                           (line-end-position))))
+          (evil-ex-hl-change 'evil-ex-substitute evil-ex-substitute-pattern)))))
+
+
+(defun evil-ex-pattern-update-ex-info (result)
+  "Updates the ex-info string."
+  (if (stringp result) (evil-ex-message result)))
+
+(defun evil-ex-pattern-update-replacement (overlay)
+  "Updates the replacement display."
+  (let ((repl (match-substitute-replacement evil-ex-substitute-replacement)))
+    (put-text-property 0 (length repl)
+                       'face 'evil-ex-substitute
+                       repl)
+    (overlay-put overlay 'after-string repl)))
+
+
+(evil-define-operator evil-substitute (beg end type substitution)
+  "The VIM substitutde command: [range]s/pattern/replacement/flags"
+  :repeat nil
+  :jump t
+  :motion evil-line
+  (interactive "<s/>")
+  (evil-ex-nohighlight)
+  (let* ((result (evil-ex-parse-substitute substitution))
+         (pattern (pop result))
+         (replacement (pop result))
+         (flags (append (pop result) nil)))
+    (unless pattern (error "No pattern given."))
+    (unless replacement (error "No replacement given."))
+    (setq flags (append flags nil))
+    (let* ((replacement replacement)
+           (first-line (line-number-at-pos beg))
+           (last-line (line-number-at-pos end))
+           (whole-line (and flags (memq ?g flags)))
+           (confirm (and flags (memq ?c flags)))
+           (ignore-case (and flags (memq ?i flags)))
+           (dont-ignore-case (and flags (memq ?I flags)))
+           (pattern (evil-ex-make-pattern pattern
+                                          (or (and ignore-case 'insensitive)
+                                              (and dont-ignore-case 'sensitive)
+                                              evil-ex-substitute-case
+                                              evil-ex-search-case)
+                                          whole-line))
+           (regex (evil-ex-pattern-regex pattern))
+           (last-point (point))
+           (overlay (make-overlay (point) (point)))
+           (next-line (line-number-at-pos (point)))
+           (nreplaced 0))
+      (let ((case-fold-search (eq 'insensitive (evil-ex-pattern-case-fold pattern)))
+            (case-replace case-fold-search))
+        (unwind-protect
+            (if whole-line
+                ;; this one is easy, just use the built in function
+                (perform-replace regex replacement confirm t nil nil nil beg end)
+              (if confirm
+                  (progn
+                    ;; this one is more difficult, we have to do the
+                    ;; highlighting and questioning on our own
+                    (overlay-put overlay 'face
+                                 (if (facep 'isearch)
+                                     'isearch 'region))
+                    (map-y-or-n-p #'(lambda (x)
+                                      (set-match-data x)
+                                      (move-overlay overlay (match-beginning 0) (match-end 0))
+                                      (concat "Query replacing "
+                                              (match-string 0)
+                                              " with "
+                                              (match-substitute-replacement replacement case-fold-search)
+                                              ": "))
+                                  #'(lambda (x)
+                                      (set-match-data x)
+                                      (replace-match replacement case-fold-search)
+                                      (incf nreplaced)
+                                      (setq last-point (point)))
+                                  #'(lambda ()
+                                      (let ((end (save-excursion
+                                                   (goto-line last-line)
+                                                   (line-end-position))))
+                                        (goto-line next-line)
+                                        (beginning-of-line)
+                                        (when (and (> end (point))
+                                                   (re-search-forward regex end t nil))
+                                          (setq last-point (point))
+                                          (setq next-line (1+ (line-number-at-pos (point))))
+                                          (match-data))))))
+
+                ;; just replace the first occurences per line
+                ;; without highlighting and asking
+                (goto-line first-line)
+                (while (and (<= (line-number-at-pos (point)) last-line)
+                            (re-search-forward regex (save-excursion
+                                                       (goto-line last-line)
+                                                       (line-end-position))
+                                               t nil))
+                  (incf nreplaced)
+                  (replace-match replacement)
+                  (setq last-point (point))
+                  (forward-line)
+                  (beginning-of-line)))
+
+              (goto-char last-point)
+              (if (= nreplaced 1)
+                  (message "Replaced 1 occurence")
+                (message "Replaced %d occurences" nreplaced)))
+
+          ;; clean-up the overlay
+          (delete-overlay overlay))))))
+
+
+(defun evil-ex-parse-substitute (text)
+  (when (string-match "\\`\\s-*/\\(\\(?:[^/]\\|\\\\.\\)+\\)\\(?:/\\(\\(?:[^/]\\|\\\\.\\)*\\)\\(?:/\\([giIc]*\\)\\)?\\)?\\s-*\\'"
+                      text)
+    (let* ((pattern (match-string 1 text))
+           (replacement (match-string 2 text))
+           (flags (match-string 3 text))
+           newrepl
+           (idx 0) (n (length replacement)))
+
+      ;; handle escaped chars
+      (while (< idx n)
+        (if (and (= (aref replacement idx) ?\\)
+                 (< (1+ idx) n))
+            (let ((c (aref replacement (1+ idx))))
+              (case c
+                (?n (push ?\n newrepl))
+                (?t (push ?\t newrepl))
+                (?r (push ?\r newrepl))
+                ((?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?\\)
+                 (push ?\\ newrepl)
+                 (push c newrepl))
+                (t (push c newrepl)))
+              (incf idx 2))
+          (push (aref replacement idx) newrepl)
+          (incf idx)))
+
+      (list pattern (apply #'string (reverse newrepl)) flags))))
 
 
 
 (defun evil-ex-nohighlight ()
   "Disables the active search highlightings."
   (interactive)
+  (evil-ex-delete-hl 'evil-ex-substitute)
   (evil-ex-delete-hl 'evil-ex-search))
 
 (provide 'evil-search)
