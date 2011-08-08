@@ -3,9 +3,14 @@
 ;; TODO: Emacs 22 completion-boundaries
 
 (require 'evil-common)
+(require 'evil-operators)
 (require 'evil-vars)
 
 (define-key evil-ex-keymap "\d" #'evil-ex-delete-backward-char)
+
+(defun evil-ex-state-p ()
+  "Return t iff ex mode is currently active."
+  (and evil-ex-current-buffer t))
 
 (defun evil-ex-delete-backward-char ()
   "Closes the minibuffer if called with empty minibuffer content, otherwise behaves like `delete-backward-char'."
@@ -19,6 +24,18 @@
   "Binds the function FUNCTION to the command CMD."
   (evil-add-to-alist 'evil-ex-commands cmd function))
 
+(defmacro evil-ex-define-argument-type (arg-type args &rest body)
+  "Defines a new handler for argument-type ARG-TYPE."
+  (declare (indent defun)
+           (debug (&define arg-type lambda-list
+                           [&optional ("interactive" interactive)]
+                           def-body)))
+  (let ((name (intern (concat "evil-ex-argument-handler-" (symbol-name arg-type)))))
+  `(progn
+     (defun ,name ,args ,@body)
+     (evil-add-to-alist 'evil-ex-arg-types-alist ',arg-type ',name))))
+
+
 (defun evil-ex-find-symbol (lst symbol)
   "Returns non-nil if LST contains SYMBOL somewhere in a sublist."
   (catch 'done
@@ -28,21 +45,6 @@
                      (evil-ex-find-symbol elm symbol)))
         (throw 'done t)))
     nil))
-
-;; TODO: this test is not very robust, could be done better
-(defun evil-ex-has-force (cmd)
-  "Returns non-nil iff the command CMD checks for a ex-force argument in its interactive list.
-The test for the force-argument should be done by checking the
-value of the variable `evil-ex-current-cmd-force'."
-  (evil-ex-find-symbol (interactive-form cmd) 'evil-ex-current-cmd-force))
-
-(defun evil-ex-has-file-argument (cmd)
-  "Returns non-nil iff the command CMD checks for an `evil-ex-file-name' argument in its interactive list."
-  (evil-ex-find-symbol (interactive-form cmd) 'evil-ex-file-name))
-
-(defun evil-ex-has-buffer-argument (cmd)
-  "Returns non-nil iff the command CMD checks for an `evil-ex-buffer-name' argument in its interactive list."
-  (evil-ex-find-symbol (interactive-form cmd) 'evil-ex-buffer-name))
 
 (defun evil-ex-message (info)
   "Shows an INFO message after the current minibuffer content."
@@ -210,9 +212,18 @@ FORCE is non-nil if and only if an exclamation followed the command."
          (boundaries (cdr-safe flag)))
     (cond
      ((= (point) pnt)
-      (if boundaries
-          (cons 'boundaries (cons (- pos (length cmd)) 0))
-        (evil-ex-complete-command cmd force predicate flag)))
+      (let ((cmdbeg (- pos (length cmd))))
+        (if boundaries
+            (cons 'boundaries (cons cmdbeg 0))
+          (let ((begin (substring cmdline 0 cmdbeg))
+                (result (evil-ex-complete-command cmd force predicate flag)))
+            (cond
+             ((null result) nil)
+             ((eq t result) t)
+             ((stringp result) (if flag result (concat begin result)))
+             ((listp result) (if flag result (mapcar #'(lambda (x) (concat begin x)) result)))
+             (t (error "Completion returned unexpected value.")))))))
+
      ((= (point) (point-max))
       (let ((argbeg (+ pos
                        (if (and (< pos (length cmdline))
@@ -236,7 +247,7 @@ FORCE is non-nil if and only if an exclamation followed the command."
   "Called to complete a command."
   (let ((has-force #'(lambda (x)
                        (let ((bnd (evil-ex-binding x)))
-                         (and bnd (evil-ex-has-force bnd))))))
+                         (and bnd (evil-get-command-property bnd :ex-force))))))
     (cond
      (force
       (let ((pred #'(lambda (x)
@@ -271,55 +282,63 @@ FORCE is non-nil if and only if an exclamation followed the command."
   "Called to complete the argument of a command.
 CMD is the current command. ARG, PREDICATE and FLAG are the
 arguments for programmable completion."
-  (let ((binding (evil-ex-completed-binding cmd)))
-    (cond
-     ((evil-ex-has-file-argument binding)
-      (evil-ex-complete-file-argument arg predicate flag))
-     ((evil-ex-has-buffer-argument binding)
-      (evil-ex-complete-buffer-argument arg predicate flag))
-     (t
+  (let* ((binding (evil-ex-completed-binding cmd))
+         (arg-type (evil-get-command-property binding :ex-arg))
+         (arg-handler (assoc arg-type evil-ex-arg-types-alist)))
+    (if arg-handler
+        (funcall (cdr arg-handler)
+                 'complete
+                 arg predicate flag)
       ;; do nothing
       (when arg
         (cond
          ((null flag) nil)
          ((eq flag t) (list arg))
-         ((eq flag 'lambda) t)))))))
+         ((eq flag 'lambda) t))))))
 
 
-(defun evil-ex-complete-file-argument (arg predicate flag)
-  "Called to complete a file argument."
-  (if (null arg)
-      default-directory
-    (let ((dir (or (file-name-directory arg)
-                   (with-current-buffer evil-ex-current-buffer default-directory)))
-          (fname (file-name-nondirectory arg)))
-      (cond
-       ((null dir) (ding))
-       ((null flag)
-        (let ((result (file-name-completion fname dir)))
+(evil-ex-define-argument-type file (flag &rest args)
+  "Handles a file argument."
+  (when (eq flag 'complete)
+    (let ((arg (pop args))
+          (predicate (pop args))
+          (flag (pop args)))
+      (if (null arg)
+          default-directory
+        (let ((dir (or (file-name-directory arg)
+                       (with-current-buffer evil-ex-current-buffer default-directory)))
+              (fname (file-name-nondirectory arg)))
           (cond
-           ((null result) nil)
-           ((eq result t) t)
-           (t (concat dir result)))))
+           ((null dir) (ding))
+           ((null flag)
+            (let ((result (file-name-completion fname dir)))
+              (cond
+               ((null result) nil)
+               ((eq result t) t)
+               (t (concat dir result)))))
 
-       ((eq t flag)
-        (file-name-all-completions fname dir))
+           ((eq t flag)
+            (file-name-all-completions fname dir))
 
-       ((eq 'lambda flag)
-        (eq (file-name-completion fname dir) t))))))
+           ((eq 'lambda flag)
+            (eq (file-name-completion fname dir) t))))))))
 
 
-(defun evil-ex-complete-buffer-argument (arg predicate flag)
+(evil-ex-define-argument-type buffer (flag &rest args)
   "Called to complete a buffer name argument."
-  (when arg
-    (let ((buffers (mapcar #'(lambda (buffer) (cons (buffer-name buffer) nil)) (buffer-list t))))
-      (cond
-       ((null flag)
-        (try-completion arg buffers predicate))
-       ((eq t flag)
-        (all-completions arg buffers predicate))
-       ((eq 'lambda flag)
-        (test-completion arg buffers predicate))))))
+  (when (eq flag 'complete)
+    (let ((arg (pop args))
+          (predicate (pop args))
+          (flag (pop args)))
+      (when arg
+        (let ((buffers (mapcar #'(lambda (buffer) (cons (buffer-name buffer) nil)) (buffer-list t))))
+          (cond
+           ((null flag)
+            (try-completion arg buffers predicate))
+           ((eq t flag)
+            (all-completions arg buffers predicate))
+           ((eq 'lambda flag)
+            (test-completion arg buffers predicate))))))))
 
 
 (defun evil-ex-update (beg end len)
@@ -330,6 +349,7 @@ arguments for programmable completion."
          (sep (pop result))
          (end (pop result))
          (cmd (pop result))
+         (bnd (and cmd (evil-ex-completed-binding cmd)))
          (force (pop result))
          (oldcmd evil-ex-current-cmd))
     (setq evil-ex-current-cmd cmd
@@ -352,7 +372,19 @@ arguments for programmable completion."
             (add-to-list 'compl (evil-ex-binding c))))
         (cond
          ((null compl) (evil-ex-message "Unknown command"))
-         ((cdr compl) (evil-ex-message "Incomplete command")))))))
+         ((cdr compl) (evil-ex-message "Incomplete command")))))
+
+    ;; update arg-handler
+    (let* ((arg-type (and bnd (evil-get-command-property bnd :ex-arg)))
+           (arg-handler (and arg-type (cdr-safe (assoc arg-type evil-ex-arg-types-alist)))))
+      (unless (eq arg-handler evil-ex-current-arg-handler)
+        (when evil-ex-current-arg-handler
+          (funcall evil-ex-current-arg-handler 'stop))
+        (setq evil-ex-current-arg-handler arg-handler)
+        (when evil-ex-current-arg-handler
+          (funcall evil-ex-current-arg-handler 'start)))
+      (when evil-ex-current-arg-handler
+        (funcall evil-ex-current-arg-handler 'update evil-ex-current-arg)))))
 
 (defun evil-ex-binding (command)
   "Returns the final binding of COMMAND."
@@ -385,14 +417,15 @@ arguments for programmable completion."
 (defun evil-ex-range ()
   "Returns the first and last position of the current range."
   (let ((rng (evil-ex-get-current-range)))
-    (if rng
-        (list (save-excursion
-                (goto-char (point-min)) (forward-line (1- (car rng)))
-                (line-beginning-position))
-              (save-excursion
-                (goto-char (point-min)) (forward-line (1- (cdr rng)))
-                (min (point-max) (1+ (line-end-position)))))
-      (list nil nil))))
+    (when rng
+      (evil-range
+       (save-excursion
+         (goto-char (point-min)) (forward-line (1- (car rng)))
+         (line-beginning-position))
+       (save-excursion
+         (goto-char (point-min)) (forward-line (1- (cdr rng)))
+         (min (point-max) (1+ (line-end-position))))
+       'line))))
 
 (defun evil-ex-get-current-range ()
   "Returns the line-numbers of the current range. A range is
@@ -447,145 +480,131 @@ count) in which case this function returns nil."
             ((eq base 'next-of-prev-subst) (error "Next-of-prev-subst not yet implemented."))
             (t (error "Invalid address: %s" address))))))))
 
-
-(defun evil-ex-read (prompt
-                     collection
-                     update
-                     &optional
-                     require-match
-                     initial
-                     hist
-                     default
-                     inherit-input-method)
-  "Starts a completing ex minibuffer session.
-The parameters are the same as for `completing-read' but an
-additional UPDATE function can be given which is called as an
-hook of after-change-functions."
-  (let ((evil-ex-current-buffer (current-buffer)))
-    (let ((minibuffer-local-completion-map evil-ex-keymap)
-          (evil-ex-update-function update)
-          (evil-ex-info-string nil))
-      (add-hook 'minibuffer-setup-hook #'evil-ex-setup)
-      (completing-read prompt collection nil require-match initial hist default inherit-input-method))))
-
 (defun evil-ex-setup ()
   "Initializes ex minibuffer."
-  (when evil-ex-update-function
-    (add-hook 'after-change-functions evil-ex-update-function nil t))
+  (add-hook 'after-change-functions #'evil-ex-update nil t)
   (add-hook 'minibuffer-exit-hook #'evil-ex-teardown)
   (remove-hook 'minibuffer-setup-hook #'evil-ex-setup))
 
 (defun evil-ex-teardown ()
   "Deinitializes ex minibuffer."
   (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown)
-  (when evil-ex-update-function
-    (remove-hook 'after-change-functions evil-ex-update-function t)
-    (funcall evil-ex-update-function (point-min) (point-max) 0)))
+  (remove-hook 'after-change-functions #'evil-ex-update t)
+  (evil-ex-update (point-min) (point-max) 0)
+  (when evil-ex-current-arg-handler
+    (funcall evil-ex-current-arg-handler 'stop)))
 
 (defun evil-ex-read-command (&optional initial-input)
   "Starts ex-mode."
-  (interactive)
+  (interactive (and (evil-visual-state-p) '("'<,'>")))
   (let ((evil-ex-current-buffer (current-buffer))
-        (result (evil-ex-read ":" 'evil-ex-completion 'evil-ex-update nil initial-input  'evil-ex-history)))
-    (when (and result (not (zerop (length result))))
-      (evil-ex-call-current-command))))
+        (minibuffer-local-completion-map evil-ex-keymap)
+        evil-ex-current-arg-handler
+        evil-ex-info-string)
+    (add-hook 'minibuffer-setup-hook #'evil-ex-setup)
+    (let ((result (completing-read ":"
+                                   #'evil-ex-completion
+                                   nil
+                                   nil
+                                   initial-input
+                                   'evil-ex-history nil t)))
+      (when (and result (not (zerop (length result))))
+        (evil-ex-call-current-command)))))
 
-
-(defun evil-ex-file-name ()
-  "Returns the current argument as file-name."
-  evil-ex-current-arg)
-
-(defun evil-ex-buffer-name ()
-  "Returns the current argument as buffer-name."
-  evil-ex-current-arg)
-
-
-(defun evil-write (file-name &optional beg end force)
+(evil-define-operator evil-write (beg end type file-name &optional force)
   "Saves the current buffer or the region from BEG to END to FILE-NAME.
 If the argument FORCE is non-nil, the file will be overwritten if
 already existing."
-  (interactive (append
-                (list (evil-ex-file-name))
-                (evil-ex-range)
-                (list evil-ex-current-cmd-force)))
-  "Saves the lines from `begin' to `end' to file `file-name'."
+  :motion mark-whole-buffer
+  :type line
+  :repeat nil
+  (interactive "<f><!>")
   (when (null file-name)
     (setq file-name (buffer-file-name))
     (unless file-name
       (error "Please specify a file-name for this buffer!")))
 
   (cond
-   ((and (null beg)
+   ((and (= beg (point-min)) (= end (point-max))
          (string= file-name (buffer-file-name)))
     (save-buffer))
-   ((and (null beg)
+   ((and (= beg (point-min)) (= end (point-max))
          (null (buffer-file-name)))
     (write-file file-name (not force)))
    (t
     (write-region beg end file-name nil nil nil (not force)))))
 
-(defun evil-write-all (force)
+(evil-define-command evil-write-all (force)
   "Saves all buffers."
-  (interactive (list evil-ex-current-cmd-force))
+  :repeat nil
+  (interactive "<!>")
   (save-some-buffers force))
 
-(defun evil-edit (file)
+(evil-define-command evil-edit (file)
   "Visits a certain file."
-  (interactive (list (evil-ex-file-name)))
+  :repeat nil
+  (interactive "<f>")
   (if file
       (find-file file)
     (when (buffer-file-name)
       (find-file (buffer-file-name)))))
 
-(defun evil-show-buffers ()
+(evil-define-command evil-show-buffers ()
   "Shows the buffer-list."
+  :repeat nil
   (interactive)
   (let (message-truncate-lines message-log-max)
     (message "%s"
              (mapconcat #'buffer-name (buffer-list) "\n"))))
 
-(defun evil-buffer (buffer)
+(evil-define-command evil-buffer (buffer)
   "Switches to another buffer."
-  (interactive (list (evil-ex-buffer-name)))
+  :repeat nil
+  (interactive "<b>")
   (if buffer
       (when (or (get-buffer buffer)
                 (y-or-n-p (format "No buffer with name \"%s\" exists. Create new buffer? " buffer)))
         (switch-to-buffer buffer))
     (switch-to-buffer (other-buffer))))
 
-(defun evil-next-buffer (&optional count)
+(evil-define-command evil-next-buffer (&optional count)
   "Goes to the `count'-th next buffer in the buffer list."
+  :repeat nil
   (interactive "p")
   (dotimes (i (or count 1))
     (next-buffer)))
 
-(defun evil-prev-buffer (&optional count)
+(evil-define-command evil-prev-buffer (&optional count)
   "Goes to the `count'-th prev buffer in the buffer list."
+  :repeat nil
   (interactive "p")
   (dotimes (i (or count 1))
     (previous-buffer)))
 
-(defun evil-split-buffer (buffer)
+(evil-define-command evil-split-buffer (buffer)
   "Splits window and switches to another buffer."
-  (interactive (list (evil-ex-buffer-name)))
+  :repeat nil
+  (interactive "<b>")
   (evil-window-split)
   (evil-buffer buffer))
 
-(defun evil-split-next-buffer (&optional count)
+(evil-define-command evil-split-next-buffer (&optional count)
   "Splits window and goes to the `count'-th next buffer in the buffer list."
+  :repeat nil
   (interactive "p")
   (evil-window-split)
   (evil-next-buffer count))
 
-(defun evil-split-prev-buffer (&optional count)
+(evil-define-command evil-split-prev-buffer (&optional count)
   "Splits window and goes to the `count'-th prev buffer in the buffer list."
+  :repeat nil
   (interactive "p")
   (evil-window-split)
   (evil-prev-buffer count))
 
-(defun evil-delete-buffer (buffer &optional force)
+(evil-define-command evil-delete-buffer (buffer &optional force)
   "Deletes a buffer."
-  (interactive (list (evil-ex-buffer-name) evil-ex-current-cmd-force))
+  (interactive "<b><!>")
   (when force
     (if buffer
         (with-current-buffer buffer
@@ -593,8 +612,9 @@ already existing."
       (set-buffer-modified-p nil)))
   (kill-buffer buffer))
 
-(defun evil-quit (&optional force)
+(evil-define-command evil-quit (&optional force)
   "Closes the current window, exits Emacs if this is the last window."
+  :repeat nil
   (interactive (list evil-ex-current-cmd-force))
   (condition-case nil
       (delete-window)
@@ -606,21 +626,23 @@ already existing."
             (kill-emacs)
           (save-buffers-kill-emacs)))))))
 
-(defun evil-quit-all (&optional force)
+(evil-define-command evil-quit-all (&optional force)
   "Exits Emacs, asking for saving."
-  (interactive (list evil-ex-current-cmd-force))
+  :repeat nil
+  (interactive "<!>")
   (if force
       (kill-emacs)
     (save-buffers-kill-emacs)))
 
-(defun evil-save-and-quit ()
+(evil-define-command evil-save-and-quit ()
   "Exits Emacs, without saving."
   (interactive)
   (save-buffers-kill-emacs 1))
 
-(defun evil-save-and-close (file &optional force)
+(evil-define-command evil-save-and-close (file &optional force)
   "Saves the current buffer and closes the window."
-  (interactive (list (evil-ex-file-name) evil-ex-current-cmd-force))
+  :repeat nil
+  (interactive "<f><!>")
   (evil-write file force)
   (evil-quit))
 

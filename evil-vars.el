@@ -42,6 +42,12 @@ moves the cursor."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-word "[:word:]_"
+  "The characters to be considered as a word.
+This should be a regexp set without the enclosing []."
+  :type 'string
+  :group 'evil)
+
 (defcustom evil-want-fine-undo nil
   "Whether actions like \"cw\" are undone in several steps."
   :type 'boolean
@@ -58,13 +64,18 @@ moves the cursor."
   :group 'evil)
 
 (defcustom evil-flash-delay 2
-  "Number of seconds to flash search matches."
-  :type  'integer
+  "Time in seconds to flash search matches."
+  :type  'number
   :group 'evil)
 
 (defcustom evil-fold-level 0
   "Default fold level."
   :type  'integer
+  :group 'evil)
+
+(defcustom evil-esc-delay 0
+  "Time in seconds to wait for another key after ESC."
+  :type 'number
   :group 'evil)
 
 (defcustom evil-show-paren-range 0
@@ -142,6 +153,9 @@ which causes the parenthesis to be highlighted."
     beginning-of-defun
     beginning-of-line
     beginning-of-visual-line
+    c-beginning-of-defun
+    c-end-of-defun
+    c-mark-function
     digit-argument
     down-list
     end-of-buffer
@@ -481,9 +495,6 @@ The format is (POS . CHAR).")
   "If set to t inside `evil-save-echo-area', then the echo area
 is not restored.")
 
-(defvar evil-word "a-zA-Z0-9_"
-  "The characters to be considered as a word.")
-
 (defvar evil-last-find nil
   "A pair (FUNCTION . CHAR) describing the lastest character
   search command.")
@@ -573,8 +584,11 @@ They are reused to prevent flicker.")
 (defvar evil-ex-commands nil
   "An alist of command-bindings to functions.")
 
-(defvar evil-ex-update-function nil
-  "Currently active ex update function.")
+(defvar evil-ex-current-arg-handler nil
+  "Currently active argument handler depending on current command.")
+
+(defvar evil-ex-arg-types-alist nil
+  "An alist of defined argument handlers.")
 
 
 ;; Searching
