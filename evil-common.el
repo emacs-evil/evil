@@ -739,10 +739,13 @@ If POS is nil, delete the mark."
     (set-marker (mark-marker) point)
     (goto-char mark)))
 
-(defun evil-adjust-eol ()
-  "Move (point) one character back if at eol on an non-empty line."
-  (when (eolp)
-    (evil-adjust)))
+(defun evil-adjust-eol (&optional force)
+  "Move point one character back if at the end of a non-empty line.
+This behavior is contingent on `evil-move-cursor-back';
+use the FORCE parameter to override it."
+  (when (or evil-move-cursor-back force)
+    (when (eolp)
+      (evil-adjust))))
 
 (defun evil-adjust ()
   "Move point one character back within the current line."

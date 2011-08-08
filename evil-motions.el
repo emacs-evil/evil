@@ -112,7 +112,8 @@ the loop immediately quits. See also `evil-loop'.
   `(save-restriction
      (narrow-to-region
       (line-beginning-position)
-      (if (evil-normal-state-p)
+      (if (and evil-move-cursor-back
+               (evil-normal-state-p))
           (max (line-beginning-position)
                (1- (line-end-position)))
         (line-end-position)))
@@ -633,7 +634,7 @@ of the object; otherwise it is placed at the end of the object."
           (when inclusive
             (unless (bobp) (backward-char)))
           (when (evil-normal-state-p)
-            (evil-adjust-eol)))))
+            (evil-adjust-eol t)))))
      ((> count 0)
       (when (evil-eobp)
         (signal 'end-of-buffer nil))
@@ -647,7 +648,7 @@ of the object; otherwise it is placed at the end of the object."
           (when inclusive
             (unless (bobp) (backward-char)))
           (when (evil-normal-state-p)
-            (evil-adjust-eol)))))
+            (evil-adjust-eol t)))))
      (t
       count))))
 
