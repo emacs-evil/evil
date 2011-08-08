@@ -522,6 +522,11 @@ They are reused to prevent flicker.")
 (defvar evil-ex-commands nil
   "An alist of command-bindings to functions.")
 
+(defvar evil-ex-current-arg-handler nil
+  "Currently active argument handler depending on current command.")
+
+(defvar evil-ex-arg-types-alist nil
+  "An alist of defined argument handlers.")
 
 
 (defconst evil-version "0.1"

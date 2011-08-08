@@ -24,6 +24,18 @@
   "Binds the function FUNCTION to the command CMD."
   (evil-add-to-alist 'evil-ex-commands cmd function))
 
+(defmacro evil-ex-define-argument-type (arg-type args &rest body)
+  "Defines a new handler for argument-type ARG-TYPE."
+  (declare (indent defun)
+           (debug (&define arg-type lambda-list
+                           [&optional ("interactive" interactive)]
+                           def-body)))
+  (let ((name (intern (concat "evil-ex-argument-handler-" (symbol-name arg-type)))))
+  `(progn
+     (defun ,name ,args ,@body)
+     (evil-add-to-alist 'evil-ex-arg-types-alist ',arg-type ',name))))
+
+
 (defun evil-ex-find-symbol (lst symbol)
   "Returns non-nil if LST contains SYMBOL somewhere in a sublist."
   (catch 'done
@@ -271,55 +283,62 @@ FORCE is non-nil if and only if an exclamation followed the command."
 CMD is the current command. ARG, PREDICATE and FLAG are the
 arguments for programmable completion."
   (let* ((binding (evil-ex-completed-binding cmd))
-         (arg-type (evil-get-command-property binding :ex-arg)))
-    (cond
-     ((eq arg-type 'file)
-      (evil-ex-complete-file-argument arg predicate flag))
-     ((eq arg-type 'buffer)
-      (evil-ex-complete-buffer-argument arg predicate flag))
-     (t
+         (arg-type (evil-get-command-property binding :ex-arg))
+         (arg-handler (assoc arg-type evil-ex-arg-types-alist)))
+    (if arg-handler
+        (funcall (cdr arg-handler)
+                 'complete
+                 arg predicate flag)
       ;; do nothing
       (when arg
         (cond
          ((null flag) nil)
          ((eq flag t) (list arg))
-         ((eq flag 'lambda) t)))))))
+         ((eq flag 'lambda) t))))))
 
 
-(defun evil-ex-complete-file-argument (arg predicate flag)
-  "Called to complete a file argument."
-  (if (null arg)
-      default-directory
-    (let ((dir (or (file-name-directory arg)
-                   (with-current-buffer evil-ex-current-buffer default-directory)))
-          (fname (file-name-nondirectory arg)))
-      (cond
-       ((null dir) (ding))
-       ((null flag)
-        (let ((result (file-name-completion fname dir)))
+(evil-ex-define-argument-type file (flag &rest args)
+  "Handles a file argument."
+  (when (eq flag 'complete)
+    (let ((arg (pop args))
+          (predicate (pop args))
+          (flag (pop args)))
+      (if (null arg)
+          default-directory
+        (let ((dir (or (file-name-directory arg)
+                       (with-current-buffer evil-ex-current-buffer default-directory)))
+              (fname (file-name-nondirectory arg)))
           (cond
-           ((null result) nil)
-           ((eq result t) t)
-           (t (concat dir result)))))
+           ((null dir) (ding))
+           ((null flag)
+            (let ((result (file-name-completion fname dir)))
+              (cond
+               ((null result) nil)
+               ((eq result t) t)
+               (t (concat dir result)))))
 
-       ((eq t flag)
-        (file-name-all-completions fname dir))
+           ((eq t flag)
+            (file-name-all-completions fname dir))
 
-       ((eq 'lambda flag)
-        (eq (file-name-completion fname dir) t))))))
+           ((eq 'lambda flag)
+            (eq (file-name-completion fname dir) t))))))))
 
 
-(defun evil-ex-complete-buffer-argument (arg predicate flag)
+(evil-ex-define-argument-type buffer (flag &rest args)
   "Called to complete a buffer name argument."
-  (when arg
-    (let ((buffers (mapcar #'(lambda (buffer) (cons (buffer-name buffer) nil)) (buffer-list t))))
-      (cond
-       ((null flag)
-        (try-completion arg buffers predicate))
-       ((eq t flag)
-        (all-completions arg buffers predicate))
-       ((eq 'lambda flag)
-        (test-completion arg buffers predicate))))))
+  (when (eq flag 'complete)
+    (let ((arg (pop args))
+          (predicate (pop args))
+          (flag (pop args)))
+      (when arg
+        (let ((buffers (mapcar #'(lambda (buffer) (cons (buffer-name buffer) nil)) (buffer-list t))))
+          (cond
+           ((null flag)
+            (try-completion arg buffers predicate))
+           ((eq t flag)
+            (all-completions arg buffers predicate))
+           ((eq 'lambda flag)
+            (test-completion arg buffers predicate))))))))
 
 
 (defun evil-ex-update (beg end len)
@@ -330,6 +349,7 @@ arguments for programmable completion."
          (sep (pop result))
          (end (pop result))
          (cmd (pop result))
+         (bnd (and cmd (evil-ex-completed-binding cmd)))
          (force (pop result))
          (oldcmd evil-ex-current-cmd))
     (setq evil-ex-current-cmd cmd
@@ -352,7 +372,19 @@ arguments for programmable completion."
             (add-to-list 'compl (evil-ex-binding c))))
         (cond
          ((null compl) (evil-ex-message "Unknown command"))
-         ((cdr compl) (evil-ex-message "Incomplete command")))))))
+         ((cdr compl) (evil-ex-message "Incomplete command")))))
+
+    ;; update arg-handler
+    (let* ((arg-type (and bnd (evil-get-command-property bnd :ex-arg)))
+           (arg-handler (and arg-type (cdr-safe (assoc arg-type evil-ex-arg-types-alist)))))
+      (unless (eq arg-handler evil-ex-current-arg-handler)
+        (when evil-ex-current-arg-handler
+          (funcall evil-ex-current-arg-handler 'stop))
+        (setq evil-ex-current-arg-handler arg-handler)
+        (when evil-ex-current-arg-handler
+          (funcall evil-ex-current-arg-handler 'start)))
+      (when evil-ex-current-arg-handler
+        (funcall evil-ex-current-arg-handler 'update evil-ex-current-arg)))))
 
 (defun evil-ex-binding (command)
   "Returns the final binding of COMMAND."
@@ -458,13 +490,16 @@ count) in which case this function returns nil."
   "Deinitializes ex minibuffer."
   (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown)
   (remove-hook 'after-change-functions #'evil-ex-update t)
-  (evil-ex-update (point-min) (point-max) 0))
+  (evil-ex-update (point-min) (point-max) 0)
+  (when evil-ex-current-arg-handler
+    (funcall evil-ex-current-arg-handler 'stop)))
 
 (defun evil-ex-read-command (&optional initial-input)
   "Starts ex-mode."
   (interactive (and (evil-visual-state-p) '("'<,'>")))
   (let ((evil-ex-current-buffer (current-buffer))
         (minibuffer-local-completion-map evil-ex-keymap)
+        evil-ex-current-arg-handler
         evil-ex-info-string)
     (add-hook 'minibuffer-setup-hook #'evil-ex-setup)
     (let ((result (completing-read ":"
