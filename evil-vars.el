@@ -522,8 +522,6 @@ They are reused to prevent flicker.")
 (defvar evil-ex-commands nil
   "An alist of command-bindings to functions.")
 
-(defvar evil-ex-update-function nil
-  "Currently active ex update function.")
 
 
 (defconst evil-version "0.1"

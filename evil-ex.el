@@ -454,48 +454,33 @@ count) in which case this function returns nil."
             ((eq base 'next-of-prev-subst) (error "Next-of-prev-subst not yet implemented."))
             (t (error "Invalid address: %s" address))))))))
 
-
-(defun evil-ex-read (prompt
-                     collection
-                     update
-                     &optional
-                     require-match
-                     initial
-                     hist
-                     default
-                     inherit-input-method)
-  "Starts a completing ex minibuffer session.
-The parameters are the same as for `completing-read' but an
-additional UPDATE function can be given which is called as an
-hook of after-change-functions."
-  (let ((evil-ex-current-buffer (current-buffer)))
-    (let ((minibuffer-local-completion-map evil-ex-keymap)
-          (evil-ex-update-function update)
-          (evil-ex-info-string nil))
-      (add-hook 'minibuffer-setup-hook #'evil-ex-setup)
-      (completing-read prompt collection nil require-match initial hist default inherit-input-method))))
-
 (defun evil-ex-setup ()
   "Initializes ex minibuffer."
-  (when evil-ex-update-function
-    (add-hook 'after-change-functions evil-ex-update-function nil t))
+  (add-hook 'after-change-functions #'evil-ex-update nil t)
   (add-hook 'minibuffer-exit-hook #'evil-ex-teardown)
   (remove-hook 'minibuffer-setup-hook #'evil-ex-setup))
 
 (defun evil-ex-teardown ()
   "Deinitializes ex minibuffer."
   (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown)
-  (when evil-ex-update-function
-    (remove-hook 'after-change-functions evil-ex-update-function t)
-    (funcall evil-ex-update-function (point-min) (point-max) 0)))
+  (remove-hook 'after-change-functions #'evil-ex-update t)
+  (evil-ex-update (point-min) (point-max) 0))
 
 (defun evil-ex-read-command (&optional initial-input)
   "Starts ex-mode."
   (interactive (and (evil-visual-state-p) '("'<,'>")))
   (let ((evil-ex-current-buffer (current-buffer))
-        (result (evil-ex-read ":" 'evil-ex-completion 'evil-ex-update nil initial-input  'evil-ex-history)))
-    (when (and result (not (zerop (length result))))
-      (evil-ex-call-current-command))))
+        (minibuffer-local-completion-map evil-ex-keymap)
+        evil-ex-info-string)
+    (add-hook 'minibuffer-setup-hook #'evil-ex-setup)
+    (let ((result (completing-read ":"
+                                   #'evil-ex-completion
+                                   nil
+                                   nil
+                                   initial-input
+                                   'evil-ex-history nil t)))
+      (when (and result (not (zerop (length result))))
+        (evil-ex-call-current-command)))))
 
 
 (defun evil-ex-file-name ()
