@@ -200,9 +200,18 @@ FORCE is non-nil if and only if an exclamation followed the command."
          (boundaries (cdr-safe flag)))
     (cond
      ((= (point) pnt)
-      (if boundaries
-          (cons 'boundaries (cons (- pos (length cmd)) 0))
-        (evil-ex-complete-command cmd force predicate flag)))
+      (let ((cmdbeg (- pos (length cmd))))
+        (if boundaries
+            (cons 'boundaries (cons cmdbeg 0))
+          (let ((begin (substring cmdline 0 cmdbeg))
+                (result (evil-ex-complete-command cmd force predicate flag)))
+            (cond
+             ((null result) nil)
+             ((eq t result) t)
+             ((stringp result) (if flag result (concat begin result)))
+             ((listp result) (if flag result (mapcar #'(lambda (x) (concat begin x)) result)))
+             (t (error "Completion returned unexpected value.")))))))
+
      ((= (point) (point-max))
       (let ((argbeg (+ pos
                        (if (and (< pos (length cmdline))
