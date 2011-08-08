@@ -34,21 +34,6 @@
         (throw 'done t)))
     nil))
 
-;; TODO: this test is not very robust, could be done better
-(defun evil-ex-has-force (cmd)
-  "Returns non-nil iff the command CMD checks for a ex-force argument in its interactive list.
-The test for the force-argument should be done by checking the
-value of the variable `evil-ex-current-cmd-force'."
-  (evil-ex-find-symbol (interactive-form cmd) 'evil-ex-current-cmd-force))
-
-(defun evil-ex-has-file-argument (cmd)
-  "Returns non-nil iff the command CMD checks for an `evil-ex-file-name' argument in its interactive list."
-  (evil-ex-find-symbol (interactive-form cmd) 'evil-ex-file-name))
-
-(defun evil-ex-has-buffer-argument (cmd)
-  "Returns non-nil iff the command CMD checks for an `evil-ex-buffer-name' argument in its interactive list."
-  (evil-ex-find-symbol (interactive-form cmd) 'evil-ex-buffer-name))
-
 (defun evil-ex-message (info)
   "Shows an INFO message after the current minibuffer content."
   (when info
@@ -241,7 +226,7 @@ FORCE is non-nil if and only if an exclamation followed the command."
   "Called to complete a command."
   (let ((has-force #'(lambda (x)
                        (let ((bnd (evil-ex-binding x)))
-                         (and bnd (evil-ex-has-force bnd))))))
+                         (and bnd (evil-get-command-property bnd :ex-force))))))
     (cond
      (force
       (let ((pred #'(lambda (x)
@@ -481,15 +466,6 @@ count) in which case this function returns nil."
                                    'evil-ex-history nil t)))
       (when (and result (not (zerop (length result))))
         (evil-ex-call-current-command)))))
-
-
-(defun evil-ex-file-name ()
-  "Returns the current argument as file-name."
-  evil-ex-current-arg)
-
-(defun evil-ex-buffer-name ()
-  "Returns the current argument as buffer-name."
-  evil-ex-current-arg)
 
 (evil-define-operator evil-write (beg end type file-name &optional force)
   "Saves the current buffer or the region from BEG to END to FILE-NAME.
