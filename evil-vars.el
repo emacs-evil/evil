@@ -706,6 +706,10 @@ They are reused to prevent flicker.")
 (defvar evil-window-map (make-sparse-keymap)
   "Keymap for window-related commands.")
 
+(defvar evil-input-method nil
+  "Input method used in Insert state and Emacs state.")
+(make-variable-buffer-local 'evil-input-method)
+
 ;;; ex-mode
 
 (defvar evil-ex-minibuffer nil

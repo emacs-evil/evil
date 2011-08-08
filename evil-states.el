@@ -70,6 +70,8 @@
     ;; re-determine the initial state in `post-command-hook' since the
     ;; major mode may not be initialized yet, and some modes neglect
     ;; to run `after-change-major-mode-hook'
+    (add-hook 'input-method-activate-hook 'evil-refresh-input-method t t)
+    (add-hook 'input-method-inactivate-hook 'evil-refresh-input-method t t)
     (add-hook 'post-command-hook 'evil-initialize-state t t)
     (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
     (add-hook 'post-command-hook 'evil-repeat-post-hook)
@@ -85,6 +87,8 @@
     (ad-disable-advice 'show-paren-function 'around 'evil)
     (ad-disable-advice 'undo-tree-visualize 'after 'evil)
     (ad-activate 'show-paren-function)
+    (remove-hook 'input-method-activate-hook 'evil-refresh-input-method t)
+    (remove-hook 'input-method-inactivate-hook 'evil-refresh-input-method t)
     (evil-change-state nil))))
 
 (defun evil-initialize ()
@@ -195,6 +199,16 @@ This is the state the buffer comes up in."
     (set modes (delq mode (symbol-value modes))))
   (when state
     (add-to-list (evil-state-property state :modes) mode)))
+
+(defun evil-refresh-input-method ()
+  "Disable input method in states with :input-method nil."
+  (let (input-method-activate-hook
+        input-method-inactivate-hook)
+    (when (and evil-local-mode evil-state)
+      (setq evil-input-method current-input-method)
+      (when (and current-input-method
+                 (null (evil-state-property evil-state :input-method)))
+        (inactivate-input-method)))))
 
 (defun evil-refresh-global-keymaps ()
   "Refresh the global value of `evil-mode-map-alist'.
@@ -693,7 +707,7 @@ The basic keymap of this state will then be
          (modes (intern (format "%s-modes" toggle)))
          (predicate (intern (format "%s-p" toggle)))
          arg cursor-value enable entry-hook-value exit-hook-value
-         key message-value suppress-keymap tag-value)
+         input-method key message-value suppress-keymap tag-value)
     ;; collect keywords
     (while (keywordp (car-safe body))
       (setq key (pop body)
@@ -715,6 +729,8 @@ The basic keymap of this state will then be
           (setq exit-hook-value (list entry-hook-value))))
        ((eq key :enable)
         (setq enable arg))
+       ((eq key :input-method)
+        (setq input-method arg))
        ((eq key :suppress-keymap)
         (setq suppress-keymap arg))))
 
@@ -761,6 +777,7 @@ cursor, or a list of the above.\n\n%s" state doc))
         :modes (defvar ,modes nil
                  ,(format "Modes that should come up in %s state."
                           state))
+        :input-method ',input-method
         :predicate ',predicate
         :enable ',enable)
 
@@ -802,6 +819,9 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
              (setq evil-state ',state)
              (let ((evil-state ',state))
                (evil-normalize-keymaps)
+               (if ',input-method
+                   (activate-input-method evil-input-method)
+                 (inactivate-input-method))
                (unless evil-locked-display
                  (evil-refresh-cursor ',state)
                  (setq evil-modeline-tag ,tag)
@@ -861,6 +881,7 @@ If the region is activated, enter Visual state."
   "Emacs state."
   :tag " <E> "
   :message "-- EMACS --"
+  :input-method t
   (evil-esc-mode -1))
 
 (provide 'evil-states)

@@ -12,6 +12,7 @@
   :cursor (bar . 2)
   :message "-- INSERT --"
   :exit-hook (evil-cleanup-insert-state)
+  :input-method t
   (cond
    ((evil-insert-state-p)
     (add-hook 'pre-command-hook 'evil-insert-repeat-hook)
