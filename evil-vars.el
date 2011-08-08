@@ -42,6 +42,12 @@ moves the cursor."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-word "[:word:]_"
+  "The characters to be considered as a word.
+This should be a regexp set without the enclosing []."
+  :type 'string
+  :group 'evil)
+
 (defcustom evil-want-fine-undo nil
   "Whether actions like \"cw\" are undone in several steps."
   :type 'boolean
@@ -423,9 +429,6 @@ The format is (POS . CHAR).")
 (defvar evil-write-echo-area nil
   "If set to t inside `evil-save-echo-area', then the echo area
 is not restored.")
-
-(defvar evil-word "a-zA-Z0-9_"
-  "The characters to be considered as a word.")
 
 (defvar evil-last-find nil
   "A pair (FUNCTION . CHAR) describing the lastest character
