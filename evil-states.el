@@ -128,7 +128,8 @@ current buffer only.")
 This is the state the buffer comes up in."
   (interactive)
   (with-current-buffer (or buffer (current-buffer))
-    (evil-change-state (evil-initial-state-for-buffer buffer 'normal)
+    (evil-change-state (evil-initial-state-for-buffer
+                        buffer (or evil-default-state 'normal))
                        message)))
 
 (defun evil-change-to-previous-state (&optional buffer message)

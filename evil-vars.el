@@ -94,6 +94,39 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-toggle-key "C-z"
+  "The key used to change to and from Emacs state.
+Must be readable by `read-kbd-macro'. For example: \"C-z\"."
+  :type 'string
+  :group 'evil
+  :set (lambda (sym value)
+         (let ((old-value (if (boundp 'evil-toggle-key)
+                              evil-toggle-key
+                            "C-z")))
+           (when (and (boundp 'evil-motion-state-map)
+                      (keymapp evil-motion-state-map))
+             (define-key evil-motion-state-map
+               (read-kbd-macro value) 'evil-emacs-state)
+             (define-key evil-motion-state-map
+               (read-kbd-macro old-value) nil))
+           (when (and (boundp 'evil-emacs-state-map)
+                      (keymapp evil-emacs-state-map))
+             (define-key evil-emacs-state-map
+               (read-kbd-macro value) 'evil-exit-emacs-state)
+             (define-key evil-emacs-state-map
+               (read-kbd-macro old-value) nil))
+           (set-default sym value))))
+
+(defcustom evil-default-state 'normal
+  "The default state.
+This is the state a mode comes up in when it is not listed
+in `evil-emacs-state-modes', `evil-insert-state-modes' or
+`evil-motion-state-modes'. The value may be one of `normal',
+`insert', `visual', `replace', `operator', `motion' and
+`emacs'."
+  :type  'symbol
+  :group 'evil)
+
 (defcustom evil-emacs-state-modes
   '(bookmark-bmenu-mode
     bookmark-edit-annotation-mode
