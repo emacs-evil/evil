@@ -4,7 +4,7 @@ FILES = evil*.el
 ELPAPKG = evil-`sed -n '3s/.*"\(.*\)".*/\1/p' evil-pkg.el`
 TAG =
 
-.PHONY: all compile compile-batch clean tests test emacs term terminal indent
+.PHONY: all compile compile-batch clean tests test emacs term terminal indent elpa version
 
 # Byte-compile Evil.
 all: compile
@@ -18,7 +18,7 @@ done
 compile-batch: clean
 	$(EMACS) --batch -Q -L . -L lib -f batch-byte-compile ${FILES}
 
-# Delete byte-compiled files.
+# Delete byte-compiled files etc.
 clean:
 	rm -f *~
 	rm -f \#*\#
@@ -39,7 +39,7 @@ tests: compile-batch
 	rm -f *.elc
 
 # Load Evil in a fresh instance of Emacs and run all tests.
-emacs: clean
+emacs:
 	$(EMACS) -Q -L . -L lib -l evil-tests.el --eval "(evil-mode 1)" \
 --eval "(if (y-or-n-p-with-timeout \"Run tests? \" 2 t) \
 (evil-tests-run '(${TAG}) t) \
@@ -47,7 +47,7 @@ emacs: clean
 
 # Load Evil in a terminal Emacs and run all tests.
 term: terminal
-terminal: clean
+terminal:
 	$(EMACS) -nw -Q -L . -L lib -l evil-tests.el --eval "(evil-mode 1)" \
 --eval "(if (y-or-n-p-with-timeout \"Run tests? \" 2 t) \
 (evil-tests-run '(${TAG}) t) \
@@ -72,8 +72,8 @@ indent: clean
 (replace-match \"\\n\\n\")) \
 (when (buffer-modified-p) (save-buffer 0))))"
 
-# Create an ELPA package
-elpa: 
+# Create an ELPA package.
+elpa:
 	rm -rf ${ELPAPKG}
 	mkdir ${ELPAPKG}
 	cp ${FILES} ${ELPAPKG}
