@@ -1,6 +1,7 @@
 SHELL = /bin/bash
 EMACS = emacs
 FILES = evil*.el
+ELPAPKG = evil-`sed -n '3s/.*"\(.*\)".*/\1/p' evil-pkg.el`
 TAG =
 
 .PHONY: all compile compile-batch clean tests test emacs term terminal indent
@@ -70,3 +71,17 @@ indent: clean
 (while (re-search-forward \"\\n\\\\{3,\\\\}\" nil t) \
 (replace-match \"\\n\\n\")) \
 (when (buffer-modified-p) (save-buffer 0))))"
+
+# Create an ELPA package
+elpa: 
+	rm -rf ${ELPAPKG}
+	mkdir ${ELPAPKG}
+	cp ${FILES} ${ELPAPKG}
+	rm ${ELPAPKG}/evil-tests.el
+	tar cf ${ELPAPKG}.tar ${ELPAPKG}
+	rm -rf ${ELPAPKG}
+
+# Change the version using make VERSION=x.y.z
+version:
+	cat evil-pkg.el | sed "3s/\".*\"/\"${VERSION}\"/" > evil-pkg.el
+
