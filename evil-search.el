@@ -529,6 +529,10 @@ name `name' to `new-regex'."
       (evil-ex-hl-set-max hl end)
       (evil-ex-hl-idle-update))))
 
+(defun evil-ex-hl-get-max (name)
+  (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
+    (and hl (evil-ex-hl-max hl))))
+
 
 (defun evil-ex-hl-update-highlights ()
   "Updates the overlays of all active highlights."
@@ -1005,15 +1009,11 @@ The search matches the COUNT-th occurrence of the word."
   (evil-ex-nohighlight)
   (let* ((result (evil-ex-parse-substitute substitution))
          (pattern (pop result))
-         (replacement (pop result))
+         (evil-ex-substitute-replacement (pop result))
          (flags (append (pop result) nil)))
     (unless pattern (error "No pattern given."))
-    (unless replacement (error "No replacement given."))
-    (setq flags (append flags nil))
-    (let* ((replacement replacement)
-           (first-line (line-number-at-pos beg))
-           (last-line (line-number-at-pos end))
-           (whole-line (and flags (memq ?g flags)))
+    (unless evil-ex-substitute-replacement (error "No replacement given."))
+    (let* ((whole-line (and flags (memq ?g flags)))
            (confirm (and flags (memq ?c flags)))
            (ignore-case (and flags (memq ?i flags)))
            (dont-ignore-case (and flags (memq ?I flags)))
@@ -1023,70 +1023,78 @@ The search matches the COUNT-th occurrence of the word."
                                               evil-ex-substitute-case
                                               evil-ex-search-case)
                                           whole-line))
-           (regex (evil-ex-pattern-regex pattern))
-           (last-point (point))
-           (overlay (make-overlay (point) (point)))
-           (next-line (line-number-at-pos (point)))
-           (nreplaced 0))
-      (let ((case-fold-search (eq 'insensitive (evil-ex-pattern-case-fold pattern)))
-            (case-replace case-fold-search))
-        (unwind-protect
-            (if whole-line
-                ;; this one is easy, just use the built in function
-                (perform-replace regex replacement confirm t nil nil nil beg end)
-              (if confirm
-                  (progn
-                    ;; this one is more difficult, we have to do the
-                    ;; highlighting and questioning on our own
-                    (overlay-put overlay 'face
-                                 (if (facep 'isearch)
-                                     'isearch 'region))
-                    (map-y-or-n-p #'(lambda (x)
-                                      (set-match-data x)
-                                      (move-overlay overlay (match-beginning 0) (match-end 0))
-                                      (concat "Query replacing "
-                                              (match-string 0)
-                                              " with "
-                                              (match-substitute-replacement replacement case-fold-search)
-                                              ": "))
-                                  #'(lambda (x)
-                                      (set-match-data x)
-                                      (replace-match replacement case-fold-search)
-                                      (incf nreplaced)
-                                      (setq last-point (point)))
-                                  #'(lambda ()
-                                      (let ((end (save-excursion
-                                                   (goto-line last-line)
-                                                   (line-end-position))))
-                                        (goto-line next-line)
-                                        (beginning-of-line)
-                                        (when (and (> end (point))
-                                                   (re-search-forward regex end t nil))
-                                          (setq last-point (point))
-                                          (setq next-line (1+ (line-number-at-pos (point))))
-                                          (match-data))))))
+           (evil-ex-substitute-regex (evil-ex-pattern-regex pattern)))
+      (let ((case-replace (eq 'insensitive (evil-ex-pattern-case-fold pattern))))
+        (if whole-line
+            ;; this one is easy, just use the built in function
+            (perform-replace evil-ex-substitute-regex
+                             evil-ex-substitute-replacement
+                             confirm
+                             t nil nil nil
+                             beg end)
+          (let ((evil-ex-substitute-nreplaced 0)
+                (evil-ex-substitute-next-line (line-number-at-pos beg))
+                (evil-ex-substitute-last-line (line-number-at-pos end))
+                (evil-ex-substitute-last-point (point)))
+            (if confirm
+                (let ((evil-ex-substitute-overlay (make-overlay (point) (point)))
+                      (evil-ex-substitute-hl (evil-ex-make-hl 'evil-ex-substitute)))
+                  (evil-ex-hl-change 'evil-ex-substitute pattern)
+                  (unwind-protect
+                      ;; this one is more difficult, we have to do the
+                      ;; highlighting and questioning on our own
+                      (overlay-put evil-ex-substitute-overlay 'face 'isearch)
+                      (overlay-put evil-ex-substitute-overlay 'priority 1001)
+                      (map-y-or-n-p #'(lambda (x)
+                                        (set-match-data x)
+                                        (move-overlay evil-ex-substitute-overlay
+                                                      (match-beginning 0)
+                                                      (match-end 0))
+                                        (concat "Query replacing "
+                                                (match-string 0)
+                                                " with "
+                                                (match-substitute-replacement evil-ex-substitute-replacement
+                                                                              case-replace)
+                                                ": "))
+                                    #'(lambda (x)
+                                        (set-match-data x)
+                                        (replace-match evil-ex-substitute-replacement case-replace)
+                                        (setq evil-ex-substitute-last-point (point))
+                                        (incf evil-ex-substitute-nreplaced)
+                                        (evil-ex-hl-set-region 'evil-ex-substitute
+                                                               (save-excursion
+                                                                 (forward-line)
+                                                                 (point))
+                                                               (evil-ex-hl-get-max 'evil-ex-substitute)))
+                                    #'(lambda ()
+                                        (goto-char (point-min))
+                                        (forward-line (1- evil-ex-substitute-next-line))
+                                        (when (and (re-search-forward evil-ex-substitute-regex nil t nil)
+                                                   (<= (line-number-at-pos (match-end 0))
+                                                       evil-ex-substitute-last-line))
+                                          (goto-char (match-beginning 0))
+                                          (setq evil-ex-substitute-next-line
+                                                (1+ (line-number-at-pos (point))))
+                                          (match-data))))
+                      (evil-ex-delete-hl 'evil-ex-substitute)
+                      (delete-overlay evil-ex-substitute-overlay)))
 
-                ;; just replace the first occurences per line
-                ;; without highlighting and asking
-                (goto-line first-line)
-                (while (and (<= (line-number-at-pos (point)) last-line)
-                            (re-search-forward regex (save-excursion
-                                                       (goto-line last-line)
-                                                       (line-end-position))
-                                               t nil))
-                  (incf nreplaced)
-                  (replace-match replacement)
-                  (setq last-point (point))
-                  (forward-line)
-                  (beginning-of-line)))
+              ;; just replace the first occurences per line
+              ;; without highlighting and asking
+              (goto-char (point-min))
+              (forward-line (1- evil-ex-substitute-next-line))
+              (while (and (re-search-forward evil-ex-substitute-regex nil t nil)
+                          (<= (line-number-at-pos (match-beginning 0)) evil-ex-substitute-last-line))
+                (incf evil-ex-substitute-nreplaced)
+                (replace-match evil-ex-substitute-replacement case-replace)
+                (setq evil-ex-substitute-last-point (point))
+                (forward-line)))
 
-              (goto-char last-point)
-              (if (= nreplaced 1)
-                  (message "Replaced 1 occurence")
-                (message "Replaced %d occurences" nreplaced)))
+            (goto-char evil-ex-substitute-last-point)
 
-          ;; clean-up the overlay
-          (delete-overlay overlay))))))
+            (if (= evil-ex-substitute-nreplaced 1)
+                (message "Replaced 1 occurence")
+              (message "Replaced %d occurences" evil-ex-substitute-nreplaced))))))))
 
 
 (defun evil-ex-parse-substitute (text)
