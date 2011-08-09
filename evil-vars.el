@@ -1,5 +1,25 @@
 ;;;; Settings and variables
 
+;;; Setters
+
+(defun evil-set-toggle-key (key)
+  "Set `evil-toggle-key' to KEY.
+KEY must be readable by `read-kbd-macro'."
+  (let ((old-key (read-kbd-macro (if (boundp 'evil-toggle-key)
+                                     evil-toggle-key
+                                   "C-z")))
+        (key (read-kbd-macro key)))
+    (when (and (boundp 'evil-motion-state-map)
+               (keymapp evil-motion-state-map))
+      (define-key evil-motion-state-map key 'evil-emacs-state)
+      (define-key evil-motion-state-map old-key nil))
+    (when (and (boundp 'evil-emacs-state-map)
+               (keymapp evil-emacs-state-map))
+      (define-key evil-emacs-state-map key 'evil-exit-emacs-state)
+      (define-key evil-emacs-state-map old-key nil))))
+
+;;; Customization group
+
 (defgroup evil nil
   "Extensible vi layer."
   :group 'emulations
@@ -100,22 +120,8 @@ Must be readable by `read-kbd-macro'. For example: \"C-z\"."
   :type 'string
   :group 'evil
   :set (lambda (sym value)
-         (let ((old-value (if (boundp 'evil-toggle-key)
-                              evil-toggle-key
-                            "C-z")))
-           (when (and (boundp 'evil-motion-state-map)
-                      (keymapp evil-motion-state-map))
-             (define-key evil-motion-state-map
-               (read-kbd-macro value) 'evil-emacs-state)
-             (define-key evil-motion-state-map
-               (read-kbd-macro old-value) nil))
-           (when (and (boundp 'evil-emacs-state-map)
-                      (keymapp evil-emacs-state-map))
-             (define-key evil-emacs-state-map
-               (read-kbd-macro value) 'evil-exit-emacs-state)
-             (define-key evil-emacs-state-map
-               (read-kbd-macro old-value) nil))
-           (set-default sym value))))
+         (evil-set-toggle-key value)
+         (set-default sym value)))
 
 (defcustom evil-default-state 'normal
   "The default state.
