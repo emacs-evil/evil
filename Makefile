@@ -1,17 +1,19 @@
 SHELL = /bin/bash
 EMACS = emacs
-FILES = evil*.el
+FILES = $(filter-out evil-tests.el,$(filter-out evil-pkg.el,$(wildcard evil*.el)))
 ELPAPKG = evil-`sed -n '3s/.*"\(.*\)".*/\1/p' evil-pkg.el`
 TAG =
+
+ELCFILES = $(FILES:.el=.elc)
 
 .PHONY: all compile compile-batch clean tests test emacs term terminal indent elpa version
 
 # Byte-compile Evil.
 all: compile
-compile: clean
-	for f in ${FILES}; do \
-  $(EMACS) --batch -Q -L . -L lib -f batch-byte-compile $$f; \
-done
+compile: $(ELCFILES)
+
+$(ELCFILES): %.elc: %.el
+	$(EMACS) --batch -Q -L . -L lib -f batch-byte-compile $<
 
 # Byte-compile all files in one batch. This is faster than
 # compiling each file in isolation, but also less stringent.
@@ -76,8 +78,7 @@ indent: clean
 elpa:
 	rm -rf ${ELPAPKG}
 	mkdir ${ELPAPKG}
-	cp ${FILES} ${ELPAPKG}
-	rm ${ELPAPKG}/evil-tests.el
+	cp $(FILES) evil-pkg.el ${ELPAPKG}
 	tar cf ${ELPAPKG}.tar ${ELPAPKG}
 	rm -rf ${ELPAPKG}
 
