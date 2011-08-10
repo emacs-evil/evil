@@ -982,7 +982,7 @@ The search matches the COUNT-th occurrence of the word."
                        repl)
     (overlay-put overlay 'after-string repl)))
 
-(evil-define-operator evil-substitute (beg end type substitution)
+(evil-define-operator evil-ex-substitute (beg end type substitution)
   "The VIM substitutde command: [range]s/pattern/replacement/flags"
   :repeat nil
   :jump t

@@ -361,7 +361,7 @@
 (evil-ex-define-cmd "xa" "xall")
 (evil-ex-define-cmd "bdelete" 'evil-delete-buffer)
 (evil-ex-define-cmd "bd" "bdelete")
-(evil-ex-define-cmd "substitute" 'evil-substitute)
+(evil-ex-define-cmd "substitute" 'evil-ex-substitute)
 (evil-ex-define-cmd "s" "substitute")
 (evil-ex-define-cmd "marks" 'evil-show-marks)
 (evil-ex-define-cmd "jumps" 'evil-show-jumps)
