@@ -992,7 +992,9 @@ The search matches the COUNT-th occurrence of the word."
 
 (defun evil-ex-pattern-update-ex-info (result)
   "Updates the ex-info string."
-  (if (stringp result) (evil-ex-message result)))
+  (with-selected-window (minibuffer-window)
+    (with-current-buffer (window-buffer (minibuffer-window))
+      (if (stringp result) (evil-ex-message result)))))
 
 (defun evil-ex-pattern-update-replacement (overlay)
   "Updates the replacement display."
