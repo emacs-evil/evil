@@ -1048,41 +1048,42 @@ The search matches the COUNT-th occurrence of the word."
                   (unwind-protect
                       ;; this one is more difficult, we have to do the
                       ;; highlighting and questioning on our own
-                      (overlay-put evil-ex-substitute-overlay 'face 'isearch)
-                      (overlay-put evil-ex-substitute-overlay 'priority 1001)
-                      (map-y-or-n-p #'(lambda (x)
-                                        (set-match-data x)
-                                        (move-overlay evil-ex-substitute-overlay
-                                                      (match-beginning 0)
-                                                      (match-end 0))
-                                        (concat "Query replacing "
-                                                (match-string 0)
-                                                " with "
-                                                (match-substitute-replacement evil-ex-substitute-replacement
-                                                                              case-replace)
-                                                ": "))
-                                    #'(lambda (x)
-                                        (set-match-data x)
-                                        (replace-match evil-ex-substitute-replacement case-replace)
-                                        (setq evil-ex-substitute-last-point (point))
-                                        (incf evil-ex-substitute-nreplaced)
-                                        (evil-ex-hl-set-region 'evil-ex-substitute
-                                                               (save-excursion
-                                                                 (forward-line)
-                                                                 (point))
-                                                               (evil-ex-hl-get-max 'evil-ex-substitute)))
-                                    #'(lambda ()
-                                        (goto-char (point-min))
-                                        (forward-line (1- evil-ex-substitute-next-line))
-                                        (when (and (re-search-forward evil-ex-substitute-regex nil t nil)
-                                                   (<= (line-number-at-pos (match-end 0))
-                                                       evil-ex-substitute-last-line))
-                                          (goto-char (match-beginning 0))
-                                          (setq evil-ex-substitute-next-line
-                                                (1+ (line-number-at-pos (point))))
-                                          (match-data))))
-                      (evil-ex-delete-hl 'evil-ex-substitute)
-                      (delete-overlay evil-ex-substitute-overlay)))
+                      (progn
+                        (overlay-put evil-ex-substitute-overlay 'face 'isearch)
+                        (overlay-put evil-ex-substitute-overlay 'priority 1001)
+                        (map-y-or-n-p #'(lambda (x)
+                                          (set-match-data x)
+                                          (move-overlay evil-ex-substitute-overlay
+                                                        (match-beginning 0)
+                                                        (match-end 0))
+                                          (concat "Query replacing "
+                                                  (match-string 0)
+                                                  " with "
+                                                  (match-substitute-replacement evil-ex-substitute-replacement
+                                                                                case-replace)
+                                                  ": "))
+                                      #'(lambda (x)
+                                          (set-match-data x)
+                                          (replace-match evil-ex-substitute-replacement case-replace)
+                                          (setq evil-ex-substitute-last-point (point))
+                                          (incf evil-ex-substitute-nreplaced)
+                                          (evil-ex-hl-set-region 'evil-ex-substitute
+                                                                 (save-excursion
+                                                                   (forward-line)
+                                                                   (point))
+                                                                 (evil-ex-hl-get-max 'evil-ex-substitute)))
+                                      #'(lambda ()
+                                          (goto-char (point-min))
+                                          (forward-line (1- evil-ex-substitute-next-line))
+                                          (when (and (re-search-forward evil-ex-substitute-regex nil t nil)
+                                                     (<= (line-number-at-pos (match-end 0))
+                                                         evil-ex-substitute-last-line))
+                                            (goto-char (match-beginning 0))
+                                            (setq evil-ex-substitute-next-line
+                                                  (1+ (line-number-at-pos (point))))
+                                            (match-data)))))
+                    (evil-ex-delete-hl 'evil-ex-substitute)
+                    (delete-overlay evil-ex-substitute-overlay)))
 
               ;; just replace the first occurences per line
               ;; without highlighting and asking
