@@ -10,7 +10,9 @@ ELCFILES = $(FILES:.el=.elc)
 
 # Byte-compile Evil.
 all: compile
-compile: $(ELCFILES)
+compile: .depend $(ELCFILES)
+
+-include .depend
 
 $(ELCFILES): %.elc: %.el
 	$(EMACS) --batch -Q -L . -L lib -f batch-byte-compile $<
@@ -20,11 +22,18 @@ $(ELCFILES): %.elc: %.el
 compile-batch: clean
 	$(EMACS) --batch -Q -L . -L lib -f batch-byte-compile ${FILES}
 
+.depend: $(FILES)
+	rm -f .depend
+	for f in $(FILES); do \
+	    sed -n "s/(require '\(evil-.*\))/$${f}c: \1.el/p" $$f >> .depend;\
+	done
+
 # Delete byte-compiled files etc.
 clean:
 	rm -f *~
 	rm -f \#*\#
 	rm -f *.elc
+	rm -f .depend
 
 # Run tests.
 # The TAG variable may specify a test tag or a test name:
