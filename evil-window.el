@@ -325,32 +325,29 @@ top-left."
     (evil-window-top-left)
     (other-window (1- count))))
 
-;; (defun evil-window-new (count (argument:file file) nonrepeatable)
-;;   "Splits the current window horizontally and opens a new buffer or edits a certain `file'."
-;;   (split-window (selected-window) count)
-;;   (if file
-;;       (evil-cmd-edit :argument file)
-;;     (let ((buffer (generate-new-buffer "*new*")))
-;;       (set-window-buffer (selected-window) buffer)
-;;       (with-current-buffer buffer (normal-mode)))))
-(evil-define-command evil-window-new (count)
+(evil-define-command evil-window-new (count file)
   "Splits the current window horizontally and opens a new buffer or edits a certain `file'."
-  (interactive "P")
+  (interactive "P<f>")
   :repeat nil
   (split-window (selected-window) count)
-  (let ((buffer (generate-new-buffer "*new*")))
-    (set-window-buffer (selected-window) buffer)
-    (with-current-buffer buffer
-      (evil-normal-state))))
+  (if file
+      (evil-edit file)
+    (let ((buffer (generate-new-buffer "*new*")))
+      (set-window-buffer (selected-window) buffer)
+      (with-current-buffer buffer
+        (evil-normal-state)))))
 
-;; (defun evil-window-vnew (count (argument:file file) nonrepeatable)
-;;   "Splits the current window vertically and opens a new buffer name or edits a certain `file'."
-;;   (split-window (selected-window) count t)
-;;   (if file
-;;       (evil-cmd-edit :argument file)
-;;     (let ((buffer (generate-new-buffer "*new*")))
-;;       (set-window-buffer (selected-window) buffer)
-;;       (with-current-buffer buffer (normal-mode)))))
+(evil-define-command evil-window-vnew (count file)
+  "Splits the current window vertically and opens a new buffer name or edits a certain `file'."
+  (interactive "P<f>")
+  :repeat nil
+  (split-window (selected-window) count t)
+  (if file
+      (evil-edit file)
+    (let ((buffer (generate-new-buffer "*new*")))
+      (set-window-buffer (selected-window) buffer)
+      (with-current-buffer buffer
+        (evil-normal-state)))))
 
 (evil-define-command evil-window-increase-height (count)
   "Increase current window height by COUNT."
