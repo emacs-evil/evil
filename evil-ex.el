@@ -32,9 +32,9 @@
                            [&optional ("interactive" interactive)]
                            def-body)))
   (let ((name (intern (concat "evil-ex-argument-handler-" (symbol-name arg-type)))))
-  `(progn
-     (defun ,name ,args ,@body)
-     (evil-add-to-alist 'evil-ex-arg-types-alist ',arg-type ',name))))
+    `(progn
+       (defun ,name ,args ,@body)
+       (evil-add-to-alist 'evil-ex-arg-types-alist ',arg-type ',name))))
 
 (evil-define-interactive-code "<f>" (list evil-ex-current-arg) :ex-arg file)
 (evil-define-interactive-code "<b>" (list evil-ex-current-arg) :ex-arg buffer)
@@ -247,7 +247,6 @@ FORCE is non-nil if and only if an exclamation followed the command."
              ((listp result) (if flag result (mapcar #'(lambda (x) (concat begin x)) result)))
              (t (error "Completion returned unexpected value."))))))))))
 
-
 (defun evil-ex-complete-command (cmd force predicate flag)
   "Called to complete a command."
   (let ((has-force #'(lambda (x)
@@ -266,22 +265,22 @@ FORCE is non-nil if and only if an exclamation followed the command."
          ((eq flag 'lambda)
           (test-completion cmd evil-ex-commands pred)))))
      (t
-        (cond
-         ((eq flag nil)
-          (let ((result (try-completion cmd evil-ex-commands predicate)))
-            (if (and (eq result t) (funcall has-force cmd))
-                cmd
-              result)))
-         ((eq flag t)
-          (let ((result (all-completions cmd evil-ex-commands predicate))
-                new-result)
-            (mapc #'(lambda (x)
-                      (push x new-result)
-                      (when (funcall has-force cmd) (push (concat x "!") new-result)))
-                  result)
-            new-result))
-         ((eq flag 'lambda)
-          (test-completion cmd evil-ex-commands predicate)))))))
+      (cond
+       ((eq flag nil)
+        (let ((result (try-completion cmd evil-ex-commands predicate)))
+          (if (and (eq result t) (funcall has-force cmd))
+              cmd
+            result)))
+       ((eq flag t)
+        (let ((result (all-completions cmd evil-ex-commands predicate))
+              new-result)
+          (mapc #'(lambda (x)
+                    (push x new-result)
+                    (when (funcall has-force cmd) (push (concat x "!") new-result)))
+                result)
+          new-result))
+       ((eq flag 'lambda)
+        (test-completion cmd evil-ex-commands predicate)))))))
 
 (defun evil-ex-complete-argument (cmd arg predicate flag)
   "Called to complete the argument of a command.
@@ -300,7 +299,6 @@ arguments for programmable completion."
          ((null flag) nil)
          ((eq flag t) (list arg))
          ((eq flag 'lambda) t))))))
-
 
 (evil-ex-define-argument-type file (flag &rest args)
   "Handles a file argument."
@@ -328,7 +326,6 @@ arguments for programmable completion."
            ((eq 'lambda flag)
             (eq (file-name-completion fname dir) t))))))))
 
-
 (evil-ex-define-argument-type buffer (flag &rest args)
   "Called to complete a buffer name argument."
   (when (eq flag 'complete)
@@ -344,7 +341,6 @@ arguments for programmable completion."
             (all-completions arg buffers predicate))
            ((eq 'lambda flag)
             (test-completion arg buffers predicate))))))))
-
 
 (defun evil-ex-update (beg end len)
   "Updates ex-variable in ex-mode when the buffer content changes."
@@ -394,9 +390,9 @@ arguments for programmable completion."
 (defun evil-ex-binding (command)
   "Returns the final binding of COMMAND."
   (let ((cmd (assoc command evil-ex-commands)))
-      (while (stringp (cdr-safe cmd))
-        (setq cmd (assoc (cdr cmd) evil-ex-commands)))
-      (and cmd (cdr cmd))))
+    (while (stringp (cdr-safe cmd))
+      (setq cmd (assoc (cdr cmd) evil-ex-commands)))
+    (and cmd (cdr cmd))))
 
 (defun evil-ex-completed-binding (command)
   "Returns the final binding of the completion of COMMAND."
@@ -462,7 +458,7 @@ count) in which case this function returns nil."
             ((eq base nil) (line-number-at-pos))
             ((eq base 'abs) (cdr base))
 
-             ;; TODO: (1- ...) may be wrong if the match is the empty string
+            ;; TODO: (1- ...) may be wrong if the match is the empty string
             ((eq base 're-fwd)
              (save-excursion
                (beginning-of-line 2)

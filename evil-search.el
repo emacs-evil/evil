@@ -33,7 +33,6 @@ If MODULE is 'evil-search the Evil's own interactive search module is used."
   :group 'evil
   :set 'evil-select-search-module)
 
-
 (evil-define-motion evil-search-forward ()
   (format "Search forward for user-entered text.
 Searches for regular expression if `evil-regexp-search' is t.%s"
@@ -353,8 +352,6 @@ Returns nil if nothing is found."
   (let (evil-search-wrap)
     ad-do-it))
 
-
-
 ;;; Ex-Searching
 
 ;; A pattern.
@@ -491,7 +488,6 @@ will be case-insensitive."
   "Sets the list of active overlays of the highlight HL to OVERLAYS."
   (aset hl 8 overlays))
 
-
 (defun evil-ex-delete-hl (name)
   "Removes the highlighting object with a certain `name'."
   (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
@@ -504,11 +500,9 @@ will be case-insensitive."
       (remove-hook 'window-scroll-functions #'evil-ex-hl-update-highlights-scroll t)
       (remove-hook 'window-size-change-functions #'evil-ex-hl-update-highlights-resize))))
 
-
 (defun evil-ex-hl-active-p (name)
   "Returns t iff the highlight with a certain name is active."
   (and (assoc name evil-ex-active-highlights-alist) t))
-
 
 (defun evil-ex-hl-change (name new-pattern)
   "Sets the regular expression of the highlighting object with
@@ -521,7 +515,6 @@ name `name' to `new-regex'."
                                 new-pattern))
       (evil-ex-hl-idle-update))))
 
-
 (defun evil-ex-hl-set-region (name beg end &optional type)
   (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
     (when hl
@@ -532,7 +525,6 @@ name `name' to `new-regex'."
 (defun evil-ex-hl-get-max (name)
   (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
     (and hl (evil-ex-hl-max hl))))
-
 
 (defun evil-ex-hl-update-highlights ()
   "Updates the overlays of all active highlights."
@@ -612,7 +604,6 @@ name `name' to `new-regex'."
       ('backward (re-search-backward (evil-ex-pattern-regex pattern) nil t))
       (t (error "Unknown search direction: %s" direction)))))
 
-
 (defun evil-ex-hl-idle-update ()
   "Triggers the timer to update the highlights in the current buffer."
   (when (and evil-ex-interactive-search-highlight
@@ -624,19 +615,16 @@ name `name' to `new-regex'."
                        #'evil-ex-hl-do-update-highlight
                        (current-buffer)))))
 
-
 (defun evil-ex-hl-do-update-highlight (&optional buffer)
   "Timer function, updating the highlights."
   (with-current-buffer buffer
     (evil-ex-hl-update-highlights))
   (setq evil-ex-hl-update-timer nil))
 
-
 (defun evil-ex-hl-update-highlights-scroll (win begin)
   "Update highlights after scrolling in some window."
   (with-current-buffer (window-buffer win)
     (evil-ex-hl-idle-update)))
-
 
 (defun evil-ex-hl-update-highlights-resize (frame)
   "Updates highlights after resizing a window."
@@ -697,7 +685,6 @@ name `name' to `new-regex'."
           (setq isearch-message "Wrapped"))
       (setq isearch-message isearch-error))))
 
-
 (defun evil-ex-search-next-pattern ()
   "Searches the next occurrence w.r.t. actual search data,
 possibly wrapping and eob or bob."
@@ -751,10 +738,10 @@ possibly wrapping and eob or bob."
                               evil-ex-search-match-beg
                               evil-ex-search-match-end)
               (setq evil-ex-search-overlay (make-overlay evil-ex-search-match-beg evil-ex-search-match-end))
-            (overlay-put evil-ex-search-overlay 'priority 1001)
-            (overlay-put evil-ex-search-overlay 'face 'evil-ex-search))))
-      (when evil-ex-search-highlight-all
-        (evil-ex-hl-change 'evil-ex-search (and isearch-success evil-ex-search-pattern))))))
+              (overlay-put evil-ex-search-overlay 'priority 1001)
+              (overlay-put evil-ex-search-overlay 'face 'evil-ex-search))))
+        (when evil-ex-search-highlight-all
+          (evil-ex-hl-change 'evil-ex-search (and isearch-success evil-ex-search-pattern))))))
   (evil-ex-message isearch-message))
 
 (defun evil-ex-search-start-session ()
@@ -794,17 +781,16 @@ possibly wrapping and eob or bob."
                               t))
   (with-current-buffer evil-ex-current-buffer
     (with-selected-window (minibuffer-selected-window)
-        (goto-char evil-ex-search-start-point)
-        (save-excursion
-          (dotimes (i (or evil-ex-search-count 1))
-            (if (eq evil-ex-search-direction 'backward)
-                (backward-char)
-              (forward-char))
-            (evil-ex-find-next)
-            (when evil-ex-search-match-beg
-              (goto-char evil-ex-search-match-beg))))))
+      (goto-char evil-ex-search-start-point)
+      (save-excursion
+        (dotimes (i (or evil-ex-search-count 1))
+          (if (eq evil-ex-search-direction 'backward)
+              (backward-char)
+            (forward-char))
+          (evil-ex-find-next)
+          (when evil-ex-search-match-beg
+            (goto-char evil-ex-search-match-beg))))))
   (evil-ex-search-update))
-
 
 (defun evil-ex-search-exit ()
   "Exits interactive search, lazy highlighting keeps active."
@@ -849,7 +835,6 @@ possibly wrapping and eob or bob."
        (goto-char evil-ex-search-start-point)
        (signal (car err) (cdr err))))))
 
-
 (evil-define-motion evil-ex-search-next (count)
   "Goes to the next occurrence."
   :jump t
@@ -861,12 +846,12 @@ possibly wrapping and eob or bob."
       (forward-char))
     (evil-ex-find-next)
     (if isearch-success
-       (progn
-         (when (and evil-ex-search-highlight-all
-                    (not (evil-ex-hl-active-p 'evil-ex-search)))
-           (evil-ex-make-hl 'evil-ex-search)
-           (evil-ex-hl-change 'evil-ex-search evil-ex-search-pattern))
-         (goto-char evil-ex-search-match-beg))
+        (progn
+          (when (and evil-ex-search-highlight-all
+                     (not (evil-ex-hl-active-p 'evil-ex-search)))
+            (evil-ex-make-hl 'evil-ex-search)
+            (evil-ex-hl-change 'evil-ex-search evil-ex-search-pattern))
+          (goto-char evil-ex-search-match-beg))
       (goto-char evil-ex-search-start-point))
     (when (or isearch-error isearch-wrapped) (ding))
     (when isearch-message
@@ -892,7 +877,6 @@ possibly wrapping and eob or bob."
   :jump t
   (evil-ex-start-search 'backward count))
 
-
 (defun evil-ex-start-symbol-search (unbounded direction count)
   "Searches for the symbol under point.
 
@@ -904,21 +888,20 @@ The second argument DIRECTION should be either 'forward or
 
 The search matches the COUNT-th occurrence of the word."
   (let ((string (evil-find-symbol (eq direction 'forward))))
-      (if (null string)
-          (error "No symbol under point")
-        (setq evil-ex-search-count count
-              evil-ex-search-pattern (evil-ex-make-pattern
-                                      (if unbounded
-                                          (regexp-quote (match-string 0))
-                                        (concat "\\_<" (regexp-quote (match-string 0)) "\\_>"))
-                                      (cond
-                                       ((memq evil-ex-search-case '(sensitive smart)) 'sensitive)
-                                       ((eq evil-ex-search-case 'insensitive) 'insensitive))
-                                      t)
-              evil-ex-search-direction direction)
-        (evil-ex-delete-hl 'evil-ex-search)
-        (evil-ex-search-next count))))
-
+    (if (null string)
+        (error "No symbol under point")
+      (setq evil-ex-search-count count
+            evil-ex-search-pattern (evil-ex-make-pattern
+                                    (if unbounded
+                                        (regexp-quote (match-string 0))
+                                      (concat "\\_<" (regexp-quote (match-string 0)) "\\_>"))
+                                    (cond
+                                     ((memq evil-ex-search-case '(sensitive smart)) 'sensitive)
+                                     ((eq evil-ex-search-case 'insensitive) 'insensitive))
+                                    t)
+            evil-ex-search-direction direction)
+      (evil-ex-delete-hl 'evil-ex-search)
+      (evil-ex-search-next count))))
 
 (evil-define-motion evil-ex-search-symbol-forward (count)
   "Searches the next occurence of word under the cursor."
@@ -926,13 +909,11 @@ The search matches the COUNT-th occurrence of the word."
   :type exclusive
   (evil-ex-start-symbol-search nil 'forward count))
 
-
 (evil-define-motion evil-ex-search-word-backward (count)
   "Searches the next occurence of word under the cursor."
   :jump t
   :type exclusive
   (evil-ex-start-symbol-search nil 'backward count))
-
 
 (evil-define-motion evil-ex-search-unbounded-symbol-forward (count)
   "Searches the next occurence of word under the cursor."
@@ -940,13 +921,11 @@ The search matches the COUNT-th occurrence of the word."
   :type exclusive
   (evil-ex-start-symbol-search t 'forward count))
 
-
 (evil-define-motion evil-ex-search-unbounded-symbol-backward (count)
   "Searches the next occurence of word under the cursor."
   :jump t
   :type exclusive
   (evil-ex-start-symbol-search t 'backward count))
-
 
 ;; Substitute
 
@@ -967,28 +946,27 @@ The search matches the COUNT-th occurrence of the word."
        ((eq flag 'stop)
         (evil-ex-delete-hl 'evil-ex-substitute))))
 
-      (when (and (eq flag 'update) evil-ex-substitute-highlight-all)
-        (let* ((result (evil-ex-parse-substitute (or (car args) "")))
-               (pattern (pop result))
-               (replacement (pop result))
-               (flags (append (pop result) nil)))
+    (when (and (eq flag 'update) evil-ex-substitute-highlight-all)
+      (let* ((result (evil-ex-parse-substitute (or (car args) "")))
+             (pattern (pop result))
+             (replacement (pop result))
+             (flags (append (pop result) nil)))
 
-          (setq evil-ex-substitute-pattern
-                (and pattern
-                     (evil-ex-make-pattern pattern
-                                           (or (and (memq ?i flags) 'insensitive)
-                                               (and (memq ?I flags) 'sensitive)
-                                               evil-ex-substitute-case
-                                               evil-ex-search-case)
-                                           (memq ?g flags)))
-                evil-ex-substitute-replacement replacement)
-          (apply #'evil-ex-hl-set-region
-                 'evil-ex-substitute
-                 (or (evil-ex-range)
-                     (list (line-beginning-position)
-                           (line-end-position))))
-          (evil-ex-hl-change 'evil-ex-substitute evil-ex-substitute-pattern)))))
-
+        (setq evil-ex-substitute-pattern
+              (and pattern
+                   (evil-ex-make-pattern pattern
+                                         (or (and (memq ?i flags) 'insensitive)
+                                             (and (memq ?I flags) 'sensitive)
+                                             evil-ex-substitute-case
+                                             evil-ex-search-case)
+                                         (memq ?g flags)))
+              evil-ex-substitute-replacement replacement)
+        (apply #'evil-ex-hl-set-region
+               'evil-ex-substitute
+               (or (evil-ex-range)
+                   (list (line-beginning-position)
+                         (line-end-position))))
+        (evil-ex-hl-change 'evil-ex-substitute evil-ex-substitute-pattern)))))
 
 (defun evil-ex-pattern-update-ex-info (result)
   "Updates the ex-info string."
@@ -1003,7 +981,6 @@ The search matches the COUNT-th occurrence of the word."
                        'face 'evil-ex-substitute
                        repl)
     (overlay-put overlay 'after-string repl)))
-
 
 (evil-define-operator evil-substitute (beg end type substitution)
   "The VIM substitutde command: [range]s/pattern/replacement/flags"
@@ -1102,7 +1079,6 @@ The search matches the COUNT-th occurrence of the word."
                 (message "Replaced 1 occurence")
               (message "Replaced %d occurences" evil-ex-substitute-nreplaced))))))))
 
-
 (defun evil-ex-parse-substitute (text)
   (when (string-match "\\`\\s-*/\\(\\(?:[^/]\\|\\\\.\\)+\\)\\(?:/\\(\\(?:[^/]\\|\\\\.\\)*\\)\\(?:/\\([giIc]*\\)\\)?\\)?\\s-*\\'"
                       text)
@@ -1130,8 +1106,6 @@ The search matches the COUNT-th occurrence of the word."
           (incf idx)))
 
       (list pattern (apply #'string (reverse newrepl)) flags))))
-
-
 
 (defun evil-ex-nohighlight ()
   "Disables the active search highlightings."

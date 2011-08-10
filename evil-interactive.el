@@ -121,5 +121,4 @@ passed to `evil-define-command'."
         (setq ilist (append ilist (list istmt)))))
     (cons (evil-cleanup-interactive-form ilist) iattr)))
 
-
 (provide 'evil-interactive)

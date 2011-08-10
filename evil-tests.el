@@ -3727,7 +3727,6 @@ if no previous selection")
       (should-error (evil-extract-count "°"))
       (should-error (evil-extract-count "12°")))))
 
-
 ;;; ex
 
 (ert-deftest evil-test-ex-parse-command ()
@@ -3793,7 +3792,6 @@ if no previous selection")
                  (cons 1 nil)))
   (should (equal (evil-ex-parse-address "5;4+2-7-3+10-cmd arg" 2)
                  (cons 13 (cons 4 1)))))
-
 
 (ert-deftest evil-test-ex-parse-range ()
   "Test `evil-ex-parse-address-range'."

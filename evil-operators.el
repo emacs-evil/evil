@@ -868,7 +868,6 @@ but doesn't insert or remove any spaces."
   :type line
   (indent-rigidly beg end evil-shift-width))
 
-
 ;; Ex operators
 (evil-define-operator evil-write (beg end type file-name &optional force)
   "Saves the current buffer or the region from BEG to END to FILE-NAME.

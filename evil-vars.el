@@ -287,11 +287,10 @@ highlighted."
   :group 'evil)
 
 (defface evil-ex-substitute '(( ((supports :underline))
-                            :underline t
-                            :foreground "red"))
+                                :underline t
+                                :foreground "red"))
   "Face for interactive replacement text."
   :group 'evil)
-
 
 ;;; Variables
 
@@ -590,7 +589,6 @@ They are reused to prevent flicker.")
 (defvar evil-ex-arg-types-alist nil
   "An alist of defined argument handlers.")
 
-
 ;; Searching
 (defvar evil-ex-search-history nil
   "The history for the search command.")
@@ -634,8 +632,6 @@ They are reused to prevent flicker.")
 (defvar evil-ex-search-keymap (make-sparse-keymap)
   "Keymap used in ex-search-mode.")
 (set-keymap-parent evil-ex-search-keymap minibuffer-local-map)
-
-
 
 (defconst evil-version "0.1"
   "The current version of Evil")

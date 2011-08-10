@@ -487,7 +487,6 @@ Translates it according to the input method."
           (aref (read-key-sequence prompt nil t) 0))
       (use-global-map old-global-map))))
 
-
 ;;; Command properties
 
 (defmacro evil-define-command (command &rest body)
@@ -909,7 +908,6 @@ POS defaults to the current position of point."
      ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>"
       1 font-lock-keyword-face))))
 
-
 ;;; Standard interactive codes
 (evil-define-interactive-code "p" (list (prefix-numeric-value prefix-arg)))
 (evil-define-interactive-code "P" (list prefix-arg))
@@ -931,7 +929,6 @@ POS defaults to the current position of point."
     (cons (1+ prompt-end)
           (cons `(list (read-buffer ,prompt (current-buffer) t))
                 nil))))
-
 
 (provide 'evil-common)
 

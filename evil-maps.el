@@ -302,7 +302,6 @@
 (define-key minibuffer-local-map "\C-x\C-p" 'evil-complete)
 (define-key minibuffer-local-map "\C-x\C-n" 'evil-complete)
 
-
 ;; Ex
 (define-key evil-normal-state-map ":" 'evil-ex-read-command)
 (evil-ex-define-cmd "write" 'evil-write)
