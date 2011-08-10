@@ -3,6 +3,7 @@
 ;; TODO: Emacs 22 completion-boundaries
 
 (require 'evil-common)
+(require 'evil-interactive)
 (require 'evil-vars)
 (require 'evil-visual)
 
@@ -35,6 +36,10 @@
      (defun ,name ,args ,@body)
      (evil-add-to-alist 'evil-ex-arg-types-alist ',arg-type ',name))))
 
+(evil-define-interactive-code "<f>" (list evil-ex-current-arg) :ex-arg file)
+(evil-define-interactive-code "<b>" (list evil-ex-current-arg) :ex-arg buffer)
+(evil-define-interactive-code "<a>" (list evil-ex-current-arg) :ex-arg t)
+(evil-define-interactive-code "<!>" (list evil-ex-current-cmd-force) :ex-force t)
 
 (defun evil-ex-find-symbol (lst symbol)
   "Returns non-nil if LST contains SYMBOL somewhere in a sublist."
