@@ -137,19 +137,33 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
   '(bookmark-bmenu-mode
     bookmark-edit-annotation-mode
     browse-kill-ring-mode
+    cfw:calendar-mode
     compilation-mode
     completion-list-mode
     Custom-mode
     debugger-mode
+    doc-view-mode
     efs-mode
     ert-results-mode
+    gnus-article-mode
+    gnus-browse-mode
     gnus-group-mode
+    gnus-server-mode
     gnus-summary-mode
+    ibuffer-mode
     jde-javadoc-checker-report-mode
+    magit-mode
+    magit-key-mode
+    magit-show-branches-mode
     mh-folder-mode
+    monky-mode
     occur-mode
+    org-agenda-mode
     rcirc-mode
+    reftex-toc-mode
     tar-mode
+    term-mode
+    twittering-mode
     vm-mode
     vm-summary-mode)
   "Modes that should come up in Emacs state."
