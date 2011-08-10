@@ -200,26 +200,40 @@
    (t
     (set-window-buffer win tree))))
 
-;; TODO: window-split, window-new functions may take an file-argument
-;; when called from ex-mode
+(evil-define-command evil-window-split (&optional count file)
+  "Splits the current window horizontally, COUNT lines height, editing a certain `file'."
+  (interactive "P<f>")
+  (let ((new-win (split-window (selected-window) count)))
+    (when file
+      (evil-edit file))))
 
-;; (defun evil-window-split (count (argument:file file) nonrepeatable)
-;;   "Splits the current window horizontally, COUNT lines height, editing a certain `file'."
-;;   (let ((new-win (split-window (selected-window) count)))
-;;     (when file
-;;       (evil-cmd-edit :argument file))))
+(evil-define-command evil-window-vsplit (&optional count file)
+  "Splits the current window vertically, COUNT columns width, editing a certain `file'."
+  (interactive "P<f>")
+  (let ((new-win (split-window (selected-window) count t)))
+    (when file
+      (evil-edit file))))
 
-;; (defun evil-window-vsplit (count (argument:file file) nonrepeatable)
-;;   "Splits the current window vertically, COUNT columns width, editing a certain `file'."
-;;   (let ((new-win (split-window (selected-window) count t)))
-;;     (when file
-;;       (evil-cmd-edit :argument file))))
+(evil-define-command evil-split-buffer (buffer)
+  "Splits window and switches to another buffer."
+  :repeat nil
+  (interactive "<b>")
+  (evil-window-split)
+  (evil-buffer buffer))
 
-;; TODO: the following commands should be unrepeatable:
-;;    * split-window-vertically
-;;    * split-window-horizontally
-;;    * delete-window
-;;    * delete-other-windows
+(evil-define-command evil-split-next-buffer (&optional count)
+  "Splits window and goes to the `count'-th next buffer in the buffer list."
+  :repeat nil
+  (interactive "p")
+  (evil-window-split)
+  (evil-next-buffer count))
+
+(evil-define-command evil-split-prev-buffer (&optional count)
+  "Splits window and goes to the `count'-th prev buffer in the buffer list."
+  :repeat nil
+  (interactive "p")
+  (evil-window-split)
+  (evil-prev-buffer count))
 
 (evil-define-command evil-window-left (count)
   "Move the cursor to new COUNT-th window left of the current one."
@@ -311,32 +325,29 @@ top-left."
     (evil-window-top-left)
     (other-window (1- count))))
 
-;; (defun evil-window-new (count (argument:file file) nonrepeatable)
-;;   "Splits the current window horizontally and opens a new buffer or edits a certain `file'."
-;;   (split-window (selected-window) count)
-;;   (if file
-;;       (evil-cmd-edit :argument file)
-;;     (let ((buffer (generate-new-buffer "*new*")))
-;;       (set-window-buffer (selected-window) buffer)
-;;       (with-current-buffer buffer (normal-mode)))))
-(evil-define-command evil-window-new (count)
+(evil-define-command evil-window-new (count file)
   "Splits the current window horizontally and opens a new buffer or edits a certain `file'."
-  (interactive "P")
+  (interactive "P<f>")
   :repeat nil
   (split-window (selected-window) count)
-  (let ((buffer (generate-new-buffer "*new*")))
-    (set-window-buffer (selected-window) buffer)
-    (with-current-buffer buffer
-      (evil-normal-state))))
+  (if file
+      (evil-edit file)
+    (let ((buffer (generate-new-buffer "*new*")))
+      (set-window-buffer (selected-window) buffer)
+      (with-current-buffer buffer
+        (evil-normal-state)))))
 
-;; (defun evil-window-vnew (count (argument:file file) nonrepeatable)
-;;   "Splits the current window vertically and opens a new buffer name or edits a certain `file'."
-;;   (split-window (selected-window) count t)
-;;   (if file
-;;       (evil-cmd-edit :argument file)
-;;     (let ((buffer (generate-new-buffer "*new*")))
-;;       (set-window-buffer (selected-window) buffer)
-;;       (with-current-buffer buffer (normal-mode)))))
+(evil-define-command evil-window-vnew (count file)
+  "Splits the current window vertically and opens a new buffer name or edits a certain `file'."
+  (interactive "P<f>")
+  :repeat nil
+  (split-window (selected-window) count t)
+  (if file
+      (evil-edit file)
+    (let ((buffer (generate-new-buffer "*new*")))
+      (set-window-buffer (selected-window) buffer)
+      (with-current-buffer buffer
+        (evil-normal-state)))))
 
 (evil-define-command evil-window-increase-height (count)
   "Increase current window height by COUNT."

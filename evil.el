@@ -65,6 +65,7 @@
 (require 'evil-replace)
 (require 'evil-integration)
 (require 'evil-maps)
+(require 'evil-ex)
 
 (provide 'evil)
 

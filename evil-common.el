@@ -1,23 +1,25 @@
 ;;;; Common functions and utilities
 
 (require 'evil-vars)
+(require 'evil-interactive)
 (require 'evil-compatibility)
 
 ;;; List functions
 
-(defun evil-add-to-alist (list-var key val &rest elements)
-  "Add the assocation of KEY and VAL to the value of LIST-VAR.
+(eval-and-compile
+  (defun evil-add-to-alist (list-var key val &rest elements)
+    "Add the assocation of KEY and VAL to the value of LIST-VAR.
 If the list already contains an entry for KEY, update that entry;
 otherwise add at the end of the list."
-  (let ((tail (symbol-value list-var)))
-    (while (and tail (not (equal (car-safe (car-safe tail)) key)))
-      (setq tail (cdr tail)))
-    (if tail
-        (setcar tail (cons key val))
-      (add-to-list list-var (cons key val) t))
-    (if elements
-        (apply 'evil-add-to-alist list-var elements)
-      (symbol-value list-var))))
+    (let ((tail (symbol-value list-var)))
+      (while (and tail (not (equal (car-safe (car-safe tail)) key)))
+        (setq tail (cdr tail)))
+      (if tail
+          (setcar tail (cons key val))
+        (add-to-list list-var (cons key val) t))
+      (if elements
+          (apply 'evil-add-to-alist list-var elements)
+        (symbol-value list-var)))))
 
 ;; custom version of `delete-if'
 (defun evil-filter-list (predicate list &optional pointer)
@@ -515,6 +517,23 @@ Translates it according to the input method."
             arg (pop body))
       (unless nil ; TODO: add keyword check
         (plist-put keys key arg)))
+    ;; collect interactive
+    (when (and body
+               (consp (car body))
+               (eq (car (car body)) 'interactive))
+      (let* ((interactive (pop body))
+             (result (apply #'evil-eval-interactive (cdr interactive)))
+             (form (car result))
+             (attrs (cdr result)))
+        (push (list 'interactive form) body)
+        ;; The next code is a copy of the previous one but does not
+        ;; overwrite properties.
+        (while (keywordp (car-safe attrs))
+          (setq key (pop attrs)
+                arg (pop attrs))
+          (unless (or nil ; TODO: add keyword check
+                      (plist-member keys key))
+            (plist-put keys key arg)))))
     `(progn
        ;; the compiler does not recognize `defun' inside `let'
        ,(when (and command body)
@@ -891,6 +910,28 @@ POS defaults to the current position of point."
       1 font-lock-keyword-face)
      ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>"
       1 font-lock-keyword-face))))
+
+;;; Standard interactive codes
+(evil-define-interactive-code "p" (list (prefix-numeric-value prefix-arg)))
+(evil-define-interactive-code "P" (list prefix-arg))
+(evil-define-interactive-code "<r>" (evil-operator-range))
+
+(evil-define-interactive-code-function "*" (istring pos)
+  (unless (zerop pos)
+    (error "Interactive code * must be at the beginning of the interactive string"))
+  (let ((rest (evil-eval-interactive-string istring (1+ pos))))
+    (cons (length istring)
+          (cons `(if buffer-read-only
+                     (signal 'buffer-read-only nil)
+                   ,(car rest))
+                (cdr rest)))))
+
+(evil-define-interactive-code-function "b" (istring pos)
+  (let* ((prompt-end (or (string-match "\n" istring pos) (length istring)))
+         (prompt (substring istring (1+ pos) prompt-end)))
+    (cons (1+ prompt-end)
+          (cons `(list (read-buffer ,prompt (current-buffer) t))
+                nil))))
 
 (provide 'evil-common)
 

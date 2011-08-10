@@ -4,6 +4,7 @@
 (require 'evil-states)
 (require 'evil-visual)
 (require 'evil-insert)
+(require 'evil-ex)
 
 (require 'rect)
 
@@ -105,8 +106,7 @@
                     ,beg (evil-range-beginning range)
                     ,end (evil-range-end range)
                     ,type (evil-type range)
-                    range (append (evil-range ,beg ,end ,type)
-                                  (progn ,@interactive)))
+                    range (append (evil-range ,beg ,end ,type)))
             (setq orig (point)
                   evil-inhibit-operator-value evil-inhibit-operator)
             (if ,keep-visual
@@ -120,7 +120,8 @@
                     (evil-visual-state-p state))
                 (evil-visual-rotate 'upper-left ,beg ,end ,type)
               (goto-char orig)))
-          range))
+          range)
+        ,@interactive)
        (unwind-protect
            (let ((evil-inhibit-operator evil-inhibit-operator-value))
              (unless (and evil-inhibit-operator
@@ -144,6 +145,10 @@ a predefined type may be specified with TYPE."
         (setq range (evil-range (evil-visual-beginning)
                                 (evil-visual-end)
                                 (evil-visual-type))))
+       ;; Ex mode
+       ((and (evil-ex-state-p)
+             evil-ex-current-range)
+        (setq range (evil-ex-range)))
        ;; active region
        ((region-active-p)
         (setq range (evil-range (region-beginning)
@@ -862,6 +867,121 @@ but doesn't insert or remove any spaces."
   "Shift text to the right."
   :type line
   (indent-rigidly beg end evil-shift-width))
+
+;; Ex operators
+(evil-define-operator evil-write (beg end type file-name &optional force)
+  "Saves the current buffer or the region from BEG to END to FILE-NAME.
+If the argument FORCE is non-nil, the file will be overwritten if
+already existing."
+  :motion mark-whole-buffer
+  :type line
+  :repeat nil
+  (interactive "<f><!>")
+  (when (null file-name)
+    (setq file-name (buffer-file-name))
+    (unless file-name
+      (error "Please specify a file-name for this buffer!")))
+
+  (cond
+   ((and (= beg (point-min)) (= end (point-max))
+         (string= file-name (buffer-file-name)))
+    (save-buffer))
+   ((and (= beg (point-min)) (= end (point-max))
+         (null (buffer-file-name)))
+    (write-file file-name (not force)))
+   (t
+    (write-region beg end file-name nil nil nil (not force)))))
+
+(evil-define-command evil-write-all (force)
+  "Saves all buffers."
+  :repeat nil
+  (interactive "<!>")
+  (save-some-buffers force))
+
+(evil-define-command evil-edit (file)
+  "Visits a certain file."
+  :repeat nil
+  (interactive "<f>")
+  (if file
+      (find-file file)
+    (when (buffer-file-name)
+      (find-file (buffer-file-name)))))
+
+(evil-define-command evil-show-buffers ()
+  "Shows the buffer-list."
+  :repeat nil
+  (interactive)
+  (let (message-truncate-lines message-log-max)
+    (message "%s"
+             (mapconcat #'buffer-name (buffer-list) "\n"))))
+
+(evil-define-command evil-buffer (buffer)
+  "Switches to another buffer."
+  :repeat nil
+  (interactive "<b>")
+  (if buffer
+      (when (or (get-buffer buffer)
+                (y-or-n-p (format "No buffer with name \"%s\" exists. Create new buffer? " buffer)))
+        (switch-to-buffer buffer))
+    (switch-to-buffer (other-buffer))))
+
+(evil-define-command evil-next-buffer (&optional count)
+  "Goes to the `count'-th next buffer in the buffer list."
+  :repeat nil
+  (interactive "p")
+  (dotimes (i (or count 1))
+    (next-buffer)))
+
+(evil-define-command evil-prev-buffer (&optional count)
+  "Goes to the `count'-th prev buffer in the buffer list."
+  :repeat nil
+  (interactive "p")
+  (dotimes (i (or count 1))
+    (previous-buffer)))
+
+(evil-define-command evil-delete-buffer (buffer &optional force)
+  "Deletes a buffer."
+  (interactive "<b><!>")
+  (when force
+    (if buffer
+        (with-current-buffer buffer
+          (set-buffer-modified-p nil))
+      (set-buffer-modified-p nil)))
+  (kill-buffer buffer))
+
+(evil-define-command evil-quit (&optional force)
+  "Closes the current window, exits Emacs if this is the last window."
+  :repeat nil
+  (interactive (list evil-ex-current-cmd-force))
+  (condition-case nil
+      (delete-window)
+    (error
+     (condition-case nil
+         (delete-frame)
+       (error
+        (if force
+            (kill-emacs)
+          (save-buffers-kill-emacs)))))))
+
+(evil-define-command evil-quit-all (&optional force)
+  "Exits Emacs, asking for saving."
+  :repeat nil
+  (interactive "<!>")
+  (if force
+      (kill-emacs)
+    (save-buffers-kill-emacs)))
+
+(evil-define-command evil-save-and-quit ()
+  "Exits Emacs, without saving."
+  (interactive)
+  (save-buffers-kill-emacs 1))
+
+(evil-define-command evil-save-and-close (file &optional force)
+  "Saves the current buffer and closes the window."
+  :repeat nil
+  (interactive "<f><!>")
+  (evil-write file force)
+  (evil-quit))
 
 (provide 'evil-operators)
 

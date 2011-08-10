@@ -259,6 +259,70 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
   :type  '(repeat symbol)
   :group 'evil)
 
+(defface evil-ex-info '(( ((supports :slant))
+                          :slant italic
+                          :foreground "red"))
+  "Face for the info message in ex mode."
+  :group 'evil)
+
+;; Searching
+(defcustom evil-ex-interactive-search-highlight 'all-windows
+  "Determine in which windows the interactive highlighting should be shown."
+  :type '(radio (const :tag "All windows." all-windows)
+                (const :tag "Selected window." selected-window)
+                (const :tag "Disable highlighting." nil))
+  :group 'evil)
+
+(defcustom evil-ex-search-case 'smart
+  "The case behaviour of the search command."
+  :type '(radio (const :tag "Case sensitive." 'sensitive)
+                (const :tag "Case insensitive." 'insensitive)
+                (const :tag "Smart case." 'smart))
+  :group 'evil)
+
+(defcustom evil-ex-substitute-case nil
+  "The case behaviour of the search command."
+  :type '(radio (const :tag "Same as interactive search." nil)
+                (const :tag "Case sensitive." 'sensitive)
+                (const :tag "Case insensitive." 'insensitive)
+                (const :tag "Smart case." 'smart))
+  :group 'evil)
+
+(defcustom evil-ex-search-interactive t
+  "If t search is interactive."
+  :type 'boolean
+  :group 'evil)
+
+(defcustom evil-ex-search-highlight-all t
+  "If t and interactive search is enabled, all matches are
+highlighted."
+  :type 'boolean
+  :group 'evil)
+
+(defcustom evil-ex-substitute-highlight-all t
+  "If t all matches for the substitute pattern are highlighted."
+  :type 'boolean
+  :group 'evil)
+
+(defcustom evil-ex-substitute-interactive-replace t
+  "If t and substitute patterns are highlighted the replacement is shown interactively."
+  :type 'boolean
+  :group 'evil)
+
+(defface evil-ex-search '((t :inherit isearch))
+  "Face for interactive search."
+  :group 'evil)
+
+(defface evil-ex-lazy-highlight '((t :inherit lazy-highlight))
+  "Face for highlighting all matches in interactive search."
+  :group 'evil)
+
+(defface evil-ex-substitute '(( ((supports :underline))
+                                :underline t
+                                :foreground "red"))
+  "Face for interactive replacement text."
+  :group 'evil)
+
 ;;; Variables
 
 (defvar evil-state nil
@@ -512,6 +576,93 @@ They are reused to prevent flicker.")
 
 (defvar evil-window-map (make-sparse-keymap)
   "Keymap for window-related commands.")
+
+;;; ex-mode
+
+(defvar evil-ex-minibuffer nil
+  "The currently active ex minibuffer.")
+
+(defvar evil-ex-current-buffer nil
+  "The buffer from which the current ex-mode has been started.")
+
+(defvar evil-ex-current-cmd nil
+  "The currently parsed command.")
+
+(defvar evil-ex-current-cmd-begin nil
+  "The begin-position of the currently parsed command.")
+
+(defvar evil-ex-current-cmd-end nil
+  "The end-position of the currently parsed command.")
+
+(defvar evil-ex-current-cmd-force nil
+  "The force argument of the currently parsed command.")
+
+(defvar evil-ex-current-arg nil
+  "The currently parsed argument.")
+
+(defvar evil-ex-current-range nil
+  "The currenty parsed range.")
+
+(defvar evil-ex-history nil
+  "History of ex-commands.")
+
+(defvar evil-ex-keymap (make-sparse-keymap)
+  "Keymap used in ex-mode.")
+(set-keymap-parent evil-ex-keymap minibuffer-local-completion-map)
+(define-key evil-ex-keymap (kbd "SPC") #'self-insert-command)
+
+(defvar evil-ex-commands nil
+  "An alist of command-bindings to functions.")
+
+(defvar evil-ex-current-arg-handler nil
+  "Currently active argument handler depending on current command.")
+
+(defvar evil-ex-arg-types-alist nil
+  "An alist of defined argument handlers.")
+
+;; Searching
+(defvar evil-ex-search-history nil
+  "The history for the search command.")
+
+(defvar evil-ex-search-direction nil
+  "The direction of the current search, either 'forward or 'backward.")
+
+(defvar evil-ex-search-count nil
+  "The count if the current search.")
+
+(defvar evil-ex-search-start-point nil
+  "The point where the search started.")
+
+(defvar evil-ex-search-overlay nil
+  "The overlay for the current search result.")
+
+(defvar evil-ex-search-pattern nil
+  "The actual search pattern.")
+
+(defvar evil-ex-search-match-beg nil
+  "The beginning position of the last match.")
+
+(defvar evil-ex-search-match-end nil
+  "The end position of the last match.")
+
+(defvar evil-ex-substitute-pattern nil
+  "The actual replacement.")
+
+(defvar evil-ex-substitute-replacement nil
+  "The actual replacement.")
+
+;; The lazy-highlighting framework.
+(defvar evil-ex-active-highlights-alist nil
+  "An alist of currently active highlights.")
+(make-variable-buffer-local 'evil-ex-active-highlights-alist)
+
+(defvar evil-ex-hl-update-timer nil
+  "Time used for updating highlights.")
+(make-variable-buffer-local 'evil-ex-hl-update-timer)
+
+(defvar evil-ex-search-keymap (make-sparse-keymap)
+  "Keymap used in ex-search-mode.")
+(set-keymap-parent evil-ex-search-keymap minibuffer-local-map)
 
 (defconst evil-version "0.1"
   "The current version of Evil")
