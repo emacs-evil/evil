@@ -214,11 +214,26 @@
     (when file
       (evil-edit file))))
 
-;; TODO: the following commands should be unrepeatable:
-;;    * split-window-vertically
-;;    * split-window-horizontally
-;;    * delete-window
-;;    * delete-other-windows
+(evil-define-command evil-split-buffer (buffer)
+  "Splits window and switches to another buffer."
+  :repeat nil
+  (interactive "<b>")
+  (evil-window-split)
+  (evil-buffer buffer))
+
+(evil-define-command evil-split-next-buffer (&optional count)
+  "Splits window and goes to the `count'-th next buffer in the buffer list."
+  :repeat nil
+  (interactive "p")
+  (evil-window-split)
+  (evil-next-buffer count))
+
+(evil-define-command evil-split-prev-buffer (&optional count)
+  "Splits window and goes to the `count'-th prev buffer in the buffer list."
+  :repeat nil
+  (interactive "p")
+  (evil-window-split)
+  (evil-prev-buffer count))
 
 (evil-define-command evil-window-left (count)
   "Move the cursor to new COUNT-th window left of the current one."
