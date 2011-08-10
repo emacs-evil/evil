@@ -176,8 +176,11 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     eshell-mode
     gud-mode
     inferior-emacs-lisp-mode
+    inferior-python-mode
     internal-ange-ftp-mode
+    prolog-inferior-mode
     shell-mode
+    slime-repl-mode
     wdired-mode)
   "Modes that should come up in Insert state."
   :type  '(repeat symbol)
