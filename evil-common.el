@@ -98,10 +98,10 @@ To concatenate regular lists, see `evil-concat-lists'."
 
 (defun evil-get-property (alist key &optional prop)
   "Return property PROP for KEY in ALIST.
-ALIST is an association list with entries in the form
+ALIST is an association list with entries of the form
 \(KEY . PLIST), where PLIST is a property list.
 If PROP is nil, return all properties for KEY.
-If KEY is nil, return an association list of states
+If KEY is nil, return an association list of keys
 and their PROP values."
   (unless (or (keywordp prop) (null prop))
     (setq prop (intern (format ":%s" prop))))
@@ -121,7 +121,7 @@ and their PROP values."
 
 (defun evil-put-property (alist-var key prop val &rest properties)
   "Set PROP to VAL for KEY in ALIST-VAR.
-ALIST-VAR points to an association list with entries in the form
+ALIST-VAR points to an association list with entries of the form
 \(KEY . PLIST), where PLIST is a property list storing PROP and VAL."
   (set alist-var
        (let* ((alist (symbol-value alist-var))
@@ -133,7 +133,7 @@ ALIST-VAR points to an association list with entries in the form
                  prop (pop properties)
                  val (pop properties)))
          (setq alist (assq-delete-all key alist))
-         (add-to-list 'alist (cons key plist)))))
+         (push (cons key plist) alist))))
 
 (defun evil-state-property (state prop)
   "Return property PROP for STATE."
