@@ -95,6 +95,7 @@ To enable Evil globally, do (evil-mode 1)."
     (evil-local-mode 1)
     (remove-hook 'post-command-hook 'evil-initialize-state t)))
 
+;;;###autoload (autoload 'evil-mode "evil")
 (define-globalized-minor-mode evil-mode
   evil-local-mode evil-initialize)
 
