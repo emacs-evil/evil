@@ -10,7 +10,15 @@ ELCFILES = $(FILES:.el=.elc)
 
 # Byte-compile Evil.
 all: compile
-compile: .depend $(ELCFILES)
+compile: $(ELCFILES)
+
+
+.depend: $(FILES)
+	@echo Compute dependencies
+	@rm -f .depend
+	@for f in $(FILES); do \
+	    sed -n "s/(require '\(evil-.*\))/$${f}c: \1.elc/p" $$f >> .depend;\
+	done
 
 -include .depend
 
@@ -21,12 +29,6 @@ $(ELCFILES): %.elc: %.el
 # compiling each file in isolation, but also less stringent.
 compile-batch: clean
 	$(EMACS) --batch -Q -L . -L lib -f batch-byte-compile ${FILES}
-
-.depend: $(FILES)
-	rm -f .depend
-	for f in $(FILES); do \
-	    sed -n "s/(require '\(evil-.*\))/$${f}c: \1.el/p" $$f >> .depend;\
-	done
 
 # Delete byte-compiled files etc.
 clean:
