@@ -44,6 +44,7 @@
 (define-key evil-normal-state-map "gU" 'evil-upcase)
 (define-key evil-normal-state-map "gv" 'evil-visual-restore)
 (define-key evil-normal-state-map "gf" 'find-file-at-point)
+(define-key evil-normal-state-map "gF" 'evil-find-file-at-point-with-line)
 (define-key evil-normal-state-map "g?" 'evil-rot13)
 (define-key evil-normal-state-map "g~" 'evil-invert-case)
 (define-key evil-normal-state-map "\C-n" 'evil-paste-pop-next)
@@ -130,6 +131,7 @@
 (define-key evil-window-map "\C-w" 'evil-window-next)
 (define-key evil-window-map "\C-W" 'evil-window-prev)
 (define-key evil-window-map "\C-_" 'evil-window-set-height)
+(define-key evil-window-map "\C-f" 'ffap-other-window)
 
 ;;; Motion state
 

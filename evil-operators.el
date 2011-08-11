@@ -983,6 +983,24 @@ already existing."
   (evil-write file force)
   (evil-quit))
 
+(eval-when-compile (require 'ffap))
+(evil-define-command evil-find-file-at-point-with-line ()
+  "Opens the file at point and goes to line-number."
+  (interactive)
+  (let ((fname (ffap-file-at-point)))
+    (if fname
+        (let ((line
+               (save-excursion
+                 (goto-char (cadr ffap-string-at-point-region))
+                 (and (re-search-backward ":\\([0-9]+\\)\\="
+                                          (line-beginning-position) t)
+                      (string-to-number (match-string 1))))))
+          (ffap-other-window)
+          (when line
+            (goto-char (point-min))
+            (forward-line (1- line))))
+      (error "File does not exist."))))
+
 (provide 'evil-operators)
 
 ;;; evil-operators.el ends here
