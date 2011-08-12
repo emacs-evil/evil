@@ -1192,16 +1192,16 @@ use `evil-regexp-range'."
         (close-regexp (regexp-quote (string close)))
         (count (or count 1))
         level beg end range)
-    (if (or (evil-in-comment-p)
-            (and (evil-in-string-p) (not (eq open close))))
-        ;; if in a comment, first look inside the comment only;
-        ;; failing that, look outside it
-        (or (evil-regexp-range count open-regexp close-regexp exclusive)
-            (progn
-              (evil-goto-min (evil-string-beginning)
-                             (evil-comment-beginning))
-              (evil-paren-range count open close exclusive)))
-      (save-excursion
+    (save-excursion
+      (if (or (evil-in-comment-p)
+              (and (evil-in-string-p) (not (eq open close))))
+          ;; if in a comment, first look inside the comment only;
+          ;; failing that, look outside it
+          (or (evil-regexp-range count open-regexp close-regexp exclusive)
+              (progn
+                (evil-goto-min (evil-string-beginning)
+                               (evil-comment-beginning))
+                (evil-paren-range count open close exclusive)))
         (with-syntax-table (copy-syntax-table (syntax-table))
           (cond
            ((= count 0))
@@ -1285,7 +1285,9 @@ the range; otherwise they are included. See also `evil-paren-range'."
           ;; Is point next to a delimiter?
           (if (< count 0)
               (when (if exclusive
-                        (looking-back open)
+                        (or (looking-back open)
+                            (and (looking-back close)
+                                 (not (looking-at close))))
                       (looking-back close))
                 (goto-char (match-beginning 0)))
             (when (if exclusive
@@ -1325,9 +1327,9 @@ the range; otherwise they are included. See also `evil-paren-range'."
   "Add whitespace at one side of RANGE, depending on POS.
 If POS is before the range, add trailing whitespace;
 if POS is after the range, add leading whitespace.
-If POS is inside the range, add trailing if DIR is positive
-and leading if DIR is negative. If there is no trailing whitespace,
-add leading whitespace and vice versa. POS defaults to point.
+If there is no trailing whitespace, add leading and vice versa.
+If POS is inside the range, add trailing if DIR is positive and
+leading if DIR is negative. POS defaults to point.
 REGEXP is a regular expression for matching whitespace;
 the default is \"[ \\f\\t\\n\\r\\v]+\"."
   (let* ((pos (or pos (point)))
@@ -1339,16 +1341,12 @@ the default is \"[ \\f\\t\\n\\r\\v]+\"."
       (save-match-data
         (goto-char pos)
         (cond
-         ((< dir 0)
-          (if (looking-back regexp)
-              (evil-add-whitespace-after-range range regexp)
-            (or (evil-add-whitespace-before-range range regexp)
-                (evil-add-whitespace-after-range range regexp))))
+         ((if (< dir 0) (looking-back regexp) (not (looking-at regexp)))
+          (or (evil-add-whitespace-after-range range regexp)
+              (evil-add-whitespace-before-range range regexp)))
          (t
-          (if (looking-at regexp)
-              (evil-add-whitespace-before-range range regexp)
-            (or (evil-add-whitespace-after-range range regexp)
-                (evil-add-whitespace-before-range range regexp)))))
+          (or (evil-add-whitespace-before-range range regexp)
+              (evil-add-whitespace-after-range range regexp))))
         range))))
 
 (defun evil-add-whitespace-before-range (range &optional regexp)
@@ -1478,12 +1476,12 @@ If BIGWORD is non-nil, select inner WORD."
 (evil-define-text-object evil-an-angle (count)
   "Select an angle bracket."
   :extend-selection nil
-  (evil-paren-range count ?< ?> t))
+  (evil-paren-range count ?< ?>))
 
 (evil-define-text-object evil-inner-angle (count)
   "Select inner angle bracket."
   :extend-selection nil
-  (evil-paren-range count ?< ?>))
+  (evil-paren-range count ?< ?> t))
 
 (evil-define-text-object evil-a-single-quote (count)
   "Select a single-quoted expression."
