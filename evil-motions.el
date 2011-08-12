@@ -106,7 +106,7 @@ the loop immediately quits. See also `evil-loop'.
           (signal (car err) (cdr err)))))))
 
 (defmacro evil-narrow-to-line (&rest body)
-  "Narrow to the current line."
+  "Narrow BODY to the current line."
   (declare (indent defun)
            (debug t))
   `(save-restriction
@@ -124,6 +124,14 @@ the loop immediately quits. See also `evil-loop'.
           (error "Beginning of line"))
          (end-of-buffer
           (error "End of line"))))))
+
+(defmacro evil-narrow-to-line-if (cond &rest body)
+  "Narrow BODY to the current line if COND yields non-nil."
+  (declare (indent 1)
+           (debug t))
+  `(if ,cond
+       (evil-narrow-to-line ,@body)
+     ,@body))
 
 (defun evil-goto-min (&rest positions)
   "Go to the smallest position in POSITIONS.
@@ -155,12 +163,39 @@ See also `evil-goto-min'."
 (evil-define-motion evil-forward-char (count)
   "Move cursor to the right by COUNT characters."
   :type exclusive
-  (evil-narrow-to-line (forward-char (or count 1))))
+  (evil-narrow-to-line-if
+      ;; Narrow movement to the current line if `evil-cross-lines'
+      ;; is nil. However, do allow the following exception: if
+      ;; `evil-move-cursor-back' is nil and we are next to a newline,
+      ;; that newline should be available to operators ("dl", "x").
+      (and (not evil-cross-lines)
+           (or evil-move-cursor-back
+               (not (evil-operator-state-p))
+               (not (eolp))))
+    (evil-motion-loop (nil (or count 1))
+      ;; skip newlines when crossing lines in Normal/Motion state
+      (when (and evil-cross-lines
+                 (not (evil-operator-state-p))
+                 (not (eolp))
+                 (save-excursion (forward-char) (eolp)))
+        (forward-char))
+      (forward-char))))
 
 (evil-define-motion evil-backward-char (count)
   "Move cursor to the left by COUNT characters."
   :type exclusive
-  (evil-narrow-to-line (backward-char (or count 1))))
+  (evil-narrow-to-line-if
+      ;; narrow movement to the current line if `evil-cross-lines'
+      ;; is nil (cf. `evil-forward-char')
+      (and (not evil-cross-lines)
+           (or evil-move-cursor-back
+               (not (evil-operator-state-p))
+               (not (bolp))))
+    (evil-motion-loop (nil (or count 1))
+      (backward-char)
+      ;; adjust cursor when crossing lines in Normal/Motion state
+      (unless (evil-operator-state-p)
+        (evil-adjust-eol)))))
 
 ;; The purpose of this function is the provide line motions which
 ;; preserve the column. This is how `previous-line' and `next-line'
@@ -863,7 +898,7 @@ If BIGWORD is non-nil, move by WORDS."
     (let ((case-fold-search nil))
       (unless (prog1
                   (search-forward (char-to-string char)
-                                  (unless evil-find-skip-newlines
+                                  (unless evil-cross-lines
                                     (if fwd
                                         (line-end-position)
                                       (line-beginning-position)))

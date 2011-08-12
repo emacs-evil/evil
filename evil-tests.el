@@ -2262,6 +2262,15 @@ This bufferThis buffe[r]"))
       "[;]; This buffer is for notes."
       ("l")
       ";[;] This buffer is for notes."))
+  (ert-info ("End of line")
+    (let ((evil-cross-lines t)
+          (evil-move-cursor-back t))
+      (evil-test-buffer
+       ";; This buffer is for notes[,]
+;; and for Lisp evaluation."
+       ("l")
+       ";; This buffer is for notes,
+\[;]; and for Lisp evaluation.")))
   (ert-info ("With count")
     (evil-test-buffer
       "[;]; This buffer is for notes."
@@ -3065,7 +3074,7 @@ Below some empty line."))
       "[;]; This buffer is for notes."
       (should-error (execute-kbd-macro "fL"))))
   (ert-info ("End of line")
-    (let ((evil-find-skip-newlines t))
+    (let ((evil-cross-lines t))
       (evil-test-buffer
         "[;]; This buffer is for notes,
 ;; and for Lisp evaluation."
@@ -3101,7 +3110,7 @@ Below some empty line."))
       ";; This buffer is for notes[.]"
       (should-error (execute-kbd-macro "FL"))))
   (ert-info ("End of line")
-    (let ((evil-find-skip-newlines t))
+    (let ((evil-cross-lines t))
       (evil-test-buffer
         ";; This buffer is for notes,
 ;; and for Lisp evaluation[.]"
@@ -3137,7 +3146,7 @@ Below some empty line."))
       "[;]; This buffer is for notes."
       (should-error (execute-kbd-macro "tL"))))
   (ert-info ("End of line")
-    (let ((evil-find-skip-newlines t))
+    (let ((evil-cross-lines t))
       (evil-test-buffer
         "[;]; This buffer is for notes,
 ;; and for Lisp evaluation."
@@ -3173,7 +3182,7 @@ Below some empty line."))
       ";; This buffer is for notes[.]"
       (should-error (execute-kbd-macro "TL"))))
   (ert-info ("End of line")
-    (let ((evil-find-skip-newlines t))
+    (let ((evil-cross-lines t))
       (evil-test-buffer
         ";; This buffer is for notes,
 ;; and for Lisp evaluation[.]"

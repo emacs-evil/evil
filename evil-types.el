@@ -555,7 +555,8 @@ If the end position is at the beginning of a line, then:
                      (looking-back "^[ \f\t\v]*"))
                    (evil-expand beg end 'line))
                   (t
-                   (setq end (max beg (1- end)))
+                   (unless evil-cross-lines
+                     (setq end (max beg (1- end))))
                    (evil-expand beg end 'inclusive))))
                 (t
                  (evil-range beg end))))

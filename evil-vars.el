@@ -52,8 +52,8 @@ moves the cursor."
   :type 'boolean
   :group 'evil)
 
-(defcustom evil-find-skip-newlines nil
-  "Whether \"f\", \"F\", \"t\" and \"T\" skip over newlines."
+(defcustom evil-cross-lines nil
+  "Whether motions may cross newlines."
   :type 'boolean
   :group 'evil)
 
