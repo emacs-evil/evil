@@ -61,7 +61,7 @@
 (define-key evil-normal-state-map "=" 'evil-indent)
 (define-key evil-normal-state-map "<" 'evil-shift-left)
 (define-key evil-normal-state-map ">" 'evil-shift-right)
-(define-key evil-normal-state-map (kbd "<backspace>") 'evil-backward-char)
+(define-key evil-normal-state-map (kbd "DEL") 'evil-backward-char)
 (define-key evil-normal-state-map [escape] 'evil-normal-state)
 (define-key evil-normal-state-map [remap cua-paste-pop] 'evil-paste-pop)
 (define-key evil-normal-state-map [remap yank-pop] 'evil-paste-pop)
@@ -290,7 +290,7 @@
 
 ;;; Replace state
 
-(define-key evil-replace-state-map [backspace] 'evil-replace-backspace)
+(define-key evil-replace-state-map (kbd "DEL") 'evil-replace-backspace)
 (define-key evil-replace-state-map [escape] 'evil-normal-state)
 
 ;;; Emacs state

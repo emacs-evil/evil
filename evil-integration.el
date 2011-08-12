@@ -72,7 +72,7 @@
        'Info-follow-nearest-node)
      (evil-define-key 'motion Info-mode-map "\C-]"
        'Info-follow-nearest-node)
-     (evil-define-key 'motion Info-mode-map [backspace]
+     (evil-define-key 'motion Info-mode-map (kbd "DEL")
        'Info-scroll-down)))
 
 ;;; Shell
