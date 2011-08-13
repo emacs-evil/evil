@@ -84,7 +84,13 @@
         (setq keys (append keys (list key arg))))))
     ;; collect `interactive' specification
     (when (eq (car-safe (car-safe body)) 'interactive)
-      (setq interactive (cdr (pop body))))
+      (setq interactive (pop body))
+      ;; transform extended interactive specs
+      (when interactive
+        (setq interactive (apply 'evil-eval-interactive
+                                 (cdr interactive)))
+        (setq keys (append keys (cdr-safe interactive))
+              interactive (car-safe interactive))))
     ;; macro expansion
     `(evil-define-command ,operator (,beg ,end ,@args)
        ,@(when doc `(,doc))
@@ -106,7 +112,8 @@
                     ,beg (evil-range-beginning range)
                     ,end (evil-range-end range)
                     ,type (evil-type range)
-                    range (append (evil-range ,beg ,end ,type)))
+                    range (append (evil-range ,beg ,end ,type)
+                                  ,interactive))
             (setq orig (point)
                   evil-inhibit-operator-value evil-inhibit-operator)
             (if ,keep-visual
@@ -120,8 +127,7 @@
                     (evil-visual-state-p state))
                 (evil-visual-rotate 'upper-left ,beg ,end ,type)
               (goto-char orig)))
-          range)
-        ,@interactive)
+          range))
        (unwind-protect
            (let ((evil-inhibit-operator evil-inhibit-operator-value))
              (unless (and evil-inhibit-operator
