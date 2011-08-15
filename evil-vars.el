@@ -197,6 +197,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     Info-mode
     help-mode
     recentf-dialog-mode
+    speedbar-mode
     view-mode)
   "Modes that should come up in Motion state."
   :type  '(repeat symbol)
