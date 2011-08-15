@@ -8,6 +8,7 @@
 (require 'evil-visual)
 
 (define-key evil-ex-keymap "\d" #'evil-ex-delete-backward-char)
+(define-key evil-ex-keymap "\t" #'evil-ex-complete)
 
 (defun evil-ex-state-p ()
   "Return t iff ex mode is currently active."
