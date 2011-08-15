@@ -239,7 +239,6 @@
 (define-key evil-motion-state-map (kbd "C-f") 'evil-scroll-page-down)
 (define-key evil-motion-state-map (kbd "C-o") 'evil-jump-backward)
 (define-key evil-motion-state-map (kbd "C-y") 'evil-scroll-line-up)
-(define-key evil-motion-state-map (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
 (define-key evil-motion-state-map (kbd "RET") 'evil-ret)
 (define-key evil-motion-state-map "z^" 'evil-scroll-top-line-to-bottom)
 (define-key evil-motion-state-map "z+" 'evil-scroll-bottom-line-to-top)
@@ -253,6 +252,8 @@
 (define-key evil-motion-state-map "z." "zz^")
 (define-key evil-motion-state-map "zb" 'evil-scroll-line-to-bottom)
 (define-key evil-motion-state-map "z-" "zb^")
+(define-key evil-motion-state-map
+  (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
 
 (when evil-want-C-i-jump
   (define-key evil-motion-state-map (kbd "C-i") 'evil-jump-forward))
@@ -288,6 +289,9 @@
 (define-key evil-insert-state-map (kbd "RET") 'evil-ret)
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
 
+(when evil-want-C-w-delete
+  (define-key evil-insert-state-map (kbd "C-w") 'backward-kill-word))
+
 ;;; Replace state
 
 (define-key evil-replace-state-map (kbd "DEL") 'evil-replace-backspace)
@@ -295,7 +299,8 @@
 
 ;;; Emacs state
 
-(define-key evil-emacs-state-map (read-kbd-macro evil-toggle-key) 'evil-exit-emacs-state)
+(define-key evil-emacs-state-map
+  (read-kbd-macro evil-toggle-key) 'evil-exit-emacs-state)
 
 ;;; Minibuffer
 

@@ -114,6 +114,11 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-want-C-w-delete t
+  "Whether \"C-w\" deletes a word in Insert state."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-toggle-key "C-z"
   "The key used to change to and from Emacs state.
 Must be readable by `read-kbd-macro'. For example: \"C-z\"."
