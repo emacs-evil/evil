@@ -18,9 +18,7 @@
 (eval-after-load 'dired
   '(progn
      ;; use the standard Dired bindings as a base
-     (set-keymap-parent
-      (evil-get-auxiliary-keymap dired-mode-map 'normal t)
-      (assq-delete-all 'menu-bar (copy-keymap dired-mode-map)))
+     (evil-make-overriding-map dired-mode-map 'normal t)
      (evil-define-key 'normal dired-mode-map "h" 'evil-backward-char)
      (evil-define-key 'normal dired-mode-map "j" 'evil-next-line)
      (evil-define-key 'normal dired-mode-map "k" 'evil-previous-line)

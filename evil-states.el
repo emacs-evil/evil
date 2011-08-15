@@ -329,6 +329,7 @@ Skip states listed in EXCLUDED."
          (local-map (symbol-value (evil-state-property
                                    state :local-keymap)))
          (aux-maps (evil-state-auxiliary-keymaps state))
+         (overriding-maps (evil-state-overriding-keymaps state))
          (enable (evil-state-property state :enable))
          (result (list evil-esc-map)))
     (add-to-list 'enable state)
@@ -340,7 +341,10 @@ Skip states listed in EXCLUDED."
         (setq result
               (evil-concat-lists
                result
-               (list local-map) aux-maps (list map)))
+               (list local-map)
+               aux-maps
+               overriding-maps
+               (list map)))
         (add-to-list 'excluded state))
        ((evil-state-p entry)
         (setq result (evil-concat-lists
@@ -372,8 +376,9 @@ Its order reflects the state in the current buffer."
     ;; enable modes for current state
     (when state
       (dolist (map (evil-state-keymaps state))
-        (if (evil-auxiliary-keymap-p map)
-            (add-to-list 'alist (cons t map) t)
+        (if (or (evil-auxiliary-keymap-p map)
+                (evil-overriding-keymap-p map))
+            (add-to-list 'alist (cons t map) t 'eq)
           (when (setq mode (evil-keymap-mode map))
             (when (and (fboundp mode) (null (symbol-value mode)))
               (funcall mode 1))
@@ -395,6 +400,8 @@ Its order reflects the state in the current buffer."
 See also `evil-mode-keymap'."
   (let ((map (if (keymapp keymap) keymap (symbol-value keymap)))
         (var (when (symbolp keymap) keymap)))
+    ;; Check Evil variables first for speed purposes.
+    ;; If all else fails, check `minor-mode-map-alist'.
     (or (when var
           (or (car (rassq var evil-global-keymaps-alist))
               (car (rassq var evil-local-keymaps-alist))))
@@ -419,11 +426,23 @@ See also `evil-keymap-mode'."
 
 (defun evil-state-auxiliary-keymaps (state)
   "Return an ordered list of auxiliary keymaps for STATE."
-  (let* ((state (or state evil-state))
-         aux result)
+  (let ((state (or state evil-state))
+        aux result)
     (dolist (map (current-active-maps) result)
       (when (setq aux (evil-get-auxiliary-keymap map state))
         (add-to-list 'result aux t 'eq)))))
+
+(defun evil-state-overriding-keymaps (state)
+  "Return an ordered list of overriding keymaps for STATE."
+  (let* ((state (or state evil-state))
+         (key (vconcat (list (intern (format "overriding-%s-state"
+                                             state)))))
+         result)
+    (dolist (map (current-active-maps) result)
+      (setq map (or (lookup-key map [overriding-states])
+                    (lookup-key map key)))
+      (when (keymapp map)
+        (add-to-list 'result map t 'eq)))))
 
 (defun evil-set-auxiliary-keymap (map state &optional aux)
   "Set the auxiliary keymap for MAP in STATE to AUX.
@@ -455,6 +474,34 @@ if MAP does not have one."
   (and (keymapp map)
        (string-match "Auxiliary keymap"
                      (or (keymap-prompt map) "")) t))
+
+(defun evil-overriding-keymap-p (map &optional state)
+  "Whether MAP is an overriding keymap for STATE.
+If STATE is nil, it means any state."
+  (if (null state)
+      (or (lookup-key map [overriding-states])
+          (catch 'done
+            (dolist (state evil-state-properties)
+              (when (evil-overriding-keymap-p map (car state))
+                (throw 'done t)))))
+    (lookup-key
+     map
+     (vconcat
+      (list (intern (format "overriding-%s-state" state)))))))
+
+(defun evil-make-overriding-map (keymap &optional state copy)
+  "Give KEYMAP precedence over the global keymap of STATE.
+If STATE is nil, give it precedence over all states.
+If COPY is t, create a copy of KEYMAP and give that
+higher precedence."
+  (let ((key (if (null state)
+                 [overriding-states]
+               (vconcat
+                (list (intern (format "overriding-%s-state" state)))))))
+    (when (and copy (not (keymapp copy)))
+      (setq copy (assq-delete-all 'menu-bar (copy-keymap keymap))))
+    (define-key (or copy keymap) key (or state 'state))
+    (define-key keymap key (or copy keymap))))
 
 (defun evil-define-key (state keymap key def)
   "Create a STATE binding from KEY to DEF for KEYMAP.
