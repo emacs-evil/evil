@@ -75,24 +75,7 @@
      (evil-define-key 'motion Info-mode-map (kbd "DEL")
        'Info-scroll-down)))
 
-;;; Shell
-
-(eval-after-load 'comint
-  '(define-key comint-mode-map [remap evil-ret] 'comint-send-input))
-
-;;; Undo tree visualizer
-
-(evil-set-initial-state 'undo-tree-visualizer-mode 'motion)
-
-(when (boundp 'undo-tree-visualizer-map)
-  (define-key undo-tree-visualizer-map [remap evil-backward-char]
-    'undo-tree-visualize-switch-branch-left)
-  (define-key undo-tree-visualizer-map [remap evil-forward-char]
-    'undo-tree-visualize-switch-branch-right)
-  (define-key undo-tree-visualizer-map [remap evil-next-line]
-    'undo-tree-visualize-redo)
-  (define-key undo-tree-visualizer-map [remap evil-previous-line]
-    'undo-tree-visualize-undo))
+;;; Parentheses
 
 (defadvice show-paren-function (around evil)
   "Match parentheses in Normal state."
@@ -122,6 +105,29 @@
           (delete-overlay show-paren-overlay))
         (when (overlayp show-paren-overlay-1)
           (delete-overlay show-paren-overlay-1))))))
+
+;;; Shell
+
+(eval-after-load 'comint
+  '(define-key comint-mode-map [remap evil-ret] 'comint-send-input))
+
+;;; Undo tree visualizer
+
+(defadvice undo-tree-visualize (after evil activate)
+  "Enable Evil."
+  (evil-local-mode))
+
+(evil-set-initial-state 'undo-tree-visualizer-mode 'motion)
+
+(when (boundp 'undo-tree-visualizer-map)
+  (define-key undo-tree-visualizer-map [remap evil-backward-char]
+    'undo-tree-visualize-switch-branch-left)
+  (define-key undo-tree-visualizer-map [remap evil-forward-char]
+    'undo-tree-visualize-switch-branch-right)
+  (define-key undo-tree-visualizer-map [remap evil-next-line]
+    'undo-tree-visualize-redo)
+  (define-key undo-tree-visualizer-map [remap evil-previous-line]
+    'undo-tree-visualize-undo))
 
 (provide 'evil-integration)
 

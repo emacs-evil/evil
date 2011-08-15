@@ -60,6 +60,7 @@
             (append '("" evil-modeline-tag)
                     global-mode-string)))
     (ad-enable-advice 'show-paren-function 'around 'evil)
+    (ad-enable-advice 'undo-tree-visualize 'after 'evil)
     (ad-activate 'show-paren-function)
     ;; restore the proper value of `major-mode' in Fundamental buffers
     (when (eq major-mode 'evil-local-mode)
@@ -84,6 +85,7 @@
             (push next new-global-mode-string))))
       (setq global-mode-string (nreverse new-global-mode-string)))
     (ad-disable-advice 'show-paren-function 'around 'evil)
+    (ad-disable-advice 'undo-tree-visualize 'after 'evil)
     (ad-activate 'show-paren-function)
     (evil-change-state nil))))
 

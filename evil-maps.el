@@ -370,6 +370,11 @@
 (evil-ex-define-cmd "noh" "nohlsearch")
 (evil-ex-define-cmd "nohlsearch" 'evil-ex-nohighlight)
 
+(when (fboundp 'undo-tree-visualize)
+  (evil-ex-define-cmd "undolist" 'undo-tree-visualize)
+  (evil-ex-define-cmd "undol" 'undo-tree-visualize)
+  (evil-ex-define-cmd "ul" 'undo-tree-visualize))
+
 (provide 'evil-maps)
 
 ;;; evil-maps.el ends here
