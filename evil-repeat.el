@@ -396,39 +396,46 @@ If SAVE-POINT is non-nil, do not move point."
            (cons #'(lambda ()
                      (error "Cannot delete buffer in repeat command"))
                  kill-buffer-hook)))
-      (evil-with-undo
+      (evil-with-single-undo
         (setq evil-last-repeat (list (point) count))
         (evil-execute-repeat-info-with-count
          count (ring-ref evil-repeat-ring 0)))))))
 
 ;; TODO: the same issue concering disabled undos as for `evil-paste-pop'
-(defun evil-repeat-pop (count)
+(defun evil-repeat-pop (count &optional save-point)
   "Replace the just repeated command with a previously executed command.
-This command is allowed only immediately after a `evil-repeat',
-`evil-repeat-pop' or `evil-repeat-pop-next'. This command uses
-the same repeat count that was used for the first repeat.
+Only allowed after `evil-repeat', `evil-repeat-pop' or
+`evil-repeat-pop-next'. Uses the same repeat count that
+was used for the first repeat.
 
-The COUNT argument inserts the COUNT-th previous kill. If COUNT
-is negative this is a more recent kill."
-  (interactive "p")
-  (unless (and (eq last-command 'evil-repeat)
-               evil-last-repeat)
+The COUNT argument inserts the COUNT-th previous kill.
+If COUNT is negative, this is a more recent kill."
+  (interactive (list (prefix-numeric-value current-prefix-arg)
+                     (not evil-repeat-move-cursor)))
+  (cond
+   ((not (and (eq last-command 'evil-repeat)
+              evil-last-repeat))
     (error "Previous command was not evil-repeat: %s" last-command))
-  (evil-undo-pop)
-  (goto-char (car evil-last-repeat))
-  ;; rotate the repeat-ring
-  (while (> count 0)
-    (when evil-repeat-ring
-      (ring-insert-at-beginning evil-repeat-ring
-                                (ring-remove evil-repeat-ring 0)))
-    (setq count (1- count)))
-  (setq this-command 'evil-repeat)
-  (evil-repeat (cadr evil-last-repeat)))
+   (save-point
+    (save-excursion
+      (evil-repeat-pop count)))
+   (t
+    (evil-undo-pop)
+    (goto-char (car evil-last-repeat))
+    ;; rotate the repeat-ring
+    (while (> count 0)
+      (when evil-repeat-ring
+        (ring-insert-at-beginning evil-repeat-ring
+                                  (ring-remove evil-repeat-ring 0)))
+      (setq count (1- count)))
+    (setq this-command 'evil-repeat)
+    (evil-repeat (cadr evil-last-repeat)))))
 
-(defun evil-repeat-pop-next (count)
-  "Same as `evil-repeat-pop' with negative COUNT."
-  (interactive "p")
-  (evil-repeat-pop (- count)))
+(defun evil-repeat-pop-next (count &optional save-point)
+  "Same as `evil-repeat-pop', but with negative COUNT."
+  (interactive (list (prefix-numeric-value current-prefix-arg)
+                     (not evil-repeat-move-cursor)))
+  (evil-repeat-pop (- count) save-point))
 
 (defadvice read-key-sequence (before evil activate)
   "Record `this-command-keys' before it is reset."

@@ -16,13 +16,13 @@
    ((evil-insert-state-p)
     (add-hook 'pre-command-hook 'evil-insert-repeat-hook nil t)
     (unless evil-want-fine-undo
-      (evil-start-undo-step)))
+      (evil-start-undo-step t)))
    (t
     (remove-hook 'pre-command-hook 'evil-insert-repeat-hook t)
     (setq evil-insert-repeat-info evil-repeat-info)
     (evil-set-marker ?^ nil t)
     (unless evil-want-fine-undo
-      (evil-end-undo-step))
+      (evil-end-undo-step t))
     (when evil-move-cursor-back
       (evil-adjust)))))
 
