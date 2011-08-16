@@ -224,7 +224,6 @@ Disallow repeat if the command specifies :repeat nil."
          (t
           (funcall repeat-type 'post))))))))
 
-
 (defun evil-repeat-record (info)
   "Add INFO to the end of `evil-repeat-info'."
   (when evil-recording-repeat

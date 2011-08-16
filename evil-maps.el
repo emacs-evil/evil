@@ -29,8 +29,6 @@
 (define-key evil-normal-state-map "R" 'evil-replace-state)
 (define-key evil-normal-state-map "s" 'evil-substitute)
 (define-key evil-normal-state-map "S" 'evil-change-whole-line)
-(define-key evil-normal-state-map "v" 'evil-visual-char)
-(define-key evil-normal-state-map "V" 'evil-visual-line)
 (define-key evil-normal-state-map "x" 'evil-delete-char)
 (define-key evil-normal-state-map "X" 'evil-delete-backward-char)
 (define-key evil-normal-state-map "y" 'evil-yank)
@@ -42,7 +40,6 @@
 (define-key evil-normal-state-map "gq" 'evil-fill)
 (define-key evil-normal-state-map "gu" 'evil-downcase)
 (define-key evil-normal-state-map "gU" 'evil-upcase)
-(define-key evil-normal-state-map "gv" 'evil-visual-restore)
 (define-key evil-normal-state-map "gf" 'find-file-at-point)
 (define-key evil-normal-state-map "gF" 'evil-find-file-at-point-with-line)
 (define-key evil-normal-state-map "g?" 'evil-rot13)
@@ -50,7 +47,6 @@
 (define-key evil-normal-state-map "\C-n" 'evil-paste-pop-next)
 (define-key evil-normal-state-map "\C-p" 'evil-paste-pop)
 (define-key evil-normal-state-map "\C-t" 'pop-tag-mark)
-(define-key evil-normal-state-map "\C-v" 'evil-visual-block)
 (define-key evil-normal-state-map "\C-w" 'evil-window-map)
 (define-key evil-normal-state-map (kbd "C-.") 'evil-repeat-pop)
 (define-key evil-normal-state-map (kbd "M-.") 'evil-repeat-pop-next)
@@ -252,6 +248,10 @@
 (define-key evil-motion-state-map "z." "zz^")
 (define-key evil-motion-state-map "zb" 'evil-scroll-line-to-bottom)
 (define-key evil-motion-state-map "z-" "zb^")
+(define-key evil-motion-state-map "v" 'evil-visual-char)
+(define-key evil-motion-state-map "V" 'evil-visual-line)
+(define-key evil-motion-state-map "\C-v" 'evil-visual-block)
+(define-key evil-motion-state-map "gv" 'evil-visual-restore)
 (define-key evil-motion-state-map
   (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
 
@@ -273,7 +273,7 @@
 (define-key evil-visual-state-map "S" 'evil-change)
 (define-key evil-visual-state-map "u" 'evil-downcase)
 (define-key evil-visual-state-map "U" 'evil-upcase)
-(define-key evil-visual-state-map [escape] 'evil-normal-state)
+(define-key evil-visual-state-map [escape] 'evil-change-to-previous-state)
 
 ;;; Insert state
 

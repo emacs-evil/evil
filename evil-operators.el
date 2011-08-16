@@ -120,7 +120,7 @@
                 (when (evil-visual-state-p)
                   (evil-visual-expand-region))
               (when (evil-visual-state-p)
-                (evil-normal-state))
+                (evil-change-to-previous-state))
               (when (region-active-p)
                 (evil-active-region -1)))
             (if (or ,move-point

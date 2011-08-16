@@ -126,24 +126,29 @@ current buffer only.")
     (evil-change-to-initial-state buffer)
     (remove-hook 'post-command-hook 'evil-initialize-state t)))
 
-(defun evil-change-to-initial-state (&optional buffer message)
+(evil-define-command evil-change-to-initial-state
+  (&optional buffer message)
   "Change state to the initial state for BUFFER.
 This is the state the buffer comes up in."
+  :keep-visual t
   (interactive)
   (with-current-buffer (or buffer (current-buffer))
     (evil-change-state (evil-initial-state-for-buffer
                         buffer (or evil-default-state 'normal))
                        message)))
 
-(defun evil-change-to-previous-state (&optional buffer message)
+(evil-define-command evil-change-to-previous-state
+  (&optional buffer message)
   "Change the state of BUFFER to its previous state."
+  :keep-visual t
   (interactive)
   (with-current-buffer (or buffer (current-buffer))
-    (evil-change-state (or evil-previous-state evil-state 'normal)
+    (evil-change-state (or evil-previous-state evil-default-state 'normal)
                        message)))
 
-(defun evil-exit-emacs-state (&optional buffer message)
+(evil-define-command evil-exit-emacs-state (&optional buffer message)
   "Change from Emacs state to the previous state."
+  :keep-visual t
   (interactive '(nil t))
   (with-current-buffer (or buffer (current-buffer))
     (evil-change-to-previous-state buffer message)
