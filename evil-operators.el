@@ -1008,7 +1008,7 @@ already existing."
       (error "File does not exist."))))
 
 (evil-define-interactive-code "<sym>" (list (and evil-ex-current-arg
-						 (intern evil-ex-current-arg))) :ex-arg sym)
+                                                 (intern evil-ex-current-arg))) :ex-arg sym)
 
 (evil-ex-define-argument-type state (flag &rest args)
   "Defines an argument type which can take state names."
@@ -1027,13 +1027,26 @@ already existing."
 
 ;; TODO: should we merge this command with `evil-set-initial-state'?
 (evil-define-command evil-ex-set-initial-state (state)
-  "Set the initial state for the current mode to STATE.
+  "Set the initial state for the current major-mode to STATE.
 This is the state the buffer comes up in. See `evil-set-initial-state'."
   :ex-arg state
+  :repeat nil
   (interactive "<sym>")
-  (if (memq state '(nil normal motion emacs insert))
-      (evil-set-initial-state major-mode state)
-    (error "State %s cannot be set as initial evil state" state)))
+  (if (not (memq state '(nil normal motion emacs insert)))
+      (error "State %s cannot be set as initial evil state" state)
+    (let ((current-initial-state (evil-initial-state major-mode)))
+      (unless (eq current-initial-state state)
+        ;; only if we selected a new mode
+        (when (y-or-n-p (format "Major-mode `%s' has initial mode `%s'. Change to `%s'? "
+                                major-mode
+                                (or current-initial-state "DEFAULT")
+                                (or state "DEFAULT")))
+          (evil-set-initial-state major-mode state)
+          (when (y-or-n-p "Save setting in customization file? ")
+            (dolist (s (list current-initial-state state))
+              (when s
+                (let ((var (intern (format "evil-%s-state-modes" s))))
+                  (customize-save-variable var (symbol-value var)))))))))))
 
 (provide 'evil-operators)
 
