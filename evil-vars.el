@@ -492,7 +492,7 @@ in the current buffer.")
   "The buffer in which the repeat started.
 If the buffer is changed, the repeat is cancelled.")
 
-(defvar evil-repeat-marker nil
+(defvar evil-repeat-pos nil
   "The position of point at the beginning of an change-tracking
   editing command.")
 

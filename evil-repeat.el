@@ -81,9 +81,7 @@ in `evil-repeat-info' and clear variables."
 (defun evil-repeat-reset (&optional flag)
   "Clear all repeat recording variables.
 Set `evil-recording-repeat' to FLAG."
-  (when (markerp evil-repeat-marker)
-    (set-marker evil-repeat-marker nil))
-  (setq evil-repeat-marker nil
+  (setq evil-repeat-pos nil
         evil-recording-repeat flag
         evil-repeat-info nil
         evil-repeat-changes nil
@@ -176,9 +174,9 @@ Disallow repeat if the command specifies :repeat nil."
     (unless evil-recording-repeat
       (evil-repeat-start))
     (when (and (eq (evil-repeat-type this-command) 'change)
-               evil-repeat-marker)
+               evil-repeat-pos)
       (evil-repeat-record-change
-       (list (- beg evil-repeat-marker)
+       (list (- beg evil-repeat-pos)
              (buffer-substring beg end)
              length)))))
 
@@ -231,14 +229,12 @@ If CHANGE is specified, it is added to `evil-repeat-changes'."
               (nconc evil-repeat-changes (list change)))
       (evil-repeat-record `(evil-execute-change
                             ,evil-repeat-changes
-                            ,(- (point) evil-repeat-marker)))
+                            ,(- (point) evil-repeat-pos)))
       (setq evil-repeat-changes nil))))
 
 (defun evil-repeat-record-position (&optional pos)
-  "Set `evil-repeat-marker' to POS or point."
-  (unless (markerp evil-repeat-marker)
-    (setq evil-repeat-marker (make-marker)))
-  (set-marker evil-repeat-marker (or pos (point))))
+  "Set `evil-repeat-pos' to POS or point."
+  (setq evil-repeat-pos (or pos (point))))
 
 (defun evil-repeat-record-buffer ()
   "Set `evil-repeat-buffer' to the current buffer."
@@ -253,7 +249,7 @@ If CHANGE is specified, it is added to `evil-repeat-changes'."
          evil-recording-repeat
          evil-repeat-info
          evil-repeat-changes
-         evil-repeat-marker
+         evil-repeat-pos
          evil-repeat-keys
          evil-repeat-buffer
          this-command
