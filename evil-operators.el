@@ -1007,6 +1007,34 @@ already existing."
             (forward-line (1- line))))
       (error "File does not exist."))))
 
+(evil-define-interactive-code "<sym>" (list (and evil-ex-current-arg
+						 (intern evil-ex-current-arg))) :ex-arg sym)
+
+(evil-ex-define-argument-type state (flag &rest args)
+  "Defines an argument type which can take state names."
+  (when (eq flag 'complete)
+    (let ((arg (pop args))
+          (predicate (pop args))
+          (flag (pop args)))
+      (when arg
+        (cond
+         ((eq flag nil)
+          (try-completion arg '("nil" "normal" "motion" "emacs" "insert") predicate))
+         ((eq flag t)
+          (all-completions arg '("nil" "normal" "motion" "emacs" "insert") predicate))
+         ((eq flag 'lambda)
+          (test-completion arg '("nil" "normal" "motion" "emacs" "insert") predicate)))))))
+
+;; TODO: should we merge this command with `evil-set-initial-state'?
+(evil-define-command evil-ex-set-initial-state (state)
+  "Set the initial state for the current mode to STATE.
+This is the state the buffer comes up in. See `evil-set-initial-state'."
+  :ex-arg state
+  (interactive "<sym>")
+  (if (memq state '(nil normal motion emacs insert))
+      (evil-set-initial-state major-mode state)
+    (error "State %s cannot be set as initial evil state" state)))
+
 (provide 'evil-operators)
 
 ;;; evil-operators.el ends here

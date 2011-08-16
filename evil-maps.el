@@ -369,6 +369,7 @@
 (evil-ex-define-cmd "ju" "jumps")
 (evil-ex-define-cmd "noh" "nohlsearch")
 (evil-ex-define-cmd "nohlsearch" 'evil-ex-nohighlight)
+(evil-ex-define-cmd "set-initial-state" 'evil-ex-set-initial-state)
 
 (when (fboundp 'undo-tree-visualize)
   (evil-ex-define-cmd "undolist" 'undo-tree-visualize)
