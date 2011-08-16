@@ -58,7 +58,7 @@ the selection is enabled.
          (let ((type (or type ,name)))
            (if (and (evil-called-interactively-p)
                     (eq (evil-visual-type) type))
-               (evil-normal-state)
+               (evil-change-to-previous-state)
              (unless (stringp message)
                (setq message (and message ,message)))
              (evil-visual-make-region mark point type message)
@@ -139,7 +139,7 @@ otherwise exit Visual state."
     (cond
      ((or quit-flag (eq this-command 'keyboard-quit))
       (evil-visual-contract-region)
-      (evil-normal-state))
+      (evil-change-to-previous-state))
      (evil-visual-region-expanded
       (evil-visual-contract-region)
       (evil-visual-highlight))
@@ -156,7 +156,7 @@ otherwise exit Visual state."
   (when (and (evil-visual-state-p)
              (not (evil-get-command-property
                    this-command :keep-visual)))
-    (evil-normal-state))
+    (evil-change-to-previous-state))
   (evil-active-region -1)
   (evil-transient-restore))
 
