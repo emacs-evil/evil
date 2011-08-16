@@ -49,6 +49,16 @@
 ;; which passes key-sequence elements to `execute-kbd-macro' and
 ;; executes other elements as defined above.
 ;;
+;; It is possible to define special repeation recording functions for
+;; specific commands. For this, the :repeat property of the command
+;; should be set to the name of the repeation function to be called.
+;; The repeation function is called with one argument which is either
+;; 'pre or 'post. The function is called twice, once before the
+;; command is executed and once after the command has been executed
+;; from pre- and post-command-hooks. The function should use, e.g.,
+;; `evil-repeat-record-change' or `evil-repeat-record' to append new
+;; repeat information.
+;;
 ;; A special version is `evil-execute-repeat-info-with-count'.
 ;; This function works as `evil-execute-repeat-info', but replaces
 ;; the count of the first command. This is done by parsing the
@@ -109,44 +119,51 @@ has :repeat nil."
   "Record new repeat if the current command has :repeat t.
 Disallow repeat if the command specifies :repeat nil."
   (when (or evil-local-mode (minibufferp))
-    (cond
-     ;; abort the repeat if the buffer changes, if in
-     ;; Emacs state or the command specifies :repeat abort
-     ((or (evil-repeat-different-buffer-p)
-          (evil-emacs-state-p)
-          (eq (evil-repeat-type this-command) 'abort))
-      (evil-repeat-reset 'abort))
-     ;; Already in repeat?
-     (evil-recording-repeat
-      (when (eq evil-recording-repeat 'abort)
-        (evil-repeat-reset)))
-     ;; Start a repeat from Normal state?
-     ((evil-normal-state-p)
+    (let ((repeat-type (evil-repeat-type this-command t)))
       (cond
-       ;; :repeat t, start repeat
-       ((eq (evil-repeat-type this-command) t)
-        (evil-repeat-start))
-       ;; :repeat nil, prevent repeat
-       ((eq (evil-repeat-type this-command t) nil)
+       ;; ignore those commands completely
+       ((eq repeat-type 'ignore))
+       ;; abort the repeat if the buffer changes, if in
+       ;; Emacs state or the command specifies :repeat abort
+       ((or (evil-repeat-different-buffer-p)
+            (evil-emacs-state-p)
+            (eq repeat-type 'abort))
         (evil-repeat-reset 'abort))
-       ;; no :repeat, but the command may change the buffer
-       (t
-        (evil-repeat-record-buffer))))))
-  ;; refresh current repeat
-  (when evil-recording-repeat
-    ;; Some functions, such as `execute-kbd-macro', may
-    ;; irrevocably clear `this-command-keys'. Therefore,
-    ;; make a backup from `pre-command-hook'.
-    (evil-repeat-record-keys (this-command-keys))
-    (evil-repeat-record-position)
-    (evil-repeat-record-buffer)
-    (setq evil-repeat-changes nil)))
+       ;; Already in repeat?
+       (evil-recording-repeat
+        (when (eq evil-recording-repeat 'abort)
+          (evil-repeat-reset)))
+       ;; Start a repeat from Normal state?
+       ((evil-normal-state-p)
+        (cond
+         ;; :repeat t, start repeat
+         ((eq (evil-repeat-type this-command) t)
+          (evil-repeat-start))
+         ;; :repeat nil, prevent repeat
+         ((eq repeat-type nil)
+          (evil-repeat-reset 'abort))
+         ;; no :repeat, but the command may change the buffer
+         (t
+          (evil-repeat-record-buffer)))))
+      ;; refresh current repeat
+      (when evil-recording-repeat
+        ;; Some functions, such as `execute-kbd-macro', may
+        ;; irrevocably clear `this-command-keys'. Therefore,
+        ;; make a backup from `pre-command-hook'.
+        (evil-repeat-record-keys (this-command-keys))
+        (evil-repeat-record-position)
+        (evil-repeat-record-buffer)
+        (unless (memq repeat-type '(t nil change ignore))
+          (funcall repeat-type 'pre))
+        (setq evil-repeat-changes nil)))))
 
 ;; called from `post-command-hook'
 (defun evil-repeat-post-hook ()
   "Refresh `evil-repeat-info' while recording a repeat."
   (when (or evil-local-mode (minibufferp))
     (cond
+     ;; ignore
+     ((eq (evil-repeat-type this-command) 'ignore))
      ((not evil-recording-repeat))
      ;; abort the repeat
      ((or (eq evil-recording-repeat 'abort)
@@ -166,6 +183,7 @@ Disallow repeat if the command specifies :repeat nil."
 ;; called from the `after-change-functions' hook
 (defun evil-repeat-change-hook (beg end length)
   "Record change information for current command."
+
   (unless (or (eq evil-recording-repeat 'abort)
               (evil-repeat-different-buffer-p t)
               (null (evil-repeat-type this-command t))
@@ -194,12 +212,18 @@ Disallow repeat if the command specifies :repeat nil."
               universal-argument
               universal-argument-minus
               universal-argument-other-key)))
-     ;; check if the command is change-based
-     ((eq (evil-repeat-type this-command) 'change)
-      (evil-repeat-record-change))
-     ;; usual command: record by key-sequence
      (t
-      (evil-repeat-record-keys)))))
+      (let ((repeat-type (evil-repeat-type this-command t)))
+        (cond
+         ((memq repeat-type '(t nil))
+          (evil-repeat-record-keys))
+         ;; the command is change-based
+         ((eq repeat-type 'change)
+          (evil-repeat-record-change))
+         ;; the command has a custom repeat function
+         (t
+          (funcall repeat-type 'post))))))))
+
 
 (defun evil-repeat-record (info)
   "Add INFO to the end of `evil-repeat-info'."
