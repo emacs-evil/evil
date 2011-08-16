@@ -33,6 +33,11 @@
      (defadvice wdired-change-to-dired-mode (after evil activate)
        (evil-change-to-initial-state nil t))))
 
+;;; Edebug
+
+(eval-after-load 'edebug
+  '(evil-make-intercept-map edebug-mode-map))
+
 ;;; ELP
 
 (eval-after-load 'elp

@@ -229,6 +229,31 @@ and update their list entries."
       (evil-add-to-alist 'evil-mode-map-alist
                          mode (symbol-value map)))))
 
+(defun evil-make-overriding-map (keymap &optional state copy)
+  "Give KEYMAP precedence over the global keymap of STATE.
+The keymap will have lower precedence than custom STATE bindings.
+If STATE is nil, give it precedence over all states.
+If COPY is t, create a copy of KEYMAP and give that
+higher precedence. See also `evil-make-intercept-map'."
+  (let ((key (if (null state)
+                 [overriding-states]
+               (vconcat
+                (list (intern (format "overriding-%s-state" state)))))))
+    (when (and copy (not (keymapp copy)))
+      (setq copy (assq-delete-all 'menu-bar (copy-keymap keymap))))
+    (define-key (or copy keymap) key (or state 'state))
+    (define-key keymap key (or copy keymap))))
+
+(defun evil-make-intercept-map (keymap &optional state)
+  "Give KEYMAP precedence over all Evil keymaps in STATE.
+If STATE is nil, give it precedence over all states.
+See also `evil-make-overriding-map'."
+  (let ((key (if (null state)
+                 [intercept-states]
+               (vconcat
+                (list (intern (format "intercept-%s-state" state)))))))
+    (define-key keymap key (or state 'state))))
+
 (defmacro evil-define-keymap (keymap doc &rest body)
   "Define a keymap KEYMAP listed in `evil-mode-map-alist'.
 That means it will have precedence over regular keymaps.
@@ -250,7 +275,7 @@ may be specified before the body code:
                            [&rest [keywordp sexp]]
                            def-body)))
   (let ((func t)
-        arg key local mode)
+        arg intercept key local mode overriding)
     (while (keywordp (car-safe body))
       (setq key (pop body)
             arg (pop body))
@@ -260,7 +285,11 @@ may be specified before the body code:
        ((eq key :local)
         (setq local arg))
        ((eq key :func)
-        (setq func arg))))
+        (setq func arg))
+       ((eq key :intercept)
+        (setq intercept arg))
+       ((eq key :overriding)
+        (setq overriding arg))))
     (setq mode (or mode
                    (intern (replace-regexp-in-string
                             "\\(?:-\\(?:mode-\\)?\\(?:key\\)?map\\)?$"
@@ -274,6 +303,10 @@ may be specified before the body code:
        (unless (get ',mode 'variable-documentation)
          (put ',mode 'variable-documentation ,doc))
        (make-variable-buffer-local ',mode)
+       (when ,intercept
+         (evil-make-intercept-map ,keymap))
+       (when ,overriding
+         (evil-make-overriding-map ,keymap))
        ,@(if local
              `((make-variable-buffer-local ',keymap)
                (evil-add-to-alist 'evil-local-keymaps-alist
@@ -301,7 +334,8 @@ may be specified before the body code:
 ;; within `evil-esc-delay', the prefixed key sequence is sent.
 ;; Otherwise only [escape] is sent.
 (evil-define-keymap evil-esc-map
-  "Keymap for intercepting ESC.")
+  "Keymap for intercepting ESC."
+  :intercept t)
 
 (defun evil-turn-on-esc-mode ()
   "Enable interception of ESC."
@@ -337,7 +371,7 @@ Skip states listed in EXCLUDED."
          (aux-maps (evil-state-auxiliary-keymaps state))
          (overriding-maps (evil-state-overriding-keymaps state))
          (enable (evil-state-property state :enable))
-         (result (list evil-esc-map)))
+         (result (evil-state-intercept-keymaps state)))
     (add-to-list 'enable state)
     ;; the keymaps for other states and modes enabled by STATE
     (dolist (entry enable result)
@@ -385,10 +419,11 @@ Its order reflects the state in the current buffer."
         (if (or (evil-auxiliary-keymap-p map)
                 (evil-overriding-keymap-p map))
             (add-to-list 'alist (cons t map) t 'eq)
-          (when (setq mode (evil-keymap-mode map))
+          (when (setq mode (or (evil-keymap-mode map) t))
             (when (and (fboundp mode) (null (symbol-value mode)))
               (funcall mode 1))
-            (set mode t)
+            (unless (eq mode t)
+              (set mode t))
             ;; refresh the keymap in case it has changed
             ;; (e.g., `evil-operator-shortcut-map' is
             ;; reset on toggling)
@@ -450,6 +485,16 @@ See also `evil-keymap-mode'."
       (when (keymapp map)
         (add-to-list 'result map t 'eq)))))
 
+(defun evil-state-intercept-keymaps (state)
+  "Return an ordered list of intercept keymaps for STATE."
+  (let* ((state (or state evil-state))
+         (key (vconcat (list (intern (format "intercept-%s-state"
+                                             state)))))
+         (result (list evil-esc-map)))
+    (dolist (map (current-active-maps) result)
+      (when (evil-intercept-keymap-p map state)
+        (add-to-list 'result map t 'eq)))))
+
 (defun evil-set-auxiliary-keymap (map state &optional aux)
   "Set the auxiliary keymap for MAP in STATE to AUX.
 If AUX is nil, create a new auxiliary keymap."
@@ -484,30 +529,30 @@ if MAP does not have one."
 (defun evil-overriding-keymap-p (map &optional state)
   "Whether MAP is an overriding keymap for STATE.
 If STATE is nil, it means any state."
-  (if (null state)
-      (or (lookup-key map [overriding-states])
-          (catch 'done
-            (dolist (state evil-state-properties)
-              (when (evil-overriding-keymap-p map (car state))
-                (throw 'done t)))))
-    (lookup-key
-     map
-     (vconcat
-      (list (intern (format "overriding-%s-state" state)))))))
+  (or (lookup-key map [overriding-states])
+      (if state
+          (lookup-key
+           map
+           (vconcat
+            (list (intern (format "overriding-%s-state" state)))))
+        (catch 'done
+          (dolist (state evil-state-properties)
+            (when (evil-overriding-keymap-p map (car state))
+              (throw 'done t)))))))
 
-(defun evil-make-overriding-map (keymap &optional state copy)
-  "Give KEYMAP precedence over the global keymap of STATE.
-If STATE is nil, give it precedence over all states.
-If COPY is t, create a copy of KEYMAP and give that
-higher precedence."
-  (let ((key (if (null state)
-                 [overriding-states]
-               (vconcat
-                (list (intern (format "overriding-%s-state" state)))))))
-    (when (and copy (not (keymapp copy)))
-      (setq copy (assq-delete-all 'menu-bar (copy-keymap keymap))))
-    (define-key (or copy keymap) key (or state 'state))
-    (define-key keymap key (or copy keymap))))
+(defun evil-intercept-keymap-p (map &optional state)
+  "Whether MAP is an intercept keymap for STATE.
+If STATE is nil, it means any state."
+  (or (lookup-key map [intercept-states])
+      (if state
+          (lookup-key
+           map
+           (vconcat
+            (list (intern (format "intercept-%s-state" state)))))
+        (catch 'done
+          (dolist (state evil-state-properties)
+            (when (evil-overriding-keymap-p map (car state))
+              (throw 'done t)))))))
 
 (defun evil-define-key (state keymap key def)
   "Create a STATE binding from KEY to DEF for KEYMAP.
@@ -537,6 +582,17 @@ which is active whenever `foo-map' is active."
   "Bind KEY to DEF in STATE in the current buffer."
   (define-key (symbol-value (evil-state-property state :local-keymap))
     key def))
+
+;; The following functions may enable an overriding keymap
+;; or a keymap with state bindings. Therefore we need to
+;; refresh `evil-mode-map-alist'.
+(defadvice use-global-map (after evil activate)
+  "Refresh Evil keymaps."
+  (evil-normalize-keymaps))
+
+(defadvice use-local-map (after evil activate)
+  "Refresh Evil keymaps."
+  (evil-normalize-keymaps))
 
 (defmacro evil-define-state (state doc &rest body)
   "Define an Evil state STATE.
