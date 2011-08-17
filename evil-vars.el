@@ -157,8 +157,8 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     gnus-summary-mode
     ibuffer-mode
     jde-javadoc-checker-report-mode
-    magit-mode
     magit-key-mode
+    magit-mode
     magit-show-branches-mode
     mh-folder-mode
     monky-mode
@@ -166,12 +166,13 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     org-agenda-mode
     package-menu-mode
     rcirc-mode
+    recentf-dialog-mode
     reftex-toc-mode
     tar-mode
     term-mode
     twittering-mode
-    vc-dir-mode
     vc-annotate-mode
+    vc-dir-mode
     vc-git-log-view-mode
     vm-mode
     vm-summary-mode)
@@ -198,9 +199,8 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
 (defcustom evil-motion-state-modes
   '(apropos-mode
     Buffer-menu-mode
-    Info-mode
     help-mode
-    recentf-dialog-mode
+    Info-mode
     speedbar-mode
     view-mode)
   "Modes that should come up in Motion state."
