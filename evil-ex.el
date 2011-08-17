@@ -526,7 +526,8 @@ count) in which case this function returns nil."
                                    nil
                                    nil
                                    (or initial-input
-                                       (concat "(default: " evil-ex-last-cmd ") "))
+                                       (and evil-ex-last-cmd
+                                            (concat "(default: " evil-ex-last-cmd ") ")))
                                    'evil-ex-history
                                    evil-ex-last-cmd
                                    t)))
