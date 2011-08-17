@@ -361,7 +361,7 @@ arguments for programmable completion."
                                ((> (length command) pos)
                                 (substring command pos)))
           evil-ex-current-cmd-force force
-          evil-ex-current-range (and start sep end (list start sep end)))))
+          evil-ex-current-range (and (or start sep end) (list start sep end)))))
 
 (defun evil-ex-update (beg end len)
   "Updates ex-variable in ex-mode when the buffer content changes."
