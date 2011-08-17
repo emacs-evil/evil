@@ -986,7 +986,7 @@ already existing."
   "Saves the current buffer and closes the window."
   :repeat nil
   (interactive "<f><!>")
-  (evil-write file force)
+  (evil-write (point-min) (point-max) 'line file force)
   (evil-quit))
 
 (eval-when-compile (require 'ffap))
