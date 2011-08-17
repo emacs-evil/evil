@@ -19,7 +19,7 @@
   (interactive)
   (call-interactively
    (if (zerop (length (minibuffer-contents)))
-       #'exit-minibuffer
+       #'abort-recursive-edit
      #'delete-backward-char)))
 
 (defun evil-ex-define-cmd (cmd function)
@@ -343,50 +343,54 @@ arguments for programmable completion."
            ((eq 'lambda flag)
             (test-completion arg buffers predicate))))))))
 
-(defun evil-ex-update (beg end len)
-  "Updates ex-variable in ex-mode when the buffer content changes."
-  (let* ((result (evil-ex-split (buffer-substring (minibuffer-prompt-end) (point-max))))
-         (pos (+ (minibuffer-prompt-end) (pop result)))
+(defun evil-ex-update-current-command (command)
+  "Updates the internal variables representing the content of the ex-buffer."
+  (let* ((result (evil-ex-split command))
+         (pos (pop result))
          (start (pop result))
          (sep (pop result))
          (end (pop result))
          (cmd (pop result))
-         (bnd (and cmd (evil-ex-completed-binding cmd)))
-         (force (pop result))
-         (oldcmd evil-ex-current-cmd))
+         (force (pop result)))
     (setq evil-ex-current-cmd cmd
-          evil-ex-current-arg (and (> (point-max) pos) (buffer-substring pos (point-max)))
-          evil-ex-current-cmd-end (if force (1- pos) pos)
-          evil-ex-current-cmd-begin (- evil-ex-current-cmd-end (length cmd))
+          evil-ex-current-arg (cond
+                               ;; Eat the first space of the argument
+                               ((and (> (length command) (1+ pos))
+                                     (= (aref command pos) ? ))
+                                (substring command (1+ pos)))
+                               ((> (length command) pos)
+                                (substring command pos)))
           evil-ex-current-cmd-force force
-          evil-ex-current-range (list start sep end))
-    ;; Ensure `evil-ex-current-range' is nil when no range has been given
-    (unless (or (car start) (cadr end) sep (car end) (cadr end))
-      (setq evil-ex-current-range nil))
-    (when (and (> (length evil-ex-current-arg) 0)
-               (= (aref evil-ex-current-arg 0) ? ))
-      (setq evil-ex-current-arg (substring evil-ex-current-arg 1)))
-    (when (and cmd (not (equal cmd oldcmd)))
-      (let ((compl (if (assoc cmd evil-ex-commands)
-                       (list t)
-                     (mapcar #'evil-ex-binding
-                             (all-completions evil-ex-current-cmd
-                                              evil-ex-commands)))))
-        (cond
-         ((null compl) (evil-ex-message "Unknown command"))
-         ((cdr compl) (evil-ex-message "Incomplete command")))))
+          evil-ex-current-range (and start sep end (list start sep end)))))
 
-    ;; update arg-handler
-    (let* ((arg-type (and bnd (evil-get-command-property bnd :ex-arg)))
-           (arg-handler (and arg-type (cdr-safe (assoc arg-type evil-ex-arg-types-alist)))))
-      (unless (eq arg-handler evil-ex-current-arg-handler)
+(defun evil-ex-update (beg end len)
+  "Updates ex-variable in ex-mode when the buffer content changes."
+  (let ((oldcmd evil-ex-current-cmd))
+    (evil-ex-update-current-command (buffer-substring (minibuffer-prompt-end) (point-max)))
+    (let ((bnd (and evil-ex-current-cmd
+                    (evil-ex-completed-binding evil-ex-current-cmd))))
+      ;; Test the current command if different from the previous command
+      (when (and evil-ex-current-cmd
+                 (not (equal evil-ex-current-cmd oldcmd)))
+        (let ((compl (if (assoc evil-ex-current-cmd evil-ex-commands)
+                         (list t)
+                       (mapcar #'evil-ex-binding
+                               (all-completions evil-ex-current-cmd
+                                                evil-ex-commands)))))
+          (cond
+           ((null compl) (evil-ex-message "Unknown command"))
+           ((cdr compl) (evil-ex-message "Incomplete command")))))
+      ;; update arg-handler
+      (let* ((arg-type (and bnd (evil-get-command-property bnd :ex-arg)))
+             (arg-handler (and arg-type (cdr-safe (assoc arg-type evil-ex-arg-types-alist)))))
+        (unless (eq arg-handler evil-ex-current-arg-handler)
+          (when evil-ex-current-arg-handler
+            (funcall evil-ex-current-arg-handler 'stop))
+          (setq evil-ex-current-arg-handler arg-handler)
+          (when evil-ex-current-arg-handler
+            (funcall evil-ex-current-arg-handler 'start evil-ex-current-arg)))
         (when evil-ex-current-arg-handler
-          (funcall evil-ex-current-arg-handler 'stop))
-        (setq evil-ex-current-arg-handler arg-handler)
-        (when evil-ex-current-arg-handler
-          (funcall evil-ex-current-arg-handler 'start evil-ex-current-arg)))
-      (when evil-ex-current-arg-handler
-        (funcall evil-ex-current-arg-handler 'update evil-ex-current-arg)))))
+          (funcall evil-ex-current-arg-handler 'update evil-ex-current-arg))))))
 
 (defun evil-ex-binding (command)
   "Returns the final binding of COMMAND."
@@ -515,6 +519,7 @@ count) in which case this function returns nil."
                                    initial-input
                                    'evil-ex-history nil t)))
       (when (and result (not (zerop (length result))))
+        (evil-ex-update-current-command result)
         (evil-ex-call-current-command)))))
 
 (provide 'evil-ex)
