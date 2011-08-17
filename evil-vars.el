@@ -164,6 +164,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     monky-mode
     occur-mode
     org-agenda-mode
+    package-menu-mode
     rcirc-mode
     reftex-toc-mode
     tar-mode
