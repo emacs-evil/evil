@@ -2,11 +2,12 @@ SHELL = /bin/bash
 EMACS = emacs
 FILES = $(filter-out evil-tests.el,$(filter-out evil-pkg.el,$(wildcard evil*.el)))
 ELPAPKG = evil-`sed -n '3s/.*"\(.*\)".*/\1/p' evil-pkg.el`
+PROFILER =
 TAG =
 
 ELCFILES = $(FILES:.el=.elc)
 
-.PHONY: all compile compile-batch clean tests test emacs term terminal indent elpa version
+.PHONY: all compile compile-batch clean tests test emacs term terminal profiler indent elpa version
 
 # Byte-compile Evil.
 all: compile
@@ -41,30 +42,31 @@ clean:
 # The TAG variable may specify a test tag or a test name:
 #       make test TAG=repeat
 # This will only run tests pertaining to the repeat system.
-test: clean
+test:
 	$(EMACS) --batch -Q -L . -L lib -l evil-tests.el \
---eval "(evil-tests-run '(${TAG}))"
+--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
 
 # Byte-compile Evil and run all tests.
 tests: compile-batch
 	$(EMACS) --batch -Q -L . -L lib -l evil-tests.el \
---eval "(evil-tests-run '(${TAG}))"
+--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
 	rm -f *.elc
 
 # Load Evil in a fresh instance of Emacs and run all tests.
 emacs:
 	$(EMACS) -Q -L . -L lib -l evil-tests.el --eval "(evil-mode 1)" \
---eval "(if (y-or-n-p-with-timeout \"Run tests? \" 2 t) \
-(evil-tests-run '(${TAG}) t) \
-(message \"You can run the tests at any time with \`M-x evil-tests-run\'\"))" &
+--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)" &
 
 # Load Evil in a terminal Emacs and run all tests.
 term: terminal
 terminal:
 	$(EMACS) -nw -Q -L . -L lib -l evil-tests.el --eval "(evil-mode 1)" \
---eval "(if (y-or-n-p-with-timeout \"Run tests? \" 2 t) \
-(evil-tests-run '(${TAG}) t) \
-(message \"You can run the tests at any time with \`M-x evil-tests-run\'\"))"
+--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)"
+
+# Run all tests with profiler.
+profiler:
+	$(EMACS) --batch -Q -L . -L lib -l evil-tests.el \
+--eval "(evil-tests-initialize '(${TAG}) (or '(${PROFILER}) t))"
 
 # Re-indent all Evil code.
 # Loads Evil into memory in order to indent macros properly.

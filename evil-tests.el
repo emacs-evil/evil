@@ -9,26 +9,64 @@
 ;;
 ;; This file is NOT part of Evil itself.
 
+(require 'elp)
 (require 'ert)
 (require 'evil)
 
 (defvar evil-tests-run nil
   "*Run Evil tests.")
 
+(defvar evil-tests-profiler nil
+  "*Profile Evil tests.")
+
+(defun evil-tests-initialize (&optional tests profiler interactive)
+  (setq profiler (or profiler evil-tests-profiler))
+  (when (listp profiler)
+    (setq profiler (car profiler)))
+  (when profiler
+    (setq evil-tests-profiler t)
+    (setq profiler
+          (or (cdr (assq profiler
+                         '((call . elp-sort-by-call-count)
+                           (average . elp-sort-by-average-time)
+                           (total . elp-sort-by-total-time))))))
+    (setq elp-sort-by-function (or profiler 'elp-sort-by-call-count))
+    (elp-instrument-package "evil"))
+  (if interactive
+      (if (y-or-n-p-with-timeout "Run tests? " 2 t)
+          (evil-tests-run tests interactive)
+        (message "You can run the tests at any time \
+with `M-x evil-tests-run'"))
+    (evil-tests-run tests)))
+
 (defun evil-tests-run (&optional tests interactive)
   "Run Evil tests."
   (interactive '(nil t))
-  (setq tests
-        (or (null tests)
-            `(or ,@(mapcar (lambda (test)
-                             (or (null test)
-                                 (and (memq test '(evil t)) t)
-                                 `(or (tag ,test)
-                                      ,(format "^%s$" test))))
-                           tests))))
-  (if interactive
+  (let ((elp-use-standard-output (not interactive)))
+    (setq tests
+          (or (null tests)
+              `(or ,@(mapcar (lambda (test)
+                               (or (null test)
+                                   (and (memq test '(evil t)) t)
+                                   `(or (tag ,test)
+                                        ,(format "^%s$" test))))
+                             tests))))
+    (cond
+     (interactive
       (ert-run-tests-interactively tests)
-    (ert-run-tests-batch-and-exit tests)))
+      (when evil-tests-profiler
+        (elp-results)))
+     (evil-tests-profiler
+      (ert-run-tests-batch tests)
+      (elp-results))
+     (t
+      (ert-run-tests-batch-and-exit tests)))))
+
+(defun evil-tests-profiler (&optional force)
+  "Profile Evil tests."
+  (when (or evil-tests-profiler force)
+    (setq evil-tests-profiler t)
+    (elp-instrument-package "evil")))
 
 (defvar evil-test-point nil
   "Marker for point.")
@@ -3816,8 +3854,8 @@ if no previous selection")
   (should (equal (evil-ex-parse-range ".+42cmd arg" 0)
                  (cons 4 '((current-line . 42) nil nil)))))
 
-(when evil-tests-run
-  (evil-tests-run))
+(when (or evil-tests-profiler evil-tests-run)
+  (evil-tests-initialize))
 
 (provide 'evil-tests)
 

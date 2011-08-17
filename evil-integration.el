@@ -33,6 +33,12 @@
      (defadvice wdired-change-to-dired-mode (after evil activate)
        (evil-change-to-initial-state nil t))))
 
+;;; ELP
+
+(eval-after-load 'elp
+  '(defadvice elp-results (after evil activate)
+     (evil-motion-state)))
+
 ;;; Folding
 
 (eval-after-load 'hideshow
