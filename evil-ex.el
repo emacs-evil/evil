@@ -496,15 +496,20 @@ count) in which case this function returns nil."
   "Initializes ex minibuffer."
   (add-hook 'after-change-functions #'evil-ex-update nil t)
   (add-hook 'minibuffer-exit-hook #'evil-ex-teardown)
+  (when evil-ex-last-cmd
+    (add-hook 'pre-command-hook #'evil-ex-remove-default))
   (remove-hook 'minibuffer-setup-hook #'evil-ex-setup))
 
 (defun evil-ex-teardown ()
   "Deinitializes ex minibuffer."
   (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown)
   (remove-hook 'after-change-functions #'evil-ex-update t)
-  (evil-ex-update (point-min) (point-max) 0)
   (when evil-ex-current-arg-handler
     (funcall evil-ex-current-arg-handler 'stop)))
+
+(defun evil-ex-remove-default ()
+  (delete-minibuffer-contents)
+  (remove-hook 'pre-command-hook #'evil-ex-remove-default))
 
 (defun evil-ex-read-command (&optional initial-input)
   "Starts ex-mode."
@@ -512,14 +517,19 @@ count) in which case this function returns nil."
   (let ((evil-ex-current-buffer (current-buffer))
         (minibuffer-local-completion-map evil-ex-keymap)
         evil-ex-current-arg-handler
-        evil-ex-info-string)
+        evil-ex-info-string
+        (evil-ex-last-cmd (and (not initial-input)
+                               (car-safe evil-ex-history))))
     (add-hook 'minibuffer-setup-hook #'evil-ex-setup)
     (let ((result (completing-read ":"
                                    #'evil-ex-completion
                                    nil
                                    nil
-                                   initial-input
-                                   'evil-ex-history nil t)))
+                                   (or initial-input
+                                       (concat "(default: " evil-ex-last-cmd ") "))
+                                   'evil-ex-history
+                                   evil-ex-last-cmd
+                                   t)))
       (when (and result (not (zerop (length result))))
         (evil-ex-update-current-command result)
         (evil-ex-call-current-command)))))

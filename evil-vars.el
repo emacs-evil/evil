@@ -608,6 +608,9 @@ They are reused to prevent flicker.")
 (defvar evil-ex-current-buffer nil
   "The buffer from which the current ex-mode has been started.")
 
+(defvar evil-ex-last-cmd nil
+  "The previously executed command.")
+
 (defvar evil-ex-current-cmd nil
   "The currently parsed command.")
 
