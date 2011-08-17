@@ -172,6 +172,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     twittering-mode
     vc-dir-mode
     vc-annotate-mode
+    vc-git-log-view-mode
     vm-mode
     vm-summary-mode)
   "Modes that should come up in Emacs state."
