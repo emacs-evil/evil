@@ -406,19 +406,21 @@ arguments for programmable completion."
 
 (defun evil-ex-call-current-command ()
   "Execute the given command COMMAND."
-  (let ((binding (evil-ex-completed-binding evil-ex-current-cmd)))
-    (if binding
-        (with-current-buffer evil-ex-current-buffer
-          (save-excursion
-            (let ((range (evil-ex-get-current-range))
-                  prefix-arg)
-              (when (and (not range)
-                         evil-ex-current-range
-                         (car evil-ex-current-range)
-                         (numberp (caar evil-ex-current-range)))
-                (setq prefix-arg (caar evil-ex-current-range)))
-              (call-interactively binding))))
-      (error "Unknown command %s" evil-ex-current-cmd))))
+  (if (not evil-ex-current-cmd)
+      (error "Invalid ex-command.")
+    (let ((binding (evil-ex-completed-binding evil-ex-current-cmd)))
+      (if binding
+          (with-current-buffer evil-ex-current-buffer
+            (save-excursion
+              (let ((range (evil-ex-get-current-range))
+                    prefix-arg)
+                (when (and (not range)
+                           evil-ex-current-range
+                           (car evil-ex-current-range)
+                           (numberp (caar evil-ex-current-range)))
+                  (setq prefix-arg (caar evil-ex-current-range)))
+                (call-interactively binding))))
+        (error "Unknown command %s" evil-ex-current-cmd)))))
 
 (defun evil-ex-range ()
   "Returns the first and last position of the current range."
