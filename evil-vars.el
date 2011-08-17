@@ -169,6 +169,8 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     tar-mode
     term-mode
     twittering-mode
+    vc-dir-mode
+    vc-annotate-mode
     vm-mode
     vm-summary-mode)
   "Modes that should come up in Emacs state."
