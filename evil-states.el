@@ -309,9 +309,10 @@ may be specified before the body code:
     (evil-esc-mode 1)
     (remove-hook 'pre-command-hook 'evil-turn-on-esc-mode t)))
 
-(defun evil-esc ()
+(evil-define-command evil-esc ()
   "Wait for further keys within `evil-esc-delay'.
 Otherwise send [escape]."
+  :repeat ignore
   (interactive)
   (if (sit-for evil-esc-delay t)
       (push 'escape unread-command-events)
