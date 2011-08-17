@@ -147,12 +147,21 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
   '(bookmark-bmenu-mode
     bookmark-edit-annotation-mode
     browse-kill-ring-mode
+    bzr-annotate-mode
     cfw:calendar-mode
     compilation-mode
     completion-list-mode
     Custom-mode
     debugger-mode
     doc-view-mode
+    dvc-bookmarks-mode
+    dvc-diff-mode
+    dvc-info-buffer-mode
+    dvc-log-buffer-mode
+    dvc-revlist-mode
+    dvc-revlog-mode
+    dvc-status-mode
+    dvc-tips-mode
     efs-mode
     ert-results-mode
     gnus-article-mode
@@ -167,6 +176,9 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     magit-show-branches-mode
     mh-folder-mode
     monky-mode
+    notmuch-hello-mode
+    notmuch-search-mode
+    notmuch-show-mode
     occur-mode
     org-agenda-mode
     package-menu-mode
@@ -175,21 +187,6 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     reftex-toc-mode
     tar-mode
     term-mode
-    twittering-mode
-    vc-annotate-mode
-    vc-dir-mode
-    vc-git-log-view-mode
-    vm-mode
-    vm-summary-mode
-    bzr-annotate-mode
-    dvc-bookmarks-mode
-    dvc-diff-mode
-    dvc-info-buffer-mode
-    dvc-log-buffer-mode
-    dvc-revlist-mode
-    dvc-revlog-mode
-    dvc-status-mode
-    dvc-tips-mode
     tla-annotate-mode
     tla-archive-list-mode
     tla-bconfig-mode
@@ -207,6 +204,12 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     tla-revlog-mode
     tla-tree-lint-mode
     tla-version-list-mode
+    twittering-mode
+    vc-annotate-mode
+    vc-dir-mode
+    vc-git-log-view-mode
+    vm-mode
+    vm-summary-mode
     xgit-annotate-mode
     xgit-changelog-mode
     xgit-diff-mode
