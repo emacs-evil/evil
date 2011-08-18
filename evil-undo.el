@@ -64,7 +64,7 @@ See `evil-start-undo-step'."
     (setq buffer-undo-list
           (evil-filter-list 'null buffer-undo-list
                             evil-undo-list-pointer)
-          evil-undo-list-pointer buffer-undo-list)))
+          evil-undo-list-pointer (or buffer-undo-list t))))
 
 ;;; Undo ring
 

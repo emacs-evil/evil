@@ -230,11 +230,11 @@ has :repeat nil."
                (not (evil-emacs-state-p))
                (not (evil-repeat-different-buffer-p t))
                evil-state)
-    (unless evil-recording-repeat
-      (evil-repeat-start))
-    (evil-repeat-record-change (- beg evil-repeat-pos)
-                               (buffer-substring beg end)
-                               length))))
+      (unless evil-recording-repeat
+        (evil-repeat-start))
+      (evil-repeat-record-change (- beg evil-repeat-pos)
+                                 (buffer-substring beg end)
+                                 length))))
 
 (defun evil-repeat-record-change (relpos ins ndel)
   "Record the current buffer changes during a repeat.
