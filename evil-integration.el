@@ -16,8 +16,12 @@
 ;;; Buffer-menu
 
 (eval-after-load "buff-menu"
-  '(evil-define-key 'motion Buffer-menu-mode-map (kbd "RET")
-     'Buffer-menu-this-window))
+  '(progn
+     (evil-make-overriding-map Buffer-menu-mode-map)
+     (evil-define-key 'motion Buffer-menu-mode-map "h" 'evil-backward-char)
+     (evil-define-key 'motion Buffer-menu-mode-map "j" 'evil-next-line)
+     (evil-define-key 'motion Buffer-menu-mode-map "k" 'evil-previous-line)
+     (evil-define-key 'motion Buffer-menu-mode-map "l" 'evil-forward-char)))
 
 ;;; Dired
 
