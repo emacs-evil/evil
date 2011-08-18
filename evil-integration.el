@@ -2,6 +2,7 @@
 
 (require 'evil-states)
 (require 'evil-motions)
+(require 'evil-repeat)
 
 (mapc 'evil-declare-motion evil-motions)
 (mapc 'evil-declare-not-repeat '(save-buffer
@@ -161,6 +162,38 @@
     'undo-tree-visualize-redo)
   (define-key undo-tree-visualizer-map [remap evil-previous-line]
     'undo-tree-visualize-undo))
+
+;;; Auto-complete
+(eval-after-load 'auto-complete
+  '(progn
+     (evil-set-command-properties 'ac-complete :repeat 'evil-ac-repeat)
+     (evil-set-command-properties 'ac-expand :repeat 'evil-ac-repeat)
+     (evil-set-command-properties 'ac-next :repeat 'ignore)
+     (evil-set-command-properties 'ac-previous :repeat 'ignore)
+
+     (defvar evil-ac-prefix-len nil
+       "The length of the prefix of the current item to be completed.")
+
+     (defun evil-ac-repeat (flag)
+       "Record the changes for auto-completion."
+       (cond
+        ((eq flag 'pre)
+         (setq evil-ac-prefix-len (length ac-prefix))
+         (evil-repeat-start-record-changes))
+        ((eq flag 'post)
+         ;; Add change to remove the prefix
+         (evil-repeat-record-change (- evil-ac-prefix-len)
+                                    ""
+                                    evil-ac-prefix-len)
+         ;; Add change to insert the full completed text
+         (evil-repeat-record-change
+          (- evil-ac-prefix-len)
+          (buffer-substring-no-properties (- evil-repeat-pos
+                                             evil-ac-prefix-len)
+                                          (point))
+          0)
+         ;; Finish repeation
+         (evil-repeat-finish-record-changes))))))
 
 (provide 'evil-integration)
 
