@@ -54,7 +54,7 @@
          ,@(when doc `(,doc))          ; avoid nil before `interactive'
          ,@keys
          :keep-visual t
-         :repeat nil
+         :repeat motion
          (interactive
           ,@(when (or jump interactive)
               `((progn

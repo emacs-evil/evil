@@ -4,7 +4,12 @@
 (require 'evil-motions)
 
 (mapc 'evil-declare-motion evil-motions)
-(mapc 'evil-declare-not-repeat '(save-buffer))
+(mapc 'evil-declare-not-repeat '(save-buffer
+                                 digit-argument
+                                 negative-argument
+                                 universal-argument
+                                 universal-argument-minus
+                                 universal-argument-other-key))
 (mapc 'evil-declare-change-repeat '(dabbrev-expand hippie-expand))
 
 ;;; Buffer-menu

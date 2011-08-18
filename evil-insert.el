@@ -14,11 +14,11 @@
   :exit-hook (evil-cleanup-insert-state)
   (cond
    ((evil-insert-state-p)
-    (add-hook 'pre-command-hook 'evil-insert-repeat-hook nil t)
+    (add-hook 'pre-command-hook 'evil-insert-repeat-hook)
     (unless evil-want-fine-undo
       (evil-start-undo-step t)))
    (t
-    (remove-hook 'pre-command-hook 'evil-insert-repeat-hook t)
+    (remove-hook 'pre-command-hook 'evil-insert-repeat-hook)
     (setq evil-insert-repeat-info evil-repeat-info)
     (evil-set-marker ?^ nil t)
     (unless evil-want-fine-undo
@@ -29,7 +29,7 @@
 (defun evil-insert-repeat-hook ()
   "Record insertion keys in `evil-insert-repeat-info'."
   (setq evil-insert-repeat-info (last evil-repeat-info))
-  (remove-hook 'pre-command-hook 'evil-insert-repeat-hook t))
+  (remove-hook 'pre-command-hook 'evil-insert-repeat-hook))
 
 (defun evil-cleanup-insert-state ()
   "Called when Insert state is about to be exited.

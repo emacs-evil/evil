@@ -618,7 +618,7 @@ MOTION defaults to the current motion."
 (defun evil-declare-motion (command)
   "Declare COMMAND to be a movement function.
 This ensures that it behaves correctly in Visual state."
-  (evil-add-command-properties command :keep-visual t :repeat nil))
+  (evil-add-command-properties command :keep-visual t :repeat 'motion))
 
 (defun evil-declare-repeat (command)
   "Declare COMMAND to be repeatable."
@@ -627,6 +627,10 @@ This ensures that it behaves correctly in Visual state."
 (defun evil-declare-not-repeat (command)
   "Declare COMMAND to be nonrepeatable."
   (evil-add-command-properties command :repeat nil))
+
+(defun evil-declare-ignore-repeat (command)
+  "Declare COMMAND to be nonrepeatable."
+  (evil-add-command-properties command :repeat 'ignore))
 
 (defun evil-declare-change-repeat (command)
   "Declare COMMAND to be repeatable by buffer changes."

@@ -483,6 +483,12 @@ in the current buffer.")
 (defvar evil-repeat-ring (make-ring 10)
   "A ring of repeat-informations to repeat the last command.")
 
+(defvar evil-repeat-types
+  '((t . evil-repeat-keystrokes)
+    (change . evil-repeat-changes)
+    (motion . evil-repeat-motion))
+  "An alist of defined repeat-types.")
+
 (defvar evil-recording-repeat nil
   "Whether we are recording a repeat.")
 
