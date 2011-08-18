@@ -47,7 +47,6 @@
 (define-key evil-normal-state-map "\C-n" 'evil-paste-pop-next)
 (define-key evil-normal-state-map "\C-p" 'evil-paste-pop)
 (define-key evil-normal-state-map "\C-t" 'pop-tag-mark)
-(define-key evil-normal-state-map "\C-w" 'evil-window-map)
 (define-key evil-normal-state-map (kbd "C-.") 'evil-repeat-pop)
 (define-key evil-normal-state-map (kbd "M-.") 'evil-repeat-pop-next)
 (define-key evil-normal-state-map "." 'evil-repeat)
@@ -192,6 +191,7 @@
 (define-key evil-motion-state-map "+" 'evil-next-line-first-non-blank)
 (define-key evil-motion-state-map "_" 'evil-next-line-first-non-blank)
 (define-key evil-motion-state-map "-" 'evil-previous-line-first-non-blank)
+(define-key evil-motion-state-map "\C-w" 'evil-window-map)
 (define-key evil-motion-state-map "\C-]" 'evil-jump-to-tag)
 (define-key evil-motion-state-map "aw" 'evil-a-word)
 (define-key evil-motion-state-map "iw" 'evil-inner-word)
@@ -273,6 +273,7 @@
 (define-key evil-visual-state-map "S" 'evil-change)
 (define-key evil-visual-state-map "u" 'evil-downcase)
 (define-key evil-visual-state-map "U" 'evil-upcase)
+(define-key evil-visual-state-map [remap evil-repeat] 'undefined)
 (define-key evil-visual-state-map [escape] 'evil-change-to-previous-state)
 
 ;;; Insert state
@@ -288,6 +289,8 @@
 (define-key evil-insert-state-map "\C-x\C-n" 'evil-complete-line)
 (define-key evil-insert-state-map (kbd "RET") 'evil-ret)
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
+(define-key evil-insert-state-map
+  (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
 
 (when evil-want-C-w-delete
   (define-key evil-insert-state-map (kbd "C-w") 'backward-kill-word))
@@ -301,6 +304,9 @@
 
 (define-key evil-emacs-state-map
   (read-kbd-macro evil-toggle-key) 'evil-exit-emacs-state)
+
+(when evil-want-C-w-in-emacs-state
+  (define-key evil-emacs-state-map "\C-w" 'evil-window-map))
 
 ;;; Minibuffer
 

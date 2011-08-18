@@ -119,6 +119,11 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-want-C-w-in-emacs-state nil
+  "Whether \"C-w\" prefixes windows commands in Emacs state."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-toggle-key "C-z"
   "The key used to change to and from Emacs state.
 Must be readable by `read-kbd-macro'. For example: \"C-z\"."
