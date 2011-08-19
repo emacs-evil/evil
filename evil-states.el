@@ -552,7 +552,7 @@ If STATE is nil, it means any state."
             (when (evil-overriding-keymap-p map (car state))
               (throw 'done t)))))))
 
-(defun evil-define-key (state keymap key def)
+(defun evil-define-key (state keymap key def &rest bindings)
   "Create a STATE binding from KEY to DEF for KEYMAP.
 STATE is one of `normal', `insert', `visual', `replace',
 `operator', `motion' and `emacs'. The remaining arguments
@@ -561,16 +561,25 @@ are like those of `define-key'. For example:
     (evil-define-key 'normal foo-map \"a\" 'bar)
 
 This creates a binding from \"a\" to `bar' in Normal state,
-which is active whenever `foo-map' is active. See also
-`evil-declare-key'."
+which is active whenever `foo-map' is active. It is possible
+to specify multiple bindings at once:
+
+    (evil-define-key 'normal foo-map
+      \"a\" 'bar
+      \"b\" 'foo)
+
+See also `evil-declare-key'."
   (let ((aux (if state
                  (evil-get-auxiliary-keymap keymap state t)
                keymap)))
-    (define-key aux key def)
+    (while key
+      (define-key aux key def)
+      (setq key (pop bindings)
+            def (pop bindings)))
     ;; ensure the prompt string comes first
     (evil-set-keymap-prompt aux (keymap-prompt aux))))
 
-(defmacro evil-declare-key (state keymap key def)
+(defmacro evil-declare-key (state keymap key def &rest bindings)
   "Declare a STATE binding from KEY to DEF in KEYMAP.
 Similar to `evil-define-key', but also works if KEYMAP is unbound;
 the execution is postponed until KEYMAP is bound. For example:
@@ -581,11 +590,11 @@ The arguments are exactly like those of `evil-define-key',
 and should be quoted as such."
   (declare (indent defun))
   `(if (boundp ',keymap)
-       (evil-define-key ,state ,keymap ,key ,def)
+       (evil-define-key ,state ,keymap ,key ,def ,@bindings)
      (add-hook 'after-load-functions
                ;; Create a lambda function that removes itself.
-               ;; As the read syntax for circular lists appears
-               ;; to be partially incompatible with the backquote
+               ;; As the read syntax for self-referential lists
+               ;; seems partially incompatible with the backquote
                ;; ("binding depth exceeds max-specpdl-size"),
                ;; the function is constructed in two parts.
                ,(nconc
@@ -593,7 +602,7 @@ and should be quoted as such."
                  `((when (boundp ',keymap)
                      (unless (keymapp ,keymap)
                        (setq ,keymap (make-sparse-keymap)))
-                     (evil-define-key ,state ,keymap ,key ,def)
+                     (evil-define-key ,state ,keymap ,key ,def ,@bindings)
                      (remove-hook 'after-load-functions #0#)))))))
 
 (put 'evil-define-key 'lisp-indent-function 'defun)

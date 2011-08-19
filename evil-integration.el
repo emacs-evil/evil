@@ -19,10 +19,11 @@
 (eval-after-load "buff-menu"
   '(progn
      (evil-make-overriding-map Buffer-menu-mode-map)
-     (evil-define-key 'motion Buffer-menu-mode-map "h" 'evil-backward-char)
-     (evil-define-key 'motion Buffer-menu-mode-map "j" 'evil-next-line)
-     (evil-define-key 'motion Buffer-menu-mode-map "k" 'evil-previous-line)
-     (evil-define-key 'motion Buffer-menu-mode-map "l" 'evil-forward-char)))
+     (evil-define-key 'motion Buffer-menu-mode-map
+       "h" 'evil-backward-char
+       "j" 'evil-next-line
+       "k" 'evil-previous-line
+       "l" 'evil-forward-char)))
 
 ;;; Dired
 
@@ -30,13 +31,14 @@
   '(progn
      ;; use the standard Dired bindings as a base
      (evil-make-overriding-map dired-mode-map 'normal t)
-     (evil-define-key 'normal dired-mode-map "h" 'evil-backward-char)
-     (evil-define-key 'normal dired-mode-map "j" 'evil-next-line)
-     (evil-define-key 'normal dired-mode-map "k" 'evil-previous-line)
-     (evil-define-key 'normal dired-mode-map "l" 'evil-forward-char)
-     (evil-define-key 'normal dired-mode-map "J" 'dired-goto-file) ; "j"
-     (evil-define-key 'normal dired-mode-map "K" 'dired-do-kill-lines) ; "k"
-     (evil-define-key 'normal dired-mode-map "r" 'dired-do-redisplay))) ; "l"
+     (evil-define-key 'normal dired-mode-map
+       "h" 'evil-backward-char
+       "j" 'evil-next-line
+       "k" 'evil-previous-line
+       "l" 'evil-forward-char
+       "J" 'dired-goto-file       ; "j"
+       "K" 'dired-do-kill-lines   ; "k"
+       "r" 'dired-do-redisplay))) ; "l"
 
 (eval-after-load 'wdired
   '(progn
@@ -85,20 +87,14 @@
 
 (eval-after-load 'info
   '(progn
-     (evil-define-key 'motion Info-mode-map "\C-t"
-       'Info-history-back) ; "l"
-     (evil-define-key 'motion Info-mode-map "\C-o"
-       'Info-history-back)
-     (evil-define-key 'motion Info-mode-map (kbd "\M-h")
-       'Info-help) ; "h"
-     (evil-define-key 'motion Info-mode-map " "
-       'Info-scroll-up)
-     (evil-define-key 'motion Info-mode-map (kbd "RET")
-       'Info-follow-nearest-node)
-     (evil-define-key 'motion Info-mode-map "\C-]"
-       'Info-follow-nearest-node)
-     (evil-define-key 'motion Info-mode-map (kbd "DEL")
-       'Info-scroll-down)))
+     (evil-define-key 'motion Info-mode-map
+       (kbd "\M-h") 'Info-help   ; "h"
+       "\C-t" 'Info-history-back ; "l"
+       "\C-o" 'Info-history-back
+       " " 'Info-scroll-up
+       (kbd "RET") 'Info-follow-nearest-node
+       "\C-]" 'Info-follow-nearest-node
+       (kbd "DEL") 'Info-scroll-down)))
 
 ;;; Parentheses
 
@@ -143,17 +139,16 @@
      (evil-make-overriding-map speedbar-key-map)
      (evil-make-overriding-map speedbar-file-key-map)
      (evil-make-overriding-map speedbar-buffers-key-map)
-     (evil-define-key 'motion speedbar-key-map "h" 'backward-char)
-     (evil-define-key 'motion speedbar-key-map "j" 'speedbar-next)
-     (evil-define-key 'motion speedbar-key-map "k" 'speedbar-prev)
-     (evil-define-key 'motion speedbar-key-map "l" 'forward-char)
-     (evil-define-key 'motion speedbar-key-map "i" 'speedbar-item-info)
-     (evil-define-key 'motion speedbar-key-map "r" 'speedbar-refresh)
-     (evil-define-key 'motion speedbar-key-map "u" 'speedbar-up-directory)
-     (evil-define-key 'motion
-       speedbar-key-map "o" 'speedbar-toggle-line-expansion)
-     (evil-define-key
-       'motion speedbar-key-map (kbd "RET") 'speedbar-edit-line)))
+     (evil-define-key 'motion speedbar-key-map
+       "h" 'backward-char
+       "j" 'speedbar-next
+       "k" 'speedbar-prev
+       "l" 'forward-char
+       "i" 'speedbar-item-info
+       "r" 'speedbar-refresh
+       "u" 'speedbar-up-directory
+       "o" 'speedbar-toggle-line-expansion
+       (kbd "RET") 'speedbar-edit-line)))
 
 ;;; Undo tree visualizer
 
