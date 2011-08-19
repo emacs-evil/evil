@@ -403,7 +403,7 @@ If SAVE-POINT is non-nil, do not move point."
          count (ring-ref evil-repeat-ring 0)))))))
 
 ;; TODO: the same issue concering disabled undos as for `evil-paste-pop'
-(defun evil-repeat-pop (count &optional save-point)
+(evil-define-command evil-repeat-pop (count &optional save-point)
   "Replace the just repeated command with a previously executed command.
 Only allowed after `evil-repeat', `evil-repeat-pop' or
 `evil-repeat-pop-next'. Uses the same repeat count that
@@ -411,6 +411,7 @@ was used for the first repeat.
 
 The COUNT argument inserts the COUNT-th previous kill.
 If COUNT is negative, this is a more recent kill."
+  :repeat nil
   (interactive (list (prefix-numeric-value current-prefix-arg)
                      (not evil-repeat-move-cursor)))
   (cond
@@ -432,8 +433,9 @@ If COUNT is negative, this is a more recent kill."
     (setq this-command 'evil-repeat)
     (evil-repeat (cadr evil-last-repeat)))))
 
-(defun evil-repeat-pop-next (count &optional save-point)
+(evil-define-command evil-repeat-pop-next (count &optional save-point)
   "Same as `evil-repeat-pop', but with negative COUNT."
+  :repeat nil
   (interactive (list (prefix-numeric-value current-prefix-arg)
                      (not evil-repeat-move-cursor)))
   (evil-repeat-pop (- count) save-point))
