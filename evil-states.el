@@ -555,18 +555,47 @@ If STATE is nil, it means any state."
 
 (defun evil-define-key (state keymap key def)
   "Create a STATE binding from KEY to DEF for KEYMAP.
-The syntax is similar to that of `define-key'. For example:
+STATE is one of `normal', `insert', `visual', `replace',
+`operator', `motion' and `emacs'. The remaining arguments
+are like those of `define-key'. For example:
 
     (evil-define-key 'normal foo-map \"a\" 'bar)
 
 This creates a binding from \"a\" to `bar' in Normal state,
-which is active whenever `foo-map' is active."
+which is active whenever `foo-map' is active. See also
+`evil-declare-key'."
   (let ((aux (if state
                  (evil-get-auxiliary-keymap keymap state t)
                keymap)))
     (define-key aux key def)
     ;; ensure the prompt string comes first
     (evil-set-keymap-prompt aux (keymap-prompt aux))))
+
+(defmacro evil-declare-key (state keymap key def)
+  "Declare a STATE binding from KEY to DEF in KEYMAP.
+Similar to `evil-define-key', but also works if KEYMAP is unbound;
+the execution is postponed until KEYMAP is bound. For example:
+
+    (evil-declare-key 'normal foo-map \"a\" 'bar)
+
+The arguments are exactly like those of `evil-define-key',
+and should be quoted as such."
+  (declare (indent defun))
+  `(if (boundp ',keymap)
+       (evil-define-key ,state ,keymap ,key ,def)
+     (add-hook 'after-load-functions
+               ;; Create a lambda function that removes itself.
+               ;; As the read syntax for circular lists appears
+               ;; to be partially incompatible with the backquote
+               ;; ("binding depth exceeds max-specpdl-size"),
+               ;; the function is constructed in two parts.
+               ,(nconc
+                 '#0=(lambda (&rest args))
+                 `((when (boundp ',keymap)
+                     (unless (keymapp ,keymap)
+                       (setq ,keymap (make-sparse-keymap)))
+                     (evil-define-key ,state ,keymap ,key ,def)
+                     (remove-hook 'after-load-functions #0#)))))))
 
 (put 'evil-define-key 'lisp-indent-function 'defun)
 (put 'evil-set-auxiliary-keymap 'lisp-indent-function 'defun)
