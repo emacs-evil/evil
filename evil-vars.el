@@ -180,7 +180,43 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     vc-dir-mode
     vc-git-log-view-mode
     vm-mode
-    vm-summary-mode)
+    vm-summary-mode
+    bzr-annotate-mode
+    dvc-bookmarks-mode
+    dvc-diff-mode
+    dvc-info-buffer-mode
+    dvc-log-buffer-mode
+    dvc-revlist-mode
+    dvc-revlog-mode
+    dvc-status-mode
+    dvc-tips-mode
+    tla-annotate-mode
+    tla-archive-list-mode
+    tla-bconfig-mode
+    tla-bookmarks-mode
+    tla-branch-list-mode
+    tla-browse-mode
+    tla-category-list-mode
+    tla-changelog-mode
+    tla-follow-symlinks-mode
+    tla-inventory-file-mode
+    tla-inventory-mode
+    tla-lint-mode
+    tla-logs-mode
+    tla-revision-list-mode
+    tla-revlog-mode
+    tla-tree-lint-mode
+    tla-version-list-mode
+    xgit-annotate-mode
+    xgit-changelog-mode
+    xgit-diff-mode
+    xgit-revlog-mode
+    xhg-annotate-mode
+    xhg-log-mode
+    xhg-mode
+    xhg-mq-mode
+    xhg-mq-sub-mode
+    xhg-status-extra-mode)
   "Modes that should come up in Emacs state."
   :type  '(repeat symbol)
   :group 'evil)
