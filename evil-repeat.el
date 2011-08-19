@@ -22,49 +22,74 @@
 ;;                  +--------> | I | <--------+
 ;;                             \___/
 ;;
-;; Normally, a repeat is triggered whenever a command leaves Normal
-;; state, or when it changes the buffer in Normal state (thereby
-;; running the `after-change-functions' hook). A command may also
-;; trigger a repeat with the :repeat command property. When executed
-;; in Normal state, a command with :repeat t will always be repeated;
-;; a command with :repeat nil will never be repeated. (Command
-;; properties may be set with `evil-add-command-properties'.)
+;; The recording of a repeat is started in one of two cases: Either a
+;; command is about being executed (in pre-command-hook) or normal
+;; state is exited. The recording is stopped whenever a command has
+;; being completed and evil is in normal state afterwards. Therefore,
+;; a non-inserting command in normal-state is recorded as a single
+;; repeat unit. In contrast, if the command leaves normal state and
+;; starts insert-state, all commands that are executed until
+;; insert-state is left and normal state is reactivated are recorded
+;; together in one repeat unit. In other words, a repeat unit consists
+;; of all commands that are executed starting and ending in normal
+;; state.
 ;;
-;; When a repeat is being recorded, each command is stored in
-;; `evil-repeat-info' from `post-command-hook'. When the repeat ends,
-;; the accumulated changes in `evil-repeat-info' are inserted into
-;; `evil-repeat-ring'. The dot command, "." (`evil-repeat'),
-;; replays the most recent entry in the ring.
+;; Not all commands are recored. There are several commands that are
+;; completely ignored and other commands that even abort the currently
+;; active recording, e.g., commands that change the current buffer.
 ;;
-;; In most cases, a command is recorded as the key-presses that
-;; invoked it. In special cases, it may be recorded as a buffer
-;; change. A repeat is represented as a list where each element
-;; is either
+;; During recording the repeat information is appended to the variable
+;; `evil-repeat-info', which is cleared when the recording
+;; starts. This accumulated repeat information is put into the
+;; `evil-repeat-ring' when the recording is finished. The dot command,
+;; `\[evil-repeat]' (`evil-repeat') replays the most recent entry in
+;; the ring, preceeding repeats can be replayed using
+;; `\[evil-repeat-pop]' (`evil-repeat-pop').
 ;;
-;;     - an array, which corresponds to a key-sequence, or
-;;     - a list (FUNCTION PARAMS...), which will be called as
-;;       (apply FUNCTION PARAMS).
+;; Repeat information can be stored in almost arbitrary form. How the
+;; repeat information for each single command is recored is determined
+;; by the :repeat property of the command. This property has the
+;; following interpretation:
 ;;
-;; This information is executed with `evil-execute-repeat-info',
+;; t         record commands by storing the key-sequence that invoked it
+;; nil       ignore this command completely
+;; ignore    synonym to nil
+;; motion    command is recorded by storing the key-sequence but only in
+;;           insert state, otherwise it is ignored.
+;; abort     stop recording of repeat information immediately
+;; change    record commands by storing buffer changes
+;; SYMBOL    if SYMBOL is contained as key in `evil-repeat-types'
+;;           call the corresponding (function-)value, otherwise
+;;           call the function associated with SYMBOL. In both
+;;           cases the function should take exactly one argument
+;;           which is either 'pre or 'post depending on whether
+;;           the function is called before or after the execution
+;;           of the command.
+;;
+;; Therefore, using a certain SYMBOL one can write specific repeation
+;; functions for each command.
+;;
+;; Each value of ring `evil-repeat-info', i.e., each single repeat
+;; information must be one of the following two possibilities:
+;; If element is a sequence, it is regarded as a key-sequence to
+;; be repeated. Otherwise the element must be a list
+;; (FUNCTION PARAMS ...) which will be called using
+;; (apply FUNCTION PARAMS) whenever this repeat is being executed.
+;;
+;; A user supplied repeat function can use the functions
+;; `evil-record-repeat' to append further repeat-information of the
+;; form described above to `evil-repeat-info'. See the implementation
+;; of `evil-repeat-keystrokes' and `evil-repeat-changes' for examples.
+;;
+;; The repeat information is executed with `evil-execute-repeat-info',
 ;; which passes key-sequence elements to `execute-kbd-macro' and
-;; executes other elements as defined above.
-;;
-;; It is possible to define special repeation recording functions for
-;; specific commands. For this, the :repeat property of the command
-;; should be set to the name of the repeation function to be called.
-;; The repeation function is called with one argument which is either
-;; 'pre or 'post. The function is called twice, once before the
-;; command is executed and once after the command has been executed
-;; from pre- and post-command-hooks. The function should use, e.g.,
-;; `evil-repeat-record-change' or `evil-repeat-record' to append new
-;; repeat information.
-;;
-;; A special version is `evil-execute-repeat-info-with-count'.
-;; This function works as `evil-execute-repeat-info', but replaces
-;; the count of the first command. This is done by parsing the
-;; key-sequence, ignoring all calls to `digit-prefix-argument' and
-;; `negative-argument', and prepending the count as a string to the
-;; vector of the remaining key-sequence.
+;; executes other elements as defined above.  A special version is
+;; `evil-execute-repeat-info-with-count'.  This function works as
+;; `evil-execute-repeat-info', but replaces the count of the first
+;; command. This is done by parsing the key-sequence, ignoring all
+;; calls to `digit-prefix-argument' and `negative-argument', and
+;; prepending the count as a string to the vector of the remaining
+;; key-sequence.
 
 (require 'evil-undo)
 (require 'evil-states)
