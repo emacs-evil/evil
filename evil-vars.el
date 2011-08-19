@@ -491,7 +491,8 @@ in the current buffer.")
 (defvar evil-repeat-types
   '((t . evil-repeat-keystrokes)
     (change . evil-repeat-changes)
-    (motion . evil-repeat-motion))
+    (motion . evil-repeat-motion)
+    (ignore . nil))
   "An alist of defined repeat-types.")
 
 (defvar evil-recording-repeat nil
