@@ -69,16 +69,21 @@
 (require 'evil-undo)
 (require 'evil-states)
 
+(defsubst evil-repeat-recording-p ()
+  "Returns non-nil iff a recording is in progress."
+  (eq evil-recording-repeat t))
+
 (defun evil-repeat-start ()
   "Start recording a new repeat into `evil-repeat-info'."
-  (evil-repeat-reset t))
+  (evil-repeat-reset t)
+  (evil-repeat-record-buffer))
 
 (defun evil-repeat-stop ()
   "Stop recording a repeat.
 Update `evil-repeat-ring' with the accumulated changes
 in `evil-repeat-info' and clear variables."
   (unwind-protect
-      (when (eq evil-recording-repeat t)
+      (when (evil-repeat-recording-p)
         (setq evil-repeat-info
               (evil-normalize-repeat-info evil-repeat-info))
         (when (and evil-repeat-info evil-repeat-ring)
@@ -90,10 +95,9 @@ in `evil-repeat-info' and clear variables."
 Set `evil-recording-repeat' to FLAG."
   (setq evil-recording-repeat flag
         evil-repeat-info nil
-        evil-repeat-buffer nil)
-  (evil-repeat-record-buffer))
+        evil-repeat-buffer nil))
 
-(defun evil-repeat-record-position (&optional pos)
+(defsubst evil-repeat-record-position (&optional pos)
   "Set `evil-repeat-pos' to POS or point."
   (setq evil-repeat-pos (or pos (point))))
 
@@ -129,14 +133,15 @@ buffer is known and different from the current buffer."
 (defun evil-repeat-type (command &optional default)
   "Return the :repeat property of COMMAND.
 If COMMAND doesn't have this property, return DEFAULT."
-  (let ((type (if (evil-has-property command :repeat)
-                  (evil-get-command-property command :repeat)
-                default)))
-    (or (cdr-safe (assq type evil-repeat-types)) type)))
+  (when (functionp command) ; ignore keyboard macros
+    (let ((type (if (evil-has-property command :repeat)
+                    (evil-get-command-property command :repeat)
+                  default)))
+      (or (cdr-safe (assq type evil-repeat-types)) type))))
 
 (defun evil-repeat-record (info)
   "Add INFO to the end of `evil-repeat-info'."
-  (when evil-recording-repeat
+  (when (evil-repeat-recording-p)
     (setq evil-repeat-info (nconc evil-repeat-info (list info)))))
 
 ;; called from `evil-normal-state-exit-hook'
@@ -151,19 +156,17 @@ has :repeat nil."
 ;; called from `pre-command-hook'
 (defun evil-repeat-pre-hook ()
   "Prepare the current command for recording the repeation."
-  (when (and (functionp this-command)
-             (or evil-local-mode (minibufferp)))
+  (when evil-local-mode
     (let ((repeat-type (evil-repeat-type this-command t)))
       (cond
        ;; ignore those commands completely
-       ((memq repeat-type '(nil ignore)))
-       ;; abort the repeat if the buffer changes, if in
-       ;; Emacs state or the command specifies :repeat abort
-       ((or (evil-repeat-different-buffer-p)
-            (evil-emacs-state-p)
-            (eq repeat-type 'abort))
-        (evil-repeat-reset 'abort))
-       ;; call repeation function for the current command.
+       ((null repeat-type))
+       ;; abort the repeat if ...
+       ((or (evil-repeat-different-buffer-p) ; ... buffer changed
+            (eq repeat-type 'abort)          ; ... explicitely forced
+            (evil-emacs-state-p))            ; ... in Emacs state
+        (evil-repeat-reset nil))
+       ;; record command
        (t
         ;; In normal-state, each command is a single repeation,
         ;; therefore start a new repeation.
@@ -174,13 +177,18 @@ has :repeat nil."
 ;; called from `post-command-hook'
 (defun evil-repeat-post-hook ()
   "Finish recording of repeat-information for the current-command."
-  (when (and (functionp this-command)
-             (or evil-local-mode (minibufferp)))
+  (when (and evil-local-mode
+             (evil-repeat-recording-p))
     (let ((repeat-type (evil-repeat-type this-command t)))
       (cond
        ;; ignore if command should not be recorded.
-       ((or (memq repeat-type '(nil ignore abort))
-            (evil-emacs-state-p)))
+       ((null repeat-type))
+       ;; abort the repeat if ...
+       ((or (evil-repeat-different-buffer-p) ; ... buffer changed
+            (eq repeat-type 'abort)          ; ... explicitely forced
+            (evil-emacs-state-p))            ; ... in Emacs state
+        (evil-repeat-reset nil))
+       ;; record command
        (t
         (evil-repeat-record-command)
         ;; In normal state, the repeat sequence is complete, so record it.
@@ -225,12 +233,12 @@ has :repeat nil."
 (defun evil-repeat-change-hook (beg end length)
   "Record change information for current command."
   (let ((repeat-type (evil-repeat-type this-command t)))
-    (when (and (memq evil-recording-repeat '(t nil))
+    (when (and (evil-repeat-recording-p)
                (eq repeat-type 'evil-repeat-changes)
                (not (evil-emacs-state-p))
                (not (evil-repeat-different-buffer-p t))
                evil-state)
-      (unless evil-recording-repeat
+      (unless (evil-repeat-recording-p)
         (evil-repeat-start))
       (evil-repeat-record-change (- beg evil-repeat-pos)
                                  (buffer-substring beg end)
@@ -239,7 +247,7 @@ has :repeat nil."
 (defun evil-repeat-record-change (relpos ins ndel)
   "Record the current buffer changes during a repeat.
 If CHANGE is specified, it is added to `evil-repeat-changes'."
-  (when evil-recording-repeat
+  (when (evil-repeat-recording-p)
     (setq evil-repeat-changes
           (nconc evil-repeat-changes (list (list relpos ins ndel))))))
 
@@ -250,7 +258,7 @@ If CHANGE is specified, it is added to `evil-repeat-changes'."
 
 (defun evil-repeat-finish-record-changes ()
   "Finishes the recording of buffer changes and records them as repeat."
-  (when evil-recording-repeat
+  (when (evil-repeat-recording-p)
     (evil-repeat-record `(evil-execute-change
                           ,evil-repeat-changes
                           ,(- (point) evil-repeat-pos)))
