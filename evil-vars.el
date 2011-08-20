@@ -162,8 +162,16 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     dvc-revlog-mode
     dvc-status-mode
     dvc-tips-mode
+    ediff-mode
     efs-mode
     ert-results-mode
+    gdb-breakpoints-mode
+    gdb-disassembly-mode
+    gdb-frames-mode
+    gdb-locals-mode
+    gdb-memory-mode
+    gdb-registers-mode
+    gdb-threads-mode
     gnus-article-mode
     gnus-browse-mode
     gnus-group-mode
@@ -185,6 +193,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     rcirc-mode
     recentf-dialog-mode
     reftex-toc-mode
+    sldb-mode
     tar-mode
     term-mode
     tla-annotate-mode
@@ -210,6 +219,8 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     vc-git-log-view-mode
     vm-mode
     vm-summary-mode
+    w3m-mode
+    wab-compilation-mode
     xgit-annotate-mode
     xgit-changelog-mode
     xgit-diff-mode
