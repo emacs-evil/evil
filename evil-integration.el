@@ -12,6 +12,7 @@
                                  universal-argument-minus
                                  universal-argument-other-key))
 (mapc 'evil-declare-change-repeat '(dabbrev-expand hippie-expand))
+(mapc 'evil-declare-abort-repeat '(eval-expression execute-extended-command))
 
 ;;; Buffer-menu
 
