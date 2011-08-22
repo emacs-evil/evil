@@ -909,7 +909,7 @@ The search matches the COUNT-th occurrence of the word."
   :type exclusive
   (evil-ex-start-symbol-search nil 'forward count))
 
-(evil-define-motion evil-ex-search-word-backward (count)
+(evil-define-motion evil-ex-search-symbol-backward (count)
   "Searches the next occurence of word under the cursor."
   :jump t
   :type exclusive
