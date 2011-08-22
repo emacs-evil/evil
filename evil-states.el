@@ -511,7 +511,7 @@ If CREATE is non-nil, create an auxiliary keymap
 if MAP does not have one."
   (when state
     (let* ((key (vconcat (list (intern (format "%s-state" state)))))
-           (aux (lookup-key map key)))
+           (aux (if state (lookup-key map key) map)))
       (cond
        ((evil-auxiliary-keymap-p aux)
         aux)
@@ -589,21 +589,30 @@ the execution is postponed until KEYMAP is bound. For example:
 The arguments are exactly like those of `evil-define-key',
 and should be quoted as such."
   (declare (indent defun))
-  `(if (boundp ',keymap)
-       (evil-define-key ,state ,keymap ,key ,def ,@bindings)
-     (add-hook 'after-load-functions
-               ;; Create a lambda function that removes itself.
-               ;; As the read syntax for self-referential lists
-               ;; seems partially incompatible with the backquote
-               ;; ("binding depth exceeds max-specpdl-size"),
-               ;; the function is constructed in two parts.
-               ,(nconc
-                 '#0=(lambda (&rest args))
-                 `((when (boundp ',keymap)
-                     (unless (keymapp ,keymap)
-                       (setq ,keymap (make-sparse-keymap)))
-                     (evil-define-key ,state ,keymap ,key ,def ,@bindings)
-                     (remove-hook 'after-load-functions #0#)))))))
+  `(let (package)
+     (cond
+      ((boundp ',keymap)
+       (evil-define-key ,state ,keymap ,key ,def ,@bindings))
+      ((setq package
+             (or (cdr-safe (assq ',keymap evil-overriding-maps))
+                 (cdr-safe (assq ',keymap evil-intercept-maps))))
+       (eval-after-load package
+         '(evil-define-key ,state ,keymap ,key ,def ,@bindings)))
+      (t
+       (add-hook
+        'after-load-functions
+        ;; Create a lambda function that removes itself.
+        ;; As the read syntax for self-referential lists
+        ;; seems partially incompatible with the backquote
+        ;; ("binding depth exceeds max-specpdl-size"),
+        ;; the function is constructed in two parts.
+        ,(nconc
+          '#0=(lambda (&rest args))
+          `((when (boundp ',keymap)
+              (unless (keymapp ,keymap)
+                (setq ,keymap (make-sparse-keymap)))
+              (evil-define-key ,state ,keymap ,key ,def ,@bindings)
+              (remove-hook 'after-load-functions #0#)))))))))
 
 (put 'evil-define-key 'lisp-indent-function 'defun)
 (put 'evil-set-auxiliary-keymap 'lisp-indent-function 'defun)

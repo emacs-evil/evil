@@ -14,16 +14,22 @@
 (mapc 'evil-declare-change-repeat '(dabbrev-expand hippie-expand))
 (mapc 'evil-declare-abort-repeat '(eval-expression execute-extended-command))
 
+(dolist (map evil-overriding-maps)
+  (eval-after-load (cdr map)
+    `(evil-make-overriding-map ,(car map))))
+
+(dolist (map evil-intercept-maps)
+  (eval-after-load (cdr map)
+    `(evil-make-intercept-map ,(car map))))
+
 ;;; Buffer-menu
 
 (eval-after-load "buff-menu"
-  '(progn
-     (evil-make-overriding-map Buffer-menu-mode-map)
-     (evil-define-key 'motion Buffer-menu-mode-map
-       "h" 'evil-backward-char
-       "j" 'evil-next-line
-       "k" 'evil-previous-line
-       "l" 'evil-forward-char)))
+  '(evil-define-key 'motion Buffer-menu-mode-map
+     "h" 'evil-backward-char
+     "j" 'evil-next-line
+     "k" 'evil-previous-line
+     "l" 'evil-forward-char))
 
 ;;; Dired
 
@@ -45,11 +51,6 @@
      (add-hook 'wdired-mode-hook 'evil-change-to-initial-state)
      (defadvice wdired-change-to-dired-mode (after evil activate)
        (evil-change-to-initial-state nil t))))
-
-;;; Edebug
-
-(eval-after-load 'edebug
-  '(evil-make-intercept-map edebug-mode-map))
 
 ;;; ELP
 
@@ -127,28 +128,19 @@
         (when (overlayp show-paren-overlay-1)
           (delete-overlay show-paren-overlay-1))))))
 
-;;; Shell
-
-(eval-after-load 'comint
-  '(define-key comint-mode-map [remap evil-ret] 'comint-send-input))
-
 ;;; Speedbar
 
 (eval-after-load 'speedbar
-  '(progn
-     (evil-make-overriding-map speedbar-key-map)
-     (evil-make-overriding-map speedbar-file-key-map)
-     (evil-make-overriding-map speedbar-buffers-key-map)
-     (evil-define-key 'motion speedbar-key-map
-       "h" 'backward-char
-       "j" 'speedbar-next
-       "k" 'speedbar-prev
-       "l" 'forward-char
-       "i" 'speedbar-item-info
-       "r" 'speedbar-refresh
-       "u" 'speedbar-up-directory
-       "o" 'speedbar-toggle-line-expansion
-       (kbd "RET") 'speedbar-edit-line)))
+  '(evil-define-key 'motion speedbar-key-map
+     "h" 'backward-char
+     "j" 'speedbar-next
+     "k" 'speedbar-prev
+     "l" 'forward-char
+     "i" 'speedbar-item-info
+     "r" 'speedbar-refresh
+     "u" 'speedbar-up-directory
+     "o" 'speedbar-toggle-line-expansion
+     (kbd "RET") 'speedbar-edit-line))
 
 ;;; Undo tree visualizer
 

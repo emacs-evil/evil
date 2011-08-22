@@ -149,7 +149,6 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     browse-kill-ring-mode
     bzr-annotate-mode
     cfw:calendar-mode
-    compilation-mode
     completion-list-mode
     Custom-mode
     debugger-mode
@@ -194,6 +193,13 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     recentf-dialog-mode
     reftex-toc-mode
     sldb-mode
+    slime-inspector-mode
+    slime-thread-control-mode
+    slime-xref-mode
+    sr-buttons-mode
+    sr-mode
+    sr-tree-mode
+    sr-virtual-mode
     tar-mode
     term-mode
     tla-annotate-mode
@@ -254,12 +260,36 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
 (defcustom evil-motion-state-modes
   '(apropos-mode
     Buffer-menu-mode
+    compilation-mode
     help-mode
     Info-mode
     speedbar-mode
     view-mode)
   "Modes that should come up in Motion state."
   :type  '(repeat symbol)
+  :group 'evil)
+
+(defcustom evil-overriding-maps
+  '((Buffer-menu-mode-map . "buff-menu")
+    (comint-mode-map . comint)
+    (compilation-mode-map . compilation-mode)
+    (speedbar-key-map . speedbar)
+    (speedbar-file-key-map . speedbar)
+    (speedbar-buffers-key-map . speedbar))
+  "Keymaps that should override global Evil maps.
+Entries have the form (MAP-VAR . EVAL-AFTER), where MAP-VAR is
+a keymap variable and EVAL-AFTER is the file or package defining it
+\(ref. `eval-after-load')."
+  :type '(alist :key-type symbol :value-type (choice symbol string))
+  :group 'evil)
+
+(defcustom evil-intercept-maps
+  '((edebug-mode-map . edebug))
+  "Keymaps that should override all Evil maps.
+Entries have the form (MAP-VAR . EVAL-AFTER), where MAP-VAR is
+a keymap variable and EVAL-AFTER is the file or package defining it
+\(ref. `eval-after-load')."
+  :type '(alist :key-type symbol :value-type (choice symbol string))
   :group 'evil)
 
 (defcustom evil-motions
