@@ -487,6 +487,15 @@ Translates it according to the input method."
           (aref (read-key-sequence prompt nil t) 0))
       (use-global-map old-global-map))))
 
+(defun evil-mouse-events-p (keys)
+  "Returns non-nil iff KEYS contains a mouse event."
+  (catch 'done
+    (dotimes (i (length keys))
+      (when (or (mouse-event-p (aref keys i))
+                (mouse-movement-p (aref keys i)))
+        (throw 'done t)))
+    nil))
+
 ;;; Command properties
 
 (defmacro evil-define-command (command &rest body)

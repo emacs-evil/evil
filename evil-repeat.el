@@ -164,6 +164,15 @@ If COMMAND doesn't have this property, return DEFAULT."
                   default)))
       (or (cdr-safe (assq type evil-repeat-types)) type))))
 
+(defun evil-repeat-force-abort-p (repeat-type)
+  "Returns non-nil iff the current command should abort the recording of repeat information."
+  (or (evil-repeat-different-buffer-p)           ; ... buffer changed
+      (eq repeat-type 'abort)                    ; ... explicitely forced
+      (eq evil-recording-repeat 'abort)          ; ... already aborted
+      (evil-emacs-state-p)                       ; ... in Emacs state
+      (evil-mouse-events-p (this-command-keys))  ; ... mouse events
+      (minibufferp)))                            ; ... minibuffer activated
+
 (defun evil-repeat-record (info)
   "Add INFO to the end of `evil-repeat-info'."
   (when (evil-repeat-recording-p)
@@ -184,13 +193,14 @@ has :repeat nil."
   (when evil-local-mode
     (let ((repeat-type (evil-repeat-type this-command t)))
       (cond
+       ;; abort the repeat
+       ((evil-repeat-force-abort-p repeat-type)
+        ;; We mark the current record as being aborted, because there
+        ;; may be further pre-hooks following before the post-hook is
+        ;; called.
+        (evil-repeat-reset 'abort))
        ;; ignore those commands completely
        ((null repeat-type))
-       ;; abort the repeat if ...
-       ((or (evil-repeat-different-buffer-p) ; ... buffer changed
-            (eq repeat-type 'abort)          ; ... explicitely forced
-            (evil-emacs-state-p))            ; ... in Emacs state
-        (evil-repeat-reset nil))
        ;; record command
        (t
         ;; In normal-state, each command is a single repeation,
@@ -206,16 +216,16 @@ has :repeat nil."
              (evil-repeat-recording-p))
     (let ((repeat-type (evil-repeat-type this-command t)))
       (cond
+       ;; abort the repeat
+       ((evil-repeat-force-abort-p repeat-type)
+        ;; The command has been aborted but is complete, so just reset
+        ;; the recording state.
+        (evil-repeat-reset nil))
        ;; ignore if command should not be recorded.
        ((null repeat-type))
-       ;; abort the repeat if ...
-       ((or (evil-repeat-different-buffer-p) ; ... buffer changed
-            (eq repeat-type 'abort)          ; ... explicitely forced
-            (evil-emacs-state-p))            ; ... in Emacs state
-        (evil-repeat-reset nil))
        ;; record command
        (t
-        (evil-repeat-record-command)
+        (evil-repeat-record-command repeat-type)
         ;; In normal state, the repeat sequence is complete, so record it.
         (when (evil-normal-state-p)
           (evil-repeat-stop)))))))

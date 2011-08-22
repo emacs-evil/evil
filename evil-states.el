@@ -73,8 +73,7 @@
     (add-hook 'post-command-hook 'evil-initialize-state t t)
     (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
     (add-hook 'post-command-hook 'evil-repeat-post-hook)
-    (add-hook 'post-command-hook 'evil-refresh-cursor)
-    (add-hook 'minibuffer-setup-hook 'evil-repeat-record-command))
+    (add-hook 'post-command-hook 'evil-refresh-cursor))
    (t
     (let (new-global-mode-string)
       (while global-mode-string
