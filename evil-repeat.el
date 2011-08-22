@@ -452,7 +452,9 @@ If COUNT is negative, this is a more recent kill."
 
 (defadvice read-key-sequence (before evil activate)
   "Record `this-command-keys' before it is reset."
-  (evil-repeat-record-command))
+  (let ((repeat-type (evil-repeat-type this-command t)))
+    (if (functionp repeat-type)
+        (evil-repeat-record-command repeat-type))))
 
 (provide 'evil-repeat)
 
