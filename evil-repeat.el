@@ -228,19 +228,12 @@ has :repeat nil."
             (not evil-recording-current-command)))
        ;; record command
        (t
-        (evil-repeat-record-command repeat-type)
+        (funcall repeat-type 'post)
         ;; In normal state, the repeat sequence is complete, so record it.
         (when (evil-normal-state-p)
           (evil-repeat-stop))))))
   ;; done with recording the current command
   (setq evil-recording-current-command nil))
-
-(defun evil-repeat-record-command (&optional repeat-type)
-  "Calls the post-repeat-information of the current command."
-  ;; finish repeation of current command
-  (let ((repeat-type (or repeat-type
-                         (evil-repeat-type this-command t))))
-    (funcall repeat-type 'post)))
 
 (defun evil-repeat-keystrokes (flag)
   "Repeation recording function for commands that are repeated by keystrokes."
@@ -461,7 +454,7 @@ If COUNT is negative, this is a more recent kill."
              evil-recording-current-command)
     (let ((repeat-type (evil-repeat-type this-command t)))
       (if (functionp repeat-type)
-          (evil-repeat-record-command repeat-type)))))
+          (funcall repeat-type 'post)))))
 
 (provide 'evil-repeat)
 
