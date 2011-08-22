@@ -137,6 +137,7 @@ Set `evil-recording-repeat' to FLAG."
            (debug t))
   `(let (evil-repeat-ring
          evil-recording-repeat
+         evil-recording-current-command
          evil-repeat-info
          evil-repeat-changes
          evil-repeat-pos
@@ -207,13 +208,13 @@ has :repeat nil."
         ;; therefore start a new repeation.
         (when (evil-normal-state-p)
           (evil-repeat-start))
+        (setq evil-recording-current-command t)
         (funcall repeat-type 'pre))))))
 
 ;; called from `post-command-hook'
 (defun evil-repeat-post-hook ()
   "Finish recording of repeat-information for the current-command."
-  (when (and evil-local-mode
-             (evil-repeat-recording-p))
+  (when (and evil-local-mode evil-recording-repeat)
     (let ((repeat-type (evil-repeat-type this-command t)))
       (cond
        ;; abort the repeat
@@ -221,14 +222,18 @@ has :repeat nil."
         ;; The command has been aborted but is complete, so just reset
         ;; the recording state.
         (evil-repeat-reset nil))
-       ;; ignore if command should not be recorded.
-       ((null repeat-type))
+       ;; ignore if command should not be recorded or the current
+       ;; command is not being recorded
+       ((or (null repeat-type)
+            (not evil-recording-current-command)))
        ;; record command
        (t
         (evil-repeat-record-command repeat-type)
         ;; In normal state, the repeat sequence is complete, so record it.
         (when (evil-normal-state-p)
-          (evil-repeat-stop)))))))
+          (evil-repeat-stop))))))
+  ;; done with recording the current command
+  (setq evil-recording-current-command nil))
 
 (defun evil-repeat-record-command (&optional repeat-type)
   "Calls the post-repeat-information of the current command."
@@ -452,9 +457,11 @@ If COUNT is negative, this is a more recent kill."
 
 (defadvice read-key-sequence (before evil activate)
   "Record `this-command-keys' before it is reset."
-  (let ((repeat-type (evil-repeat-type this-command t)))
-    (if (functionp repeat-type)
-        (evil-repeat-record-command repeat-type))))
+  (when (and (evil-repeat-recording-p)
+             evil-recording-current-command)
+    (let ((repeat-type (evil-repeat-type this-command t)))
+      (if (functionp repeat-type)
+          (evil-repeat-record-command repeat-type)))))
 
 (provide 'evil-repeat)
 
