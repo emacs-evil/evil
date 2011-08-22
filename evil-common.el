@@ -636,6 +636,10 @@ This ensures that it behaves correctly in Visual state."
   "Declare COMMAND to be repeatable by buffer changes."
   (evil-add-command-properties command :repeat 'change))
 
+(defun evil-declare-abort-repeat (command)
+  "Declare COMMAND to be nonrepeatable."
+  (evil-add-command-properties command :repeat 'abort))
+
 ;;; Region
 
 (defun evil-transient-save ()
