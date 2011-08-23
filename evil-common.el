@@ -410,14 +410,15 @@ or a marker object pointing nowhere."
       (setq evil-jump-list nil)
       (push-mark pos))))
 
-(defun evil-get-register (register)
+(defun evil-get-register (register &optional noerror)
   "Return contents of REGISTER.
-Signal an error if empty."
+Signal an error if empty, unless NOERROR is non-nil."
   (when (characterp register)
     (or (if (eq register ?\")
             (current-kill 0)
           (get-register register))
-        (error "Register `%c' is empty" register))))
+        (unless noerror
+          (error "Register `%c' is empty" register)))))
 
 ;;; Key sequences
 

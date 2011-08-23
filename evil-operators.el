@@ -761,12 +761,17 @@ of the block."
                        (or evil-this-register (read-char)))))
   (cond
    (evil-this-macro
-    (end-kbd-macro)
+    (condition-case nil
+        (end-kbd-macro)
+      (error nil))
     (when last-kbd-macro
+      (when (member last-kbd-macro '("" []))
+        (setq last-kbd-macro nil))
       (set-register evil-this-macro last-kbd-macro))
     (setq evil-this-macro nil))
    (t
     (setq evil-this-macro register)
+    (set-register evil-this-macro nil)
     (start-kbd-macro nil))))
 
 (evil-define-command evil-execute-macro (count macro)
