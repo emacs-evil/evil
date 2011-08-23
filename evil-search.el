@@ -929,8 +929,6 @@ The search matches the COUNT-th occurrence of the word."
 
 ;; Substitute
 
-(evil-define-interactive-code "<s/>" (list evil-ex-current-arg) :ex-arg substitution)
-
 (evil-ex-define-argument-type substitution (flag &rest args)
   (with-selected-window (minibuffer-selected-window)
     (with-current-buffer evil-ex-current-buffer

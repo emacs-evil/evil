@@ -50,6 +50,7 @@
 
 (require 'evil-vars)
 (require 'evil-compatibility)
+(require 'evil-interactive)
 (require 'evil-common)
 (require 'evil-types)
 (require 'evil-undo)

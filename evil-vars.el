@@ -502,6 +502,9 @@ Entries have the form (TYPE . PLIST), where PLIST is a property
 list specifying functions for handling the type: expanding it,
 describing it, etc.")
 
+(defvar evil-interactive-alist nil
+  "Association list of Evil-specific interactive codes.")
+
 (defvar evil-motion-marker nil
   "Marker for storing the starting position of a motion.")
 (make-variable-buffer-local 'evil-motion-marker)

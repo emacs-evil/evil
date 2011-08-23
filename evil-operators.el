@@ -87,7 +87,7 @@
       (setq interactive (pop body))
       ;; transform extended interactive specs
       (when interactive
-        (setq interactive (apply 'evil-eval-interactive
+        (setq interactive (apply 'evil-interactive-form
                                  (cdr interactive)))
         (setq keys (append keys (cdr-safe interactive))
               interactive (car-safe interactive))))
@@ -1006,9 +1006,6 @@ already existing."
             (goto-char (point-min))
             (forward-line (1- line))))
       (error "File does not exist."))))
-
-(evil-define-interactive-code "<sym>" (list (and evil-ex-current-arg
-                                                 (intern evil-ex-current-arg))) :ex-arg sym)
 
 (evil-ex-define-argument-type state (flag &rest args)
   "Defines an argument type which can take state names."
