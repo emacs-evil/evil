@@ -570,9 +570,11 @@ If the buffer is changed, the repeat is cancelled.")
 
 (defvar evil-last-repeat nil
   "Information about the latest repeat command.
-This is a list of two elements (POINT COUNT), where POINT is
-the position of point before the latest repeat, and COUNT
-the count-argument of the latest repeat command.")
+This is a list of three elements (POINT COUNT UNDO-POINTER),
+where POINT is the position of point before the latest repeat,
+COUNT the count-argument of the latest repeat command and
+UNDO-POINTER the head of the undo-list before the last command
+has been repeated.")
 
 (defvar evil-repeat-count nil
   "The explicit count when repeating a command.")

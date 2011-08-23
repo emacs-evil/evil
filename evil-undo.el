@@ -81,7 +81,10 @@ is stored in `evil-temporary-undo' instead of `buffer-undo-list'."
      (unless (eq buffer-undo-list t)
        ;; undo is enabled, so update the global buffer undo list
        (setq buffer-undo-list
-             (append evil-temporary-undo buffer-undo-list)
+             ;; prepend new undos (if there are some)
+             (if (cdr evil-temporary-undo)
+                 (nconc evil-temporary-undo buffer-undo-list)
+               buffer-undo-list)
              evil-temporary-undo nil))))
 
 (defun evil-undo-pop ()

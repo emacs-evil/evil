@@ -404,9 +404,10 @@ If SAVE-POINT is non-nil, do not move point."
           (kill-buffer-hook
            (cons #'(lambda ()
                      (error "Cannot delete buffer in repeat command"))
-                 kill-buffer-hook)))
+                 kill-buffer-hook))
+          (undo-pointer buffer-undo-list))
       (evil-with-single-undo
-        (setq evil-last-repeat (list (point) count))
+        (setq evil-last-repeat (list (point) count undo-pointer))
         (evil-execute-repeat-info-with-count
          count (ring-ref evil-repeat-ring 0)))))))
 
@@ -430,7 +431,8 @@ If COUNT is negative, this is a more recent kill."
     (save-excursion
       (evil-repeat-pop count)))
    (t
-    (evil-undo-pop)
+    (unless (eq buffer-undo-list (nth 2 evil-last-repeat))
+      (evil-undo-pop))
     (goto-char (car evil-last-repeat))
     ;; rotate the repeat-ring
     (while (> count 0)
