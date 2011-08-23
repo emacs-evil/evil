@@ -438,6 +438,11 @@ If COUNT is negative, this is a more recent kill."
         (ring-insert-at-beginning evil-repeat-ring
                                   (ring-remove evil-repeat-ring 0)))
       (setq count (1- count)))
+    (while (< count 0)
+      (when evil-repeat-ring
+        (ring-insert evil-repeat-ring
+                     (ring-remove evil-repeat-ring)))
+      (setq count (1+ count)))
     (setq this-command 'evil-repeat)
     (evil-repeat (cadr evil-last-repeat)))))
 
