@@ -260,6 +260,8 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
 (defcustom evil-motion-state-modes
   '(apropos-mode
     Buffer-menu-mode
+    calendar-mode
+    command-history-mode
     compilation-mode
     help-mode
     Info-mode
@@ -272,7 +274,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
 (defcustom evil-overriding-maps
   '((Buffer-menu-mode-map . "buff-menu")
     (comint-mode-map . comint)
-    (compilation-mode-map . compilation-mode)
+    (compilation-mode-map . compile)
     (speedbar-key-map . speedbar)
     (speedbar-file-key-map . speedbar)
     (speedbar-buffers-key-map . speedbar))
