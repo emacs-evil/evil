@@ -1434,6 +1434,42 @@ the `evil-repeat' command")
       (evil-execute-repeat-info (ring-ref evil-repeat-ring 0))
       (should-error (call-interactively 'evil-repeat)))))
 
+(ert-deftest evil-test-repeat-pop ()
+  "Test `repeat-pop'."
+  :tags '(evil repeat)
+  (ert-info ("Test repeat-pop")
+    (evil-test-buffer
+      ";; [T]his buffer is for notes."
+      (setq evil-repeat-ring (make-ring 10))
+      ("iABC" [escape] "aXYZ" [escape])
+      ";; ABCXY[Z]This buffer is for notes."
+      (".")
+      ";; ABCXYZXY[Z]This buffer is for notes."))
+  (ert-info ("Test repeat-pop")
+    (evil-test-buffer
+      ";; [T]his buffer is for notes."
+      (setq evil-repeat-ring (make-ring 10))
+      ("iABC" [escape] "aXYZ" [escape])
+      ";; ABCXY[Z]This buffer is for notes."
+      ("." (kbd "C-."))
+      ";; ABCXYAB[C]ZThis buffer is for notes."))
+  (ert-info ("Test repeat-pop-next")
+    (evil-test-buffer
+      ";; [T]his buffer is for notes."
+      (setq evil-repeat-ring (make-ring 10))
+      ("iABC" [escape] "aXYZ" [escape])
+      ";; ABCXY[Z]This buffer is for notes."
+      ("." (kbd "C-.") (kbd "M-."))
+      ";; ABCXYZXY[Z]This buffer is for notes."))
+  (ert-info ("Test repeat-pop after non-change")
+    (evil-test-buffer
+      ";; [T]his buffer is for notes."
+      (setq evil-repeat-ring (make-ring 10))
+      ("iABC" [escape] "a" [escape] "aXYZ" [escape])
+      ";; ABCXY[Z]This buffer is for notes."
+      ("." (kbd "C-.") (kbd "C-."))
+      ";; ABCXYAB[C]ZThis buffer is for notes.")))
+
 ;;; Operators
 
 (ert-deftest evil-test-keypress-parser ()
