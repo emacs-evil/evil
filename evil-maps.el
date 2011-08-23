@@ -316,7 +316,7 @@
 (define-key minibuffer-local-map "\C-x\C-n" 'evil-complete)
 
 ;; Ex
-(define-key evil-normal-state-map ":" 'evil-ex-read-command)
+(define-key evil-motion-state-map ":" 'evil-ex-read-command)
 
 (evil-ex-define-cmd "edit" 'evil-edit)
 (evil-ex-define-cmd "e" "edit")
