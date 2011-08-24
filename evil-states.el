@@ -239,8 +239,12 @@ higher precedence. See also `evil-make-intercept-map'."
                 (list (intern (format "overriding-%s-state" state)))))))
     (when (and copy (not (keymapp copy)))
       (setq copy (assq-delete-all 'menu-bar (copy-keymap keymap))))
-    (define-key (or copy keymap) key (or state 'state))
-    (define-key keymap key (or copy keymap))))
+    (cond
+     ((keymapp copy)
+      (define-key copy key (or state 'state))
+      (define-key keymap key copy))
+     (t
+      (define-key keymap key (or state 'state))))))
 
 (defun evil-make-intercept-map (keymap &optional state)
   "Give KEYMAP precedence over all Evil keymaps in STATE.
@@ -476,12 +480,15 @@ See also `evil-keymap-mode'."
   (let* ((state (or state evil-state))
          (key (vconcat (list (intern (format "overriding-%s-state"
                                              state)))))
-         result)
-    (dolist (map (current-active-maps) result)
-      (setq map (or (lookup-key map [overriding-states])
-                    (lookup-key map key)))
-      (when (keymapp map)
-        (add-to-list 'result map t 'eq)))))
+         override result)
+    (dolist (map (current-active-maps))
+      (setq override (or (lookup-key map [overriding-states])
+                         (lookup-key map key)))
+      (when (keymapp override)
+        (setq map override))
+      (when override
+        (push map result)))
+    (nreverse result)))
 
 (defun evil-state-intercept-keymaps (state)
   "Return an ordered list of intercept keymaps for STATE."
