@@ -776,19 +776,36 @@ of the block."
 
 (evil-define-command evil-execute-macro (count macro)
   "Execute keyboard macro MACRO, COUNT times.
-When called interactively, MACRO is read from a register."
+When called with a non-numerical prefix \
+\(such as \\[universal-argument]),
+COUNT is infinite. MACRO is read from a register
+when called interactively."
   :keep-visual t
   (interactive
    (let (count macro register)
-     (setq count (prefix-numeric-value current-prefix-arg)
+     (setq count (if current-prefix-arg
+                     (if (numberp current-prefix-arg)
+                         current-prefix-arg
+                       0) 1)
            register (or evil-this-register (read-char)))
      (if (eq register ?@)
          (setq macro last-kbd-macro)
-       (setq macro (evil-get-register register)))
+       (setq macro (evil-get-register register t)))
      (list count macro)))
-  (if (member macro '("" [] nil))
-      (error "No previous macro")
-    (execute-kbd-macro macro count)))
+  (if (or (and (not (stringp macro))
+               (not (vectorp macro)))
+          (member macro '("" [])))
+      ;; allow references to currently empty registers
+      ;; when defining macro
+      (unless evil-this-macro
+        (error "No previous macro"))
+    (condition-case nil
+        (let ((pre-command-hook pre-command-hook)
+              (post-command-hook post-command-hook))
+          (execute-kbd-macro macro count))
+      ;; enter Normal state if the macro fails
+      (error (evil-normal-state)
+             (evil-normalize-keymaps)))))
 
 (evil-define-operator evil-upcase (beg end type)
   "Convert text to upper case."
