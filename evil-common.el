@@ -195,7 +195,9 @@ RESULT specifies a variable for storing this value.
 Intermittent messages are not logged in the *Messages* buffer."
   (declare (indent defun)
            (debug t))
-  `(let (evil-echo-area-message evil-write-echo-area)
+  `(let ((inhibit-quit t)
+         evil-echo-area-message
+         evil-write-echo-area)
      (unwind-protect
          (progn
            (evil-echo-area-save)
@@ -240,7 +242,8 @@ or display a message in the echo area."
   `(let* ((evil-state evil-state)
           (evil-previous-state evil-previous-state)
           (evil-next-state evil-next-state)
-          (old-state evil-state))
+          (old-state evil-state)
+          (inhibit-quit t))
      (unwind-protect
          (progn ,@body)
        (evil-change-state old-state))))
@@ -304,7 +307,8 @@ function for changing the cursor, or a list of the above."
   (declare (indent defun)
            (debug t))
   `(let ((cursor cursor-type)
-         (color (frame-parameter (selected-frame) 'cursor-color)))
+         (color (frame-parameter (selected-frame) 'cursor-color))
+         (inhibit-quit t))
      (unwind-protect
          (progn ,@body)
        (evil-set-cursor cursor)
@@ -715,7 +719,8 @@ Enable with positive ARG, disable with negative ARG."
   "Save Transient Mark mode; execute BODY; then restore it."
   (declare (indent defun)
            (debug t))
-  `(let (evil-transient-vals)
+  `(let ((inhibit-quit t)
+         evil-transient-vals)
      (unwind-protect
          (progn
            (evil-transient-save)
