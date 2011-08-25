@@ -7,6 +7,7 @@
 
 (define-key evil-ex-keymap "\d" #'evil-ex-delete-backward-char)
 (define-key evil-ex-keymap "\t" #'evil-ex-complete)
+(define-key evil-ex-keymap "?" nil)
 
 (defun evil-ex-state-p ()
   "Return t iff ex mode is currently active."
