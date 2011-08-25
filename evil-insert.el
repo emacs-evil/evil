@@ -63,11 +63,10 @@ Handles the repeat-count of the insertion command."
 (defun evil-insert (count &optional vcount skip-empty-lines)
   "Switch to Insert state just before point.
 The insertion will be repeated COUNT times and repeated once for
-the next VCOUNT-1 lines starting at the same column. If
-SKIP-EMPTY-LINES is non-nil, the insertion will not be performed
-on lines on which the insertion point would be after the end of
-the lines. This is the default behaviour for visual-state
-insertion."
+the next VCOUNT-1 lines starting at the same column.
+If SKIP-EMPTY-LINES is non-nil, the insertion will not be performed
+on lines on which the insertion point would be after the end of the
+lines. This is the default behaviour for Visual-state insertion."
   (interactive
    (list (prefix-numeric-value current-prefix-arg)
          (when (evil-visual-state-p)
@@ -76,7 +75,7 @@ insertion."
              (count-lines (evil-visual-beginning)
                           (evil-visual-end))))
          (evil-visual-state-p)))
-  (if (and (called-interactively-p 'any)
+  (if (and (evil-called-interactively-p)
            (evil-visual-state-p)
            (and (eq (evil-visual-type) 'line)))
       (evil-insert-line count vcount)
@@ -110,7 +109,7 @@ the lines."
                (evil-visual-rotate 'upper-left)
                (count-lines (evil-visual-beginning)
                             (evil-visual-end)))))))
-  (if (and (called-interactively-p 'any)
+  (if (and (evil-called-interactively-p)
            (evil-visual-state-p)
            (and (eq (evil-visual-type) 'line)))
       (evil-append-line count vcount)
@@ -209,12 +208,12 @@ The insertion is repeated COUNT times."
            ;; put cursor at (i.e., right before) the prompt
            (put-text-property 0 1 'cursor t string)
            (overlay-put overlay 'after-string string)
-           (setq char1 (read-key))
+           (setq char1 (evil-read-key))
            (setq string (string char1))
            (put-text-property 0 1 'face 'minibuffer-prompt string)
            (put-text-property 0 1 'cursor t string)
            (overlay-put overlay 'after-string string)
-           (setq char2 (read-key)))
+           (setq char2 (evil-read-key)))
        (delete-overlay overlay))
      (list count (list char1 char2))))
   (let ((digraph (or (evil-digraph digraph)

@@ -5,18 +5,20 @@
 (defun evil-set-toggle-key (key)
   "Set `evil-toggle-key' to KEY.
 KEY must be readable by `read-kbd-macro'."
-  (let ((old-key (read-kbd-macro (if (boundp 'evil-toggle-key)
-                                     evil-toggle-key
-                                   "C-z")))
+  (let ((old-key (read-kbd-macro
+                  (if (boundp 'evil-toggle-key)
+                      evil-toggle-key
+                    "C-z")))
         (key (read-kbd-macro key)))
-    (when (and (boundp 'evil-motion-state-map)
-               (keymapp evil-motion-state-map))
-      (define-key evil-motion-state-map key 'evil-emacs-state)
-      (define-key evil-motion-state-map old-key nil))
-    (when (and (boundp 'evil-emacs-state-map)
-               (keymapp evil-emacs-state-map))
-      (define-key evil-emacs-state-map key 'evil-exit-emacs-state)
-      (define-key evil-emacs-state-map old-key nil))))
+    (with-no-warnings
+      (when (and (boundp 'evil-motion-state-map)
+                 (keymapp evil-motion-state-map))
+        (define-key evil-motion-state-map key 'evil-emacs-state)
+        (define-key evil-motion-state-map old-key nil))
+      (when (and (boundp 'evil-emacs-state-map)
+                 (keymapp evil-emacs-state-map))
+        (define-key evil-emacs-state-map key 'evil-exit-emacs-state)
+        (define-key evil-emacs-state-map old-key nil)))))
 
 ;;; Customization group
 

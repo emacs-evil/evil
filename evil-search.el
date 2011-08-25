@@ -272,8 +272,9 @@ one more than the current position."
       (setq isearch-string string)
       (isearch-update-ring string regexp-p)
       ;; handle opening and closing of invisible area
-      (funcall isearch-filter-predicate
-               (match-beginning 0) (match-end 0))
+      (when (boundp 'isearch-filter-predicate)
+        (funcall isearch-filter-predicate
+                 (match-beginning 0) (match-end 0)))
       ;; always position point at the beginning of the match
       (goto-char (match-beginning 0))
       ;; determine message for echo area
@@ -974,11 +975,14 @@ The search matches the COUNT-th occurrence of the word."
 
 (defun evil-ex-pattern-update-replacement (overlay)
   "Updates the replacement display."
-  (let ((repl (match-substitute-replacement evil-ex-substitute-replacement)))
-    (put-text-property 0 (length repl)
-                       'face 'evil-ex-substitute
-                       repl)
-    (overlay-put overlay 'after-string repl)))
+  (let (repl)
+    (when (fboundp 'match-substitute-replacement)
+      (setq repl (match-substitute-replacement
+                  evil-ex-substitute-replacement))
+      (put-text-property 0 (length repl)
+                         'face 'evil-ex-substitute
+                         repl)
+      (overlay-put overlay 'after-string repl))))
 
 (evil-define-operator evil-ex-substitute (beg end type substitution)
   "The VIM substitutde command: [range]s/pattern/replacement/flags"
@@ -1034,8 +1038,10 @@ The search matches the COUNT-th occurrence of the word."
                                           (concat "Query replacing "
                                                   (match-string 0)
                                                   " with "
-                                                  (match-substitute-replacement evil-ex-substitute-replacement
-                                                                                case-replace)
+                                                  (if (fboundp 'match-substitute-replacement)
+                                                      (match-substitute-replacement
+                                                       evil-ex-substitute-replacement case-replace)
+                                                    evil-ex-substitute-replacement)
                                                   ": "))
                                       #'(lambda (x)
                                           (set-match-data x)

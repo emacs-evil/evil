@@ -323,7 +323,8 @@ In Insert state, insert a newline."
                     (get (widget-type widget) 'widget-type))))
       (when (evil-operator-state-p)
         (setq evil-inhibit-operator t))
-      (widget-button-press (point)))
+      (when (fboundp 'widget-button-press)
+        (widget-button-press (point))))
      ((and (fboundp 'button-at)
            (fboundp 'push-button)
            (button-at (point)))
@@ -462,7 +463,9 @@ By default the last line."
 (evil-define-motion evil-beginning-of-visual-line ()
   "Move the cursor to the first character of the current screen line."
   :type exclusive
-  (beginning-of-visual-line))
+  (if (fboundp 'beginning-of-visual-line)
+      (beginning-of-visual-line)
+    (beginning-of-line)))
 
 (evil-define-motion evil-first-non-blank-of-visual-line ()
   "Move the cursor to the first non blank character
@@ -475,7 +478,9 @@ of the current screen line."
   "Move the cursor to the last character of the current screen line.
 If COUNT is given, move COUNT - 1 screen lines downward first."
   :type inclusive
-  (end-of-visual-line count)
+  (if (fboundp 'end-of-visual-line)
+      (end-of-visual-line count)
+    (end-of-line count))
   (unless (evil-visual-state-p)
     (evil-adjust-eol)))
 
