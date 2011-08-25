@@ -420,6 +420,12 @@ Signal an error if empty, unless NOERROR is non-nil."
         (unless noerror
           (error "Register `%c' is empty" register)))))
 
+;; custom version of `gensym'
+(defun evil-generate-symbol ()
+  "Return a new uninterned symbol."
+  (prog1 (make-symbol (format "evil-symbol-%d" evil-symbol-counter))
+    (setq evil-symbol-counter (1+ evil-symbol-counter))))
+
 ;;; Key sequences
 
 (defun evil-extract-count (keys)

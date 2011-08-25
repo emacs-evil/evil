@@ -712,6 +712,9 @@ They are reused to prevent flicker.")
   "Input method used in Insert state and Emacs state.")
 (make-variable-buffer-local 'evil-input-method)
 
+(defvar evil-symbol-counter 1
+  "Counter used by `evil-generate-symbol'.")
+
 ;;; ex-mode
 
 (defvar evil-ex-minibuffer nil

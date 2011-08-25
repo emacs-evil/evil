@@ -5,14 +5,19 @@
 (require 'evil-repeat)
 
 (mapc 'evil-declare-motion evil-motions)
-(mapc 'evil-declare-not-repeat '(save-buffer
-                                 digit-argument
-                                 negative-argument
-                                 universal-argument
-                                 universal-argument-minus
-                                 universal-argument-other-key))
-(mapc 'evil-declare-change-repeat '(dabbrev-expand hippie-expand))
-(mapc 'evil-declare-abort-repeat '(eval-expression execute-extended-command))
+(mapc 'evil-declare-not-repeat
+      '(digit-argument
+        negative-argument
+        save-buffer
+        universal-argument
+        universal-argument-minus
+        universal-argument-other-key))
+(mapc 'evil-declare-change-repeat
+      '(dabbrev-expand
+        hippie-expand))
+(mapc 'evil-declare-abort-repeat
+      '(eval-expression
+        execute-extended-command))
 
 (dolist (map evil-overriding-maps)
   (eval-after-load (cdr map)
@@ -24,12 +29,11 @@
 
 ;;; Buffer-menu
 
-(eval-after-load "buff-menu"
-  '(evil-define-key 'motion Buffer-menu-mode-map
-     "h" 'evil-backward-char
-     "j" 'evil-next-line
-     "k" 'evil-previous-line
-     "l" 'evil-forward-char))
+(evil-declare-key 'motion Buffer-menu-mode-map
+  "h" 'evil-backward-char
+  "j" 'evil-next-line
+  "k" 'evil-previous-line
+  "l" 'evil-forward-char)
 
 ;;; Dired
 
@@ -86,16 +90,14 @@
 
 ;;; Info
 
-(eval-after-load 'info
-  '(progn
-     (evil-define-key 'motion Info-mode-map
-       (kbd "\M-h") 'Info-help   ; "h"
-       "\C-t" 'Info-history-back ; "l"
-       "\C-o" 'Info-history-back
-       " " 'Info-scroll-up
-       (kbd "RET") 'Info-follow-nearest-node
-       "\C-]" 'Info-follow-nearest-node
-       (kbd "DEL") 'Info-scroll-down)))
+(evil-declare-key 'motion Info-mode-map
+  (kbd "\M-h") 'Info-help   ; "h"
+  "\C-t" 'Info-history-back ; "l"
+  "\C-o" 'Info-history-back
+  " " 'Info-scroll-up
+  (kbd "RET") 'Info-follow-nearest-node
+  "\C-]" 'Info-follow-nearest-node
+  (kbd "DEL") 'Info-scroll-down)
 
 ;;; Parentheses
 
@@ -130,17 +132,16 @@
 
 ;;; Speedbar
 
-(eval-after-load 'speedbar
-  '(evil-define-key 'motion speedbar-key-map
-     "h" 'backward-char
-     "j" 'speedbar-next
-     "k" 'speedbar-prev
-     "l" 'forward-char
-     "i" 'speedbar-item-info
-     "r" 'speedbar-refresh
-     "u" 'speedbar-up-directory
-     "o" 'speedbar-toggle-line-expansion
-     (kbd "RET") 'speedbar-edit-line))
+(evil-declare-key 'motion speedbar-key-map
+  "h" 'backward-char
+  "j" 'speedbar-next
+  "k" 'speedbar-prev
+  "l" 'forward-char
+  "i" 'speedbar-item-info
+  "r" 'speedbar-refresh
+  "u" 'speedbar-up-directory
+  "o" 'speedbar-toggle-line-expansion
+  (kbd "RET") 'speedbar-edit-line)
 
 ;;; Undo tree visualizer
 
