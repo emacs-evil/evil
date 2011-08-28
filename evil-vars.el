@@ -64,6 +64,13 @@ moves the cursor."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-mode-line-format 'after
+  "The position of the mode line tag.
+`before' means before the mode list.
+`after' means after the mode list."
+  :type 'symbol
+  :group 'evil)
+
 (defcustom evil-word "[:word:]_"
   "The characters to be considered as a word.
 This should be a regexp set without the enclosing []."
@@ -456,9 +463,10 @@ or call the state function (e.g., `evil-normal-state').")
   "The Evil state being switched from.")
 (make-variable-buffer-local 'evil-previous-state)
 
-(defvar evil-modeline-tag nil
-  "Modeline indicator for the current state.")
-(make-variable-buffer-local 'evil-modeline-tag)
+(defvar evil-mode-line-tag nil
+  "Mode-Line indicator for the current state.")
+(make-variable-buffer-local 'evil-mode-line-tag)
+(put 'evil-mode-line-tag 'risky-local-variable t)
 
 (defvar evil-global-keymaps-alist nil
   "Association list of keymap variables.

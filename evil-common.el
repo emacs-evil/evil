@@ -228,7 +228,7 @@ That is, the message is not logged in the *Messages* buffer.
 
 (defmacro evil-with-locked-display (&rest body)
   "Execute BODY with locked display.
-State changes will not change the cursor, refresh the modeline
+State changes will not change the cursor, refresh the mode line
 or display a message in the echo area."
   (declare (indent defun)
            (debug t))

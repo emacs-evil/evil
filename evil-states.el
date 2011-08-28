@@ -55,10 +55,6 @@
           (evil-concat-lists '(evil-mode-map-alist)
                              emulation-mode-map-alists))
     (evil-refresh-local-keymaps)
-    (unless (memq 'evil-modeline-tag global-mode-string)
-      (setq global-mode-string
-            (append '("" evil-modeline-tag)
-                    global-mode-string)))
     (ad-enable-advice 'show-paren-function 'around 'evil)
     (ad-enable-advice 'undo-tree-visualize 'after 'evil)
     (ad-activate 'show-paren-function)
@@ -77,13 +73,7 @@
     (add-hook 'post-command-hook 'evil-repeat-post-hook)
     (add-hook 'post-command-hook 'evil-refresh-cursor))
    (t
-    (let (new-global-mode-string)
-      (while global-mode-string
-        (let ((next (pop global-mode-string)))
-          (if (eq next 'evil-modeline-tag)
-              (pop new-global-mode-string) ;; remove the ""
-            (push next new-global-mode-string))))
-      (setq global-mode-string (nreverse new-global-mode-string)))
+    (evil-refresh-mode-line)
     (ad-disable-advice 'show-paren-function 'around 'evil)
     (ad-disable-advice 'undo-tree-visualize 'after 'evil)
     (ad-activate 'show-paren-function)
@@ -199,6 +189,42 @@ This is the state the buffer comes up in."
     (set modes (delq mode (symbol-value modes))))
   (when state
     (add-to-list (evil-state-property state :modes) mode)))
+
+(defun evil-refresh-mode-line (&optional state)
+  "Refresh mode line tag."
+  (let (name next string temp)
+    (setq string (and state (symbol-value
+                             (evil-state-property state :tag)))
+          name (evil-state-property state :name))
+    ;; add tooltip
+    (when (stringp string)
+      (setq string
+            (propertize string
+                        'help-echo name
+                        'mouse-face 'mode-line-highlight)))
+    (setq evil-mode-line-tag string)
+    ;; refresh mode line data structure
+    (when (or (null evil-local-mode)
+              (null state)
+              (not (eq evil-mode-line-format 'before)))
+      (setq mode-line-position
+            (delq 'evil-mode-line-tag mode-line-position)))
+    (when (or (null evil-local-mode)
+              (null state)
+              (eq evil-mode-line-format 'before))
+      (while global-mode-string
+        (setq next (pop global-mode-string))
+        (if (eq next 'evil-mode-line-tag)
+            (pop temp) ; remove the ""
+          (push next temp)))
+      (setq global-mode-string (nreverse temp)))
+    (when evil-local-mode
+      (if (eq evil-mode-line-format 'before)
+          (add-to-list 'mode-line-position 'evil-mode-line-tag t 'eq)
+        (unless (memq 'evil-mode-line-tag global-mode-string)
+          (setq global-mode-string
+                (nconc global-mode-string '("" evil-mode-line-tag))))))
+    (force-mode-line-update)))
 
 (defun evil-refresh-input-method ()
   "Disable input method in states with :input-method nil."
@@ -760,7 +786,7 @@ Use the command `%s' to change this variable." name toggle))
         :local-keymap (defvar ,local-keymap nil
                         ,(format "Buffer-local keymap for %s." name))
         :tag (defvar ,tag ,tag-value
-               ,(format "Modeline tag for %s." name))
+               ,(format "Mode line tag for %s." name))
         :message (defvar ,message ,message-value
                    ,(format "Echo area indicator for %s." name))
         :cursor (defvar ,cursor ',cursor-value
@@ -821,8 +847,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                  (inactivate-input-method))
                (unless evil-locked-display
                  (evil-refresh-cursor ',state)
-                 (setq evil-modeline-tag ,tag)
-                 (force-mode-line-update)
+                 (evil-refresh-mode-line ',state)
                  (when (evil-called-interactively-p)
                    (redisplay)))
                ,@body
