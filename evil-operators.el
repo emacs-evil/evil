@@ -9,7 +9,7 @@
 (require 'rect)
 
 (evil-define-state operator
-  "Operator-Pending state"
+  "Operator-Pending state."
   :tag " <O> "
   :cursor evil-half-cursor
   :enable (evil-operator-shortcut-map operator motion normal))

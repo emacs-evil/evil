@@ -688,7 +688,14 @@ The basic keymap of this state will then be
                            [&optional stringp]
                            [&rest [keywordp sexp]]
                            def-body)))
-  (let* ((toggle (intern (format "evil-%s-state" state)))
+  (let* ((name (and (string-match "^\\(.+\\)\\(\\(?:.\\|\n\\)*\\)" doc)
+                    (match-string 1 doc)))
+         (doc (match-string 2 doc))
+         (name (and (string-match "^\\(.+?\\)\\.?$" name)
+                    (match-string 1 name)))
+         (doc (if (or (null doc) (string= doc "")) ""
+                (format "\n%s" doc)))
+         (toggle (intern (format "evil-%s-state" state)))
          (mode (intern (format "%s-minor-mode" toggle)))
          (keymap (intern (format "%s-map" toggle)))
          (local (intern (format "%s-local-minor-mode" toggle)))
@@ -740,37 +747,33 @@ The basic keymap of this state will then be
        ;; states whose definitions may not have been processed yet.
        (evil-put-property
         'evil-state-properties ',state
+        :name ',name
         :toggle ',toggle
         :mode (defvar ,mode nil
-                ,(format "Non-nil if %s state is enabled.
-Use the command `%s' to change this variable.\n\n%s" state toggle doc))
+                ,(format "Non-nil if %s is enabled.
+Use the command `%s' to change this variable." name toggle))
         :keymap (defvar ,keymap (make-sparse-keymap)
-                  ,(format "Keymap for %s state.\n\n%s" state doc))
+                  ,(format "Keymap for %s." name))
         :local (defvar ,local nil
-                 ,(format "Non-nil if %s state is enabled.
-Use the command `%s' to change this variable.\n\n%s" state toggle doc))
+                 ,(format "Non-nil if %s is enabled.
+Use the command `%s' to change this variable." name toggle))
         :local-keymap (defvar ,local-keymap nil
-                        ,(format "Buffer-local keymap for %s state.\n\n%s"
-                                 state doc))
+                        ,(format "Buffer-local keymap for %s." name))
         :tag (defvar ,tag ,tag-value
-               ,(format "Modeline tag for %s state.\n\n%s" state doc))
+               ,(format "Modeline tag for %s." name))
         :message (defvar ,message ,message-value
-                   ,(format "Echo area indicator for %s state.\n\n%s"
-                            state doc))
+                   ,(format "Echo area indicator for %s." name))
         :cursor (defvar ,cursor ',cursor-value
-                  ,(format "Cursor for %s state.
+                  ,(format "Cursor for %s.
 May be a cursor type as per `cursor-type', a color string as passed
 to `set-cursor-color', a zero-argument function for changing the
-cursor, or a list of the above.\n\n%s" state doc))
+cursor, or a list of the above." name))
         :entry-hook (defvar ,entry-hook nil
-                      ,(format "Hooks to run when entering %s state.\n\n%s"
-                               state doc))
+                      ,(format "Hooks to run when entering %s." name))
         :exit-hook (defvar ,exit-hook nil
-                     ,(format "Hooks to run when exiting %s state.\n\n%s"
-                              state doc))
+                     ,(format "Hooks to run when exiting %s." name))
         :modes (defvar ,modes nil
-                 ,(format "Modes that should come up in %s state."
-                          state))
+                 ,(format "Modes that should come up in %s." name))
         :input-method ',input-method
         :predicate ',predicate
         :enable ',enable)
@@ -785,16 +788,16 @@ cursor, or a list of the above.\n\n%s" state doc))
          (add-hook ',exit-hook func))
 
        (defun ,predicate (&optional state)
-         ,(format "Whether the current STATE is %s." state)
+         ,(format "Whether the current state is %s.
+\(That is, whether `evil-state' is `%s'.)" name state)
          (and evil-local-mode
               (eq (or state evil-state) ',state)))
 
        ;; define state function
        (evil-define-command ,toggle (&optional arg)
          :keep-visual t
-         ,(format "Enable %s state. Disable with negative ARG.
-If ARG is nil, don't display a message in the echo area.\n\n%s"
-                  state doc)
+         ,(format "Enable %s. Disable with negative ARG.
+If ARG is nil, don't display a message in the echo area.%s" name doc)
          (interactive "p")
          (cond
           ((and (numberp arg) (< arg 1))
@@ -843,7 +846,8 @@ If ARG is nil, don't display a message in the echo area.\n\n%s"
 ;;; Define Normal state and Emacs state
 
 (evil-define-state normal
-  "Normal state, AKA \"Command\" state."
+  "Normal state.
+AKA \"Command\" state."
   :tag " <N> "
   :enable (motion)
   :exit-hook (evil-repeat-start-hook)

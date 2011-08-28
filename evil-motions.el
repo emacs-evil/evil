@@ -5,7 +5,7 @@
 (require 'evil-operators)
 
 (evil-define-state motion
-  "Motion state"
+  "Motion state."
   :tag " <M> "
   :suppress-keymap t)
 
