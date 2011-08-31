@@ -232,9 +232,12 @@ This is the state the buffer comes up in."
         input-method-inactivate-hook)
     (when (and evil-local-mode evil-state)
       (setq evil-input-method current-input-method)
-      (when (and current-input-method
-                 (null (evil-state-property evil-state :input-method)))
+      (unless (evil-state-property evil-state :input-method)
         (inactivate-input-method)))))
+
+(defadvice toggle-input-method (after evil activate)
+  "Refresh `evil-input-method'."
+  (evil-refresh-input-method))
 
 (defun evil-refresh-global-keymaps ()
   "Refresh the global value of `evil-mode-map-alist'.
@@ -837,7 +840,9 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
           (t
            (unless evil-local-mode
              (evil-initialize))
-           (let ((evil-next-state ',state))
+           (let ((evil-next-state ',state)
+                 input-method-activate-hook
+                 input-method-inactivate-hook)
              (evil-change-state nil)
              (setq evil-state ',state)
              (let ((evil-state ',state))
