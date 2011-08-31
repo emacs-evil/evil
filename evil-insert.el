@@ -225,13 +225,21 @@ The insertion is repeated COUNT times."
 (defun evil-execute-in-normal-state ()
   "Execute the next command in Normal state."
   (interactive)
-  (evil-normal-state)
-  (if (eq this-command 'evil-execute-in-normal-state)
-      (add-hook 'post-command-hook
-                'evil-execute-in-normal-state nil t)
+  (let (evil-move-cursor-back)
+    (evil-normal-state))
+  (setq evil-old-move-cursor-back evil-move-cursor-back
+        evil-move-cursor-back nil)
+  (add-hook 'post-command-hook 'evil-execute-in-normal-state-hook))
+
+(defun evil-execute-in-normal-state-hook ()
+  "Return to Insert state."
+  (unless (eq this-command 'evil-execute-in-normal-state)
+    (let (evil-move-cursor-back)
+      (evil-insert-state))
+    (setq evil-move-cursor-back evil-old-move-cursor-back
+          evil-old-move-cursor-back nil)
     (remove-hook 'post-command-hook
-                 'evil-execute-in-normal-state t)
-    (evil-insert-state)))
+                 'evil-execute-in-normal-state-hook)))
 
 (defun evil-copy-from-above (arg)
   "Copy characters from preceding non-blank line.

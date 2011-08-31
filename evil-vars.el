@@ -554,6 +554,10 @@ to t, the operator code is not executed.")
   "This variable is used to transfer the value
 of `evil-inhibit-operator' from one local scope to another.")
 
+;; used by `evil-execute-in-normal-state'
+(defvar evil-old-move-cursor-back nil
+  "Old value of `evil-move-cursor-back'.")
+
 (defvar evil-markers-alist
   '((?\( . evil-backward-sentence)
     (?\) . evil-forward-sentence)
