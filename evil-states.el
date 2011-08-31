@@ -66,8 +66,8 @@
     ;; re-determine the initial state in `post-command-hook' since the
     ;; major mode may not be initialized yet, and some modes neglect
     ;; to run `after-change-major-mode-hook'
-    (add-hook 'input-method-activate-hook 'evil-refresh-input-method t t)
-    (add-hook 'input-method-inactivate-hook 'evil-refresh-input-method t t)
+    (add-hook 'input-method-activate-hook 'evil-activate-input-method t t)
+    (add-hook 'input-method-inactivate-hook 'evil-inactivate-input-method t t)
     (add-hook 'post-command-hook 'evil-initialize-state t t)
     (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
     (add-hook 'post-command-hook 'evil-repeat-post-hook)
@@ -77,8 +77,8 @@
     (ad-disable-advice 'show-paren-function 'around 'evil)
     (ad-disable-advice 'undo-tree-visualize 'after 'evil)
     (ad-activate 'show-paren-function)
-    (remove-hook 'input-method-activate-hook 'evil-refresh-input-method t)
-    (remove-hook 'input-method-inactivate-hook 'evil-refresh-input-method t)
+    (remove-hook 'input-method-activate-hook 'evil-activate-input-method t)
+    (remove-hook 'input-method-inactivate-hook 'evil-inactivate-input-method t)
     (evil-change-state nil))))
 
 (defun evil-initialize ()
@@ -226,7 +226,7 @@ This is the state the buffer comes up in."
                 (nconc global-mode-string '("" evil-mode-line-tag))))))
     (force-mode-line-update)))
 
-(defun evil-refresh-input-method ()
+(defun evil-activate-input-method ()
   "Disable input method in states with :input-method nil."
   (let (input-method-activate-hook
         input-method-inactivate-hook)
@@ -235,9 +235,19 @@ This is the state the buffer comes up in."
       (unless (evil-state-property evil-state :input-method)
         (inactivate-input-method)))))
 
-(defadvice toggle-input-method (after evil activate)
+(defun evil-inactivate-input-method ()
+  "Disable input method in states with :input-method nil."
+  (let (input-method-activate-hook
+        input-method-inactivate-hook)
+    (when (and evil-local-mode evil-state)
+      (setq evil-input-method nil))))
+
+(defadvice toggle-input-method (around evil activate)
   "Refresh `evil-input-method'."
-  (evil-refresh-input-method))
+  (if (evil-state-property evil-state :input-method)
+      ad-do-it
+    (let ((current-input-method evil-input-method))
+      ad-do-it)))
 
 (defun evil-refresh-global-keymaps ()
   "Refresh the global value of `evil-mode-map-alist'.
