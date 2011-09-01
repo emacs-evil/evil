@@ -1163,7 +1163,7 @@ If one is unspecified, the other is used with a negative argument."
                 (funcall backward 1)
                 (point))
           end (save-excursion
-                (funcall forward 1)
+                (funcall forward count)
                 (point)))
     (evil-range beg end type)))
 

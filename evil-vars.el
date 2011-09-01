@@ -717,6 +717,12 @@ They are reused to prevent flicker.")
 (defvar evil-search-prompt nil
   "String to use for search prompt.")
 
+(defvar evil-inner-text-objects-map (make-sparse-keymap)
+  "Keymap for inner text objects.")
+
+(defvar evil-outer-text-objects-map (make-sparse-keymap)
+  "Keymap for outer text objects.")
+
 (defvar evil-window-map (make-sparse-keymap)
   "Keymap for window-related commands.")
 
