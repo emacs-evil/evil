@@ -66,8 +66,8 @@ moves the cursor."
 
 (defcustom evil-mode-line-format 'after
   "The position of the mode line tag.
-`before' means before the mode list.
-`after' means after the mode list."
+`before' means before the mode list, `after' means after it,
+and nil means no mode line tag."
   :type 'symbol
   :group 'evil)
 

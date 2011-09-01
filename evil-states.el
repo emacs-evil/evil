@@ -211,7 +211,7 @@ This is the state the buffer comes up in."
             (delq 'evil-mode-line-tag mode-line-position)))
     (when (or (null evil-local-mode)
               (null state)
-              (eq evil-mode-line-format 'before))
+              (not (eq evil-mode-line-format 'after)))
       (while global-mode-string
         (setq next (pop global-mode-string))
         (if (eq next 'evil-mode-line-tag)
@@ -219,8 +219,9 @@ This is the state the buffer comes up in."
           (push next temp)))
       (setq global-mode-string (nreverse temp)))
     (when evil-local-mode
-      (if (eq evil-mode-line-format 'before)
-          (add-to-list 'mode-line-position 'evil-mode-line-tag t 'eq)
+      (when (eq evil-mode-line-format 'before)
+        (add-to-list 'mode-line-position 'evil-mode-line-tag t 'eq))
+      (when (eq evil-mode-line-format 'after)
         (unless (memq 'evil-mode-line-tag global-mode-string)
           (setq global-mode-string
                 (nconc global-mode-string '("" evil-mode-line-tag))))))
