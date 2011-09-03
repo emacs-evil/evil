@@ -50,6 +50,16 @@
   "k" 'evil-previous-line
   "l" 'evil-forward-char)
 
+;; dictionary.el
+
+(eval-after-load 'dictionary
+  '(evil-define-key 'motion dictionary-mode-map
+     "h" 'evil-backward-char
+     "j" 'evil-next-line
+     "k" 'evil-previous-line
+     "l" 'evil-forward-char
+     "?" 'dictionary-help)) ; "h"
+
 ;;; Dired
 
 (eval-after-load 'dired

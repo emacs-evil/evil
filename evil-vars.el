@@ -381,6 +381,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     calendar-mode
     command-history-mode
     compilation-mode
+    dictionary-mode
     help-mode
     Info-mode
     speedbar-mode
@@ -394,6 +395,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
   '((Buffer-menu-mode-map . "buff-menu")
     (comint-mode-map . comint)
     (compilation-mode-map . compile)
+    (dictionary-mode-map . dictionary)
     (speedbar-key-map . speedbar)
     (speedbar-file-key-map . speedbar)
     (speedbar-buffers-key-map . speedbar))
