@@ -216,8 +216,6 @@
 (define-key evil-motion-state-map "V" 'evil-visual-line)
 (define-key evil-motion-state-map "\C-v" 'evil-visual-block)
 (define-key evil-motion-state-map "gv" 'evil-visual-restore)
-(define-key evil-motion-state-map "a" evil-outer-text-objects-map)
-(define-key evil-motion-state-map "i" evil-inner-text-objects-map)
 (define-key evil-motion-state-map
   (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
 
@@ -277,8 +275,15 @@
 (define-key evil-visual-state-map "S" 'evil-change)
 (define-key evil-visual-state-map "u" 'evil-downcase)
 (define-key evil-visual-state-map "U" 'evil-upcase)
+(define-key evil-visual-state-map "a" evil-outer-text-objects-map)
+(define-key evil-visual-state-map "i" evil-inner-text-objects-map)
 (define-key evil-visual-state-map [remap evil-repeat] 'undefined)
 (define-key evil-visual-state-map [escape] 'evil-change-to-previous-state)
+
+;;; Operator-Pending state
+
+(define-key evil-operator-state-map "a" evil-outer-text-objects-map)
+(define-key evil-operator-state-map "i" evil-inner-text-objects-map)
 
 ;;; Insert state
 
