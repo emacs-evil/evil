@@ -304,7 +304,8 @@ a keymap variable and EVAL-AFTER is the file or package defining it
   :group 'evil)
 
 (defcustom evil-motions
-  '(backward-char
+  '(back-to-indentation
+    backward-char
     backward-list
     backward-paragraph
     backward-sentence
@@ -330,6 +331,7 @@ a keymap variable and EVAL-AFTER is the file or package defining it
     forward-sentence
     forward-sexp
     forward-word
+    goto-last-change
     isearch-abort
     isearch-cancel
     isearch-complete
