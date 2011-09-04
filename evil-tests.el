@@ -2739,6 +2739,11 @@ Below some empty line")
       ";;[ ]This buffer is for notes."
       ("3e")
       ";; This buffer i[s] for notes."))
+  (ert-info ("Delete")
+    (evil-test-buffer
+     ";; This[-]buffer-is-for-notes."
+     ("de")
+     ";; This[-]is-for-notes."))
   (ert-info ("Empty line")
     (evil-test-buffer
       "Above some line

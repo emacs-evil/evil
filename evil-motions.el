@@ -743,8 +743,10 @@ If BIGWORD is non-nil, move by WORDS."
 If BIGWORD is non-nil, move by WORDS."
   :type inclusive
   (let ((move (if bigword #'evil-move-WORD #'evil-move-word)))
-    (if (evil-operator-state-p)
-        ;; if changing a one-letter word, don't move point at all
+    ;; if changing a one-letter word, don't move point to the
+    ;; next word (which would change two words)
+    (if (and (evil-operator-state-p)
+             (looking-at (format "[%s]" evil-word)))
         (prog1 (evil-move-end count move)
           (unless (bobp) (backward-char)))
       (evil-move-end count move nil t))))
