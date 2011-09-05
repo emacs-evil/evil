@@ -266,13 +266,10 @@
 ;;; Visual state
 
 (define-key evil-visual-state-map "A" 'evil-append)
-(define-key evil-visual-state-map "C" 'evil-change)
-(define-key evil-visual-state-map "D" 'evil-delete)
 (define-key evil-visual-state-map "I" 'evil-insert)
 (define-key evil-visual-state-map "o" 'exchange-point-and-mark)
 (define-key evil-visual-state-map "O" 'evil-visual-exchange-corners)
 (define-key evil-visual-state-map "R" 'evil-change)
-(define-key evil-visual-state-map "S" 'evil-change)
 (define-key evil-visual-state-map "u" 'evil-downcase)
 (define-key evil-visual-state-map "U" 'evil-upcase)
 (define-key evil-visual-state-map "a" evil-outer-text-objects-map)

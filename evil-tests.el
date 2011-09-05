@@ -1756,6 +1756,29 @@ the `evil-repeat' command")
 If you want to create a file, visit that file with C-x C-f,
 then enter the text in that file's own buffer.")))
 
+(ert-deftest evil-test-delete-line ()
+  "Test `evil-delete-line'"
+  :tags '(evil operator)
+  (ert-info ("Delete to end of line")
+    (evil-test-buffer
+     ";; This buffer is for notes[ ]you don't want to save."
+     ("D")
+     ";; This buffer is for note[s]"))
+  (ert-info ("Act linewise on character selection")
+    (evil-test-buffer
+     ";; This <buffe[r]> is for notes,
+and for Lisp evaluation."
+     ("D")
+     "[a]nd for Lisp evaluation."))
+  (ert-info ("Act on each line of block selection")
+    (evil-test-buffer
+      :visual block
+      ";; This buffer is for <notes,
+;; and for Lisp evaluatio[n]>."
+      ("D")
+      ";; This buffer is for[ ]
+;; and for Lisp evalua")))
+
 (ert-deftest evil-test-change ()
   "Test `evil-change'"
   :tags '(evil operator)

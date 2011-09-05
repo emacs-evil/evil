@@ -677,7 +677,8 @@ is negative this is a more recent kill."
   (evil-paste-pop (- count)))
 
 (evil-define-operator evil-delete (beg end type register yank-handler)
-  "Delete and save in kill-ring or REGISTER."
+  "Delete text from BEG to END with TYPE.
+Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (interactive "<R><x><y>")
   (evil-yank beg end type register yank-handler)
   (cond
@@ -690,11 +691,33 @@ is negative this is a more recent kill."
    (t
     (delete-region beg end))))
 
-(evil-define-operator evil-delete-line (beg end type register)
+(evil-define-operator evil-delete-line (beg end type register yank-handler)
   "Delete to end of line."
-  :motion evil-end-of-line
+  :motion nil
+  :keep-visual t
   (interactive "<R><x>")
-  (evil-delete beg end type register))
+  ;; act linewise in Visual state
+  (when (evil-visual-state-p)
+    (unless (memq type '(line block))
+      (let ((range (evil-expand beg end 'line)))
+        (setq beg (evil-range-beginning range)
+              end (evil-range-end range)
+              type (evil-type range))))
+    (evil-change-to-previous-state))
+  (cond
+   ((eq type 'block)
+    (evil-apply-on-block 'evil-delete-line beg end nil register yank-handler))
+   ((eq type 'line)
+    (evil-delete beg end type register yank-handler))
+   (t
+    (evil-delete beg (line-end-position) type register yank-handler))))
+
+(evil-define-operator evil-delete-whole-line
+  (beg end type register yank-handler)
+  "Delete whole line."
+  :motion evil-line
+  (interactive "<R><x>")
+  (evil-delete beg end type register yank-handler))
 
 (evil-define-operator evil-delete-char (beg end type register)
   "Delete next character."
@@ -708,17 +731,21 @@ is negative this is a more recent kill."
   (interactive "<R><x>")
   (evil-delete beg end type register))
 
-(evil-define-operator evil-change (beg end type register yank-handler)
-  "Delete region and change to insert state.
-If the region is linewise insertion starts on an empty line.
-If region is a block, the inserted text in inserted at each line
+(evil-define-operator evil-change
+  (beg end type register yank-handler delete-func)
+  "Change text from BEG to END with TYPE.
+Save in REGISTER or the kill-ring with YANK-HANDLER.
+DELETE-FUNC is a function for deleting text, default `evil-delete'.
+If TYPE is `line', insertion starts on an empty line.
+If TYPE is `block', the inserted text in inserted at each line
 of the block."
   (interactive "<R><x><y>")
-  (let ((nlines (1+ (- (line-number-at-pos end)
+  (let ((delete-func (or delete-func 'evil-delete))
+        (nlines (1+ (- (line-number-at-pos end)
                        (line-number-at-pos beg))))
         (bop (= beg (buffer-end -1)))
         (eob (= end (buffer-end 1))))
-    (evil-delete beg end type register yank-handler)
+    (funcall delete-func beg end type register yank-handler)
     (cond
      ((eq type 'line)
       (if (and eob (not bop))
@@ -729,17 +756,18 @@ of the block."
      (t
       (evil-insert 1)))))
 
-(evil-define-operator evil-change-line (beg end type register)
+(evil-define-operator evil-change-line (beg end type register yank-handler)
   "Change to end of line."
   :motion evil-end-of-line
-  (interactive "<R><x>")
-  (evil-change beg end type register))
+  (interactive "<R><x><y>")
+  (evil-change beg end type register yank-handler 'evil-delete-line))
 
-(evil-define-operator evil-change-whole-line (beg end type register)
+(evil-define-operator evil-change-whole-line
+  (beg end type register yank-handler)
   "Change whole line."
   :motion evil-line
   (interactive "<R><x>")
-  (evil-change beg end type register))
+  (evil-change beg end type register yank-handler 'evil-delete-whole-line))
 
 (evil-define-operator evil-substitute (beg end type register)
   "Change a character."
