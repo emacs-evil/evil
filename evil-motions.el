@@ -17,16 +17,13 @@
            (debug (&define name lambda-list
                            [&optional stringp]
                            [&rest keywordp sexp]
-                           [&optional ("interactive" interactive)]
+                           [&optional ("interactive" [&rest form])]
                            def-body)))
   (let (arg doc interactive jump key keys type)
     (when args
       (setq args `(&optional ,@(delq '&optional args))
-            interactive
             ;; the count is either numerical or nil
-            '(list (when current-prefix-arg
-                     (prefix-numeric-value
-                      current-prefix-arg)))))
+            interactive '("<c>")))
     ;; collect docstring
     (when (and (> (length body) 1)
                (or (eq (car-safe (car-safe body)) 'format)
@@ -43,7 +40,11 @@
         (setq keys (append keys (list key arg))))))
     ;; collect `interactive' specification
     (when (eq (car-safe (car-safe body)) 'interactive)
-      (setq interactive `(append ,interactive ,@(cdr (pop body)))))
+      (setq interactive (cdr (pop body))))
+    (when interactive
+      (setq interactive (apply 'evil-interactive-form interactive))
+      (setq keys (append keys (cdr-safe interactive))
+            interactive (car-safe interactive)))
     ;; macro expansion
     `(progn
        ;; refresh echo area in Eldoc mode
@@ -722,7 +723,7 @@ of the object; otherwise it is placed at the end of the object."
   (evil-move-chars "^ \t\r\n" count)
   (evil-move-empty-lines count))
 
-(evil-define-motion evil-forward-word-begin (count bigword)
+(evil-define-motion evil-forward-word-begin (count &optional bigword)
   "Move the cursor to the beginning of the COUNT-th next word.
 If BIGWORD is non-nil, move by WORDS."
   :type exclusive
@@ -738,7 +739,7 @@ If BIGWORD is non-nil, move by WORDS."
                  (bolp))
         (backward-char)))))
 
-(evil-define-motion evil-forward-word-end (count bigword)
+(evil-define-motion evil-forward-word-end (count &optional bigword)
   "Move the cursor to the end of the COUNT-th next word.
 If BIGWORD is non-nil, move by WORDS."
   :type inclusive
@@ -751,14 +752,14 @@ If BIGWORD is non-nil, move by WORDS."
           (unless (bobp) (backward-char)))
       (evil-move-end count move nil t))))
 
-(evil-define-motion evil-backward-word-begin (count bigword)
+(evil-define-motion evil-backward-word-begin (count &optional bigword)
   "Move the cursor to the beginning of the COUNT-th previous word.
 If BIGWORD is non-nil, move by WORDS."
   :type exclusive
   (let ((move (if bigword #'evil-move-WORD #'evil-move-word)))
     (evil-move-beginning (- (or count 1)) move)))
 
-(evil-define-motion evil-backward-word-end (count bigword)
+(evil-define-motion evil-backward-word-end (count &optional bigword)
   "Move the cursor to the end of the COUNT-th previous word.
 If BIGWORD is non-nil, move by WORDS."
   :type inclusive
@@ -897,7 +898,7 @@ If BIGWORD is non-nil, move by WORDS."
   "Move to the next COUNT'th occurrence of CHAR."
   :jump t
   :type inclusive
-  (interactive (list (read-char)))
+  (interactive "<c>c")
   (setq count (or count 1))
   (let ((fwd (> count 0)))
     (setq evil-last-find (list #'evil-find-char char fwd))
@@ -917,14 +918,14 @@ If BIGWORD is non-nil, move by WORDS."
   "Move to the previous COUNT'th occurrence of CHAR."
   :jump t
   :type exclusive
-  (interactive (list (read-char)))
+  (interactive "<c>c")
   (evil-find-char (- (or count 1)) char))
 
 (evil-define-motion evil-find-char-to (count char)
   "Move before the next COUNT'th occurence of CHAR."
   :jump t
   :type inclusive
-  (interactive (list (read-char)))
+  (interactive "<c>c")
   (unwind-protect
       (progn
         (evil-find-char count char)
@@ -937,7 +938,7 @@ If BIGWORD is non-nil, move by WORDS."
   "Move before the previous COUNT'th occurence of CHAR."
   :jump t
   :type exclusive
-  (interactive (list (read-char)))
+  (interactive "<c>c")
   (evil-find-char-to (- (or count 1)) char))
 
 (evil-define-motion evil-repeat-find-char (count)
@@ -1410,14 +1411,14 @@ Returns t if RANGE was successfully adjusted and nil otherwise."
         (evil-set-range range nil (line-end-position 0)))
       (not (evil-subrange-p orig range)))))
 
-(evil-define-text-object evil-a-word (count bigword)
+(evil-define-text-object evil-a-word (count &optional bigword)
   "Select a word.
 If BIGWORD is non-nil, select a WORD."
   (evil-an-object-range count (if bigword
                                   'evil-move-WORD
                                 'evil-move-word)))
 
-(evil-define-text-object evil-inner-word (count bigword)
+(evil-define-text-object evil-inner-word (count &optional bigword)
   "Select inner word.
 If BIGWORD is non-nil, select inner WORD."
   (evil-inner-object-range count (if bigword

@@ -558,6 +558,18 @@ of `evil-inhibit-operator' from one local scope to another.")
 (defvar evil-old-move-cursor-back nil
   "Old value of `evil-move-cursor-back'.")
 
+(defvar evil-operator-range-motion nil
+  "Motion of `evil-operator-range'.")
+
+(defvar evil-operator-range-beginning nil
+  "Beginning of `evil-operator-range'.")
+
+(defvar evil-operator-range-end nil
+  "End of `evil-operator-range'.")
+
+(defvar evil-operator-range-type nil
+  "Type of `evil-operator-range'.")
+
 (defvar evil-markers-alist
   '((?\( . evil-backward-sentence)
     (?\) . evil-forward-sentence)
@@ -730,7 +742,7 @@ They are reused to prevent flicker.")
   "Input method used in Insert state and Emacs state.")
 (make-variable-buffer-local 'evil-input-method)
 
-(defvar evil-symbol-counter 1
+(defvar evil-symbol-counter 0
   "Counter used by `evil-generate-symbol'.")
 
 ;;; ex-mode

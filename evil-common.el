@@ -425,10 +425,13 @@ Signal an error if empty, unless NOERROR is non-nil."
           (error "Register `%c' is empty" register)))))
 
 ;; custom version of `gensym'
-(defun evil-generate-symbol ()
-  "Return a new uninterned symbol."
-  (prog1 (make-symbol (format "evil-symbol-%d" evil-symbol-counter))
-    (setq evil-symbol-counter (1+ evil-symbol-counter))))
+(defun evil-generate-symbol (&optional intern)
+  "Return a new uninterned symbol.
+If INTERN is non-nil, intern the symbol."
+  (setq evil-symbol-counter (1+ evil-symbol-counter))
+  (if intern
+      (intern (format "evil-symbol-%d" evil-symbol-counter))
+    (make-symbol (format "evil-symbol-%d" evil-symbol-counter))))
 
 ;;; Key sequences
 
@@ -499,7 +502,7 @@ recursively."
                            [&optional lambda-list]
                            [&optional stringp]
                            [&rest keywordp sexp]
-                           [&optional ("interactive" interactive)]
+                           [&optional ("interactive" [&rest form])]
                            def-body)))
   (let ((keys (plist-put nil :repeat t))
         arg args doc doc-form key)

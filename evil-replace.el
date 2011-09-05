@@ -44,7 +44,8 @@
 (evil-define-operator evil-replace (beg end type char)
   "Replace text from BEG to END with CHAR."
   :motion evil-forward-char
-  (interactive (list (evil-save-cursor
+  (interactive "<R>"
+               (list (evil-save-cursor
                        (evil-set-cursor evil-replace-state-cursor)
                        (evil-read-key))))
   (if (eq type 'block)

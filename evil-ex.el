@@ -29,7 +29,7 @@
   "Defines a new handler for argument-type ARG-TYPE."
   (declare (indent defun)
            (debug (&define symbolp lambda-list
-                           [&optional ("interactive" interactive)]
+                           [&optional ("interactive" [&rest form])]
                            def-body)))
   (let ((name (intern (concat "evil-ex-argument-handler-" (symbol-name arg-type)))))
     `(progn
