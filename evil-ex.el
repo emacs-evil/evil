@@ -207,7 +207,7 @@ FORCE is non-nil if and only if an exclamation followed the command."
          (start (pop result))
          (sep (pop result))
          (end (pop result))
-         (cmd (pop result))
+         (cmd (or (pop result) ""))
          (force (pop result))
          (boundaries (cdr-safe flag)))
     (cond
