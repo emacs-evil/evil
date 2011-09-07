@@ -1,7 +1,8 @@
 SHELL = /bin/bash
 EMACS = emacs
 FILES = $(filter-out evil-tests.el,$(filter-out evil-pkg.el,$(wildcard evil*.el)))
-ELPAPKG = evil-`sed -n '3s/.*"\(.*\)".*/\1/p' evil-pkg.el`
+VERSION := $(shell sed -n '3s/.*"\(.*\)".*/\1/p' evil-pkg.el)
+ELPAPKG = evil-$(VERSION)
 PROFILER =
 TAG =
 
@@ -89,11 +90,12 @@ indent: clean
 
 # Create an ELPA package.
 elpa:
-	rm -rf ${ELPAPKG}
-	mkdir ${ELPAPKG}
-	cp $(FILES) evil-pkg.el ${ELPAPKG}
-	tar cf ${ELPAPKG}.tar ${ELPAPKG}
-	rm -rf ${ELPAPKG}
+	@echo "Creating ELPA package $(ELPAPKG).tar"
+	@rm -rf ${ELPAPKG}
+	@mkdir ${ELPAPKG}
+	@cp $(FILES) evil-pkg.el ${ELPAPKG}
+	@tar cf ${ELPAPKG}.tar ${ELPAPKG}
+	@rm -rf ${ELPAPKG}
 
 # Change the version using make VERSION=x.y.z
 version:
