@@ -985,11 +985,11 @@ The search matches the COUNT-th occurrence of the word."
       (overlay-put overlay 'after-string repl))))
 
 (evil-define-operator evil-ex-substitute (beg end type substitution)
-  "The VIM substitutde command: [range]s/pattern/replacement/flags"
+  "The VIM substitute command: [range]s/pattern/replacement/flags"
   :repeat nil
   :jump t
   :motion evil-line
-  (interactive "<s/>")
+  (interactive "<R><s/>")
   (evil-ex-nohighlight)
   (let* ((result (evil-ex-parse-substitute substitution))
          (pattern (pop result))

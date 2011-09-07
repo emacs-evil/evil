@@ -932,7 +932,7 @@ already existing."
   :motion mark-whole-buffer
   :type line
   :repeat nil
-  (interactive "<f><!>")
+  (interactive "<R><f><!>")
   (when (null file-name)
     (setq file-name (buffer-file-name))
     (unless file-name
