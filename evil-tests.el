@@ -1744,7 +1744,7 @@ the `evil-repeat' command")
 ;; [I]f you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
       ("2dd")
-      ";; This buffer is for notes you don't want to save[.]"))
+      "[;]; This buffer is for notes you don't want to save."))
   (ert-info ("Delete rectangle")
     (evil-test-buffer
       "[;]; This buffer is for notes you don't want to save.

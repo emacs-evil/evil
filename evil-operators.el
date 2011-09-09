@@ -689,7 +689,9 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
          (/= (point-min) beg))
     (delete-region (1- beg) end))
    (t
-    (delete-region beg end))))
+    (delete-region beg end)))
+  (when (eq type 'line)
+    (back-to-indentation)))
 
 (evil-define-operator evil-delete-line (beg end type register yank-handler)
   "Delete to end of line."
