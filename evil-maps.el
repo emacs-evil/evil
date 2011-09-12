@@ -57,7 +57,7 @@
 (define-key evil-normal-state-map "<" 'evil-shift-left)
 (define-key evil-normal-state-map ">" 'evil-shift-right)
 (define-key evil-normal-state-map (kbd "DEL") 'evil-backward-char)
-(define-key evil-normal-state-map [escape] 'evil-normal-state)
+(define-key evil-normal-state-map [escape] 'evil-force-normal-state)
 (define-key evil-normal-state-map [remap cua-paste-pop] 'evil-paste-pop)
 (define-key evil-normal-state-map [remap yank-pop] 'evil-paste-pop)
 

@@ -1105,6 +1105,12 @@ Change to `%s'? "
                 (let ((var (intern (format "evil-%s-state-modes" s))))
                   (customize-save-variable var (symbol-value var)))))))))))
 
+(evil-define-command evil-force-normal-state ()
+  "Switch to normal state without recording current command."
+  :repeat abort
+  (interactive)
+  (evil-normal-state))
+
 (provide 'evil-operators)
 
 ;;; evil-operators.el ends here
