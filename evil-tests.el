@@ -1487,6 +1487,25 @@ the `evil-repeat' command")
       (".")
       ";; ABCABCAB[C]This buffer is for notes.")))
 
+(ert-deftest evil-test-abort-operator-repeat ()
+  "Test if ESC in operator-state cancels recording of repeation."
+  :tags '(evil repeat)
+  (let ((inhibit-quit t))
+    (ert-info ("Test ESC")
+      (evil-test-buffer
+	";;[ ]This buffer is for notes."
+	(setq evil-repeat-ring (make-ring 10))
+	(should (= (ring-length evil-repeat-ring) 0))
+	("aABC" [escape])
+	";; AB[C]This buffer is for notes."
+	(should (= (ring-length evil-repeat-ring) 1))
+	(".")
+	";; ABCAB[C]This buffer is for notes."
+	("d" [escape])
+	(should (= (ring-length evil-repeat-ring) 1))
+	(".")
+	";; ABCABCAB[C]This buffer is for notes."))))
+
 ;;; Operators
 
 (ert-deftest evil-test-keypress-parser ()
