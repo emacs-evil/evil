@@ -1472,6 +1472,7 @@ the `evil-repeat' command")
 
 (ert-deftest evil-test-ESC-repeat-normal-state ()
   "Test if ESC is not been recorded in normal state."
+  :tags '(evil repeat)
   (ert-info ("Test normal ESC")
     (evil-test-buffer
       ";;[ ]This buffer is for notes."
