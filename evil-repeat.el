@@ -115,6 +115,10 @@ in `evil-repeat-info' and clear variables."
           (ring-insert evil-repeat-ring evil-repeat-info)))
     (evil-repeat-reset nil)))
 
+(defun evil-repeat-abort ()
+  "Abort current repeation."
+  (evil-repeat-reset 'abort))
+
 (defun evil-repeat-reset (flag)
   "Clear all repeat recording variables.
 Set `evil-recording-repeat' to FLAG."
@@ -199,7 +203,7 @@ has :repeat nil."
         ;; We mark the current record as being aborted, because there
         ;; may be further pre-hooks following before the post-hook is
         ;; called.
-        (evil-repeat-reset 'abort))
+        (evil-repeat-abort))
        ;; ignore those commands completely
        ((null repeat-type))
        ;; record command
