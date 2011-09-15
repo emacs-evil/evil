@@ -157,6 +157,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     bookmark-edit-annotation-mode
     browse-kill-ring-mode
     bzr-annotate-mode
+    calc-mode
     cfw:calendar-mode
     completion-list-mode
     Custom-mode
@@ -172,6 +173,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     dvc-tips-mode
     ediff-mode
     efs-mode
+    Electric-buffer-menu-mode
     ert-results-mode
     gdb-breakpoints-mode
     gdb-disassembly-mode
@@ -187,9 +189,13 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     gnus-summary-mode
     ibuffer-mode
     jde-javadoc-checker-report-mode
+    magit-commit-mode
     magit-key-mode
+    magit-log-mode
     magit-mode
     magit-show-branches-mode
+    magit-stash-mode
+    magit-status-mode
     mh-folder-mode
     monky-mode
     notmuch-hello-mode
