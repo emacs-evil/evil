@@ -332,8 +332,10 @@ Search forward if a match isn't found."
            (overlay-put overlay 'after-string string)
            (list (or evil-this-register (read-char))))
        (delete-overlay overlay))))
-  (and (fboundp 'evil-paste-after)
-       (evil-paste-after nil register)))
+  (when (fboundp 'evil-paste-before)
+    (when (evil-paste-before nil register t)
+      ;; go to end of pasted text
+      (forward-char))))
 
 (provide 'evil-insert)
 
