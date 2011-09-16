@@ -286,28 +286,22 @@ The keymap will have lower precedence than custom STATE bindings.
 If STATE is nil, give it precedence over all states.
 If COPY is t, create a copy of KEYMAP and give that
 higher precedence. See also `evil-make-intercept-map'."
-  (let ((key (if (null state)
-                 [overriding-states]
-               (vconcat
-                (list (intern (format "overriding-%s-state" state)))))))
+  (let ((key [override-state]))
     (when (and copy (not (keymapp copy)))
       (setq copy (assq-delete-all 'menu-bar (copy-keymap keymap))))
     (cond
      ((keymapp copy)
-      (define-key copy key (or state 'state))
+      (define-key copy key (or state 'all))
       (define-key keymap key copy))
      (t
-      (define-key keymap key (or state 'state))))))
+      (define-key keymap key (or state 'all))))))
 
 (defun evil-make-intercept-map (keymap &optional state)
   "Give KEYMAP precedence over all Evil keymaps in STATE.
 If STATE is nil, give it precedence over all states.
 See also `evil-make-overriding-map'."
-  (let ((key (if (null state)
-                 [intercept-states]
-               (vconcat
-                (list (intern (format "intercept-%s-state" state)))))))
-    (define-key keymap key (or state 'state))))
+  (let ((key [intercept-state]))
+    (define-key keymap key (or state 'all))))
 
 (defmacro evil-define-keymap (keymap doc &rest body)
   "Define a keymap KEYMAP listed in `evil-mode-map-alist'.
@@ -528,30 +522,23 @@ See also `evil-keymap-mode'."
       (when (setq aux (evil-get-auxiliary-keymap map state))
         (add-to-list 'result aux t 'eq)))))
 
-(defun evil-state-overriding-keymaps (state)
+(defun evil-state-overriding-keymaps (&optional state)
   "Return an ordered list of overriding keymaps for STATE."
   (let* ((state (or state evil-state))
-         (key (vconcat (list (intern (format "overriding-%s-state"
-                                             state)))))
-         override result)
+         result)
     (dolist (map (current-active-maps))
-      (setq override (or (lookup-key map [overriding-states])
-                         (lookup-key map key)))
-      (when (keymapp override)
-        (setq map override))
-      (when override
+      (when (setq map (evil-overriding-keymap-p map state))
         (push map result)))
     (nreverse result)))
 
-(defun evil-state-intercept-keymaps (state)
+(defun evil-state-intercept-keymaps (&optional state)
   "Return an ordered list of intercept keymaps for STATE."
   (let* ((state (or state evil-state))
-         (key (vconcat (list (intern (format "intercept-%s-state"
-                                             state)))))
          (result (list evil-esc-map)))
-    (dolist (map (current-active-maps) result)
-      (when (evil-intercept-keymap-p map state)
-        (add-to-list 'result map t 'eq)))))
+    (dolist (map (current-active-maps))
+      (when (setq map (evil-intercept-keymap-p map state))
+        (push map result)))
+    (nreverse result)))
 
 (defun evil-set-auxiliary-keymap (map state &optional aux)
   "Set the auxiliary keymap for MAP in STATE to AUX.
@@ -584,33 +571,37 @@ if MAP does not have one."
        (string-match "Auxiliary keymap"
                      (or (keymap-prompt map) "")) t))
 
-(defun evil-overriding-keymap-p (map &optional state)
-  "Whether MAP is an overriding keymap for STATE.
-If STATE is nil, it means any state."
-  (or (lookup-key map [overriding-states])
-      (if state
-          (lookup-key
-           map
-           (vconcat
-            (list (intern (format "overriding-%s-state" state)))))
-        (catch 'done
-          (dolist (state evil-state-properties)
-            (when (evil-overriding-keymap-p map (car state))
-              (throw 'done t)))))))
-
 (defun evil-intercept-keymap-p (map &optional state)
   "Whether MAP is an intercept keymap for STATE.
 If STATE is nil, it means any state."
-  (or (lookup-key map [intercept-states])
-      (if state
-          (lookup-key
-           map
-           (vconcat
-            (list (intern (format "intercept-%s-state" state)))))
-        (catch 'done
-          (dolist (state evil-state-properties)
-            (when (evil-overriding-keymap-p map (car state))
-              (throw 'done t)))))))
+  (let ((entry (and (keymapp map)
+                    (lookup-key map [intercept-state]))))
+    (cond
+     ((null entry)
+      nil)
+     ((null state)
+      map)
+     ((eq entry state)
+      map)
+     ((eq entry 'all)
+      map))))
+
+(defun evil-overriding-keymap-p (map &optional state)
+  "Whether MAP is an overriding keymap for STATE.
+If STATE is nil, it means any state."
+  (let ((entry (and (keymapp map)
+                    (lookup-key map [override-state]))))
+    (cond
+     ((null entry)
+      nil)
+     ((keymapp entry)
+      (evil-overriding-keymap-p entry state))
+     ((null state)
+      map)
+     ((eq entry state)
+      map)
+     ((eq entry 'all)
+      map))))
 
 (defun evil-define-key (state keymap key def &rest bindings)
   "Create a STATE binding from KEY to DEF for KEYMAP.
