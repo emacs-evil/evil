@@ -16,7 +16,8 @@ otherwise add at the end of the list."
         (setq tail (cdr tail)))
       (if tail
           (setcar tail (cons key val))
-        (add-to-list list-var (cons key val) t))
+        (set list-var (append (symbol-value list-var)
+                              (list (cons key val)))))
       (if elements
           (apply 'evil-add-to-alist list-var elements)
         (symbol-value list-var)))))
@@ -57,44 +58,22 @@ Stop when reaching POINTER."
   "Concatenate lists, removing duplicates.
 The first occurrence is retained.
 To concatenate association lists, see `evil-concat-alists'."
-  (let ((first (pop sequences))
-        (tail (copy-sequence (pop sequences)))
-        result)
-    ;; remove internal duplicates
-    (dolist (elt first)
-      (add-to-list 'result elt t 'eq))
-    ;; remove tail duplicates
-    (catch 'empty
-      (dolist (elt result)
-        (if tail
-            (setq tail (delq elt tail))
-          (throw 'empty t))))
-    (setq result (append result tail))
-    (if sequences
-        (apply 'evil-concat-lists result sequences)
-      result)))
+  (let (result)
+    (dolist (sequence sequences)
+      (dolist (elt sequence)
+        (add-to-list 'result elt nil 'eq)))
+    (nreverse result)))
 
 (defun evil-concat-alists (&rest sequences)
   "Concatenate association lists, removing duplicates.
 The first association is retained.
 To concatenate regular lists, see `evil-concat-lists'."
-  (let ((first (pop sequences))
-        (tail (copy-sequence (pop sequences)))
-        result)
-    ;; remove internal duplicates
-    (dolist (elt first)
-      (unless (assq (car-safe elt) result)
-        (add-to-list 'result elt t 'eq)))
-    ;; remove tail duplicates
-    (catch 'empty
-      (dolist (elt result)
-        (if tail
-            (setq tail (assq-delete-all (car-safe elt) tail))
-          (throw 'empty t))))
-    (setq result (append result tail))
-    (if sequences
-        (apply 'evil-concat-lists result sequences)
-      result)))
+  (let (result)
+    (dolist (sequence sequences)
+      (dolist (elt sequence)
+        (unless (assq (car-safe elt) result)
+          (add-to-list 'result elt))))
+    (nreverse result)))
 
 (defun evil-get-property (alist key &optional prop)
   "Return property PROP for KEY in ALIST.
