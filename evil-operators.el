@@ -575,7 +575,8 @@ The return value is the yanked text."
                         opoint
                         opoint          ; beg
                         (point)))       ; end
-            (evil-exchange-point-and-mark)))
+            (when (> (length text) 0)
+              (backward-char))))
         ;; no paste-pop after pasting from a register
         (when register
           (setq evil-last-paste nil))

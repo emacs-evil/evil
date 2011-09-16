@@ -1763,7 +1763,7 @@ the `evil-repeat' command")
       ";; [ ]is for notes you don't want to save"
       (should (string= (current-kill 0) "This buffer"))
       ("P")
-      ";; [T]his buffer is for notes you don't want to save"))
+      ";; This buffe[r] is for notes you don't want to save"))
   (ert-info ("Delete lines")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save.
@@ -1931,7 +1931,7 @@ Below some empty line")))
 \[;]; and for Lisp evaluation."
       ("P")
       ";; This buffer is for notes you don't want to save,
-\[T]his buffer;; and for Lisp evaluation."))
+This buffe[r];; and for Lisp evaluation."))
   (ert-info ("Paste characters with count")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
@@ -1941,7 +1941,7 @@ Below some empty line")))
 \[;]; and for Lisp evaluation."
       ("3P")
       ";; This buffer is for notes you don't want to save,
-\[T]his bufferThis bufferThis buffer;; and for Lisp evaluation."))
+This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
   (ert-info ("Paste characters at end-of-buffer")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
@@ -1951,7 +1951,7 @@ Below some empty line")))
 ;; and for Lisp evaluation[.]"
       ("2P")
       ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation[T]his bufferThis buffer."))
+;; and for Lisp evaluationThis bufferThis buffe[r]."))
   (ert-info ("Paste characters at end-of-buffer on empty line")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
@@ -1963,7 +1963,7 @@ Below some empty line")))
       ("2P")
       ";; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.
-\[T]his bufferThis buffer"))
+This bufferThis buffe[r]"))
   (ert-info ("Paste lines")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
@@ -2238,7 +2238,7 @@ This bufferThis buffe[r]"))
       (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
       ("y2e2yyy3sjP\C-p\C-p")
       ";; This buffer is for notes you don't want to save.
-\[;]; This;; If you want to create a file, visit that file with C-x C-f,
+;; Thi[s];; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."))
   (ert-info ("Pop with count")
     (evil-test-buffer
@@ -2248,7 +2248,7 @@ This bufferThis buffe[r]"))
       (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
       ("y2e2yyy3sjP2\C-p")
       ";; This buffer is for notes you don't want to save.
-\[;]; This;; If you want to create a file, visit that file with C-x C-f,
+;; Thi[s];; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."))
   (ert-info ("Single pop-next")
     (evil-test-buffer
