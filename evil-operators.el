@@ -541,8 +541,10 @@ Both COUNT and CMD may be nil."
       (unless (eobp) (forward-line)))
     (goto-char opoint)))
 
-(evil-define-command evil-paste-before (count &optional register)
-  "Pastes the latest yanked text before the cursor position."
+(evil-define-command evil-paste-before
+  (count &optional register yank-handler)
+  "Pastes the latest yanked text before the cursor position.
+The return value is the yanked text."
   (interactive "P<x>")
   (if (evil-visual-state-p)
       (evil-visual-paste count register)
@@ -550,19 +552,20 @@ Both COUNT and CMD may be nil."
       (let* ((text (if register
                        (evil-get-register register)
                      (current-kill 0)))
-             (yank-handler (when (stringp text)
-                             (car-safe (get-text-property
-                                        0 'yank-handler text))))
+             (yank-handler (or yank-handler
+                               (when (stringp text)
+                                 (car-safe (get-text-property
+                                            0 'yank-handler text)))))
              (opoint (point)))
         (when text
-          (if (memq yank-handler '(evil-yank-line-handler
-                                   evil-yank-block-handler))
+          (if (functionp yank-handler)
               (let ((evil-paste-count count)
                     ;; for non-interactive use
                     (this-command 'evil-paste-before))
                 (push-mark opoint t)
                 (insert-for-yank text))
             ;; no yank-handler, default
+            (set-text-properties 0 (length text) nil text)
             (push-mark opoint t)
             (dotimes (i (or count 1))
               (insert-for-yank text))
@@ -575,10 +578,13 @@ Both COUNT and CMD may be nil."
             (evil-exchange-point-and-mark)))
         ;; no paste-pop after pasting from a register
         (when register
-          (setq evil-last-paste nil))))))
+          (setq evil-last-paste nil))
+        (and (> (length text) 0) text)))))
 
-(evil-define-command evil-paste-after (count &optional register)
-  "Pastes the latest yanked text behind point."
+(evil-define-command evil-paste-after
+  (count &optional register yank-handler)
+  "Pastes the latest yanked text behind point.
+The return value is the yanked text."
   (interactive "P<x>")
   (if (evil-visual-state-p)
       (evil-visual-paste count register)
@@ -586,17 +592,18 @@ Both COUNT and CMD may be nil."
       (let* ((text (if register
                        (evil-get-register register)
                      (current-kill 0)))
-             (yank-handler (when (stringp text)
-                             (car-safe (get-text-property
-                                        0 'yank-handler text))))
+             (yank-handler (or yank-handler
+                               (when (stringp text)
+                                 (car-safe (get-text-property
+                                            0 'yank-handler text)))))
              (opoint (point)))
         (when text
-          (if (memq yank-handler '(evil-yank-line-handler
-                                   evil-yank-block-handler))
+          (if (functionp yank-handler)
               (let ((evil-paste-count count)
                     (this-command 'evil-paste-after)) ; for non-interactive use
                 (insert-for-yank text))
             ;; no yank-handler, default
+            (set-text-properties 0 (length text) nil text)
             (unless (eolp) (forward-char))
             (push-mark (point) t)
             ;; TODO: Perhaps it is better to collect a list of all
@@ -615,7 +622,8 @@ Both COUNT and CMD may be nil."
               (when (evil-normal-state-p)
                 (evil-adjust)))))
         (when register
-          (setq evil-last-paste nil))))))
+          (setq evil-last-paste nil))
+        (and (> (length text) 0) text)))))
 
 (evil-define-command evil-visual-paste (count &optional register)
   "Paste over Visual selection."
