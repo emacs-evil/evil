@@ -339,6 +339,8 @@ a keymap variable and EVAL-AFTER is the file or package defining it
     forward-sexp
     forward-word
     goto-last-change
+    ibuffer-forward-line
+    ibuffer-backward-line
     isearch-abort
     isearch-cancel
     isearch-complete
