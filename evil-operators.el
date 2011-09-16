@@ -175,13 +175,13 @@ a predefined type may be specified with TYPE."
                   count (nth 1 command)
                   type (or type (nth 2 command))))
           (cond
-	   ;; ESC cancels the current operator
-	   ;; TODO: is there a better way to detect this canceling?
+           ;; ESC cancels the current operator
+           ;; TODO: is there a better way to detect this canceling?
            ((memq motion '(nil evil-esc))
-	    (evil-repeat-abort)
+            (evil-repeat-abort)
             (setq quit-flag t))
            ((evil-get-command-property motion :suppress-operator)
-	    (evil-repeat-abort)
+            (evil-repeat-abort)
             (setq quit-flag t))
            ((eq motion 'undefined)
             (setq motion nil))

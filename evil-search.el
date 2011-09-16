@@ -391,26 +391,33 @@ otherwise only the first one."
 (defun evil-ex-regex-case (re default-case)
   "Returns the case as implied by \\c or \\C in regular expression `re'.
 If \\c appears anywhere in the pattern, the pattern is case
-insenstive, if \\C appears the pattern is case sensitive. Only
-the first occurrence of \\c or \\C is used, all others are
-ignored. If neither \\c nor \\C appears in the pattern, the
-case specified by `default-case' is used. `default-case' should be either
-'sensitive, 'insensitive or 'smart. In the latter case the pattern will be
-case-sensitive if and only if it contains an upper-case letter, otherwise it
-will be case-insensitive."
+insensitive. If \\C appears, the pattern is case sensitive.
+Only the first occurrence of \\c or \\C is used, all others are
+ignored. If neither \\c nor \\C appears in the pattern, the case
+specified by DEFAULT-CASE is used. DEFAULT-CASE should be either
+`sensitive', `insensitive' or `smart'. In the latter case the pattern
+will be case sensitive if and only if it contains an upper-case
+letter, otherwise it will be case insensitive."
   (let ((start 0)
-        recase)
+        case recase)
     (while (and (not recase)
                 (string-match "\\\\." re start))
-      (case (aref re (1- (match-end 0)))
-        (?c (setq recase 'insensitive))
-        (?C (setq recase 'sensitive))
-        (t (setq start (match-end 0)))))
-    (or recase
-        (case default-case
-          ((sensitive insensitive) default-case)
-          (smart (if (isearch-no-upper-case-p re t) 'insensitive 'sensitive))
-          (t nil)))))
+      (setq case (1- (match-end 0)))
+      (cond
+       ((eq case ?c)
+        (setq recase 'insensitive))
+       ((eq case ?C)
+        (setq recase 'sensitive))
+       (t
+        (setq start (match-end 0)))))
+    (cond
+     (recase)
+     ((memq default-case '(sensitive insensitive))
+      default-case)
+     ((eq default-case 'smart)
+      (if (isearch-no-upper-case-p re t)
+          'insensitive
+        'sensitive)))))
 
 (defun evil-ex-make-hl (name &rest args)
   "Creates a new highlight object with name NAME and properties ARGS."
@@ -597,13 +604,17 @@ name `name' to `new-regex'."
         (funcall (evil-ex-hl-update-hook hl) result)))))
 
 (defun evil-ex-search-find-next-pattern (pattern &optional direction)
-  "Looks for the next occurrence of pattern in a certain direction."
+  "Look for the next occurrence of PATTERN in a certain DIRECTION."
   (setq direction (or direction 'forward))
-  (let ((case-fold-search (eq (evil-ex-pattern-case-fold pattern) 'insensitive)))
-    (case direction
-      ('forward (re-search-forward (evil-ex-pattern-regex pattern) nil t))
-      ('backward (re-search-backward (evil-ex-pattern-regex pattern) nil t))
-      (t (error "Unknown search direction: %s" direction)))))
+  (let ((case-fold-search (eq (evil-ex-pattern-case-fold pattern)
+                              'insensitive)))
+    (cond
+     ((eq direction 'forward)
+      (re-search-forward (evil-ex-pattern-regex pattern) nil t))
+     ((eq direction 'backward)
+      (re-search-backward (evil-ex-pattern-regex pattern) nil t))
+     (t
+      (error "Unknown search direction: %s" direction)))))
 
 (defun evil-ex-hl-idle-update ()
   "Triggers the timer to update the highlights in the current buffer."
@@ -647,13 +658,16 @@ name `name' to `new-regex'."
         (progn
           (while retry
             (let ((search-result (evil-ex-search-next-pattern)))
-              (case search-result
-                ((t) (setq isearch-success t
-                           isearch-wrapped nil))
-                ((nil) (setq isearch-success nil
-                             isearch-wrapped nil))
-                (t (setq isearch-success t
-                         isearch-wrapped t))))
+              (cond
+               ((null search-result)
+                (setq isearch-success nil
+                      isearch-wrapped nil))
+               ((eq search-result t)
+                (setq isearch-success t
+                      isearch-wrapped nil))
+               (t
+                (setq isearch-success t
+                      isearch-wrapped t))))
             (setq isearch-success (evil-ex-search-next-pattern))
             ;; Clear RETRY unless we matched some invisible text
             ;; and we aren't supposed to do that.
@@ -711,9 +725,9 @@ possibly wrapping and eob or bob."
 
            ;; wrap and eob and bob
            ((not wrapped)
-            (goto-char (case evil-ex-search-direction
-                         ('forward (point-min))
-                         ('backward (point-max))))
+            (goto-char (if (eq evil-ex-search-direction 'forward)
+                           (point-min)
+                         (point-max)))
             (setq wrapped t))
 
            ;; already wrapped, search failed
@@ -822,9 +836,8 @@ possibly wrapping and eob or bob."
           (add-hook 'minibuffer-setup-hook #'evil-ex-search-start-session)
           ;; read the search string
           (let ((minibuffer-local-map evil-ex-search-keymap))
-            (when (read-string (case evil-ex-search-direction
-                                 ('forward "/")
-                                 ('backward "?"))
+            (when (read-string (if (eq evil-ex-search-direction 'forward)
+                                   "/" "?")
                                nil 'evil-ex-search-history)
               (goto-char evil-ex-search-start-point)
               (if evil-ex-search-match-beg
@@ -1008,7 +1021,8 @@ The search matches the COUNT-th occurrence of the word."
                                               evil-ex-search-case)
                                           whole-line))
            (evil-ex-substitute-regex (evil-ex-pattern-regex pattern)))
-      (let ((case-replace (eq 'insensitive (evil-ex-pattern-case-fold pattern))))
+      (let ((case-replace (eq (evil-ex-pattern-case-fold pattern)
+                              'insensitive)))
         (if whole-line
             ;; this one is easy, just use the built in function
             (perform-replace evil-ex-substitute-regex
@@ -1047,7 +1061,8 @@ The search matches the COUNT-th occurrence of the word."
                                           (set-match-data x)
                                           (replace-match evil-ex-substitute-replacement case-replace)
                                           (setq evil-ex-substitute-last-point (point))
-                                          (incf evil-ex-substitute-nreplaced)
+                                          (setq evil-ex-substitute-nreplaced
+                                                (1+ evil-ex-substitute-nreplaced))
                                           (evil-ex-hl-set-region 'evil-ex-substitute
                                                                  (save-excursion
                                                                    (forward-line)
@@ -1072,7 +1087,8 @@ The search matches the COUNT-th occurrence of the word."
               (forward-line (1- evil-ex-substitute-next-line))
               (while (and (re-search-forward evil-ex-substitute-regex nil t nil)
                           (<= (line-number-at-pos (match-beginning 0)) evil-ex-substitute-last-line))
-                (incf evil-ex-substitute-nreplaced)
+                (setq evil-ex-substitute-nreplaced
+                      (1+ evil-ex-substitute-nreplaced))
                 (replace-match evil-ex-substitute-replacement case-replace)
                 (setq evil-ex-substitute-last-point (point))
                 (forward-line)))
@@ -1097,17 +1113,21 @@ The search matches the COUNT-th occurrence of the word."
         (if (and (= (aref replacement idx) ?\\)
                  (< (1+ idx) n))
             (let ((c (aref replacement (1+ idx))))
-              (case c
-                (?n (push ?\n newrepl))
-                (?t (push ?\t newrepl))
-                (?r (push ?\r newrepl))
-                ((?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?\\)
-                 (push ?\\ newrepl)
-                 (push c newrepl))
-                (t (push c newrepl)))
-              (incf idx 2))
+              (cond
+               ((eq c ?n)
+                (push ?\n newrepl))
+               ((eq c ?t)
+                (push ?\t newrepl))
+               ((eq c ?r)
+                (push ?\r newrepl))
+               ((memq c '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?\\))
+                (push ?\\ newrepl)
+                (push c newrepl))
+               (t
+                (push c newrepl)))
+              (setq idx (+ idx 2)))
           (push (aref replacement idx) newrepl)
-          (incf idx)))
+          (setq idx (1+ idx))))
 
       (list pattern (apply #'string (reverse newrepl)) flags))))
 
