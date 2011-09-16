@@ -367,6 +367,7 @@ a keymap variable and EVAL-AFTER is the file or package defining it
     isearch-yank-line
     isearch-yank-word-or-char
     keyboard-quit
+    left-char
     mouse-drag-region
     mouse-save-then-kill
     mouse-set-point
@@ -376,6 +377,7 @@ a keymap variable and EVAL-AFTER is the file or package defining it
     next-line
     previous-line
     redo
+    right-char
     scroll-down
     scroll-up
     undo
