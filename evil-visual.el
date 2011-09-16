@@ -137,7 +137,12 @@ If `this-command' was a motion, refresh the selection;
 otherwise exit Visual state."
   (when (evil-visual-state-p)
     (cond
-     ((or quit-flag (eq this-command 'keyboard-quit))
+     ((or quit-flag
+          (eq this-command 'keyboard-quit)
+          ;; Is `mark-active' nil for an unexpanded region?
+          (and (not evil-visual-region-expanded)
+               (not (region-active-p))
+               (not (eq (evil-visual-type) evil-visual-block))))
       (evil-visual-contract-region)
       (evil-change-to-previous-state))
      (evil-visual-region-expanded
@@ -153,12 +158,17 @@ otherwise exit Visual state."
                'evil-visual-deactivate-hook t)
   (remove-hook 'evil-normal-state-entry-hook
                'evil-visual-deactivate-hook t)
-  (when (and (evil-visual-state-p)
-             (not (evil-get-command-property
-                   this-command :keep-visual)))
-    (evil-change-to-previous-state))
-  (evil-active-region -1)
-  (evil-transient-restore))
+  (cond
+   ((and (evil-visual-state-p)
+         this-command
+         (not (evil-get-command-property
+               this-command :keep-visual)))
+    (evil-change-to-previous-state)
+    (evil-active-region -1)
+    (evil-transient-restore))
+   ((not (evil-visual-state-p))
+    (evil-active-region -1)
+    (evil-transient-restore))))
 
 (defun evil-visual-select (beg end &optional type dir)
   "Create a Visual selection of type TYPE from BEG to END.
@@ -241,7 +251,8 @@ exclude that newline from the region."
   (let (dir mark point overlay)
     (unwind-protect
         (progn
-          (evil-visual-refresh)
+          (when (evil-type-property (evil-visual-type) :injective)
+            (evil-visual-refresh))
           (setq overlay (copy-overlay evil-visual-overlay))
           (when (overlay-get overlay :expanded)
             (evil-contract-overlay overlay))
@@ -260,24 +271,28 @@ exclude that newline from the region."
          (mark  (or mark (mark t) point))
          (dir   (evil-visual-direction))
          (type  (or type (evil-visual-type) evil-visual-char))
-         (properties (plist-put properties :direction dir)))
+         (properties (plist-put properties :direction dir))
+         (injective (or (evil-type-property type :injective)
+                        (not evil-visual-region-expanded))))
     (evil-move-mark mark)
     (goto-char point)
     (unless evil-visual-overlay
       (setq evil-visual-overlay (make-overlay mark point nil nil t)))
-    (evil-contract-overlay evil-visual-overlay)
-    (if evil-visual-region-expanded
-        (let ((range (evil-contract mark point type)))
-          (move-overlay evil-visual-overlay
-                        (evil-range-beginning range)
-                        (evil-range-end range)))
-      (move-overlay evil-visual-overlay mark point))
+    (when injective
+      (evil-contract-overlay evil-visual-overlay)
+      (if evil-visual-region-expanded
+          (let ((range (evil-contract mark point type)))
+            (move-overlay evil-visual-overlay
+                          (evil-range-beginning range)
+                          (evil-range-end range)))
+        (move-overlay evil-visual-overlay mark point)))
     (while properties
       (overlay-put evil-visual-overlay
                    (pop properties) (pop properties)))
     (evil-set-type evil-visual-overlay type)
     (setq evil-this-type (evil-visual-type))
-    (evil-expand-overlay evil-visual-overlay)
+    (when injective
+      (evil-expand-overlay evil-visual-overlay))
     (when evil-visual-region-expanded
       (move-overlay evil-visual-overlay mark point))
     (evil-set-marker ?< (evil-visual-beginning))

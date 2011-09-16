@@ -3624,6 +3624,38 @@ Below some empty line."))
                 (if (< (point) (mark)) -1 1)))
     (should (eq (overlay-get evil-visual-overlay :expanded) t))))
 
+(ert-deftest evil-test-visual-refresh ()
+  "Test `evil-visual-refresh'"
+  :tags '(evil visual)
+  (evil-test-buffer
+   ";; [T]his buffer is for notes."
+   (let (evil-visual-overlay)
+     (evil-visual-refresh)
+     (should (overlayp evil-visual-overlay))
+     (should (overlay-get evil-visual-overlay :backup))
+     (should (eq (overlay-start evil-visual-overlay) 4))
+     (should (eq (overlay-end evil-visual-overlay) 5))))
+  (evil-test-buffer
+   ";; [T]his buffer is for notes."
+   (let ((evil-visual-region-expanded t)
+         evil-visual-overlay)
+     (evil-visual-refresh)
+     (should (overlayp evil-visual-overlay))
+     (should (overlay-get evil-visual-overlay :backup))
+     (should (eq (overlay-start evil-visual-overlay) 4))
+     (should (eq (overlay-end evil-visual-overlay) 4)))))
+
+(ert-deftest evil-test-visual-exchange ()
+  "Test `exchange-point-and-mark' in Visual character selection"
+  :tags '(evil visual)
+  (evil-test-buffer
+    ";; <[T]his> buffer is for notes you don't want to save,
+;; and for Lisp evaluation."
+    ("o")
+    (should (region-active-p))
+    ";; <Thi[s]> buffer is for notes you don't want to save,
+;; and for Lisp evaluation."))
+
 (ert-deftest evil-test-visual-char ()
   "Test Visual character selection"
   :tags '(evil visual)
