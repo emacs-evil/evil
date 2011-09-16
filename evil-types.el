@@ -170,7 +170,7 @@ If COPY is non-nil, return a copy of RANGE."
     (setq range (evil-copy-range range)))
   (if type
       (setcdr (cdr range)
-              (append (list type) (evil-range-properties range)))
+              (cons type (evil-range-properties range)))
     (setcdr (cdr range) (evil-range-properties range)))
   range)
 
@@ -302,7 +302,7 @@ Return a new overlay if COPY is non-nil."
     (when copy
       (setq overlay (copy-overlay overlay)))
     (unless (overlay-get overlay :expanded)
-      (when (and type (evil-type-property type :expand))
+      (when (evil-type-property type :expand)
         ;; explicitly set :expanded to nil before expanding,
         ;; so that it is guaranteed to change back to nil
         ;; if the overlay is restored

@@ -101,23 +101,23 @@ To concatenate regular lists, see `evil-concat-lists'."
 ALIST is an association list with entries of the form
 \(KEY . PLIST), where PLIST is a property list.
 If PROP is nil, return all properties for KEY.
-If KEY is nil, return an association list of keys
+If KEY is t, return an association list of keys
 and their PROP values."
   (unless (or (keywordp prop) (null prop))
     (setq prop (intern (format ":%s" prop))))
   (cond
-   ((and key prop)
-    (plist-get (cdr (assq key alist)) prop))
-   (key ; PROP is nil
+   ((null prop)
     (cdr (assq key alist)))
-   (prop ; KEY is nil
+   ((eq key t)
     (let (result val)
       (dolist (entry alist result)
         (setq key (car entry)
               val (cdr entry))
         (when (plist-member val prop)
           (setq val (plist-get val prop))
-          (add-to-list 'result (cons key val))))))))
+          (push (cons key val) result)))))
+   (t
+    (plist-get (cdr (assq key alist)) prop))))
 
 (defun evil-put-property (alist-var key prop val &rest properties)
   "Set PROP to VAL for KEY in ALIST-VAR.
@@ -330,7 +330,7 @@ is non-nil) and returns point."
   "Set the prompt-string of MAP to PROMPT."
   (delq (keymap-prompt map) map)
   (when prompt
-    (setcdr map (append (list prompt) (cdr map)))))
+    (setcdr map (cons prompt (cdr map)))))
 
 ;;; Markers
 
@@ -477,7 +477,7 @@ recursively."
                            (substring keys beg end)
                            (when (< end len)
                              (substring keys end))))))
-           (t ;; append a further event
+           (t ; append a further event
             (setq end (1+ end))))))
       (error "Key sequence contains no complete binding"))))
 

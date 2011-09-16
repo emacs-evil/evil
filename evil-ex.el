@@ -375,8 +375,11 @@ arguments for programmable completion."
            ((null compl) (evil-ex-message "Unknown command"))
            ((cdr compl) (evil-ex-message "Incomplete command")))))
       ;; update arg-handler
-      (let* ((arg-type (and bnd (evil-get-command-property bnd :ex-arg)))
-             (arg-handler (and arg-type (cdr-safe (assoc arg-type evil-ex-arg-types-alist)))))
+      (let* ((arg-type (evil-get-command-property bnd :ex-arg))
+             (arg-handler (and arg-type
+                               (cdr-safe
+                                (assoc arg-type
+                                       evil-ex-arg-types-alist)))))
         (unless (eq arg-handler evil-ex-current-arg-handler)
           (when evil-ex-current-arg-handler
             (funcall evil-ex-current-arg-handler 'stop))

@@ -174,7 +174,7 @@ The initial state for a mode can be set with
 `evil-set-initial-state'."
   (let (state modes)
     (or (catch 'loop
-          (dolist (entry (evil-state-property nil :modes))
+          (dolist (entry (evil-state-property t :modes))
             (setq state (car entry)
                   modes (symbol-value (cdr entry)))
             (when (memq mode modes)
@@ -184,7 +184,7 @@ The initial state for a mode can be set with
 (defun evil-set-initial-state (mode state)
   "Set the initial state for MODE to STATE.
 This is the state the buffer comes up in."
-  (dolist (modes (evil-state-property nil :modes))
+  (dolist (modes (evil-state-property t :modes))
     (setq modes (cdr-safe modes))
     (set modes (delq mode (symbol-value modes))))
   (when state
@@ -193,8 +193,7 @@ This is the state the buffer comes up in."
 (defun evil-refresh-mode-line (&optional state)
   "Refresh mode line tag."
   (let (name next string temp)
-    (setq string (and state (symbol-value
-                             (evil-state-property state :tag)))
+    (setq string (symbol-value (evil-state-property state :tag))
           name (evil-state-property state :name))
     ;; add tooltip
     (when (stringp string)
