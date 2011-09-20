@@ -55,9 +55,6 @@
           (evil-concat-lists '(evil-mode-map-alist)
                              emulation-mode-map-alists))
     (evil-refresh-local-keymaps)
-    (ad-enable-advice 'show-paren-function 'around 'evil)
-    (ad-enable-advice 'undo-tree-visualize 'after 'evil)
-    (ad-activate 'show-paren-function)
     ;; restore the proper value of `major-mode' in Fundamental buffers
     (when (eq major-mode 'evil-local-mode)
       (setq major-mode 'fundamental-mode))
@@ -74,9 +71,6 @@
     (add-hook 'post-command-hook 'evil-refresh-cursor))
    (t
     (evil-refresh-mode-line)
-    (ad-disable-advice 'show-paren-function 'around 'evil)
-    (ad-disable-advice 'undo-tree-visualize 'after 'evil)
-    (ad-activate 'show-paren-function)
     (remove-hook 'input-method-activate-hook 'evil-activate-input-method t)
     (remove-hook 'input-method-inactivate-hook 'evil-inactivate-input-method t)
     (evil-change-state nil))))
@@ -95,12 +89,17 @@ To enable Evil globally, do (evil-mode 1)."
 
 ;; to ensure that Fundamental buffers come up in Normal state,
 ;; initialize `fundamental-mode' via `evil-local-mode'
-(defadvice evil-mode (after evil activate)
+(defadvice evil-mode (after start-evil activate)
   "Enable Evil in Fundamental mode."
   (if evil-mode
-      ;; this is changed back when initializing `evil-local-mode'
-      (setq-default major-mode 'evil-local-mode)
-    (setq-default major-mode 'fundamental-mode)))
+      (progn
+        ;; this is changed back when initializing `evil-local-mode'
+        (setq-default major-mode 'evil-local-mode)
+        (ad-enable-regexp "^evil")
+        (ad-activate-regexp "^evil"))
+    (setq-default major-mode 'fundamental-mode)
+    (ad-disable-regexp "^evil")
+    (ad-update-regexp "^evil")))
 
 (put 'evil-mode 'function-documentation
      "Toggle Evil in all buffers.
