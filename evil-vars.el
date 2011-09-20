@@ -377,8 +377,10 @@ a keymap variable and EVAL-AFTER is the file or package defining it
     mouse-set-region
     move-beginning-of-line
     move-end-of-line
+    next-error
     next-line
     previous-line
+    previous-error
     redo
     right-char
     scroll-down
