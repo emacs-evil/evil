@@ -214,6 +214,7 @@
 (define-key evil-motion-state-map "V" 'evil-visual-line)
 (define-key evil-motion-state-map "\C-v" 'evil-visual-block)
 (define-key evil-motion-state-map "gv" 'evil-visual-restore)
+(define-key evil-motion-state-map (kbd "C-^") 'evil-buffer)
 (define-key evil-motion-state-map
   (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
 
