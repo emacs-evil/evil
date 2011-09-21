@@ -489,6 +489,41 @@ count) in which case this function returns nil."
             ((eq base 'next-of-prev-subst) (error "Next-of-prev-subst not yet implemented."))
             (t (error "Invalid address: %s" address))))))))
 
+;;; TODO: extensions likes :p :~ <cfile> ...
+(defun evil-ex-replace-special-filenames (file-name)
+  "Replaces % by the current file-name, # by the alternate file-name in FILE-NAME."
+  (let ((current-fname (buffer-file-name))
+        (alternate-fname (and (other-buffer) (buffer-file-name (other-buffer)))))
+    (when current-fname
+      (setq file-name
+            (replace-regexp-in-string "\\(^\\|[^\\\\]\\)\\(%\\)"
+                                      current-fname
+                                      file-name
+                                      t
+                                      t
+                                      2)))
+    (when alternate-fname
+      (setq file-name
+            (replace-regexp-in-string "\\(^\\|[^\\\\]\\)\\(#\\)"
+                                      alternate-fname
+                                      file-name
+                                      t
+                                      t
+                                      2)))
+    (setq file-name
+          (replace-regexp-in-string "\\\\\\([#%]\\)"
+                                    "\\1"
+                                    file-name
+                                    t)))
+  file-name)
+
+(defun evil-ex-file-arg ()
+  "Returns the current ex-argument as file name.
+This function interprets special file-names like # and %."
+   (unless (or (null evil-ex-current-arg)
+               (zerop (length evil-ex-current-arg)))
+     (evil-ex-replace-special-filenames evil-ex-current-arg)))
+
 (defun evil-ex-setup ()
   "Initializes ex minibuffer."
   (add-hook 'after-change-functions #'evil-ex-update nil t)

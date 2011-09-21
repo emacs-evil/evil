@@ -174,7 +174,7 @@ list of command properties as passed to `evil-define-command'."
 
 (evil-define-interactive-code "<f>"
   :ex-arg file
-  (list evil-ex-current-arg))
+  (list (evil-ex-file-arg)))
 
 (evil-define-interactive-code "<b>"
   :ex-arg buffer
