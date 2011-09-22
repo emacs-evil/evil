@@ -146,10 +146,9 @@
 ;;; Undo tree visualizer
 
 (defadvice undo-tree-visualize (after evil activate)
-  "Enable Evil."
-  (evil-local-mode))
-
-(evil-set-initial-state 'undo-tree-visualizer-mode 'motion)
+  "Initialize Evil in the visualization buffer."
+  (when evil-local-mode
+    (evil-initialize-state)))
 
 (when (boundp 'undo-tree-visualizer-map)
   (define-key undo-tree-visualizer-map [remap evil-backward-char]

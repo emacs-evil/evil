@@ -520,9 +520,9 @@ count) in which case this function returns nil."
 (defun evil-ex-file-arg ()
   "Returns the current ex-argument as file name.
 This function interprets special file-names like # and %."
-   (unless (or (null evil-ex-current-arg)
-               (zerop (length evil-ex-current-arg)))
-     (evil-ex-replace-special-filenames evil-ex-current-arg)))
+  (unless (or (null evil-ex-current-arg)
+              (zerop (length evil-ex-current-arg)))
+    (evil-ex-replace-special-filenames evil-ex-current-arg)))
 
 (defun evil-ex-setup ()
   "Initializes ex minibuffer."

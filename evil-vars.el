@@ -281,6 +281,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     help-mode
     Info-mode
     speedbar-mode
+    undo-tree-visualizer-mode
     view-mode)
   "Modes that should come up in Motion state."
   :type  '(repeat symbol)

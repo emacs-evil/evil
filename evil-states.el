@@ -189,6 +189,14 @@ This is the state the buffer comes up in."
   (when state
     (add-to-list (evil-state-property state :modes) mode)))
 
+(defadvice display-buffer (before evil activate)
+  "Initialize Evil in the displayed buffer."
+  (when evil-mode
+    (with-current-buffer (ad-get-arg 0)
+      (unless evil-local-mode
+        (evil-local-mode 1)
+        (evil-initialize-state)))))
+
 (defun evil-refresh-mode-line (&optional state)
   "Refresh mode line tag."
   (let (name next string temp)
