@@ -22,7 +22,7 @@ Translates it according to the input method."
   (let ((old-global-map (current-global-map))
         (new-global-map (make-sparse-keymap))
         (overriding-terminal-local-map (make-sparse-keymap))
-        overriding-local-map)
+        overriding-local-map char)
     (unwind-protect
         (progn
           (define-key new-global-map [menu-bar]
@@ -33,7 +33,11 @@ Translates it according to the input method."
                        (make-char-table 'display-table
                                         'self-insert-command) t)
           (use-global-map new-global-map)
-          (aref (read-key-sequence prompt nil t) 0))
+          (setq char (aref (read-key-sequence prompt nil t) 0))
+          (when (memq char '(?\C-q ?\C-v))
+            (setq char (read-quoted-char)))
+          (or (cdr (assq char '((?\r . ?\n))))
+              char))
       (use-global-map old-global-map))))
 
 ;; `make-char-table' requires this property in Emacs 22
