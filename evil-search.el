@@ -1070,8 +1070,9 @@ The search matches the COUNT-th occurrence of the word."
                                                                  (evil-ex-hl-get-max 'evil-ex-substitute)))
                                       #'(lambda ()
                                           (goto-char (point-min))
-                                          (forward-line (1- evil-ex-substitute-next-line))
-                                          (when (and (re-search-forward evil-ex-substitute-regex nil t nil)
+                                          (when (and (zerop (forward-line (1- evil-ex-substitute-next-line)))
+                                                     (bolp)
+                                                     (re-search-forward evil-ex-substitute-regex nil t nil)
                                                      (<= (line-number-at-pos (match-end 0))
                                                          evil-ex-substitute-last-line))
                                             (goto-char (match-beginning 0))
@@ -1084,14 +1085,16 @@ The search matches the COUNT-th occurrence of the word."
               ;; just replace the first occurences per line
               ;; without highlighting and asking
               (goto-char (point-min))
-              (forward-line (1- evil-ex-substitute-next-line))
-              (while (and (re-search-forward evil-ex-substitute-regex nil t nil)
-                          (<= (line-number-at-pos (match-beginning 0)) evil-ex-substitute-last-line))
-                (setq evil-ex-substitute-nreplaced
-                      (1+ evil-ex-substitute-nreplaced))
-                (replace-match evil-ex-substitute-replacement case-replace)
-                (setq evil-ex-substitute-last-point (point))
-                (forward-line)))
+              (let ((n (1- evil-ex-substitute-next-line)))
+                (while (and (zerop (forward-line n))
+                            (bolp)
+                            (re-search-forward evil-ex-substitute-regex nil t nil)
+                            (<= (line-number-at-pos (match-beginning 0)) evil-ex-substitute-last-line))
+                  (setq evil-ex-substitute-nreplaced
+                        (1+ evil-ex-substitute-nreplaced))
+                  (replace-match evil-ex-substitute-replacement case-replace)
+                  (setq evil-ex-substitute-last-point (point))
+                  (setq n 1))))
 
             (goto-char evil-ex-substitute-last-point)
 
