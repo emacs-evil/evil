@@ -216,10 +216,14 @@ See also `evil-goto-min'."
             (next-line count))
         (cond
          ((> count 0)
-          (line-move-finish (or goal-column temporary-goal-column)
+          (line-move-finish (or goal-column
+                                (car-safe temporary-goal-column)
+                                temporary-goal-column)
                             opoint nil))
          ((< count 0)
-          (line-move-finish (or goal-column temporary-goal-column)
+          (line-move-finish (or goal-column
+                                (car-safe temporary-goal-column)
+                                temporary-goal-column)
                             opoint t)))))))
 
 (evil-define-command evil-goto-mark (char)
