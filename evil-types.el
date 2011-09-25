@@ -6,16 +6,15 @@
 ;;
 ;; The basic transformation is "expansion". For example, the `line'
 ;; type "expands" a pair of positions to whole lines by moving the
-;; first position to the beginning of its line and the last position
-;; to the end of its line. That expanded selection is what the rest
+;; first position to the beginning of the line and the last position
+;; to the end of the line. That expanded selection is what the rest
 ;; of Emacs sees and acts on.
 ;;
 ;; An optional transformation is "contraction", which is the opposite
-;; of expansion (assuming the expansion is one-to-one). The
-;; `inclusive' type, which increases the last position by one, is
-;; one-to-one and contractable. The `line' type is not one-to-one
-;; as it may expand multiple positions to the same lines, so it
-;; has no contraction procedure.
+;; of expansion. If the transformation is one-to-one, expansion
+;; followed by contraction always returns the original range.
+;; (The `line' type is not one-to-one, as it may expand multiple
+;; positions to the same lines.)
 ;;
 ;; Another optional transformation is "normalization", which takes
 ;; two unexpanded positions and adjusts them before expansion.
@@ -313,10 +312,10 @@ Return a new overlay if COPY is non-nil."
 
 (defun evil-contract-overlay (overlay &optional copy)
   "Contract OVERLAY according to its `type' property.
-If the type isn't injective, restore original positions.
+If the type isn't one-to-one, restore original positions.
 Return a new overlay if COPY is non-nil."
   (let ((type (evil-type overlay)))
-    (if (and type (evil-type-property type :injective))
+    (if (and type (evil-type-property type :one-to-one))
         (setq overlay (evil-reset-overlay overlay copy)
               overlay (evil-transform-overlay 'contract overlay))
       (setq overlay (evil-restore-overlay overlay copy)))
@@ -427,19 +426,19 @@ If no description is available, return the empty string."
 DOC is a general description and shows up in all docstrings.
 It is followed by a list of keywords and functions:
 
-:expand FUNC    Expansion function. This function should accept
-                two positions in the current buffer, BEG and END,
-                and return a pair of expanded buffer positions.
-:contract FUNC  The opposite of :expand, optional.
-:injective BOOL Whether expansion is one-to-one. This means that
-                :expand followed by :contract always returns the
-                original range.
-:normalize FUNC Normalization function, optional. This function should
-                accept two unexpanded positions and adjust them before
-                expansion. May be used to deal with buffer boundaries.
-:string FUNC    Description function. This takes two buffer positions
-                and returns a human-readable string, for example,
-                \"2 lines\".
+:expand FUNC     Expansion function. This function should accept
+                 two positions in the current buffer, BEG and END,
+                 and return a pair of expanded buffer positions.
+:contract FUNC   The opposite of :expand, optional.
+:one-to-one BOOL Whether expansion is one-to-one. This means that
+                 :expand followed by :contract always returns the
+                 original range.
+:normalize FUNC  Normalization function, optional. This function should
+                 accept two unexpanded positions and adjust them before
+                 expansion. May be used to deal with buffer boundaries.
+:string FUNC     Description function. This takes two buffer positions
+                 and returns a human-readable string, for example,
+                 \"2 lines\".
 
 Further keywords and functions may be specified. These are assumed to
 be transformations on buffer positions, like :expand and :contract.
@@ -451,7 +450,7 @@ be transformations on buffer positions, like :expand and :contract.
                            [&rest [keywordp function-form]])))
   (let (args defun-forms func key name plist string sym val)
     ;; standard values
-    (setq plist (plist-put plist :injective t))
+    (setq plist (plist-put plist :one-to-one t))
     ;; keywords
     (while (keywordp (car-safe body))
       (setq key (pop body)
@@ -522,11 +521,11 @@ with PROPERTIES.\n\n%s%s" sym type string doc)
                                        (pop range) (pop range))))
                     (apply 'evil-range beg end type properties)))))))
          t)))
-    ;; :injective presupposes both or neither of :expand and :contract
+    ;; :one-to-one presupposes both or neither of :expand and :contract
     (when (plist-get plist :expand)
-      (setq plist (plist-put plist :injective
+      (setq plist (plist-put plist :one-to-one
                              (and (plist-get plist :contract)
-                                  (plist-get plist :injective)))))
+                                  (plist-get plist :one-to-one)))))
     `(progn
        (evil-put-property 'evil-type-properties ',type ,@plist)
        ,@defun-forms
@@ -583,7 +582,7 @@ If the end position is at the beginning of a line, then:
 
 (evil-define-type line
   "Include whole lines."
-  :injective nil
+  :one-to-one nil
   :expand (lambda (beg end)
             (evil-range
              (progn
@@ -610,13 +609,13 @@ the last column is included."
                               (goto-char end)
                               (current-column)))
                    (corner (plist-get properties :corner)))
-              ;; Because blocks are implemented as a pair of buffer
+              ;; Since blocks are implemented as a pair of buffer
               ;; positions, expansion is restricted to what the buffer
               ;; allows. In the case of a one-column block, there are
-              ;; two ways to expand it (either increase the upper
-              ;; corner beyond the lower corner, or increase the lower
-              ;; beyond the upper), so we try out both possibilities
-              ;; when we encounter the end of the line.
+              ;; two ways to expand it (either move the upper corner
+              ;; beyond the lower corner, or the lower beyond the
+              ;; upper), so try out both possibilities when
+              ;; encountering the end of the line.
               (cond
                ((= beg-col end-col)
                 (goto-char end)

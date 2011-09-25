@@ -449,7 +449,8 @@ highlighted."
   :group 'evil)
 
 (defcustom evil-ex-substitute-interactive-replace t
-  "If t and substitute patterns are highlighted the replacement is shown interactively."
+  "If t and substitute patterns are highlighted,
+the replacement is shown interactively."
   :type 'boolean
   :group 'evil)
 
@@ -461,9 +462,9 @@ highlighted."
   "Face for highlighting all matches in interactive search."
   :group 'evil)
 
-(defface evil-ex-substitute '(( ((supports :underline))
-                                :underline t
-                                :foreground "red"))
+(defface evil-ex-substitute '((((supports :underline))
+                               :underline t
+                               :foreground "red"))
   "Face for interactive replacement text."
   :group 'evil)
 
@@ -597,15 +598,17 @@ of `evil-inhibit-operator' from one local scope to another.")
     (?{ . evil-backward-paragraph)
     (?} . evil-forward-paragraph)
     (?' . evil-jump-backward)
-    (?` . evil-jump-backward))
+    (?` . evil-jump-backward)
+    (?< . evil-visual-beginning)
+    (?> . evil-visual-end))
   "Association list for markers.
 Entries have the form (CHAR . DATA), where CHAR is the marker's
-name and DATA is either a marker object as returned by
-`make-marker', a movement function, or a cons cell (STRING NUMBER),
+name and DATA is either a marker object as returned by `make-marker',
+a variable, a movement function, or a cons cell (STRING NUMBER),
 where STRING is a file path and NUMBER is a buffer position.
-The global value of this variable holds markers available from every
-buffer, while the buffer-local value holds markers available only
-in the current buffer.")
+The global value of this variable holds markers available from
+every buffer, while the buffer-local value holds markers available
+only in the current buffer.")
 (make-variable-buffer-local 'evil-markers-alist)
 
 (defvar evil-jump-list nil
@@ -716,29 +719,9 @@ BEG end END are the region of the inserted text.")
   "The count argument of the current paste command.")
 
 (defvar evil-temporary-undo nil
-  "When undo is disabled in current buffer, certain commands
-depending on undo use the variable instead of
-`buffer-undo-list'.")
-
-(defvar evil-visual-alist nil
-  "Association list of Visual selections.
-Elements have the form (NAME . FUNCTION).")
-
-(defvar evil-visual-overlay nil
-  "Overlay for Visual selection.
-This stores the boundaries of the selection and its type.
-It is also used for highlighting, unless the type is `block',
-in which case see `evil-visual-block-overlays'.")
-(make-variable-buffer-local 'evil-visual-overlay)
-
-(defvar evil-visual-block-overlays nil
-  "Overlays for Visual Block selection, one for each line.
-They are reused to prevent flicker.")
-(make-variable-buffer-local 'evil-visual-block-overlays)
-
-(defvar evil-visual-region-expanded nil
-  "Whether the region matches the Visual selection.")
-(make-variable-buffer-local 'evil-visual-region-expanded)
+  "When undo is disabled in current buffer.
+Certain commands depending on undo use this variable
+instead of `buffer-undo-list'.")
 
 (defvar evil-undo-list-pointer nil
   "Everything up to this mark is united in the undo-list.")
@@ -765,6 +748,65 @@ They are reused to prevent flicker.")
 
 (defvar evil-symbol-counter 0
   "Counter used by `evil-generate-symbol'.")
+
+;;; Visual state
+
+(defvar evil-visual-beginning nil
+  "The beginning of the Visual selection, a marker.")
+(make-variable-buffer-local 'evil-visual-beginning)
+
+(defvar evil-visual-end nil
+  "The end of the Visual selection, a marker.")
+(make-variable-buffer-local 'evil-visual-end)
+
+(defvar evil-visual-mark nil
+  "The position of mark in Visual state, a marker.")
+(make-variable-buffer-local 'evil-visual-mark)
+
+(defvar evil-visual-point nil
+  "The position of point in Visual state, a marker.")
+(make-variable-buffer-local 'evil-visual-point)
+
+(defvar evil-visual-type nil
+  "The type of the Visual selection.
+This is a type as defined by `evil-define-type'.")
+(make-variable-buffer-local 'evil-visual-type)
+
+;; we could infer the direction by comparing `evil-visual-mark'
+;; and `evil-visual-point', but destructive operations may
+;; displace the markers
+(defvar evil-visual-direction 0
+  "Whether point follows mark in Visual state.
+Negative if point precedes mark, otherwise positive.
+See also the function `evil-visual-direction'.")
+(make-variable-buffer-local 'evil-visual-direction)
+
+(defvar evil-visual-properties nil
+  "Property list of miscellaneous Visual properties.")
+(make-variable-buffer-local 'evil-visual-properties)
+
+(defvar evil-visual-region-expanded nil
+  "Whether the region matches the Visual selection.
+That is, whether the positions of point and mark have been
+expanded to coincide with the selection's boundaries.
+This makes the selection available to functions acting
+on Emacs' region.")
+(make-variable-buffer-local 'evil-visual-region-expanded)
+
+(defvar evil-visual-overlay nil
+  "Overlay for highlighting the Visual selection.
+Not used for blockwise selections, in which case
+see `evil-visual-block-overlays'.")
+(make-variable-buffer-local 'evil-visual-overlay)
+
+(defvar evil-visual-block-overlays nil
+  "Overlays for Visual Block selection, one for each line.
+They are reused to minimize flicker.")
+(make-variable-buffer-local 'evil-visual-block-overlays)
+
+(defvar evil-visual-alist nil
+  "Association list of Visual selection functions.
+Elements have the form (NAME . FUNCTION).")
 
 ;;; ex-mode
 

@@ -240,9 +240,9 @@ VISUAL is the Visual selection: it defaults to `evil-visual-char'."
           (when evil-test-point
             (goto-char evil-test-point)
             (evil-visual-refresh)
-            (unless (and (= (evil-visual-beginning)
+            (unless (and (= evil-visual-beginning
                             evil-test-visual-start)
-                         (= (evil-visual-end)
+                         (= evil-visual-end
                             evil-test-visual-end))
               (evil-visual-select
                evil-test-visual-start evil-test-visual-end visual -1)
@@ -353,10 +353,10 @@ is executed at the end."
   (declare (indent defun))
   `(progn
      (save-excursion
-       (goto-char (or (evil-visual-beginning) (region-beginning)))
+       (goto-char (or evil-visual-beginning (region-beginning)))
        (evil-test-text nil (or ,string ,end-string) ,before-predicate))
      (save-excursion
-       (goto-char (or (evil-visual-end) (region-end)))
+       (goto-char (or evil-visual-end (region-end)))
        (evil-test-text (or ,end-string ,string) nil nil ,after-predicate))))
 
 (defmacro evil-test-region
@@ -3613,37 +3613,29 @@ Below some empty line."))
      (t
       (should (mark))
       (should (region-active-p)))))
-  (ert-info ("Refresh `evil-visual-overlay'")
-    (should (overlayp evil-visual-overlay))
-    (should (= (overlay-start evil-visual-overlay)
-               (car (evil-expand (point) (mark) type))))
-    (should (= (overlay-end evil-visual-overlay)
-               (cadr (evil-expand (point) (mark) type))))
-    (should (eq (evil-type evil-visual-overlay) type))
-    (should (eq (overlay-get evil-visual-overlay :direction)
-                (if (< (point) (mark)) -1 1)))
-    (should (eq (overlay-get evil-visual-overlay :expanded) t))))
+  (ert-info ("Refresh Visual markers")
+    (should (= (evil-range-beginning (evil-expand (point) (mark) type))
+               evil-visual-beginning))
+    (should (= (evil-range-end (evil-expand (point) (mark) type))
+               evil-visual-end))
+    (should (eq evil-visual-type type))
+    (should (eq evil-visual-direction
+                (if (< (point) (mark)) -1 1)))))
 
 (ert-deftest evil-test-visual-refresh ()
   "Test `evil-visual-refresh'"
   :tags '(evil visual)
   (evil-test-buffer
    ";; [T]his buffer is for notes."
-   (let (evil-visual-overlay)
-     (evil-visual-refresh)
-     (should (overlayp evil-visual-overlay))
-     (should (overlay-get evil-visual-overlay :backup))
-     (should (eq (overlay-start evil-visual-overlay) 4))
-     (should (eq (overlay-end evil-visual-overlay) 5))))
+   (evil-visual-refresh)
+   (should (= evil-visual-beginning 4))
+   (should (= evil-visual-end 5)))
   (evil-test-buffer
    ";; [T]his buffer is for notes."
-   (let ((evil-visual-region-expanded t)
-         evil-visual-overlay)
+   (let ((evil-visual-region-expanded t))
      (evil-visual-refresh)
-     (should (overlayp evil-visual-overlay))
-     (should (overlay-get evil-visual-overlay :backup))
-     (should (eq (overlay-start evil-visual-overlay) 4))
-     (should (eq (overlay-end evil-visual-overlay) 4)))))
+     (should (= evil-visual-beginning 4))
+     (should (= evil-visual-end 4)))))
 
 (ert-deftest evil-test-visual-exchange ()
   "Test `exchange-point-and-mark' in Visual character selection"
@@ -3825,7 +3817,7 @@ if no previous selection")
   (ert-info ("Remove duplicate associations")
     (should (equal (evil-concat-alists
                     '((a . b)) '((a . c)))
-                   '((a . b))))
+                   '((a . c))))
     (should-not (equal (evil-concat-lists
                         '((a . b)) '((a . c)))
                        '((a . b))))))

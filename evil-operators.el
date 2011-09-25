@@ -145,9 +145,7 @@ a predefined type may be specified with TYPE."
       (cond
        ;; Visual selection
        ((evil-visual-state-p)
-        (setq range (evil-range (evil-visual-beginning)
-                                (evil-visual-end)
-                                (evil-visual-type))))
+        (setq range (evil-visual-range)))
        ;; Ex mode
        ((and (evil-ex-state-p)
              evil-ex-current-range)
@@ -247,9 +245,7 @@ The return value is a list (BEG END TYPE)."
              ((evil-range-p range))
              ;; the motion made a Visual selection
              ((evil-visual-state-p)
-              (setq range (evil-range (evil-visual-beginning)
-                                      (evil-visual-end)
-                                      (evil-visual-type))))
+              (setq range (evil-visual-range)))
              ;; the motion made an active region
              ((region-active-p)
               (setq range (evil-range (region-beginning)
@@ -643,13 +639,12 @@ The return value is the yanked text."
           (setq kill-ring (delete text kill-ring)))
         (setq kill-ring-yank-pointer kill-ring)
         (evil-visual-rotate 'upper-left)
-        (evil-delete (evil-visual-beginning)
-                     (evil-visual-end)
-                     (evil-visual-type))
+        (evil-delete evil-visual-beginning evil-visual-end
+                     evil-visual-type)
         (unless register
           (kill-new text))
         (when (and (eq yank-handler 'evil-yank-line-handler)
-                   (not (eq (evil-visual-type) 'line)))
+                   (not (eq evil-visual-type 'line)))
           (newline))
         (evil-normal-state))
       (if (eobp)

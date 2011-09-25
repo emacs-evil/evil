@@ -55,9 +55,7 @@ Stop when reaching POINTER."
           (setq list (cdr list)))))))
 
 (defun evil-concat-lists (&rest sequences)
-  "Concatenate lists, removing duplicates.
-The first occurrence is retained.
-To concatenate association lists, see `evil-concat-alists'."
+  "Concatenate lists, removing duplicates."
   (let (result)
     (dolist (sequence sequences)
       (dolist (elt sequence)
@@ -65,15 +63,21 @@ To concatenate association lists, see `evil-concat-alists'."
     (nreverse result)))
 
 (defun evil-concat-alists (&rest sequences)
-  "Concatenate association lists, removing duplicates.
-The first association is retained.
-To concatenate regular lists, see `evil-concat-lists'."
+  "Concatenate association lists, removing duplicates."
   (let (result)
     (dolist (sequence sequences)
       (dolist (elt sequence)
-        (unless (assq (car-safe elt) result)
-          (add-to-list 'result elt))))
+        (setq result (assq-delete-all (car-safe elt) result))
+        (add-to-list 'result elt)))
     (nreverse result)))
+
+(defun evil-concat-plists (&rest sequences)
+  "Concatenate property lists, removing duplicates."
+  (let (result)
+    (dolist (sequence sequences result)
+      (while sequence
+        (setq result
+              (plist-put result (pop sequence) (pop sequence)))))))
 
 (defun evil-get-property (alist key &optional prop)
   "Return property PROP for KEY in ALIST.
@@ -721,7 +725,8 @@ Execute BODY, then restore those things."
 (defun evil-normalize-position (pos)
   "Return POS if it does not exceed the buffer boundaries.
 If POS is less than `point-min', return `point-min'.
-Is POS is more than `point-max', return `point-max'."
+Is POS is more than `point-max', return `point-max'.
+If POS is a marker, return its position."
   (cond
    ((not (number-or-marker-p pos))
     pos)
@@ -729,6 +734,8 @@ Is POS is more than `point-max', return `point-max'."
     (point-min))
    ((> pos (point-max))
     (point-max))
+   ((markerp pos)
+    (marker-position pos))
    (t
     pos)))
 

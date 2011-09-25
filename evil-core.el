@@ -463,9 +463,9 @@ Its order reflects the state in the current buffer."
     (evil-refresh-global-keymaps)
     (evil-refresh-local-keymaps)
     ;; disable all modes
-    (dolist (mode (mapcar 'car (evil-concat-alists
-                                evil-mode-map-alist
-                                evil-local-keymaps-alist)))
+    (dolist (mode (append evil-mode-map-alist
+                          evil-local-keymaps-alist))
+      (setq mode (car-safe mode))
       (when (and (fboundp mode) (symbol-value mode))
         (funcall mode -1))
       (set mode nil))

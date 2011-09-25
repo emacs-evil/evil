@@ -71,13 +71,13 @@ lines. This is the default behaviour for Visual-state insertion."
    (list (prefix-numeric-value current-prefix-arg)
          (when (evil-visual-state-p)
            (evil-visual-rotate 'upper-left)
-           (when (memq (evil-visual-type) '(block line))
-             (count-lines (evil-visual-beginning)
-                          (evil-visual-end))))
+           (when (memq evil-visual-type '(block line))
+             (count-lines evil-visual-beginning
+                          evil-visual-end)))
          (evil-visual-state-p)))
   (if (and (evil-called-interactively-p)
            (evil-visual-state-p)
-           (and (eq (evil-visual-type) 'line)))
+           (and (eq evil-visual-type 'line)))
       (evil-insert-line count vcount)
     (setq evil-insert-count count
           evil-insert-lines nil
@@ -99,19 +99,19 @@ the lines."
   (interactive
    (list (prefix-numeric-value current-prefix-arg)
          (when (evil-visual-state-p)
-           (evil-visual-rotate (if (eq (evil-visual-type) 'block)
+           (evil-visual-rotate (if (eq evil-visual-type 'block)
                                    'upper-right
                                  'upper-left))
-           (when (memq (evil-visual-type) '(block line))
+           (when (memq evil-visual-type '(block line))
              (save-excursion
                ;; go to upper-left corner temporarily so
                ;; `count-lines' yields accurate results
                (evil-visual-rotate 'upper-left)
-               (count-lines (evil-visual-beginning)
-                            (evil-visual-end)))))))
+               (count-lines evil-visual-beginning
+                            evil-visual-end))))))
   (if (and (evil-called-interactively-p)
            (evil-visual-state-p)
-           (and (eq (evil-visual-type) 'line)))
+           (and (eq evil-visual-type 'line)))
       (evil-append-line count vcount)
     (unless (or (eolp) (evil-visual-state-p))
       (forward-char))

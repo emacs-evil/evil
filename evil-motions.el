@@ -1051,7 +1051,7 @@ if COUNT is positive, and to the left of it if negative.
        :type ,type
        (setq ,count (or ,count 1))
        (when (/= ,count 0)
-         (let* ((dir (evil-visual-direction))
+         (let* ((dir evil-visual-direction)
                 (type (or ',type evil-visual-char))
                 mark point range region selection temp)
            (cond
@@ -1060,19 +1060,17 @@ if COUNT is positive, and to the left of it if negative.
              ;; if we are at the beginning of the Visual selection,
              ;; go to the left (negative COUNT); if at the end,
              ;; go to the right (positive COUNT)
-             (setq dir (evil-visual-direction)
+             (setq dir evil-visual-direction
                    ,count (* ,count dir)
                    region (evil-range (mark t) (point))
-                   selection (evil-range (evil-visual-beginning)
-                                         (evil-visual-end)))
+                   selection (evil-visual-range))
              ;; expand Visual selection so that point
              ;; is outside already selected text
              (when ',extend
                (setq range (evil-range (point) (point) type)))
              (evil-visual-make-selection (mark t) (point) type)
              (evil-visual-expand-region)
-             (setq selection (evil-range (evil-visual-beginning)
-                                         (evil-visual-end)))
+             (setq selection (evil-visual-range))
              ;; the preceding selection should contain
              ;; at least one object; if not, add it now
              (let ((,count (- dir)))
@@ -1105,12 +1103,10 @@ if COUNT is positive, and to the left of it if negative.
               ((and ',extend (evil-subrange-p range selection))
                ;; Visual fall-back: enlarge selection by one character
                (if (< ,count 0)
-                   (evil-visual-select (1- (evil-visual-beginning))
-                                       (evil-visual-end)
-                                       type)
-                 (evil-visual-select (evil-visual-beginning)
-                                     (1+ (evil-visual-end))
-                                     type)))
+                   (evil-visual-select (1- evil-visual-beginning)
+                                       evil-visual-end type)
+                 (evil-visual-select evil-visual-beginning
+                                     (1+ evil-visual-end) type)))
               ((evil-range-p range)
                ;; Find the union of the range and the selection.
                ;; Actually, this uses the region (point and mark)
