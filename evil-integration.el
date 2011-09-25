@@ -1,6 +1,6 @@
 ;;;; Integrate Evil with other modules
 
-(require 'evil-states)
+(require 'evil-core)
 (require 'evil-motions)
 (require 'evil-repeat)
 

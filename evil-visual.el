@@ -14,7 +14,7 @@
 ;; preferences in other states.
 
 (require 'evil-types)
-(require 'evil-states)
+(require 'evil-core)
 
 (defmacro evil-define-visual-selection (selection doc &rest body)
   "Define a Visual selection SELECTION.

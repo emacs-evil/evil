@@ -1,7 +1,7 @@
 ;;;; Insert state
 
 (require 'evil-undo)
-(require 'evil-states)
+(require 'evil-core)
 (require 'evil-repeat)
 (require 'evil-visual)
 (require 'evil-digraphs)

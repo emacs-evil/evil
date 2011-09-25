@@ -1,7 +1,7 @@
 ;;;; Operator-Pending state
 
 (require 'evil-undo)
-(require 'evil-states)
+(require 'evil-core)
 (require 'evil-visual)
 (require 'evil-insert)
 (require 'evil-repeat)

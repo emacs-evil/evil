@@ -92,7 +92,7 @@
 ;; key-sequence.
 
 (require 'evil-undo)
-(require 'evil-states)
+(require 'evil-core)
 
 (defsubst evil-repeat-recording-p ()
   "Returns non-nil iff a recording is in progress."

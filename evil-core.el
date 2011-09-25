@@ -1,4 +1,4 @@
-;;;; State system
+;;;; Core functionality
 
 ;; What is "modes" in Vim is "states" in Evil. States are defined
 ;; with the macro `evil-define-state'.
@@ -920,6 +920,6 @@ If the region is activated, enter Visual state."
   :input-method t
   (evil-esc-mode -1))
 
-(provide 'evil-states)
+(provide 'evil-core)
 
-;;; evil-states.el ends here
+;;; evil-core.el ends here

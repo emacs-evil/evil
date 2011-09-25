@@ -54,7 +54,7 @@
 (require 'evil-common)
 (require 'evil-types)
 (require 'evil-undo)
-(require 'evil-states)
+(require 'evil-core)
 (require 'evil-repeat)
 (require 'evil-visual)
 (require 'evil-search)

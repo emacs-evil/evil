@@ -1,6 +1,6 @@
 ;;;; Default keymaps
 
-(require 'evil-states)
+(require 'evil-core)
 (require 'evil-visual)
 (require 'evil-motions)
 (require 'evil-insert)
