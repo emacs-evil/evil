@@ -35,7 +35,6 @@
       (setq type (nth 2 object)))
      ((listp object)
       (setq type (plist-get object :type)))
-     ;; command
      ((commandp object)
       (setq type (evil-get-command-property object :type)))
      ((symbolp object)
@@ -73,13 +72,9 @@ will make `line' the type of the `next-line' command."
 BEG and END are buffer positions (numbers or markers),
 TYPE is a type as per `evil-type-p', and PROPERTIES is
 a property list."
-  (let ((beg (if (markerp beg) (marker-position beg) beg))
-        (end (if (markerp end) (marker-position end) end))
-        (point-min (point-min))
-        (point-max (point-max)))
-    ;; BEG and END may not exceed the buffer boundaries
-    (evil-sort point-min beg end point-max)
-    (append (list beg end)
+  (let ((beg (evil-normalize-position beg))
+        (end (evil-normalize-position end)))
+    (append (list (min beg end) (max beg end))
             (when (evil-type-p type)
               (list type))
             properties)))
@@ -94,24 +89,16 @@ a property list."
 (defun evil-range-beginning (range)
   "Return beginning of RANGE."
   (when (evil-range-p range)
-    (let ((beg (nth 0 range))
-          (end (nth 1 range))
-          (point-min (point-min))
-          (point-max (point-max)))
-      ;; `beg' may not exceed the buffer boundaries
-      (evil-sort point-min beg end point-max)
-      beg)))
+    (let ((beg (evil-normalize-position (nth 0 range)))
+          (end (evil-normalize-position (nth 1 range))))
+      (min beg end))))
 
 (defun evil-range-end (range)
   "Return end of RANGE."
   (when (evil-range-p range)
-    (let ((beg (nth 0 range))
-          (end (nth 1 range))
-          (point-min (point-min))
-          (point-max (point-max)))
-      ;; `end' may not exceed the buffer boundaries
-      (evil-sort point-min beg end point-max)
-      end)))
+    (let ((beg (evil-normalize-position (nth 0 range)))
+          (end (evil-normalize-position (nth 1 range))))
+      (max beg end))))
 
 (defun evil-range-properties (range)
   "Return properties of RANGE."
@@ -131,15 +118,14 @@ If an argument is nil, it's not used; the previous value is retained.
 See also `evil-set-range-beginning', `evil-set-range-end',
 `evil-set-range-type' and `evil-set-range-properties'."
   (when (evil-range-p range)
-    (let ((beg (or beg (evil-range-beginning range)))
-          (end (or end (evil-range-end range)))
+    (let ((beg (or (evil-normalize-position beg)
+                   (evil-range-beginning range)))
+          (end (or (evil-normalize-position end)
+                   (evil-range-end range)))
           (type (or type (evil-type range)))
-          (plist (evil-range-properties range))
-          (point-min (point-min))
-          (point-max (point-max)))
-      (evil-sort point-min beg end point-max)
-      (while properties
-        (setq plist (plist-put plist (pop properties) (pop properties))))
+          (plist (evil-range-properties range)))
+      (evil-sort beg end)
+      (setq plist (evil-concat-plists plist properties))
       (evil-set-range-beginning range beg)
       (evil-set-range-end range end)
       (evil-set-range-type range type)
@@ -209,9 +195,7 @@ This can be overridden with TYPE."
 (defun evil-expand (beg end type &rest properties)
   "Expand BEG and END as TYPE with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
-may contain a property list.
-
-The overlay equivalent is `evil-expand-overlay'."
+may contain a property list."
   (apply 'evil-transform
          ;; don't expand if already expanded
          (unless (plist-get properties :expanded) :expand)
@@ -220,17 +204,13 @@ The overlay equivalent is `evil-expand-overlay'."
 (defun evil-contract (beg end type &rest properties)
   "Contract BEG and END as TYPE with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
-may contain a property list.
-
-The overlay equivalent is `evil-contract-overlay'."
+may contain a property list."
   (apply 'evil-transform 'contract beg end type properties))
 
 (defun evil-normalize (beg end type &rest properties)
   "Normalize BEG and END as TYPE with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
-may contain a property list.
-
-The overlay equivalent is `evil-normalize-overlay'."
+may contain a property list."
   (apply 'evil-transform 'normalize beg end type properties))
 
 (defun evil-transform
@@ -238,9 +218,7 @@ The overlay equivalent is `evil-normalize-overlay'."
   "Apply TRANSFORM on BEG and END with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list. If TRANSFORM is undefined,
-return positions unchanged.
-
-The overlay equivalent is `evil-transform-overlay'."
+return positions unchanged."
   (let* ((type (or type (evil-type properties)))
          (transform (when (and type transform)
                       (evil-type-property type transform))))
@@ -250,9 +228,7 @@ The overlay equivalent is `evil-transform-overlay'."
 
 (defun evil-describe (beg end type &rest properties)
   "Return description of BEG and END with PROPERTIES.
-If no description is available, return the empty string.
-
-The overlay equivalent is `evil-describe-overlay'."
+If no description is available, return the empty string."
   (let* ((type (or type (evil-type properties)))
          (properties (plist-put properties :type type))
          (describe (evil-type-property type :string)))
@@ -293,133 +269,6 @@ Return a new range if COPY is non-nil."
   "Return description of RANGE.
 If no description is available, return the empty string."
   (apply 'evil-describe range))
-
-(defun evil-expand-overlay (overlay &optional copy)
-  "Expand OVERLAY according to its `type' property.
-Return a new overlay if COPY is non-nil."
-  (let ((type (evil-type overlay)))
-    (when copy
-      (setq overlay (copy-overlay overlay)))
-    (unless (overlay-get overlay :expanded)
-      (when (evil-type-property type :expand)
-        ;; explicitly set :expanded to nil before expanding,
-        ;; so that it is guaranteed to change back to nil
-        ;; if the overlay is restored
-        (overlay-put overlay :expanded nil)
-        (setq overlay (evil-backup-overlay overlay)
-              overlay (evil-transform-overlay :expand overlay))))
-    overlay))
-
-(defun evil-contract-overlay (overlay &optional copy)
-  "Contract OVERLAY according to its `type' property.
-If the type isn't one-to-one, restore original positions.
-Return a new overlay if COPY is non-nil."
-  (let ((type (evil-type overlay)))
-    (if (and type (evil-type-property type :one-to-one))
-        (setq overlay (evil-reset-overlay overlay copy)
-              overlay (evil-transform-overlay 'contract overlay))
-      (setq overlay (evil-restore-overlay overlay copy)))
-    overlay))
-
-(defun evil-normalize-overlay (overlay &optional copy)
-  "Normalize OVERLAY according to its `type' property.
-Return a new overlay if COPY is non-nil."
-  (evil-transform-overlay 'normalize overlay copy))
-
-(defun evil-transform-overlay (transform overlay &optional copy)
-  "Apply TRANSFORM to OVERLAY according to its `type' property.
-Return a new overlay if COPY is non-nil."
-  (let* ((beg (overlay-start overlay))
-         (end (overlay-end overlay))
-         (type (evil-type overlay))
-         (buffer (overlay-buffer overlay))
-         (properties (overlay-properties overlay))
-         (range (save-excursion
-                  (with-current-buffer (or buffer (current-buffer))
-                    (apply 'evil-transform
-                           transform beg end type properties))))
-         (beg (pop range))
-         (end (pop range))
-         (type (if (evil-type-p (car-safe range)) (pop range) type)))
-    (when copy
-      (setq overlay (copy-overlay overlay)))
-    (while range
-      (overlay-put overlay (pop range) (pop range)))
-    (evil-set-type overlay type)
-    (move-overlay overlay beg end buffer)
-    overlay))
-
-(defun evil-backup-overlay (overlay &optional copy)
-  "Back up current OVERLAY positions and properties.
-The information is stored in a :backup property.
-Return a new overlay if COPY is non-nil."
-  (let* ((beg (overlay-start overlay))
-         (end (overlay-end overlay))
-         (buffer (overlay-buffer overlay))
-         (beg-marker (move-marker (make-marker) beg buffer))
-         (end-marker (move-marker (make-marker) end buffer))
-         (properties (overlay-properties overlay)))
-    (setq overlay (evil-reset-overlay overlay copy))
-    (set-marker-insertion-type beg-marker t)
-    (set-marker-insertion-type end-marker nil)
-    (overlay-put overlay :backup
-                 (append (list beg-marker end-marker) properties))
-    overlay))
-
-(defun evil-restore-overlay (overlay &optional copy)
-  "Restore previous OVERLAY positions and properties.
-The information is retrieved from the :backup property.
-Return a new overlay if COPY is non-nil."
-  (let ((backup (overlay-get overlay :backup))
-        beg end beg-marker end-marker properties buffer)
-    (when copy
-      (setq overlay (copy-overlay overlay)))
-    (when backup
-      (setq beg-marker (pop backup)
-            end-marker (pop backup)
-            properties backup
-            beg (or (marker-position beg-marker)
-                    (overlay-start overlay))
-            end (or (marker-position end-marker)
-                    (overlay-end overlay))
-            buffer (or (marker-buffer beg-marker)
-                       (marker-buffer end-marker)
-                       (overlay-buffer overlay))
-            overlay (evil-reset-overlay overlay copy))
-      (move-overlay overlay beg end buffer)
-      (while properties
-        (overlay-put overlay (pop properties) (pop properties))))
-    overlay))
-
-(defun evil-reset-overlay (overlay &optional copy)
-  "Reset back-up information for OVERLAY.
-Return a new overlay if COPY is non-nil."
-  (let* ((backup (overlay-get overlay :backup))
-         (beg (pop backup))
-         (end (pop backup)))
-    (cond
-     (copy
-      (setq overlay (copy-overlay overlay)))
-     ;; unless we're making a copy, delete old markers
-     ;; so they don't slow down editing
-     (backup
-      (set-marker beg nil)
-      (set-marker end nil)))
-    (overlay-put overlay :backup nil)
-    overlay))
-
-(defun evil-describe-overlay (overlay)
-  "Return description of OVERLAY.
-If no description is available, return the empty string."
-  (let ((beg (overlay-start overlay))
-        (end (overlay-end overlay))
-        (type (evil-type overlay))
-        (buffer (overlay-buffer overlay))
-        (properties (overlay-properties overlay)))
-    (save-excursion
-      (with-current-buffer (or buffer (current-buffer))
-        (apply 'evil-describe
-               beg end type properties)))))
 
 (defmacro evil-define-type (type doc &rest body)
   "Define type TYPE.
@@ -473,21 +322,22 @@ be transformations on buffer positions, like :expand and :contract.
            `(defun ,name (beg end &rest properties)
               ,(format "Return size of %s from BEG to END \
 with PROPERTIES.\n\n%s%s" type string doc)
-              (let (type range)
+              (let ((beg (evil-normalize-position beg))
+                    (end (evil-normalize-position end))
+                    (type ',type)
+                    plist range)
                 (when (and beg end)
                   (save-excursion
                     (evil-sort beg end)
                     (unless (plist-get properties :expanded)
-                      (setq range (evil-expand
-                                   beg end ',type properties)
-                            beg  (or (pop range) beg)
-                            end  (or (pop range) end)
-                            type (if (evil-type-p (car-safe range))
-                                     (pop range) type))
-                      (while range
-                        (setq properties
-                              (plist-put properties
-                                         (pop range) (pop range)))))
+                      (setq range (apply 'evil-expand
+                                         beg end type properties)
+                            beg (evil-range-beginning range)
+                            end (evil-range-end range)
+                            type (evil-type range type)
+                            plist (evil-range-properties range))
+                      (setq properties
+                            (evil-concat-plists properties plist)))
                     (or (apply ',func beg end
                                (when ,(> (length args) 2)
                                  properties))
@@ -496,32 +346,32 @@ with PROPERTIES.\n\n%s%s" type string doc)
            `(defun ,name (beg end &rest properties)
               ,(format "Perform %s transformation on %s from BEG to END \
 with PROPERTIES.\n\n%s%s" sym type string doc)
-              (let ((type ',type) range)
+              (let ((beg (evil-normalize-position beg))
+                    (end (evil-normalize-position end))
+                    (type ',type)
+                    plist range)
                 (when (and beg end)
                   (save-excursion
+                    (evil-sort beg end)
                     (when (memq ,key '(:expand :contract))
                       (setq properties
                             (plist-put properties
                                        :expanded
                                        ,(eq key :expand))))
-                    (setq range (apply 'evil-range beg end type properties)
-                          beg (car range)
-                          end (cadr range))
                     (setq range (or (apply ',func beg end
                                            (when ,(> (length args) 2)
                                              properties))
-                                    range)
-                          beg  (or (pop range) beg)
-                          end  (or (pop range) end)
-                          type (if (evil-type-p (car-safe range))
-                                   (pop range) type))
-                    (while range
-                      (setq properties
-                            (plist-put properties
-                                       (pop range) (pop range))))
+                                    (apply 'evil-range
+                                           beg end type properties))
+                          beg (evil-range-beginning range)
+                          end (evil-range-end range)
+                          type (evil-type range type)
+                          plist (evil-range-properties range))
+                    (setq properties
+                          (evil-concat-plists properties plist))
                     (apply 'evil-range beg end type properties)))))))
          t)))
-    ;; :one-to-one presupposes both or neither of :expand and :contract
+    ;; :one-to-one requires both or neither of :expand and :contract
     (when (plist-get plist :expand)
       (setq plist (plist-put plist :one-to-one
                              (and (plist-get plist :contract)

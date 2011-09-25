@@ -349,7 +349,7 @@ is executed at the end."
 
 (defmacro evil-test-selection
   (string &optional end-string before-predicate after-predicate)
-  "Verify that the Visual selection corresponds to STRING."
+  "Verify that the Visual selection contains STRING."
   (declare (indent defun))
   `(progn
      (save-excursion
@@ -361,7 +361,7 @@ is executed at the end."
 
 (defmacro evil-test-region
   (string &optional end-string before-predicate after-predicate)
-  "Verify that the region corresponds to STRING."
+  "Verify that the region contains STRING."
   (declare (indent defun))
   `(progn
      (save-excursion
@@ -373,7 +373,7 @@ is executed at the end."
 
 (defmacro evil-test-overlay
   (overlay string &optional end-string before-predicate after-predicate)
-  "Verify that OVERLAY corresponds to STRING."
+  "Verify that OVERLAY contains STRING."
   (declare (indent defun))
   `(progn
      (save-excursion
@@ -624,8 +624,7 @@ when exiting Operator-Pending state")
                           (point)))
            (third-line (progn
                          (forward-line)
-                         (point)))
-           (overlay (make-overlay 1 1)))
+                         (point))))
       (ert-info ("Return the beginning and end unchanged \
 if they are the same")
         (should (equal (evil-normalize 1 1 'exclusive)
@@ -647,66 +646,32 @@ and the beginning")
         (should (string= (evil-describe 1 2 'exclusive)
                          "1 character"))
         (should (string= (evil-describe 5 2 'exclusive)
-                         "3 characters")))
-      (ert-info ("Expand and measure overlay")
-        (evil-set-type overlay 'exclusive)
-        (should (string= (evil-describe-overlay overlay)
-                         "0 characters"))
-        (move-overlay overlay 1 3)
-        (evil-expand-overlay overlay)
-        (should (string= (evil-describe-overlay overlay)
-                         "2 characters"))
-        (evil-contract-overlay overlay)
-        (should (string= (evil-describe-overlay overlay)
-                         "2 characters"))
-        (ert-info ("Normalize overlay")
-          (move-overlay overlay (1+ first-line) second-line)
-          (evil-normalize-overlay overlay)
-          (should (= (overlay-start overlay) (1+ first-line)))
-          (should (= (overlay-end overlay) (1- second-line)))
-          (should (eq (evil-type overlay) 'inclusive))
-          (should (overlay-get overlay :expanded)))
-        (ert-info ("Contract overlay")
-          (evil-contract-overlay overlay)
-          (should-not (overlay-get overlay :expanded)))))))
+                         "3 characters"))))))
 
 (ert-deftest evil-test-inclusive-type ()
   "Expand and contract the `inclusive' type"
   :tags '(evil type)
   (evil-test-buffer
-    ";; This buffer is for notes you don't want to save.
+   ";; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-    (let ((overlay (make-overlay 1 1)))
-      (ert-info ("Include the ending character")
-        (should (equal (evil-expand 1 1 'inclusive)
-                       '(1 2 inclusive :expanded t))))
-      (ert-info ("Don't mind if positions are in wrong order")
-        (should (equal (evil-expand 5 2 'inclusive)
-                       '(2 6 inclusive :expanded t))))
-      (ert-info ("Exclude the ending character when contracting")
-        (should (equal (evil-contract 1 2 'inclusive)
-                       '(1 1 inclusive :expanded nil))))
-      (ert-info ("Don't mind positions' order when contracting")
-        (should (equal (evil-contract 6 2 'inclusive)
-                       '(2 5 inclusive :expanded nil))))
-      (ert-info ("Measure as one more than the difference")
-        (should (string= (evil-describe 1 1 'inclusive)
-                         "1 character"))
-        (should (string= (evil-describe 5 2 'inclusive)
-                         "4 characters")))
-      (ert-info ("Expand overlay")
-        (evil-set-type overlay 'inclusive)
-        (evil-expand-overlay overlay)
-        (should (= (overlay-start overlay) 1))
-        (should (= (overlay-end overlay) 2))
-        (should (overlay-get overlay :expanded)))
-      (ert-info ("Contract overlay")
-        (move-overlay overlay 1 4)
-        (evil-contract-overlay overlay)
-        (should (= (overlay-start overlay) 1))
-        (should (= (overlay-end overlay) 3))
-        (should-not (overlay-get overlay :expanded))))))
+   (ert-info ("Include the ending character")
+     (should (equal (evil-expand 1 1 'inclusive)
+                    '(1 2 inclusive :expanded t))))
+   (ert-info ("Don't mind if positions are in wrong order")
+     (should (equal (evil-expand 5 2 'inclusive)
+                    '(2 6 inclusive :expanded t))))
+   (ert-info ("Exclude the ending character when contracting")
+     (should (equal (evil-contract 1 2 'inclusive)
+                    '(1 1 inclusive :expanded nil))))
+   (ert-info ("Don't mind positions' order when contracting")
+     (should (equal (evil-contract 6 2 'inclusive)
+                    '(2 5 inclusive :expanded nil))))
+   (ert-info ("Measure as one more than the difference")
+     (should (string= (evil-describe 1 1 'inclusive)
+                      "1 character"))
+     (should (string= (evil-describe 5 2 'inclusive)
+                      "4 characters")))))
 
 (ert-deftest evil-test-line-type ()
   "Expand the `line' type"
@@ -721,8 +686,7 @@ and the beginning")
                           (point)))
            (third-line (progn
                          (forward-line)
-                         (point)))
-           (overlay (make-overlay 1 1)))
+                         (point))))
       (ert-info ("Expand to the whole first line")
         (should (equal (evil-expand first-line first-line 'line)
                        (list first-line second-line 'line :expanded t)))
@@ -732,18 +696,7 @@ and the beginning")
         (should (equal (evil-expand first-line second-line 'line)
                        (list first-line third-line 'line :expanded t)))
         (should (string= (evil-describe first-line second-line 'line)
-                         "2 lines")))
-      (ert-info ("Expand overlay")
-        (evil-set-type overlay 'line)
-        (evil-expand-overlay overlay)
-        (should (= (overlay-start overlay) first-line))
-        (should (= (overlay-end overlay) second-line))
-        (should (overlay-get overlay :expanded)))
-      (ert-info ("Restore overlay")
-        (evil-contract-overlay overlay)
-        (should (= (overlay-start overlay) 1))
-        (should (= (overlay-end overlay) 1))
-        (should-not (overlay-get overlay :expanded))))))
+                         "2 lines"))))))
 
 (ert-deftest evil-test-block-type ()
   "Expand and contract the `block' type"
