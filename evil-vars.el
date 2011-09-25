@@ -379,6 +379,12 @@ a keymap variable and EVAL-AFTER is the file or package defining it
     move-end-of-line
     next-error
     next-line
+    paredit-forward
+    paredit-backward
+    paredit-forward-down
+    paredit-forward-up
+    paredit-backward-down
+    paredit-backward-up
     previous-line
     previous-error
     redo
