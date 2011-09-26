@@ -34,10 +34,11 @@ Translates it according to the input method."
                                         'self-insert-command) t)
           (use-global-map new-global-map)
           (setq char (aref (read-key-sequence prompt nil t) 0))
-          (when (memq char '(?\C-q ?\C-v))
-            (setq char (read-quoted-char)))
-          (or (cdr (assq char '((?\r . ?\n))))
-              char))
+          (if (memq char '(?\C-q ?\C-v))
+              (read-quoted-char)
+            (unless (eq char ?\e)
+              (or (cdr (assq char '((?\r . ?\n))))
+                  char))))
       (use-global-map old-global-map))))
 
 ;; `make-char-table' requires this property in Emacs 22
