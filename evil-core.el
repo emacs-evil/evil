@@ -251,10 +251,14 @@ This is the state the buffer comes up in."
 
 (defadvice toggle-input-method (around evil activate)
   "Refresh `evil-input-method'."
-  (if (evil-state-property evil-state :input-method)
-      ad-do-it
+  (cond
+   ((not evil-local-mode)
+    ad-do-it)
+   ((evil-state-property evil-state :input-method)
+    ad-do-it)
+   (t
     (let ((current-input-method evil-input-method))
-      ad-do-it)))
+      ad-do-it))))
 
 (defun evil-refresh-global-keymaps ()
   "Refresh the global value of `evil-mode-map-alist'.
