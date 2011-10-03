@@ -447,6 +447,12 @@ If COUNT is given, move COUNT - 1 lines downward first."
   (evil-next-line (or count 1))
   (evil-first-non-blank))
 
+(evil-define-motion evil-next-line-1-first-non-blank (count)
+  "Move the cursor COUNT-1 lines down on the first non-blank character."
+  :type line
+  (evil-next-line (1- (or count 1)))
+  (evil-first-non-blank))
+
 (evil-define-motion evil-goto-first-line (count)
   "Go to the first non-blank character of line COUNT.
 By default the first line."
