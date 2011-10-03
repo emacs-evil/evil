@@ -397,8 +397,8 @@ a keymap variable and EVAL-AFTER is the file or package defining it
     forward-sexp
     forward-word
     goto-last-change
-    ibuffer-forward-line
     ibuffer-backward-line
+    ibuffer-forward-line
     isearch-abort
     isearch-cancel
     isearch-complete
@@ -437,14 +437,17 @@ a keymap variable and EVAL-AFTER is the file or package defining it
     move-end-of-line
     next-error
     next-line
-    paredit-forward
     paredit-backward
-    paredit-forward-down
-    paredit-forward-up
     paredit-backward-down
     paredit-backward-up
-    previous-line
+    paredit-forward
+    paredit-forward-down
+    paredit-forward-up
+    pop-global-mark
+    pop-tag-mark
+    pop-to-mark-command
     previous-error
+    previous-line
     redo
     right-char
     scroll-down
