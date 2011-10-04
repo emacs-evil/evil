@@ -652,26 +652,26 @@ and the beginning")
   "Expand and contract the `inclusive' type"
   :tags '(evil type)
   (evil-test-buffer
-   ";; This buffer is for notes you don't want to save.
+    ";; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-   (ert-info ("Include the ending character")
-     (should (equal (evil-expand 1 1 'inclusive)
-                    '(1 2 inclusive :expanded t))))
-   (ert-info ("Don't mind if positions are in wrong order")
-     (should (equal (evil-expand 5 2 'inclusive)
-                    '(2 6 inclusive :expanded t))))
-   (ert-info ("Exclude the ending character when contracting")
-     (should (equal (evil-contract 1 2 'inclusive)
-                    '(1 1 inclusive :expanded nil))))
-   (ert-info ("Don't mind positions' order when contracting")
-     (should (equal (evil-contract 6 2 'inclusive)
-                    '(2 5 inclusive :expanded nil))))
-   (ert-info ("Measure as one more than the difference")
-     (should (string= (evil-describe 1 1 'inclusive)
-                      "1 character"))
-     (should (string= (evil-describe 5 2 'inclusive)
-                      "4 characters")))))
+    (ert-info ("Include the ending character")
+      (should (equal (evil-expand 1 1 'inclusive)
+                     '(1 2 inclusive :expanded t))))
+    (ert-info ("Don't mind if positions are in wrong order")
+      (should (equal (evil-expand 5 2 'inclusive)
+                     '(2 6 inclusive :expanded t))))
+    (ert-info ("Exclude the ending character when contracting")
+      (should (equal (evil-contract 1 2 'inclusive)
+                     '(1 1 inclusive :expanded nil))))
+    (ert-info ("Don't mind positions' order when contracting")
+      (should (equal (evil-contract 6 2 'inclusive)
+                     '(2 5 inclusive :expanded nil))))
+    (ert-info ("Measure as one more than the difference")
+      (should (string= (evil-describe 1 1 'inclusive)
+                       "1 character"))
+      (should (string= (evil-describe 5 2 'inclusive)
+                       "4 characters")))))
 
 (ert-deftest evil-test-line-type ()
   "Expand the `line' type"
@@ -1447,18 +1447,18 @@ the `evil-repeat' command")
   (let ((inhibit-quit t))
     (ert-info ("Test ESC")
       (evil-test-buffer
-	";;[ ]This buffer is for notes."
-	(setq evil-repeat-ring (make-ring 10))
-	(should (= (ring-length evil-repeat-ring) 0))
-	("aABC" [escape])
-	";; AB[C]This buffer is for notes."
-	(should (= (ring-length evil-repeat-ring) 1))
-	(".")
-	";; ABCAB[C]This buffer is for notes."
-	("d" [escape])
-	(should (= (ring-length evil-repeat-ring) 1))
-	(".")
-	";; ABCABCAB[C]This buffer is for notes."))))
+        ";;[ ]This buffer is for notes."
+        (setq evil-repeat-ring (make-ring 10))
+        (should (= (ring-length evil-repeat-ring) 0))
+        ("aABC" [escape])
+        ";; AB[C]This buffer is for notes."
+        (should (= (ring-length evil-repeat-ring) 1))
+        (".")
+        ";; ABCAB[C]This buffer is for notes."
+        ("d" [escape])
+        (should (= (ring-length evil-repeat-ring) 1))
+        (".")
+        ";; ABCABCAB[C]This buffer is for notes."))))
 
 ;;; Operators
 
@@ -1751,15 +1751,15 @@ then enter the text in that file's own buffer.")))
   :tags '(evil operator)
   (ert-info ("Delete to end of line")
     (evil-test-buffer
-     ";; This buffer is for notes[ ]you don't want to save."
-     ("D")
-     ";; This buffer is for note[s]"))
+      ";; This buffer is for notes[ ]you don't want to save."
+      ("D")
+      ";; This buffer is for note[s]"))
   (ert-info ("Act linewise on character selection")
     (evil-test-buffer
-     ";; This <buffe[r]> is for notes,
+      ";; This <buffe[r]> is for notes,
 and for Lisp evaluation."
-     ("D")
-     "[a]nd for Lisp evaluation."))
+      ("D")
+      "[a]nd for Lisp evaluation."))
   (ert-info ("Act on each line of block selection")
     (evil-test-buffer
       :visual block
@@ -2353,10 +2353,10 @@ This bufferThis buffe[r]"))
     (let ((evil-cross-lines t)
           (evil-move-cursor-back t))
       (evil-test-buffer
-       ";; This buffer is for notes[,]
+        ";; This buffer is for notes[,]
 ;; and for Lisp evaluation."
-       ("l")
-       ";; This buffer is for notes,
+        ("l")
+        ";; This buffer is for notes,
 \[;]; and for Lisp evaluation.")))
   (ert-info ("With count")
     (evil-test-buffer
@@ -2754,9 +2754,9 @@ Below some empty line")
       ";; This buffer i[s] for notes."))
   (ert-info ("Delete")
     (evil-test-buffer
-     ";; This[-]buffer-is-for-notes."
-     ("de")
-     ";; This[-]is-for-notes."))
+      ";; This[-]buffer-is-for-notes."
+      ("de")
+      ";; This[-]is-for-notes."))
   (ert-info ("Empty line")
     (evil-test-buffer
       "Above some line
@@ -3579,16 +3579,16 @@ Below some empty line."))
   "Test `evil-visual-refresh'"
   :tags '(evil visual)
   (evil-test-buffer
-   ";; [T]his buffer is for notes."
-   (evil-visual-refresh)
-   (should (= evil-visual-beginning 4))
-   (should (= evil-visual-end 5)))
+    ";; [T]his buffer is for notes."
+    (evil-visual-refresh)
+    (should (= evil-visual-beginning 4))
+    (should (= evil-visual-end 5)))
   (evil-test-buffer
-   ";; [T]his buffer is for notes."
-   (let ((evil-visual-region-expanded t))
-     (evil-visual-refresh)
-     (should (= evil-visual-beginning 4))
-     (should (= evil-visual-end 4)))))
+    ";; [T]his buffer is for notes."
+    (let ((evil-visual-region-expanded t))
+      (evil-visual-refresh)
+      (should (= evil-visual-beginning 4))
+      (should (= evil-visual-end 4)))))
 
 (ert-deftest evil-test-visual-exchange ()
   "Test `exchange-point-and-mark' in Visual character selection"
