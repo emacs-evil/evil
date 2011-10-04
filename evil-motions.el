@@ -353,13 +353,13 @@ In Insert state, insert a newline."
     (evil-line-move (1- (or count 1)))))
 
 (evil-define-motion evil-previous-visual-line (count)
-  "Move the cursor COUNT screen lines down."
+  "Move the cursor COUNT screen lines up."
   :type exclusive
   (let ((line-move-visual t))
     (evil-line-move (- (or count 1)))))
 
 (evil-define-motion evil-next-visual-line (count)
-  "Move the cursor COUNT screen lines up."
+  "Move the cursor COUNT screen lines down."
   :type exclusive
   (let ((line-move-visual t))
     (evil-line-move (or count 1))))
