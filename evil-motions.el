@@ -211,20 +211,19 @@ See also `evil-goto-min'."
   (evil-signal-without-movement
     (setq this-command 'next-line)
     (let ((opoint (point)))
-      (unwind-protect
+      (condition-case err
           (with-no-warnings
             (next-line count))
-        (cond
-         ((> count 0)
-          (line-move-finish (or goal-column
-                                (car-safe temporary-goal-column)
-                                temporary-goal-column)
-                            opoint nil))
-         ((< count 0)
-          (line-move-finish (or goal-column
-                                (car-safe temporary-goal-column)
-                                temporary-goal-column)
-                            opoint t)))))))
+        ((beginning-of-buffer end-of-buffer)
+         (let ((col (or goal-column
+                        (if (consp temporary-goal-column)
+                            (car temporary-goal-column)
+                          temporary-goal-column))))
+           (if line-move-visual
+               (vertical-motion (cons col 0))
+             (line-move-finish col opoint (< count 0)))
+           ;; maybe we should just (ding) ?
+           (signal (car err) (cdr err))))))))
 
 (evil-define-command evil-goto-mark (char)
   "Go to marker denoted by CHAR."
