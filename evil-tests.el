@@ -3856,6 +3856,25 @@ if no previous selection")
       (should-error (evil-extract-count "°"))
       (should-error (evil-extract-count "12°")))))
 
+(ert-deftest evil-test-eval-last-sexp ()
+  "Test adviced `evil-last-sexp'."
+  :tags '(evil)
+  (ert-info ("Normal state")
+    (evil-test-buffer
+      "(+ 1 (+ 2 3[)])"
+      ("1" (kbd "C-x C-e"))
+      "(+ 1 (+ 2 35[)])"))
+  (ert-info ("Insert state")
+    (evil-test-buffer
+      "(+ 1 (+ 2 3[)])"
+      ("i" (kbd "C-u") (kbd "C-x C-e") [escape])
+      "(+ 1 (+ 2 3[3]))"))
+  (ert-info ("Emacs state")
+    (evil-test-buffer
+      "(+ 1 (+ 2 3[)])"
+      ((kbd "C-z") (kbd "C-u") (kbd "C-x C-e"))
+      "(+ 1 (+ 2 33[)])")))
+
 ;;; ex
 
 (ert-deftest evil-test-ex-parse-command ()

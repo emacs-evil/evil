@@ -192,6 +192,23 @@
          ;; Finish repeation
          (evil-repeat-finish-record-changes))))))
 
+;; Eval last sexp
+(defadvice preceding-sexp (around evil activate)
+  "In normal-state, last sexp ends at point."
+  (if (evil-normal-state-p)
+      (save-excursion
+        (unless (or (eobp) (eolp)) (forward-char))
+        ad-do-it)
+    ad-do-it))
+
+(defadvice pp-last-sexp (around evil activate)
+  "In normal-state, last sexp ends at point."
+  (if (evil-normal-state-p)
+      (save-excursion
+        (unless (or (eobp) (eolp)) (forward-char))
+        ad-do-it)
+    ad-do-it))
+
 (provide 'evil-integration)
 
 ;;; evil-integration.el ends here
