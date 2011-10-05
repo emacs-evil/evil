@@ -27,20 +27,13 @@
   "Start a undo step.
 All following buffer modifications are grouped together as a
 single action. If CONTINUE is non-nil, preceding modifications
-are grouped too. The step is terminated with `evil-end-undo-step'."
+are included. The step is terminated with `evil-end-undo-step'."
   (when (listp buffer-undo-list)
-    (cond
-     (evil-undo-list-pointer
-      (evil-refresh-undo-step))
-     (t
-      (when (and (car-safe buffer-undo-list)
-                 (not continue))
+    (if evil-undo-list-pointer
+        (evil-refresh-undo-step)
+      (unless (or continue (null (car-safe buffer-undo-list)))
         (undo-boundary))
-      (setq evil-undo-list-pointer (or buffer-undo-list t))))
-    ;; continually refresh the undo entries for the step,
-    ;; ensuring proper synchronization between `buffer-undo-list'
-    ;; and undo-tree.el's `buffer-undo-tree'
-    (add-hook 'post-command-hook 'evil-refresh-undo-step nil t)))
+      (setq evil-undo-list-pointer (or buffer-undo-list t)))))
 
 (defun evil-end-undo-step (&optional continue)
   "End a undo step started with `evil-start-undo-step'.
