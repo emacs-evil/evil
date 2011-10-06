@@ -292,7 +292,6 @@
 (define-key evil-insert-state-map "\C-n" 'evil-complete)
 (define-key evil-insert-state-map "\C-x\C-p" 'evil-complete-line)
 (define-key evil-insert-state-map "\C-x\C-n" 'evil-complete-line)
-(define-key evil-insert-state-map (kbd "RET") 'evil-ret)
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
 (define-key evil-insert-state-map
   (read-kbd-macro evil-toggle-key) 'evil-emacs-state)

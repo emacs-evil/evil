@@ -62,11 +62,6 @@
   '(defadvice elp-results (after evil activate)
      (evil-motion-state)))
 
-;;; ERC
-
-(eval-after-load 'erc
-  '(define-key erc-mode-map [remap evil-ret] 'erc-send-current-line))
-
 ;;; Folding
 
 (eval-after-load 'hideshow
