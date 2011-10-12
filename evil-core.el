@@ -403,14 +403,18 @@ may be specified before the body code:
     (evil-esc-mode 1)
     (remove-hook 'pre-command-hook 'evil-turn-on-esc-mode t)))
 
-(evil-define-command evil-esc ()
+;; TODO: this will probably not work well with the repeat-system.
+(evil-define-command evil-esc (arg)
   "Wait for further keys within `evil-esc-delay'.
 Otherwise send [escape]."
   :repeat ignore
-  (interactive)
+  (interactive "P")
   (if (sit-for evil-esc-delay t)
       (push 'escape unread-command-events)
     (push last-command-event unread-command-events))
+  ;; preserve prefix argument
+  (setq prefix-arg arg)
+  (setq universal-argument-num-events (1- (length (this-command-keys))))
   ;; disable interception for the next key sequence
   (evil-esc-mode -1)
   (add-hook 'pre-command-hook 'evil-turn-on-esc-mode nil t))

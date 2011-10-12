@@ -3875,6 +3875,21 @@ if no previous selection")
       ((kbd "C-z") (kbd "C-u") (kbd "C-x C-e"))
       "(+ 1 (+ 2 33[)])")))
 
+(ert-deftest evil-test-esc-count ()
+  "Test if prefix-argument is transfered for key sequences with meta-key."
+  :tags '(evil esc)
+  (unless noninteractive
+    (ert-info ("Test M-<right>")
+      (evil-test-buffer
+	"[A]BC DEF GHI JKL MNO"
+	("3" (kbd "ESC <right>"))
+	"ABC DEF GHI[ ]JKL MNO"))
+    (ert-info ("Test shell-command")
+      (evil-test-buffer
+	"[A]BC DEF GHI JKL MNO"
+	("1" (kbd "ESC !") "echo TEST" [return])
+	"[T]EST\nABC DEF GHI JKL MNO"))))
+
 ;;; ex
 
 (ert-deftest evil-test-ex-parse-command ()
