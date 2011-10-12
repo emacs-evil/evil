@@ -411,10 +411,9 @@ Otherwise send [escape]."
   (interactive "P")
   (if (sit-for evil-esc-delay t)
       (push 'escape unread-command-events)
-    (push last-command-event unread-command-events))
-  ;; preserve prefix argument
-  (setq prefix-arg arg)
-  (setq universal-argument-num-events (1- (length (this-command-keys))))
+    (push last-command-event unread-command-events)
+    ;; preserve prefix argument
+    (setq prefix-arg arg))
   ;; disable interception for the next key sequence
   (evil-esc-mode -1)
   (add-hook 'pre-command-hook 'evil-turn-on-esc-mode nil t))

@@ -3881,14 +3881,14 @@ if no previous selection")
   (unless noninteractive
     (ert-info ("Test M-<right>")
       (evil-test-buffer
-	"[A]BC DEF GHI JKL MNO"
-	("3" (kbd "ESC <right>"))
-	"ABC DEF GHI[ ]JKL MNO"))
+        "[A]BC DEF GHI JKL MNO"
+        ("3" (kbd "ESC <right>"))
+        "ABC DEF GHI[ ]JKL MNO"))
     (ert-info ("Test shell-command")
       (evil-test-buffer
-	"[A]BC DEF GHI JKL MNO"
-	("1" (kbd "ESC !") "echo TEST" [return])
-	"[T]EST\nABC DEF GHI JKL MNO"))))
+        "[A]BC DEF GHI JKL MNO"
+        ("1" (kbd "ESC !") "echo TEST" [return])
+        "[T]EST\nABC DEF GHI JKL MNO"))))
 
 ;;; ex
 
