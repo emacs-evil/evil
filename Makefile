@@ -74,7 +74,7 @@ profiler:
 # Loads Evil into memory in order to indent macros properly.
 # Also removes trailing whitespace, tabs and extraneous blank lines.
 indent: clean
-	$(EMACS) --batch ${FILES} evil-tests.el -Q -L . $(LIBS) -l evil-tests.el \
+	$(EMACS) --batch --eval '(setq vc-handled-backends nil)' ${FILES} evil-tests.el -Q -L . $(LIBS) -l evil-tests.el \
 --eval "(dolist (buffer (reverse (buffer-list))) \
 (when (buffer-file-name buffer) \
 (set-buffer buffer) \
