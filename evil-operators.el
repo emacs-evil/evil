@@ -937,7 +937,7 @@ but doesn't insert or remove any spaces."
 
 ;; Ex operators
 (evil-define-operator evil-write (beg end type file-name &optional force)
-  "Saves the current buffer or the region from BEG to END to FILE-NAME.
+  "Saves the current buffer or the region from BEG to END to FILE-NAME without changing the current buffer's name.
 If the argument FORCE is non-nil, the file will be overwritten if
 already existing."
   :motion mark-whole-buffer
@@ -964,6 +964,17 @@ already existing."
   :repeat nil
   (interactive "<!>")
   (save-some-buffers force))
+
+(evil-define-command evil-save (file-name &optional force)
+  "Saves the current buffer to FILE-NAME and changes the file-name of the current buffer to this name.
+If no FILE-NAME is given, the current buffer's file-name is used."
+  :repeat nil
+  (interactive "<f><!>")
+  (when (null file-name)
+    (setq file-name (buffer-file-name))
+    (unless file-name
+      (error "Please specify a file-name for this buffer!")))
+  (write-file file-name (not force)))
 
 (evil-define-command evil-edit (file)
   "Visits a certain file."
