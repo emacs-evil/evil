@@ -1019,6 +1019,11 @@ and jump to the corresponding one."
         (goto-char (1+ pos))
         (backward-list)))))))
 
+(evil-define-motion evil-lookup ()
+  "Look up the keyword at point.
+Calls `evil-lookup-func'."
+  (funcall evil-lookup-func))
+
 (defmacro evil-define-text-object (object args &rest body)
   "Define a text object command OBJECT.
 BODY should return a range (BEG END) to the right of point

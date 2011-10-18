@@ -152,6 +152,7 @@
 (define-key evil-motion-state-map "k" 'evil-previous-line)
 (define-key evil-motion-state-map "l" 'evil-forward-char)
 (define-key evil-motion-state-map " " 'evil-forward-char)
+(define-key evil-motion-state-map "K" 'evil-lookup)
 (define-key evil-motion-state-map "L" 'evil-window-bottom)
 (define-key evil-motion-state-map "M" 'evil-window-middle)
 (define-key evil-motion-state-map "n" 'evil-search-next)
