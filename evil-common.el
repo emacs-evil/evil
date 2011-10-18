@@ -401,11 +401,33 @@ or a marker object pointing nowhere."
   "Return contents of REGISTER.
 Signal an error if empty, unless NOERROR is non-nil."
   (when (characterp register)
-    (or (if (eq register ?\")
-            (current-kill 0)
-          (get-register register))
+    (or (cond
+         ((eq register ?\")
+          (current-kill 0))
+         ((eq register ?*)
+          (let ((x-select-enable-primary t))
+            (current-kill 0)))
+         ((eq register ?+)
+          (let ((x-select-enable-clipboard t))
+            (current-kill 0)))
+         (t
+          (get-register register)))
         (unless noerror
           (error "Register `%c' is empty" register)))))
+
+(defun evil-set-register (register text)
+  "Set the contents of register REGISTER to TEXT."
+  (cond
+   ((eq register ?\")
+    (kill-new text))
+   ((eq register ?*)
+    (let ((x-select-enable-primary t))
+      (kill-new text)))
+   ((eq register ?+)
+    (let ((x-select-enable-clipboard t))
+      (kill-new text)))
+   (t
+    (set-register register text))))
 
 ;; custom version of `gensym'
 (defun evil-generate-symbol (&optional intern)

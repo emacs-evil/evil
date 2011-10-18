@@ -395,7 +395,7 @@ Both COUNT and CMD may be nil."
     (when yank-handler
       (setq text (propertize text 'yank-handler (list yank-handler))))
     (when register
-      (set-register register text))
+      (evil-set-register register text))
     (kill-new text)))
 
 (defun evil-yank-lines (beg end &optional register yank-handler)
@@ -410,7 +410,7 @@ Both COUNT and CMD may be nil."
       (setq text (concat text "\n")))
     (setq text (propertize text 'yank-handler yank-handler))
     (when register
-      (set-register register text))
+      (evil-set-register register text))
     (kill-new text)))
 
 (defun evil-yank-rectangle (beg end &optional register yank-handler)
@@ -431,7 +431,7 @@ Both COUNT and CMD may be nil."
            (text (propertize (mapconcat #'identity lines "\n")
                              'yank-handler yank-handler)))
       (when register
-        (set-register register text))
+        (evil-set-register register text))
       (kill-new text))))
 
 (defun evil-yank-line-handler (text)
@@ -806,11 +806,11 @@ of the block."
     (when last-kbd-macro
       (when (member last-kbd-macro '("" []))
         (setq last-kbd-macro nil))
-      (set-register evil-this-macro last-kbd-macro))
+      (evil-set-register evil-this-macro last-kbd-macro))
     (setq evil-this-macro nil))
    (t
     (setq evil-this-macro register)
-    (set-register evil-this-macro nil)
+    (evil-set-register evil-this-macro nil)
     (start-kbd-macro nil))))
 
 (evil-define-command evil-execute-macro (count macro)
