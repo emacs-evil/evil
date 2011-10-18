@@ -133,6 +133,52 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-complete-next-func
+  (lambda (arg)
+    (let (dabbrev-case-distinction)
+      (funcall #'dabbrev-expand arg)))
+  "Completion function used by \
+\\<evil-insert-state-map>\\[evil-complete-next]."
+  :type 'function
+  :group 'evil)
+
+(defcustom evil-complete-previous-func
+  evil-complete-next-func
+  "Completion function used by \
+\\<evil-insert-state-map>\\[evil-complete-previous]."
+  :type 'function
+  :group 'evil)
+
+(defcustom evil-complete-next-minibuffer-func 'minibuffer-complete
+  "Minibuffer completion function used by \
+\\<evil-insert-state-map>\\[evil-complete-next]."
+  :type 'function
+  :group 'evil)
+
+(defcustom evil-complete-previous-minibuffer-func 'minibuffer-complete
+  "Minibuffer completion function used by \
+\\<evil-insert-state-map>\\[evil-complete-previous]."
+  :type 'function
+  :group 'evil)
+
+(defcustom evil-complete-next-line-func
+  (lambda (arg)
+    (let ((hippie-expand-try-functions-list
+           '(try-expand-line
+             try-expand-line-all-buffers)))
+      (hippie-expand arg)))
+  "Minibuffer completion function used by \
+\\<evil-insert-state-map>\\[evil-complete-next-line]."
+  :type 'function
+  :group 'evil)
+
+(defcustom evil-complete-previous-line-func
+  evil-complete-next-line-func
+  "Minibuffer completion function used by \
+\\<evil-insert-state-map>\\[evil-complete-previous-line]."
+  :type 'function
+  :group 'evil)
+
 (defcustom evil-toggle-key "C-z"
   "The key used to change to and from Emacs state.
 Must be readable by `read-kbd-macro'. For example: \"C-z\"."

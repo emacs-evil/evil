@@ -301,23 +301,43 @@ COL defaults to the current column."
 
 ;;; Completion
 
-(evil-define-command evil-complete ()
-  "Complete to the nearest preceding word.
-Search forward if a match isn't found."
-  :repeat change
-  (interactive)
-  (if (minibufferp)
-      (minibuffer-complete)
-    (dabbrev-expand nil)))
-
-(evil-define-command evil-complete-line (&optional arg)
-  "Complete a whole line."
+(evil-define-command evil-complete-next (&optional arg)
+  "Complete to the nearest following word.
+Search backward if a match isn't found.
+Calls `evil-complete-next-func'."
   :repeat change
   (interactive "P")
-  (let ((hippie-expand-try-functions-list
-         '(try-expand-line
-           try-expand-line-all-buffers)))
-    (hippie-expand arg)))
+  (if (minibufferp)
+      (funcall evil-complete-next-minibuffer-func)
+    (funcall evil-complete-next-func arg)))
+
+(evil-define-command evil-complete-previous (&optional arg)
+  "Complete to the nearest preceding word.
+Search forward if a match isn't found.
+Calls `evil-complete-previous-func'."
+  :repeat change
+  (interactive "P")
+  (if (minibufferp)
+      (funcall evil-complete-previous-minibuffer-func)
+    (funcall evil-complete-previous-func arg)))
+
+(evil-define-command evil-complete-next-line (&optional arg)
+  "Complete a whole line.
+Calls `evil-complete-next-line-func'."
+  :repeat change
+  (interactive "P")
+  (if (minibufferp)
+      (funcall evil-complete-next-minibuffer-func)
+    (funcall evil-complete-next-line-func arg)))
+
+(evil-define-command evil-complete-previous-line (&optional arg)
+  "Complete a whole line.
+Calls `evil-complete-previous-line-func'."
+  :repeat change
+  (interactive "P")
+  (if (minibufferp)
+      (funcall evil-complete-previous-minibuffer-func)
+    (funcall evil-complete-previous-line-func arg)))
 
 (defun evil-paste-from-register (register)
   "Paste from REGISTER."
