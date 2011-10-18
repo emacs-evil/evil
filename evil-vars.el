@@ -136,14 +136,20 @@ which causes the parenthesis to be highlighted."
 (defcustom evil-complete-next-func
   (lambda (arg)
     (let (dabbrev-case-distinction)
-      (funcall #'dabbrev-expand arg)))
+      (condition-case nil
+          (if (eq last-command this-command)
+              (dabbrev-expand nil)
+            (dabbrev-expand (- (abs (or arg 1)))))
+        (error (dabbrev-expand nil)))))
   "Completion function used by \
 \\<evil-insert-state-map>\\[evil-complete-next]."
   :type 'function
   :group 'evil)
 
 (defcustom evil-complete-previous-func
-  evil-complete-next-func
+  (lambda (arg)
+    (let (dabbrev-case-distinction)
+      (dabbrev-expand arg)))
   "Completion function used by \
 \\<evil-insert-state-map>\\[evil-complete-previous]."
   :type 'function

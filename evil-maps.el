@@ -315,10 +315,10 @@
 
 ;;; Minibuffer
 
-(define-key minibuffer-local-map "\C-p" 'evil-complete)
-(define-key minibuffer-local-map "\C-n" 'evil-complete)
-(define-key minibuffer-local-map "\C-x\C-p" 'evil-complete)
-(define-key minibuffer-local-map "\C-x\C-n" 'evil-complete)
+(define-key minibuffer-local-map "\C-p" 'evil-complete-next)
+(define-key minibuffer-local-map "\C-n" 'evil-complete-previous)
+(define-key minibuffer-local-map "\C-x\C-p" 'evil-complete-next-line)
+(define-key minibuffer-local-map "\C-x\C-n" 'evil-complete-previous-line)
 
 ;; Ex
 (define-key evil-motion-state-map ":" 'evil-ex-read-command)
