@@ -135,7 +135,8 @@ which causes the parenthesis to be highlighted."
 
 (defcustom evil-complete-next-func
   (lambda (arg)
-    (let (dabbrev-case-distinction)
+    (let ((dabbrev-search-these-buffers-only (list (current-buffer)))
+          dabbrev-case-distinction)
       (condition-case nil
           (if (eq last-command this-command)
               (dabbrev-expand nil)
@@ -148,7 +149,8 @@ which causes the parenthesis to be highlighted."
 
 (defcustom evil-complete-previous-func
   (lambda (arg)
-    (let (dabbrev-case-distinction)
+    (let ((dabbrev-search-these-buffers-only (list (current-buffer)))
+          dabbrev-case-distinction)
       (dabbrev-expand arg)))
   "Completion function used by \
 \\<evil-insert-state-map>\\[evil-complete-previous]."
