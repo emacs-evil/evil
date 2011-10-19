@@ -1282,13 +1282,13 @@ OPEN is a regular expression matching the opening sequence,
 and CLOSE is a regular expression matching the closing sequence.
 If EXCLUSIVE is non-nil, OPEN and CLOSE are excluded from
 the range; otherwise they are included. See also `evil-paren-range'."
-  (let ((either (format "\\(%s\\)\\|\\(%s\\)" open close))
-        (count (or count 1))
-        (level 0)
-        beg end range)
-    (save-excursion
-      (save-match-data
-        (evil-narrow-to-comment
+  (evil-with-or-without-comment
+    (let ((either (format "\\(%s\\)\\|\\(%s\\)" open close))
+          (count (or count 1))
+          (level 0)
+          beg end range)
+      (save-excursion
+        (save-match-data
           ;; find beginning of range: handle edge cases
           (unless (or (looking-at either)
                       (looking-back either nil t))

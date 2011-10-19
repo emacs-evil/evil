@@ -915,6 +915,16 @@ POS defaults to the current position of point."
         (cadr exp)
       exp)))
 
+(defmacro evil-with-or-without-comment (&rest body)
+  "Try BODY narrowed to the current comment; then try BODY unnarrowed.
+If BODY returns non-nil inside the current comment, return that.
+Otherwise, execute BODY again, but without the restriction."
+  (declare (indent defun)
+           (debug t))
+  `(or (when (or (evil-in-comment-p) (evil-in-string-p))
+         (evil-narrow-to-comment ,@body))
+       (progn ,@body)))
+
 ;;; Highlighting
 
 (when (fboundp 'font-lock-add-keywords)
