@@ -1341,6 +1341,13 @@ the range; otherwise they are included. See also `evil-paren-range'."
               (setq range (evil-range beg end))))
           range)))))
 
+(defun evil-xml-range (&optional count exclusive)
+  "Return a range (BEG END) of COUNT matching XML tags.
+If EXCLUSIVE is non-nil, the tags themselves are excluded
+from the range."
+  (evil-regexp-range
+   count "<\\(?:[^/ ]\\(?:[^>]*?[^/>]\\)?\\)?>" "</[^>]+?>" exclusive))
+
 (defun evil-add-whitespace-to-range (range &optional dir pos regexp)
   "Add whitespace at one side of RANGE, depending on POS.
 If POS is before the range, add trailing whitespace;
@@ -1534,12 +1541,18 @@ If BIGWORD is non-nil, select inner WORD."
 (evil-define-text-object evil-a-tag (count)
   "Select a tag block."
   :extend-selection nil
-  (evil-regexp-range count "<[^/>]+?>" "</[^/>]+?>"))
+  (evil-xml-range count))
 
 (evil-define-text-object evil-inner-tag (count)
   "Select inner tag block."
   :extend-selection nil
-  (evil-regexp-range count "<[^/>]+?>" "</[^/>]+?>" t))
+  (cond
+   ((and (evil-called-interactively-p)
+         (eq last-command this-command))
+    (setq this-command 'evil-a-tag)
+    (evil-a-tag count))
+   (t
+    (evil-xml-range count t))))
 
 (provide 'evil-motions)
 
