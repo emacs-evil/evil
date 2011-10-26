@@ -95,7 +95,7 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
   :jump t
   :type exclusive
   (let* ((string (evil-find-symbol t))
-         (search (if evil-regexp-search (regexp-quote string) string))
+         (search (format "\\_<%s\\_>" (regexp-quote string)))
          ientry ipos)
     ;; load imenu if available
     (unless (featurep 'imenu)
@@ -120,13 +120,13 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
          ;; highlight the occurrence
          ((and (markerp ipos)
                (eq (marker-buffer ipos) (current-buffer)))
-          (evil-search search t evil-regexp-search ipos))
+          (evil-search search t t ipos))
          ;; imenu failed, so just go to first occurrence in buffer
          (t
-          (evil-search search t evil-regexp-search (point-min)))))
+          (evil-search search t t (point-min)))))
        ;; no imenu, so just go to first occurrence in buffer
        (t
-        (evil-search search t evil-regexp-search (point-min)))))))
+        (evil-search search t t (point-min)))))))
 
 (defun evil-search-incrementally (forward regexp-p)
   "Search incrementally for user-entered text."
@@ -300,13 +300,13 @@ If FORWARD is nil, search backward, otherwise forward."
                    evil-search-symbol-backward))
            (stringp string)
            (not (string= string "")))
-      (evil-search string forward evil-search-wrap))
+      (evil-search string forward t))
      (t
       (setq string (evil-find-symbol forward))
       (if (null string)
           (error "No symbol under point")
         (setq string (format "\\_<%s\\_>" (regexp-quote string))))
-      (evil-search string forward evil-search-wrap)))))
+      (evil-search string forward t)))))
 
 (defun evil-find-symbol (forward)
   "Return symbol near point as a string.
