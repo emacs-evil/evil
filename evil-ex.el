@@ -404,7 +404,15 @@ arguments for programmable completion."
 (defun evil-ex-call-current-command ()
   "Execute the given command COMMAND."
   (if (not evil-ex-current-cmd)
-      (error "Invalid ex-command.")
+      (if (and evil-ex-current-range
+               (car evil-ex-current-range)
+               (numberp (caar evil-ex-current-range)))
+          ;; TODO: we use funcall to avoid the compiler complaining about
+          ;;       undefined `evil-goto-line'. We can't require evil-motions.el
+          ;;       because this would lead to recursive requires.
+          (let ((fn 'evil-goto-line))
+            (funcall fn (caar evil-ex-current-range)))
+        (error "Invalid ex-command."))
     (let ((binding (evil-ex-completed-binding evil-ex-current-cmd)))
       (if binding
           (with-current-buffer evil-ex-current-buffer

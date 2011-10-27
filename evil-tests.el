@@ -3966,6 +3966,17 @@ if no previous selection")
   (should (equal (evil-ex-parse-range ".+42cmd arg" 0)
                  (cons 4 '((current-line . 42) nil nil)))))
 
+(ert-deftest evil-test-goto-line ()
+  "Test if :number moves point to a certain line."
+  (ert-info ("Move to line")
+    (evil-test-buffer
+      :visual line
+      "1\n 2\n [ ]3\n   4\n    5\n"
+      (":4" [return])
+      "1\n 2\n  3\n   [4]\n    5\n"
+      (":2" [return])
+      "1\n [2]\n  3\n   4\n    5\n")))
+
 (when (or evil-tests-profiler evil-tests-run)
   (evil-tests-initialize))
 
