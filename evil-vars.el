@@ -38,6 +38,7 @@ KEY must be readable by `read-kbd-macro'."
 and \\[evil-shift-left]."
   :type 'integer
   :group 'evil)
+(make-variable-buffer-local 'evil-shift-width)
 
 (defcustom evil-default-cursor
   (list (or (frame-parameter nil 'cursor-color) "black") t)
@@ -76,6 +77,7 @@ and nil means no mode line tag."
 This should be a regexp set without the enclosing []."
   :type 'string
   :group 'evil)
+(make-variable-buffer-local 'evil-word)
 
 (defcustom evil-want-fine-undo nil
   "Whether actions like \"cw\" are undone in several steps."
