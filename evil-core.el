@@ -872,7 +872,8 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                    (redisplay)))
                ,@body
                (run-hooks ',entry-hook)
-               (when (and arg (not evil-locked-display) ,message)
+               (when (and evil-echo-state
+                          arg (not evil-locked-display) ,message)
                  (if (functionp ,message)
                      (funcall ,message)
                    (evil-echo ,message))))))))

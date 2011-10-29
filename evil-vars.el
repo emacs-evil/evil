@@ -149,6 +149,11 @@ which causes the parenthesis to be highlighted."
   :type 'function
   :group 'evil)
 
+(defcustom evil-echo-state t
+  "Whether to signal the current state in the echo area."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-complete-previous-func
   (lambda (arg)
     (let ((dabbrev-search-these-buffers-only (list (current-buffer)))

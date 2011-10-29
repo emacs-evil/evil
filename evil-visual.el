@@ -249,6 +249,7 @@ If MESSAGE is given, display it in the echo area."
     (setq evil-visual-region-expanded nil)
     (evil-visual-refresh type mark point)
     (cond
+     ((null evil-echo-state))
      ((stringp message)
       (evil-echo message))
      (message
