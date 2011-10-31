@@ -4009,6 +4009,11 @@ if no previous selection")
       "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
       (":1,3s/BC/XYZ/c" (kbd "RET") "yn")
       "AXYZABCABC\nQRT\nABC[A]BCABC\nABCABCABC"))
+  (ert-info ("Substitute whole lines on range with other delim")
+    (evil-test-buffer
+      "A/CA/CA/C\nQRT\nA/C[A]/CA/C\nA/CA/CA/C"
+      (":1,3s,/C,XYZ,g" (kbd "RET"))
+      "AXYZAXYZAXYZ\nQRT\nAXYZ[A]XYZAXYZ\nA/CA/CA/C"))
   (ert-info ("Substitute on whole buffer, smart case")
     (evil-test-buffer
       "[A]bcAbcAbc\naBcaBcaBc\nABCABCABC\nabcabcabc"

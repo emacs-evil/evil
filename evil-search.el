@@ -1105,36 +1105,45 @@ The search matches the COUNT-th occurrence of the word."
               (message "Replaced %d occurences" evil-ex-substitute-nreplaced))))))))
 
 (defun evil-ex-parse-substitute (text)
-  (when (string-match "\\`\\s-*/\\(\\(?:[^/]\\|\\\\.\\)+\\)\\(?:/\\(\\(?:[^/]\\|\\\\.\\)*\\)\\(?:/\\([giIc]*\\)\\)?\\)?\\s-*\\'"
-                      text)
-    (let* ((pattern (match-string 1 text))
-           (replacement (match-string 2 text))
-           (flags (match-string 3 text))
-           newrepl
-           (idx 0) (n (length replacement)))
+  (save-match-data
+    (when (string-match "\\`\\s-*\\([^][[:word:]\\|\"-]\\)" text)
+      (let* ((delim (match-string 1 text))
+             (notdelim (concat "[^" delim "]")))
+        (when (string-match (concat "\\`\\s-*"
+                                    delim
+                                    "\\(\\(?:" notdelim "\\|\\\\.\\)+\\)\\(?:"
+                                    delim
+                                    "\\(\\(?:" notdelim "\\|\\\\.\\)*\\)\\(?:"
+                                    delim "\\([giIc]*\\)\\)?\\)?\\s-*\\'")
+                            text)
+          (let* ((pattern (match-string 1 text))
+                 (replacement (match-string 2 text))
+                 (flags (match-string 3 text))
+                 newrepl
+                 (idx 0) (n (length replacement)))
 
-      ;; handle escaped chars
-      (while (< idx n)
-        (if (and (= (aref replacement idx) ?\\)
-                 (< (1+ idx) n))
-            (let ((c (aref replacement (1+ idx))))
-              (cond
-               ((eq c ?n)
-                (push ?\n newrepl))
-               ((eq c ?t)
-                (push ?\t newrepl))
-               ((eq c ?r)
-                (push ?\r newrepl))
-               ((memq c '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?\\))
-                (push ?\\ newrepl)
-                (push c newrepl))
-               (t
-                (push c newrepl)))
-              (setq idx (+ idx 2)))
-          (push (aref replacement idx) newrepl)
-          (setq idx (1+ idx))))
+            ;; handle escaped chars
+            (while (< idx n)
+              (if (and (= (aref replacement idx) ?\\)
+                       (< (1+ idx) n))
+                  (let ((c (aref replacement (1+ idx))))
+                    (cond
+                     ((eq c ?n)
+                      (push ?\n newrepl))
+                     ((eq c ?t)
+                      (push ?\t newrepl))
+                     ((eq c ?r)
+                      (push ?\r newrepl))
+                     ((memq c '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?\\))
+                      (push ?\\ newrepl)
+                      (push c newrepl))
+                     (t
+                      (push c newrepl)))
+                    (setq idx (+ idx 2)))
+                (push (aref replacement idx) newrepl)
+                (setq idx (1+ idx))))
 
-      (list pattern (apply #'string (reverse newrepl)) flags))))
+            (list pattern (apply #'string (reverse newrepl)) flags)))))))
 
 (defun evil-ex-nohighlight ()
   "Disables the active search highlightings."
