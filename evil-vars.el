@@ -832,6 +832,11 @@ instead of `buffer-undo-list'.")
   "The position of point in Visual state, a marker.")
 (make-variable-buffer-local 'evil-visual-point)
 
+(defvar evil-visual-selection nil
+  "The kind of Visual selection.
+This is a selection as defined by `evil-define-visual-selection'.")
+(make-variable-buffer-local 'evil-visual-selection)
+
 (defvar evil-visual-type nil
   "The type of the Visual selection.
 This is a type as defined by `evil-define-type'.")

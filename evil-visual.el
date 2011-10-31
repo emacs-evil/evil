@@ -60,8 +60,7 @@ the selection is enabled.
                     (evil-visual-state-p)
                     (eq evil-visual-type type))
                (evil-change-to-previous-state)
-             (unless (stringp message)
-               (setq message (and message ,message)))
+             (setq evil-visual-selection ',selection)
              (evil-visual-make-region mark point type message)
              ,@body)
            ',selection)))))
@@ -88,6 +87,7 @@ the selection is enabled.
   "Visual state."
   :tag " <V> "
   :enable (motion normal)
+  :message 'evil-visual-message
   (cond
    ((evil-visual-state-p)
     (evil-transient-save)
@@ -115,6 +115,7 @@ the selection is enabled.
                   'evil-visual-deactivate-hook nil t)
       (evil-visual-deactivate-hook))
     (setq evil-visual-region-expanded nil)
+    (setq evil-visual-selection nil)
     (remove-hook 'pre-command-hook 'evil-visual-pre-command t)
     (remove-hook 'post-command-hook 'evil-visual-post-command t)
     (remove-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook t)
@@ -173,6 +174,23 @@ otherwise exit Visual state."
     (evil-active-region -1)
     (evil-transient-restore))))
 
+(defun evil-visual-message (&optional selection)
+  "Create an echo area message for SELECTION.
+SELECTION is a kind of selection as defined by
+`evil-define-visual-selection', such as `char', `line'
+or `block'."
+  (let (message)
+    (setq selection (or selection evil-visual-selection))
+    (when selection
+      (setq message
+            (symbol-value (intern (format "evil-visual-%s-message"
+                                          selection))))
+      (cond
+       ((functionp message)
+        (funcall message))
+       ((stringp message)
+        (evil-echo message))))))
+
 (defun evil-visual-select (beg end &optional type dir)
   "Create a Visual selection of type TYPE from BEG to END.
 Point and mark are positioned so that the resulting selection
@@ -230,8 +248,15 @@ If MESSAGE is given, display it in the echo area."
     (evil-active-region 1)
     (setq evil-visual-region-expanded nil)
     (evil-visual-refresh type mark point)
-    (when (stringp message)
-      (evil-echo message))))
+    (cond
+     ((stringp message)
+      (evil-echo message))
+     (message
+      (cond
+       ((stringp evil-visual-state-message)
+        (evil-echo evil-visual-state-message))
+       ((functionp evil-visual-state-message)
+        (funcall evil-visual-state-message)))))))
 
 (defun evil-visual-expand-region (&optional no-trailing-newline)
   "Expand the region to the Visual selection.
