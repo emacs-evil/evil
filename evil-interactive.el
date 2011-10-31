@@ -174,27 +174,28 @@ list of command properties as passed to `evil-define-command'."
 
 (evil-define-interactive-code "<f>"
   :ex-arg file
-  (list (evil-ex-file-arg)))
+  (list (and (evil-ex-state-p) (evil-ex-file-arg))))
 
 (evil-define-interactive-code "<b>"
   :ex-arg buffer
-  (list evil-ex-current-arg))
+  (list (and (evil-ex-state-p) evil-ex-current-arg)))
 
 (evil-define-interactive-code "<a>"
   :ex-arg t
-  (list evil-ex-current-arg))
+  (list (and (evil-ex-state-p) evil-ex-current-arg)))
 
 (evil-define-interactive-code "<!>"
   :ex-force t
-  (list evil-ex-current-cmd-force))
+  (list (and (evil-ex-state-p) evil-ex-current-cmd-force)))
 
 (evil-define-interactive-code "<sym>"
   :ex-arg sym
-  (list (and evil-ex-current-arg
+  (list (and (evil-ex-state-p)
+             evil-ex-current-arg
              (intern evil-ex-current-arg))))
 
 (evil-define-interactive-code "<s/>"
   :ex-arg substitution
-  (list evil-ex-current-arg))
+  (list (and (evil-ex-state-p) evil-ex-current-arg)))
 
 (provide 'evil-interactive)
