@@ -1032,7 +1032,9 @@ The search matches the COUNT-th occurrence of the word."
                              beg end)
           (let ((evil-ex-substitute-nreplaced 0)
                 (evil-ex-substitute-next-line (line-number-at-pos beg))
-                (evil-ex-substitute-last-line (line-number-at-pos end))
+                (evil-ex-substitute-last-line (if (save-excursion (goto-char end) (bolp))
+                                                  (1- (line-number-at-pos end))
+                                                (line-number-at-pos end)))
                 (evil-ex-substitute-last-point (point)))
             (if confirm
                 (let ((evil-ex-substitute-overlay (make-overlay (point) (point)))
