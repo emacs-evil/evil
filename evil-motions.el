@@ -373,11 +373,12 @@ on the first non-blank character."
   (back-to-indentation))
 
 (evil-define-motion evil-window-middle ()
-  "Move the cursor to the middle line of the current window
-on the first non-blank character."
+  "Move the cursor to the middle line of the buffer text currently visible in the window on the first non-blank character."
   :jump t
   :type line
-  (move-to-window-line (/ (window-body-height) 2))
+  (move-to-window-line (/ (save-excursion
+                            (move-to-window-line -1))
+                          2))
   (back-to-indentation))
 
 (evil-define-motion evil-window-bottom (count)
