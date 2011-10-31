@@ -3966,6 +3966,55 @@ if no previous selection")
   (should (equal (evil-ex-parse-range ".+42cmd arg" 0)
                  (cons 4 '((current-line . 42) nil nil)))))
 
+(ert-deftest evil-test-ex-substitute ()
+  "Test `evil-ex-substitute'."
+  :tags '(evil)
+  (ert-info ("Substitute on current line")
+    (evil-test-buffer
+      "ABCABCABC\nABCA[B]CABC\nABCABCABC"
+      (":s/BC/XYZ/" (kbd "RET"))
+      "ABCABCABC\nAXYZA[B]CABC\nABCABCABC"))
+  (ert-info ("Substitute on whole current line")
+    (evil-test-buffer
+      "ABCABCABC\nABC[A]BCABC\nABCABCABC"
+      (":s/BC/XYZ/g" (kbd "RET"))
+      "ABCABCABC\nAXYZ[A]XYZAXYZ\nABCABCABC"))
+  (ert-info ("Substitute on last line")
+    (evil-test-buffer
+      "ABCABCABC\nABCABCABC\nABCABC[A]BC"
+      (":s/BC/XYZ/" (kbd "RET"))
+      "ABCABCABC\nABCABCABC\nAXYZABC[A]BC"))
+  (ert-info ("Substitute on whole last line")
+    (evil-test-buffer
+      "ABCABCABC\nABCABCABC\nABCABC[A]BC"
+      (":s/BC/XYZ/g" (kbd "RET"))
+      "ABCABCABC\nABCABCABC\nAXYZAXYZ[A]XYZ"))
+  (ert-info ("Substitute on range")
+    (evil-test-buffer
+      "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
+      (":1,3s/BC/XYZ/" (kbd "RET"))
+      "AXYZABCABC\nQRT\nAXYZ[A]BCABC\nABCABCABC"))
+  (ert-info ("Substitute whole lines on range")
+    (evil-test-buffer
+      "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
+      (":1,3s/BC/XYZ/g" (kbd "RET"))
+      "AXYZAXYZAXYZ\nQRT\nAXYZ[A]XYZAXYZ\nABCABCABC"))
+  (ert-info ("Substitute on whole current line confirm")
+    (evil-test-buffer
+      "ABCABCABC\nABC[A]BCABC\nABCABCABC"
+      (":s/BC/XYZ/gc" (kbd "RET") "yny")
+      "ABCABCABC\nAXYZ[A]BCAXYZ\nABCABCABC"))
+  (ert-info ("Substitute on range confirm")
+    (evil-test-buffer
+      "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
+      (":1,3s/BC/XYZ/c" (kbd "RET") "yn")
+      "AXYZABCABC\nQRT\nABC[A]BCABC\nABCABCABC"))
+  (ert-info ("Substitute on whole buffer, smart case")
+    (evil-test-buffer
+      "[A]bcAbcAbc\naBcaBcaBc\nABCABCABC\nabcabcabc"
+      (":%s/bc/xy/g" (kbd "RET"))
+      "[A]xyAxyAxy\naXyaXyaXy\nAXYAXYAXY\naxyaxyaxy")))
+
 (ert-deftest evil-test-goto-line ()
   "Test if :number moves point to a certain line."
   (ert-info ("Move to line")
