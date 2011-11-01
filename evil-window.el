@@ -202,6 +202,7 @@
 
 (evil-define-command evil-window-split (&optional count file)
   "Splits the current window horizontally, COUNT lines height, editing a certain `file'."
+  :repeat nil
   (interactive "P<f>")
   (let ((new-win (split-window (selected-window) count)))
     (when file
@@ -209,6 +210,7 @@
 
 (evil-define-command evil-window-vsplit (&optional count file)
   "Splits the current window vertically, COUNT columns width, editing a certain `file'."
+  :repeat nil
   (interactive "P<f>")
   (let ((new-win (split-window (selected-window) count t)))
     (when file
@@ -327,8 +329,8 @@ top-left."
 
 (evil-define-command evil-window-new (count file)
   "Splits the current window horizontally and opens a new buffer or edits a certain `file'."
-  (interactive "P<f>")
   :repeat nil
+  (interactive "P<f>")
   (split-window (selected-window) count)
   (if file
       (evil-edit file)
@@ -339,8 +341,8 @@ top-left."
 
 (evil-define-command evil-window-vnew (count file)
   "Splits the current window vertically and opens a new buffer name or edits a certain `file'."
-  (interactive "P<f>")
   :repeat nil
+  (interactive "P<f>")
   (split-window (selected-window) count t)
   (if file
       (evil-edit file)
