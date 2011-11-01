@@ -498,7 +498,7 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
 (evil-define-motion evil-jump-to-tag ()
   "Jump to tag under point."
   :jump t
-  (let ((tag (thing-at-point 'word)))
+  (let ((tag (thing-at-point 'symbol)))
     (find-tag tag)))
 
 ;;; Text object and movement framework
