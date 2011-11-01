@@ -17,7 +17,9 @@
         hippie-expand))
 (mapc 'evil-declare-abort-repeat
       '(eval-expression
-        execute-extended-command))
+        execute-extended-command
+        compile
+        recompile))
 
 (dolist (map evil-overriding-maps)
   (eval-after-load (cdr map)
