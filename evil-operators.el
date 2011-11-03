@@ -19,7 +19,7 @@
   "Keymap for Operator-Pending shortcuts like \"dd\" and \"gqq\"."
   :local t
   (setq evil-operator-shortcut-map (make-sparse-keymap))
-  (evil-refresh-local-keymaps))
+  (evil-initialize-local-keymaps))
 
 ;; the half-height "Operator-Pending cursor" cannot be specified
 ;; as a static `cursor-type' value, since its height depends on

@@ -400,9 +400,6 @@ is executed at the end."
     (should (keymapp evil-normal-state-local-map))
     (should (assq 'evil-emacs-state-local-map (buffer-local-variables)))
     (should (keymapp evil-emacs-state-local-map)))
-  (ert-info ("Refresh buffer-local entries in `evil-mode-map-alist'")
-    (should (rassq evil-normal-state-local-map evil-mode-map-alist))
-    (should (rassq evil-emacs-state-local-map evil-mode-map-alist)))
   (ert-info ("Don't add buffer-local entries to the default value")
     (should-not (rassq evil-normal-state-local-map
                        (default-value 'evil-mode-map-alist)))
@@ -422,11 +419,11 @@ is executed at the end."
     (should-not evil-state))
   (ert-info ("Disable all state keymaps")
     (dolist (state (mapcar 'car evil-state-properties) t)
-      (should-not (symbol-value (evil-state-property state :mode)))
-      (should-not (memq (symbol-value (evil-state-property state :keymap))
+      (should-not (evil-state-property state :mode t))
+      (should-not (memq (evil-state-property state :keymap t)
                         (current-active-maps)))
-      (should-not (symbol-value (evil-state-property state :local)))
-      (should-not (memq (symbol-value (evil-state-property state :local-keymap))
+      (should-not (evil-state-property state :local t))
+      (should-not (memq (evil-state-property state :local-keymap t)
                         (current-active-maps)))
       (dolist (map (evil-state-auxiliary-keymaps state))
         (should-not (memq map (current-active-maps)))))))
@@ -447,13 +444,10 @@ is executed at the end."
   (let (mode keymap local-mode local-keymap tag)
     (evil-change-state state)
     (setq mode (evil-state-property state :mode)
-          keymap (symbol-value (evil-state-property
-                                state :keymap))
+          keymap (evil-state-property state :keymap t)
           local-mode (evil-state-property state :local)
-          local-keymap (symbol-value (evil-state-property
-                                      state :local-keymap))
-          tag (symbol-value (evil-state-property
-                             state :tag)))
+          local-keymap (evil-state-property state :local-keymap t)
+          tag (evil-state-property state :tag t))
     (ert-info ("Update `evil-state'")
       (should (eq evil-state state)))
     (ert-info ("Ensure `evil-local-mode' is enabled")
@@ -469,32 +463,39 @@ is executed at the end."
 (defun evil-test-state-keymaps (state)
   "Verify that STATE's keymaps are pushed to the top"
   (let ((actual (evil-state-keymaps state))
-        (expected (list evil-esc-map
-                        (symbol-value (evil-state-property
-                                       state :local-keymap))
-                        (symbol-value (evil-state-property
-                                       state :keymap)))))
+        (expected `((evil-esc-mode . ,evil-esc-map)
+                    (,(evil-state-property state :local)
+                     . , (evil-state-property state :local-keymap t))
+                    (,(evil-state-property state :mode)
+                     . ,(evil-state-property state :keymap t)))))
     ;; additional keymaps inherited with :enable
     (cond
      ((eq state 'operator)
       (setq expected
-            (list evil-esc-map
-                  evil-operator-shortcut-map
-                  evil-operator-state-local-map
-                  evil-operator-state-map
-                  evil-motion-state-local-map
-                  evil-motion-state-map
-                  evil-normal-state-local-map
-                  evil-normal-state-map))))
-    (dotimes (i (length expected))
-      (should (keymapp (nth i expected)))
-      (should (eq (nth i actual) (nth i expected)))
-      ;; Emacs state disables `evil-esc-map'
-      (unless (and (eq state 'emacs)
-                   (eq (nth i expected) evil-esc-map))
-        (should (memq (nth i expected) (current-active-maps))))
-      (should (eq (cdr (nth i evil-mode-map-alist))
-                  (nth i expected))))))
+            `((evil-esc-mode . ,evil-esc-map)
+              (evil-operator-shortcut-mode
+               . ,evil-operator-shortcut-map)
+              (evil-operator-state-local-minor-mode
+               . ,evil-operator-state-local-map)
+              (evil-operator-state-minor-mode
+               . ,evil-operator-state-map)
+              (evil-motion-state-local-minor-mode
+               . ,evil-motion-state-local-map)
+              (evil-motion-state-minor-mode
+               . ,evil-motion-state-map)
+              (evil-normal-state-local-minor-mode
+               . ,evil-normal-state-local-map)
+              (evil-normal-state-minor-mode
+               . ,evil-normal-state-map)))))
+    (let ((actual (butlast actual (- (length actual)
+                                     (length expected)))))
+      (should (equal actual expected))
+      (dolist (map actual)
+        (setq map (cdr-safe map))
+        (should (keymapp map))
+        ;; Emacs state disables `evil-esc-map'
+        (unless (and (eq state 'emacs) (eq map evil-esc-map))
+          (should (memq map (current-active-maps))))))))
 
 (ert-deftest evil-test-exit-normal-state ()
   "Enter Normal state and then disable all states"
@@ -566,8 +567,8 @@ of `self-insert-command' from Normal state"
     (ert-info ("Activate `evil-operator-shortcut-map' in \
 Operator-Pending state")
       (evil-test-change-state 'operator)
-      (should (memq evil-operator-shortcut-map
-                    (evil-state-keymaps 'operator)))
+      (should (rassq evil-operator-shortcut-map
+                     (evil-state-keymaps 'operator)))
       (should (keymapp evil-operator-shortcut-map))
       (should evil-operator-shortcut-mode)
       (should (memq evil-operator-shortcut-map

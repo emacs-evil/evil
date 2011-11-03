@@ -4,6 +4,15 @@
 (require 'evil-compatibility)
 (require 'evil-interactive)
 
+;;; Macro helpers
+
+(eval-and-compile
+  (defun evil-unquote (exp)
+    "Return EXP unquoted."
+    (while (eq (car-safe exp) 'quote)
+      (setq exp (cadr exp)))
+    exp))
+
 ;;; List functions
 
 (eval-and-compile
@@ -45,7 +54,8 @@ changing the value of `foo'."
 
 (defun evil-member-if (predicate list &optional pointer)
   "Find the first item satisfying PREDICATE in LIST.
-Stop when reaching POINTER."
+Stop when reaching POINTER, which should point at a link
+in the list."
   (let (elt)
     (catch 'done
       (while (and (consp list) (not (eq list pointer)))
@@ -55,7 +65,8 @@ Stop when reaching POINTER."
           (setq list (cdr list)))))))
 
 (defun evil-concat-lists (&rest sequences)
-  "Concatenate lists, removing duplicates."
+  "Concatenate lists, removing duplicates.
+Elements are compared with `eq'."
   (let (result)
     (dolist (sequence sequences)
       (dolist (elt sequence)
@@ -63,21 +74,39 @@ Stop when reaching POINTER."
     (nreverse result)))
 
 (defun evil-concat-alists (&rest sequences)
-  "Concatenate association lists, removing duplicates."
+  "Concatenate association lists, removing duplicates.
+An alist is a list of cons cells (KEY . VALUE) where each key
+may occur only once. Later values overwrite earlier values."
   (let (result)
     (dolist (sequence sequences)
       (dolist (elt sequence)
         (setq result (assq-delete-all (car-safe elt) result))
-        (add-to-list 'result elt)))
+        (push elt result)))
     (nreverse result)))
 
 (defun evil-concat-plists (&rest sequences)
-  "Concatenate property lists, removing duplicates."
+  "Concatenate property lists, removing duplicates.
+A property list is a list (:KEYWORD1 VALUE1 :KEYWORD2 VALUE2...)
+where each keyword may occur only once. Later values overwrite
+earlier values."
   (let (result)
     (dolist (sequence sequences result)
       (while sequence
         (setq result
               (plist-put result (pop sequence) (pop sequence)))))))
+
+(defun evil-concat-keymap-alists (&rest sequences)
+  "Concatenate keymap association lists, removing duplicates.
+A keymap alist is a list of cons cells (VAR . MAP) where each keymap
+may occur only once, but where the variables may be repeated
+\(e.g., (VAR . MAP1) (VAR . MAP2) is allowed). The order matters,
+with the highest priority keymaps being listed first."
+  (let (result)
+    (dolist (sequence sequences)
+      (dolist (elt sequence)
+        (unless (rassq (cdr-safe elt) result)
+          (push elt result))))
+    (nreverse result)))
 
 (defun evil-get-property (alist key &optional prop)
   "Return property PROP for KEY in ALIST.
@@ -118,9 +147,16 @@ ALIST-VAR points to an association list with entries of the form
          (setq alist (assq-delete-all key alist))
          (push (cons key plist) alist))))
 
-(defun evil-state-property (state prop)
-  "Return property PROP for STATE."
-  (evil-get-property evil-state-properties state prop))
+(defun evil-state-property (state prop &optional value)
+  "Return the value of property PROP for STATE.
+PROP is a keyword as used by `evil-define-state'.
+STATE is the state's symbolic name.
+If VALUE is non-nil and the value is a variable,
+return the value of that variable."
+  (let ((val (evil-get-property evil-state-properties state prop)))
+    (if (and value (symbolp val) (boundp val))
+        (symbol-value val)
+      val)))
 
 (defmacro evil-swap (this that &rest vars)
   "Swap the values of variables THIS and THAT.
@@ -247,7 +283,7 @@ STATE defaults to the current state.
 BUFFER defaults to the current buffer."
   (let* ((state (or state evil-state 'normal))
          (default (or evil-default-cursor t))
-         (cursor (symbol-value (evil-state-property state :cursor)))
+         (cursor (evil-state-property state :cursor t))
          (color (or (and (stringp cursor) cursor)
                     (and (listp cursor)
                          (evil-member-if 'stringp cursor)))))
@@ -930,15 +966,6 @@ POS defaults to the current position of point."
       ((evil-in-string-p)
        (narrow-to-region (evil-string-beginning) (evil-string-end))))
      ,@body))
-
-;;; Macro helpers
-
-(eval-and-compile
-  (defun evil-unquote (exp)
-    "Return EXP unquoted."
-    (if (eq (car-safe exp) 'quote)
-        (cadr exp)
-      exp)))
 
 (defmacro evil-with-or-without-comment (&rest body)
   "Try BODY narrowed to the current comment; then try BODY unnarrowed.
