@@ -1,48 +1,79 @@
 ;;;; Core functionality
 
-;; What is "modes" in Vim is "states" in Evil. States are defined
-;; with the macro `evil-define-state'.
+;; Evil is defined as a globalized minor mode, enabled with the toggle
+;; function `evil-mode'. This in turn enables `evil-local-mode' in
+;; every buffer, which sets up the buffer's state.
 ;;
-;; A state consists of a universal keymap (like
-;; `evil-normal-state-map' for Normal state) and a buffer-local keymap for
-;; overriding the former (like `evil-normal-state-local-map').
-;; Sandwiched between these keymaps may be so-called auxiliary
-;; keymaps, which contain state bindings assigned to an Emacs mode
-;; (minor or major): more on that below.
+;; Each state has its own keymaps, and these keymaps have status as
+;; "emulation keymaps" with priority over regular keymaps. Emacs
+;; maintains the following keymap hierarchy (highest priority first):
 ;;
-;; A state may "inherit" keymaps from another state. For example,
-;; Visual state will enable Normal state's keymaps in addition to its own.
-;; The keymap order then becomes:
+;;     * Overriding keymaps/overlay keymaps...
+;;     * Emulation mode keymaps...
+;;       - Evil keymaps...
+;;     * Minor mode keymaps...
+;;     * Local keymap (`local-set-key')
+;;     * Global keymap (`global-set-key')
 ;;
-;;     <visual-local-map>
-;;     <visual auxiliary maps>
-;;     <visual-universal-map>
-;;     <normal-local-map>
-;;     <normal auxiliary maps>
-;;     <normal-universal-map>
+;; Within this hierarchy, Evil arranges the keymaps for the current
+;; state as shown below:
 ;;
-;; Since the activation of auxiliary maps depends on the current
-;; buffer and its modes, states are necessarily buffer-local.
-;; Different buffers can have different states, and different buffers
-;; enable states differently. (Thus, what keymaps to enable cannot be
-;; determined at compile time.) For example, the user may define some
-;; Visual state bindings for foo-mode, and if he enters foo-mode and
-;; Visual state in the current buffer, then the auxiliary keymap
-;; containing those bindings will be active. In a buffer where
-;; foo-mode is not enabled, it will not be.
+;;     * Intercept keymaps...
+;;     * Local state keymap
+;;     * Auxiliary keymaps...
+;;     * Overriding keymaps...
+;;     * Global state keymap
+;;     * Keymaps for other states...
 ;;
-;; Why go to this trouble? Because it allows state bindings to be
-;; grouped into Emacs modes. This is useful for writing extensions.
+;; These keymaps are listed in `evil-mode-map-alist', which is listed
+;; in `emulation-mode-map-alist'.
 ;;
-;; All state keymaps are listed in `evil-mode-map-alist', which is
-;; then listed in `emulation-mode-map-alist'. This gives state keymaps
-;; precedence over other keymaps. Note that `evil-mode-map-alist'
-;; has both a default (global) value and a buffer-local value. The
-;; default value is constructed when Evil is loaded and its states
-;; are defined. Afterwards, when entering a buffer, the default value
-;; is copied into the buffer-local value, and that value is reordered
-;; according to the current state (pushing Visual keymaps to the top
-;; when the user enters Visual state, etc.).
+;; Most of the key bindings for a state are stored in its global
+;; keymap, which has a name such as `evil-normal-state-map'. (See the
+;; file evil-maps.el, which contains all the default key bindings.)
+;; A state also has a local keymap (`evil-normal-state-local-map'),
+;; which may contain user customizations for the current buffer.
+;; Furthermore, any Emacs mode may be assigned state bindings of its
+;; own by passing the mode's keymap to the function `evil-define-key'.
+;; These mode-specific bindings are ultimately stored in so-called
+;; auxiliary keymaps, which are sandwiched between the local keymap
+;; and the global keymap. Finally, the state may also activate the
+;; keymaps of other states (e.g., Normal state inherits bindings
+;; from Motion state).
+;;
+;; For integration purposes, a regular Emacs keymap may be "elevated"
+;; to emulation status by passing it to `evil-make-intercept-map' or
+;; `evil-make-overriding-map'. An "intercept" keymap has priority over
+;; all other Evil keymaps. (Evil uses this facility when debugging and
+;; for handling the "ESC" key in the terminal.) More common is the
+;; "overriding" keymap, which only has priority over the global state
+;; keymap. (This is useful for adapting key-heavy modes such as Dired,
+;; where all but a few keys should be left as-is and should not be
+;; shadowed by Evil's default bindings.)
+;;
+;; States are defined with the macro `evil-define-state', which
+;; creates a command for switching to the state. This command,
+;; for example `evil-normal-state' for Normal state, performs
+;; the following tasks:
+;;
+;;     * Setting `evil-state' to the new state.
+;;     * Refreshing the keymaps in `evil-mode-map-alist'.
+;;     * Updating the mode line.
+;;       - Normal state depends on `evil-normal-state-tag'.
+;;     * Adjusting the cursor's appearance.
+;;       - Normal state depends on `evil-normal-state-cursor'.
+;;     * Displaying a message in the echo area.
+;;       - Normal state depends on `evil-normal-state-message'.
+;;     * Running hooks.
+;;       - Normal state runs `evil-normal-state-entry-hook' when
+;;         entering, and `evil-normal-state-exit-hook' when exiting.
+;;
+;; The various properties of a state can be accessed through their
+;; respective variables, or by passing a keyword and the state's name
+;; to the `evil-state-property' function. Evil defines the states
+;; Normal state ("normal"), Insert state ("insert"), Visual state
+;; ("visual"), Replace state ("replace"), Operator-Pending state
+;; ("operator"), Motion state ("motion") and Emacs state ("emacs").
 
 (require 'evil-common)
 
@@ -87,13 +118,18 @@ To enable Evil globally, do (evil-mode 1)."
 (define-globalized-minor-mode evil-mode
   evil-local-mode evil-initialize)
 
-;; to ensure that Fundamental buffers come up in Normal state,
-;; initialize `fundamental-mode' via `evil-local-mode'
+;; No hooks are run in Fundamental buffers, so other measures are
+;; necessary to initialize Evil in these buffers. When Evil is
+;; enabled globally, the default value of `major-mode' is set to
+;; `evil-local-mode', so that this function is called in Fundamental
+;; buffers as well. Then, the buffer-local value of `major-mode' is
+;; changed back to `fundamental-mode'. (Since the `evil-mode' function
+;; is created by a macro, we use `defadvice' to augment it.)
 (defadvice evil-mode (after start-evil activate)
   "Enable Evil in Fundamental mode."
   (if evil-mode
       (progn
-        ;; this is changed back when initializing `evil-local-mode'
+        ;; changed back by `evil-local-mode'
         (setq-default major-mode 'evil-local-mode)
         (ad-enable-regexp "^evil")
         (ad-activate-regexp "^evil"))
@@ -116,15 +152,17 @@ If STATE is nil, disable all states."
       (funcall func (if state (and message 1) -1)))))
 
 (defun evil-initialize-state (&optional buffer)
-  "Initialize Evil state in BUFFER."
+  "Set up the initial state for BUFFER.
+This is the state the buffer comes up in.
+See also `evil-set-initial-state'."
   (with-current-buffer (or buffer (current-buffer))
     (evil-change-to-initial-state buffer)
     (remove-hook 'post-command-hook 'evil-initialize-state t)))
 
 (evil-define-command evil-change-to-initial-state
   (&optional buffer message)
-  "Change state to the initial state for BUFFER.
-This is the state the buffer comes up in."
+  "Change the state of BUFFER to its initial state.
+This is the state the buffer came up in."
   :keep-visual t
   (interactive)
   (with-current-buffer (or buffer (current-buffer))
@@ -142,7 +180,9 @@ This is the state the buffer comes up in."
                        message)))
 
 (evil-define-command evil-exit-emacs-state (&optional buffer message)
-  "Change from Emacs state to the previous state."
+  "Exit Emacs state.
+Changes the state to the previous state, or to Normal state
+if the previous state was Emacs state."
   :keep-visual t
   (interactive '(nil t))
   (with-current-buffer (or buffer (current-buffer))
@@ -151,8 +191,10 @@ This is the state the buffer comes up in."
       (evil-normal-state (and message 1)))))
 
 (defun evil-initial-state-for-buffer (&optional buffer default)
-  "Return initial Evil state to use for BUFFER, or DEFAULT if none.
-BUFFER defaults to the current buffer."
+  "Return the initial Evil state to use for BUFFER.
+BUFFER defaults to the current buffer. Returns DEFAULT
+if no initial state is associated with BUFFER.
+See also `evil-initial-state'."
   (let (state)
     (with-current-buffer (or buffer (current-buffer))
       (or (catch 'loop
@@ -164,7 +206,8 @@ BUFFER defaults to the current buffer."
           default))))
 
 (defun evil-initial-state (mode &optional default)
-  "Return Evil state to use for MODE, or DEFAULT if none.
+  "Return the Evil state to use for MODE.
+Returns DEFAULT if no initial state is associated with MODE.
 The initial state for a mode can be set with
 `evil-set-initial-state'."
   (let (state modes)
@@ -229,6 +272,7 @@ This is the state the buffer comes up in."
                 (nconc global-mode-string '("" evil-mode-line-tag))))))
     (force-mode-line-update)))
 
+;; input methods should be disabled in non-insertion states
 (defun evil-activate-input-method ()
   "Disable input method in states with :input-method nil."
   (let (input-method-activate-hook
@@ -245,6 +289,11 @@ This is the state the buffer comes up in."
     (when (and evil-local-mode evil-state)
       (setq evil-input-method nil))))
 
+;; When a buffer is created in a low-level way, it is invisible to
+;; Evil (as well as other globalized minor modes) because no hooks are
+;; run. This is appropriate since many buffers are used for throwaway
+;; purposes. Passing the buffer to `display-buffer' indicates
+;; otherwise, though, so advise this function to initialize Evil.
 (defadvice toggle-input-method (around evil activate)
   "Refresh `evil-input-method'."
   (cond
@@ -710,7 +759,7 @@ and should be quoted as such."
 (put 'evil-define-key 'lisp-indent-function 'defun)
 (put 'evil-set-auxiliary-keymap 'lisp-indent-function 'defun)
 
-;; these may be useful for programmatic purposes
+;; may be useful for programmatic purposes
 (defun evil-global-set-key (state key def)
   "Bind KEY to DEF in STATE."
   (define-key (evil-state-property state :keymap t) key def))
@@ -719,9 +768,8 @@ and should be quoted as such."
   "Bind KEY to DEF in STATE in the current buffer."
   (define-key (evil-state-property state :local-keymap t) key def))
 
-;; The following functions may enable an overriding keymap
-;; or a keymap with state bindings. Therefore we need to
-;; refresh `evil-mode-map-alist'.
+;; Advise these functions as they may activate an overriding keymap or
+;; a keymap with state bindings; if so, refresh `evil-mode-map-alist'.
 (defadvice use-global-map (after evil activate)
   "Refresh Evil keymaps."
   (evil-normalize-keymaps))
@@ -732,7 +780,8 @@ and should be quoted as such."
 
 (defmacro evil-define-state (state doc &rest body)
   "Define an Evil state STATE.
-DOC is a general description and shows up in all docstrings.
+DOC is a general description and shows up in all docstrings;
+the first line of the string should be the full name of the state.
 Then follows one or more optional keywords:
 
 :tag STRING             Mode line indicator.
@@ -741,22 +790,21 @@ Then follows one or more optional keywords:
 :entry-hook LIST        Hooks run when changing to STATE.
 :exit-hook LIST         Hooks run when changing from STATE.
 :enable LIST            List of other states and modes enabled by STATE.
-:suppress-keymap FLAG   If FLAG is non-nil, makes
-                        `evil-suppress-map' the parent of the
-                        global map of STATE, effectively disabling
-                        bindings to `self-insert-command'.
+:suppress-keymap FLAG   If FLAG is non-nil, makes `evil-suppress-map'
+                        the parent of the global map of STATE,
+                        effectively disabling bindings to
+                        `self-insert-command'.
 
 Following the keywords is optional code to be executed each time
-the state is enabled or disabled.
-
-For example:
+the state is enabled or disabled. For example:
 
     (evil-define-state test
-      \"A simple test state.\"
-      :tag \"<T> \")
+      \"Test state.\"
+      :tag \"<T> \"
+      (setq test-var t))
 
-The basic keymap of this state will then be
-`evil-test-state-map', and so on.
+The global keymap of this state will be `evil-test-state-map',
+the local keymap will be `evil-test-state-local-map', and so on.
 
 \(fn STATE DOC [[KEY VAL]...] BODY...)"
   (declare (indent defun)
@@ -841,7 +889,7 @@ Use the command `%s' to change this variable." name toggle))
         :tag (defvar ,tag ,tag-value
                ,(format "Mode line tag for %s." name))
         :message (defvar ,message ,message-value
-                   ,(format "Echo area indicator for %s." name))
+                   ,(format "Echo area message for %s." name))
         :cursor (defvar ,cursor ',cursor-value
                   ,(format "Cursor for %s.
 May be a cursor type as per `cursor-type', a color string as passed

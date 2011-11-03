@@ -1,11 +1,36 @@
 ;; evil-tests.el --- unit tests for Evil -*- coding: utf-8 -*-
 
 ;; This file is for developers. It runs some tests on Evil.
-;; To load it, add the following lines to .emacs:
+;; To load it, run the Makefile target "make test" or add
+;; the following lines to .emacs:
 ;;
-;;     (setq evil-tests-run t) ; run tests immediately
+;;     (setq evil-tests-run nil) ; set to t to run tests immediately
 ;;     (global-set-key [f12] 'evil-tests-run) ; hotkey
 ;;     (require 'evil-tests)
+;;
+;; Loading this file enables profiling on Evil. The current numbers
+;; can be displayed with `elp-results'. The Makefile target
+;; "make profiler" shows profiling results in the terminal on the
+;; basis of running all tests.
+;;
+;; To write a test, use `ert-deftest' and specify a :tags value of at
+;; least '(evil). The test may inspect the output of functions given
+;; certain input, or it may execute a key sequence in a temporary
+;; buffer and investigate the results. For the latter approach, the
+;; macro `evil-test-buffer' creates a temporary buffer in Normal
+;; state. String descriptors initialize and match the contents of
+;; the buffer:
+;;
+;;     (ert-deftest evil-test ()
+;;       :tags '(evil)
+;;       (evil-test-buffer
+;;        "[T]his creates a test buffer." ; cursor on "T"
+;;        ("w")                           ; key sequence
+;;        "This [c]reates a test buffer."))) ; cursor moved to "c"
+;;
+;; The initial state, the cursor syntax, etc., can be changed
+;; with keyword arguments. See the documentation string of
+;; `evil-test-buffer' for more details.
 ;;
 ;; This file is NOT part of Evil itself.
 

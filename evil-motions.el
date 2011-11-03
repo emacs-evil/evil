@@ -1,4 +1,70 @@
-;;;; Motions
+;;;; Motions and text objects
+
+;; Motions are defined with the macro `evil-define-motion'. A motion
+;; is a command with an optional argument called the COUNT (which can
+;; be accessed with the special interactive code "<c>"), or with no
+;; arguments at all. A motion must specify the command properties
+;; :keep-visual t and :repeat motion.
+;;
+;; Text objects are defined with `evil-define-text-object'. Their
+;; behavior is either to extend the selection in Visual state, or to
+;; return a pair of buffer positions in Operator-Pending state. Outer
+;; text objects are bound in the keymap `evil-outer-text-objects-map',
+;; and inner text objects are bound in `evil-inner-text-objects-map'.
+;;
+;; Usual text objects like words, WORDS, paragraphs and sentences are
+;; defined via a corresponding move-function. This function must have
+;; the following properties:
+;;
+;;   1. Take exactly one argument, the count.
+;;   2. When the count is positive, move point forward to the first
+;;      character after the end of the next count-th object.
+;;   3. When the count is negative, move point backward to the first
+;;      character of the count-th previous object.
+;;   4. If point is placed on the first character of an object, the
+;;      backward motion does NOT count that object.
+;;   5. If point is placed on the last character of an object, the
+;;      forward motion DOES count that object.
+;;   6. The return value is "count left", i.e., in forward direction
+;;      count is decreased by one for each successful move and in
+;;      backward direction count is increased by one for each
+;;      successful move, returning the final value of count.
+;;      Therefore, if the complete move is successful, the return
+;;      value is 0.
+;;
+;; A useful macro in this regard is `evil-motion-loop', which quits
+;; when point does not move further and returns the count difference.
+;; It also provides a "unit value" of 1 or -1 for use in each
+;; iteration. For example, a hypothetical "foo-bar" move could be
+;; written as such:
+;;
+;;     (defun foo-bar (count)
+;;       (evil-motion-loop (var count)
+;;         (forward-foo var) ; `var' is 1 or -1 depending on COUNT
+;;         (forward-bar var)))
+;;
+;; If "forward-foo" and "-bar" didn't accept negative arguments,
+;; we could choose their backward equivalents by inspecting `var':
+;;
+;;     (defun foo-bar (count)
+;;       (evil-motion-loop (var count)
+;;         (cond
+;;          ((< var 0)
+;;           (backward-foo 1)
+;;           (backward-bar 1))
+;;          (t
+;;           (forward-foo 1)
+;;           (forward-bar 1)))))
+;;
+;; After a forward motion, point has to be placed on the first
+;; character after some object, unless no motion was possible at all.
+;; Similarly, after a backward motion, point has to be placed on the
+;; first character of some object. This implies that point should
+;; NEVER be moved to eob or bob, unless an object ends or begins at
+;; eob or bob. (Usually, Emacs motions always move as far as possible.
+;; But we want to use the motion-function to identify certain objects
+;; in the buffer, and thus exact movement to object boundaries is
+;; required.)
 
 (require 'evil-common)
 (require 'evil-visual)
@@ -500,62 +566,6 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
   :jump t
   (let ((tag (thing-at-point 'symbol)))
     (find-tag tag)))
-
-;;; Text object and movement framework
-
-;; Usual text objects like words, WORDS, paragraphs and sentences are
-;; defined via a corresponding move-function. This function must have
-;; the following properties:
-;;
-;;   1. Take exactly one argument, the count.
-;;   2. When the count is positive, move point forward to the first
-;;      character after the end of the next count-th object.
-;;   3. When the count is negative, move point backward to the first
-;;      character of the count-th previous object.
-;;   4. If point is placed on the first character of an object, the
-;;      backward motion does NOT count that object.
-;;   5. If point is placed on the last character of an object, the
-;;      forward motion DOES count that object.
-;;   6. The return value is "count left", i.e., in forward direction
-;;      count is decreased by one for each successful move and in
-;;      backward direction count is increased by one for each
-;;      successful move, returning the final value of count.
-;;      Therefore, if the complete move is successful, the return
-;;      value is 0.
-;;
-;; A useful macro in this regard is `evil-motion-loop', which quits
-;; when point does not move further and returns the count difference.
-;; It also provides a "unit value" of 1 or -1 for use in each
-;; iteration. For example, a hypothetical "foo-bar" move could be
-;; written as such:
-;;
-;;     (defun foo-bar (count)
-;;       (evil-motion-loop (var count)
-;;         (forward-foo var) ; `var' is 1 or -1 depending on COUNT
-;;         (forward-bar var)))
-;;
-;; If "forward-foo" and "-bar" didn't accept negative arguments,
-;; we could choose their backward equivalents by inspecting `var':
-;;
-;;     (defun foo-bar (count)
-;;       (evil-motion-loop (var count)
-;;         (cond
-;;          ((< var 0)
-;;           (backward-foo 1)
-;;           (backward-bar 1))
-;;          (t
-;;           (forward-foo 1)
-;;           (forward-bar 1)))))
-;;
-;; After a forward motion, point has to be placed on the first
-;; character after some object, unless no motion was possible at all.
-;; Similarly, after a backward motion, point has to be placed on the
-;; first character of some object. This implies that point should
-;; NEVER be moved to eob or bob, unless an object ends or begins at
-;; eob or bob. (Usually, Emacs motions always move as far as possible.
-;; But we want to use the motion-function to identify certain objects
-;; in the buffer, and thus exact movement to object boundaries is
-;; required.)
 
 (defmacro evil-define-union-move (name args &rest moves)
   "Create a movement function named NAME.
