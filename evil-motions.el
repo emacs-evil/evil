@@ -1066,6 +1066,7 @@ if COUNT is positive, and to the left of it if negative.
                 (type (or ',type evil-visual-char))
                 mark point range region selection temp)
            (cond
+            ;; Visual state: extend the current selection
             ((and (evil-visual-state-p)
                   (evil-called-interactively-p))
              ;; if we are at the beginning of the Visual selection,
@@ -1075,44 +1076,53 @@ if COUNT is positive, and to the left of it if negative.
                    ,count (* ,count dir)
                    region (evil-range (mark t) (point))
                    selection (evil-visual-range))
-             ;; expand Visual selection so that point
-             ;; is outside already selected text
              (when ',extend
                (setq range (evil-range (point) (point) type)))
-             (evil-visual-make-selection (mark t) (point) type)
-             (evil-visual-expand-region)
-             (setq selection (evil-visual-range))
-             ;; the preceding selection should contain
-             ;; at least one object; if not, add it now
-             (let ((,count (- dir)))
-               (setq temp (progn ,@body)))
+             ;; select the object under point
+             (let ((,count dir))
+               (setq temp (progn ,@body))
+               (unless (evil-range-p temp)
+                 ;; At the end of the buffer?
+                 ;; Try the other direction.
+                 (setq ,count (- dir)
+                       temp (progn ,@body))))
              (when (and (evil-range-p temp)
                         (not (evil-subrange-p temp selection))
                         (or (not ',extend)
                             (if (< dir 0)
-                                (= (evil-range-beginning temp)
-                                   (evil-range-beginning selection))
-                              (= (evil-range-end temp)
-                                 (evil-range-end selection)))))
-               ;; found an unselected preceding object:
-               ;; decrease COUNT and adjust selection boundaries
+                                (>= (evil-range-end temp)
+                                    (evil-range-end selection))
+                              (<= (evil-range-beginning temp)
+                                  (evil-range-beginning selection)))))
+               ;; found an unselected object under point:
+               ;; decrease COUNT by one and save the result
                (setq ,count (if (< ,count 0) (1+ ,count) (1- ,count)))
                (if ',extend
                    (setq range (evil-range-union temp range))
                  (setq range temp)
                  (evil-set-type range (evil-type range type))))
+             ;; now look for remaining objects
              (when (/= ,count 0)
-               ;; main attempt: find range from current position
+               ;; expand the Visual selection so point is outside it
+               (evil-visual-make-selection (mark t) (point) type)
+               (evil-visual-expand-region)
+               (setq selection (evil-visual-range))
+               (if (< dir 0)
+                   (evil-goto-min (evil-range-beginning range)
+                                  (evil-range-beginning selection))
+                 (evil-goto-max (evil-range-end range)
+                                (evil-range-end selection)))
                (setq temp (progn ,@body))
                (when (evil-range-p temp)
                  (if ',extend
                      (setq range (evil-range-union temp range))
                    (setq range temp)
-                   (evil-set-type range (evil-type range type)))))
-             (evil-visual-contract-region)
+                   (evil-set-type range (evil-type range type))))
+               (evil-visual-contract-region))
              (cond
+              ;; if the previous attempts failed, then enlarge
+              ;; the selection by one character as a last resort
               ((and ',extend (evil-subrange-p range selection))
-               ;; Visual fall-back: enlarge selection by one character
                (if (< ,count 0)
                    (evil-visual-select (1- evil-visual-beginning)
                                        evil-visual-end type)
@@ -1120,10 +1130,11 @@ if COUNT is positive, and to the left of it if negative.
                                      (1+ evil-visual-end) type)))
               ((evil-range-p range)
                ;; Find the union of the range and the selection.
-               ;; Actually, this uses the region (point and mark)
-               ;; rather than the selection to prevent the object
-               ;; from unnecessarily overwriting the position of
-               ;; the mark at the other end of the selection.
+               ;; Actually, this uses point and mark rather than the
+               ;; selection boundaries to prevent the object from
+               ;; unnecessarily overwriting the mark's position;
+               ;; if the selection is large enough, only point
+               ;; needs to move.
                (setq range (evil-contract-range range))
                (when ',extend
                  (setq range (evil-range-union range region)))
@@ -1134,13 +1145,14 @@ if COUNT is positive, and to the left of it if negative.
                      type  (evil-type range type))
                (when (< dir 0)
                  (evil-swap mark point))
-               ;; select the range
+               ;; select the union
                (evil-visual-make-selection mark point type))))
+            ;; not Visual state: return a pair of buffer positions
             (t
              (setq range (progn ,@body))
              (unless (evil-range-p range)
-               (let ((,count (- ,count)))
-                 (setq range (progn ,@body))))
+               (setq ,count (- ,count)
+                     range (progn ,@body)))
              (when (evil-range-p range)
                (setq selection (evil-range (point) (point) type))
                (if ',extend

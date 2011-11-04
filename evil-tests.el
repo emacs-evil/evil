@@ -3387,6 +3387,85 @@ Below some empty line."))
         ("aw")
         ";;<[ ]This buffer> is for notes."))))
 
+(ert-deftest evil-test-paragraph-objects ()
+  "Test `evil-inner-paragraph' and `evil-a-paragraph'"
+  :tags '(evil text-object)
+  (ert-info ("Select a paragraph")
+    (evil-test-buffer
+      "[;]; This buffer is for notes,
+;; and for Lisp evaluation.
+
+;; This buffer is for notes,
+;; and for Lisp evaluation."
+      ("vap")
+      "<;; This buffer is for notes,
+;; and for Lisp evaluation.
+\[]\n>\
+;; This buffer is for notes,
+;; and for Lisp evaluation.")
+    (evil-test-buffer
+      ";; This buffer is for notes,
+\[;]; and for Lisp evaluation.
+
+;; This buffer is for notes,
+;; and for Lisp evaluation."
+      ("vap")
+      "<;; This buffer is for notes,
+;; and for Lisp evaluation.
+\[]\n>\
+;; This buffer is for notes,
+;; and for Lisp evaluation.")
+    (evil-test-buffer
+      ";; This buffer is for notes,
+;; and for Lisp evaluation.
+\[]
+;; This buffer is for notes,
+;; and for Lisp evaluation."
+      ("vap")
+      ";; This buffer is for notes,
+;; and for Lisp evaluation.
+<
+;; This buffer is for notes,
+;; and for Lisp evaluation[.]>"))
+  (ert-info ("Select inner paragraph")
+    (evil-test-buffer
+      "[;]; This buffer is for notes,
+;; and for Lisp evaluation.
+
+;; This buffer is for notes,
+;; and for Lisp evaluation."
+      ("vip")
+      "<;; This buffer is for notes,
+;; and for Lisp evaluation[.]
+>
+;; This buffer is for notes,
+;; and for Lisp evaluation.")
+    (evil-test-buffer
+      ";; This buffer is for notes,
+\[;]; and for Lisp evaluation.
+
+;; This buffer is for notes,
+;; and for Lisp evaluation."
+      ("vip")
+      "<;; This buffer is for notes,
+;; and for Lisp evaluation[.]
+>
+;; This buffer is for notes,
+;; and for Lisp evaluation.")
+
+    (evil-test-buffer
+      ";; This buffer is for notes,
+;; and for Lisp evaluation.
+\[]
+;; This buffer is for notes,
+;; and for Lisp evaluation."
+      ("vip")
+      ";; This buffer is for notes,
+;; and for Lisp evaluation.
+<
+;; This buffer is for notes,
+;; and for Lisp evaluation[.]>")))
+
 (ert-deftest evil-test-paren-objects ()
   "Test `evil-inner-paren', etc."
   :tags '(evil text-object)
@@ -3702,6 +3781,148 @@ if no previous selection")
       "<;; This buffer is for notes,
 ;;[ ]>and for Lisp evaluation.")))
 
+;;; ex
+
+(ert-deftest evil-test-ex-parse-command ()
+  "Test `evil-ex-parse-command'"
+  :tags '(evil ex)
+  (should (equal (evil-ex-parse-command "5,2cmd arg" 3)
+                 (list 6 "cmd" nil)))
+  (should (equal (evil-ex-parse-command "5,2cmd! arg" 3)
+                 (list 7 "cmd" t)))
+  (should (equal (evil-ex-parse-command "5,2 arg" 3)
+                 (list 3 nil nil))))
+
+(ert-deftest evil-test-ex-parse-address-base ()
+  "Test `evil-ex-parse-address-base'"
+  :tags '(evil ex)
+  (should (equal (evil-ex-parse-address-base "5,27cmd arg" 11)
+                 (cons 11 nil)))
+  (should (equal (evil-ex-parse-address-base "5,27cmd arg" 2)
+                 (cons 4 27)))
+  (should (equal (evil-ex-parse-address-base "5,27cmd arg" 1)
+                 (cons 1 nil)))
+  (should (equal (evil-ex-parse-address-base "5,$cmd arg" 2)
+                 (cons 3 'last-line)))
+  (should (equal (evil-ex-parse-address-base "5,'xcmd arg" 2)
+                 (cons 4 '(mark ?x)))))
+
+(ert-deftest evil-test-ex-parse-address-sep ()
+  "Test `evil-ex-parse-address-sep'"
+  :tags '(evil ex)
+  (should (equal (evil-ex-parse-address-sep "5,27cmd arg" 11)
+                 (cons 11 nil)))
+  (should (equal (evil-ex-parse-address-sep "5,27cmd arg" 2)
+                 (cons 2 nil)))
+  (should (equal (evil-ex-parse-address-sep "5,27cmd arg" 1)
+                 (cons 2 ?,)))
+  (should (equal (evil-ex-parse-address-sep "5;$cmd arg" 1)
+                 (cons 2 ?\;))))
+
+(ert-deftest evil-test-ex-parse-address-offset ()
+  "Test `evil-ex-parse-address-offset'"
+  :tags '(evil ex)
+  (should (equal (evil-ex-parse-address-offset "5,27cmd arg" 11)
+                 (cons 11 nil)))
+  (should (equal (evil-ex-parse-address-offset "5,+cmd arg" 2)
+                 (cons 3 1)))
+  (should (equal (evil-ex-parse-address-offset "5,-cmd arg" 2)
+                 (cons 3 -1)))
+  (should (equal (evil-ex-parse-address-offset "5;4+2-7-3+10-cmd arg" 2)
+                 (cons 2 nil)))
+  (should (equal (evil-ex-parse-address-offset "5;4+2-7-3+10-cmd arg" 3)
+                 (cons 13 1))))
+
+(ert-deftest evil-test-ex-parse-address ()
+  "Test `evil-ex-parse-address'"
+  :tags '(evil ex)
+  (should (equal (evil-ex-parse-address "5,27cmd arg" 0)
+                 (cons 1 (cons 5 nil))))
+  (should (equal (evil-ex-parse-address "5,+cmd arg" 2)
+                 (cons 3 (cons nil 1))))
+  (should (equal (evil-ex-parse-address "5,-cmd arg" 2)
+                 (cons 3 (cons nil -1))))
+  (should (equal (evil-ex-parse-address "5;4+2-7-3+10-cmd arg" 1)
+                 (cons 1 nil)))
+  (should (equal (evil-ex-parse-address "5;4+2-7-3+10-cmd arg" 2)
+                 (cons 13 (cons 4 1)))))
+
+(ert-deftest evil-test-ex-parse-range ()
+  "Test `evil-ex-parse-address-range'"
+  :tags '(evil ex)
+  (should (equal (evil-ex-parse-range ".-2;4+2-7-3+10-cmd arg" 0)
+                 (cons 15 '((current-line . -2) ?\; (4 . 1)))))
+  (should (equal (evil-ex-parse-range "'a-2,$-10cmd arg" 0)
+                 (cons 9 '(((mark ?a) . -2) ?\, (last-line . -10)))))
+  (should (equal (evil-ex-parse-range ".+42cmd arg" 0)
+                 (cons 4 '((current-line . 42) nil nil)))))
+
+(ert-deftest evil-test-ex-substitute ()
+  "Test `evil-ex-substitute'"
+  :tags '(evil ex)
+  (ert-info ("Substitute on current line")
+    (evil-test-buffer
+      "ABCABCABC\nABCA[B]CABC\nABCABCABC"
+      (":s/BC/XYZ/" (kbd "RET"))
+      "ABCABCABC\nAXYZA[B]CABC\nABCABCABC"))
+  (ert-info ("Substitute on whole current line")
+    (evil-test-buffer
+      "ABCABCABC\nABC[A]BCABC\nABCABCABC"
+      (":s/BC/XYZ/g" (kbd "RET"))
+      "ABCABCABC\nAXYZ[A]XYZAXYZ\nABCABCABC"))
+  (ert-info ("Substitute on last line")
+    (evil-test-buffer
+      "ABCABCABC\nABCABCABC\nABCABC[A]BC"
+      (":s/BC/XYZ/" (kbd "RET"))
+      "ABCABCABC\nABCABCABC\nAXYZABC[A]BC"))
+  (ert-info ("Substitute on whole last line")
+    (evil-test-buffer
+      "ABCABCABC\nABCABCABC\nABCABC[A]BC"
+      (":s/BC/XYZ/g" (kbd "RET"))
+      "ABCABCABC\nABCABCABC\nAXYZAXYZ[A]XYZ"))
+  (ert-info ("Substitute on range")
+    (evil-test-buffer
+      "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
+      (":1,3s/BC/XYZ/" (kbd "RET"))
+      "AXYZABCABC\nQRT\nAXYZ[A]BCABC\nABCABCABC"))
+  (ert-info ("Substitute whole lines on range")
+    (evil-test-buffer
+      "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
+      (":1,3s/BC/XYZ/g" (kbd "RET"))
+      "AXYZAXYZAXYZ\nQRT\nAXYZ[A]XYZAXYZ\nABCABCABC"))
+  (ert-info ("Substitute on whole current line confirm")
+    (evil-test-buffer
+      "ABCABCABC\nABC[A]BCABC\nABCABCABC"
+      (":s/BC/XYZ/gc" (kbd "RET") "yny")
+      "ABCABCABC\nAXYZ[A]BCAXYZ\nABCABCABC"))
+  (ert-info ("Substitute on range confirm")
+    (evil-test-buffer
+      "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
+      (":1,3s/BC/XYZ/c" (kbd "RET") "yn")
+      "AXYZABCABC\nQRT\nABC[A]BCABC\nABCABCABC"))
+  (ert-info ("Substitute whole lines on range with other delim")
+    (evil-test-buffer
+      "A/CA/CA/C\nQRT\nA/C[A]/CA/C\nA/CA/CA/C"
+      (":1,3s,/C,XYZ,g" (kbd "RET"))
+      "AXYZAXYZAXYZ\nQRT\nAXYZ[A]XYZAXYZ\nA/CA/CA/C"))
+  (ert-info ("Substitute on whole buffer, smart case")
+    (evil-test-buffer
+      "[A]bcAbcAbc\naBcaBcaBc\nABCABCABC\nabcabcabc"
+      (":%s/bc/xy/g" (kbd "RET"))
+      "[A]xyAxyAxy\naXyaXyaXy\nAXYAXYAXY\naxyaxyaxy")))
+
+(ert-deftest evil-test-goto-line ()
+  "Test if :number moves point to a certain line"
+  :tags '(evil ex)
+  (ert-info ("Move to line")
+    (evil-test-buffer
+      :visual line
+      "1\n 2\n [ ]3\n   4\n    5\n"
+      (":4" [return])
+      "1\n 2\n  3\n   [4]\n    5\n"
+      (":2" [return])
+      "1\n [2]\n  3\n   4\n    5\n")))
+
 ;;; Utilities
 
 (ert-deftest evil-test-properties ()
@@ -3856,9 +4077,11 @@ if no previous selection")
       (should-error (evil-extract-count "°"))
       (should-error (evil-extract-count "12°")))))
 
+;;; Advice
+
 (ert-deftest evil-test-eval-last-sexp ()
-  "Test adviced `evil-last-sexp'."
-  :tags '(evil)
+  "Test advised `evil-last-sexp'"
+  :tags '(evil advice)
   (ert-info ("Normal state")
     (evil-test-buffer
       "(+ 1 (+ 2 3[)])"
@@ -3875,8 +4098,10 @@ if no previous selection")
       ((kbd "C-z") (kbd "C-u") (kbd "C-x C-e"))
       "(+ 1 (+ 2 33[)])")))
 
+;;; ESC
+
 (ert-deftest evil-test-esc-count ()
-  "Test if prefix-argument is transfered for key sequences with meta-key."
+  "Test if prefix-argument is transfered for key sequences with meta-key"
   :tags '(evil esc)
   (unless noninteractive
     (ert-info ("Test M-<right>")
@@ -3893,8 +4118,8 @@ if no previous selection")
 ;;; ex
 
 (ert-deftest evil-test-ex-parse-command ()
-  "Test `evil-ex-parse-command'."
-  :tags '(evil)
+  "Test `evil-ex-parse-command'"
+  :tags '(evil ex)
   (should (equal (evil-ex-parse-command "5,2cmd arg" 3)
                  (list 6 "cmd" nil)))
   (should (equal (evil-ex-parse-command "5,2cmd! arg" 3)
@@ -3903,8 +4128,8 @@ if no previous selection")
                  (list 3 nil nil))))
 
 (ert-deftest evil-test-ex-parse-address-base ()
-  "Test `evil-ex-parse-address-base'."
-  :tags '(evil)
+  "Test `evil-ex-parse-address-base'"
+  :tags '(evil ex)
   (should (equal (evil-ex-parse-address-base "5,27cmd arg" 11)
                  (cons 11 nil)))
   (should (equal (evil-ex-parse-address-base "5,27cmd arg" 2)
@@ -3917,8 +4142,8 @@ if no previous selection")
                  (cons 4 '(mark ?x)))))
 
 (ert-deftest evil-test-ex-parse-address-sep ()
-  "Test `evil-ex-parse-address-sep'."
-  :tags '(evil)
+  "Test `evil-ex-parse-address-sep'"
+  :tags '(evil ex)
   (should (equal (evil-ex-parse-address-sep "5,27cmd arg" 11)
                  (cons 11 nil)))
   (should (equal (evil-ex-parse-address-sep "5,27cmd arg" 2)
@@ -3929,8 +4154,8 @@ if no previous selection")
                  (cons 2 ?\;))))
 
 (ert-deftest evil-test-ex-parse-address-offset ()
-  "Test `evil-ex-parse-address-offset'."
-  :tags '(evil)
+  "Test `evil-ex-parse-address-offset'"
+  :tags '(evil ex)
   (should (equal (evil-ex-parse-address-offset "5,27cmd arg" 11)
                  (cons 11 nil)))
   (should (equal (evil-ex-parse-address-offset "5,+cmd arg" 2)
@@ -3943,8 +4168,8 @@ if no previous selection")
                  (cons 13 1))))
 
 (ert-deftest evil-test-ex-parse-address ()
-  "Test `evil-ex-parse-address'."
-  :tags '(evil)
+  "Test `evil-ex-parse-address'"
+  :tags '(evil ex)
   (should (equal (evil-ex-parse-address "5,27cmd arg" 0)
                  (cons 1 (cons 5 nil))))
   (should (equal (evil-ex-parse-address "5,+cmd arg" 2)
@@ -3957,8 +4182,8 @@ if no previous selection")
                  (cons 13 (cons 4 1)))))
 
 (ert-deftest evil-test-ex-parse-range ()
-  "Test `evil-ex-parse-address-range'."
-  :tags '(evil)
+  "Test `evil-ex-parse-address-range'"
+  :tags '(evil ex)
   (should (equal (evil-ex-parse-range ".-2;4+2-7-3+10-cmd arg" 0)
                  (cons 15 '((current-line . -2) ?\; (4 . 1)))))
   (should (equal (evil-ex-parse-range "'a-2,$-10cmd arg" 0)
@@ -3967,7 +4192,7 @@ if no previous selection")
                  (cons 4 '((current-line . 42) nil nil)))))
 
 (ert-deftest evil-test-ex-substitute ()
-  "Test `evil-ex-substitute'."
+  "Test `evil-ex-substitute'"
   :tags '(evil)
   (ert-info ("Substitute on current line")
     (evil-test-buffer
@@ -4021,7 +4246,7 @@ if no previous selection")
       "[A]xyAxyAxy\naXyaXyaXy\nAXYAXYAXY\naxyaxyaxy")))
 
 (ert-deftest evil-test-goto-line ()
-  "Test if :number moves point to a certain line."
+  "Test if :number moves point to a certain line"
   (ert-info ("Move to line")
     (evil-test-buffer
       :visual line
