@@ -404,6 +404,8 @@ Signal an error if empty, unless NOERROR is non-nil."
     (or (cond
          ((eq register ?\")
           (current-kill 0))
+         ((and (<= ?0 register) (<= register ?9))
+          (current-kill (- register ?0) t))
          ((eq register ?*)
           (let ((x-select-enable-primary t))
             (current-kill 0)))
@@ -420,6 +422,14 @@ Signal an error if empty, unless NOERROR is non-nil."
   (cond
    ((eq register ?\")
     (kill-new text))
+   ((and (<= ?0 register) (<= register ?9))
+    (if (null kill-ring)
+        (kill-new text)
+      (let ((kill-ring-yank-pointer kill-ring-yank-pointer)
+            interprogram-paste-function
+            interprogram-cut-function)
+        (current-kill (- register ?0))
+        (setcar kill-ring-yank-pointer text))))
    ((eq register ?*)
     (let ((x-select-enable-primary t))
       (kill-new text)))
