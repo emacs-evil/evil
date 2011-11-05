@@ -74,10 +74,11 @@ TYPE is a type as per `evil-type-p', and PROPERTIES is
 a property list."
   (let ((beg (evil-normalize-position beg))
         (end (evil-normalize-position end)))
-    (append (list (min beg end) (max beg end))
-            (when (evil-type-p type)
-              (list type))
-            properties)))
+    (when (and (numberp beg) (numberp end))
+      (append (list (min beg end) (max beg end))
+              (when (evil-type-p type)
+                (list type))
+              properties))))
 
 (defun evil-range-p (object)
   "Whether OBJECT is a range."

@@ -851,10 +851,23 @@ each line. Extra arguments to FUNC may be passed via ARGS."
 (defun evil-in-comment-p (&optional pos)
   "Whether POS is inside a comment.
 POS defaults to the current position of point."
-  (setq pos (or pos (point)))
-  (and (nth 4 (parse-partial-sexp
-               (save-excursion (beginning-of-defun) (point))
-               pos)) t))
+  (let ((parse (lambda (p)
+                 (let ((c (char-after p)))
+                   (or (and c (eq (char-syntax c) ?<))
+                       (nth 4 (parse-partial-sexp
+                               (save-excursion
+                                 (beginning-of-defun)
+                                 (point)) p)))))))
+    (save-excursion
+      (goto-char (or pos (point)))
+      (or (funcall parse (point))
+          ;; `parse-partial-sexp's notion of comments
+          ;; doesn't span lines
+          (progn
+            (back-to-indentation)
+            (unless (eolp)
+              (forward-char)
+              (funcall parse (point))))))))
 
 (defun evil-in-string-p (&optional pos)
   "Whether POS is inside a string.
@@ -867,22 +880,24 @@ POS defaults to the current position of point."
 (defun evil-comment-beginning (&optional pos)
   "Return beginning of comment containing POS.
 POS defaults to the current position of point."
-  (save-excursion
-    (goto-char (or pos (point)))
-    (when (evil-in-comment-p)
-      (while (and (evil-in-comment-p) (not (bobp)))
-        (backward-char))
-      (point))))
+  (setq pos (or pos (point)))
+  (when (evil-in-comment-p pos)
+    (while (let ((next (1+ pos)))
+             (when (and (<= next (buffer-end 1))
+                        (evil-in-comment-p next))
+               (setq pos next))))
+    pos))
 
 (defun evil-comment-end (&optional pos)
   "Return end of comment containing POS.
 POS defaults to the current position of point."
-  (save-excursion
-    (goto-char (or pos (point)))
-    (when (evil-in-comment-p)
-      (while (and (evil-in-comment-p) (not (eobp)))
-        (forward-char))
-      (point))))
+  (setq pos (or pos (point)))
+  (when (evil-in-comment-p pos)
+    (while (let ((prev (1- pos)))
+             (when (and (>= prev (buffer-end -1))
+                        (evil-in-comment-p prev))
+               (setq pos prev))))
+    pos))
 
 (defun evil-string-beginning (&optional pos)
   "Return beginning of string containing POS.
