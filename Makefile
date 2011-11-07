@@ -4,12 +4,13 @@ FILES = $(filter-out evil-tests.el,$(filter-out evil-pkg.el,$(wildcard evil*.el)
 VERSION := $(shell sed -n '3s/.*"\(.*\)".*/\1/p' evil-pkg.el)
 ELPAPKG = evil-$(VERSION)
 PROFILER =
+DOC = doc
 TAG =
 LIBS = -L lib
 
 ELCFILES = $(FILES:.el=.elc)
 
-.PHONY: all compile compile-batch clean tests test emacs term terminal profiler indent elpa version
+.PHONY: all compile compile-batch info pdf clean tests test emacs term terminal profiler indent elpa version
 
 # Byte-compile Evil.
 all: compile
@@ -33,12 +34,20 @@ $(ELCFILES): %.elc: %.el
 compile-batch: clean
 	$(EMACS) --batch -Q -L . $(LIBS) -f batch-byte-compile ${FILES}
 
+# Documentation.
+info: clean pdf
+	cd $(DOC) && makeinfo evil.texi
+
+pdf: clean
+	cd $(DOC) && texi2pdf evil.texi
+
 # Delete byte-compiled files etc.
 clean:
 	rm -f *~
 	rm -f \#*\#
 	rm -f *.elc
 	rm -f .depend
+	cd $(DOC) && rm -f *.aux *.cp *.fn *.fns *.info *.ky *.log *.pg *.toc *.tp *.vr *.vrs
 
 # Run tests.
 # The TAG variable may specify a test tag or a test name:
