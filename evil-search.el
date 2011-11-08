@@ -586,9 +586,9 @@ name `name' to `new-regex'."
                 (setq result t)
               ;; maybe the match could just not be found somewhere else?
               (save-excursion
-                (goto-char (evil-ex-hl-min hl))
+                (goto-char (or (evil-ex-hl-min hl) (point-min)))
                 (if (and (evil-ex-search-find-next-pattern pattern)
-                         (< (match-end 0) (evil-ex-hl-max hl)))
+                         (< (match-end 0) (or (evil-ex-hl-max hl) (point-max))))
                     (setq result (format "Match in line %d" (line-number-at-pos (match-beginning 0))))
                   (setq result "No match")))))
 
