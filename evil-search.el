@@ -1108,6 +1108,7 @@ The search matches the COUNT-th occurrence of the word."
   (save-match-data
     (when (string-match "\\`\\s-*\\([^][[:word:]\\|\"-]\\)" text)
       (let* ((delim (match-string 1 text))
+             (delim-ch (aref delim 0))
              (notdelim (concat "[^" delim "]")))
         (when (string-match (concat "\\`\\s-*"
                                     delim
@@ -1134,10 +1135,10 @@ The search matches the COUNT-th occurrence of the word."
                       (push ?\t newrepl))
                      ((eq c ?r)
                       (push ?\r newrepl))
-                     ((memq c '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?\\))
-                      (push ?\\ newrepl)
-                      (push c newrepl))
+                     ((eq c delim-ch)
+                      (push delim-ch newrepl))
                      (t
+                      (push ?\\ newrepl)
                       (push c newrepl)))
                     (setq idx (+ idx 2)))
                 (push (aref replacement idx) newrepl)
