@@ -54,6 +54,7 @@ the selection is enabled.
        (evil-define-command ,name (&optional mark point type message)
          ,@(when doc `(,doc))
          :keep-visual t
+         :repeat nil
          (interactive (list nil nil nil t))
          (let ((type (or type ,name)))
            (if (and (evil-called-interactively-p)

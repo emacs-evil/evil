@@ -1486,6 +1486,91 @@ the `evil-repeat' command")
         (".")
         ";; ABCABCAB[C]This buffer is for notes."))))
 
+(ert-deftest evil-test-repeat-visual-char ()
+  "Test repeat of character visual mode command."
+  :tags '(evil repeat)
+  (ert-info ("Test repeat on same line")
+    (evil-test-buffer
+      ";; [T]his buffer is for notes."
+      ("v3lcABC" [escape])
+      ";; AB[C] buffer is for notes."
+      ("ww.")
+      ";; ABC buffer AB[C]or notes."))
+  (ert-info ("Test repeat on several lines")
+    (evil-test-buffer
+      ";; This [b]uffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.
+"
+      ("vj^eerX")
+      ";; This XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXX[X] you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.
+"
+      ("2gg^3w.")
+      ";; This XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXX you want XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXX[X]en enter the text in that file's own buffer.
+")))
+
+(ert-deftest evil-test-repeat-visual-line ()
+  "Test repeat of linewise visual mode command."
+  :tags '(evil repeat)
+  (ert-info ("Test repeat on several lines")
+    (evil-test-buffer
+      ";; This buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter th[e] text in that file's own buffer.
+
+;; This buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.
+"
+      ("VkcNew Text" [escape])
+      ";; This buffer is for notes you don't want to save.
+New Tex[t]
+
+;; This buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.
+"
+      ("jj.")
+      ";; This buffer is for notes you don't want to save.
+New Text
+
+New Tex[t]
+;; then enter the text in that file's own buffer.
+")))
+
+(ert-deftest evil-test-repeat-visual-block ()
+  "Test repeat of block visual mode command."
+  :tags '(evil repeat)
+  (ert-info ("Test repeat on several lines")
+    (evil-test-buffer
+      ";; This [b]uffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.
+;; This buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.
+"
+      ((kbd "C-v") "3j2lrQ")
+      ";; This [Q]QQfer is for notes you don't want to save.
+;; If yoQQQant to create a file, visit that file with C-x C-f,
+;; then QQQer the text in that file's own buffer.
+;; This QQQfer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.
+"
+      ("2j3w.")
+      ";; This QQQfer is for notes you don't want to save.
+;; If yoQQQant to create a file, visit that file with C-x C-f,
+;; then QQQer the text [Q]QQthat file's own buffer.
+;; This QQQfer is for nQQQs you don't want to save.
+;; If you want to creatQQQ file, visit that file with C-x C-f,
+;; then enter the text QQQthat file's own buffer.
+")))
+
 ;;; Operators
 
 (ert-deftest evil-test-keypress-parser ()
