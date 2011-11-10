@@ -3892,6 +3892,75 @@ if no previous selection")
       "<;; This buffer is for notes,
 ;;[ ]>and for Lisp evaluation.")))
 
+;;; search
+(ert-deftest evil-test-ex-regex-without-case ()
+  "Test `evil-ex-regex-without-case'"
+  :tags '(evil search)
+  (should (equal (evil-ex-regex-without-case "cdeCDE")
+                 "cdeCDE"))
+  (should (equal (evil-ex-regex-without-case "\\ccde\\CCDE")
+                 "cdeCDE"))
+  (should (equal (evil-ex-regex-without-case "\\\\ccde\\\\CCDE")
+                 "\\\\ccde\\\\CCDE"))
+  (should (equal (evil-ex-regex-without-case "\\\\\\ccde\\\\\\CCDE")
+                 "\\\\cde\\\\CDE")))
+
+(ert-deftest evil-test-ex-regex-case ()
+  "Test `evil-ex-regex-case'"
+  :tags '(evil search)
+  (should (equal (evil-ex-regex-case "cde" 'smart) 'insensitive))
+  (should (equal (evil-ex-regex-case "cDe" 'smart) 'sensitive))
+  (should (equal (evil-ex-regex-case "cde" 'sensitive) 'sensitive))
+  (should (equal (evil-ex-regex-case "cde" 'insensitive) 'insensitive))
+  (should (equal (evil-ex-regex-case "\\ccde" 'smart) 'insensitive))
+  (should (equal (evil-ex-regex-case "\\cCde" 'smart) 'insensitive))
+  (should (equal (evil-ex-regex-case "\\Ccde" 'smart) 'sensitive))
+  (should (equal (evil-ex-regex-case "\\CCde" 'smart) 'sensitive))
+  (should (equal (evil-ex-regex-case "\\ccd\\Ce" 'smart) 'insensitive))
+  (should (equal (evil-ex-regex-case "\\cCd\\Ce" 'smart) 'insensitive))
+  (should (equal (evil-ex-regex-case "\\Ccd\\ce" 'smart) 'sensitive))
+  (should (equal (evil-ex-regex-case "\\CCd\\ce" 'smart) 'sensitive)))
+
+(ert-deftest evil-test-ex-search ()
+  "Test evil internal search."
+  (evil-select-search-module 'evil-search-module 'evil-search)
+  (ert-info ("Test smart case insensitive")
+    (evil-test-buffer
+      "[s]tart you YOU You you YOU You"
+      ("/you" [return])
+      "start [y]ou YOU You you YOU You"
+      ("n")
+      "start you [Y]OU You you YOU You"
+      ("n")
+      "start you YOU [Y]ou you YOU You"
+      ("n")
+      "start you YOU You [y]ou YOU You"))
+  (ert-info ("Test smart case sensitive")
+    (evil-test-buffer
+      "[s]tart you YOU You you YOU You"
+      ("/You" [return])
+      "start you YOU [Y]ou you YOU You"
+      ("n")
+      "start you YOU You you YOU [Y]ou"))
+  (ert-info ("Test insensitive")
+    (evil-test-buffer
+      "[s]tart you YOU You you YOU You"
+      ("/\\cyou" [return])
+      "start [y]ou YOU You you YOU You"
+      ("n")
+      "start you [Y]OU You you YOU You"
+      ("n")
+      "start you YOU [Y]ou you YOU You"
+      ("n")
+      "start you YOU You [y]ou YOU You"))
+  (ert-info ("Test sensitive")
+    (evil-test-buffer
+      "[s]tart you YOU You you YOU You"
+      ("/\\Cyou" [return])
+      "start [y]ou YOU You you YOU You"
+      ("n")
+      "start you YOU You [y]ou YOU You")))
+
 ;;; ex
 
 (ert-deftest evil-test-ex-parse-command ()

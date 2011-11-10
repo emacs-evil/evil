@@ -381,12 +381,7 @@ otherwise only the first one."
 (defun evil-ex-regex-without-case (re)
   "Returns the regular expression without all occurrences of \\c and \\C."
   (replace-regexp-in-string
-   "\\\\."
-   #'(lambda (txt)
-       (if (member (aref txt 1) '(?c ?C))
-           ""
-         txt))
-   re t t))
+   "\\(\\(?:^\\|[^\\\\]\\)\\(?:\\\\\\\\\\)*\\)\\\\[cC]" "\\1" re))
 
 (defun evil-ex-regex-case (re default-case)
   "Returns the case as implied by \\c or \\C in regular expression `re'.
@@ -398,26 +393,14 @@ specified by DEFAULT-CASE is used. DEFAULT-CASE should be either
 `sensitive', `insensitive' or `smart'. In the latter case the pattern
 will be case sensitive if and only if it contains an upper-case
 letter, otherwise it will be case insensitive."
-  (let ((start 0)
-        case recase)
-    (while (and (not recase)
-                (string-match "\\\\." re start))
-      (setq case (1- (match-end 0)))
-      (cond
-       ((eq case ?c)
-        (setq recase 'insensitive))
-       ((eq case ?C)
-        (setq recase 'sensitive))
-       (t
-        (setq start (match-end 0)))))
-    (cond
-     (recase)
-     ((memq default-case '(sensitive insensitive))
-      default-case)
-     ((eq default-case 'smart)
-      (if (isearch-no-upper-case-p re t)
-          'insensitive
-        'sensitive)))))
+  (cond
+   ((string-match "\\(?:^\\|[^\\\\]\\)\\(?:\\\\\\\\\\)*\\\\\\([cC]\\)" re)
+    (if (eq (aref (match-string 1 re) 0) ?c) 'insensitive 'sensitive))
+   ((eq default-case 'smart)
+    (if (isearch-no-upper-case-p re t)
+        'insensitive
+      'sensitive))
+   (t default-case)))
 
 (defun evil-ex-make-hl (name &rest args)
   "Creates a new highlight object with name NAME and properties ARGS."
