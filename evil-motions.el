@@ -85,7 +85,7 @@
                            [&rest keywordp sexp]
                            [&optional ("interactive" [&rest form])]
                            def-body)))
-  (let (arg doc interactive jump key keys type)
+  (let (arg doc interactive key keys type)
     (when args
       (setq args `(&optional ,@(delq '&optional args))
             ;; the count is either numerical or nil
@@ -98,18 +98,14 @@
     ;; collect keywords
     (while (keywordp (car-safe body))
       (setq key (pop body)
-            arg (pop body))
-      (cond
-       ((eq key :jump)
-        (setq jump arg))
-       (t
-        (setq keys (append keys (list key arg))))))
+            arg (pop body)
+            keys (plist-put keys key arg)))
     ;; collect `interactive' specification
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive (cdr (pop body))))
     (when interactive
       (setq interactive (apply 'evil-interactive-form interactive))
-      (setq keys (append keys (cdr-safe interactive))
+      (setq keys (evil-concat-plists keys (cdr-safe interactive))
             interactive (car-safe interactive)))
     ;; macro expansion
     `(progn
@@ -123,13 +119,12 @@
          :keep-visual t
          :repeat motion
          (interactive
-          ,@(when (or jump interactive)
-              `((progn
-                  ,(when jump
-                     '(unless (or (evil-visual-state-p)
-                                  (evil-operator-state-p))
-                        (evil-set-jump)))
-                  ,interactive))))
+          (progn
+            (when (evil-get-command-property ',motion :jump)
+              (unless (or (evil-visual-state-p)
+                          (evil-operator-state-p))
+                (evil-set-jump)))
+            ,interactive))
          ,@body))))
 
 (defmacro evil-motion-loop (spec &rest body)
@@ -1049,32 +1044,29 @@ if COUNT is positive, and to the left of it if negative.
   (let* ((args (delq '&optional args))
          (count (or (pop args) 'count))
          (args (when args `(&optional ,@args)))
-         (extend t)
-         arg doc key keys type)
+         arg doc key keys)
     ;; collect docstring
     (when (stringp (car-safe body))
       (setq doc (pop body)))
     ;; collect keywords
+    (setq keys (plist-put keys :extend-selection t))
     (while (keywordp (car-safe body))
       (setq key (pop body)
-            arg (pop body))
-      (cond
-       ((eq key :type)
-        (setq type arg))
-       ((eq key :extend-selection)
-        (setq extend arg))
-       (t
-        (setq keys (append keys (list key arg))))))
+            arg (pop body)
+            keys (plist-put keys key arg)))
     ;; macro expansion
     `(evil-define-motion ,object (,count ,@args)
        ,@(when doc `(,doc))
        ,@keys
-       :type ,type
        (setq ,count (or ,count 1))
        (when (/= ,count 0)
-         (let* ((dir evil-visual-direction)
-                (type (or ',type evil-visual-char))
-                mark point range region selection temp)
+         (let ((type (evil-type ',object evil-visual-char))
+               (extend (if (evil-has-property ',object :extend-selection)
+                           (evil-get-command-property
+                            ',object :extend-selection)
+                         ',(plist-get keys :extend-selection)))
+               (dir evil-visual-direction)
+               mark point range region selection temp)
            (cond
             ;; Visual state: extend the current selection
             ((and (evil-visual-state-p)
@@ -1086,7 +1078,7 @@ if COUNT is positive, and to the left of it if negative.
                    ,count (* ,count dir)
                    region (evil-range (mark t) (point))
                    selection (evil-visual-range))
-             (when ',extend
+             (when extend
                (setq range (evil-range (point) (point) type)))
              ;; select the object under point
              (let ((,count dir))
@@ -1098,7 +1090,7 @@ if COUNT is positive, and to the left of it if negative.
                        temp (progn ,@body))))
              (when (and (evil-range-p temp)
                         (not (evil-subrange-p temp selection))
-                        (or (not ',extend)
+                        (or (not extend)
                             (if (< dir 0)
                                 (>= (evil-range-end temp)
                                     (evil-range-end selection))
@@ -1107,7 +1099,7 @@ if COUNT is positive, and to the left of it if negative.
                ;; found an unselected object under point:
                ;; decrease COUNT by one and save the result
                (setq ,count (if (< ,count 0) (1+ ,count) (1- ,count)))
-               (if ',extend
+               (if extend
                    (setq range (evil-range-union temp range))
                  (setq range temp)
                  (evil-set-type range (evil-type range type))))
@@ -1124,7 +1116,7 @@ if COUNT is positive, and to the left of it if negative.
                                 (evil-range-end selection)))
                (setq temp (progn ,@body))
                (when (evil-range-p temp)
-                 (if ',extend
+                 (if extend
                      (setq range (evil-range-union temp range))
                    (setq range temp)
                    (evil-set-type range (evil-type range type))))
@@ -1132,7 +1124,7 @@ if COUNT is positive, and to the left of it if negative.
              (cond
               ;; if the previous attempts failed, then enlarge
               ;; the selection by one character as a last resort
-              ((and ',extend (evil-subrange-p range selection))
+              ((and extend (evil-subrange-p range selection))
                (if (< ,count 0)
                    (evil-visual-select (1- evil-visual-beginning)
                                        evil-visual-end type)
@@ -1146,7 +1138,7 @@ if COUNT is positive, and to the left of it if negative.
                ;; if the selection is large enough, only point
                ;; needs to move.
                (setq range (evil-contract-range range))
-               (when ',extend
+               (when extend
                  (setq range (evil-range-union range region)))
                ;; the beginning is mark and the end is point
                ;; unless the selection goes the other way
@@ -1165,7 +1157,7 @@ if COUNT is positive, and to the left of it if negative.
                      range (progn ,@body)))
              (when (evil-range-p range)
                (setq selection (evil-range (point) (point) type))
-               (if ',extend
+               (if extend
                    (setq range (evil-range-union range selection))
                  (evil-set-type range (evil-type range type)))
                ;; ensure the range is properly expanded

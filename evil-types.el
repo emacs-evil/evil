@@ -54,7 +54,7 @@ will make `line' the type of the `next-line' command."
    ((listp object)
     (plist-put object :type type))
    ((commandp object)
-    (evil-add-command-properties object :type type))
+    (evil-set-command-property object :type type))
    ((symbolp object)
     (put object 'type type)))
   object)

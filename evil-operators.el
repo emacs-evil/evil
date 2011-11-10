@@ -55,39 +55,31 @@
                    `(,(nth 0 args) ,(nth 1 args)
                      &optional ,@(nthcdr 2 args))
                  args))
-         (move-point t)
-         (keep-visual nil)
-         (whole-lines nil)
-         (motion nil)
-         arg doc key keys type)
+         arg doc key keys visual)
     ;; collect docstring
     (when (and (> (length body) 1)
                (or (eq (car-safe (car-safe body)) 'format)
                    (stringp (car-safe body))))
       (setq doc (pop body)))
     ;; collect keywords
+    (setq keys (plist-put keys :move-point t))
     (while (keywordp (car-safe body))
       (setq key (pop body)
             arg (pop body))
       (cond
-       ((eq key :motion)
-        (setq motion arg)
-        (unless motion
-          (setq motion 'undefined)))
        ((eq key :keep-visual)
-        (setq keep-visual arg))
-       ((eq key :move-point)
-        (setq move-point arg))
-       ((eq key :type)
-        (setq type arg))
+        (setq visual arg))
+       ;; :motion nil is equivalent to :motion undefined
+       ((eq key :motion)
+        (setq keys (plist-put keys key (or arg 'undefined))))
        (t
-        (setq keys (append keys (list key arg))))))
+        (setq keys (plist-put keys key arg)))))
     ;; collect `interactive' specification
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive (cdr-safe (pop body))))
     ;; transform extended interactive specs
     (setq interactive (apply 'evil-interactive-form interactive))
-    (setq keys (append keys (cdr-safe interactive))
+    (setq keys (evil-concat-plists keys (cdr-safe interactive))
           interactive (car-safe interactive))
     ;; macro expansion
     `(evil-define-command ,operator ,args
@@ -96,8 +88,10 @@
        :keep-visual t
        :suppress-operator t
        (interactive
-        (let* ((evil-operator-range-motion ',motion)
-               (evil-operator-range-type ',type)
+        (let* ((evil-operator-range-motion
+                (evil-get-command-property ',operator :motion))
+               (evil-operator-range-type
+                (evil-get-command-property ',operator :type))
                (orig (point))
                (state evil-state)
                evil-operator-range-beginning
@@ -109,14 +103,14 @@
               ,interactive
             (setq orig (point)
                   evil-inhibit-operator-value evil-inhibit-operator)
-            (if ,keep-visual
+            (if ,visual
                 (when (evil-visual-state-p)
                   (evil-visual-expand-region))
               (when (evil-visual-state-p)
                 (evil-change-to-previous-state))
               (when (region-active-p)
                 (evil-active-region -1)))
-            (if (or ,move-point
+            (if (or (evil-get-command-property ',operator :move-point)
                     (evil-visual-state-p state))
                 (evil-visual-rotate 'upper-left
                                     evil-operator-range-beginning
