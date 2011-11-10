@@ -531,6 +531,7 @@ This is a keymap alist, determined by the current state
         (when (and (fboundp mode) (symbol-value mode))
           (funcall mode -1))
         (set mode nil)))
+    (setq evil-mode-map-alist nil)
     ;; enable modes for current state
     (when state
       (dolist (entry (evil-state-keymaps state))
