@@ -174,6 +174,7 @@ This is the state the buffer came up in."
   (&optional buffer message)
   "Change the state of BUFFER to its previous state."
   :keep-visual t
+  :repeat abort
   (interactive)
   (with-current-buffer (or buffer (current-buffer))
     (evil-change-state (or evil-previous-state evil-default-state 'normal)
