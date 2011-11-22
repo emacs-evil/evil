@@ -983,7 +983,7 @@ Otherwise, execute BODY again, but without the restriction."
    ;; Match all `evil-define-' forms except `evil-define-key'.
    ;; In the interests of speed, this expression is incomplete
    ;; and will not match all three-letter words.
-   '(("(\\(evil-define-\\(?:[^ k][^ e][^ y]\\|[-[:word:]]\\{4,\\}\\)\\)\
+   '(("(\\(evil-\\(?:ex-\\)?define-\\(?:[^ k][^ e][^ y]\\|[-[:word:]]\\{4,\\}\\)\\)\
 \\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
       (1 font-lock-keyword-face)
       (2 font-lock-function-name-face nil t))

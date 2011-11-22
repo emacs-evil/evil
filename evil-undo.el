@@ -3,7 +3,8 @@
 (require 'evil-common)
 
 ;; load undo-tree.el if available
-(when (require 'undo-tree nil t)
+(when (and (require 'undo-tree nil t)
+           (fboundp 'global-undo-tree-mode))
   (global-undo-tree-mode 1))
 
 (defmacro evil-with-single-undo (&rest body)
