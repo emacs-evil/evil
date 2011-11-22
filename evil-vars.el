@@ -327,9 +327,11 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
   '(comint-mode
     erc-mode
     eshell-mode
+    geiser-repl-mode
     gud-mode
     inferior-emacs-lisp-mode
     inferior-python-mode
+    inferior-scheme-mode
     internal-ange-ftp-mode
     prolog-inferior-mode
     shell-mode
