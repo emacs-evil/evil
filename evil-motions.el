@@ -1116,27 +1116,25 @@ if COUNT is positive, and to the left of it if negative.
                                 (evil-range-end selection)))
                (setq temp (progn ,@body))
                (when (evil-range-p temp)
+                 ;; if the previous attempts failed, then enlarge
+                 ;; the selection by one character as a last resort
+                 (when (evil-subrange-p temp selection)
+                   (if (< dir 0)
+                       (backward-char)
+                     (forward-char))
+                   (setq temp (progn ,@body)))
                  (if extend
                      (setq range (evil-range-union temp range))
-                   (setq range temp)
-                   (evil-set-type range (evil-type range type))))
+                   (setq range temp))
+                 (evil-set-type range (evil-type range type)))
                (evil-visual-contract-region))
-             (cond
-              ;; if the previous attempts failed, then enlarge
-              ;; the selection by one character as a last resort
-              ((and extend (evil-subrange-p range selection))
-               (if (< ,count 0)
-                   (evil-visual-select (1- evil-visual-beginning)
-                                       evil-visual-end type)
-                 (evil-visual-select evil-visual-beginning
-                                     (1+ evil-visual-end) type)))
-              ((evil-range-p range)
+             (when (evil-range-p range)
                ;; Find the union of the range and the selection.
                ;; Actually, this uses point and mark rather than the
                ;; selection boundaries to prevent the object from
                ;; unnecessarily overwriting the mark's position;
-               ;; if the selection is large enough, only point
-               ;; needs to move.
+               ;; if the selection is larger than the object,
+               ;; only point needs to move.
                (setq range (evil-contract-range range))
                (when extend
                  (setq range (evil-range-union range region)))
@@ -1148,7 +1146,7 @@ if COUNT is positive, and to the left of it if negative.
                (when (< dir 0)
                  (evil-swap mark point))
                ;; select the union
-               (evil-visual-make-selection mark point type))))
+               (evil-visual-make-selection mark point type)))
             ;; not Visual state: return a pair of buffer positions
             (t
              (setq range (progn ,@body))
@@ -1255,19 +1253,11 @@ use `evil-regexp-range'."
             ;; otherwise handle as open and close parentheses
             (modify-syntax-entry open (format "(%c" close))
             (modify-syntax-entry close (format ")%c" open))
-            ;; handle edge cases
+            ;; Is point next to a parenthesis?
             (if (< count 0)
-                (when (if exclusive
-                          (or (looking-back open-regexp)
-                              (and (looking-back close-regexp)
-                                   (not (looking-at close-regexp))))
-                        (looking-back close-regexp))
+                (when (looking-back close-regexp)
                   (backward-char))
-              (when (if exclusive
-                        (or (looking-at close-regexp)
-                            (and (looking-at open-regexp)
-                                 (not (looking-back open-regexp))))
-                      (looking-at open-regexp))
+              (when (looking-at open-regexp)
                 (forward-char)))
             ;; find OPEN
             (evil-motion-loop (nil count level)
@@ -1304,32 +1294,18 @@ the range; otherwise they are included. See also `evil-paren-range'."
           beg end range)
       (save-excursion
         (save-match-data
-          ;; find beginning of range: handle edge cases
-          (unless (or (looking-at either)
-                      (looking-back either nil t))
-            ;; Is point inside a delimiter?
+          ;; Is point inside a delimiter?
+          (when (evil-in-regexp-p either)
             (if (< count 0)
-                (when (re-search-backward either nil t)
-                  (goto-char (match-end 0))
-                  (re-search-forward either nil t))
-              (when (re-search-forward either nil t)
-                (goto-char (match-beginning 0))
-                (re-search-backward either nil t))))
+                (goto-char (match-end 0))
+              (goto-char (match-beginning 0))))
           ;; Is point next to a delimiter?
           (if (< count 0)
-              (when (if exclusive
-                        (or (looking-back open)
-                            (and (looking-back close)
-                                 (not (looking-at close))))
-                      (looking-back close))
+              (when (looking-back close)
                 (goto-char (match-beginning 0)))
-            (when (if exclusive
-                      (or (looking-at close)
-                          (and (looking-at open)
-                               (not (looking-back open))))
-                    (looking-at open))
+            (when (looking-at open)
               (goto-char (match-end 0))))
-          ;; now loop over remainder
+          ;; find beginning of range
           (while (and (< level (abs count))
                       (re-search-backward either nil t))
             (if (looking-at open)

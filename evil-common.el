@@ -882,6 +882,19 @@ each line. Extra arguments to FUNC may be passed via ARGS."
       (set-marker beg-marker nil)
       (set-marker end-marker nil))))
 
+(defun evil-in-regexp-p (regexp &optional pos)
+  "Whether POS is inside a match for REGEXP.
+POS defaults to the current position of point."
+  (let ((pos (or pos (point))))
+    (save-excursion
+      (goto-char pos)
+      (if (re-search-forward regexp nil t)
+          (goto-char (match-beginning 0))
+        (goto-char (point-max)))
+      (when (re-search-backward regexp nil t)
+        (and (> pos (match-beginning 0))
+             (< pos (match-end 0)))))))
+
 (defun evil-in-comment-p (&optional pos)
   "Whether POS is inside a comment.
 POS defaults to the current position of point."

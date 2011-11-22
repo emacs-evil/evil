@@ -3596,12 +3596,12 @@ Below some empty line."))
         "([(]aaa))"
         (emacs-lisp-mode)
         ("vi(")
-        "(<(aaa[)]>)")
+        "((<aa[a]>))")
       (evil-test-buffer
         "((aaa[)])"
         (emacs-lisp-mode)
         ("vi(")
-        "(<(aaa[)]>)")))
+        "((<aa[a]>))")))
   (ert-info ("Select parentheses inside strings")
     (evil-test-buffer
       "(aaa \"b(b[b]b)\" aa)"
@@ -3613,8 +3613,19 @@ Below some empty line."))
       "(aaa \"bb[b]b\" aa)"
       (emacs-lisp-mode)
       ("va(")
-      "<(aaa \"bbbb\" aa[)]>"))
-  (ert-info ("Break out multi-char delimiters")
+      "<(aaa \"bbbb\" aa[)]>")))
+
+(ert-deftest evil-test-tag-objects ()
+  "Test `evil-inner-tag', etc."
+  :tags '(evil text-object)
+  (ert-info ("Handle nested tags")
+    (evil-test-buffer
+      :visual-start "{"
+      :visual-end "}"
+      "<p><a>f[o]o</a> bar</p>"
+      ("vit")
+      "<p><a>{fo[o]}</a> bar</p>"))
+  (ert-info ("Break out of tags")
     (evil-test-buffer
       :visual-start "{"
       :visual-end "}"
@@ -3656,14 +3667,14 @@ Below some empty line."))
         (should (equal (evil-paren-range 1 ?\( ?\)) '(1 6)))
         (should (equal (evil-paren-range 1 ?\( ?\) t) '(2 5)))
         (should (equal (evil-paren-range -1 ?\( ?\)) '(1 6)))
-        (should-not (evil-paren-range -1 ?\( ?\) t))
+        (should (equal (evil-paren-range -1 ?\( ?\) t) '(2 5)))
         (should-not (evil-paren-range 0 ?\( ?\)))
         (should-not (evil-paren-range 0 ?\( ?\) t))))
     (ert-info ("Before closing parenthesis")
       (evil-test-buffer
         "(234[)]"
         (should (equal (evil-paren-range 1 ?\( ?\)) '(1 6)))
-        (should-not (evil-paren-range 1 ?\( ?\) t))
+        (should (equal (evil-paren-range 1 ?\( ?\) t) '(2 5)))
         (should (equal (evil-paren-range -1 ?\( ?\)) '(1 6)))
         (should (equal (evil-paren-range -1 ?\( ?\) t) '(2 5)))
         (should-not (evil-paren-range 0 ?\( ?\)))
@@ -3711,14 +3722,14 @@ Below some empty line."))
         (should (equal (evil-regexp-range 1 "(" ")") '(1 6)))
         (should (equal (evil-regexp-range 1 "(" ")" t) '(2 5)))
         (should (equal (evil-regexp-range -1 "(" ")") '(1 6)))
-        (should-not (evil-regexp-range -1 "(" ")" t))
+        (should (equal (evil-regexp-range -1 "(" ")" t) '(2 5)))
         (should-not (evil-regexp-range 0 "(" ")"))
         (should-not (evil-regexp-range 0 "(" ")" t))))
     (ert-info ("Before closing parenthesis")
       (evil-test-buffer
         "(234[)]"
         (should (equal (evil-regexp-range 1 "(" ")") '(1 6)))
-        (should-not (evil-regexp-range 1 "(" ")" t))
+        (should (equal (evil-regexp-range 1 "(" ")" t) '(2 5)))
         (should (equal (evil-regexp-range -1 "(" ")") '(1 6)))
         (should (equal (evil-regexp-range -1 "(" ")" t) '(2 5)))
         (should-not (evil-regexp-range 0 "(" ")"))
