@@ -460,8 +460,8 @@ Otherwise send [escape]."
 (defun evil-state-keymaps (state &rest excluded)
   "Return a keymap alist of keymaps activated by STATE.
 Recursively includes the keymaps of other states referenced by STATE.
-The EXCLUDED argument acts as a safeguard against infinite recursion
-by keeping track of earlier states."
+The EXCLUDED argument is an internal safeguard against infinite
+recursion, keeping track of earlier states."
   (let* ((state (or state evil-state))
          (enable (evil-state-property state :enable))
          (map (cons
@@ -476,7 +476,7 @@ by keeping track of earlier states."
          (intercept-maps
           (evil-state-intercept-keymaps state))
          (result `(,intercept-maps))
-         (filter (null excluded)))
+         (remove-duplicates (null excluded)))
     (unless (memq state enable)
       (setq enable (cons state enable)))
     ;; process STATE's :enable property
@@ -504,7 +504,7 @@ by keeping track of earlier states."
                        ((,(evil-mode-for-keymap entry t) .
                          ,entry)))))))
     ;; postpone the expensive filtering of duplicates to the top level
-    (if filter
+    (if remove-duplicates
         (apply 'evil-concat-keymap-alists result)
       (apply 'append result))))
 
@@ -514,15 +514,14 @@ This is a keymap alist, determined by the current state
 \(or by STATE if specified)."
   (let ((state (or state evil-state))
         (excluded '(nil t))
-        alist key map mode result)
-    ;; initialize buffer-local keymaps
+        map mode temp)
+    ;; initialize buffer-local keymaps as necessary
     (evil-initialize-local-keymaps)
-    ;; disable all modes
-    (dolist (entry (append evil-mode-map-alist
-                           evil-local-keymaps-alist))
+    ;; deactivate keymaps of previous state
+    (dolist (entry evil-mode-map-alist)
       (setq mode (car-safe entry)
             map (cdr-safe entry))
-      ;; overriding keymaps are not toggled here,
+      ;; auxiliary keymaps etc. are not toggled here,
       ;; but by the mode they are associated with
       (if (or (memq mode excluded)
               (evil-intercept-keymap-p map)
@@ -533,9 +532,10 @@ This is a keymap alist, determined by the current state
           (funcall mode -1))
         (set mode nil)))
     (setq evil-mode-map-alist nil)
-    ;; enable modes for current state
+    ;; activate keymaps of current state
     (when state
-      (dolist (entry (evil-state-keymaps state))
+      (setq temp (evil-state-keymaps state))
+      (dolist (entry temp)
         (setq mode (car entry)
               map (cdr entry))
         (unless (and (boundp mode) (symbol-value mode))
@@ -550,10 +550,9 @@ This is a keymap alist, determined by the current state
                 (evil-overriding-keymap-p map)
                 (evil-auxiliary-keymap-p map))
             (push mode excluded)
-          (setq map (or (evil-keymap-for-mode mode) map)))
-        (push (cons mode map) alist)))
-    ;; update `evil-mode-map-alist'
-    (setq evil-mode-map-alist (nreverse alist))))
+          (setcdr entry (or (evil-keymap-for-mode mode) map))))
+      ;; update `evil-mode-map-alist'
+      (setq evil-mode-map-alist temp))))
 
 (defun evil-mode-for-keymap (keymap &optional default)
   "Return the minor mode associated with KEYMAP.
