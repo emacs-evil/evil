@@ -220,7 +220,8 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
   :group 'evil)
 
 (defcustom evil-emacs-state-modes
-  '(bookmark-bmenu-mode
+  '(bbdb-mode
+    bookmark-bmenu-mode
     bookmark-edit-annotation-mode
     browse-kill-ring-mode
     bzr-annotate-mode
@@ -229,6 +230,9 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     completion-list-mode
     Custom-mode
     debugger-mode
+    delicious-search-mode
+    desktop-menu-blist-mode
+    desktop-menu-mode
     doc-view-mode
     dvc-bookmarks-mode
     dvc-diff-mode
@@ -241,7 +245,14 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     ediff-mode
     efs-mode
     Electric-buffer-menu-mode
+    emms-browser-mode
+    emms-mark-mode
+    emms-metaplaylist-mode
+    emms-playlist-mode
     ert-results-mode
+    etags-select-mode
+    fj-mode
+    gc-issues-mode
     gdb-breakpoints-mode
     gdb-disassembly-mode
     gdb-frames-mode
@@ -249,20 +260,25 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     gdb-memory-mode
     gdb-registers-mode
     gdb-threads-mode
+    gist-list-mode
     gnus-article-mode
     gnus-browse-mode
     gnus-group-mode
     gnus-server-mode
     gnus-summary-mode
+    google-maps-static-mode
     ibuffer-mode
     jde-javadoc-checker-report-mode
     magit-commit-mode
+    magit-diff-mode
     magit-key-mode
     magit-log-mode
     magit-mode
+    magit-reflog-mode
     magit-show-branches-mode
     magit-stash-mode
     magit-status-mode
+    magit-wazzup-mode
     mh-folder-mode
     monky-mode
     notmuch-hello-mode
@@ -271,7 +287,9 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     occur-mode
     org-agenda-mode
     package-menu-mode
+    proced-mode
     rcirc-mode
+    rebase-mode
     recentf-dialog-mode
     reftex-toc-mode
     sldb-mode
@@ -283,7 +301,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     sr-tree-mode
     sr-virtual-mode
     tar-mode
-    term-mode
+    tetris-mode
     tla-annotate-mode
     tla-archive-list-mode
     tla-bconfig-mode
@@ -302,6 +320,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     tla-tree-lint-mode
     tla-version-list-mode
     twittering-mode
+    urlview-mode
     vc-annotate-mode
     vc-dir-mode
     vc-git-log-view-mode
@@ -329,13 +348,18 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     eshell-mode
     geiser-repl-mode
     gud-mode
+    inferior-apl-mode
+    inferior-caml-mode
     inferior-emacs-lisp-mode
+    inferior-j-mode
     inferior-python-mode
     inferior-scheme-mode
+    inferior-sml-mode
     internal-ange-ftp-mode
     prolog-inferior-mode
     shell-mode
     slime-repl-mode
+    term-mode
     wdired-mode)
   "Modes that should come up in Insert state."
   :type  '(repeat symbol)
