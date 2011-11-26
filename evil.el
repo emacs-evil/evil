@@ -22,7 +22,7 @@
 ;;      git clone git://gitorious.org/evil/evil.git
 ;;
 ;; Evil is discussed at <implementations-list at lists.ourproject.org>,
-;; a mailing list to which you can subscribe at:
+;; a mailing list you can subscribe to at:
 ;;
 ;; http://lists.ourproject.org/cgi-bin/mailman/listinfo/implementations-list
 ;;
@@ -49,24 +49,18 @@
 ;;; Code:
 
 (require 'evil-vars)
-(require 'evil-compatibility)
-(require 'evil-interactive)
 (require 'evil-common)
-(require 'evil-types)
-(require 'evil-undo)
 (require 'evil-core)
+(require 'evil-states)
 (require 'evil-repeat)
-(require 'evil-visual)
+(require 'evil-macros)
 (require 'evil-search)
-(require 'evil-window)
-(require 'evil-digraphs)
-(require 'evil-insert)
-(require 'evil-operators)
-(require 'evil-motions)
-(require 'evil-replace)
-(require 'evil-integration)
-(require 'evil-maps)
 (require 'evil-ex)
+(require 'evil-digraphs)
+(require 'evil-types)
+(require 'evil-commands)
+(require 'evil-maps)
+(require 'evil-integration)
 
 (provide 'evil)
 

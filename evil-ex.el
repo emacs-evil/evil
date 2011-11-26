@@ -3,7 +3,7 @@
 ;; TODO: Emacs 22 completion-boundaries
 
 (require 'evil-common)
-(require 'evil-visual)
+(require 'evil-states)
 
 (define-key evil-ex-keymap "\d" #'evil-ex-delete-backward-char)
 (define-key evil-ex-keymap "\t" #'evil-ex-complete)

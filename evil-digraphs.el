@@ -10,7 +10,8 @@
 An element is a cons cell of the digraph and its character replacement,
 where the digraph is a list of two characters.
 See also `evil-digraphs-table'."
-  :type '(alist :key-type (list character character) :value-type character)
+  :type '(alist :key-type (list character character)
+                :value-type character)
   :require 'evil-digraphs
   :group 'evil-digraphs)
 

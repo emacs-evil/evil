@@ -1,7 +1,6 @@
 ;;;; Search
 
 (require 'evil-common)
-(require 'evil-motions)
 (require 'evil-ex)
 
 (defun evil-select-search-module (option module)
@@ -25,108 +24,14 @@ If MODULE is 'evil-search the Evil's own interactive search module is used."
           (substitute-key-definition isearch evil-search evil-motion-state-map)))))
   (set-default option module))
 
-;; This customization is here because it requires the knowledge of `evil-select-search-mode'
+;; This customization is here because it requires
+;; the knowledge of `evil-select-search-mode'
 (defcustom evil-search-module 'isearch
   "The search module to be used."
   :type '(radio (const :tag "Emacs built in isearch." :value isearch)
                 (const :tag "Evil interactive search." :value evil-search))
   :group 'evil
   :set 'evil-select-search-module)
-
-(evil-define-motion evil-search-forward ()
-  (format "Search forward for user-entered text.
-Searches for regular expression if `evil-regexp-search' is t.%s"
-          (if (and (fboundp 'isearch-forward)
-                   (documentation 'isearch-forward))
-              (format "\n\nBelow is the documentation string \
-for `isearch-forward',\nwhich lists available keys:\n\n%s"
-                      (documentation 'isearch-forward)) ""))
-  :type exclusive
-  (evil-search-incrementally t evil-regexp-search))
-
-(evil-define-motion evil-search-backward ()
-  (format "Search backward for user-entered text.
-Searches for regular expression if `evil-regexp-search' is t.%s"
-          (if (and (fboundp 'isearch-forward)
-                   (documentation 'isearch-forward))
-              (format "\n\nBelow is the documentation string \
-for `isearch-forward',\nwhich lists available keys:\n\n%s"
-                      (documentation 'isearch-forward)) ""))
-  :jump t
-  :type exclusive
-  (evil-search-incrementally nil evil-regexp-search))
-
-(evil-define-motion evil-search-next (count)
-  "Repeat the last search."
-  :jump t
-  :type exclusive
-  (dotimes (var (or count 1))
-    (evil-search (if evil-regexp-search
-                     (car-safe regexp-search-ring)
-                   (car-safe search-ring))
-                 isearch-forward evil-regexp-search)))
-
-(evil-define-motion evil-search-previous (count)
-  "Repeat the last search in the opposite direction."
-  :jump t
-  :type exclusive
-  (dotimes (var (or count 1))
-    (evil-search (if evil-regexp-search
-                     (car-safe regexp-search-ring)
-                   (car-safe search-ring))
-                 (not isearch-forward) evil-regexp-search)))
-
-(evil-define-motion evil-search-symbol-backward (count)
-  "Search backward for symbol under point."
-  :jump t
-  :type exclusive
-  (dotimes (var (or count 1))
-    (evil-search-symbol nil)))
-
-(evil-define-motion evil-search-symbol-forward (count)
-  "Search forward for symbol under point."
-  :jump t
-  :type exclusive
-  (dotimes (var (or count 1))
-    (evil-search-symbol t)))
-
-(evil-define-motion evil-goto-definition ()
-  "Go to definition or first occurrence of symbol under point."
-  :jump t
-  :type exclusive
-  (let* ((string (evil-find-symbol t))
-         (search (format "\\_<%s\\_>" (regexp-quote string)))
-         ientry ipos)
-    ;; load imenu if available
-    (unless (featurep 'imenu)
-      (condition-case nil
-          (require 'imenu)
-        (error nil)))
-    (if (null string)
-        (error "No symbol under cursor")
-      (setq isearch-forward t)
-      ;; if imenu is available, try it
-      (cond
-       ((fboundp 'imenu--make-index-alist)
-        (condition-case nil
-            (setq ientry (imenu--make-index-alist))
-          (error nil))
-        (setq ientry (assoc string ientry))
-        (setq ipos (cdr ientry))
-        (unless (markerp ipos)
-          (setq ipos (cadr ientry)))
-        (cond
-         ;; imenu found a position, so go there and
-         ;; highlight the occurrence
-         ((and (markerp ipos)
-               (eq (marker-buffer ipos) (current-buffer)))
-          (evil-search search t t ipos))
-         ;; imenu failed, so just go to first occurrence in buffer
-         (t
-          (evil-search search t t (point-min)))))
-       ;; no imenu, so just go to first occurrence in buffer
-       (t
-        (evil-search search t t (point-min)))))))
 
 (defun evil-search-incrementally (forward regexp-p)
   "Search incrementally for user-entered text."
@@ -684,7 +589,7 @@ name `name' to `new-regex'."
       (setq isearch-message isearch-error))))
 
 (defun evil-ex-search-next-pattern ()
-  "Searches the next occurrence w.r.t. actual search data,
+  "Searches the next occurrence with regard to actual search data,
 possibly wrapping and eob or bob."
   (if (zerop (length (evil-ex-pattern-regex evil-ex-search-pattern)))
       (progn
@@ -832,48 +737,6 @@ possibly wrapping and eob or bob."
        (goto-char evil-ex-search-start-point)
        (signal (car err) (cdr err))))))
 
-(evil-define-motion evil-ex-search-next (count)
-  "Goes to the next occurrence."
-  :jump t
-  :type exclusive
-  (setq evil-ex-search-start-point (point))
-  (dotimes (i (or count 1))
-    (if (eq evil-ex-search-direction 'backward)
-        (backward-char)
-      (forward-char))
-    (evil-ex-find-next)
-    (if isearch-success
-        (progn
-          (when (and evil-ex-search-highlight-all
-                     (not (evil-ex-hl-active-p 'evil-ex-search)))
-            (evil-ex-make-hl 'evil-ex-search)
-            (evil-ex-hl-change 'evil-ex-search evil-ex-search-pattern))
-          (goto-char evil-ex-search-match-beg))
-      (goto-char evil-ex-search-start-point))
-    (when (or isearch-error isearch-wrapped) (ding))
-    (when isearch-message
-      (let (message-log-max)
-        (message "%s" isearch-message)))))
-
-(evil-define-motion evil-ex-search-previous (count)
-  "Goes the the previous occurrence."
-  :jump t
-  :type exclusive
-  (let ((evil-ex-search-direction
-         (if (eq evil-ex-search-direction 'backward) 'forward 'backward)))
-    (evil-ex-search-next count)))
-
-(evil-define-motion evil-ex-search-forward (count)
-  "Starts a forward search."
-  :jump t
-  :type exclusive
-  (evil-ex-start-search 'forward count))
-
-(evil-define-motion evil-ex-search-backward (count)
-  "Starts a forward search."
-  :jump t
-  (evil-ex-start-search 'backward count))
-
 (defun evil-ex-start-symbol-search (unbounded direction count)
   "Searches for the symbol under point.
 
@@ -898,31 +761,8 @@ The search matches the COUNT-th occurrence of the word."
                                     t)
             evil-ex-search-direction direction)
       (evil-ex-delete-hl 'evil-ex-search)
-      (evil-ex-search-next count))))
-
-(evil-define-motion evil-ex-search-symbol-forward (count)
-  "Searches the next occurence of word under the cursor."
-  :jump t
-  :type exclusive
-  (evil-ex-start-symbol-search nil 'forward count))
-
-(evil-define-motion evil-ex-search-symbol-backward (count)
-  "Searches the next occurence of word under the cursor."
-  :jump t
-  :type exclusive
-  (evil-ex-start-symbol-search nil 'backward count))
-
-(evil-define-motion evil-ex-search-unbounded-symbol-forward (count)
-  "Searches the next occurence of word under the cursor."
-  :jump t
-  :type exclusive
-  (evil-ex-start-symbol-search t 'forward count))
-
-(evil-define-motion evil-ex-search-unbounded-symbol-backward (count)
-  "Searches the next occurence of word under the cursor."
-  :jump t
-  :type exclusive
-  (evil-ex-start-symbol-search t 'backward count))
+      (when (fboundp 'evil-ex-search-next)
+        (evil-ex-search-next count)))))
 
 ;; Substitute
 
@@ -979,113 +819,6 @@ The search matches the COUNT-th occurrence of the word."
                          'face 'evil-ex-substitute
                          repl)
       (overlay-put overlay 'after-string repl))))
-
-(evil-define-operator evil-ex-substitute (beg end type substitution)
-  "The VIM substitute command: [range]s/pattern/replacement/flags"
-  :repeat nil
-  :jump t
-  :motion evil-line
-  (interactive "<R><s/>")
-  (evil-ex-nohighlight)
-  (let* ((result (evil-ex-parse-substitute substitution))
-         (pattern (pop result))
-         (evil-ex-substitute-replacement (pop result))
-         (flags (append (pop result) nil)))
-    (unless pattern (error "No pattern given."))
-    (unless evil-ex-substitute-replacement (error "No replacement given."))
-    (let* ((whole-line (and flags (memq ?g flags)))
-           (confirm (and flags (memq ?c flags)))
-           (ignore-case (and flags (memq ?i flags)))
-           (dont-ignore-case (and flags (memq ?I flags)))
-           (pattern (evil-ex-make-pattern pattern
-                                          (or (and ignore-case 'insensitive)
-                                              (and dont-ignore-case 'sensitive)
-                                              evil-ex-substitute-case
-                                              evil-ex-search-case)
-                                          whole-line))
-           (evil-ex-substitute-regex (evil-ex-pattern-regex pattern)))
-      (let ((case-replace (eq (evil-ex-pattern-case-fold pattern)
-                              'insensitive)))
-        (if whole-line
-            ;; this one is easy, just use the built in function
-            (perform-replace evil-ex-substitute-regex
-                             evil-ex-substitute-replacement
-                             confirm
-                             t nil nil nil
-                             beg end)
-          (let ((evil-ex-substitute-nreplaced 0)
-                (evil-ex-substitute-next-line (line-number-at-pos beg))
-                (evil-ex-substitute-last-line (if (save-excursion (goto-char end) (bolp))
-                                                  (1- (line-number-at-pos end))
-                                                (line-number-at-pos end)))
-                (evil-ex-substitute-last-point (point)))
-            (if confirm
-                (let ((evil-ex-substitute-overlay (make-overlay (point) (point)))
-                      (evil-ex-substitute-hl (evil-ex-make-hl 'evil-ex-substitute)))
-                  (evil-ex-hl-change 'evil-ex-substitute pattern)
-                  (unwind-protect
-                      ;; this one is more difficult, we have to do the
-                      ;; highlighting and questioning on our own
-                      (progn
-                        (overlay-put evil-ex-substitute-overlay 'face 'isearch)
-                        (overlay-put evil-ex-substitute-overlay 'priority 1001)
-                        (map-y-or-n-p #'(lambda (x)
-                                          (set-match-data x)
-                                          (move-overlay evil-ex-substitute-overlay
-                                                        (match-beginning 0)
-                                                        (match-end 0))
-                                          (concat "Query replacing "
-                                                  (match-string 0)
-                                                  " with "
-                                                  (if (fboundp 'match-substitute-replacement)
-                                                      (match-substitute-replacement
-                                                       evil-ex-substitute-replacement case-replace)
-                                                    evil-ex-substitute-replacement)
-                                                  ": "))
-                                      #'(lambda (x)
-                                          (set-match-data x)
-                                          (replace-match evil-ex-substitute-replacement case-replace)
-                                          (setq evil-ex-substitute-last-point (point))
-                                          (setq evil-ex-substitute-nreplaced
-                                                (1+ evil-ex-substitute-nreplaced))
-                                          (evil-ex-hl-set-region 'evil-ex-substitute
-                                                                 (save-excursion
-                                                                   (forward-line)
-                                                                   (point))
-                                                                 (evil-ex-hl-get-max 'evil-ex-substitute)))
-                                      #'(lambda ()
-                                          (goto-char (point-min))
-                                          (when (and (zerop (forward-line (1- evil-ex-substitute-next-line)))
-                                                     (bolp)
-                                                     (re-search-forward evil-ex-substitute-regex nil t nil)
-                                                     (<= (line-number-at-pos (match-end 0))
-                                                         evil-ex-substitute-last-line))
-                                            (goto-char (match-beginning 0))
-                                            (setq evil-ex-substitute-next-line
-                                                  (1+ (line-number-at-pos (point))))
-                                            (match-data)))))
-                    (evil-ex-delete-hl 'evil-ex-substitute)
-                    (delete-overlay evil-ex-substitute-overlay)))
-
-              ;; just replace the first occurences per line
-              ;; without highlighting and asking
-              (goto-char (point-min))
-              (let ((n (1- evil-ex-substitute-next-line)))
-                (while (and (zerop (forward-line n))
-                            (bolp)
-                            (re-search-forward evil-ex-substitute-regex nil t nil)
-                            (<= (line-number-at-pos (match-beginning 0)) evil-ex-substitute-last-line))
-                  (setq evil-ex-substitute-nreplaced
-                        (1+ evil-ex-substitute-nreplaced))
-                  (replace-match evil-ex-substitute-replacement case-replace)
-                  (setq evil-ex-substitute-last-point (point))
-                  (setq n 1))))
-
-            (goto-char evil-ex-substitute-last-point)
-
-            (if (= evil-ex-substitute-nreplaced 1)
-                (message "Replaced 1 occurence")
-              (message "Replaced %d occurences" evil-ex-substitute-nreplaced))))))))
 
 (defun evil-ex-parse-substitute (text)
   (save-match-data

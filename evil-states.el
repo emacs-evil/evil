@@ -1,4 +1,114 @@
-;;;; Visual state
+;;;; States
+
+(require 'evil-core)
+
+;;; Normal state
+
+(evil-define-state normal
+  "Normal state.
+AKA \"Command\" state."
+  :tag " <N> "
+  :enable (motion)
+  :exit-hook (evil-repeat-start-hook)
+  (cond
+   ((evil-normal-state-p)
+    (add-hook 'post-command-hook 'evil-normal-post-command nil t))
+   (t
+    (remove-hook 'post-command-hook 'evil-normal-post-command t))))
+
+(defun evil-normal-post-command ()
+  "Reset command loop variables in Normal state.
+Also prevent point from reaching the end of the line.
+If the region is activated, enter Visual state."
+  (when (evil-normal-state-p)
+    (setq evil-this-type nil
+          evil-this-operator nil
+          evil-this-motion nil
+          evil-this-motion-count nil
+          evil-inhibit-operator nil
+          evil-inhibit-operator-value nil)
+    (unless (eq this-command 'evil-use-register)
+      (setq evil-this-register nil))
+    (evil-adjust-eol)
+    (when (region-active-p)
+      (and (fboundp 'evil-visual-state)
+           (evil-visual-state)))))
+
+;;; Insert state
+
+(evil-define-state insert
+  "Insert state."
+  :tag " <I> "
+  :cursor (bar . 2)
+  :message "-- INSERT --"
+  :exit-hook (evil-cleanup-insert-state)
+  :input-method t
+  (cond
+   ((evil-insert-state-p)
+    (add-hook 'pre-command-hook 'evil-insert-repeat-hook)
+    (unless evil-want-fine-undo
+      (evil-start-undo-step t)))
+   (t
+    (remove-hook 'pre-command-hook 'evil-insert-repeat-hook)
+    (setq evil-insert-repeat-info evil-repeat-info)
+    (evil-set-marker ?^ nil t)
+    (unless evil-want-fine-undo
+      (evil-end-undo-step t))
+    (when evil-move-cursor-back
+      (evil-adjust)))))
+
+(defun evil-insert-repeat-hook ()
+  "Record insertion keys in `evil-insert-repeat-info'."
+  (setq evil-insert-repeat-info (last evil-repeat-info))
+  (remove-hook 'pre-command-hook 'evil-insert-repeat-hook))
+
+(defun evil-cleanup-insert-state ()
+  "Called when Insert state is about to be exited.
+Handles the repeat-count of the insertion command."
+  (when evil-insert-count
+    (dotimes (i (1- evil-insert-count))
+      (when evil-insert-lines
+        (evil-insert-newline-below))
+      (when (fboundp 'evil-execute-repeat-info)
+        (evil-execute-repeat-info
+         (cdr evil-insert-repeat-info)))))
+  (when evil-insert-vcount
+    (let ((line (nth 0 evil-insert-vcount))
+          (col (nth 1 evil-insert-vcount))
+          (vcount (nth 2 evil-insert-vcount)))
+      (save-excursion
+        (dotimes (v (1- vcount))
+          (goto-char (point-min))
+          (forward-line (+ line v))
+          (when (or (not evil-insert-skip-empty-lines)
+                    (not (integerp col))
+                    (save-excursion
+                      (end-of-line)
+                      (>= (current-column) col)))
+            (if (integerp col)
+                (move-to-column col t)
+              (funcall col))
+            (dotimes (i (or evil-insert-count 1))
+              (when (fboundp 'evil-execute-repeat-info)
+                (evil-execute-repeat-info
+                 (cdr evil-insert-repeat-info))))))))))
+
+(defun evil-insert-newline-above ()
+  "Inserts a new line above point and places point in that line
+with regard to indentation."
+  (beginning-of-line)
+  (newline)
+  (forward-line -1)
+  (back-to-indentation))
+
+(defun evil-insert-newline-below ()
+  "Inserts a new line below point and places point in that line
+with regard to indentation."
+  (end-of-line)
+  (newline)
+  (back-to-indentation))
+
+;;; Visual state
 
 ;; Visual selections are implemented in terms of types, and are
 ;; compatible with the Emacs region. This is achieved by "translating"
@@ -12,9 +122,6 @@
 ;; exiting Visual state. This allows Visual state to harness the
 ;; "transient" behavior of many commands without overriding the user's
 ;; preferences in other states.
-
-(require 'evil-types)
-(require 'evil-core)
 
 (defmacro evil-define-visual-selection (selection doc &rest body)
   "Define a Visual selection SELECTION.
@@ -518,71 +625,6 @@ Default to `evil-visual-make-region'."
       ;; generic selection function
       'evil-visual-make-region))
 
-(evil-define-command evil-visual-restore ()
-  "Restore previous selection."
-  :keep-visual t
-  (interactive)
-  (let* ((point (point))
-         (mark (or (mark t) point))
-         (dir evil-visual-direction)
-         (type evil-visual-type)
-         range)
-    (unless (evil-visual-state-p)
-      (cond
-       ;; No previous selection.
-       ((or (null type)
-            (null evil-visual-mark)
-            (null evil-visual-point)))
-       ;; If the type was one-to-one, it is preferable to infer
-       ;; point and mark from the selection's boundaries. The reason
-       ;; is that a destructive operation may displace the markers
-       ;; inside the selection.
-       ((evil-type-property type :one-to-one)
-        (setq range (evil-contract-range (evil-visual-range))
-              mark (evil-range-beginning range)
-              point (evil-range-end range))
-        (when (< dir 0)
-          (evil-swap mark point)))
-       ;; If the type wasn't one-to-one, we have to restore the
-       ;; selection on the basis of the previous point and mark.
-       (t
-        (setq mark evil-visual-mark
-              point evil-visual-point)))
-      (evil-visual-make-selection mark point type))))
-
-(evil-define-command evil-visual-exchange-corners ()
-  "Rearrange corners in Visual Block mode.
-
-        M---+           +---M
-        |   |    <=>    |   |
-        +---P           P---+
-
-For example, if mark is in the upper left corner and point
-in the lower right, this function puts mark in the upper right
-corner and point in the lower left."
-  :keep-visual t
-  (interactive)
-  (cond
-   ((eq evil-visual-type evil-visual-block)
-    (let* ((point (point))
-           (mark (or (mark t) point))
-           (point-col (current-column))
-           (mark-col (save-excursion
-                       (goto-char mark)
-                       (current-column)))
-           (mark (save-excursion
-                   (goto-char mark)
-                   (evil-move-to-column point-col)
-                   (point)))
-           (point (save-excursion
-                    (goto-char point)
-                    (evil-move-to-column mark-col)
-                    (point))))
-      (evil-visual-refresh evil-visual-block mark point)))
-   (t
-    (evil-exchange-point-and-mark)
-    (evil-visual-refresh))))
-
 (defun evil-visual-block-corner (&optional corner point mark)
   "Block corner corresponding to POINT, with MARK in opposite corner.
 Depending on POINT and MARK, the return value is `upper-left',
@@ -633,44 +675,93 @@ CORNER defaults to `upper-left'."
       (setq vertical "lower")))
     (intern (format "%s-%s" vertical horizontal))))
 
-(evil-define-command evil-visual-rotate (corner &optional beg end type)
-  "In Visual Block selection, put point in CORNER.
-Corner may be one of `upper-left', `upper-right', `lower-left'
-and `lower-right':
+;;; Operator-Pending state
 
-        upper-left +---+ upper-right
-                   |   |
-        lower-left +---+ lower-right
+(evil-define-state operator
+  "Operator-Pending state."
+  :tag " <O> "
+  :cursor evil-half-cursor
+  :enable (evil-operator-shortcut-map operator motion normal))
 
-When called interactively, the selection is rotated blockwise."
-  :keep-visual t
-  (interactive
-   (let ((corners '(upper-left upper-right lower-right lower-left)))
-     (list (or (cadr (memq (evil-visual-block-corner) corners))
-               'upper-left))))
-  (let* ((beg (or beg (point)))
-         (end (or end (mark t) beg))
-         (type (or type evil-visual-type))
-         range)
-    (cond
-     ((eq type 'block)
-      (setq range (evil-block-rotate beg end :corner corner)
-            beg (pop range)
-            end (pop range))
-      (unless (eq corner (evil-visual-block-corner corner beg end))
-        (evil-swap beg end))
-      (goto-char beg)
-      (evil-move-mark end)
-      (when (evil-visual-state-p)
-        (evil-visual-refresh evil-visual-block
-                             nil nil :corner corner)))
-     ((memq corner '(upper-right lower-right))
-      (goto-char (max beg end))
-      (evil-move-mark (min beg end)))
-     (t
-      (goto-char (min beg end))
-      (evil-move-mark (max beg end))))))
+(evil-define-keymap evil-operator-shortcut-map
+  "Keymap for Operator-Pending shortcuts like \"dd\" and \"gqq\"."
+  :local t
+  (setq evil-operator-shortcut-map (make-sparse-keymap))
+  (evil-initialize-local-keymaps))
 
-(provide 'evil-visual)
+;; the half-height "Operator-Pending cursor" cannot be specified
+;; as a static `cursor-type' value, since its height depends on
+;; the current font size
+(defun evil-half-cursor ()
+  "Change cursor to a half-height box.
+\(This is really just a thick horizontal bar.)"
+  (let (height)
+    ;; make `window-line-height' reliable
+    (redisplay)
+    (setq height (window-line-height))
+    (setq height (+ (nth 0 height) (nth 3 height)))
+    ;; cut cursor height in half
+    (setq height (/ height 2))
+    (setq cursor-type (cons 'hbar height))
+    ;; ensure the cursor is redisplayed
+    (force-window-update (selected-window))
+    (redisplay)))
 
-;;; evil-visual.el ends here
+;;; Replace state
+
+(evil-define-state replace
+  "Replace state."
+  :tag " <R> "
+  :cursor hbar
+  :message "-- REPLACE --"
+  (cond
+   ((evil-replace-state-p)
+    (overwrite-mode 1)
+    (add-hook 'pre-command-hook 'evil-replace-pre-command nil t))
+   (t
+    (overwrite-mode -1)
+    (remove-hook 'pre-command-hook 'evil-replace-pre-command t)
+    (when evil-move-cursor-back
+      (evil-adjust))))
+  (setq evil-replace-alist nil))
+
+(defun evil-replace-pre-command ()
+  "Remember the character under point."
+  (when (evil-replace-state-p)
+    (unless (assq (point) evil-replace-alist)
+      (add-to-list 'evil-replace-alist
+                   (cons (point)
+                         (unless (eolp)
+                           (char-after)))))))
+
+(defun evil-replace-backspace ()
+  "Restore character under cursor."
+  (interactive)
+  (let (char)
+    (backward-char)
+    (when (assq (point) evil-replace-alist)
+      (setq char (cdr (assq (point) evil-replace-alist)))
+      (save-excursion
+        (delete-char 1)
+        (when char
+          (insert char))))))
+
+;;; Motion state
+
+(evil-define-state motion
+  "Motion state."
+  :tag " <M> "
+  :suppress-keymap t)
+
+;;; Emacs state
+
+(evil-define-state emacs
+  "Emacs state."
+  :tag " <E> "
+  :message "-- EMACS --"
+  :input-method t
+  :intercept-esc nil)
+
+(provide 'evil-states)
+
+;;; evil-states.el ends here

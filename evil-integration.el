@@ -1,8 +1,6 @@
 ;;;; Integrate Evil with other modules
 
-(require 'evil-core)
-(require 'evil-motions)
-(require 'evil-repeat)
+(require 'evil-maps)
 
 (mapc 'evil-declare-motion evil-motions)
 (mapc 'evil-declare-not-repeat

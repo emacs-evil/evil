@@ -91,9 +91,7 @@
 ;; prepending the count as a string to the vector of the remaining
 ;; key-sequence.
 
-(require 'evil-undo)
-(require 'evil-core)
-(require 'evil-types)
+(require 'evil-states)
 
 (declare-function evil-visual-state-p "evil-visual")
 (declare-function evil-visual-range "evil-visual")

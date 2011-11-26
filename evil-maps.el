@@ -1,11 +1,6 @@
 ;;;; Default keymaps
 
-(require 'evil-core)
-(require 'evil-visual)
-(require 'evil-motions)
-(require 'evil-insert)
-(require 'evil-operators)
-(require 'evil-replace)
+(require 'evil-states)
 (require 'evil-ex)
 
 ;;; Normal state

@@ -151,6 +151,29 @@ If STATE is nil, disable all states."
                (or message (not (eq state evil-state))))
       (funcall func (if state (and message 1) -1)))))
 
+(defmacro evil-save-state (&rest body)
+  "Save the current state; execute BODY; restore the state."
+  (declare (indent defun)
+           (debug t))
+  `(let* ((evil-state evil-state)
+          (evil-previous-state evil-previous-state)
+          (evil-next-state evil-next-state)
+          (old-state evil-state)
+          (inhibit-quit t))
+     (unwind-protect
+         (progn ,@body)
+       (evil-change-state old-state))))
+
+(defmacro evil-with-state (state &rest body)
+  "Change to STATE and execute BODY without refreshing the display.
+Restore the previous state afterwards."
+  (declare (indent defun)
+           (debug t))
+  `(evil-without-display
+     (evil-save-state
+       (evil-change-state ',state)
+       ,@body)))
+
 (defun evil-initialize-state (&optional buffer)
   "Set up the initial state for BUFFER.
 This is the state the buffer comes up in.
@@ -158,38 +181,6 @@ See also `evil-set-initial-state'."
   (with-current-buffer (or buffer (current-buffer))
     (evil-change-to-initial-state buffer)
     (remove-hook 'post-command-hook 'evil-initialize-state t)))
-
-(evil-define-command evil-change-to-initial-state
-  (&optional buffer message)
-  "Change the state of BUFFER to its initial state.
-This is the state the buffer came up in."
-  :keep-visual t
-  (interactive)
-  (with-current-buffer (or buffer (current-buffer))
-    (evil-change-state (evil-initial-state-for-buffer
-                        buffer (or evil-default-state 'normal))
-                       message)))
-
-(evil-define-command evil-change-to-previous-state
-  (&optional buffer message)
-  "Change the state of BUFFER to its previous state."
-  :keep-visual t
-  :repeat abort
-  (interactive)
-  (with-current-buffer (or buffer (current-buffer))
-    (evil-change-state (or evil-previous-state evil-default-state 'normal)
-                       message)))
-
-(evil-define-command evil-exit-emacs-state (&optional buffer message)
-  "Exit Emacs state.
-Changes the state to the previous state, or to Normal state
-if the previous state was Emacs state."
-  :keep-visual t
-  (interactive '(nil t))
-  (with-current-buffer (or buffer (current-buffer))
-    (evil-change-to-previous-state buffer message)
-    (when (evil-emacs-state-p)
-      (evil-normal-state (and message 1)))))
 
 (defun evil-initial-state-for-buffer (&optional buffer default)
   "Return the initial Evil state to use for BUFFER.
@@ -228,6 +219,27 @@ This is the state the buffer comes up in."
     (set modes (delq mode (symbol-value modes))))
   (when state
     (add-to-list (evil-state-property state :modes) mode)))
+
+(evil-define-command evil-change-to-initial-state
+  (&optional buffer message)
+  "Change the state of BUFFER to its initial state.
+This is the state the buffer came up in."
+  :keep-visual t
+  (interactive)
+  (with-current-buffer (or buffer (current-buffer))
+    (evil-change-state (evil-initial-state-for-buffer
+                        buffer (or evil-default-state 'normal))
+                       message)))
+
+(evil-define-command evil-change-to-previous-state
+  (&optional buffer message)
+  "Change the state of BUFFER to its previous state."
+  :keep-visual t
+  :repeat abort
+  (interactive)
+  (with-current-buffer (or buffer (current-buffer))
+    (evil-change-state (or evil-previous-state evil-default-state 'normal)
+                       message)))
 
 (defadvice display-buffer (before evil activate)
   "Initialize Evil in the displayed buffer."
@@ -432,21 +444,6 @@ may be specified before the body code:
     (evil-esc-mode 1)
     (remove-hook 'pre-command-hook 'evil-turn-on-esc-mode t)))
 
-;; TODO: this will probably not work well with the repeat-system.
-(evil-define-command evil-esc (arg)
-  "Wait for further keys within `evil-esc-delay'.
-Otherwise send [escape]."
-  :repeat ignore
-  (interactive "P")
-  (if (sit-for evil-esc-delay t)
-      (push 'escape unread-command-events)
-    (push last-command-event unread-command-events)
-    ;; preserve prefix argument
-    (setq prefix-arg arg))
-  ;; disable interception for the next key sequence
-  (evil-esc-mode -1)
-  (add-hook 'pre-command-hook 'evil-turn-on-esc-mode nil t))
-
 ;; `evil-esc' is bound to (kbd "ESC"), while other commands
 ;; are bound to [escape]. That way `evil-esc' is used only when
 ;; (kbd "ESC") and [escape] are the same event -- i.e., when
@@ -521,7 +518,7 @@ This is a keymap alist, determined by the current state
     (dolist (entry evil-mode-map-alist)
       (setq mode (car-safe entry)
             map (cdr-safe entry))
-      ;; auxiliary keymaps etc. are not toggled here,
+      ;; overriding keymaps are not toggled here,
       ;; but by the mode they are associated with
       (if (or (memq mode excluded)
               (evil-intercept-keymap-p map)
@@ -976,45 +973,6 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
          :func nil)
 
        ',state)))
-
-;;; Define Normal state and Emacs state
-
-(evil-define-state normal
-  "Normal state.
-AKA \"Command\" state."
-  :tag " <N> "
-  :enable (motion)
-  :exit-hook (evil-repeat-start-hook)
-  (cond
-   ((evil-normal-state-p)
-    (add-hook 'post-command-hook 'evil-normal-post-command nil t))
-   (t
-    (remove-hook 'post-command-hook 'evil-normal-post-command t))))
-
-(defun evil-normal-post-command ()
-  "Reset command loop variables in Normal state.
-Also prevent point from reaching the end of the line.
-If the region is activated, enter Visual state."
-  (when (evil-normal-state-p)
-    (setq evil-this-type nil
-          evil-this-operator nil
-          evil-this-motion nil
-          evil-this-motion-count nil
-          evil-inhibit-operator nil
-          evil-inhibit-operator-value nil)
-    (unless (eq this-command 'evil-use-register)
-      (setq evil-this-register nil))
-    (evil-adjust-eol)
-    (when (region-active-p)
-      (and (fboundp 'evil-visual-state)
-           (evil-visual-state)))))
-
-(evil-define-state emacs
-  "Emacs state."
-  :tag " <E> "
-  :message "-- EMACS --"
-  :input-method t
-  :intercept-esc nil)
 
 (provide 'evil-core)
 
