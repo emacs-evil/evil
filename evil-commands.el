@@ -674,9 +674,9 @@ The default is half the screen."
   :keep-visual t
   (interactive "P")
   (evil-save-column
-    (let ((line (or count (line-number-at-pos (point)))))
+    (when count
       (goto-char (point-min))
-      (forward-line (1- line)))
+      (forward-line (1- count)))
     (recenter nil)))
 
 (evil-define-command evil-scroll-line-to-bottom (count)
