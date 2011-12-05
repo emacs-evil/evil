@@ -202,9 +202,7 @@ on the first non-blank character."
 on the first non-blank character."
   :jump t
   :type line
-  (move-to-window-line (/ (save-excursion
-                            (move-to-window-line -1))
-                          2))
+  (move-to-window-line (/ (1+ (save-excursion (move-to-window-line -1))) 2))
   (back-to-indentation))
 
 (evil-define-motion evil-window-bottom (count)
