@@ -6,18 +6,27 @@
 (mapc 'evil-declare-not-repeat
       '(digit-argument
         negative-argument
-        save-buffer
         universal-argument
         universal-argument-minus
-        universal-argument-other-key))
+        universal-argument-other-key
+        what-cursor-position))
 (mapc 'evil-declare-change-repeat
       '(dabbrev-expand
         hippie-expand))
 (mapc 'evil-declare-abort-repeat
-      '(eval-expression
+      '(balance-windows
+        eval-expression
         execute-extended-command
         compile
-        recompile))
+        delete-window
+        delete-other-windows
+        find-file-at-point
+        ffap-other-window
+        recompile
+        save-buffer
+        split-window
+        split-window-horizontally
+        split-window-vertically))
 
 (dolist (map evil-overriding-maps)
   (eval-after-load (cdr map)
