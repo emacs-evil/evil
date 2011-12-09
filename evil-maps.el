@@ -372,6 +372,7 @@
 (evil-ex-define-cmd "bd" "bdelete")
 (evil-ex-define-cmd "substitute" 'evil-ex-substitute)
 (evil-ex-define-cmd "s" "substitute")
+(evil-ex-define-cmd "registers" 'evil-show-registers)
 (evil-ex-define-cmd "marks" 'evil-show-marks)
 (evil-ex-define-cmd "jumps" 'evil-show-jumps)
 (evil-ex-define-cmd "ju" "jumps")

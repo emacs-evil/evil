@@ -1900,6 +1900,20 @@ If no FILE-NAME is given, the current buffer's file-name is used."
   (evil-write (point-min) (point-max) 'line file force)
   (evil-quit))
 
+;; TODO: escape special characters (currently only \n) ... perhaps
+;; there is some Emacs function doing this?
+(evil-define-command evil-show-registers ()
+  "Shows the contents of all registers."
+  :repeat nil
+  (interactive)
+  (let (message-truncate-lines message-log-max)
+    (message "%s"
+             (mapconcat #'(lambda (reg)
+                            (format "\"%c\t%s"
+                                    (car reg)
+                                    (replace-regexp-in-string "\n" "^J" (cdr reg))))
+                        (evil-register-list) "\n"))))
+
 (eval-when-compile (require 'ffap))
 (evil-define-command evil-find-file-at-point-with-line ()
   "Opens the file at point and goes to line-number."

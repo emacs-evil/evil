@@ -1151,6 +1151,14 @@ Signal an error if empty, unless NOERROR is non-nil."
    (t
     (set-register register text))))
 
+(defun evil-register-list ()
+  "Returns an alist of all registers"
+  (sort (append (mapcar #'(lambda (reg)
+                            (cons reg (evil-get-register reg)))
+                        '(?\" ?* ?+ ?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+                register-alist)
+        #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
+
 ;;; Region
 
 (defun evil-transient-save ()
