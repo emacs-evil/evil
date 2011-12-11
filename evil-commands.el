@@ -1758,13 +1758,13 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
           (error nil))
         (setq ientry (assoc string ientry))
         (setq ipos (cdr ientry))
-        (unless (markerp ipos)
-          (setq ipos (cadr ientry)))
+        (when (and (markerp ipos)
+                   (eq (marker-buffer ipos) (current-buffer)))
+          (setq ipos (marker-position ipos)))
         (cond
          ;; imenu found a position, so go there and
          ;; highlight the occurrence
-         ((and (markerp ipos)
-               (eq (marker-buffer ipos) (current-buffer)))
+         ((numberp ipos)
           (evil-search search t t ipos))
          ;; imenu failed, so just go to first occurrence in buffer
          (t
