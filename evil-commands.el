@@ -2073,8 +2073,9 @@ Change to `%s'? "
                                               evil-ex-search-case)
                                           whole-line))
            (evil-ex-substitute-regex (evil-ex-pattern-regex pattern)))
-      (let ((case-replace (eq (evil-ex-pattern-case-fold pattern)
-                              'insensitive)))
+      (let* ((case-replace (eq (evil-ex-pattern-case-fold pattern)
+                               'insensitive))
+             (case-fold-search case-replace))
         (if whole-line
             ;; this one is easy, just use the built-in function
             (perform-replace evil-ex-substitute-regex
