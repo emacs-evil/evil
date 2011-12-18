@@ -28,6 +28,9 @@
         split-window-horizontally
         split-window-vertically))
 
+(evil-set-type 'previous-line 'line)
+(evil-set-type 'next-line 'line)
+
 (dolist (map evil-overriding-maps)
   (eval-after-load (cdr map)
     `(evil-make-overriding-map ,(car map))))
