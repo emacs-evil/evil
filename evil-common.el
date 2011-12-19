@@ -940,20 +940,23 @@ POS defaults to the current position of point."
   (let ((parse (lambda (p)
                  (let ((c (char-after p)))
                    (or (and c (eq (char-syntax c) ?<))
+                       (memq (get-text-property p 'face)
+                             '(font-lock-comment-face
+                               font-lock-comment-delimiter-face))
                        (nth 4 (parse-partial-sexp
                                (save-excursion
                                  (beginning-of-defun)
                                  (point)) p)))))))
     (save-excursion
       (goto-char (or pos (point)))
-      (or (funcall parse (point))
-          ;; `parse-partial-sexp's notion of comments
-          ;; doesn't span lines
-          (progn
-            (back-to-indentation)
-            (unless (eolp)
-              (forward-char)
-              (funcall parse (point))))))))
+      (and (or (funcall parse (point))
+               ;; `parse-partial-sexp's notion of comments
+               ;; doesn't span lines
+               (progn
+                 (back-to-indentation)
+                 (unless (eolp)
+                   (forward-char)
+                   (funcall parse (point))))) t))))
 
 (defun evil-in-string-p (&optional pos)
   "Whether POS is inside a string.
