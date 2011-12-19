@@ -40,6 +40,14 @@ and \\[evil-shift-left]."
   :group 'evil)
 (make-variable-buffer-local 'evil-shift-width)
 
+(defcustom evil-shift-round t
+  "Whether \\<evil-normal-state-map>\\[evil-shift-right] \
+and \\[evil-shift-left] round to the nearest multiple \
+of `evil-shift-width'."
+  :type 'boolean
+  :group 'evil)
+(make-variable-buffer-local 'evil-shift-round)
+
 (defcustom evil-default-cursor
   (list (or (frame-parameter nil 'cursor-color) "black") t)
   "The default cursor.

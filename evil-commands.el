@@ -1207,14 +1207,43 @@ but doesn't insert or remove any spaces."
   (back-to-indentation))
 
 (evil-define-operator evil-shift-left (beg end)
-  "Shift text to the left."
+  "Shift text from BEG to END to the left.
+The text is shifted to the nearest multiple of `evil-shift-width'
+\(the rounding can be disabled by setting `evil-shift-round').
+See also `evil-shift-right'."
   :type line
-  (indent-rigidly beg end (- evil-shift-width)))
+  (if (not evil-shift-round)
+      (indent-rigidly beg end (- evil-shift-width))
+    (let* ((indent
+            (save-excursion
+              (goto-char beg)
+              (beginning-of-line)
+              ;; ignore blank lines
+              (while (and (< (point) end) (looking-at "[ \t]*$"))
+                (forward-line))
+              (if (> (point) end) 0
+                (current-indentation))))
+           (offset (1+ (mod (1- indent) evil-shift-width))))
+      (indent-rigidly beg end (- offset)))))
 
 (evil-define-operator evil-shift-right (beg end)
-  "Shift text to the right."
+  "Shift text from BEG to END to the right.
+The text is shifted to the nearest multiple of `evil-shift-width'
+\(the rounding can be disabled by setting `evil-shift-round').
+See also `evil-shift-left'."
   :type line
-  (indent-rigidly beg end evil-shift-width))
+  (if (not evil-shift-round)
+      (indent-rigidly beg end evil-shift-width)
+    (let* ((indent
+            (save-excursion
+              (goto-char beg)
+              (beginning-of-line)
+              (while (and (< (point) end) (looking-at "[ \t]*$"))
+                (forward-line))
+              (if (> (point) end) 0
+                (current-indentation))))
+           (offset (- evil-shift-width (mod indent evil-shift-width))))
+      (indent-rigidly beg end offset))))
 
 (evil-define-operator evil-replace (beg end type char)
   "Replace text from BEG to END with CHAR."
