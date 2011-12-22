@@ -590,19 +590,20 @@ function for changing the cursor, or a list of the above."
   "Refresh the cursor for STATE in BUFFER.
 STATE defaults to the current state.
 BUFFER defaults to the current buffer."
-  (let* ((state (or state evil-state 'normal))
-         (default (or evil-default-cursor t))
-         (cursor (evil-state-property state :cursor t))
-         (color (or (and (stringp cursor) cursor)
-                    (and (listp cursor)
-                         (evil-member-if 'stringp cursor)))))
-    (with-current-buffer (or buffer (current-buffer))
-      ;; if both STATE and `evil-default-cursor'
-      ;; specify a color, don't set it twice
-      (when (and color (listp default))
-        (setq default (evil-filter-list 'stringp default)))
-      (evil-set-cursor default)
-      (evil-set-cursor cursor))))
+  (when (and (boundp 'evil-local-mode) evil-local-mode)
+    (let* ((state (or state evil-state 'normal))
+           (default (or evil-default-cursor t))
+           (cursor (evil-state-property state :cursor t))
+           (color (or (and (stringp cursor) cursor)
+                      (and (listp cursor)
+                           (evil-member-if 'stringp cursor)))))
+      (with-current-buffer (or buffer (current-buffer))
+        ;; if both STATE and `evil-default-cursor'
+        ;; specify a color, don't set it twice
+        (when (and color (listp default))
+          (setq default (evil-filter-list 'stringp default)))
+        (evil-set-cursor default)
+        (evil-set-cursor cursor)))))
 (put 'evil-refresh-cursor 'permanent-local-hook t)
 
 (defmacro evil-save-cursor (&rest body)
