@@ -73,7 +73,7 @@ moves the cursor."
   :type 'boolean
   :group 'evil)
 
-(defcustom evil-mode-line-format 'after
+(defcustom evil-mode-line-format 'before
   "The position of the mode line tag.
 `before' means before the mode list, `after' means after it,
 and nil means no mode line tag."

@@ -416,8 +416,6 @@ is executed at the end."
     (should (eq evil-local-mode t)))
   (ert-info ("Refresh `emulation-mode-map-alist'")
     (should (memq 'evil-mode-map-alist emulation-mode-map-alists)))
-  (ert-info ("Refresh the mode line")
-    (should (memq 'evil-mode-line-tag global-mode-string)))
   (ert-info ("Create a buffer-local value for `evil-mode-map-alist'")
     (should (assq 'evil-mode-map-alist (buffer-local-variables))))
   (ert-info ("Initialize buffer-local keymaps")
