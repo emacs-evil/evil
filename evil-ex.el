@@ -388,6 +388,7 @@ arguments for programmable completion."
             (funcall evil-ex-current-arg-handler 'start evil-ex-current-arg)))
         (when evil-ex-current-arg-handler
           (funcall evil-ex-current-arg-handler 'update evil-ex-current-arg))))))
+(put 'evil-ex-update 'permanent-local-hook t)
 
 (defun evil-ex-binding (command)
   "Returns the final binding of COMMAND."
@@ -539,6 +540,7 @@ This function interprets special file-names like # and %."
   (when evil-ex-last-cmd
     (add-hook 'pre-command-hook #'evil-ex-remove-default))
   (remove-hook 'minibuffer-setup-hook #'evil-ex-setup))
+(put 'evil-ex-setup 'permanent-local-hook t)
 
 (defun evil-ex-teardown ()
   "Deinitializes ex minibuffer."
@@ -546,10 +548,12 @@ This function interprets special file-names like # and %."
   (remove-hook 'after-change-functions #'evil-ex-update t)
   (when evil-ex-current-arg-handler
     (funcall evil-ex-current-arg-handler 'stop)))
+(put 'evil-ex-teardown 'permanent-local-hook t)
 
 (defun evil-ex-remove-default ()
   (delete-minibuffer-contents)
   (remove-hook 'pre-command-hook #'evil-ex-remove-default))
+(put 'evil-ex-remove-default 'permanent-local-hook t)
 
 (defun evil-ex-read-command (&optional initial-input)
   "Starts ex-mode."

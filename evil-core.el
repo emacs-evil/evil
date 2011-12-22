@@ -179,8 +179,10 @@ Restore the previous state afterwards."
 This is the state the buffer comes up in.
 See also `evil-set-initial-state'."
   (with-current-buffer (or buffer (current-buffer))
-    (evil-change-to-initial-state buffer)
-    (remove-hook 'post-command-hook 'evil-initialize-state t)))
+    (remove-hook 'post-command-hook 'evil-initialize-state t)
+    (unless evil-state
+      (evil-change-to-initial-state buffer))))
+(put 'evil-initialize-state 'permanent-local-hook t)
 
 (defun evil-initial-state-for-buffer (&optional buffer default)
   "Return the initial Evil state to use for BUFFER.
@@ -294,6 +296,7 @@ This is the state the buffer came up in."
       (setq evil-input-method current-input-method)
       (unless (evil-state-property evil-state :input-method)
         (inactivate-input-method)))))
+(put 'evil-activate-input-method 'permanent-local-hook t)
 
 (defun evil-inactivate-input-method ()
   "Disable input method in states with :input-method nil."
@@ -301,6 +304,7 @@ This is the state the buffer came up in."
         input-method-inactivate-hook)
     (when (and evil-local-mode evil-state)
       (setq evil-input-method nil))))
+(put 'evil-inactivate-input-method 'permanent-local-hook t)
 
 ;; When a buffer is created in a low-level way, it is invisible to
 ;; Evil (as well as other globalized minor modes) because no hooks are
@@ -443,6 +447,7 @@ may be specified before the body code:
   (unless (eq this-command 'evil-esc)
     (evil-esc-mode 1)
     (remove-hook 'pre-command-hook 'evil-turn-on-esc-mode t)))
+(put 'evil-turn-on-esc-mode 'permanent-local-hook t)
 
 ;; `evil-esc' is bound to (kbd "ESC"), while other commands
 ;; are bound to [escape]. That way `evil-esc' is used only when

@@ -248,6 +248,7 @@ has :repeat nil."
           (evil-repeat-start))
         (setq evil-recording-current-command t)
         (funcall repeat-type 'pre))))))
+(put 'evil-repeat-pre-hook 'permanent-local-hook t)
 
 ;; called from `post-command-hook'
 (defun evil-repeat-post-hook ()
@@ -272,6 +273,7 @@ has :repeat nil."
           (evil-repeat-stop))))))
   ;; done with recording the current command
   (setq evil-recording-current-command nil))
+(put 'evil-repeat-post-hook 'permanent-local-hook t)
 
 (defun evil-repeat-keystrokes (flag)
   "Repeation recording function for commands that are repeated by keystrokes."
@@ -314,6 +316,7 @@ has :repeat nil."
       (evil-repeat-record-change (- beg evil-repeat-pos)
                                  (buffer-substring beg end)
                                  length))))
+(put 'evil-repeat-change-hook 'permanent-local-hook t)
 
 (defun evil-repeat-record-change (relpos ins ndel)
   "Record the current buffer changes during a repeat.

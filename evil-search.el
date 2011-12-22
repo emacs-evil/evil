@@ -94,6 +94,7 @@ to display in the echo area."
                   evil-search-symbol-backward
                   evil-search-symbol-forward))
     (isearch-clean-overlays)))
+(put 'evil-clean-isearch-overlays 'permanent-local-hook t)
 
 (defun evil-flash-hook (&optional force)
   "Disable hightlighting if `this-command' is not search.
@@ -115,6 +116,7 @@ Disable anyway if FORCE is t."
     (when evil-flash-timer
       (cancel-timer evil-flash-timer)))
   (remove-hook 'pre-command-hook 'evil-flash-hook))
+(put 'evil-flash-hook 'permanent-local-hook t)
 
 (defun evil-search-function (&optional forward regexp-p wrap)
   "Return a search function.
@@ -525,6 +527,7 @@ name `name' to `new-regex'."
   "Update highlights after scrolling in some window."
   (with-current-buffer (window-buffer win)
     (evil-ex-hl-idle-update)))
+(put 'evil-ex-hl-update-highlights-scroll 'permanent-local-hook t)
 
 (defun evil-ex-hl-update-highlights-resize (frame)
   "Updates highlights after resizing a window."
@@ -532,6 +535,7 @@ name `name' to `new-regex'."
     (dolist (buf buffers)
       (with-current-buffer buf
         (evil-ex-hl-idle-update)))))
+(put 'evil-ex-hl-update-highlights-resize 'permanent-local-hook t)
 
 ;; Interactive search.
 
@@ -655,6 +659,7 @@ possibly wrapping and eob or bob."
   (when (and evil-ex-search-interactive evil-ex-search-highlight-all)
     (with-current-buffer evil-ex-current-buffer
       (evil-ex-make-hl 'evil-ex-search :win (minibuffer-selected-window)))))
+(put 'evil-ex-search-start-session 'permanent-local-hook t)
 
 (defun evil-ex-search-stop-session ()
   "Stops interactive search."
@@ -675,6 +680,7 @@ possibly wrapping and eob or bob."
   (when evil-ex-search-overlay
     (delete-overlay evil-ex-search-overlay)
     (setq evil-ex-search-overlay nil)))
+(put 'evil-ex-search-stop-session 'permanent-local-hook t)
 
 (defun evil-ex-search-update-pattern (beg end range)
   "Called to update the current search pattern."
@@ -694,6 +700,7 @@ possibly wrapping and eob or bob."
           (when evil-ex-search-match-beg
             (goto-char evil-ex-search-match-beg))))))
   (evil-ex-search-update))
+(put 'evil-ex-search-update-pattern 'permanent-local-hook t)
 
 (defun evil-ex-search-exit ()
   "Exits interactive search, lazy highlighting keeps active."

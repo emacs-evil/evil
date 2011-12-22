@@ -33,6 +33,7 @@ If the region is activated, enter Visual state."
     (when (region-active-p)
       (and (fboundp 'evil-visual-state)
            (evil-visual-state)))))
+(put 'evil-normal-post-command 'permanent-local-hook t)
 
 ;;; Insert state
 
@@ -61,6 +62,7 @@ If the region is activated, enter Visual state."
   "Record insertion keys in `evil-insert-repeat-info'."
   (setq evil-insert-repeat-info (last evil-repeat-info))
   (remove-hook 'pre-command-hook 'evil-insert-repeat-hook))
+(put 'evil-insert-repeat-hook 'permanent-local-hook t)
 
 (defun evil-cleanup-insert-state ()
   "Called when Insert state is about to be exited.
@@ -242,6 +244,7 @@ to the selection."
        (and (eq evil-visual-type 'line)
             (not (evil-get-command-property
                   this-command :include-newline)))))))
+(put 'evil-visual-pre-command 'permanent-local-hook t)
 
 (defun evil-visual-post-command ()
   "Run after each command in Visual state.
@@ -263,6 +266,7 @@ otherwise exit Visual state."
      (t
       (evil-visual-refresh)
       (evil-visual-highlight)))))
+(put 'evil-visual-post-command 'permanent-local-hook t)
 
 (defun evil-visual-deactivate-hook ()
   "Deactivate the region and restore Transient Mark mode."
@@ -281,6 +285,7 @@ otherwise exit Visual state."
    ((not (evil-visual-state-p))
     (evil-active-region -1)
     (evil-transient-restore))))
+(put 'evil-visual-deactivate-hook 'permanent-local-hook t)
 
 (defun evil-visual-message (&optional selection)
   "Create an echo area message for SELECTION.
@@ -733,6 +738,7 @@ CORNER defaults to `upper-left'."
                    (cons (point)
                          (unless (eolp)
                            (char-after)))))))
+(put 'evil-replace-pre-command 'permanent-local-hook t)
 
 (defun evil-replace-backspace ()
   "Restore character under cursor."

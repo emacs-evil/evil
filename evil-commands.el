@@ -2546,6 +2546,7 @@ if the previous state was Emacs state."
           evil-old-move-cursor-back nil)
     (remove-hook 'post-command-hook
                  'evil-execute-in-normal-state-hook)))
+(put 'evil-execute-in-normal-state-hook 'permanent-local-hook t)
 
 ;; TODO: this will probably not work well with the repeat-system.
 (evil-define-command evil-esc (arg)

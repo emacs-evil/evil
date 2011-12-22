@@ -579,19 +579,23 @@ the replacement is shown interactively."
 To change the state, use `evil-change-state'
 or call the state function (e.g., `evil-normal-state').")
 (make-variable-buffer-local 'evil-state)
+(put 'evil-state 'permanent-local t)
 
 ;; these may be used inside `evil-define-state'
 (defvar evil-next-state nil
   "The Evil state being switched to.")
 (make-variable-buffer-local 'evil-next-state)
+(put 'evil-next-state 'permanent-local t)
 
 (defvar evil-previous-state nil
   "The Evil state being switched from.")
 (make-variable-buffer-local 'evil-previous-state)
+(put 'evil-previous-state 'permanent-local t)
 
 (defvar evil-mode-line-tag nil
   "Mode-Line indicator for the current state.")
 (make-variable-buffer-local 'evil-mode-line-tag)
+(put 'evil-mode-line-tag 'permanent-local t)
 (put 'evil-mode-line-tag 'risky-local-variable t)
 
 (defvar evil-global-keymaps-alist nil
@@ -616,6 +620,7 @@ use `evil-state-property'.")
 Elements have the form (MODE . KEYMAP), with the first keymaps
 having higher priority.")
 (make-variable-buffer-local 'evil-mode-map-alist)
+(put 'evil-mode-map-alist 'permanent-local t)
 
 (defvar evil-command-properties nil
   "Specifications made by `evil-define-command'.")
@@ -633,6 +638,7 @@ whether the variable was previously buffer-local.")
 Don't set this directly; use the macro
 `evil-with-locked-display' instead.")
 (make-variable-buffer-local 'evil-locked-display)
+(put 'evil-locked-display 'permanent-local t)
 
 (defvar evil-type-properties nil
   "Specifications made by `evil-define-type'.
@@ -646,30 +652,37 @@ describing it, etc.")
 (defvar evil-motion-marker nil
   "Marker for storing the starting position of a motion.")
 (make-variable-buffer-local 'evil-motion-marker)
+(put 'evil-motion-marker 'permanent-local t)
 
 (defvar evil-this-type nil
   "Current motion type.")
 (make-variable-buffer-local 'evil-this-type)
+(put 'evil-this-type 'permanent-local t)
 
 (defvar evil-this-register nil
   "Current register.")
 (make-variable-buffer-local 'evil-this-register)
+(put 'evil-this-register 'permanent-local t)
 
 (defvar evil-this-macro nil
   "Current macro register.")
 (make-variable-buffer-local 'evil-this-macro)
+(put 'evil-this-macro 'permanent-local t)
 
 (defvar evil-this-operator nil
   "Current operator.")
 (make-variable-buffer-local 'evil-this-operator)
+(put 'evil-this-operator 'permanent-local t)
 
 (defvar evil-this-motion nil
   "Current motion.")
 (make-variable-buffer-local 'evil-this-motion)
+(put 'evil-this-motion 'permanent-local t)
 
 (defvar evil-this-motion-count nil
   "Current motion count.")
 (make-variable-buffer-local 'evil-this-motion-count)
+(put 'evil-this-motion-count 'permanent-local t)
 
 (defvar evil-inhibit-operator nil
   "Inhibit current operator.
@@ -714,10 +727,12 @@ The global value of this variable holds markers available from
 every buffer, while the buffer-local value holds markers available
 only in the current buffer.")
 (make-variable-buffer-local 'evil-markers-alist)
+(put 'evil-markers-alist 'permanent-local t)
 
 (defvar evil-jump-list nil
   "Jump list.")
 (make-variable-buffer-local 'evil-jump-list)
+(put 'evil-jump-list 'permanent-local t)
 
 (defconst evil-suppress-map (make-keymap)
   "Full keymap disabling default bindings to `self-insert-command'.")
@@ -771,6 +786,7 @@ has been repeated.")
 (defvar evil-insert-count nil
   "The explicit count passed to an command starting Insert state.")
 (make-variable-buffer-local 'evil-insert-count)
+(put 'evil-insert-count 'permanent-local t)
 
 (defvar evil-insert-vcount nil
   "The information about the number of following lines the
@@ -780,6 +796,7 @@ started and COLUMN is either a number of function determining the
 column where the repeated insertions should take place. COUNT is
 number of repeats (including the original insertion).")
 (make-variable-buffer-local 'evil-insert-vcount)
+(put 'evil-insert-vcount 'permanent-local t)
 
 (defvar evil-insert-skip-empty-lines nil
   "Non-nil of the current insertion should not take place on
@@ -790,19 +807,23 @@ number of repeats (including the original insertion).")
   "Non-nil if the current insertion command is a line-insertion
 command o or O.")
 (make-variable-buffer-local 'evil-insert-lines)
+(put 'evil-insert-lines 'permanent-local t)
 
 (defvar evil-insert-repeat-info nil
   "Repeat information accumulated during an insertion.")
 (make-variable-buffer-local 'evil-insert-repeat-info)
+(put 'evil-insert-repeat-info 'permanent-local t)
 
 (defvar evil-replace-alist nil
   "Association list of characters overwritten in Replace state.
 The format is (POS . CHAR).")
 (make-variable-buffer-local 'evil-replace-alist)
+(put 'evil-replace-alist 'permanent-local t)
 
 (defvar evil-echo-area-message nil
   "Previous value of `current-message'.")
 (make-variable-buffer-local 'evil-echo-area-message)
+(put 'evil-echo-area-message 'permanent-local t)
 
 (defvar evil-write-echo-area nil
   "If set to t inside `evil-save-echo-area', then the echo area
@@ -830,6 +851,7 @@ instead of `buffer-undo-list'.")
 (defvar evil-undo-list-pointer nil
   "Everything up to this mark is united in the undo-list.")
 (make-variable-buffer-local 'evil-undo-list-pointer)
+(put 'evil-undo-list-pointer 'permanent-local t)
 
 (defvar evil-flash-timer nil
   "Timer for flashing search results.")
@@ -849,6 +871,7 @@ instead of `buffer-undo-list'.")
 (defvar evil-input-method nil
   "Input method used in Insert state and Emacs state.")
 (make-variable-buffer-local 'evil-input-method)
+(put 'evil-input-method 'permanent-local t)
 
 (defvar evil-symbol-counter 0
   "Counter used by `evil-generate-symbol'.")
@@ -858,28 +881,34 @@ instead of `buffer-undo-list'.")
 (defvar evil-visual-beginning nil
   "The beginning of the Visual selection, a marker.")
 (make-variable-buffer-local 'evil-visual-beginning)
+(put 'evil-visual-beginning 'permanent-local t)
 
 (defvar evil-visual-end nil
   "The end of the Visual selection, a marker.")
 (make-variable-buffer-local 'evil-visual-end)
+(put 'evil-visual-end 'permanent-local t)
 
 (defvar evil-visual-mark nil
   "The position of mark in Visual state, a marker.")
 (make-variable-buffer-local 'evil-visual-mark)
+(put 'evil-visual-mark 'permanent-local t)
 
 (defvar evil-visual-point nil
   "The position of point in Visual state, a marker.")
 (make-variable-buffer-local 'evil-visual-point)
+(put 'evil-visual-point 'permanent-local t)
 
 (defvar evil-visual-selection nil
   "The kind of Visual selection.
 This is a selection as defined by `evil-define-visual-selection'.")
 (make-variable-buffer-local 'evil-visual-selection)
+(put 'evil-visual-selection 'permanent-local t)
 
 (defvar evil-visual-type nil
   "The type of the Visual selection.
 This is a type as defined by `evil-define-type'.")
 (make-variable-buffer-local 'evil-visual-type)
+(put 'evil-visual-type 'permanent-local t)
 
 ;; we could infer the direction by comparing `evil-visual-mark'
 ;; and `evil-visual-point', but destructive operations may
@@ -889,10 +918,12 @@ This is a type as defined by `evil-define-type'.")
 Negative if point precedes mark, otherwise positive.
 See also the function `evil-visual-direction'.")
 (make-variable-buffer-local 'evil-visual-direction)
+(put 'evil-visual-direction 'permanent-local t)
 
 (defvar evil-visual-properties nil
   "Property list of miscellaneous Visual properties.")
 (make-variable-buffer-local 'evil-visual-properties)
+(put 'evil-visual-properties 'permanent-local t)
 
 (defvar evil-visual-region-expanded nil
   "Whether the region matches the Visual selection.
@@ -901,17 +932,20 @@ expanded to coincide with the selection's boundaries.
 This makes the selection available to functions acting
 on Emacs' region.")
 (make-variable-buffer-local 'evil-visual-region-expanded)
+(put 'evil-visual-region-expanded 'permanent-local t)
 
 (defvar evil-visual-overlay nil
   "Overlay for highlighting the Visual selection.
 Not used for blockwise selections, in which case
 see `evil-visual-block-overlays'.")
 (make-variable-buffer-local 'evil-visual-overlay)
+(put 'evil-visual-overlay 'permanent-local t)
 
 (defvar evil-visual-block-overlays nil
   "Overlays for Visual Block selection, one for each line.
 They are reused to minimize flicker.")
 (make-variable-buffer-local 'evil-visual-block-overlays)
+(put 'evil-visual-block-overlays 'permanent-local t)
 
 (defvar evil-visual-alist nil
   "Association list of Visual selection functions.
@@ -998,10 +1032,12 @@ Elements have the form (NAME . FUNCTION).")
 (defvar evil-ex-active-highlights-alist nil
   "An alist of currently active highlights.")
 (make-variable-buffer-local 'evil-ex-active-highlights-alist)
+(put 'evil-ex-active-highlights-alist 'permanent-local t)
 
 (defvar evil-ex-hl-update-timer nil
   "Time used for updating highlights.")
 (make-variable-buffer-local 'evil-ex-hl-update-timer)
+(put 'evil-ex-hl-update-timer 'permanent-local t)
 
 (defvar evil-ex-search-keymap (make-sparse-keymap)
   "Keymap used in ex-search-mode.")

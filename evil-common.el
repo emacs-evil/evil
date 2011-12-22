@@ -603,6 +603,7 @@ BUFFER defaults to the current buffer."
         (setq default (evil-filter-list 'stringp default)))
       (evil-set-cursor default)
       (evil-set-cursor cursor))))
+(put 'evil-refresh-cursor 'permanent-local-hook t)
 
 (defmacro evil-save-cursor (&rest body)
   "Save the current cursor; execute BODY; restore the cursor."
@@ -1101,6 +1102,7 @@ or a marker object pointing nowhere."
               (eq (marker-buffer (cdr entry)) (current-buffer))
               (setcdr entry (cons buffer-file-name
                                   (marker-position (cdr entry))))))))
+(put 'evil-swap-out-markers 'permanent-local-hook t)
 
 (defun evil-set-jump (&optional pos)
   "Set jump point at POS."
