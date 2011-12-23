@@ -1177,7 +1177,8 @@ Their values are stored in `evil-transient-vals'."
       (push (list var (symbol-value var)
                   (and (assq var (buffer-local-variables)) t))
             evil-transient-vals)
-      (make-variable-buffer-local var))))
+      (make-variable-buffer-local var)
+      (put var 'permanent-local t))))
 
 (defun evil-transient-restore ()
   "Restore Transient Mark mode from `evil-transient-vals'."
