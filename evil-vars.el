@@ -508,6 +508,21 @@ a keymap variable and EVAL-AFTER is the file or package defining it
   :type  '(repeat symbol)
   :group 'evil)
 
+(defcustom evil-visual-newline-commands
+  '(cua-copy-region
+    cua-cut-region
+    cua-delete-region
+    delete-region
+    execute-extended-command
+    kill-region
+    kill-ring-save
+    org-sort)
+  "Commands requiring the trailing newline of a Visual Line selection.
+\(In most cases, it's more useful not to include this newline in
+the region acted on.)"
+  :type  '(repeat symbol)
+  :group 'evil)
+
 (defface evil-ex-info '(( ((supports :slant))
                           :slant italic
                           :foreground "red"))

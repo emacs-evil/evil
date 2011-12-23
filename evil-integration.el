@@ -31,6 +31,9 @@
 (evil-set-type 'previous-line 'line)
 (evil-set-type 'next-line 'line)
 
+(dolist (cmd evil-visual-newline-commands)
+  (evil-set-command-property cmd :include-newline t))
+
 (dolist (map evil-overriding-maps)
   (eval-after-load (cdr map)
     `(evil-make-overriding-map ,(car map))))
