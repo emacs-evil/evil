@@ -90,7 +90,7 @@
     (when (eq major-mode 'evil-local-mode)
       (setq major-mode 'fundamental-mode))
     ;; determine and enable the initial state
-    (evil-initialize-state)
+    (unless evil-state (evil-initialize-state))
     ;; re-determine the initial state in `post-command-hook' since the
     ;; major mode may not be initialized yet, and some modes neglect
     ;; to run `after-change-major-mode-hook'
@@ -180,8 +180,7 @@ This is the state the buffer comes up in.
 See also `evil-set-initial-state'."
   (with-current-buffer (or buffer (current-buffer))
     (remove-hook 'post-command-hook 'evil-initialize-state t)
-    (unless evil-state
-      (evil-change-to-initial-state buffer))))
+    (evil-change-to-initial-state buffer)))
 (put 'evil-initialize-state 'permanent-local-hook t)
 
 (defun evil-initial-state-for-buffer (&optional buffer default)
@@ -344,14 +343,12 @@ If STATE is nil, give it precedence over all states.
 If COPY is t, create a copy of KEYMAP and give that
 higher precedence. See also `evil-make-intercept-map'."
   (let ((key [override-state]))
-    (when (and copy (not (keymapp copy)))
-      (setq copy (assq-delete-all 'menu-bar (copy-keymap keymap))))
-    (cond
-     ((keymapp copy)
+    (if (not copy)
+        (define-key keymap key (or state 'all))
+      (unless (keymapp copy)
+        (setq copy (assq-delete-all 'menu-bar (copy-keymap keymap))))
       (define-key copy key (or state 'all))
-      (define-key keymap key copy))
-     (t
-      (define-key keymap key (or state 'all))))))
+      (define-key keymap key copy))))
 
 (defun evil-make-intercept-map (keymap &optional state)
   "Give KEYMAP precedence over all Evil keymaps in STATE.

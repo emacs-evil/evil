@@ -228,7 +228,8 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
   :group 'evil)
 
 (defcustom evil-emacs-state-modes
-  '(bbdb-mode
+  '(archive-mode
+    bbdb-mode
     bookmark-bmenu-mode
     bookmark-edit-annotation-mode
     browse-kill-ring-mode
