@@ -50,6 +50,10 @@
   "k" 'evil-previous-line
   "l" 'evil-forward-char)
 
+;;; Debugger
+
+(add-hook 'debugger-mode-hook 'evil-initialize-state)
+
 ;;; Dired
 
 (eval-after-load 'dired

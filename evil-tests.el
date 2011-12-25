@@ -255,8 +255,7 @@ VISUAL is the Visual selection: it defaults to `evil-visual-char'."
     (with-current-buffer buffer
       (prog1 buffer
         (evil-change-state state)
-        ;; let the buffer change its major mode
-        ;; without disabling Evil
+        ;; let the buffer change its major mode without disabling Evil
         (add-hook 'after-change-major-mode-hook 'evil-initialize)
         (when (and (markerp evil-test-visual-start)
                    (markerp evil-test-visual-end))

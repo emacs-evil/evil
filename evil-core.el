@@ -90,13 +90,13 @@
     (when (eq major-mode 'evil-local-mode)
       (setq major-mode 'fundamental-mode))
     ;; determine and enable the initial state
-    (unless evil-state (evil-initialize-state))
-    ;; re-determine the initial state in `post-command-hook' since the
-    ;; major mode may not be initialized yet, and some modes neglect
-    ;; to run `after-change-major-mode-hook'
+    (unless evil-state
+      (evil-initialize-state)
+      ;; re-determine the initial state in `post-command-hook' since
+      ;; the major mode may not have been initialized yet
+      (add-hook 'post-command-hook 'evil-initialize-state t t))
     (add-hook 'input-method-activate-hook 'evil-activate-input-method t t)
     (add-hook 'input-method-inactivate-hook 'evil-inactivate-input-method t t)
-    (add-hook 'post-command-hook 'evil-initialize-state t t)
     (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
     (add-hook 'post-command-hook 'evil-repeat-post-hook)
     (add-hook 'post-command-hook 'evil-refresh-cursor))
@@ -111,8 +111,7 @@
 To enable Evil globally, do (evil-mode 1)."
   ;; TODO: option for enabling vi keys in the minibuffer
   (unless (minibufferp)
-    (evil-local-mode 1)
-    (remove-hook 'post-command-hook 'evil-initialize-state t)))
+    (evil-local-mode 1)))
 
 ;;;###autoload (autoload 'evil-mode "evil")
 (define-globalized-minor-mode evil-mode
@@ -938,7 +937,8 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
              ,@body))
           (t
            (unless evil-local-mode
-             (evil-initialize))
+             (evil-local-mode 1)
+             (evil-initialize-state))
            (let ((evil-next-state ',state)
                  input-method-activate-hook
                  input-method-inactivate-hook)
