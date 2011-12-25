@@ -44,17 +44,18 @@ If MODULE is 'evil-search the Evil's own interactive search module is used."
       (if forward
           (isearch-forward regexp-p)
         (isearch-backward regexp-p))
-      (when (and (eq point (point))
-                 (not (string= isearch-string "")))
-        (if forward
-            (isearch-repeat-forward)
-          (isearch-repeat-backward))
-        (isearch-exit))
-      ;; always position point at the beginning of the match
-      (when (and forward isearch-other-end)
-        (goto-char isearch-other-end))
-      (evil-flash-search-pattern
-       (evil-search-message isearch-string forward)))))
+      (when isearch-success
+        (when (and (eq point (point))
+                   (not (string= isearch-string "")))
+          (if forward
+              (isearch-repeat-forward)
+            (isearch-repeat-backward))
+          (isearch-exit))
+        ;; always position point at the beginning of the match
+        (when (and forward isearch-other-end)
+          (goto-char isearch-other-end))
+        (evil-flash-search-pattern
+         (evil-search-message isearch-string forward))))))
 
 (defun evil-flash-search-pattern (string &optional all)
   "Flash last search matches for duration of `evil-flash-delay'.
