@@ -2824,7 +2824,12 @@ Below some empty line"
       ("dw")
       "[]
 
-Below some empty line")
+Below some empty line"
+      ("dw")
+      "[]
+Below some empty line"
+      ("dw")
+      "[B]elow some empty line")
     (evil-test-buffer
       "[A]\n"
       ("dw")

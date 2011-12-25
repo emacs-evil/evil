@@ -367,7 +367,7 @@ If BIGWORD is non-nil, move by WORDS."
       ;; if we reached the beginning of a new line in Operator-Pending
       ;; state, go back to the end of the previous line
       (when (and (evil-operator-state-p)
-                 (> (point) orig)
+                 (> (point) (1+ orig))
                  (bolp))
         (backward-char)))))
 
