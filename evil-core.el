@@ -246,8 +246,7 @@ This is the state the buffer came up in."
   (when evil-mode
     (with-current-buffer (ad-get-arg 0)
       (unless evil-local-mode
-        (evil-local-mode 1)
-        (evil-initialize-state)))))
+        (evil-local-mode 1)))))
 
 (defun evil-refresh-mode-line (&optional state)
   "Refresh mode line tag."
