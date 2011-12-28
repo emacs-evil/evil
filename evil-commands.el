@@ -1083,6 +1083,12 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (interactive "<R><x>")
   (evil-delete beg end type register))
 
+(evil-define-operator evil-delete-backward-word (beg end type register)
+  "Delete previous word."
+  :motion evil-backward-word-begin
+  (interactive "<R><x>")
+  (evil-delete beg end type register))
+
 (evil-define-operator evil-change
   (beg end type register yank-handler delete-func)
   "Change text from BEG to END with TYPE.
