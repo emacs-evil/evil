@@ -605,6 +605,259 @@ This function interprets special file-names like # and %."
                                    t)))
       (evil-ex-eval result))))
 
+(defun evil-parser (string symbol grammar &optional greedy syntax)
+  "Parse STRING as a SYMBOL in GRAMMAR.
+If GREEDY is non-nil, the whole of STRING must match.
+If the parse succeeds, the return value is a cons cell
+\(RESULT . TAIL), where RESULT is a parse tree and TAIL is
+the remainder of STRING. Otherwise, the return value is nil.
+
+GRAMMAR is an association list of symbols and their definitions.
+A definition is either a list of production rules, which are
+tried in succession, or a #'-quoted function, which is called
+to parse the input.
+
+A production rule can be one of the following:
+
+    nil matches the empty string.
+    A regular expression matches a substring.
+    A symbol matches a production for that symbol.
+    (X Y) matches X followed by Y.
+    (\\? X) matches zero or one of X.
+    (* X) matches zero or more of X.
+    (+ X) matches one or more of X.
+    (& X) matches X, but does not consume.
+    (! X) matches anything but X, but does not consume.
+
+Thus, a simple grammar may look like:
+
+    ((plus \"\\\\+\")           ; plus <- \"+\"
+     (minus \"-\")            ; minus <- \"-\"
+     (operator plus minus)) ; operator <- plus / minus
+
+All input-consuming rules have a value. A regular expression evaluates
+to the text matched, while a list evaluates to a list of values.
+The value of a list may be overridden with a semantic action, which is
+specified with a #'-quoted expression at the end:
+
+    (X Y #'foo)
+
+The value of this rule is the result of calling foo with the values
+of X and Y as arguments. Alternatively, the function call may be
+specified explicitly:
+
+    (X Y #'(foo $1 $2))
+
+Here, $1 refers to X and $2 refers to Y. $0 refers to the whole list.
+Dollar expressions can also be used directly:
+
+    (X Y #'$1)
+
+This matches X followed by Y, but ignores the value of Y;
+the value of the list is the same as the value of X.
+
+If the SYNTAX argument is non-nil, then all semantic actions
+are ignored, and a syntax tree is constructed instead. The
+syntax tree obeys the property that all the leave nodes are
+parts of the input string. Thus, by traversing the syntax tree,
+one can determine how each character was parsed.
+
+The following symbols have reserved meanings within a grammar:
+`\\?', `*', `+', `&', `!', `function', `alt', `seq' and nil."
+  (let ((string (or string ""))
+        func pair result rules tail)
+    (cond
+     ;; epsilon
+     ((member symbol '("" nil))
+      (setq pair (cons nil string)))
+     ;; token
+     ((stringp symbol)
+      (save-match-data
+        (when (or (eq (string-match symbol string) 0)
+                  ;; ignore leading whitespace
+                  (and (string-match "^[ \f\t\n\r\v]+" string)
+                       (eq (match-end 0)
+                           (string-match
+                            symbol string (match-end 0)))))
+          (setq result (match-string 0 string)
+                tail (substring string (match-end 0))
+                pair (cons result tail))
+          (when (and syntax pair)
+            (setq result (substring string 0
+                                    (- (length string)
+                                       (length tail))))
+            (setcar pair result)))))
+     ;; symbol
+     ((symbolp symbol)
+      (let ((context symbol))
+        (setq rules (cdr-safe (assq symbol grammar)))
+        (setq pair (evil-parser string `(alt ,@rules)
+                                grammar greedy syntax))
+        (when (and syntax pair)
+          (setq result (car pair))
+          (if (and (listp result) (sequencep (car result)))
+              (setq result `(,symbol ,@result))
+            (setq result `(,symbol ,result)))
+          (setcar pair result))))
+     ;; function
+     ((eq (car-safe symbol) 'function)
+      (setq symbol (cadr symbol)
+            pair (funcall symbol string))
+      (when (and syntax pair)
+        (setq tail (or (cdr pair) "")
+              result (substring string 0
+                                (- (length string)
+                                   (length tail))))
+        (setcar pair result)))
+     ;; list
+     ((listp symbol)
+      (setq rules symbol
+            symbol (car-safe rules))
+      (if (memq symbol '(& ! \? * + alt seq))
+          (setq rules (cdr rules))
+        (setq symbol 'seq))
+      (when (and (memq symbol '(+ alt seq))
+                 (> (length rules) 1))
+        (setq func (car (last rules)))
+        (if (eq (car-safe func) 'function)
+            (setq rules (delq func (copy-sequence rules))
+                  func (cadr func))
+          (setq func nil)))
+      (cond
+       ;; positive lookahead
+       ((eq symbol '&)
+        (when (evil-parser string rules grammar greedy syntax)
+          (setq pair (evil-parser string nil grammar nil syntax))))
+       ;; negative lookahead
+       ((eq symbol '!)
+        (unless (evil-parser string rules grammar greedy syntax)
+          (setq pair (evil-parser string nil grammar nil syntax))))
+       ;; zero or one
+       ((eq symbol '\?)
+        (setq rules (if (> (length rules) 1)
+                        `(alt ,rules nil)
+                      `(alt ,@rules nil))
+              pair (evil-parser string rules grammar greedy syntax)))
+       ;; zero or more
+       ((eq symbol '*)
+        (setq rules `(alt (+ ,@rules) nil)
+              pair (evil-parser string rules grammar greedy syntax)))
+       ;; one or more
+       ((eq symbol '+)
+        (let (current results)
+          (catch 'done
+            (while (setq current (evil-parser
+                                  string rules grammar nil syntax))
+              (setq result (car-safe current)
+                    tail (or (cdr-safe current) "")
+                    results (append results (if syntax result
+                                              (cdr-safe result))))
+              ;; stop if stuck
+              (if (equal string tail)
+                  (throw 'done nil)
+                (setq string tail))))
+          (when results
+            (setq func (or func 'list)
+                  pair (cons results tail)))))
+       ;; alternatives
+       ((eq symbol 'alt)
+        (catch 'done
+          (dolist (rule rules)
+            (when (setq pair (evil-parser
+                              string rule grammar greedy syntax))
+              (throw 'done pair)))))
+       ;; sequence
+       (t
+        (setq func (or func 'list))
+        (let ((last (car-safe (last rules)))
+              current results rule)
+          (catch 'done
+            (while rules
+              (setq rule (pop rules)
+                    current (evil-parser string rule grammar
+                                         (when greedy
+                                           (null rules))
+                                         syntax))
+              (cond
+               ((null current)
+                (setq results nil)
+                (throw 'done nil))
+               (t
+                (setq result (car-safe current)
+                      tail (cdr-safe current))
+                (unless (memq (car-safe rule) '(& !))
+                  (if (and syntax
+                           (or (null result)
+                               (and (listp rule)
+                                    ;; splice in single-element
+                                    ;; (\? ...) expressions
+                                    (not (and (eq (car-safe rule) '\?)
+                                              (eq (length rule) 2))))))
+                      (setq results (append results result))
+                    (setq results (append results (list result)))))
+                (setq string (or tail ""))))))
+          (when results
+            (setq pair (cons results tail))))))
+      ;; semantic action
+      (when (and pair func (not syntax))
+        (setq result (car pair))
+        (let* ((dexp
+                (lambda (obj)
+                  (when (symbolp obj)
+                    (let ((str (symbol-name obj)))
+                      (when (string-match "\\$\\([0-9]+\\)" str)
+                        (string-to-number (match-string 1 str)))))))
+               ;; traverse a tree for dollar expressions
+               (dval nil)
+               (dval
+                (lambda (obj)
+                  (if (listp obj)
+                      (mapcar dval obj)
+                    (let ((num (funcall dexp obj)))
+                      (if num
+                          (if (not (listp result))
+                              result
+                            (if (eq num 0)
+                                `(list ,@result)
+                              (nth (1- num) result)))
+                        obj))))))
+          (cond
+           ((null func)
+            (setq result nil))
+           ;; lambda function
+           ((eq (car-safe func) 'lambda)
+            (if (memq symbol '(+ seq))
+                (setq result `(funcall ,func ,@result))
+              (setq result `(funcall ,func ,result))))
+           ;; string replacement
+           ((or (stringp func) (stringp (car-safe func)))
+            (let* ((symbol (or (car-safe (cdr-safe func))
+                               (and (boundp 'context) context)
+                               (car-safe (car-safe grammar))))
+                   (string (if (stringp func) func (car-safe func))))
+              (setq result (car-safe (evil-parser string symbol grammar
+                                                  greedy syntax)))))
+           ;; dollar expression
+           ((funcall dexp func)
+            (setq result (funcall dval func)))
+           ;; function call
+           ((listp func)
+            (setq result (funcall dval func)))
+           ;; symbol
+           (t
+            (if (memq symbol '(+ seq))
+                (setq result `(,func ,@result))
+              (setq result `(,func ,result))))))
+        (setcar pair result))))
+    ;; weed out incomplete matches
+    (when pair
+      (if (not greedy) pair
+        (if (null (cdr pair)) pair
+          ;; ignore trailing whitespace
+          (when (string-match "^[ \f\t\n\r\v]*$" (cdr pair))
+            (unless syntax (setcdr pair nil))
+            pair))))))
+
 (provide 'evil-ex)
 
 ;;; evil-ex.el ends here
