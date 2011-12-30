@@ -429,7 +429,7 @@ arguments for programmable completion."
                          (car evil-ex-current-range)
                          (numberp (caar evil-ex-current-range)))
                 (setq prefix-arg (caar evil-ex-current-range)
-		      current-prefix-arg prefix-arg))
+                      current-prefix-arg prefix-arg))
               (call-interactively binding)))
         (error "Unknown command %s" evil-ex-current-cmd)))))
 

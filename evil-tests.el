@@ -4308,7 +4308,6 @@ if no previous selection")
         ("1" (kbd "ESC !") "echo TEST" [return])
         "[T]EST\nABC DEF GHI JKL MNO"))))
 
-
 (when (or evil-tests-profiler evil-tests-run)
   (evil-tests-initialize))
 

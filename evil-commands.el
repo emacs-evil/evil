@@ -2209,7 +2209,7 @@ Change to `%s'? "
             (if (= evil-ex-substitute-nreplaced 1)
                 (message "Replaced 1 occurence")
               (message "Replaced %d occurences" evil-ex-substitute-nreplaced))))
-	(evil-first-non-blank)))))
+        (evil-first-non-blank)))))
 
 ;;; Window navigation
 

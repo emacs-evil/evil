@@ -104,6 +104,17 @@ in the list."
             (throw 'done elt)
           (setq list (cdr list)))))))
 
+(defun evil-member-recursive-if (predicate tree)
+  "Find the first item satisfying PREDICATE in TREE."
+  (cond
+   ((funcall predicate tree)
+    tree)
+   ((listp tree)
+    (catch 'done
+      (dolist (elt tree)
+        (when (setq elt (evil-member-recursive-if predicate elt))
+          (throw 'done elt)))))))
+
 (defun evil-concat-lists (&rest sequences)
   "Concatenate lists, removing duplicates.
 Elements are compared with `eq'."
@@ -963,52 +974,63 @@ POS defaults to the current position of point."
 (defun evil-in-string-p (&optional pos)
   "Whether POS is inside a string.
 POS defaults to the current position of point."
-  (setq pos (or pos (point)))
-  (and (nth 3 (parse-partial-sexp
-               (save-excursion (beginning-of-defun) (point))
-               pos)) t))
+  (save-excursion
+    (goto-char (or pos (point)))
+    (and (nth 3 (parse-partial-sexp
+                 (save-excursion (beginning-of-defun) (point))
+                 (point))) t)))
+
+(defun evil-find-beginning (predicate &optional pos bound)
+  "Find the beginning of a series of characters satisfying PREDICATE.
+POS is the starting point and defaults to the current position.
+Stops at BOUND, which defaults to the beginning of the buffer."
+  (setq pos (or pos (point))
+        bound (or bound (buffer-end -1)))
+  (while (let ((prev (1- pos)))
+           (when (and (>= prev bound)
+                      (funcall predicate prev))
+             (setq pos prev))))
+  pos)
+
+(defun evil-find-end (predicate &optional pos bound)
+  "Find the end of a series of characters satisfying PREDICATE.
+POS is the starting point and defaults to the current position.
+Stops at BOUND, which defaults to the end of the buffer."
+  (setq pos (or pos (point))
+        bound (or bound (buffer-end 1)))
+  (while (let ((next (1+ pos)))
+           (when (and (<= next bound)
+                      (funcall predicate next))
+             (setq pos next))))
+  pos)
 
 (defun evil-comment-beginning (&optional pos)
   "Return beginning of comment containing POS.
 POS defaults to the current position of point."
-  (setq pos (or pos (point)))
-  (when (evil-in-comment-p pos)
-    (while (let ((next (1+ pos)))
-             (when (and (<= next (buffer-end 1))
-                        (evil-in-comment-p next))
-               (setq pos next))))
-    pos))
+  (let ((pos (or pos (point))))
+    (when (evil-in-comment-p pos)
+      (evil-find-beginning #'evil-in-comment-p pos))))
 
 (defun evil-comment-end (&optional pos)
   "Return end of comment containing POS.
 POS defaults to the current position of point."
-  (setq pos (or pos (point)))
-  (when (evil-in-comment-p pos)
-    (while (let ((prev (1- pos)))
-             (when (and (>= prev (buffer-end -1))
-                        (evil-in-comment-p prev))
-               (setq pos prev))))
-    pos))
+  (let ((pos (or pos (point))))
+    (when (evil-in-comment-p pos)
+      (evil-find-end #'evil-in-comment-p pos))))
 
 (defun evil-string-beginning (&optional pos)
   "Return beginning of string containing POS.
 POS defaults to the current position of point."
-  (save-excursion
-    (goto-char (or pos (point)))
-    (when (evil-in-string-p)
-      (while (and (evil-in-string-p) (not (bobp)))
-        (backward-char))
-      (point))))
+  (let ((pos (or pos (point))))
+    (when (evil-in-string-p pos)
+      (evil-find-beginning #'evil-in-string-p pos))))
 
 (defun evil-string-end (&optional pos)
   "Return end of string containing POS.
 POS defaults to the current position of point."
-  (save-excursion
-    (goto-char (or pos (point)))
-    (when (evil-in-string-p)
-      (while (and (evil-in-string-p) (not (eobp)))
-        (forward-char))
-      (point))))
+  (let ((pos (or pos (point))))
+    (when (evil-in-string-p pos)
+      (evil-find-end #'evil-in-string-p pos))))
 
 (defmacro evil-narrow-to-comment (&rest body)
   "Narrow to the current comment or docstring, if any."
