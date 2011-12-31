@@ -92,8 +92,9 @@ of the syntax.")
   "Whether Ex is currently active."
   (and evil-ex-current-buffer t))
 
-(defun evil-ex (&optional initial-input)
+(evil-define-command evil-ex (&optional initial-input)
   "Enter an Ex command."
+  :keep-visual t
   (interactive
    (when (evil-visual-state-p) '("'<,'>")))
   (let ((minibuffer-local-completion-map evil-ex-completion-map)
@@ -477,11 +478,22 @@ arguments for programmable completion."
          (evil-ex-range
           (when (evil-range-p range) range))
          (evil-this-type
-          (evil-type evil-ex-range)))
+          (evil-type evil-ex-range))
+         (visual (and evil-ex-range (not (evil-visual-state-p)))))
     (when (stringp evil-ex-argument)
       (set-text-properties
        0 (length evil-ex-argument) nil evil-ex-argument))
-    (call-interactively evil-ex-command)))
+    (when visual
+      (evil-visual-select (evil-range-beginning evil-ex-range)
+                          (evil-range-end evil-ex-range)
+                          (evil-type evil-ex-range 'line) -1))
+    (when (evil-visual-state-p)
+      (unless (evil-get-command-property evil-ex-command :keep-visual)
+        (evil-visual-expand-region)))
+    (unwind-protect
+        (call-interactively evil-ex-command)
+      (when visual
+        (evil-exit-visual-state)))))
 
 (defun evil-ex-address (base &optional offset)
   "Return the line number of BASE plus OFFSET."
