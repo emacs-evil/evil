@@ -8,50 +8,50 @@
 
 ;;; Motions
 
-;; Motions are defined with the macro `evil-define-motion'. A motion
-;; is a command with an optional argument called the COUNT (which can
-;; be accessed with the special interactive code "<c>"), or with no
-;; arguments at all. A motion must specify the command properties
-;; :keep-visual t and :repeat motion.
+;; Movement commands, or motions, are defined with the macro
+;; `evil-define-motion'. A motion is a command with an optional
+;; argument COUNT (accessed with the special interactive code "<c>").
+;; Furthermore, the command must specify the command properties
+;; :keep-visual t and :repeat motion; this is automatically handled
+;; by the `evil-define-motion' macro.
+
 (evil-define-motion evil-forward-char (count)
   "Move cursor to the right by COUNT characters."
   :type exclusive
   (evil-narrow-to-line-if
-      ;; Narrow movement to the current line if `evil-cross-lines'
-      ;; is nil. However, do allow the following exception: if
-      ;; `evil-move-cursor-back' is nil and we are next to a newline,
-      ;; that newline should be available to operators ("dl", "x").
+      ;; restrict movement to this line unless `evil-cross-lines' is t
       (and (not evil-cross-lines)
+           ;; in Operator-Pending state ("dl", "x"), include the
+           ;; newline unless `evil-move-cursor-back' is t
            (or evil-move-cursor-back
                (not (evil-operator-state-p))
                (not (eolp))))
     (evil-motion-loop (nil (or count 1))
-      ;; skip newlines when crossing lines in Normal/Motion state
-      (when (and evil-cross-lines
-                 (not (evil-operator-state-p))
-                 (not (eolp))
-                 (save-excursion (forward-char) (eolp)))
-        (forward-char))
+      (when (and evil-cross-lines evil-move-cursor-back)
+        ;; don't put the cursor on a newline
+        (when (and (not (evil-operator-state-p))
+                   (not (eolp))
+                   (save-excursion (forward-char) (eolp)))
+          (forward-char)))
       (forward-char))))
 
 (evil-define-motion evil-backward-char (count)
   "Move cursor to the left by COUNT characters."
   :type exclusive
   (evil-narrow-to-line-if
-      ;; narrow movement to the current line if `evil-cross-lines'
-      ;; is nil (cf. `evil-forward-char')
+      ;; restrict movement to this line
       (and (not evil-cross-lines)
            (or evil-move-cursor-back
                (not (evil-operator-state-p))
                (not (bolp))))
     (evil-motion-loop (nil (or count 1))
       (backward-char)
-      ;; adjust cursor when crossing lines in Normal/Motion state
+      ;; don't put the cursor on a newline
       (unless (evil-operator-state-p)
         (evil-adjust-eol)))))
 
 (evil-define-command evil-goto-mark (char)
-  "Go to marker denoted by CHAR."
+  "Go to the marker specified by CHAR."
   :keep-visual t
   :repeat nil
   :type exclusive
@@ -75,7 +75,7 @@
                " in this buffer"))))))
 
 (evil-define-command evil-goto-mark-line (char)
-  "Go to line of marker denoted by CHAR."
+  "Go to the line of the marker specified by CHAR."
   :keep-visual t
   :repeat nil
   :type line
@@ -819,13 +819,13 @@ When called interactively, the selection is rotated blockwise."
 
 ;;; Text objects
 
-;; Text objects are defined with `evil-define-text-object'. Their
-;; behavior is either to extend the selection in Visual state, or to
-;; return a pair of buffer positions in Operator-Pending state. Outer
-;; text objects are bound in the keymap `evil-outer-text-objects-map',
-;; and inner text objects are bound in `evil-inner-text-objects-map'.
+;; Text objects are defined with `evil-define-text-object'. In Visual
+;; state, they modify the current selection; in Operator-Pending
+;; state, they return a pair of buffer positions. Outer text objects
+;; are bound in the keymap `evil-outer-text-objects-map', and inner
+;; text objects are bound in `evil-inner-text-objects-map'.
 ;;
-;; Usual text objects like words, WORDS, paragraphs and sentences are
+;; Common text objects like words, WORDS, paragraphs and sentences are
 ;; defined via a corresponding move-function. This function must have
 ;; the following properties:
 ;;
