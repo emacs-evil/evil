@@ -159,6 +159,26 @@ with the highest priority keymaps being listed first."
           (push elt result))))
     (nreverse result)))
 
+(defun evil-plist-delete (prop plist)
+  "Delete by side effect the property PROP from PLIST.
+If PROP is the first property in PLIST, there is no way
+to remove it by side-effect; therefore, write
+\(setq foo (evil-plist-delete :prop foo)) to be sure of
+changing the value of `foo'."
+  (let ((tail plist) elt head)
+    (while tail
+      (setq elt (car tail))
+      (cond
+       ((eq elt prop)
+        (setq tail (cdr (cdr tail)))
+        (if head
+            (setcdr (cdr head) tail)
+          (setq plist tail)))
+       (t
+        (setq head tail
+              tail (cdr (cdr tail))))))
+    plist))
+
 (defun evil-get-property (alist key &optional prop)
   "Return property PROP for KEY in ALIST.
 ALIST is an association list with entries of the form
@@ -294,40 +314,67 @@ sorting in between."
          (apply 'evil-set-command-properties func ',keys)
          func))))
 
-(defun evil-set-command-property (command property value &rest properties)
-  "Set PROPERTY to VALUE for COMMAND.
-Multiple properties may be specified with PROPERTIES.
-This retains previous command properties; to replace
-all properties at once, use `evil-set-command-properties'."
-  (evil-put-property 'evil-command-properties command property value)
-  (while properties
-    (evil-put-property
-     'evil-command-properties command (pop properties) (pop properties))))
-(defalias 'evil-add-command-properties 'evil-set-command-property)
-
-(defun evil-set-command-properties (command &rest properties)
-  "Replace all of COMMAND's properties with PROPERTIES.
-This erases all previous properties. To only add properties,
-use `evil-set-command-property'."
-  (setq evil-command-properties
-        (assq-delete-all command evil-command-properties))
-  (apply #'evil-set-command-property command properties))
-
 ;; If no Evil properties are defined for the command, several parts of
 ;; Evil apply certain default rules; e.g., the repeat system decides
 ;; whether the command is repeatable by monitoring buffer changes.
-(defun evil-has-properties-p (command)
-  "Whether Evil properties are defined for COMMAND."
+(defun evil-has-command-property-p (command property)
+  "Whether COMMAND has Evil PROPERTY.
+See also `evil-has-command-properties-p'."
+  (plist-member (evil-get-command-properties command) property))
+
+(defun evil-has-command-properties-p (command)
+  "Whether Evil properties are defined for COMMAND.
+See also `evil-has-command-property-p'."
+  (and (evil-get-command-properties command) t))
+
+(defun evil-get-command-property (command property &optional default)
+  "Return the value of Evil PROPERTY of COMMAND.
+If the command does not have the property, return DEFAULT.
+See also `evil-get-command-properties'."
+  (if (evil-has-command-property-p command property)
+      (evil-get-property evil-command-properties command property)
+    default))
+
+(defun evil-get-command-properties (command)
+  "Return all Evil properties of COMMAND.
+See also `evil-get-command-property'."
   (evil-get-property evil-command-properties command))
 
-(defun evil-has-property (command property)
-  "Whether COMMAND has Evil PROPERTY."
-  (plist-member (evil-get-property evil-command-properties command)
-                property))
+(defun evil-set-command-property (command property value)
+  "Set PROPERTY to VALUE for COMMAND.
+To set multiple properties at once, see
+`evil-set-command-properties' and `evil-add-command-properties'."
+  (evil-put-property 'evil-command-properties command property value))
+(defalias 'evil-put-command-property 'evil-set-command-property)
 
-(defun evil-get-command-property (command property)
-  "Returns the value of Evil PROPERTY of COMMAND."
-  (evil-get-property evil-command-properties command property))
+(defun evil-add-command-properties (command &rest properties)
+  "Add PROPERTIES to COMMAND.
+PROPERTIES should be a property list.
+To replace all properties at once, use `evil-set-command-properties'."
+  (while properties
+    (evil-put-command-property command
+                               (pop properties) (pop properties))))
+
+(defun evil-set-command-properties (command &rest properties)
+  "Replace all of COMMAND's properties with PROPERTIES.
+PROPERTIES should be a property list.
+This erases all previous properties; to only add properties,
+use `evil-set-command-property'."
+  (setq evil-command-properties
+        (assq-delete-all command evil-command-properties))
+  (when properties
+    (apply #'evil-add-command-properties command properties)))
+
+(defun evil-remove-command-properties (command &rest properties)
+  "Remove PROPERTIES from COMMAND.
+PROPERTIES should be a list of properties (:PROP1 :PROP2 ...).
+If PROPERTIES is the empty list, all properties are removed."
+  (let (plist)
+    (when properties
+      (setq plist (evil-get-command-properties command))
+      (dolist (property properties)
+        (setq plist (evil-plist-delete property plist))))
+    (apply #'evil-set-command-properties command plist)))
 
 (defun evil-yank-handler (&optional motion)
   "Return the yank handler for MOTION.
@@ -338,27 +385,27 @@ MOTION defaults to the current motion."
 (defun evil-declare-motion (command)
   "Declare COMMAND to be a movement function.
 This ensures that it behaves correctly in Visual state."
-  (evil-set-command-property command :keep-visual t :repeat 'motion))
+  (evil-add-command-properties command :keep-visual t :repeat 'motion))
 
 (defun evil-declare-repeat (command)
   "Declare COMMAND to be repeatable."
-  (evil-set-command-property command :repeat t))
+  (evil-add-command-properties command :repeat t))
 
 (defun evil-declare-not-repeat (command)
   "Declare COMMAND to be nonrepeatable."
-  (evil-set-command-property command :repeat nil))
+  (evil-add-command-properties command :repeat nil))
 
 (defun evil-declare-ignore-repeat (command)
   "Declare COMMAND to be nonrepeatable."
-  (evil-set-command-property command :repeat 'ignore))
+  (evil-add-command-properties command :repeat 'ignore))
 
 (defun evil-declare-change-repeat (command)
   "Declare COMMAND to be repeatable by buffer changes."
-  (evil-set-command-property command :repeat 'change))
+  (evil-add-command-properties command :repeat 'change))
 
 (defun evil-declare-abort-repeat (command)
   "Declare COMMAND to be nonrepeatable."
-  (evil-set-command-property command :repeat 'abort))
+  (evil-add-command-properties command :repeat 'abort))
 
 ;;; Key sequences
 

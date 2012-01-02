@@ -32,7 +32,7 @@
 (evil-set-type 'next-line 'line)
 
 (dolist (cmd evil-visual-newline-commands)
-  (evil-set-command-property cmd :include-newline t))
+  (evil-add-command-properties cmd :include-newline t))
 
 (dolist (map evil-overriding-maps)
   (eval-after-load (cdr map)
@@ -177,10 +177,10 @@
 ;;; Auto-complete
 (eval-after-load 'auto-complete
   '(progn
-     (evil-set-command-properties 'ac-complete :repeat 'evil-ac-repeat)
-     (evil-set-command-properties 'ac-expand :repeat 'evil-ac-repeat)
-     (evil-set-command-properties 'ac-next :repeat 'ignore)
-     (evil-set-command-properties 'ac-previous :repeat 'ignore)
+     (evil-add-command-properties 'ac-complete :repeat 'evil-ac-repeat)
+     (evil-add-command-properties 'ac-expand :repeat 'evil-ac-repeat)
+     (evil-add-command-properties 'ac-next :repeat 'ignore)
+     (evil-add-command-properties 'ac-previous :repeat 'ignore)
 
      (defvar evil-ac-prefix-len nil
        "The length of the prefix of the current item to be completed.")

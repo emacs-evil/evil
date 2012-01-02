@@ -197,9 +197,7 @@ buffer is known and different from the current buffer."
   "Return the :repeat property of COMMAND.
 If COMMAND doesn't have this property, return DEFAULT."
   (when (functionp command) ; ignore keyboard macros
-    (let ((type (if (evil-has-property command :repeat)
-                    (evil-get-command-property command :repeat)
-                  default)))
+    (let ((type (evil-get-command-property command :repeat default)))
       (or (cdr-safe (assq type evil-repeat-types)) type))))
 
 (defun evil-repeat-force-abort-p (repeat-type)

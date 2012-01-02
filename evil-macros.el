@@ -308,10 +308,9 @@ if COUNT is positive, and to the left of it if negative.
        (setq ,count (or ,count 1))
        (when (/= ,count 0)
          (let ((type (evil-type ',object evil-visual-char))
-               (extend (if (evil-has-property ',object :extend-selection)
-                           (evil-get-command-property
-                            ',object :extend-selection)
-                         ',(plist-get keys :extend-selection)))
+               (extend (evil-get-command-property
+                        ',object :extend-selection
+                        ',(plist-get keys :extend-selection)))
                (dir evil-visual-direction)
                mark point range region selection temp)
            (cond
