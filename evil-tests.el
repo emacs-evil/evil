@@ -4104,7 +4104,7 @@ if no previous selection")
       (":%s/bc/xy/g" (kbd "RET"))
       "[A]xyAxyAxy\naXyaXyaXy\nAXYAXYAXY\naxyaxyaxy")))
 
-(ert-deftest evil-test-goto-line ()
+(ert-deftest evil-test-ex-goto-line ()
   "Test if :number moves point to a certain line"
   :tags '(evil ex)
   (ert-info ("Move to line")
