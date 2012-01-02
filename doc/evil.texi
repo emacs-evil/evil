@@ -26,7 +26,7 @@ their feedback and contributions.
 
 @dircategory Emacs
 @direntry
-* Evil: (evil-mode). Extensible vi layer for Emacs.
+* Evil: (evil). Extensible vi layer for Emacs.
 @end direntry
 
 @titlepage
