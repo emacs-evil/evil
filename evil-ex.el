@@ -23,7 +23,12 @@
 
 (defun evil-ex-define-cmd (cmd function)
   "Binds the function FUNCTION to the command CMD."
-  (evil-add-to-alist 'evil-ex-commands cmd function))
+  (if (string-match "\\[\\(.*\\)\\]" cmd)
+      (let ((abbrev (match-string 1 cmd))
+            (full (replace-match "\\1" nil nil cmd)))
+        (evil-add-to-alist 'evil-ex-commands full function)
+        (evil-add-to-alist 'evil-ex-commands abbrev full))
+    (evil-add-to-alist 'evil-ex-commands cmd function)))
 
 (defmacro evil-ex-define-argument-type (arg-type args &rest body)
   "Defines a new handler for argument-type ARG-TYPE."
