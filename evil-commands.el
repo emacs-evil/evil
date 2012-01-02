@@ -1815,6 +1815,7 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
 If the argument FORCE is non-nil, the file will be overwritten if
 already existing."
   :motion mark-whole-buffer
+  :move-point nil
   :type line
   :repeat nil
   (interactive "<R><f><!>")
@@ -1836,6 +1837,7 @@ already existing."
 (evil-define-command evil-write-all (force)
   "Saves all buffers."
   :repeat nil
+  :move-point nil
   (interactive "<!>")
   (save-some-buffers force))
 
@@ -1843,6 +1845,7 @@ already existing."
   "Saves the current buffer to FILE-NAME and changes the file-name of the current buffer to this name.
 If no FILE-NAME is given, the current buffer's file-name is used."
   :repeat nil
+  :move-point nil
   (interactive "<f><!>")
   (when (null file-name)
     (setq file-name (buffer-file-name))
@@ -1862,6 +1865,7 @@ If no FILE-NAME is given, the current buffer's file-name is used."
 (evil-define-command evil-read (count file)
   "Inserts the contents of FILE below the current line or line COUNT."
   :repeat nil
+  :move-point nil
   (interactive "P<f>")
   (when (and file (not (zerop (length file))))
     (when count (goto-char (point-min)))
@@ -2101,6 +2105,7 @@ Change to `%s'? "
   "The VIM substitute command: [range]s/pattern/replacement/flags"
   :repeat nil
   :jump t
+  :move-point nil
   :motion evil-line
   (interactive "<R><s/>")
   (evil-ex-nohighlight)
@@ -2203,7 +2208,8 @@ Change to `%s'? "
 
             (if (= evil-ex-substitute-nreplaced 1)
                 (message "Replaced 1 occurence")
-              (message "Replaced %d occurences" evil-ex-substitute-nreplaced))))))))
+              (message "Replaced %d occurences" evil-ex-substitute-nreplaced))))
+	(evil-first-non-blank)))))
 
 ;;; Window navigation
 

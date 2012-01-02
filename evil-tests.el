@@ -4057,52 +4057,52 @@ if no previous selection")
     (evil-test-buffer
       "ABCABCABC\nABCA[B]CABC\nABCABCABC"
       (":s/BC/XYZ/" (kbd "RET"))
-      "ABCABCABC\nAXYZA[B]CABC\nABCABCABC"))
+      "ABCABCABC\n[A]XYZABCABC\nABCABCABC"))
   (ert-info ("Substitute on whole current line")
     (evil-test-buffer
       "ABCABCABC\nABC[A]BCABC\nABCABCABC"
       (":s/BC/XYZ/g" (kbd "RET"))
-      "ABCABCABC\nAXYZ[A]XYZAXYZ\nABCABCABC"))
+      "ABCABCABC\n[A]XYZAXYZAXYZ\nABCABCABC"))
   (ert-info ("Substitute on last line")
     (evil-test-buffer
       "ABCABCABC\nABCABCABC\nABCABC[A]BC"
       (":s/BC/XYZ/" (kbd "RET"))
-      "ABCABCABC\nABCABCABC\nAXYZABC[A]BC"))
+      "ABCABCABC\nABCABCABC\n[A]XYZABCABC"))
   (ert-info ("Substitute on whole last line")
     (evil-test-buffer
       "ABCABCABC\nABCABCABC\nABCABC[A]BC"
       (":s/BC/XYZ/g" (kbd "RET"))
-      "ABCABCABC\nABCABCABC\nAXYZAXYZ[A]XYZ"))
+      "ABCABCABC\nABCABCABC\n[A]XYZAXYZAXYZ"))
   (ert-info ("Substitute on range")
     (evil-test-buffer
       "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
       (":1,3s/BC/XYZ/" (kbd "RET"))
-      "AXYZABCABC\nQRT\nAXYZ[A]BCABC\nABCABCABC"))
+      "AXYZABCABC\nQRT\n[A]XYZABCABC\nABCABCABC"))
   (ert-info ("Substitute whole lines on range")
     (evil-test-buffer
       "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
       (":1,3s/BC/XYZ/g" (kbd "RET"))
-      "AXYZAXYZAXYZ\nQRT\nAXYZ[A]XYZAXYZ\nABCABCABC"))
+      "AXYZAXYZAXYZ\nQRT\n[A]XYZAXYZAXYZ\nABCABCABC"))
   (ert-info ("Substitute on whole current line confirm")
     (evil-test-buffer
       "ABCABCABC\nABC[A]BCABC\nABCABCABC"
       (":s/BC/XYZ/gc" (kbd "RET") "yny")
-      "ABCABCABC\nAXYZ[A]BCAXYZ\nABCABCABC"))
+      "ABCABCABC\n[A]XYZABCAXYZ\nABCABCABC"))
   (ert-info ("Substitute on range confirm")
     (evil-test-buffer
       "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
       (":1,3s/BC/XYZ/c" (kbd "RET") "yn")
-      "AXYZABCABC\nQRT\nABC[A]BCABC\nABCABCABC"))
+      "[A]XYZABCABC\nQRT\nABCABCABC\nABCABCABC"))
   (ert-info ("Substitute whole lines on range with other delim")
     (evil-test-buffer
       "A/CA/CA/C\nQRT\nA/C[A]/CA/C\nA/CA/CA/C"
       (":1,3s,/C,XYZ,g" (kbd "RET"))
-      "AXYZAXYZAXYZ\nQRT\nAXYZ[A]XYZAXYZ\nA/CA/CA/C"))
+      "AXYZAXYZAXYZ\nQRT\n[A]XYZAXYZAXYZ\nA/CA/CA/C"))
   (ert-info ("Substitute on whole buffer, smart case")
     (evil-test-buffer
       "[A]bcAbcAbc\naBcaBcaBc\nABCABCABC\nabcabcabc"
       (":%s/bc/xy/g" (kbd "RET"))
-      "[A]xyAxyAxy\naXyaXyaXy\nAXYAXYAXY\naxyaxyaxy")))
+      "AxyAxyAxy\naXyaXyaXy\nAXYAXYAXY\n[a]xyaxyaxy")))
 
 (ert-deftest evil-test-ex-goto-line ()
   "Test if :number moves point to a certain line"

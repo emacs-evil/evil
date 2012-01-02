@@ -422,15 +422,15 @@ arguments for programmable completion."
     (let ((binding (evil-ex-completed-binding evil-ex-current-cmd)))
       (if binding
           (with-current-buffer evil-ex-current-buffer
-            (save-excursion
-              (let ((range (evil-ex-get-current-range))
-                    prefix-arg)
-                (when (and (not range)
-                           evil-ex-current-range
-                           (car evil-ex-current-range)
-                           (numberp (caar evil-ex-current-range)))
-                  (setq prefix-arg (caar evil-ex-current-range)))
-                (call-interactively binding))))
+            (let ((range (evil-ex-get-current-range))
+                  prefix-arg)
+              (when (and (not range)
+                         evil-ex-current-range
+                         (car evil-ex-current-range)
+                         (numberp (caar evil-ex-current-range)))
+                (setq prefix-arg (caar evil-ex-current-range)
+		      current-prefix-arg prefix-arg))
+              (call-interactively binding)))
         (error "Unknown command %s" evil-ex-current-cmd)))))
 
 (defun evil-ex-range ()
