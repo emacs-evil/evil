@@ -522,7 +522,7 @@ If BIGWORD is non-nil, move by WORDS."
   (evil-find-char (- (or count 1)) char))
 
 (evil-define-motion evil-find-char-to (count char)
-  "Move before the next COUNT'th occurence of CHAR."
+  "Move before the next COUNT'th occurrence of CHAR."
   :jump t
   :type inclusive
   (interactive "<c>c")
@@ -535,7 +535,7 @@ If BIGWORD is non-nil, move by WORDS."
     (setcar evil-last-find #'evil-find-char-to)))
 
 (evil-define-motion evil-find-char-to-backward (count char)
-  "Move before the previous COUNT'th occurence of CHAR."
+  "Move before the previous COUNT'th occurrence of CHAR."
   :jump t
   :type exclusive
   (interactive "<c>c")
@@ -2137,25 +2137,25 @@ Change to `%s'? "
   (evil-ex-start-search 'backward count))
 
 (evil-define-motion evil-ex-search-symbol-forward (count)
-  "Searches the next occurence of word under the cursor."
+  "Search for the next occurrence of word under the cursor."
   :jump t
   :type exclusive
   (evil-ex-start-symbol-search nil 'forward count))
 
 (evil-define-motion evil-ex-search-symbol-backward (count)
-  "Searches the next occurence of word under the cursor."
+  "Search for the next occurrence of word under the cursor."
   :jump t
   :type exclusive
   (evil-ex-start-symbol-search nil 'backward count))
 
 (evil-define-motion evil-ex-search-unbounded-symbol-forward (count)
-  "Searches the next occurence of word under the cursor."
+  "Search for the next occurrence of word under the cursor."
   :jump t
   :type exclusive
   (evil-ex-start-symbol-search t 'forward count))
 
 (evil-define-motion evil-ex-search-unbounded-symbol-backward (count)
-  "Searches the next occurence of word under the cursor."
+  "Search for the next occurrence of word under the cursor."
   :jump t
   :type exclusive
   (evil-ex-start-symbol-search t 'backward count))
@@ -2170,105 +2170,123 @@ Change to `%s'? "
   (evil-ex-nohighlight)
   (let* ((result (evil-ex-parse-substitute substitution))
          (pattern (pop result))
-         (evil-ex-substitute-replacement (pop result))
-         (flags (append (pop result) nil)))
-    (unless pattern (error "No pattern given."))
-    (unless evil-ex-substitute-replacement (error "No replacement given."))
-    (let* ((whole-line (and flags (memq ?g flags)))
-           (confirm (and flags (memq ?c flags)))
-           (ignore-case (and flags (memq ?i flags)))
-           (dont-ignore-case (and flags (memq ?I flags)))
-           (pattern (evil-ex-make-pattern pattern
-                                          (or (and ignore-case 'insensitive)
-                                              (and dont-ignore-case 'sensitive)
-                                              evil-ex-substitute-case
-                                              evil-ex-search-case)
-                                          whole-line))
-           (evil-ex-substitute-regex (evil-ex-pattern-regex pattern)))
-      (let* ((case-replace (eq (evil-ex-pattern-case-fold pattern)
-                               'insensitive))
-             (case-fold-search case-replace))
-        (if whole-line
-            ;; this one is easy, just use the built-in function
-            (perform-replace evil-ex-substitute-regex
-                             evil-ex-substitute-replacement
-                             confirm
-                             t nil nil nil
-                             beg end)
-          (let ((evil-ex-substitute-nreplaced 0)
-                (evil-ex-substitute-next-line (line-number-at-pos beg))
-                (evil-ex-substitute-last-line (if (save-excursion (goto-char end) (bolp))
-                                                  (1- (line-number-at-pos end))
-                                                (line-number-at-pos end)))
-                (evil-ex-substitute-last-point (point)))
-            (if confirm
-                (let ((evil-ex-substitute-overlay (make-overlay (point) (point)))
-                      (evil-ex-substitute-hl (evil-ex-make-hl 'evil-ex-substitute)))
-                  (evil-ex-hl-change 'evil-ex-substitute pattern)
-                  (unwind-protect
-                      ;; this one is more difficult, we have to do the
-                      ;; highlighting and questioning on our own
-                      (progn
-                        (overlay-put evil-ex-substitute-overlay 'face 'isearch)
-                        (overlay-put evil-ex-substitute-overlay 'priority 1001)
-                        (map-y-or-n-p #'(lambda (x)
-                                          (set-match-data x)
-                                          (move-overlay evil-ex-substitute-overlay
-                                                        (match-beginning 0)
-                                                        (match-end 0))
-                                          (concat "Query replacing "
-                                                  (match-string 0)
-                                                  " with "
-                                                  (if (fboundp 'match-substitute-replacement)
-                                                      (match-substitute-replacement
-                                                       evil-ex-substitute-replacement (not case-replace))
-                                                    evil-ex-substitute-replacement)
-                                                  ": "))
-                                      #'(lambda (x)
-                                          (set-match-data x)
-                                          (replace-match evil-ex-substitute-replacement (not case-replace))
-                                          (setq evil-ex-substitute-last-point (point))
-                                          (setq evil-ex-substitute-nreplaced
-                                                (1+ evil-ex-substitute-nreplaced))
-                                          (evil-ex-hl-set-region 'evil-ex-substitute
-                                                                 (save-excursion
-                                                                   (forward-line)
-                                                                   (point))
-                                                                 (evil-ex-hl-get-max 'evil-ex-substitute)))
-                                      #'(lambda ()
-                                          (goto-char (point-min))
-                                          (when (and (zerop (forward-line (1- evil-ex-substitute-next-line)))
-                                                     (bolp)
-                                                     (re-search-forward evil-ex-substitute-regex nil t nil)
-                                                     (<= (line-number-at-pos (match-end 0))
-                                                         evil-ex-substitute-last-line))
-                                            (goto-char (match-beginning 0))
-                                            (setq evil-ex-substitute-next-line
-                                                  (1+ (line-number-at-pos (point))))
-                                            (match-data)))))
-                    (evil-ex-delete-hl 'evil-ex-substitute)
-                    (delete-overlay evil-ex-substitute-overlay)))
+         (replacement (pop result))
+         (flags (append (pop result) nil))
+         (whole-line (memq ?g flags))
+         (confirm (memq ?c flags))
+         (ignore-case (memq ?i flags))
+         (dont-ignore-case (memq ?I flags))
+         (pattern (evil-ex-make-pattern
+                   pattern
+                   (or (and ignore-case 'insensitive)
+                       (and dont-ignore-case 'sensitive)
+                       evil-ex-substitute-case
+                       evil-ex-search-case)
+                   whole-line))
+         (case-replace (eq (evil-ex-pattern-case-fold pattern)
+                           'insensitive))
+         (case-fold-search case-replace)
+         (evil-ex-substitute-replacement replacement)
+         (evil-ex-substitute-regex (evil-ex-pattern-regex pattern)))
+    (unless pattern
+      (error "No pattern given"))
+    (unless replacement
+      (error "No replacement given"))
+    (if whole-line
+        ;; this one is easy, just use the built-in function
+        (perform-replace evil-ex-substitute-regex
+                         evil-ex-substitute-replacement
+                         confirm t nil nil nil beg end)
+      (let ((evil-ex-substitute-nreplaced 0)
+            (evil-ex-substitute-next-line (line-number-at-pos beg))
+            (evil-ex-substitute-last-line
+             (if (save-excursion (goto-char end) (bolp))
+                 (1- (line-number-at-pos end))
+               (line-number-at-pos end)))
+            (evil-ex-substitute-last-point (point)))
+        (if confirm
+            (let ((evil-ex-substitute-overlay
+                   (make-overlay (point) (point)))
+                  (evil-ex-substitute-hl
+                   (evil-ex-make-hl 'evil-ex-substitute)))
+              (evil-ex-hl-change 'evil-ex-substitute pattern)
+              (unwind-protect
+                  ;; this one is more difficult: we have to do
+                  ;; the highlighting and querying on our own
+                  (progn
+                    (overlay-put evil-ex-substitute-overlay
+                                 'face 'isearch)
+                    (overlay-put evil-ex-substitute-overlay
+                                 'priority 1001)
+                    (map-y-or-n-p
+                     #'(lambda (x)
+                         (set-match-data x)
+                         (move-overlay evil-ex-substitute-overlay
+                                       (match-beginning 0)
+                                       (match-end 0))
+                         (format "Query replacing %s with %s: "
+                                 (match-string 0)
+                                 (if (fboundp 'match-substitute-replacement)
+                                     (match-substitute-replacement
+                                      evil-ex-substitute-replacement
+                                      (not case-replace))
+                                   evil-ex-substitute-replacement)))
+                     #'(lambda (x)
+                         (set-match-data x)
+                         (replace-match evil-ex-substitute-replacement
+                                        (not case-replace))
+                         (setq evil-ex-substitute-last-point (point))
+                         (setq evil-ex-substitute-nreplaced
+                               (1+ evil-ex-substitute-nreplaced))
+                         (evil-ex-hl-set-region 'evil-ex-substitute
+                                                (save-excursion
+                                                  (forward-line)
+                                                  (point))
+                                                (evil-ex-hl-get-max
+                                                 'evil-ex-substitute)))
+                     #'(lambda ()
+                         (goto-char (point-min))
+                         (when (and
+                                (zerop
+                                 (forward-line
+                                  (1- evil-ex-substitute-next-line)))
+                                (bolp)
+                                (re-search-forward
+                                 evil-ex-substitute-regex
+                                 nil t nil)
+                                (<= (line-number-at-pos (match-end 0))
+                                    evil-ex-substitute-last-line))
+                           (goto-char (match-beginning 0))
+                           (setq evil-ex-substitute-next-line
+                                 (1+ (line-number-at-pos (point))))
+                           (match-data)))))
+                (evil-ex-delete-hl 'evil-ex-substitute)
+                (delete-overlay evil-ex-substitute-overlay)))
 
-              ;; just replace the first occurences per line
-              ;; without highlighting and asking
-              (goto-char (point-min))
-              (let ((n (1- evil-ex-substitute-next-line)))
-                (while (and (zerop (forward-line n))
-                            (bolp)
-                            (re-search-forward evil-ex-substitute-regex nil t nil)
-                            (<= (line-number-at-pos (match-beginning 0)) evil-ex-substitute-last-line))
-                  (setq evil-ex-substitute-nreplaced
-                        (1+ evil-ex-substitute-nreplaced))
-                  (replace-match evil-ex-substitute-replacement (not case-replace))
-                  (setq evil-ex-substitute-last-point (point))
-                  (setq n 1))))
+          ;; just replace the first occurrences per line
+          ;; without highlighting and asking
+          (goto-char (point-min))
+          (let ((num (1- evil-ex-substitute-next-line)))
+            (while (and (zerop (forward-line num))
+                        (bolp)
+                        (re-search-forward
+                         evil-ex-substitute-regex nil t nil)
+                        (<= (line-number-at-pos
+                             (match-beginning 0))
+                            evil-ex-substitute-last-line))
+              (setq evil-ex-substitute-nreplaced
+                    (1+ evil-ex-substitute-nreplaced))
+              (replace-match evil-ex-substitute-replacement
+                             (not case-replace))
+              (setq evil-ex-substitute-last-point (point))
+              (setq num 1))))
 
-            (goto-char evil-ex-substitute-last-point)
+        (goto-char evil-ex-substitute-last-point)
 
-            (if (= evil-ex-substitute-nreplaced 1)
-                (message "Replaced 1 occurence")
-              (message "Replaced %d occurences" evil-ex-substitute-nreplaced))))
-        (evil-first-non-blank)))))
+        (message "Replaced %d occurrence%s"
+                 evil-ex-substitute-nreplaced
+                 (if (/= evil-ex-substitute-nreplaced 1) "s" ""))))
+    (evil-first-non-blank)))
 
 ;;; Window navigation
 
