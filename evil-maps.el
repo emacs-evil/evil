@@ -330,6 +330,8 @@
 (evil-ex-define-cmd "wa" "wall")
 (evil-ex-define-cmd "saveas" 'evil-save)
 (evil-ex-define-cmd "sav" "saveas")
+(evil-ex-define-cmd "read" 'evil-read)
+(evil-ex-define-cmd "r" "read")
 (evil-ex-define-cmd "buffer" 'evil-buffer)
 (evil-ex-define-cmd "b" "buffer")
 (evil-ex-define-cmd "bnext" 'evil-next-buffer)

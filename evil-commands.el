@@ -1859,6 +1859,19 @@ If no FILE-NAME is given, the current buffer's file-name is used."
     (when (buffer-file-name)
       (find-file (buffer-file-name)))))
 
+(evil-define-command evil-read (count file)
+  "Inserts the contents of FILE below the current line or line COUNT."
+  :repeat nil
+  (interactive "P<f>")
+  (when (and file (not (zerop (length file))))
+    (when count (goto-char (point-min)))
+    (when (or (not (zerop (forward-line (or count 1))))
+              (not (bolp)))
+      (newline))
+    (if (= (aref file 0) ?!)
+        (shell-command (substring file 1) 42)
+      (insert-file-contents file))))
+
 (evil-define-command evil-show-buffers ()
   "Shows the buffer-list."
   :repeat nil
