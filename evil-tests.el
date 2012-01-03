@@ -3432,6 +3432,32 @@ Below some empty line."))
       "[#]include <stdio.h>"
       (should-error (execute-kbd-macro "%")))))
 
+(ert-deftest evil-test-unmatched-paren ()
+  "Test `evil-previous-open-paren' and `evil-next-close-paren'"
+  :tags '(evil motion)
+  (ert-info ("Simple")
+    (evil-test-buffer
+      "foo ( { ( [b]ar ) baz } )"
+      ("[(")
+      "foo ( { [(] bar ) baz } )"
+      ("])")
+      "foo ( { ( bar [)] baz } )"
+      ("[(")
+      "foo ( { [(] bar ) baz } )"
+      ("[(")
+      "foo [(] { ( bar ) baz } )"
+      ("f)])")
+      "foo ( { ( bar ) baz } [)]"))
+  (ert-info ("With count")
+    (evil-test-buffer
+      "foo ( { ( [b]ar ) baz } )"
+      ("2[(")
+      "foo [(] { ( bar ) baz } )")
+    (evil-test-buffer
+      "foo ( { ( [b]ar ) baz } )"
+      ("2])")
+      "foo ( { ( bar ) baz } [)]")))
+
 ;;; Text objects
 
 (ert-deftest evil-test-text-object ()

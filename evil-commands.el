@@ -585,6 +585,42 @@ and jump to the corresponding one."
         (goto-char (1+ pos))
         (backward-list)))))))
 
+(evil-define-motion evil-previous-open-paren (count)
+  "Go to [count] previous unmatched '('."
+  :type exclusive
+  (let ((range (save-excursion
+                 (backward-char)
+                 (evil-paren-range count ?\( ?\)))))
+    (when range
+      (goto-char (evil-range-beginning range)))))
+
+(evil-define-motion evil-next-close-paren (count)
+  "Go to [count] next unmatched ')'."
+  :type exclusive
+  (let ((range (save-excursion
+                 (forward-char)
+                 (evil-paren-range count ?\( ?\)))))
+    (when range
+      (goto-char (1- (evil-range-end range))))))
+
+(evil-define-motion evil-previous-open-brace (count)
+  "Go to [count] previous unmatched '{'."
+  :type exclusive
+  (let ((range (save-excursion
+                 (backward-char)
+                 (evil-paren-range count ?\{ ?\}))))
+    (when range
+      (goto-char (evil-range-beginning range)))))
+
+(evil-define-motion evil-next-close-brace (count)
+  "Go to [count] next unmatched '}'."
+  :type exclusive
+  (let ((range (save-excursion
+                 (forward-char)
+                 (evil-paren-range count ?\{ ?\}))))
+    (when range
+      (goto-char (1- (evil-range-end range))))))
+
 (evil-define-motion evil-lookup ()
   "Look up the keyword at point.
 Calls `evil-lookup-func'."
