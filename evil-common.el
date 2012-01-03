@@ -1070,14 +1070,16 @@ POS defaults to the current position of point."
 POS defaults to the current position of point."
   (let ((pos (or pos (point))))
     (when (evil-in-string-p pos)
-      (evil-find-beginning #'evil-in-string-p pos))))
+      (evil-normalize-position
+       (1- (evil-find-beginning #'evil-in-string-p pos))))))
 
 (defun evil-string-end (&optional pos)
   "Return end of string containing POS.
 POS defaults to the current position of point."
   (let ((pos (or pos (point))))
     (when (evil-in-string-p pos)
-      (evil-find-end #'evil-in-string-p pos))))
+      (evil-normalize-position
+       (1+ (evil-find-end #'evil-in-string-p pos))))))
 
 (defmacro evil-narrow-to-comment (&rest body)
   "Narrow to the current comment or docstring, if any."
