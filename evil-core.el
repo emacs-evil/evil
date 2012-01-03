@@ -187,15 +187,15 @@ See also `evil-set-initial-state'."
 BUFFER defaults to the current buffer. Returns DEFAULT
 if no initial state is associated with BUFFER.
 See also `evil-initial-state'."
-  (let (state)
-    (with-current-buffer (or buffer (current-buffer))
-      (or (catch 'loop
-            (dolist (mode (append (mapcar 'car minor-mode-map-alist)
-                                  (list major-mode)))
-              (when (and (or (not (boundp mode)) (symbol-value mode))
-                         (setq state (evil-initial-state mode)))
-                (throw 'loop state))))
-          default))))
+  (with-current-buffer (or buffer (current-buffer))
+    (or (catch 'done
+          (dolist (mode minor-mode-map-alist)
+            (setq mode (car-safe mode))
+            (when (and (boundp mode) (symbol-value mode))
+              (when (setq mode (evil-initial-state mode))
+                (throw 'done mode)))))
+        (evil-initial-state major-mode)
+        default)))
 
 (defun evil-initial-state (mode &optional default)
   "Return the Evil state to use for MODE.
@@ -203,12 +203,12 @@ Returns DEFAULT if no initial state is associated with MODE.
 The initial state for a mode can be set with
 `evil-set-initial-state'."
   (let (state modes)
-    (or (catch 'loop
+    (or (catch 'done
           (dolist (entry (evil-state-property t :modes))
             (setq state (car entry)
                   modes (symbol-value (cdr entry)))
             (when (memq mode modes)
-              (throw 'loop state))))
+              (throw 'done state))))
         default)))
 
 (defun evil-set-initial-state (mode state)

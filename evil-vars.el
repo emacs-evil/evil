@@ -366,6 +366,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     inferior-sml-mode
     internal-ange-ftp-mode
     prolog-inferior-mode
+    reb-mode
     shell-mode
     slime-repl-mode
     term-mode
