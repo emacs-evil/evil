@@ -423,7 +423,7 @@ arguments for programmable completion."
       (if binding
           (with-current-buffer evil-ex-current-buffer
             (let ((range (evil-ex-get-current-range))
-                  prefix-arg)
+                  prefix-arg current-prefix-arg)
               (when (and (not range)
                          evil-ex-current-range
                          (car evil-ex-current-range)
