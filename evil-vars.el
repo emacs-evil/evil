@@ -143,6 +143,11 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-echo-state t
+  "Whether to signal the current state in the echo area."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-complete-next-func
   (lambda (arg)
     (let ((dabbrev-search-these-buffers-only (list (current-buffer)))
@@ -155,11 +160,6 @@ which causes the parenthesis to be highlighted."
   "Completion function used by \
 \\<evil-insert-state-map>\\[evil-complete-next]."
   :type 'function
-  :group 'evil)
-
-(defcustom evil-echo-state t
-  "Whether to signal the current state in the echo area."
-  :type 'boolean
   :group 'evil)
 
 (defcustom evil-complete-previous-func
