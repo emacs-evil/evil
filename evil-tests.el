@@ -4116,6 +4116,31 @@ if no previous selection")
       (":2" [return])
       "1\n [2]\n  3\n   4\n    5\n")))
 
+(ert-deftest evil-test-ex-repeat ()
+  "Test :@: command."
+  :tags '(evil ex)
+  (ert-info ("Repeat in current line")
+    (evil-test-buffer
+      "[a]bcdef\nabcdef\nabcdef"
+      (":s/[be]/X/g" [return])
+      "[a]XcdXf\nabcdef\nabcdef"
+      ("jj:@:" [return])
+      "aXcdXf\nabcdef\n[a]XcdXf"))
+  (ert-info ("Repeat in specified line")
+    (evil-test-buffer
+      "[a]bcdef\nabcdef\nabcdef"
+      (":s/[be]/X/g" [return])
+      "[a]XcdXf\nabcdef\nabcdef"
+      (":3@:" [return])
+      "aXcdXf\nabcdef\n[a]XcdXf"))
+  (ert-info ("Double repeat, first without then with specified line")
+    (evil-test-buffer
+      "[a]bcdef\nabcdef\nabcdef"
+      (":s/[be]/X/" [return])
+      "[a]Xcdef\nabcdef\nabcdef"
+      ("jj:@:" [return] ":1@:" [return])
+      "[a]XcdXf\nabcdef\naXcdef")))
+
 ;;; Utilities
 
 (ert-deftest evil-test-properties ()

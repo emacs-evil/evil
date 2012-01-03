@@ -357,6 +357,7 @@
 (evil-ex-define-cmd "marks" 'evil-show-marks)
 (evil-ex-define-cmd "[ju]mps" 'evil-show-jumps)
 (evil-ex-define-cmd "[noh]lsearch" 'evil-ex-nohighlight)
+(evil-ex-define-cmd "@:" 'evil-ex-repeat)
 (evil-ex-define-cmd "set-initial-state" 'evil-ex-set-initial-state)
 
 (when (fboundp 'undo-tree-visualize)

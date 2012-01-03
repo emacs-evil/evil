@@ -191,7 +191,7 @@ Returns a list (POS CMD FORCE) where
 POS is the position of the first character after the separator,
 CMD is the parsed command,
 FORCE is non-nil if and only if an exclamation followed the command."
-  (if (and (string-match "\\([a-zA-Z_-]+\\)\\(!\\)?" text pos)
+  (if (and (string-match "\\([*@:a-zA-Z_-]+\\)\\(!\\)?" text pos)
            (= (match-beginning 0) pos))
       (list (match-end 0)
             (match-string 1 text)
@@ -559,6 +559,23 @@ This function interprets special file-names like # and %."
   (delete-minibuffer-contents)
   (remove-hook 'pre-command-hook #'evil-ex-remove-default))
 (put 'evil-ex-remove-default 'permanent-local-hook t)
+
+(defun evil-ex-repeat (count)
+  "Repeats the last ex command."
+  (interactive "P")
+  (when count
+    (goto-char (point-min))
+    (forward-line (1- count)))
+  (let ((evil-ex-current-buffer (current-buffer))
+        (hist evil-ex-history))
+    (while hist
+      (let ((evil-ex-last-cmd (pop hist)))
+        (when evil-ex-last-cmd
+          (evil-ex-update-current-command evil-ex-last-cmd)
+          (let ((binding (evil-ex-completed-binding evil-ex-current-cmd)))
+            (unless (eq binding #'evil-ex-repeat)
+              (evil-ex-call-current-command)
+              (setq hist nil))))))))
 
 (defun evil-ex-read-command (&optional initial-input)
   "Starts ex-mode."
