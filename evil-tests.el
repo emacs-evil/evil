@@ -202,20 +202,6 @@ Remaining forms are used as-is.
                           '(("(\\(evil-test-buffer\\)\\>"
                              1 font-lock-keyword-face))))
 
-(ert-deftest evil-test-quote-objects ()
-  "Test `evil-inner-single-quote' and `evil-a-single-quote'"
-  :tags '(evil text-object)
-  (ert-info ("Select text inside of '...'")
-    (evil-test-buffer
-      "This is 'a [t]est' for quote objects."
-      ("vi'")
-      "This is '<a tes[t]>' for quote objects."))
-  (ert-info ("Select text including enclosing quotes")
-    (evil-test-buffer
-      "This is 'a [t]est' for quote objects."
-      ("va'")
-      "This is <'a test[']> for quote objects.")))
-
 (defun evil-test-buffer-string
   (string &optional point-start point-end visual-start visual-end)
   "Validate the current buffer according to STRING.
@@ -3592,6 +3578,20 @@ Below some empty line."))
 <
 ;; This buffer is for notes,
 ;; and for Lisp evaluation[.]>")))
+
+(ert-deftest evil-test-quote-objects ()
+  "Test `evil-inner-single-quote' and `evil-a-single-quote'"
+  :tags '(evil text-object)
+  (ert-info ("Select text inside of '...'")
+    (evil-test-buffer
+      "This is 'a [t]est' for quote objects."
+      ("vi'")
+      "This is '<a tes[t]>' for quote objects."))
+  (ert-info ("Select text including enclosing quotes")
+    (evil-test-buffer
+      "This is 'a [t]est' for quote objects."
+      ("va'")
+      "This is <'a test[']> for quote objects.")))
 
 (ert-deftest evil-test-paren-objects ()
   "Test `evil-inner-paren', etc."
