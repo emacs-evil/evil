@@ -777,6 +777,14 @@ use the FORCE parameter to override it."
   (unless (bolp)
     (backward-char)))
 
+(defun evil-column (&optional pos)
+  "Return the horizontal position of POS.
+POS defaults to point."
+  (save-excursion
+    (when pos
+      (goto-char pos))
+    (current-column)))
+
 (defun evil-move-to-column (column &optional dir force)
   "Move point to column COLUMN in the current line.
 Places point at left of the tab character (at the right if DIR
@@ -977,9 +985,9 @@ CHARS is a character set as inside [...] in a regular expression."
   "Restores the column after execution of BODY."
   (declare (indent defun)
            (debug t))
-  `(let ((ocolumn (current-column)))
+  `(let ((col (current-column)))
      ,@body
-     (move-to-column ocolumn)))
+     (move-to-column col)))
 
 (defun evil-in-regexp-p (regexp &optional pos)
   "Whether POS is inside a match for REGEXP.
@@ -1348,10 +1356,8 @@ each line. Extra arguments to FUNC may be passed via ARGS."
     (save-excursion
       (evil-sort beg end)
       ;; calculate columns
-      (goto-char end)
-      (setq right (current-column))
-      (goto-char beg)
-      (setq left (current-column))
+      (setq left  (evil-column beg)
+            right (evil-column end))
       ;; ensure LEFT < RIGHT
       (when (> left right)
         (evil-sort left right)
@@ -1488,16 +1494,10 @@ each line. Extra arguments to FUNC may be passed via ARGS."
           (newline))
         (setq current-line (1+ current-line))
         ;; insert text unless we insert an empty line behind eol
-        (unless (and (< (save-excursion
-                          (goto-char (line-end-position))
-                          (current-column))
-                        col)                ; nothing in this line
-                     (zerop (length text))) ; and nothing to insert
+        (unless (and (< (evil-column (line-end-position)) col)
+                     (zerop (length text)))
           ;; if we paste behind eol, it may be sufficient to insert tabs
-          (if (< (save-excursion
-                   (goto-char (line-end-position))
-                   (current-column))
-                 col)
+          (if (< (evil-column (line-end-position)) col)
               (move-to-column (+ col begextra) t)
             (move-to-column col t)
             (insert (make-string begextra ? )))

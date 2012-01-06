@@ -129,12 +129,7 @@
         ((eq evil-visual-type 'block)
          (list #'evil-repeat-visual-block
                nfwdlines
-               (abs (- (save-excursion
-                         (goto-char beg)
-                         (current-column))
-                       (save-excursion
-                         (goto-char end)
-                         (current-column)))))))))))
+               (abs (- (evil-column beg) (evil-column end))))))))))
 
 (defun evil-repeat-stop ()
   "Stop recording a repeat.

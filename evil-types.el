@@ -97,13 +97,9 @@ If the end position is at the beginning of a line, then:
   "Like `inclusive', but for rectangles:
 the last column is included."
   :expand (lambda (beg end &rest properties)
-            (let* ((beg-col (progn
-                              (goto-char beg)
-                              (current-column)))
-                   (end-col (progn
-                              (goto-char end)
-                              (current-column)))
-                   (corner (plist-get properties :corner)))
+            (let ((beg-col (evil-column beg))
+                  (end-col (evil-column end))
+                  (corner (plist-get properties :corner)))
               ;; Since blocks are implemented as a pair of buffer
               ;; positions, expansion is restricted to what the buffer
               ;; allows. In the case of a one-column block, there are
@@ -135,12 +131,8 @@ the last column is included."
                     (evil-range beg end)
                   (evil-range (1+ beg) end))))))
   :contract (lambda (beg end)
-              (let* ((beg-col (progn
-                                (goto-char beg)
-                                (current-column)))
-                     (end-col (progn
-                                (goto-char end)
-                                (current-column))))
+              (let ((beg-col (evil-column beg))
+                    (end-col (evil-column end)))
                 (if (> beg-col end-col)
                     (evil-range (1- beg) end)
                   (evil-range beg (max beg (1- end))))))
@@ -152,12 +144,8 @@ the last column is included."
                              (if (and (bolp) (not (eobp)))
                                  (1+ end)
                                end))))
-                  (width (abs (- (progn
-                                   (goto-char beg)
-                                   (current-column))
-                                 (progn
-                                   (goto-char end)
-                                   (current-column))))))
+                  (width (abs (- (evil-column beg)
+                                 (evil-column end)))))
               (format "%s row%s and %s column%s"
                       height
                       (if (= height 1) "" "s")
@@ -167,14 +155,10 @@ the last column is included."
             "Rotate block according to :corner property.
 :corner can be one of `upper-left',``upper-right', `lower-left'
 and `lower-right'."
-            (let* ((left (progn
-                           (goto-char beg)
-                           (current-column)))
-                   (right (progn
-                            (goto-char end)
-                            (current-column)))
-                   (corner (or (plist-get properties :corner)
-                               'upper-left)))
+            (let ((left  (evil-column beg))
+                  (right (evil-column end))
+                  (corner (or (plist-get properties :corner)
+                              'upper-left)))
               (evil-sort left right)
               (goto-char beg)
               (if (memq corner '(upper-right lower-left))

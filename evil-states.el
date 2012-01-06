@@ -498,10 +498,8 @@ Reuse overlays where possible to prevent flicker."
     ;; but put BEG in the upper-left corner and END in the lower-right
     ;; if not already there
     (save-excursion
-      (setq beg-col (save-excursion (goto-char beg)
-                                    (current-column))
-            end-col (save-excursion (goto-char end)
-                                    (current-column)))
+      (setq beg-col (evil-column beg)
+            end-col (evil-column end))
       (when (>= beg-col end-col)
         (if (= beg-col end-col)
             (setq end-col (1+ end-col))
@@ -650,12 +648,8 @@ CORNER defaults to `upper-left'."
                            (overlay-get evil-visual-overlay
                                         :corner))
                       'upper-left)))
-         (point-col (save-excursion
-                      (goto-char point)
-                      (current-column)))
-         (mark-col (save-excursion
-                     (goto-char mark)
-                     (current-column)))
+         (point-col (evil-column point))
+         (mark-col (evil-column mark))
          horizontal vertical)
     (cond
      ((= point-col mark-col)

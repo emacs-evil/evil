@@ -798,10 +798,8 @@ corner and point in the lower left."
    ((eq evil-visual-type evil-visual-block)
     (let* ((point (point))
            (mark (or (mark t) point))
-           (point-col (current-column))
-           (mark-col (save-excursion
-                       (goto-char mark)
-                       (current-column)))
+           (point-col (evil-column point))
+           (mark-col (evil-column mark))
            (mark (save-excursion
                    (goto-char mark)
                    (evil-move-to-column point-col)
