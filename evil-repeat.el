@@ -115,7 +115,7 @@
                          (line-number-at-pos beg))))
       (evil-repeat-record
        (cond
-        ((memq evil-visual-type '(inclusive exclusive))
+        ((eq evil-visual-selection 'char)
          (list #'evil-repeat-visual-char
                nfwdlines
                (- end
@@ -124,9 +124,9 @@
                     (save-excursion
                       (goto-char end)
                       (line-beginning-position))))))
-        ((eq evil-visual-type 'line)
+        ((eq evil-visual-selection 'line)
          (list #'evil-repeat-visual-line nfwdlines))
-        ((eq evil-visual-type 'block)
+        ((eq evil-visual-selection 'block)
          (list #'evil-repeat-visual-block
                nfwdlines
                (abs (- (evil-column beg) (evil-column end))))))))))

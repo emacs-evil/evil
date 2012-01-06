@@ -278,7 +278,7 @@
 (define-key evil-visual-state-map "a" evil-outer-text-objects-map)
 (define-key evil-visual-state-map "i" evil-inner-text-objects-map)
 (define-key evil-visual-state-map [remap evil-repeat] 'undefined)
-(define-key evil-visual-state-map [escape] 'evil-change-to-previous-state)
+(define-key evil-visual-state-map [escape] 'evil-exit-visual-state)
 
 ;;; Operator-Pending state
 

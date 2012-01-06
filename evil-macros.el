@@ -16,11 +16,11 @@ The return value is a list (BEG END TYPE)."
       (evil-transient-mark 1)
       (unwind-protect
           (let ((current-prefix-arg count)
-                ;; Store the type in global variable `evil-this-type'.
-                ;; Motions can change their type during execution
-                ;; by setting this variable.
-                (evil-this-type (or type
-                                    (evil-type motion 'exclusive))))
+                ;; Store type in the global variable `evil-this-type'.
+                ;; If necessary, motions can change their type
+                ;; during execution by setting this variable.
+                (evil-this-type
+                 (or type (evil-type motion 'exclusive))))
             (condition-case err
                 (setq range (call-interactively motion))
               (error (prog1 nil
@@ -483,7 +483,7 @@ if COUNT is positive, and to the left of it if negative.
                 (when (evil-visual-state-p)
                   (evil-visual-expand-region))
               (when (evil-visual-state-p)
-                (evil-change-to-previous-state))
+                (evil-exit-visual-state))
               (when (region-active-p)
                 (evil-active-region -1)))
             (if (or (evil-get-command-property ',operator :move-point)

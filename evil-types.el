@@ -174,6 +174,15 @@ and `lower-right'."
                                           :corner corner))
               (apply 'evil-range beg end properties))))
 
+(evil-define-type rectangle
+  "Like `exclusive', but for rectangles:
+the last column is excluded."
+  :expand (lambda (beg end)
+            ;; select at least one column
+            (if (= (evil-column beg) (evil-column end))
+                (evil-expand beg end 'block)
+              (evil-range beg end 'block))))
+
 ;;; Standard interactive codes
 
 (evil-define-interactive-code "*"

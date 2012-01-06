@@ -923,12 +923,6 @@ This is a selection as defined by `evil-define-visual-selection'.")
 (make-variable-buffer-local 'evil-visual-selection)
 (put 'evil-visual-selection 'permanent-local t)
 
-(defvar evil-visual-type nil
-  "The type of the Visual selection.
-This is a type as defined by `evil-define-type'.")
-(make-variable-buffer-local 'evil-visual-type)
-(put 'evil-visual-type 'permanent-local t)
-
 ;; we could infer the direction by comparing `evil-visual-mark'
 ;; and `evil-visual-point', but destructive operations may
 ;; displace the markers

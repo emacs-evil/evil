@@ -248,8 +248,9 @@ VISUAL-END, then a Visual selection is created with those boundaries.
 POINT-START and POINT-END default to [ and ].
 VISUAL-START and VISUAL-END default to < and >.
 STATE is the initial state; it defaults to `normal'.
-VISUAL is the Visual selection: it defaults to `evil-visual-char'."
-  (let ((buffer (evil-test-marker-buffer-from-string
+VISUAL is the Visual selection: it defaults to `char'."
+  (let ((type (evil-visual-type (or visual 'char)))
+        (buffer (evil-test-marker-buffer-from-string
                  string point-start point-end
                  visual-start visual-end)))
     (with-current-buffer buffer
@@ -260,7 +261,7 @@ VISUAL is the Visual selection: it defaults to `evil-visual-char'."
         (when (and (markerp evil-test-visual-start)
                    (markerp evil-test-visual-end))
           (evil-visual-select
-           evil-test-visual-start evil-test-visual-end visual)
+           evil-test-visual-start evil-test-visual-end type)
           (when evil-test-point
             (goto-char evil-test-point)
             (evil-visual-refresh)
@@ -269,7 +270,7 @@ VISUAL is the Visual selection: it defaults to `evil-visual-char'."
                          (= evil-visual-end
                             evil-test-visual-end))
               (evil-visual-select
-               evil-test-visual-start evil-test-visual-end visual -1)
+               evil-test-visual-start evil-test-visual-end type -1)
               (goto-char evil-test-point)
               (evil-visual-refresh))))
         (when (markerp evil-test-point)
@@ -3797,39 +3798,40 @@ Below some empty line."))
 
 ;;; Visual state
 
-(defun evil-test-visual-select (type &optional mark point)
+(defun evil-test-visual-select (selection &optional mark point)
   "Verify that TYPE is selected correctly"
-  (evil-visual-make-selection mark point type)
-  (ert-info ("Activate region unless TYPE is `block'")
-    (cond
-     ((eq type 'block)
-      (should (mark t))
-      (should-not (region-active-p))
-      (should-not transient-mark-mode))
-     (t
-      (should (mark))
-      (should (region-active-p)))))
-  (ert-info ("Refresh Visual markers")
-    (should (= (evil-range-beginning (evil-expand (point) (mark) type))
-               evil-visual-beginning))
-    (should (= (evil-range-end (evil-expand (point) (mark) type))
-               evil-visual-end))
-    (should (eq evil-visual-type type))
-    (should (eq evil-visual-direction
-                (if (< (point) (mark)) -1 1)))))
+  (let ((type (evil-visual-type selection)))
+    (evil-visual-make-selection mark point type)
+    (ert-info ("Activate region unless SELECTION is `block'")
+      (cond
+       ((eq selection 'block)
+        (should (mark t))
+        (should-not (region-active-p))
+        (should-not transient-mark-mode))
+       (t
+        (should (mark))
+        (should (region-active-p)))))
+    (ert-info ("Refresh Visual markers")
+      (should (= (evil-range-beginning (evil-expand (point) (mark) type))
+                 evil-visual-beginning))
+      (should (= (evil-range-end (evil-expand (point) (mark) type))
+                 evil-visual-end))
+      (should (eq (evil-visual-type) type))
+      (should (eq evil-visual-direction
+                  (if (< (point) (mark)) -1 1))))))
 
 (ert-deftest evil-test-visual-refresh ()
   "Test `evil-visual-refresh'"
   :tags '(evil visual)
   (evil-test-buffer
     ";; [T]his buffer is for notes."
-    (evil-visual-refresh)
+    (evil-visual-refresh nil nil 'inclusive)
     (should (= evil-visual-beginning 4))
     (should (= evil-visual-end 5)))
   (evil-test-buffer
     ";; [T]his buffer is for notes."
     (let ((evil-visual-region-expanded t))
-      (evil-visual-refresh)
+      (evil-visual-refresh nil nil 'inclusive)
       (should (= evil-visual-beginning 4))
       (should (= evil-visual-end 4)))))
 
@@ -3850,7 +3852,7 @@ Below some empty line."))
   (evil-test-buffer
     ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
-    (evil-test-visual-select evil-visual-char)
+    (evil-test-visual-select 'char)
     ";; <[T]>his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
     ("e")
@@ -3872,7 +3874,7 @@ Below some empty line."))
   (evil-test-buffer
     ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
-    (evil-test-visual-select evil-visual-line)
+    (evil-test-visual-select 'line)
     "<;; [T]his buffer is for notes you don't want to save,\n>\
 ;; and for Lisp evaluation."
     ("e")
@@ -3891,7 +3893,7 @@ Below some empty line."))
     "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-    (evil-test-visual-select evil-visual-block)
+    (evil-test-visual-select 'block)
     "<[;]>; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."

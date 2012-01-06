@@ -759,12 +759,12 @@ or line COUNT to the top of the window."
   (let* ((point (point))
          (mark (or (mark t) point))
          (dir evil-visual-direction)
-         (type evil-visual-type)
+         (type (evil-visual-type))
          range)
     (unless (evil-visual-state-p)
       (cond
        ;; No previous selection.
-       ((or (null type)
+       ((or (null evil-visual-selection)
             (null evil-visual-mark)
             (null evil-visual-point)))
        ;; If the type was one-to-one, it is preferable to infer
@@ -782,7 +782,7 @@ or line COUNT to the top of the window."
        (t
         (setq mark evil-visual-mark
               point evil-visual-point)))
-      (evil-visual-make-selection mark point type))))
+      (evil-visual-make-selection mark point type t))))
 
 (evil-define-motion evil-visual-exchange-corners ()
   "Rearrange corners in Visual Block mode.
@@ -795,7 +795,7 @@ For example, if mark is in the upper left corner and point
 in the lower right, this function puts mark in the upper right
 corner and point in the lower left."
   (cond
-   ((eq evil-visual-type evil-visual-block)
+   ((eq evil-visual-selection 'block)
     (let* ((point (point))
            (mark (or (mark t) point))
            (point-col (evil-column point))
@@ -808,7 +808,7 @@ corner and point in the lower left."
                     (goto-char point)
                     (evil-move-to-column mark-col)
                     (point))))
-      (evil-visual-refresh evil-visual-block mark point)))
+      (evil-visual-refresh mark point)))
    (t
     (evil-exchange-point-and-mark)
     (evil-visual-refresh))))
@@ -830,10 +830,10 @@ When called interactively, the selection is rotated blockwise."
                'upper-left))))
   (let* ((beg (or beg (point)))
          (end (or end (mark t) beg))
-         (type (or type evil-visual-type))
+         (type (or type evil-this-type))
          range)
     (cond
-     ((eq type 'block)
+     ((memq type '(rectangle block))
       (setq range (evil-block-rotate beg end :corner corner)
             beg (pop range)
             end (pop range))
@@ -842,8 +842,7 @@ When called interactively, the selection is rotated blockwise."
       (goto-char beg)
       (evil-move-mark end)
       (when (evil-visual-state-p)
-        (evil-visual-refresh evil-visual-block
-                             nil nil :corner corner)))
+        (evil-visual-refresh nil nil nil :corner corner)))
      ((memq corner '(upper-right lower-right))
       (goto-char (max beg end))
       (evil-move-mark (min beg end)))
@@ -1089,7 +1088,7 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
         (setq beg (evil-range-beginning range)
               end (evil-range-end range)
               type (evil-type range))))
-    (evil-change-to-previous-state))
+    (evil-exit-visual-state))
   (cond
    ((eq type 'block)
     (evil-apply-on-block 'evil-delete-line beg end nil register yank-handler))
@@ -1412,11 +1411,11 @@ The return value is the yanked text."
         (setq kill-ring-yank-pointer kill-ring)
         (evil-visual-rotate 'upper-left)
         (evil-delete evil-visual-beginning evil-visual-end
-                     evil-visual-type)
+                     (evil-visual-type))
         (unless register
           (kill-new text))
         (when (and (eq yank-handler 'evil-yank-line-handler)
-                   (not (eq evil-visual-type 'line)))
+                   (not (eq (evil-visual-type) 'line)))
           (newline))
         (evil-normal-state))
       (if (eobp)
@@ -1512,13 +1511,13 @@ lines. This is the default behaviour for Visual-state insertion."
    (list (prefix-numeric-value current-prefix-arg)
          (when (evil-visual-state-p)
            (evil-visual-rotate 'upper-left)
-           (when (memq evil-visual-type '(block line))
+           (when (memq (evil-visual-type) '(line block))
              (count-lines evil-visual-beginning
                           evil-visual-end)))
          (evil-visual-state-p)))
   (if (and (evil-called-interactively-p)
            (evil-visual-state-p)
-           (and (eq evil-visual-type 'line)))
+           (and (eq (evil-visual-type) 'line)))
       (evil-insert-line count vcount)
     (setq evil-insert-count count
           evil-insert-lines nil
@@ -1540,10 +1539,10 @@ the lines."
   (interactive
    (list (prefix-numeric-value current-prefix-arg)
          (when (evil-visual-state-p)
-           (evil-visual-rotate (if (eq evil-visual-type 'block)
+           (evil-visual-rotate (if (eq (evil-visual-type) 'block)
                                    'upper-right
                                  'upper-left))
-           (when (memq evil-visual-type '(block line))
+           (when (memq (evil-visual-type) '(line block))
              (save-excursion
                ;; go to upper-left corner temporarily so
                ;; `count-lines' yields accurate results
@@ -1552,7 +1551,7 @@ the lines."
                             evil-visual-end))))))
   (if (and (evil-called-interactively-p)
            (evil-visual-state-p)
-           (and (eq evil-visual-type 'line)))
+           (and (eq (evil-visual-type) 'line)))
       (evil-append-line count vcount)
     (unless (or (eolp) (evil-visual-state-p))
       (forward-char))
