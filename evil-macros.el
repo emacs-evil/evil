@@ -162,6 +162,11 @@ not be performed.
          (end-of-buffer
           (error "End of line"))))))
 
+;; we don't want line boundaries to trigger the debugger
+;; when `debug-on-error' is t
+(add-to-list 'debug-ignored-errors "^Beginning of line$")
+(add-to-list 'debug-ignored-errors "^End of line$")
+
 (defmacro evil-narrow-to-line-if (cond &rest body)
   "Narrow BODY to the current line if COND yields non-nil."
   (declare (indent 1)
