@@ -42,6 +42,13 @@
   (eval-after-load (cdr map)
     `(evil-make-intercept-map ,(car map))))
 
+;;; key-binding
+
+;; disable evil-esc-mode during a call to key-binding
+(defadvice key-binding (around evil activate)
+  (let (evil-esc-mode)
+    ad-do-it))
+
 ;;; Buffer-menu
 
 (evil-declare-key 'motion Buffer-menu-mode-map
