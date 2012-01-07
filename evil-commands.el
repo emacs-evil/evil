@@ -319,11 +319,15 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
   (unless (evil-visual-state-p)
     (evil-adjust-eol)))
 
-(evil-define-motion evil-jump-to-tag ()
-  "Jump to tag under point."
+(evil-define-motion evil-jump-to-tag (arg)
+  "Jump to tag under point.
+If called with a prefix argument, provide a prompt
+for specifying the tag."
   :jump t
-  (let ((tag (thing-at-point 'symbol)))
-    (find-tag tag)))
+  (interactive "P")
+  (if arg (call-interactively #'find-tag)
+    (let ((tag (thing-at-point 'symbol)))
+      (find-tag tag))))
 
 (evil-define-motion evil-move-empty-lines (count)
   "Move to the next or previous empty line, repeated COUNT times."
