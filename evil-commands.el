@@ -422,6 +422,27 @@ If BIGWORD is non-nil, move by WORDS."
   :type inclusive
   (evil-backward-word-end count t))
 
+;; section movement
+(evil-define-motion evil-forward-section-begin (count)
+  "Move the cursor to the beginning of the COUNT-th next section."
+  :type exclusive
+  (beginning-of-defun (- (or count 1))))
+
+(evil-define-motion evil-forward-section-end (count)
+  "Move the cursor to the end of the COUNT-th next section."
+  :type inclusive
+  (end-of-defun (or count 1)))
+
+(evil-define-motion evil-backward-section-begin (count)
+  "Move the cursor to the beginning of the COUNT-th previous section."
+  :type exclusive
+  (beginning-of-defun (or count 1)))
+
+(evil-define-motion evil-backward-section-end (count)
+  "Move the cursor to the end of the COUNT-th previous section."
+  :type inclusive
+  (end-of-defun (- (or count 1))))
+
 (evil-define-motion evil-forward-sentence (count)
   :type exclusive
   "Move to the next COUNT-th beginning of a sentence or end of a paragraph."
