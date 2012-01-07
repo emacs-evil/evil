@@ -32,7 +32,7 @@
 (evil-set-type 'next-line 'line)
 
 (dolist (cmd evil-visual-newline-commands)
-  (evil-add-command-properties cmd :include-newline t))
+  (evil-add-command-properties cmd :exclude-newline t))
 
 (dolist (map evil-overriding-maps)
   (eval-after-load (cdr map)

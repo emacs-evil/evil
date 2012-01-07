@@ -243,8 +243,8 @@ to the selection."
        ;; exclude final newline from linewise selection
        ;; unless the command has real need of it
        (and (eq (evil-visual-type) 'line)
-            (not (evil-get-command-property
-                  this-command :include-newline)))))))
+            (evil-get-command-property
+             this-command :exclude-newline))))))
 (put 'evil-visual-pre-command 'permanent-local-hook t)
 
 (defun evil-visual-post-command ()
@@ -377,9 +377,9 @@ If MESSAGE is given, display it in the echo area."
        ((functionp evil-visual-state-message)
         (funcall evil-visual-state-message)))))))
 
-(defun evil-visual-expand-region (&optional no-trailing-newline)
+(defun evil-visual-expand-region (&optional exclude-newline)
   "Expand the region to the Visual selection.
-If NO-TRAILING-NEWLINE is t and the selection ends with a newline,
+If EXCLUDE-NEWLINE is non-nil and the selection ends with a newline,
 exclude that newline from the region."
   (when (and (evil-visual-state-p)
              (not evil-visual-region-expanded))
@@ -389,7 +389,7 @@ exclude that newline from the region."
         (evil-swap mark point))
       (setq evil-visual-region-expanded t)
       (evil-visual-refresh mark point)
-      (when (and no-trailing-newline
+      (when (and exclude-newline
                  (save-excursion
                    (goto-char evil-visual-end)
                    (and (bolp) (not (bobp)))))
