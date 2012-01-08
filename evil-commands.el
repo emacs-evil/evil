@@ -1878,26 +1878,27 @@ already existing."
   (interactive "<!>")
   (save-some-buffers force))
 
-(evil-define-command evil-save (file-name &optional force)
-  "Saves the current buffer to FILE-NAME and changes the file-name of the current buffer to this name.
-If no FILE-NAME is given, the current buffer's file-name is used."
+(evil-define-command evil-save (file &optional force)
+  "Save the current buffer to FILE.
+Changes the file name of the current buffer to this name.
+If no FILE is given, the current file name is used."
   :repeat nil
   :move-point nil
   (interactive "<f><!>")
-  (when (null file-name)
-    (setq file-name (buffer-file-name))
-    (unless file-name
-      (error "Please specify a file-name for this buffer!")))
-  (write-file file-name (not force)))
+  (unless file
+    (setq file (buffer-file-name))
+    (unless file
+      (error "Please specify a file name for this buffer!")))
+  (write-file file (not force)))
 
-(evil-define-command evil-edit (file)
-  "Visits a certain file."
+(evil-define-command evil-edit (file &optional force)
+  "Open FILE.
+If no FILE is specified, reload the current buffer from disk."
   :repeat nil
-  (interactive "<f>")
+  (interactive "<f><!>")
   (if file
       (find-file file)
-    (when (buffer-file-name)
-      (find-file (buffer-file-name)))))
+    (revert-buffer nil (or force (not (buffer-modified-p))) t)))
 
 (evil-define-command evil-read (count file)
   "Inserts the contents of FILE below the current line or line COUNT."
