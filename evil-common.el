@@ -680,8 +680,8 @@ BUFFER defaults to the current buffer."
   "Display an unlogged message in the echo area.
 That is, the message is not logged in the *Messages* buffer.
 \(To log the message, just use `message'.)"
-  (let (message-log-max)
-    (unless evil-locked-display
+  (unless evil-no-display
+    (let (message-log-max)
       (apply 'message string args))))
 
 (defun evil-echo-area-save ()
@@ -714,12 +714,11 @@ Intermittent messages are not logged in the *Messages* buffer."
        (evil-echo-area-restore))))
 
 (defmacro evil-without-display (&rest body)
-  "Execute BODY with locked display.
-State changes will not change the cursor, refresh the mode line
-or display a message in the echo area."
+  "Execute BODY without Evil displays.
+Inhibits echo area messages, mode line updates and cursor changes."
   (declare (indent defun)
            (debug t))
-  `(let ((evil-locked-display t))
+  `(let ((evil-no-display t))
      ,@body))
 
 (defun evil-num-visible-lines ()

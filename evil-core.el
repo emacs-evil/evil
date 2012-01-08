@@ -951,7 +951,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                (if ',input-method
                    (activate-input-method evil-input-method)
                  (inactivate-input-method))
-               (unless evil-locked-display
+               (unless evil-no-display
                  (evil-refresh-cursor ',state)
                  (evil-refresh-mode-line ',state)
                  (when (evil-called-interactively-p)
@@ -959,7 +959,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                ,@body
                (run-hooks ',entry-hook)
                (when (and evil-echo-state
-                          arg (not evil-locked-display) ,message)
+                          arg (not evil-no-display) ,message)
                  (if (functionp ,message)
                      (funcall ,message)
                    (evil-echo ,message))))))))

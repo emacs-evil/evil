@@ -3978,43 +3978,45 @@ if no previous selection")
 
 (ert-deftest evil-test-ex-search ()
   "Test evil internal search."
-  (evil-select-search-module 'evil-search-module 'evil-search)
-  (ert-info ("Test smart case insensitive")
-    (evil-test-buffer
-      "[s]tart you YOU You you YOU You"
-      ("/you" [return])
-      "start [y]ou YOU You you YOU You"
-      ("n")
-      "start you [Y]OU You you YOU You"
-      ("n")
-      "start you YOU [Y]ou you YOU You"
-      ("n")
-      "start you YOU You [y]ou YOU You"))
-  (ert-info ("Test smart case sensitive")
-    (evil-test-buffer
-      "[s]tart you YOU You you YOU You"
-      ("/You" [return])
-      "start you YOU [Y]ou you YOU You"
-      ("n")
-      "start you YOU You you YOU [Y]ou"))
-  (ert-info ("Test insensitive")
-    (evil-test-buffer
-      "[s]tart you YOU You you YOU You"
-      ("/\\cyou" [return])
-      "start [y]ou YOU You you YOU You"
-      ("n")
-      "start you [Y]OU You you YOU You"
-      ("n")
-      "start you YOU [Y]ou you YOU You"
-      ("n")
-      "start you YOU You [y]ou YOU You"))
-  (ert-info ("Test sensitive")
-    (evil-test-buffer
-      "[s]tart you YOU You you YOU You"
-      ("/\\Cyou" [return])
-      "start [y]ou YOU You you YOU You"
-      ("n")
-      "start you YOU You [y]ou YOU You")))
+  :tags '(evil ex search)
+  (evil-without-display
+    (evil-select-search-module 'evil-search-module 'evil-search)
+    (ert-info ("Test smart case insensitive")
+      (evil-test-buffer
+        "[s]tart you YOU You you YOU You"
+        ("/you" [return])
+        "start [y]ou YOU You you YOU You"
+        ("n")
+        "start you [Y]OU You you YOU You"
+        ("n")
+        "start you YOU [Y]ou you YOU You"
+        ("n")
+        "start you YOU You [y]ou YOU You"))
+    (ert-info ("Test smart case sensitive")
+      (evil-test-buffer
+        "[s]tart you YOU You you YOU You"
+        ("/You" [return])
+        "start you YOU [Y]ou you YOU You"
+        ("n")
+        "start you YOU You you YOU [Y]ou"))
+    (ert-info ("Test insensitive")
+      (evil-test-buffer
+        "[s]tart you YOU You you YOU You"
+        ("/\\cyou" [return])
+        "start [y]ou YOU You you YOU You"
+        ("n")
+        "start you [Y]OU You you YOU You"
+        ("n")
+        "start you YOU [Y]ou you YOU You"
+        ("n")
+        "start you YOU You [y]ou YOU You"))
+    (ert-info ("Test sensitive")
+      (evil-test-buffer
+        "[s]tart you YOU You you YOU You"
+        ("/\\Cyou" [return])
+        "start [y]ou YOU You you YOU You"
+        ("n")
+        "start you YOU You [y]ou YOU You"))))
 
 ;;; ex
 
@@ -4094,57 +4096,58 @@ if no previous selection")
 
 (ert-deftest evil-test-ex-substitute ()
   "Test `evil-ex-substitute'"
-  :tags '(evil ex)
-  (ert-info ("Substitute on current line")
-    (evil-test-buffer
-      "ABCABCABC\nABCA[B]CABC\nABCABCABC"
-      (":s/BC/XYZ/" (kbd "RET"))
-      "ABCABCABC\n[A]XYZABCABC\nABCABCABC"))
-  (ert-info ("Substitute on whole current line")
-    (evil-test-buffer
-      "ABCABCABC\nABC[A]BCABC\nABCABCABC"
-      (":s/BC/XYZ/g" (kbd "RET"))
-      "ABCABCABC\n[A]XYZAXYZAXYZ\nABCABCABC"))
-  (ert-info ("Substitute on last line")
-    (evil-test-buffer
-      "ABCABCABC\nABCABCABC\nABCABC[A]BC"
-      (":s/BC/XYZ/" (kbd "RET"))
-      "ABCABCABC\nABCABCABC\n[A]XYZABCABC"))
-  (ert-info ("Substitute on whole last line")
-    (evil-test-buffer
-      "ABCABCABC\nABCABCABC\nABCABC[A]BC"
-      (":s/BC/XYZ/g" (kbd "RET"))
-      "ABCABCABC\nABCABCABC\n[A]XYZAXYZAXYZ"))
-  (ert-info ("Substitute on range")
-    (evil-test-buffer
-      "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
-      (":1,3s/BC/XYZ/" (kbd "RET"))
-      "AXYZABCABC\nQRT\n[A]XYZABCABC\nABCABCABC"))
-  (ert-info ("Substitute whole lines on range")
-    (evil-test-buffer
-      "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
-      (":1,3s/BC/XYZ/g" (kbd "RET"))
-      "AXYZAXYZAXYZ\nQRT\n[A]XYZAXYZAXYZ\nABCABCABC"))
-  (ert-info ("Substitute on whole current line confirm")
-    (evil-test-buffer
-      "ABCABCABC\nABC[A]BCABC\nABCABCABC"
-      (":s/BC/XYZ/gc" (kbd "RET") "yny")
-      "ABCABCABC\n[A]XYZABCAXYZ\nABCABCABC"))
-  (ert-info ("Substitute on range confirm")
-    (evil-test-buffer
-      "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
-      (":1,3s/BC/XYZ/c" (kbd "RET") "yn")
-      "[A]XYZABCABC\nQRT\nABCABCABC\nABCABCABC"))
-  (ert-info ("Substitute whole lines on range with other delim")
-    (evil-test-buffer
-      "A/CA/CA/C\nQRT\nA/C[A]/CA/C\nA/CA/CA/C"
-      (":1,3s,/C,XYZ,g" (kbd "RET"))
-      "AXYZAXYZAXYZ\nQRT\n[A]XYZAXYZAXYZ\nA/CA/CA/C"))
-  (ert-info ("Substitute on whole buffer, smart case")
-    (evil-test-buffer
-      "[A]bcAbcAbc\naBcaBcaBc\nABCABCABC\nabcabcabc"
-      (":%s/bc/xy/g" (kbd "RET"))
-      "AxyAxyAxy\naXyaXyaXy\nAXYAXYAXY\n[a]xyaxyaxy")))
+  :tags '(evil ex search)
+  (evil-without-display
+    (ert-info ("Substitute on current line")
+      (evil-test-buffer
+        "ABCABCABC\nABCA[B]CABC\nABCABCABC"
+        (":s/BC/XYZ/" (kbd "RET"))
+        "ABCABCABC\n[A]XYZABCABC\nABCABCABC"))
+    (ert-info ("Substitute on whole current line")
+      (evil-test-buffer
+        "ABCABCABC\nABC[A]BCABC\nABCABCABC"
+        (":s/BC/XYZ/g" (kbd "RET"))
+        "ABCABCABC\n[A]XYZAXYZAXYZ\nABCABCABC"))
+    (ert-info ("Substitute on last line")
+      (evil-test-buffer
+        "ABCABCABC\nABCABCABC\nABCABC[A]BC"
+        (":s/BC/XYZ/" (kbd "RET"))
+        "ABCABCABC\nABCABCABC\n[A]XYZABCABC"))
+    (ert-info ("Substitute on whole last line")
+      (evil-test-buffer
+        "ABCABCABC\nABCABCABC\nABCABC[A]BC"
+        (":s/BC/XYZ/g" (kbd "RET"))
+        "ABCABCABC\nABCABCABC\n[A]XYZAXYZAXYZ"))
+    (ert-info ("Substitute on range")
+      (evil-test-buffer
+        "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
+        (":1,3s/BC/XYZ/" (kbd "RET"))
+        "AXYZABCABC\nQRT\n[A]XYZABCABC\nABCABCABC"))
+    (ert-info ("Substitute whole lines on range")
+      (evil-test-buffer
+        "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
+        (":1,3s/BC/XYZ/g" (kbd "RET"))
+        "AXYZAXYZAXYZ\nQRT\n[A]XYZAXYZAXYZ\nABCABCABC"))
+    (ert-info ("Substitute on whole current line confirm")
+      (evil-test-buffer
+        "ABCABCABC\nABC[A]BCABC\nABCABCABC"
+        (":s/BC/XYZ/gc" (kbd "RET") "yny")
+        "ABCABCABC\n[A]XYZABCAXYZ\nABCABCABC"))
+    (ert-info ("Substitute on range confirm")
+      (evil-test-buffer
+        "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
+        (":1,3s/BC/XYZ/c" (kbd "RET") "yn")
+        "[A]XYZABCABC\nQRT\nABCABCABC\nABCABCABC"))
+    (ert-info ("Substitute whole lines on range with other delim")
+      (evil-test-buffer
+        "A/CA/CA/C\nQRT\nA/C[A]/CA/C\nA/CA/CA/C"
+        (":1,3s,/C,XYZ,g" (kbd "RET"))
+        "AXYZAXYZAXYZ\nQRT\n[A]XYZAXYZAXYZ\nA/CA/CA/C"))
+    (ert-info ("Substitute on whole buffer, smart case")
+      (evil-test-buffer
+        "[A]bcAbcAbc\naBcaBcaBc\nABCABCABC\nabcabcabc"
+        (":%s/bc/xy/g" (kbd "RET"))
+        "AxyAxyAxy\naXyaXyaXy\nAXYAXYAXY\n[a]xyaxyaxy"))))
 
 (ert-deftest evil-test-ex-goto-line ()
   "Test if :number moves point to a certain line"
@@ -4161,27 +4164,28 @@ if no previous selection")
 (ert-deftest evil-test-ex-repeat ()
   "Test :@: command."
   :tags '(evil ex)
-  (ert-info ("Repeat in current line")
-    (evil-test-buffer
-      "[a]bcdef\nabcdef\nabcdef"
-      (":s/[be]/X/g" [return])
-      "[a]XcdXf\nabcdef\nabcdef"
-      ("jj:@:" [return])
-      "aXcdXf\nabcdef\n[a]XcdXf"))
-  (ert-info ("Repeat in specified line")
-    (evil-test-buffer
-      "[a]bcdef\nabcdef\nabcdef"
-      (":s/[be]/X/g" [return])
-      "[a]XcdXf\nabcdef\nabcdef"
-      (":3@:" [return])
-      "aXcdXf\nabcdef\n[a]XcdXf"))
-  (ert-info ("Double repeat, first without then with specified line")
-    (evil-test-buffer
-      "[a]bcdef\nabcdef\nabcdef"
-      (":s/[be]/X/" [return])
-      "[a]Xcdef\nabcdef\nabcdef"
-      ("jj:@:" [return] ":1@:" [return])
-      "[a]XcdXf\nabcdef\naXcdef")))
+  (evil-without-display
+    (ert-info ("Repeat in current line")
+      (evil-test-buffer
+        "[a]bcdef\nabcdef\nabcdef"
+        (":s/[be]/X/g" [return])
+        "[a]XcdXf\nabcdef\nabcdef"
+        ("jj:@:" [return])
+        "aXcdXf\nabcdef\n[a]XcdXf"))
+    (ert-info ("Repeat in specified line")
+      (evil-test-buffer
+        "[a]bcdef\nabcdef\nabcdef"
+        (":s/[be]/X/g" [return])
+        "[a]XcdXf\nabcdef\nabcdef"
+        (":3@:" [return])
+        "aXcdXf\nabcdef\n[a]XcdXf"))
+    (ert-info ("Double repeat, first without then with specified line")
+      (evil-test-buffer
+        "[a]bcdef\nabcdef\nabcdef"
+        (":s/[be]/X/" [return])
+        "[a]Xcdef\nabcdef\nabcdef"
+        ("jj:@:" [return] ":1@:" [return])
+        "[a]XcdXf\nabcdef\naXcdef"))))
 
 ;;; Utilities
 

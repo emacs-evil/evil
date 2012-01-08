@@ -51,14 +51,14 @@
         (throw 'done t)))
     nil))
 
-(defun evil-ex-message (info)
-  "Shows an INFO message after the current minibuffer content."
-  (when info
-    (let ((txt (concat " [" info "]"))
-          after-change-functions
-          before-change-functions)
-      (put-text-property 0 (length txt) 'face 'evil-ex-info txt)
-      (minibuffer-message txt))))
+(defun evil-ex-message (string &optional args)
+  "Display a message after the current Ex command."
+  (unless evil-no-display
+    (unless (zerop (length string))
+      (let ((string (format " [%s]" (apply #'format string args)))
+            after-change-functions before-change-functions)
+        (put-text-property 0 (length string) 'face 'evil-ex-info string)
+        (minibuffer-message string)))))
 
 (defun evil-ex-split (text)
   "Splits an ex command line in range, command and argument.

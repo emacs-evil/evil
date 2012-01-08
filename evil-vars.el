@@ -645,12 +645,11 @@ having higher priority.")
 Entries have the form (VARIABLE VALUE LOCAL), where LOCAL is
 whether the variable was previously buffer-local.")
 
-(defvar evil-locked-display nil
-  "If non-nil, state changes are invisible.
-Don't set this directly; use the macro
-`evil-with-locked-display' instead.")
-(make-variable-buffer-local 'evil-locked-display)
-(put 'evil-locked-display 'permanent-local t)
+(defvar evil-no-display nil
+  "If non-nil, various Evil displays are inhibited.
+Use the macro `evil-without-display' to set this variable.")
+(make-variable-buffer-local 'evil-no-display)
+(put 'evil-no-display 'permanent-local t)
 
 (defvar evil-type-properties nil
   "Specifications made by `evil-define-type'.
