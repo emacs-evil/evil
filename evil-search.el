@@ -832,7 +832,9 @@ The search matches the COUNT-th occurrence of the word."
   (let (repl)
     (when (fboundp 'match-substitute-replacement)
       (setq repl (match-substitute-replacement
-                  evil-ex-substitute-replacement))
+                  evil-ex-substitute-replacement
+                  (not (eq (evil-ex-pattern-case-fold (evil-ex-hl-pattern hl))
+                           'insensitive))))
       (put-text-property 0 (length repl)
                          'face 'evil-ex-substitute
                          repl)

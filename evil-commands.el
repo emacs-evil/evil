@@ -2221,12 +2221,12 @@ Change to `%s'? "
                                                   " with "
                                                   (if (fboundp 'match-substitute-replacement)
                                                       (match-substitute-replacement
-                                                       evil-ex-substitute-replacement case-replace)
+                                                       evil-ex-substitute-replacement (not case-replace))
                                                     evil-ex-substitute-replacement)
                                                   ": "))
                                       #'(lambda (x)
                                           (set-match-data x)
-                                          (replace-match evil-ex-substitute-replacement case-replace)
+                                          (replace-match evil-ex-substitute-replacement (not case-replace))
                                           (setq evil-ex-substitute-last-point (point))
                                           (setq evil-ex-substitute-nreplaced
                                                 (1+ evil-ex-substitute-nreplaced))
@@ -2259,7 +2259,7 @@ Change to `%s'? "
                             (<= (line-number-at-pos (match-beginning 0)) evil-ex-substitute-last-line))
                   (setq evil-ex-substitute-nreplaced
                         (1+ evil-ex-substitute-nreplaced))
-                  (replace-match evil-ex-substitute-replacement case-replace)
+                  (replace-match evil-ex-substitute-replacement (not case-replace))
                   (setq evil-ex-substitute-last-point (point))
                   (setq n 1))))
 
