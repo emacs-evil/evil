@@ -728,7 +728,7 @@ of `evil-inhibit-operator' from one local scope to another.")
     (?' . evil-jump-backward)
     (?` . evil-jump-backward)
     (?< . evil-visual-beginning)
-    (?> . evil-visual-end))
+    (?> . evil-visual-end-mark))
   "Association list for markers.
 Entries have the form (CHAR . DATA), where CHAR is the marker's
 name and DATA is either a marker object as returned by `make-marker',

@@ -622,6 +622,12 @@ If SELECTION is specified, return the type of that instead."
     (setq selection (or selection evil-visual-selection))
     (symbol-value (cdr-safe (assq selection evil-visual-alist)))))
 
+(defun evil-visual-end-mark ()
+  "Return the position of the mark to then end of last visual selection.
+This position may differ from `evil-visual-end' depending on the
+selection type and is contained in the visual selection."
+  (evil-range-end (evil-contract-range (evil-visual-range))))
+
 (defun evil-visual-alist ()
   "Return an association list from types to selection symbols."
   (mapcar (lambda (e)
