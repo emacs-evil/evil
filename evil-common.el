@@ -755,14 +755,6 @@ If POS is a marker, return its position."
    (t
     pos)))
 
-;; `set-mark' does too much at once
-(defun evil-move-mark (pos)
-  "Set buffer's mark to POS.
-If POS is nil, delete the mark."
-  (when pos
-    (setq pos (evil-normalize-position pos)))
-  (set-marker (mark-marker) pos))
-
 (defun evil-adjust-eol (&optional force)
   "Move point one character back if at the end of a non-empty line.
 This behavior is contingent on `evil-move-cursor-back';
@@ -772,8 +764,10 @@ use the FORCE parameter to override it."
       (evil-adjust))))
 
 (defun evil-adjust ()
-  "Move point one character back within the current line."
-  (unless (bolp)
+  "Move point one character back within the current line.
+Honors field boundaries, i.e., constrains the movement
+to the current field as recognized by `line-beginning-position'."
+  (unless (= (point) (line-beginning-position))
     (backward-char)))
 
 (defun evil-column (&optional pos)
@@ -1034,26 +1028,26 @@ POS defaults to the current position of point."
                  (save-excursion (beginning-of-defun) (point))
                  (point))) t)))
 
-(defun evil-find-beginning (predicate &optional pos bound)
+(defun evil-find-beginning (predicate &optional pos limit)
   "Find the beginning of a series of characters satisfying PREDICATE.
 POS is the starting point and defaults to the current position.
-Stops at BOUND, which defaults to the beginning of the buffer."
+Stops at LIMIT, which defaults to the beginning of the buffer."
   (setq pos (or pos (point))
-        bound (or bound (buffer-end -1)))
+        limit (or limit (buffer-end -1)))
   (while (let ((prev (1- pos)))
-           (when (and (>= prev bound)
+           (when (and (>= prev limit)
                       (funcall predicate prev))
              (setq pos prev))))
   pos)
 
-(defun evil-find-end (predicate &optional pos bound)
+(defun evil-find-end (predicate &optional pos limit)
   "Find the end of a series of characters satisfying PREDICATE.
 POS is the starting point and defaults to the current position.
-Stops at BOUND, which defaults to the end of the buffer."
+Stops at LIMIT, which defaults to the end of the buffer."
   (setq pos (or pos (point))
-        bound (or bound (buffer-end 1)))
+        limit (or limit (buffer-end 1)))
   (while (let ((next (1+ pos)))
-           (when (and (<= next bound)
+           (when (and (<= next limit)
                       (funcall predicate next))
              (setq pos next))))
   pos)
@@ -1244,6 +1238,14 @@ Signal an error if empty, unless NOERROR is non-nil."
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
 
 ;;; Region
+
+;; `set-mark' does too much at once
+(defun evil-move-mark (pos)
+  "Set buffer's mark to POS.
+If POS is nil, delete the mark."
+  (when pos
+    (setq pos (evil-normalize-position pos)))
+  (set-marker (mark-marker) pos))
 
 (defun evil-transient-save ()
   "Save Transient Mark mode and make the new setup buffer-local.
