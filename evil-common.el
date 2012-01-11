@@ -892,7 +892,9 @@ See also `evil-goto-min'."
     (let ((opoint (point)))
       (condition-case err
           (with-no-warnings
-            (next-line count))
+            (if (>= count 0)
+                (next-line count)
+              (previous-line (- count))))
         ((beginning-of-buffer end-of-buffer)
          (let ((col (or goal-column
                         (if (consp temporary-goal-column)
