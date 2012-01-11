@@ -112,7 +112,7 @@ This should be a regexp set without the enclosing []."
   :type  'integer
   :group 'evil)
 
-(defcustom evil-esc-delay 0
+(defcustom evil-esc-delay 0.01
   "Time in seconds to wait for another key after ESC."
   :type 'number
   :group 'evil)
