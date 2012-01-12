@@ -275,6 +275,13 @@ has :repeat nil."
     (setq evil-recording-current-command nil)))
 (put 'evil-repeat-post-hook 'permanent-local-hook t)
 
+(defun evil-clear-command-keys ()
+  "Clear `this-command-keys' and all information about the current command keys.
+Calling this function prevents further recording of the keys that
+invoked the current command"
+  (clear-this-command-keys t)
+  (setq evil-repeat-keys ""))
+
 (defun evil-repeat-keystrokes (flag)
   "Repeation recording function for commands that are repeated by keystrokes."
   (cond
@@ -285,7 +292,7 @@ has :repeat nil."
                             evil-repeat-keys
                           (this-command-keys)))
     ;; erase commands keys to prevent double recording
-    (clear-this-command-keys t))))
+    (evil-clear-command-keys))))
 
 (defun evil-repeat-motion (flag)
   "Repeation for motions. Motions are recorded by keystroke but only in insert state."
