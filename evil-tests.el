@@ -936,6 +936,7 @@ If nil, KEYS is used."
   "Save key-sequence after simple editing command in Normal state"
   :tags '(evil repeat)
   (evil-test-buffer
+    "[T]his is a test buffer"
     (ert-info ("Call simple command without count")
       (evil-test-repeat-info "x"))
     (ert-info ("Call simple command with count 3")
@@ -945,6 +946,7 @@ If nil, KEYS is used."
   "Save key-sequence after editing command with character in Normal state"
   :tags '(evil repeat)
   (evil-test-buffer
+    "[T]his is a test buffer"
     (ert-info ("Call command with character argument without count")
       (evil-test-repeat-info "r5"))
     (ert-info ("Call command with character argument with count 12")
