@@ -78,6 +78,7 @@ The return value is a list (BEG END TYPE)."
                    (stringp (car-safe body))))
       (setq doc (pop body)))
     ;; collect keywords
+    (setq keys (plist-put keys :repeat 'motion))
     (while (keywordp (car-safe body))
       (setq key (pop body)
             arg (pop body)
@@ -99,7 +100,6 @@ The return value is a list (BEG END TYPE)."
          ,@(when doc `(,doc))          ; avoid nil before `interactive'
          ,@keys
          :keep-visual t
-         :repeat motion
          (interactive
           (progn
             (when (evil-get-command-property ',motion :jump)
