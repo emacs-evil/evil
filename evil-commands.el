@@ -1779,6 +1779,7 @@ Searches for regular expression if `evil-regexp-search' is t.%s"
               (format "\n\nBelow is the documentation string \
 for `isearch-forward',\nwhich lists available keys:\n\n%s"
                       (documentation 'isearch-forward)) ""))
+  :jump t
   :type exclusive
   (evil-search-incrementally t evil-regexp-search))
 
