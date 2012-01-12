@@ -48,15 +48,17 @@ search module is used."
           (isearch-forward regexp-p)
         (isearch-backward regexp-p))
       (when isearch-success
+        ;; always position point at the beginning of the match
+        (when (and forward isearch-other-end)
+          (goto-char isearch-other-end))
         (when (and (eq point (point))
                    (not (string= isearch-string "")))
           (if forward
               (isearch-repeat-forward)
             (isearch-repeat-backward))
-          (isearch-exit))
-        ;; always position point at the beginning of the match
-        (when (and forward isearch-other-end)
-          (goto-char isearch-other-end))
+          (isearch-exit)
+          (when (and forward isearch-other-end)
+            (goto-char isearch-other-end)))
         (evil-flash-search-pattern
          (evil-search-message isearch-string forward))))))
 
@@ -82,14 +84,15 @@ to display in the echo area."
         (isearch-lazy-highlight-new-loop)
         (unless isearch-lazy-highlight-overlays
           (isearch-lazy-highlight-update)))
-      (add-hook 'pre-command-hook 'evil-flash-hook)
-      (add-hook 'pre-command-hook 'evil-clean-isearch-overlays)
+      (add-hook 'pre-command-hook 'evil-flash-hook nil t)
+      (add-hook 'evil-operator-state-exit-hook 'evil-flash-hook nil t)
+      (add-hook 'pre-command-hook 'evil-clean-isearch-overlays nil t)
       (setq evil-flash-timer
             (run-at-time evil-flash-delay nil disable)))))
 
 (defun evil-clean-isearch-overlays ()
   "Clean isearch overlays unless `this-command' is search."
-  (remove-hook 'pre-command-hook 'evil-clean-isearch-overlays)
+  (remove-hook 'pre-command-hook 'evil-clean-isearch-overlays t)
   (unless (memq this-command
                 '(evil-search-backward
                   evil-search-forward
@@ -119,7 +122,8 @@ Disable anyway if FORCE is t."
     (lazy-highlight-cleanup t)
     (when evil-flash-timer
       (cancel-timer evil-flash-timer)))
-  (remove-hook 'pre-command-hook 'evil-flash-hook))
+  (remove-hook 'pre-command-hook 'evil-flash-hook t)
+  (remove-hook 'evil-operator-state-exit-hook 'evil-flash-hook t))
 (put 'evil-flash-hook 'permanent-local-hook t)
 
 (defun evil-search-function (&optional forward regexp-p wrap)
