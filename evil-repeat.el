@@ -80,6 +80,13 @@
 ;; `evil-record-repeat' to append further repeat-information of the
 ;; form described above to `evil-repeat-info'. See the implementation
 ;; of `evil-repeat-keystrokes' and `evil-repeat-changes' for examples.
+;; Those functions are called in different situations before and after
+;; the execution of a command. Each function should take one argument
+;; which can be either 'pre, 'post, 'pre-operator or 'post-operator
+;; specifying when the repeat function has been called. If the command
+;; is a usual command the function is called with 'pre before the
+;; command is executed and with 'post after the command has been
+;; executed.
 ;;
 ;; The repeat information is executed with `evil-execute-repeat-info',
 ;; which passes key-sequence elements to `execute-kbd-macro' and
@@ -263,9 +270,9 @@ has :repeat nil."
         (funcall repeat-type 'post)
         ;; In normal state, the repeat sequence is complete, so record it.
         (when (evil-normal-state-p)
-          (evil-repeat-stop))))))
-  ;; done with recording the current command
-  (setq evil-recording-current-command nil))
+          (evil-repeat-stop)))))
+    ;; done with recording the current command
+    (setq evil-recording-current-command nil)))
 (put 'evil-repeat-post-hook 'permanent-local-hook t)
 
 (defun evil-repeat-keystrokes (flag)
