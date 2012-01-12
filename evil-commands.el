@@ -2346,6 +2346,21 @@ Change to `%s'? "
                  (if (/= evil-ex-substitute-nreplaced 1) "s" ""))))
     (evil-first-non-blank)))
 
+(evil-define-command evil-goto-char (position)
+  "Go to POSITION in the buffer.
+Default position is the beginning of the buffer."
+  (interactive "p")
+  (let ((position (evil-normalize-position
+                   (or position (point-min)))))
+    (goto-char position)))
+
+(evil-define-operator evil-ex-line-number (beg end)
+  "Print the last line number."
+  :motion mark-whole-buffer
+  :move-point nil
+  (interactive "<r>")
+  (message "%d" (count-lines (point-min) end)))
+
 ;;; Window navigation
 
 (defun evil-resize-window (new-size &optional horizontal)

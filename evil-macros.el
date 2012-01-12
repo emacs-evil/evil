@@ -518,7 +518,10 @@ The return value is a list (BEG END) or (BEG END TYPE),
 depending on RETURN-TYPE. Instead of reading from the keyboard,
 a predefined motion may be specified with MOTION. Likewise,
 a predefined type may be specified with TYPE."
-  (let ((motion evil-operator-range-motion)
+  (let ((motion (or evil-operator-range-motion
+                    (when (and (fboundp 'evil-ex-state-p)
+                               (evil-ex-state-p))
+                      'evil-line)))
         (type evil-operator-range-type)
         (range (evil-range (point) (point)))
         command count modifier)
