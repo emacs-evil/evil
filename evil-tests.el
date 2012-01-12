@@ -4020,6 +4020,70 @@ if no previous selection")
         ("n")
         "start you YOU You [y]ou YOU You"))))
 
+(ert-deftest evil-test-ex-search-offset ()
+  "Test search offsets."
+  :tags '(evil ex search)
+  (evil-without-display
+    (evil-select-search-module 'evil-search-module 'evil-search)
+    (ert-info ("Test line offsets")
+      (evil-test-buffer
+        "[f]oo foo\nbar bar\nbaz baz\nAnother line\nAnd yet another line"
+        ("/bar/2")
+        "foo foo\nbar bar\nbaz baz\n[A]nother line\nAnd yet another line"
+        ("?bar?-")
+        "[f]oo foo\nbar bar\nbaz baz\nAnother line\nAnd yet another line"
+        ("/r bar/")
+        "foo foo\nba[r] bar\nbaz baz\nAnother line\nAnd yet another line"))
+    (ert-info ("Test end offsets")
+      (evil-test-buffer
+        "[f]oo foo\nbar bar\nbaz baz\nAnother line\nAnd yet another line"
+        ("/bar/e")
+        "foo foo\nba[r] bar\nbaz baz\nAnother line\nAnd yet another line"
+        ("/baz/e+2")
+        "foo foo\nbar bar\nbaz [b]az\nAnother line\nAnd yet another line"
+        ("/line/e-1")
+        "foo foo\nbar bar\nbaz baz\nAnother li[n]e\nAnd yet another line"))
+    (ert-info ("Test begin offsets")
+      (evil-test-buffer
+        "[f]oo foo\nbar bar\nbaz baz\nAnother line\nAnd yet another line"
+        ("/bar/b")
+        "foo foo\n[b]ar bar\nbaz baz\nAnother line\nAnd yet another line"
+        ("/baz/b+2")
+        "foo foo\nbar bar\nba[z] baz\nAnother line\nAnd yet another line"
+        ("/line/b-")
+        "foo foo\nbar bar\nbaz baz\nAnother[ ]line\nAnd yet another line"))))
+
+(ert-deftest evil-test-ex-search-repeat ()
+  "Test repeat of search."
+  :tags '(evil ex search)
+  (evil-without-display
+    (evil-select-search-module 'evil-search-module 'evil-search)
+    (ert-info ("Test repeat of simple pattern")
+      (evil-test-buffer
+        "[f]oo foo\nbar bar\nbaz baz\nAnother line\nAnd yet another line"
+        ("/bar" [return] "/" [return])
+        "foo foo\nbar [b]ar\nbaz baz\nAnother line\nAnd yet another line"))
+    (ert-info ("Test repeat of simple pattern with new offset")
+      (evil-test-buffer
+        "[f]oo foo\nbar bar\nbaz baz\nAnother line\nAnd yet another line"
+        ("/bar" [return] "//e" [return])
+        "foo foo\nbar ba[r]\nbaz baz\nAnother line\nAnd yet another line"))
+    (ert-info ("Test repeat of pattern with offset")
+      (evil-test-buffer
+        "[f]oo foo\nbar bar\nbaz baz\nAnother line\nAnd yet another line"
+        ("/bar/e" [return] "/" [return])
+        "foo foo\nbar ba[r]\nbaz baz\nAnother line\nAnd yet another line"))
+    (ert-info ("Test repeat of pattern with offset without offset")
+      (evil-test-buffer
+        "[f]oo foo\nbar bar\nbaz baz\nAnother line\nAnd yet another line"
+        ("/bar/e" [return] "//" [return])
+        "foo foo\nbar [b]ar\nbaz baz\nAnother line\nAnd yet another line"))
+    (ert-info ("Test repeat of pattern with offset with new offset")
+      (evil-test-buffer
+        "[f]oo foo\nbar bar\nbaz baz\nAnother line\nAnd yet another line"
+        ("/bar/e" [return] "//b+1" [return])
+        "foo foo\nbar b[a]r\nbaz baz\nAnother line\nAnd yet another line"))))
+
 ;;; ex
 
 (ert-deftest evil-test-ex-parse-command ()

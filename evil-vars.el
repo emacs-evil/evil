@@ -1024,6 +1024,9 @@ Elements have the form (NAME . FUNCTION).")
 (defvar evil-ex-search-pattern nil
   "The actual search pattern.")
 
+(defvar evil-ex-search-offset nil
+  "The actual search offset.")
+
 (defvar evil-ex-search-match-beg nil
   "The beginning position of the last match.")
 
