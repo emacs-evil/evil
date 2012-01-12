@@ -2031,6 +2031,29 @@ If no FILE is specified, reload the current buffer from disk."
   (evil-write (point-min) (point-max) 'line file force)
   (evil-quit))
 
+(evil-define-operator evil-shell-command
+  (beg end command &optional previous)
+  "Execute a shell command.
+If BEG and END is specified, COMMAND is executed on the region,
+which is replaced with the command's output. Otherwise, the
+output is displayed in its own buffer. If PREVIOUS is non-nil,
+the previous shell command is executed instead."
+  :motion nil
+  (interactive "<r><a><!>")
+  (when command
+    (setq command (evil-ex-replace-special-filenames command)))
+  (if (zerop (length command))
+      (when previous (setq command evil-previous-shell-command))
+    (setq evil-previous-shell-command command))
+  (cond
+   ((zerop (length command))
+    (if previous (error "No previous shell command")
+      (error "No shell command")))
+   ((eq beg end) ; empty range
+    (shell-command command))
+   (t
+    (shell-command-on-region beg end command t))))
+
 ;; TODO: escape special characters (currently only \n) ... perhaps
 ;; there is some Emacs function doing this?
 (evil-define-command evil-show-registers ()
@@ -2663,9 +2686,10 @@ if the previous state was Emacs state."
   :keep-visual t
   (interactive '(nil t))
   (with-current-buffer (or buffer (current-buffer))
-    (evil-change-to-previous-state buffer message)
     (when (evil-emacs-state-p)
-      (evil-normal-state (and message 1)))))
+      (evil-change-to-previous-state buffer message)
+      (when (evil-emacs-state-p)
+        (evil-normal-state (and message 1))))))
 
 (defun evil-execute-in-normal-state ()
   "Execute the next command in Normal state."

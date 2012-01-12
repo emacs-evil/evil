@@ -1002,6 +1002,9 @@ Elements have the form (NAME . FUNCTION).")
 (defvar evil-ex-arg-types-alist nil
   "An alist of defined argument handlers.")
 
+(defvar evil-previous-shell-command nil
+  "The last shell command.")
+
 ;; Searching
 (defvar evil-ex-search-history nil
   "The history for the search command.")

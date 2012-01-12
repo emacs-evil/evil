@@ -191,7 +191,7 @@ Returns a list (POS CMD FORCE) where
 POS is the position of the first character after the separator,
 CMD is the parsed command,
 FORCE is non-nil if and only if an exclamation followed the command."
-  (if (and (string-match "\\([*@:a-zA-Z_-]+\\)\\(!\\)?" text pos)
+  (if (and (string-match "\\([*@:a-zA-Z_-]+\\|!\\)\\(!\\)?" text pos)
            (= (match-beginning 0) pos))
       (list (match-end 0)
             (match-string 1 text)

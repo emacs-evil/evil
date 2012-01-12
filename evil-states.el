@@ -293,9 +293,10 @@ otherwise exit Visual state."
   :repeat abort
   (interactive)
   (with-current-buffer (or buffer (current-buffer))
-    (when evil-visual-region-expanded
-      (evil-visual-contract-region))
-    (evil-change-to-previous-state)))
+    (when (evil-visual-state-p)
+      (when evil-visual-region-expanded
+        (evil-visual-contract-region))
+      (evil-change-to-previous-state))))
 
 (defun evil-visual-message (&optional selection)
   "Create an echo area message for SELECTION.

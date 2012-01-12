@@ -456,9 +456,6 @@ if COUNT is positive, and to the left of it if negative.
       (cond
        ((eq key :keep-visual)
         (setq visual arg))
-       ;; :motion nil is equivalent to :motion undefined
-       ((eq key :motion)
-        (setq keys (plist-put keys key (or arg 'undefined))))
        (t
         (setq keys (plist-put keys key arg)))))
     ;; collect `interactive' specification
@@ -476,7 +473,10 @@ if COUNT is positive, and to the left of it if negative.
        :suppress-operator t
        (interactive
         (let* ((evil-operator-range-motion
-                (evil-get-command-property ',operator :motion))
+                (when (evil-has-command-property-p ',operator :motion)
+                  ;; :motion nil is equivalent to :motion undefined
+                  (or (evil-get-command-property ',operator :motion)
+                      'undefined)))
                (evil-operator-range-type
                 (evil-get-command-property ',operator :type))
                (orig (point))
