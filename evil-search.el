@@ -938,31 +938,16 @@ The DIRECTION argument should be either `forward' or
                          repl)
       (overlay-put overlay 'after-string repl))))
 
-(defun evil-ex-parse-substitute (text)
-  (save-match-data
-    (when (string-match "\\`\\s-*\\([^][[:word:]\\|\"-]\\)" text)
-      (let* ((delim (match-string 1 text))
-             (delim-ch (aref delim 0))
-             (notdelim (concat "[^" delim "]")))
-        (when (string-match
-               (concat "\\`\\s-*"
-                       delim
-                       "\\(\\(?:" notdelim "\\|[\\].\\)+\\)\\(?:"
-                       delim
-                       "\\(\\(?:" notdelim "\\|[\\].\\)*\\)\\(?:"
-                       delim "\\([giIc]*\\)\\)?\\)?\\s-*\\'")
-               text)
-          (let* ((pattern (match-string 1 text))
-                 (replacement (match-string 2 text))
-                 (flags (match-string 3 text))
-                 newrepl
-                 (idx 0) (n (length replacement)))
+(defun evil-ex-parse-global (string)
+  "Parse STRING as a global argument."
+  (evil-delimited-arguments string 2))
 
-            (list pattern
-                  (if replacement
-                      (evil-compile-replacement replacement)
-                    "")
-                  flags)))))))
+(defun evil-ex-parse-substitute (string)
+  "Parse STRING as a substitution argument."
+  (let ((args (evil-delimited-arguments string 3)))
+    (list (nth 0 args)
+          (evil-compile-replacement (nth 1 args))
+          (nth 2 args))))
 
 (defun evil-ex-nohighlight ()
   "Disable the active search highlightings."

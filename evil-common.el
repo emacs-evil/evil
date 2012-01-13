@@ -407,6 +407,32 @@ This ensures that it behaves correctly in Visual state."
   "Declare COMMAND to be nonrepeatable."
   (evil-add-command-properties command :repeat 'abort))
 
+(defun evil-delimited-arguments (string &optional num)
+  "Parse STRING as a sequence of delimited arguments.
+The first non-blank character in the string is taken to be
+the delimiter. Returns a list of NUM strings."
+  (save-match-data
+    (let ((string (or string ""))
+          (count 0) (idx 0)
+          argument delim match result)
+      (when (string-match "^[[:space:]]*\\(.\\)" string)
+        (setq delim (match-string 1 string)
+              argument (format "%s\\(\\(?:[\\].\\|[^%s]\\)*\\)"
+                               (regexp-quote delim)
+                               delim))
+        (while (string-match argument string idx)
+          (setq count (1+ count))
+          (if (eq count num)
+              (setq match (substring string (match-beginning 1))
+                    idx (length string))
+            (setq match (match-string 1 string)
+                  idx (match-end 1)))
+          (unless (zerop (length match))
+            (push match result))))
+      (while (and num (< (length result) num))
+        (push "" result))
+      (nreverse result))))
+
 ;;; Key sequences
 
 (defun evil-keypress-parser (&optional input)

@@ -230,31 +230,47 @@ the last column is excluded."
   "Current yank-handler."
   (list (evil-yank-handler)))
 
+(evil-define-interactive-code "<a>"
+  "Ex argument."
+  :ex-arg t
+  (list (when (evil-ex-state-p) evil-ex-current-arg)))
+
 (evil-define-interactive-code "<f>"
+  "Ex file argument."
   :ex-arg file
-  (list (and (evil-ex-state-p) (evil-ex-file-arg))))
+  (list (when (evil-ex-state-p) (evil-ex-file-arg))))
 
 (evil-define-interactive-code "<b>"
+  "Ex buffer argument."
   :ex-arg buffer
-  (list (and (evil-ex-state-p) evil-ex-current-arg)))
-
-(evil-define-interactive-code "<a>"
-  :ex-arg t
-  (list (and (evil-ex-state-p) evil-ex-current-arg)))
-
-(evil-define-interactive-code "<!>"
-  :ex-force t
-  (list (and (evil-ex-state-p) evil-ex-current-cmd-force)))
+  (list (when (evil-ex-state-p) evil-ex-current-arg)))
 
 (evil-define-interactive-code "<sym>"
+  "Ex symbolic argument."
   :ex-arg sym
-  (list (and (evil-ex-state-p)
-             evil-ex-current-arg
-             (intern evil-ex-current-arg))))
+  (list (when (and (evil-ex-state-p) evil-ex-current-arg)
+          (intern evil-ex-current-arg))))
+
+(evil-define-interactive-code "<!>"
+  "Ex force argument."
+  :ex-force t
+  (list (when (evil-ex-state-p) evil-ex-current-cmd-force)))
+
+(evil-define-interactive-code "</>"
+  "Ex delimited argument."
+  (when (evil-ex-state-p)
+    (evil-delimited-arguments evil-ex-current-arg)))
+
+(evil-define-interactive-code "<g/>"
+  "Ex global argument."
+  (when (evil-ex-state-p)
+    (evil-ex-parse-global evil-ex-current-arg)))
 
 (evil-define-interactive-code "<s/>"
+  "Ex substitution argument."
   :ex-arg substitution
-  (list (and (evil-ex-state-p) evil-ex-current-arg)))
+  (when (evil-ex-state-p)
+    (evil-ex-parse-substitute evil-ex-current-arg)))
 
 (provide 'evil-types)
 

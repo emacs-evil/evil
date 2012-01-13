@@ -2220,18 +2220,21 @@ Change to `%s'? "
   :type exclusive
   (evil-ex-start-symbol-search t 'backward count))
 
-(evil-define-operator evil-ex-substitute (beg end type substitution)
-  "The VIM substitute command: [range]s/pattern/replacement/flags"
+(evil-define-operator evil-ex-substitute
+  (beg end pattern replacement flags)
+  "The Ex substitute command.
+\[BEG,END]s/PATTERN/REPLACEMENT/FLAGS"
   :repeat nil
   :jump t
   :move-point nil
   :motion evil-line
-  (interactive "<R><s/>")
+  (interactive "<r><s/>")
   (evil-ex-nohighlight)
-  (let* ((result (evil-ex-parse-substitute substitution))
-         (pattern (pop result))
-         (replacement (pop result))
-         (flags (append (pop result) nil))
+  (unless pattern
+    (error "No pattern given"))
+  (unless replacement
+    (error "No replacement given"))
+  (let* ((flags (append flags nil))
          (whole-line (memq ?g flags))
          (confirm (memq ?c flags))
          (ignore-case (memq ?i flags))
@@ -2248,10 +2251,6 @@ Change to `%s'? "
          (case-fold-search case-replace)
          (evil-ex-substitute-replacement replacement)
          (evil-ex-substitute-regex (evil-ex-pattern-regex pattern)))
-    (unless pattern
-      (error "No pattern given"))
-    (unless replacement
-      (error "No replacement given"))
     (if whole-line
         ;; this one is easy, just use the built-in function
         (perform-replace evil-ex-substitute-regex
@@ -2345,6 +2344,27 @@ Change to `%s'? "
                  evil-ex-substitute-nreplaced
                  (if (/= evil-ex-substitute-nreplaced 1) "s" ""))))
     (evil-first-non-blank)))
+
+(evil-define-operator evil-ex-global (beg end pattern command)
+  "The Ex global command.
+\[BEG,END]g/PATTERN/COMMAND"
+  :motion mark-whole-buffer
+  (interactive "<r><g/>")
+  (let (markers)
+    (unless (or (zerop (length pattern)) (zerop (length command)))
+      (goto-char beg)
+      (while (re-search-forward pattern end t)
+        (push (move-marker (make-marker) (match-beginning 0))
+              markers))
+      (setq markers (nreverse markers))
+      (unwind-protect
+          (dolist (marker markers)
+            (goto-char marker)
+            (evil-ex-eval command))
+        ;; ensure that all markers are deleted afterwards,
+        ;; even in the event of failure
+        (dolist (marker markers)
+          (set-marker marker nil))))))
 
 (evil-define-command evil-goto-char (position)
   "Go to POSITION in the buffer.

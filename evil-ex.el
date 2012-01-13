@@ -433,6 +433,12 @@ arguments for programmable completion."
               (call-interactively binding)))
         (error "Unknown command %s" evil-ex-current-cmd)))))
 
+(defun evil-ex-eval (string)
+  "Evaluate STRING as an Ex command."
+  (when (and string (not (zerop (length string))))
+    (evil-ex-update-current-command string)
+    (evil-ex-call-current-command)))
+
 (defun evil-ex-range ()
   "Returns the first and last position of the current range."
   (let ((rng (evil-ex-get-current-range)))
@@ -597,9 +603,7 @@ This function interprets special file-names like # and %."
                                    'evil-ex-history
                                    evil-ex-last-cmd
                                    t)))
-      (when (and result (not (zerop (length result))))
-        (evil-ex-update-current-command result)
-        (evil-ex-call-current-command)))))
+      (evil-ex-eval result))))
 
 (provide 'evil-ex)
 
