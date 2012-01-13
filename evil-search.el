@@ -887,9 +887,9 @@ The DIRECTION argument should be either `forward' or
 
     (when (and (eq flag 'update) evil-ex-substitute-highlight-all)
       (condition-case lossage
-          (let* ((result (evil-ex-parse-substitute (or (car args) "")))
+          (let* ((result (evil-ex-parse-substitute (car args)))
                  (pattern (pop result))
-                 (replacement (pop result))
+                 (replacement (or (pop result) ""))
                  (flags (append (pop result) nil)))
 
             (setq evil-ex-substitute-pattern

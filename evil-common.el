@@ -430,7 +430,7 @@ the delimiter. Returns a list of NUM strings."
           (unless (zerop (length match))
             (push match result))))
       (while (and num (< (length result) num))
-        (push "" result))
+        (push nil result))
       (nreverse result))))
 
 ;;; Key sequences
@@ -2359,9 +2359,10 @@ REST is the unparsed rest of TO."
   "Maybe convert a regexp replacement TO to Lisp.
 Returns a list suitable for `perform-replace' if necessary,
 the original string if not."
-  (save-match-data
-    (cons 'replace-eval-replacement
-          (car (evil-compile-subreplacement to)))))
+  (when (stringp to)
+    (save-match-data
+      (cons 'replace-eval-replacement
+            (car (evil-compile-subreplacement to))))))
 
 (defun evil-replace-match (replacement &optional fixedcase string)
   "Replace text match by last search with REPLACEMENT.

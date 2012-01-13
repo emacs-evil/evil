@@ -2349,9 +2349,10 @@ Change to `%s'? "
   "The Ex global command.
 \[BEG,END]g/PATTERN/COMMAND"
   :motion mark-whole-buffer
+  :move-point nil
   (interactive "<r><g/>")
   (let (markers)
-    (unless (or (zerop (length pattern)) (zerop (length command)))
+    (when (and pattern command)
       (goto-char beg)
       (while (re-search-forward pattern end t)
         (push (move-marker (make-marker) (match-beginning 0))
