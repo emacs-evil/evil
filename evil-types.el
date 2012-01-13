@@ -233,44 +233,44 @@ the last column is excluded."
 (evil-define-interactive-code "<a>"
   "Ex argument."
   :ex-arg t
-  (list (when (evil-ex-state-p) evil-ex-current-arg)))
+  (list (when (evil-ex-p) evil-ex-argument)))
 
 (evil-define-interactive-code "<f>"
   "Ex file argument."
   :ex-arg file
-  (list (when (evil-ex-state-p) (evil-ex-file-arg))))
+  (list (when (evil-ex-p) (evil-ex-file-arg))))
 
 (evil-define-interactive-code "<b>"
   "Ex buffer argument."
   :ex-arg buffer
-  (list (when (evil-ex-state-p) evil-ex-current-arg)))
+  (list (when (evil-ex-p) evil-ex-argument)))
 
 (evil-define-interactive-code "<sym>"
   "Ex symbolic argument."
   :ex-arg sym
-  (list (when (and (evil-ex-state-p) evil-ex-current-arg)
-          (intern evil-ex-current-arg))))
+  (list (when (and (evil-ex-p) evil-ex-argument)
+          (intern evil-ex-argument))))
 
 (evil-define-interactive-code "<!>"
   "Ex force argument."
   :ex-force t
-  (list (when (evil-ex-state-p) evil-ex-current-cmd-force)))
+  (list (when (evil-ex-p) evil-ex-force)))
 
 (evil-define-interactive-code "</>"
   "Ex delimited argument."
-  (when (evil-ex-state-p)
-    (evil-delimited-arguments evil-ex-current-arg)))
+  (when (evil-ex-p)
+    (evil-delimited-arguments evil-ex-argument)))
 
 (evil-define-interactive-code "<g/>"
   "Ex global argument."
-  (when (evil-ex-state-p)
-    (evil-ex-parse-global evil-ex-current-arg)))
+  (when (evil-ex-p)
+    (evil-ex-parse-global evil-ex-argument)))
 
 (evil-define-interactive-code "<s/>"
   "Ex substitution argument."
   :ex-arg substitution
-  (when (evil-ex-state-p)
-    (evil-ex-parse-substitute evil-ex-current-arg)))
+  (when (evil-ex-p)
+    (evil-ex-parse-substitute evil-ex-argument)))
 
 (provide 'evil-types)
 

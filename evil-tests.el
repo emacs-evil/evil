@@ -3951,79 +3951,110 @@ if no previous selection")
 
 ;;; Ex
 
-(ert-deftest evil-test-ex-parse-command ()
-  "Test `evil-ex-parse-command'"
+(ert-deftest evil-test-ex-parse ()
+  "Test `evil-ex-parse'"
   :tags '(evil ex)
-  (should (equal (evil-ex-parse-command "5,2cmd arg" 3)
-                 (list 6 "cmd" nil)))
-  (should (equal (evil-ex-parse-command "5,2cmd! arg" 3)
-                 (list 7 "cmd" t)))
-  (should (equal (evil-ex-parse-command "5,2 arg" 3)
-                 (list 3 nil nil))))
+  (should (equal (evil-ex-parse "5,2cmd arg")
+                 '(evil-ex-call-command
+                   (evil-ex-range
+                    (evil-ex-address (string-to-number "5") nil)
+                    (evil-ex-address (string-to-number "2") nil))
+                   "cmd"
+                   nil
+                   "arg")))
+  (should (equal (evil-ex-parse "5,2cmd! arg")
+                 '(evil-ex-call-command
+                   (evil-ex-range
+                    (evil-ex-address (string-to-number "5") nil)
+                    (evil-ex-address (string-to-number "2") nil))
+                   "cmd"
+                   "!"
+                   "arg")))
+  (should (equal (evil-ex-parse "5,2 arg")
+                 '(evil-ex-call-command
+                   (evil-ex-range
+                    (evil-ex-address (string-to-number "5") nil)
+                    (evil-ex-address (string-to-number "2") nil))
+                   "arg"
+                   nil
+                   nil))))
 
-(ert-deftest evil-test-ex-parse-address-base ()
-  "Test `evil-ex-parse-address-base'"
+(ert-deftest evil-test-ex-parse-ranges ()
+  "Test parsing of ranges"
   :tags '(evil ex)
-  (should (equal (evil-ex-parse-address-base "5,27cmd arg" 11)
-                 (cons 11 nil)))
-  (should (equal (evil-ex-parse-address-base "5,27cmd arg" 2)
-                 (cons 4 27)))
-  (should (equal (evil-ex-parse-address-base "5,27cmd arg" 1)
-                 (cons 1 nil)))
-  (should (equal (evil-ex-parse-address-base "5,$cmd arg" 2)
-                 (cons 3 'last-line)))
-  (should (equal (evil-ex-parse-address-base "5,'xcmd arg" 2)
-                 (cons 4 '(mark ?x)))))
-
-(ert-deftest evil-test-ex-parse-address-sep ()
-  "Test `evil-ex-parse-address-sep'"
-  :tags '(evil ex)
-  (should (equal (evil-ex-parse-address-sep "5,27cmd arg" 11)
-                 (cons 11 nil)))
-  (should (equal (evil-ex-parse-address-sep "5,27cmd arg" 2)
-                 (cons 2 nil)))
-  (should (equal (evil-ex-parse-address-sep "5,27cmd arg" 1)
-                 (cons 2 ?,)))
-  (should (equal (evil-ex-parse-address-sep "5;$cmd arg" 1)
-                 (cons 2 ?\;))))
-
-(ert-deftest evil-test-ex-parse-address-offset ()
-  "Test `evil-ex-parse-address-offset'"
-  :tags '(evil ex)
-  (should (equal (evil-ex-parse-address-offset "5,27cmd arg" 11)
-                 (cons 11 nil)))
-  (should (equal (evil-ex-parse-address-offset "5,+cmd arg" 2)
-                 (cons 3 1)))
-  (should (equal (evil-ex-parse-address-offset "5,-cmd arg" 2)
-                 (cons 3 -1)))
-  (should (equal (evil-ex-parse-address-offset "5;4+2-7-3+10-cmd arg" 2)
-                 (cons 2 nil)))
-  (should (equal (evil-ex-parse-address-offset "5;4+2-7-3+10-cmd arg" 3)
-                 (cons 13 1))))
-
-(ert-deftest evil-test-ex-parse-address ()
-  "Test `evil-ex-parse-address'"
-  :tags '(evil ex)
-  (should (equal (evil-ex-parse-address "5,27cmd arg" 0)
-                 (cons 1 (cons 5 nil))))
-  (should (equal (evil-ex-parse-address "5,+cmd arg" 2)
-                 (cons 3 (cons nil 1))))
-  (should (equal (evil-ex-parse-address "5,-cmd arg" 2)
-                 (cons 3 (cons nil -1))))
-  (should (equal (evil-ex-parse-address "5;4+2-7-3+10-cmd arg" 1)
-                 (cons 1 nil)))
-  (should (equal (evil-ex-parse-address "5;4+2-7-3+10-cmd arg" 2)
-                 (cons 13 (cons 4 1)))))
-
-(ert-deftest evil-test-ex-parse-range ()
-  "Test `evil-ex-parse-address-range'"
-  :tags '(evil ex)
-  (should (equal (evil-ex-parse-range ".-2;4+2-7-3+10-cmd arg" 0)
-                 (cons 15 '((current-line . -2) ?\; (4 . 1)))))
-  (should (equal (evil-ex-parse-range "'a-2,$-10cmd arg" 0)
-                 (cons 9 '(((mark ?a) . -2) ?\, (last-line . -10)))))
-  (should (equal (evil-ex-parse-range ".+42cmd arg" 0)
-                 (cons 4 '((current-line . 42) nil nil)))))
+  (should (equal (evil-ex-parse "%" nil 'range)
+                 '(evil-ex-full-range)))
+  (should (equal (evil-ex-parse "5,27" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-address (string-to-number "5") nil)
+                   (evil-ex-address (string-to-number "27") nil))))
+  (should (equal (evil-ex-parse "5;$" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-address (string-to-number "5") nil)
+                   (evil-ex-address (evil-ex-last-line) nil))))
+  (should (equal (evil-ex-parse "5,'x" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-address (string-to-number "5") nil)
+                   (evil-ex-address (evil-ex-marker "x") nil))))
+  (should (equal (evil-ex-parse "5,+" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-address (string-to-number "5") nil)
+                   (evil-ex-address
+                    nil (+ (evil-ex-signed-number (intern "+") nil))))))
+  (should (equal (evil-ex-parse "5,-" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-address (string-to-number "5") nil)
+                   (evil-ex-address
+                    nil (+ (evil-ex-signed-number (intern "-") nil))))))
+  (should (equal (evil-ex-parse "5;4+2-7-3+10-" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-address (string-to-number "5") nil)
+                   (evil-ex-address
+                    (string-to-number "4")
+                    (+ (evil-ex-signed-number
+                        (intern "+") (string-to-number "2"))
+                       (evil-ex-signed-number
+                        (intern "-") (string-to-number "7"))
+                       (evil-ex-signed-number
+                        (intern "-") (string-to-number "3"))
+                       (evil-ex-signed-number
+                        (intern "+") (string-to-number "10"))
+                       (evil-ex-signed-number (intern "-") nil))))))
+  (should (equal (evil-ex-parse ".-2;4+2-7-3+10-" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-address
+                    (evil-ex-current-line)
+                    (+ (evil-ex-signed-number
+                        (intern "-") (string-to-number "2"))))
+                   (evil-ex-address
+                    (string-to-number "4")
+                    (+ (evil-ex-signed-number
+                        (intern "+") (string-to-number "2"))
+                       (evil-ex-signed-number
+                        (intern "-") (string-to-number "7"))
+                       (evil-ex-signed-number
+                        (intern "-") (string-to-number "3"))
+                       (evil-ex-signed-number
+                        (intern "+") (string-to-number "10"))
+                       (evil-ex-signed-number
+                        (intern "-") nil))))))
+  (should (equal (evil-ex-parse "'a-2,$-10" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-address
+                    (evil-ex-marker "a")
+                    (+ (evil-ex-signed-number
+                        (intern "-") (string-to-number "2"))))
+                   (evil-ex-address
+                    (evil-ex-last-line)
+                    (+ (evil-ex-signed-number
+                        (intern "-") (string-to-number "10")))))))
+  (should (equal (evil-ex-parse ".+42" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-address
+                    (evil-ex-current-line)
+                    (+ (evil-ex-signed-number
+                        (intern "+") (string-to-number "42"))))
+                   nil))))
 
 (ert-deftest evil-test-ex-goto-line ()
   "Test if :number moves point to a certain line"

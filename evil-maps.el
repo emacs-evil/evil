@@ -333,7 +333,7 @@
 (define-key minibuffer-local-map "\C-x\C-n" 'evil-complete-previous-line)
 
 ;; Ex
-(define-key evil-motion-state-map ":" 'evil-ex-read-command)
+(define-key evil-motion-state-map ":" 'evil-ex)
 
 (evil-ex-define-cmd "[e]dit" 'evil-edit)
 (evil-ex-define-cmd "[w]rite" 'evil-write)
@@ -385,6 +385,14 @@
 (when (fboundp 'undo-tree-visualize)
   (evil-ex-define-cmd "[undol]ist" 'undo-tree-visualize)
   (evil-ex-define-cmd "ul" 'undo-tree-visualize))
+
+;; completion
+(define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
+(define-key evil-ex-completion-map "\d" #'evil-ex-delete-backward-char)
+(define-key evil-ex-completion-map "\t" #'evil-ex-complete)
+(define-key evil-ex-completion-map "\C-p" #'evil-ex-complete)
+(define-key evil-ex-completion-map "\C-n" #'evil-ex-complete)
+(define-key evil-ex-completion-map "?" nil)
 
 (provide 'evil-maps)
 

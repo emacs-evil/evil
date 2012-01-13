@@ -574,8 +574,6 @@ Note that this function ignores the whole-line property of PATTERN."
 (put 'evil-ex-hl-update-highlights-resize 'permanent-local-hook t)
 
 ;; interactive search
-(define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
-
 (defun evil-ex-find-next ()
   "Search for the next occurrence of the pattern.
 This function also handles error messages and invisible text
@@ -694,7 +692,7 @@ and updates the global search information accordingly."
           (evil-ex-hl-change 'evil-ex-search
                              (and isearch-success
                                   evil-ex-search-pattern))))))
-  (evil-ex-message isearch-message))
+  (evil-ex-echo isearch-message))
 
 (defun evil-ex-search-start-session ()
   "Initialize Ex for interactive search."
@@ -904,7 +902,7 @@ The DIRECTION argument should be either `forward' or
                   evil-ex-substitute-replacement replacement)
             (apply #'evil-ex-hl-set-region
                    'evil-ex-substitute
-                   (or (evil-ex-range)
+                   (or evil-ex-range
                        (evil-range (line-beginning-position)
                                    (line-end-position))))
             (evil-ex-hl-change 'evil-ex-substitute
@@ -921,7 +919,7 @@ The DIRECTION argument should be either `forward' or
   (with-selected-window (minibuffer-window)
     (with-current-buffer (window-buffer (minibuffer-window))
       (when (stringp result)
-        (evil-ex-message result)))))
+        (evil-ex-echo result)))))
 
 (defun evil-ex-pattern-update-replacement (hl overlay)
   "Update the replacement display."

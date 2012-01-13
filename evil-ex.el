@@ -1,25 +1,218 @@
 ;;; Ex-mode
 
-;; TODO: Emacs 22 completion-boundaries
+;; Ex is implemented as an extensible minilanguage, whose grammar
+;; is stored in `evil-ex-grammar'. Ex commands are defined with
+;; `evil-ex-define-cmd', which creates a binding from a string
+;; to an interactive function. It is also possible to define key
+;; sequences which execute a command immediately when entered:
+;; such shortcuts go in `evil-ex-map'.
+;;
+;; To provide buffer and filename completion, as well as interactive
+;; feedback, Ex defines the concept of an argument handler, specified
+;; with `evil-ex-define-argument-type'. In the case of the
+;; substitution command (":s/foo/bar"), the handler incrementally
+;; highlights matches in the buffer as the substitution is typed.
 
 (require 'evil-common)
 (require 'evil-states)
 
-(define-key evil-ex-keymap "\d" #'evil-ex-delete-backward-char)
-(define-key evil-ex-keymap "\t" #'evil-ex-complete)
-(define-key evil-ex-keymap "?" nil)
+(defconst evil-ex-grammar
+  '((expression
+     (count command (\? force) (\? argument)
+            #'evil-ex-call-command)
+     ((\? range) command (\? force) (\? argument)
+      #'evil-ex-call-command)
+     (line #'evil-goto-line)
+     (sexp #'eval-expression))
+    (count
+     number)
+    (command
+     "[*@<>=:a-zA-Z_-]+\\|!")
+    (force
+     ((! space) "!" #'$1))
+    (argument
+     ((\? space) ".+" #'$2))
+    (range
+     (address (\? "[,;]" address #'$2) #'evil-ex-range)
+     ("%" #'(evil-ex-full-range)))
+    (address
+     (line (\? offset) #'evil-ex-address)
+     ((\? line) offset #'evil-ex-address))
+    (line
+     number
+     marker
+     search
+     ("\\^" #'(evil-ex-first-line))
+     ("\\$" #'(evil-ex-last-line))
+     ("\\." #'(evil-ex-current-line)))
+    (offset
+     (+ signed-number #'+))
+    (marker
+     ("'" "[-a-zA-Z_<>']" #'(evil-ex-marker $2)))
+    (search
+     forward
+     backward
+     next
+     prev
+     subst)
+    (forward
+     ("/" "\\(?:[\\].\\|[^/,; ]\\)+" (! "/")
+      #'(evil-ex-re-fwd $2))
+     ("/" "\\(?:[\\].\\|[^/]\\)+" "/"
+      #'(evil-ex-re-fwd $2)))
+    (backward
+     ("\\?" "\\(?:[\\].\\|[^?,; ]\\)+" (! "\\?")
+      #'(evil-ex-re-bwd $2))
+     ("\\?" "\\(?:[\\].\\|[^?]\\)+" "\\?"
+      #'(evil-ex-re-bwd $2)))
+    (next
+     "/" #'(evil-ex-prev-search))
+    (prev
+     "\\?" #'(evil-ex-prev-search))
+    (subst
+     "&" #'(evil-ex-prev-search))
+    (signed-number
+     (sign (\? number) #'evil-ex-signed-number))
+    (sign
+     "\\+\\|-" #'intern)
+    (number
+     "[0-9]+" #'string-to-number)
+    (space
+     "[ ]+")
+    (sexp
+     "(.*)" #'(car-safe (read-from-string $1))))
+  "Grammar for Ex.
+An association list of syntactic symbols and their definitions.
+The first entry is the start symbol. A symbol's definition may
+reference other symbols, but the grammar cannot contain
+left recursion. See `evil-parser' for a detailed explanation
+of the syntax.")
 
-(defun evil-ex-state-p ()
-  "Return t iff ex mode is currently active."
+(defun evil-ex-p ()
+  "Whether Ex is currently active."
   (and evil-ex-current-buffer t))
 
+(defun evil-ex (&optional initial-input)
+  "Enter an Ex command."
+  (interactive
+   (when (evil-visual-state-p) '("'<,'>")))
+  (let ((minibuffer-local-completion-map evil-ex-completion-map)
+        (evil-ex-current-buffer (current-buffer))
+        (evil-ex-previous-command (unless initial-input
+                                    (car-safe evil-ex-history)))
+        evil-ex-argument-handler evil-ex-info-string result)
+    (add-hook 'minibuffer-setup-hook #'evil-ex-setup)
+    (setq result
+          (completing-read ":" #'evil-ex-completion nil nil
+                           (or initial-input
+                               (and evil-ex-previous-command
+                                    (format "(default: %s) "
+                                            evil-ex-previous-command)))
+                           'evil-ex-history evil-ex-previous-command t))
+    (evil-ex-update nil nil nil result)
+    (unless (zerop (length result))
+      (if evil-ex-expression
+          (eval evil-ex-expression)
+        (error "Ex: syntax error")))))
+
 (defun evil-ex-delete-backward-char ()
-  "Closes the minibuffer if called with empty minibuffer content, otherwise behaves like `delete-backward-char'."
+  "Close the minibuffer if it is empty.
+Otherwise behaves like `delete-backward-char'."
   (interactive)
   (call-interactively
    (if (zerop (length (minibuffer-contents)))
        #'abort-recursive-edit
      #'delete-backward-char)))
+
+(defun evil-ex-setup ()
+  "Initialize Ex minibuffer."
+  (add-hook 'after-change-functions #'evil-ex-update nil t)
+  (add-hook 'minibuffer-exit-hook #'evil-ex-teardown)
+  (when evil-ex-previous-command
+    (add-hook 'pre-command-hook #'evil-ex-remove-default))
+  (remove-hook 'minibuffer-setup-hook #'evil-ex-setup))
+(put 'evil-ex-setup 'permanent-local-hook t)
+
+(defun evil-ex-teardown ()
+  "Deinitialize Ex minibuffer."
+  (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown)
+  (remove-hook 'after-change-functions #'evil-ex-update t)
+  (when evil-ex-argument-handler
+    (funcall evil-ex-argument-handler 'stop)))
+(put 'evil-ex-teardown 'permanent-local-hook t)
+
+(defun evil-ex-remove-default ()
+  (delete-minibuffer-contents)
+  (remove-hook 'pre-command-hook #'evil-ex-remove-default))
+(put 'evil-ex-remove-default 'permanent-local-hook t)
+
+(defun evil-ex-update (&optional beg end len string)
+  "Update Ex variables when the minibuffer changes."
+  (let* ((prompt (minibuffer-prompt-end))
+         (string (or string (buffer-substring prompt (point-max))))
+         arg arg-handler arg-type cmd expr force func range tree)
+    (cond
+     ((commandp (setq cmd (lookup-key evil-ex-map string)))
+      (setq evil-ex-expression `(call-interactively ',cmd))
+      (when (minibufferp)
+        (exit-minibuffer)))
+     (t
+      (setq cmd nil)
+      ;; store the buffer position of each character
+      ;; as the `ex-index' text property
+      (dotimes (i (length string))
+        (add-text-properties
+         i (1+ i) (list 'ex-index (+ i prompt)) string))
+      (with-current-buffer evil-ex-current-buffer
+        (setq tree (evil-ex-parse string t)
+              expr (evil-ex-parse string))
+        (when (eq (car-safe expr) 'evil-ex-call-command)
+          (setq range (eval (nth 1 expr))
+                cmd (eval (nth 2 expr))
+                force (eval (nth 3 expr))
+                arg (eval (nth 4 expr)))))
+      (setq evil-ex-tree tree
+            evil-ex-expression expr
+            evil-ex-command cmd
+            evil-ex-force force
+            evil-ex-argument arg
+            evil-ex-range
+            (when (evil-range-p range) range))
+      ;; test the current command
+      (when (and cmd (minibufferp))
+        (setq func (evil-ex-binding cmd t))
+        (cond
+         ;; update arg-handler
+         (func
+          (when (setq arg-type (evil-get-command-property
+                                func :ex-arg))
+            (setq arg-handler (cdr-safe
+                               (assoc arg-type
+                                      evil-ex-argument-types))))
+          (unless (eq arg-handler evil-ex-argument-handler)
+            (when evil-ex-argument-handler
+              (funcall evil-ex-argument-handler 'stop))
+            (setq evil-ex-argument-handler arg-handler)
+            (when evil-ex-argument-handler
+              (funcall evil-ex-argument-handler
+                       'start evil-ex-argument)))
+          (when evil-ex-argument-handler
+            (funcall evil-ex-argument-handler
+                     'update evil-ex-argument)))
+         ((all-completions cmd evil-ex-commands)
+          (evil-ex-echo "Incomplete command"))
+         (t
+          (evil-ex-echo "Unknown command"))))))))
+(put 'evil-ex-update 'permanent-local-hook t)
+
+(defun evil-ex-echo (string &optional args)
+  "Display a message after the current Ex command."
+  (unless evil-no-display
+    (unless (zerop (length string))
+      (let ((string (format " [%s]" (apply #'format string args)))
+            after-change-functions before-change-functions)
+        (put-text-property 0 (length string) 'face 'evil-ex-info string)
+        (minibuffer-message string)))))
 
 (defun evil-ex-define-cmd (cmd function)
   "Binds the function FUNCTION to the command CMD."
@@ -36,269 +229,12 @@
            (debug (&define symbolp lambda-list
                            [&optional ("interactive" [&rest form])]
                            def-body)))
-  (let ((name (intern (concat "evil-ex-argument-handler-" (symbol-name arg-type)))))
+  (let ((name (intern (format "evil-ex-argument-handler-%s"
+                              arg-type))))
     `(progn
        (defun ,name ,args ,@body)
-       (evil-add-to-alist 'evil-ex-arg-types-alist ',arg-type ',name))))
-
-(defun evil-ex-find-symbol (lst symbol)
-  "Returns non-nil if LST contains SYMBOL somewhere in a sublist."
-  (catch 'done
-    (dolist (elm lst)
-      (when (or (eq elm symbol)
-                (and (listp elm)
-                     (evil-ex-find-symbol elm symbol)))
-        (throw 'done t)))
-    nil))
-
-(defun evil-ex-message (string &optional args)
-  "Display a message after the current Ex command."
-  (unless evil-no-display
-    (unless (zerop (length string))
-      (let ((string (format " [%s]" (apply #'format string args)))
-            after-change-functions before-change-functions)
-        (put-text-property 0 (length string) 'face 'evil-ex-info string)
-        (minibuffer-message string)))))
-
-(defun evil-ex-split (text)
-  "Splits an ex command line in range, command and argument.
-Returns a list (POS START SEP END CMD FORCE) where
-POS is the first character after the command,
-START is a pair (BEG . END) of indices of the start position,
-SEP is either ?\, or ?\; separating both range positions,
-END is a pair (BEG . END) of indices of the end position,
-CMD is a pair (BEG . END) of indices of the command,
-FORCE is non-nil if an exclamation mark follows the command."
-  (let* ((range (evil-ex-parse-range text 0))
-         (command (evil-ex-parse-command text (pop range)))
-         (pos (pop command)))
-    (cons pos (append range command))))
-
-(defun evil-ex-parse-range (text pos)
-  "Start parsing TEXT at position POS for a range of lines.
-Returns (POS) if no range has been parsed or a pair (POS . (START
-SEP END)) where POS is the position of the first character after
-the range, START is nil or a pair (base . offset) describing the
-start position, SEP is either ?,, ?; or nil and END is nil or a
-pair (base . offset) describing the end position."
-  (let* ((start (evil-ex-parse-address text pos))
-         (sep (evil-ex-parse-address-sep text (pop start)))
-         (end (evil-ex-parse-address text (pop sep)))
-         (pos (pop end)))
-    (cons pos
-          (and (or start sep pos)
-               (list start sep end)))))
-
-(defun evil-ex-parse-address (text pos)
-  "Start parsing TEXT at position POS for a line number.
-Returns a list (POS) if no address has been parsed or (POS BASE
-OFFSET) where POS is the position of the first character after
-the range, BASE is the base offset of the line, OFF is the
-relative offset of the line from BASE."
-  (let* ((base (evil-ex-parse-address-base text pos))
-         (off (evil-ex-parse-address-offset text (pop base)))
-         (pos (pop off)))
-    (cons pos (and (or base off) (cons base off)))))
-
-(defun evil-ex-parse-address-base (text pos)
-  "Start parsing TEXT at position POS for a base address of a line.
-Returns a list (POS) if no base address has been parsed or a
-pair (POS . ADDR) where
-POS is the position of the first character after the address,
-ADDR is the number of the line.
-ADDR can be either
-* a number, corresponding to the absolute line number
-* 'last-line,
-* 'current-line,
-* 'all which specifies the special range selecting all lines,
-* '(re-fwd RE) a regular expression for forward search,
-* '(re-bwd RE) a regular expression for backward search,
-* '(mark CHAR) a mark."
-  (cond
-   ((>= pos (length text)) (cons pos nil))
-
-   ((= pos (or (string-match "[0-9]+" text pos) -1))
-    (cons (match-end 0)
-          (string-to-number (match-string 0 text))))
-
-   (t
-    (let ((c (aref text pos)))
-      (cond
-       ((= c ?$)
-        (cons (1+ pos) 'last-line))
-       ((= c ?\%)
-        (cons (1+ pos) 'all))
-       ((= c ?.)
-        (cons (1+ pos) 'current-line))
-       ((and (= c ?')
-             (< pos (1- (length text))))
-        (cons (+ 2 pos) `(mark ,(aref text (1+ pos)))))
-       ((and (= (aref text pos) ?\\)
-             (< pos (1- (length text))))
-        (let ((c2 (aref text (1+ pos))))
-          (cond
-           ((= c2 ?/) (cons (+ 2 pos) 'next-of-prev-search))
-           ((= c2 ??) (cons (+ 2 pos) 'prev-of-prev-search))
-           ((= c2 ?&) (cons (+ 2 pos) 'next-of-prev-subst))
-           (t (signal 'ex-parse '("Unexpected symbol after ?\\"))))))
-       ((= (aref text pos) ?/)
-        (if (string-match "\\([^/]+\\|\\\\.\\)\\(?:/\\|$\\)"
-                          text (1+ pos))
-            (cons (match-end 0)
-                  (cons 're-fwd (match-string 1 text)))
-          (signal 'ex-parse '("Invalid regular expression"))))
-       ((= (aref text pos) ??)
-        (if (string-match "\\([^?]+\\|\\\\.\\)\\(?:?\\|$\\)"
-                          text (1+ pos))
-            (cons (match-end 0)
-                  (cons 're-bwd (match-string 1 text)))
-          (signal 'ex-parse '("Invalid regular expression"))))
-       (t
-        (cons pos nil)))))))
-
-(defun evil-ex-parse-address-sep (text pos)
-  "Start parsing TEXT at position POS for an address separator.
-Returns a list (POS) if no separator has been parsed or a
-list (POS SEP) where
-POS is the position of the first character after the separator,
-SEP is either ?;, ?,. or nil if no separator has been parsed"
-  (if (>= pos (length text))
-      (cons pos nil)
-    (let ((c (aref text pos)))
-      (if (member c '(?\, ?\;))
-          (cons (1+ pos) c)
-        (cons pos nil)))))
-
-(defun evil-ex-parse-address-offset (text pos)
-  "Parses TEXT starting at POS for an offset.
-Returns a list (POS) if no offset has been parsed or a list (POS
-OFF) where
-POS is the position of the first character after the offset,
-OFF is the numerical offset."
-  (let ((off nil))
-    (while (= pos (or (string-match "\\([-+]\\)\\([0-9]+\\)?" text pos) -1))
-      (setq off (funcall (if (string= (match-string 1 text) "+") #'+ #'-)
-                         (or off 0)
-                         (if (match-beginning 2)
-                             (string-to-number (match-string 2 text))
-                           1)))
-      (setq pos (match-end 0)))
-    (cons pos off)))
-
-(defun evil-ex-parse-command (text pos)
-  "Parses TEXT starting at POS for a command.
-Returns a list (POS CMD FORCE) where
-POS is the position of the first character after the separator,
-CMD is the parsed command,
-FORCE is non-nil if and only if an exclamation followed the command."
-  (if (and (string-match "\\([*@<>=:a-zA-Z_-]+\\|!\\)\\(!\\)?" text pos)
-           (= (match-beginning 0) pos))
-      (list (match-end 0)
-            (match-string 1 text)
-            (and (match-beginning 2) t))
-    (list pos nil nil)))
-
-(defun evil-ex-complete ()
-  "Starts ex minibuffer completion while temporarily disabling update functions."
-  (interactive)
-  (let (after-change-functions before-change-functions)
-    (minibuffer-complete)))
-
-(defun evil-ex-completion (cmdline predicate flag)
-  "Called to complete an object in the ex-buffer."
-  (let* ((result (evil-ex-split cmdline))
-         (pos (pop result))
-         (pnt (+ (minibuffer-prompt-end) pos))
-         (start (pop result))
-         (sep (pop result))
-         (end (pop result))
-         (cmd (or (pop result) ""))
-         (force (pop result))
-         (boundaries (cdr-safe flag)))
-    (cond
-     ((= (point) pnt)
-      (let ((cmdbeg (- pos (length cmd))))
-        (if boundaries
-            (cons 'boundaries (cons cmdbeg 0))
-          (let ((begin (substring cmdline 0 cmdbeg))
-                (result (evil-ex-complete-command cmd force predicate flag)))
-            (cond
-             ((null result) nil)
-             ((eq t result) t)
-             ((stringp result) (if flag result (concat begin result)))
-             ((listp result) (if flag result (mapcar #'(lambda (x) (concat begin x)) result)))
-             (t (error "Completion returned unexpected value.")))))))
-
-     ((= (point) (point-max))
-      (let ((argbeg (+ pos
-                       (if (and (< pos (length cmdline))
-                                (= (aref cmdline pos) ?\ ))
-                           1
-                         0))))
-        (if boundaries
-            (cons 'boundaries (cons argbeg (length (cdr flag))))
-          (let* ((begin (substring cmdline 0 argbeg))
-                 (arg (substring cmdline argbeg))
-                 (result (evil-ex-complete-argument cmd arg predicate flag)))
-            (cond
-             ((null result) nil)
-             ((eq t result) t)
-             ((stringp result) (if flag result (concat begin result)))
-             ((listp result) (if flag result (mapcar #'(lambda (x) (concat begin x)) result)))
-             (t (error "Completion returned unexpected value."))))))))))
-
-(defun evil-ex-complete-command (cmd force predicate flag)
-  "Called to complete a command."
-  (let ((has-force #'(lambda (x)
-                       (let ((bnd (evil-ex-binding x)))
-                         (and bnd (evil-get-command-property bnd :ex-force))))))
-    (cond
-     (force
-      (let ((pred #'(lambda (x)
-                      (and (or (null predicate) (funcall predicate x))
-                           (funcall has-force x)))))
-        (cond
-         ((eq flag nil)
-          (try-completion cmd evil-ex-commands pred))
-         ((eq flag t)
-          (all-completions cmd evil-ex-commands pred))
-         ((eq flag 'lambda)
-          (test-completion cmd evil-ex-commands pred)))))
-     (t
-      (cond
-       ((eq flag nil)
-        (let ((result (try-completion cmd evil-ex-commands predicate)))
-          (if (and (eq result t) (funcall has-force cmd))
-              cmd
-            result)))
-       ((eq flag t)
-        (let ((result (all-completions cmd evil-ex-commands predicate))
-              new-result)
-          (mapc #'(lambda (x)
-                    (push x new-result)
-                    (when (funcall has-force cmd) (push (concat x "!") new-result)))
-                result)
-          new-result))
-       ((eq flag 'lambda)
-        (test-completion cmd evil-ex-commands predicate)))))))
-
-(defun evil-ex-complete-argument (cmd arg predicate flag)
-  "Called to complete the argument of a command.
-CMD is the current command. ARG, PREDICATE and FLAG are the
-arguments for programmable completion."
-  (let* ((binding (evil-ex-completed-binding cmd))
-         (arg-type (evil-get-command-property binding :ex-arg))
-         (arg-handler (assoc arg-type evil-ex-arg-types-alist)))
-    (if arg-handler
-        (funcall (cdr arg-handler)
-                 'complete
-                 arg predicate flag)
-      ;; do nothing
-      (when arg
-        (cond
-         ((null flag) nil)
-         ((eq flag t) (list arg))
-         ((eq flag 'lambda) t))))))
+       (evil-add-to-alist 'evil-ex-argument-types ',arg-type ',name)
+       ',arg-type)))
 
 (evil-ex-define-argument-type file (flag &rest args)
   "Handles a file argument."
@@ -309,7 +245,8 @@ arguments for programmable completion."
       (if (null arg)
           default-directory
         (let ((dir (or (file-name-directory arg)
-                       (with-current-buffer evil-ex-current-buffer default-directory)))
+                       (with-current-buffer evil-ex-current-buffer
+                         default-directory)))
               (fname (file-name-nondirectory arg)))
           (cond
            ((null dir) (ding))
@@ -333,7 +270,9 @@ arguments for programmable completion."
           (predicate (pop args))
           (flag (pop args)))
       (when arg
-        (let ((buffers (mapcar #'(lambda (buffer) (cons (buffer-name buffer) nil)) (buffer-list t))))
+        (let ((buffers (mapcar #'(lambda (buffer)
+                                   (cons (buffer-name buffer) nil))
+                               (buffer-list t))))
           (cond
            ((null flag)
             (try-completion arg buffers predicate))
@@ -342,229 +281,171 @@ arguments for programmable completion."
            ((eq 'lambda flag)
             (test-completion arg buffers predicate))))))))
 
-(defun evil-ex-update-current-command (command)
-  "Updates the internal variables representing the content of the ex-buffer."
-  (let* ((result (evil-ex-split command))
-         (pos (pop result))
-         (start (pop result))
-         (sep (pop result))
-         (end (pop result))
-         (cmd (pop result))
-         (force (pop result)))
-    (setq evil-ex-current-cmd cmd
-          evil-ex-current-arg (cond
-                               ;; Eat the first space of the argument
-                               ((and (> (length command) (1+ pos))
-                                     (= (aref command pos) ? ))
-                                (substring command (1+ pos)))
-                               ((> (length command) pos)
-                                (substring command pos)))
-          evil-ex-current-cmd-force force
-          evil-ex-current-range (and (or start sep end) (list start sep end)))))
-
-(defun evil-ex-update (beg end len)
-  "Updates ex-variable in ex-mode when the buffer content changes."
-  (let ((oldcmd evil-ex-current-cmd))
-    (evil-ex-update-current-command (buffer-substring (minibuffer-prompt-end) (point-max)))
-    (let ((bnd (and evil-ex-current-cmd
-                    (evil-ex-completed-binding evil-ex-current-cmd))))
-      ;; Test the current command if different from the previous command
-      (when (and evil-ex-current-cmd
-                 (not (equal evil-ex-current-cmd oldcmd)))
-        (let ((compl (if (assoc evil-ex-current-cmd evil-ex-commands)
-                         (list t)
-                       (mapcar #'evil-ex-binding
-                               (all-completions evil-ex-current-cmd
-                                                evil-ex-commands)))))
-          (cond
-           ((null compl) (evil-ex-message "Unknown command"))
-           ((cdr compl) (evil-ex-message "Incomplete command")))))
-      ;; update arg-handler
-      (let* ((arg-type (evil-get-command-property bnd :ex-arg))
-             (arg-handler (and arg-type
-                               (cdr-safe
-                                (assoc arg-type
-                                       evil-ex-arg-types-alist)))))
-        (unless (eq arg-handler evil-ex-current-arg-handler)
-          (when evil-ex-current-arg-handler
-            (funcall evil-ex-current-arg-handler 'stop))
-          (setq evil-ex-current-arg-handler arg-handler)
-          (when evil-ex-current-arg-handler
-            (funcall evil-ex-current-arg-handler 'start evil-ex-current-arg)))
-        (when evil-ex-current-arg-handler
-          (funcall evil-ex-current-arg-handler 'update evil-ex-current-arg))))))
-(put 'evil-ex-update 'permanent-local-hook t)
-
-(defun evil-ex-binding (command)
+(defun evil-ex-binding (command &optional noerror)
   "Returns the final binding of COMMAND."
-  (let ((cmd (assoc command evil-ex-commands)))
-    (while (stringp (cdr-safe cmd))
-      (setq cmd (assoc (cdr cmd) evil-ex-commands)))
-    (and cmd (cdr cmd))))
+  (let ((binding command))
+    (when binding
+      (while (progn
+               (setq binding (cdr (assoc binding evil-ex-commands)))
+               (stringp binding)))
+      (unless binding
+        (setq binding (intern command)))
+      (if (commandp binding)
+          binding
+        (unless noerror
+          (error "Unknown command: `%s'" command))))))
 
 (defun evil-ex-completed-binding (command)
   "Returns the final binding of the completion of COMMAND."
-  (let ((completed-command (try-completion command evil-ex-commands nil)))
-    (evil-ex-binding (if (eq completed-command t) command completed-command))))
-
-(defun evil-ex-call-current-command ()
-  "Execute the given command COMMAND."
-  (if (not evil-ex-current-cmd)
-      (if (and evil-ex-current-range
-               (car evil-ex-current-range)
-               (numberp (caar evil-ex-current-range)))
-          ;; TODO: we use funcall to avoid the compiler complaining about
-          ;;       undefined `evil-goto-line'. We can't require evil-motions.el
-          ;;       because this would lead to recursive requires.
-          (let ((fn 'evil-goto-line))
-            (funcall fn (caar evil-ex-current-range)))
-        (error "Invalid ex-command."))
-    (let ((binding (evil-ex-completed-binding evil-ex-current-cmd)))
-      (if binding
-          (with-current-buffer evil-ex-current-buffer
-            (let ((range (evil-ex-get-current-range))
-                  prefix-arg current-prefix-arg)
-              (when (and (not range)
-                         evil-ex-current-range
-                         (car evil-ex-current-range)
-                         (numberp (caar evil-ex-current-range)))
-                (setq prefix-arg (caar evil-ex-current-range)
-                      current-prefix-arg prefix-arg))
-              (call-interactively binding)))
-        (error "Unknown command %s" evil-ex-current-cmd)))))
-
-(defun evil-ex-eval (string)
-  "Evaluate STRING as an Ex command."
-  (when (and string (not (zerop (length string))))
-    (evil-ex-update-current-command string)
-    (evil-ex-call-current-command)))
-
-(defun evil-ex-range ()
-  "Returns the first and last position of the current range."
-  (let ((rng (evil-ex-get-current-range)))
-    (when rng
-      (evil-range
-       (save-excursion
-         (goto-char (point-min)) (forward-line (1- (car rng)))
-         (line-beginning-position))
-       (save-excursion
-         (goto-char (point-min)) (forward-line (1- (cdr rng)))
-         (min (point-max) (1+ (line-end-position))))
-       'line))))
-
-(defun evil-ex-get-current-range ()
-  "Returns the line-numbers of the current range. A range is
-returned if and only if a range separator is specified, otherwise
-the number is interpreted as prefix argument (i.e., as numeric
-count) in which case this function returns nil."
-  (when (and evil-ex-current-range)
-    (cond
-     ((and (car evil-ex-current-range)
-           (eq (car (car evil-ex-current-range)) 'all))
-      (cons (point-min) (point-max)))
-     ((cadr evil-ex-current-range)
-      (let ((beg (evil-ex-get-line (car evil-ex-current-range))))
-        (save-excursion
-          (when (equal (cadr evil-ex-current-range) ?\;)
-            (goto-char (point-min))
-            (forward-line (1- beg)))
-          (cons beg (evil-ex-get-line (nth 2 evil-ex-current-range)))))))))
-
-(defun evil-ex-get-line (address)
-  "Returns the line represented by ADDRESS."
-  (if (not address)
-      (line-number-at-pos)
-    (let ((base (car address))
-          (offset (or (cdr address) 0)))
-      (+ (or offset 0)
-         (if (integerp base) base
-           (cond
-            ((eq base nil) (line-number-at-pos))
-            ((eq base 'abs) (cdr base))
-
-            ;; TODO: (1- ...) may be wrong if the match is the empty string
-            ((eq base 're-fwd)
-             (save-excursion
-               (beginning-of-line 2)
-               (and (re-search-forward (cdr base))
-                    (line-number-at-pos (1- (match-end 0))))))
-
-            ((eq base 're-bwd)
-             (save-excursion
-               (beginning-of-line 0)
-               (and (re-search-backward (cdr base))
-                    (line-number-at-pos (match-beginning 0)))))
-
-            ((eq base 'current-line) (line-number-at-pos (point)))
-            ((eq base 'first-line) (line-number-at-pos (point-min)))
-            ((eq base 'last-line) (line-number-at-pos (point-max)))
-            ((and (consp base) (eq (car base) 'mark))
-             (let ((m (evil-get-marker (cadr base))))
-               (cond
-                ((eq m nil) (error "Marker <%c> not defined" (cadr base)))
-                ((consp m) (error "Ex-mode ranges do not support markers in other files"))
-                (t (line-number-at-pos m)))))
-            ((eq base 'next-of-prev-search) (error "Next-of-prev-search not yet implemented."))
-            ((eq base 'prev-of-prev-search) (error "Prev-of-prev-search not yet implemented."))
-            ((eq base 'next-of-prev-subst) (error "Next-of-prev-subst not yet implemented."))
-            (t (error "Invalid address: %s" address))))))))
+  (let ((completed-command (try-completion
+                            command evil-ex-commands nil)))
+    (evil-ex-binding (if (eq completed-command t)
+                         command
+                       completed-command))))
 
 ;;; TODO: extensions likes :p :~ <cfile> ...
 (defun evil-ex-replace-special-filenames (file-name)
-  "Replaces % by the current file-name, # by the alternate file-name in FILE-NAME."
+  "Replace special symbols in FILE-NAME.
+Replaces % by the current file-name,
+Replaces # by the alternate file-name in FILE-NAME."
   (let ((current-fname (buffer-file-name))
-        (alternate-fname (and (other-buffer) (buffer-file-name (other-buffer)))))
+        (alternate-fname (and (other-buffer)
+                              (buffer-file-name (other-buffer)))))
     (when current-fname
       (setq file-name
             (replace-regexp-in-string "\\(^\\|[^\\\\]\\)\\(%\\)"
-                                      current-fname
-                                      file-name
-                                      t
-                                      t
-                                      2)))
+                                      current-fname file-name
+                                      t t 2)))
     (when alternate-fname
       (setq file-name
             (replace-regexp-in-string "\\(^\\|[^\\\\]\\)\\(#\\)"
-                                      alternate-fname
-                                      file-name
-                                      t
-                                      t
-                                      2)))
+                                      alternate-fname file-name
+                                      t t 2)))
     (setq file-name
           (replace-regexp-in-string "\\\\\\([#%]\\)"
-                                    "\\1"
-                                    file-name
-                                    t)))
+                                    "\\1" file-name t)))
   file-name)
 
 (defun evil-ex-file-arg ()
-  "Returns the current ex-argument as file name.
-This function interprets special file-names like # and %."
-  (unless (or (null evil-ex-current-arg)
-              (zerop (length evil-ex-current-arg)))
-    (evil-ex-replace-special-filenames evil-ex-current-arg)))
+  "Returns the current Ex argument as a file name.
+This function interprets special file names like # and %."
+  (unless (or (null evil-ex-argument)
+              (zerop (length evil-ex-argument)))
+    (evil-ex-replace-special-filenames evil-ex-argument)))
 
-(defun evil-ex-setup ()
-  "Initializes ex minibuffer."
-  (add-hook 'after-change-functions #'evil-ex-update nil t)
-  (add-hook 'minibuffer-exit-hook #'evil-ex-teardown)
-  (when evil-ex-last-cmd
-    (add-hook 'pre-command-hook #'evil-ex-remove-default))
-  (remove-hook 'minibuffer-setup-hook #'evil-ex-setup))
-(put 'evil-ex-setup 'permanent-local-hook t)
+(defun evil-ex-complete ()
+  "Start Ex minibuffer completion.
+Temporarily disables update functions."
+  (interactive)
+  (let (after-change-functions before-change-functions)
+    (minibuffer-complete)))
 
-(defun evil-ex-teardown ()
-  "Deinitializes ex minibuffer."
-  (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown)
-  (remove-hook 'after-change-functions #'evil-ex-update t)
-  (when evil-ex-current-arg-handler
-    (funcall evil-ex-current-arg-handler 'stop)))
-(put 'evil-ex-teardown 'permanent-local-hook t)
+;; TODO: Emacs 22 completion boundaries
+(defun evil-ex-completion (string predicate flag)
+  "Complete an object in the Ex buffer."
+  (let* ((boundaries (cdr-safe flag))
+         (prompt (minibuffer-prompt-end))
+         context prefix result start)
+    (when (= (point) (+ (length string) prompt))
+      (evil-ex-update)
+      (setq context (evil-ex-syntactic-context (1- (point))))
+      (cond
+       ;; complete command
+       ((memq 'command context)
+        (setq start (or (get-text-property
+                         0 'ex-index evil-ex-command) (point))
+              prefix (buffer-substring prompt start))
+        (if boundaries
+            (setq boundaries (cons 'boundaries
+                                   (cons (- start prompt) 0)))
+          (setq result (evil-ex-complete-command
+                        evil-ex-command
+                        evil-ex-force
+                        predicate flag))))
+       ;; complete argument
+       ((memq 'argument context)
+        (setq start (or (get-text-property
+                         0 'ex-index evil-ex-argument) (point))
+              prefix (buffer-substring prompt start))
+        (if boundaries
+            (setq boundaries (cons 'boundaries
+                                   (cons (- start prompt)
+                                         (length (cdr flag)))))
+          (setq result (evil-ex-complete-argument
+                        evil-ex-command
+                        evil-ex-argument
+                        predicate flag)))))
+      ;; return result
+      (cond
+       (boundaries)
+       ((null result)
+        nil)
+       ((eq result t))
+       ((stringp result)
+        (if flag result
+          (concat prefix result)))
+       ((listp result)
+        (if flag result
+          (mapcar #'(lambda (r) (concat prefix r)) result)))
+       (t
+        (error "Completion returned unexpected value"))))))
 
-(defun evil-ex-remove-default ()
-  (delete-minibuffer-contents)
-  (remove-hook 'pre-command-hook #'evil-ex-remove-default))
-(put 'evil-ex-remove-default 'permanent-local-hook t)
+(defun evil-ex-complete-command (cmd force predicate flag)
+  "Called to complete a command."
+  (let ((has-force #'(lambda (x)
+                       (let ((bnd (evil-ex-binding x)))
+                         (when bnd
+                           (evil-get-command-property
+                            bnd :ex-force))))))
+    (cond
+     (force
+      (let ((pred #'(lambda (x)
+                      (when (or (null predicate)
+                                (funcall predicate x))
+                        (funcall has-force x)))))
+        (cond
+         ((eq flag nil)
+          (try-completion cmd evil-ex-commands pred))
+         ((eq flag t)
+          (all-completions cmd evil-ex-commands pred))
+         ((eq flag 'lambda)
+          (test-completion cmd evil-ex-commands pred)))))
+     (t
+      (cond
+       ((eq flag nil)
+        (let ((result (try-completion cmd evil-ex-commands predicate)))
+          (if (and (eq result t) (funcall has-force cmd))
+              cmd
+            result)))
+       ((eq flag t)
+        (let ((result (all-completions cmd evil-ex-commands predicate))
+              new-result)
+          (mapc #'(lambda (x)
+                    (push x new-result)
+                    (when (funcall has-force cmd)
+                      (push (concat x "!") new-result)))
+                result)
+          new-result))
+       ((eq flag 'lambda)
+        (test-completion cmd evil-ex-commands predicate)))))))
+
+(defun evil-ex-complete-argument (cmd arg predicate flag)
+  "Called to complete the argument of a command.
+CMD is the current command. ARG, PREDICATE and FLAG are the
+arguments for programmable completion."
+  (let* ((binding (evil-ex-completed-binding cmd))
+         (arg-type (evil-get-command-property binding :ex-arg))
+         (arg-handler (assoc arg-type evil-ex-argument-types)))
+    (if arg-handler
+        (funcall (cdr arg-handler)
+                 'complete
+                 arg predicate flag)
+      ;; do nothing
+      (when arg
+        (cond
+         ((null flag) nil)
+         ((eq flag t) (list arg))
+         ((eq flag 'lambda) t))))))
 
 (defun evil-ex-repeat (count)
   "Repeats the last ex command."
@@ -577,33 +458,183 @@ This function interprets special file-names like # and %."
     (while hist
       (let ((evil-ex-last-cmd (pop hist)))
         (when evil-ex-last-cmd
-          (evil-ex-update-current-command evil-ex-last-cmd)
-          (let ((binding (evil-ex-completed-binding evil-ex-current-cmd)))
+          (evil-ex-update nil nil nil evil-ex-last-cmd)
+          (let ((binding (evil-ex-binding evil-ex-command)))
             (unless (eq binding #'evil-ex-repeat)
-              (evil-ex-call-current-command)
-              (setq hist nil))))))))
+              (setq hist nil)
+              (if evil-ex-expression
+                  (eval evil-ex-expression)
+                (error "Ex: syntax error")))))))))
 
-(defun evil-ex-read-command (&optional initial-input)
-  "Starts ex-mode."
-  (interactive (and (evil-visual-state-p) '("'<,'>")))
-  (let ((evil-ex-current-buffer (current-buffer))
-        (minibuffer-local-completion-map evil-ex-keymap)
-        evil-ex-current-arg-handler
-        evil-ex-info-string
-        (evil-ex-last-cmd (and (not initial-input)
-                               (car-safe evil-ex-history))))
-    (add-hook 'minibuffer-setup-hook #'evil-ex-setup)
-    (let ((result (completing-read ":"
-                                   #'evil-ex-completion
-                                   nil
-                                   nil
-                                   (or initial-input
-                                       (and evil-ex-last-cmd
-                                            (concat "(default: " evil-ex-last-cmd ") ")))
-                                   'evil-ex-history
-                                   evil-ex-last-cmd
-                                   t)))
-      (evil-ex-eval result))))
+(defun evil-ex-call-command (range command force argument)
+  "Execute the given command COMMAND."
+  (let* ((evil-ex-command (evil-ex-binding command))
+         (evil-ex-force (and force t))
+         (evil-ex-argument (copy-sequence argument))
+         (current-prefix-arg
+          (when (numberp range) range))
+         (prefix-arg current-prefix-arg)
+         (evil-ex-range
+          (when (evil-range-p range) range))
+         (evil-this-type
+          (evil-type evil-ex-range)))
+    (when (stringp evil-ex-argument)
+      (set-text-properties
+       0 (length evil-ex-argument) nil evil-ex-argument))
+    (call-interactively evil-ex-command)))
+
+(defun evil-ex-address (base &optional offset)
+  "Return the line number of BASE plus OFFSET."
+  (+ (or offset 0)
+     (cond
+      ((integerp base)
+       base)
+      ((null base)
+       (line-number-at-pos))
+      ((eq (car-safe base) 'abs)
+       (cdr base))
+      ;; TODO: (1- ...) may be wrong if the match is the empty string
+      ((eq base 're-fwd)
+       (save-excursion
+         (beginning-of-line 2)
+         (and (re-search-forward (cdr base))
+              (line-number-at-pos (1- (match-end 0))))))
+      ((eq base 're-bwd)
+       (save-excursion
+         (beginning-of-line 0)
+         (and (re-search-backward (cdr base))
+              (line-number-at-pos (match-beginning 0)))))
+      ;; $, %, ., etc.
+      ((eq base 'current-line)
+       (line-number-at-pos (point)))
+      ((eq base 'first-line)
+       (line-number-at-pos (point-min)))
+      ((eq base 'last-line)
+       (line-number-at-pos (point-max)))
+      ((eq (car-safe base) 'mark)
+       (setq base (cadr base))
+       (let* ((base (cadr base))
+              (mark (evil-get-marker base)))
+         (cond
+          ((null mark)
+           (error "Marker <%c> not defined" base))
+          ((consp mark)
+           (error "Ex-mode ranges do not support markers in other files"))
+          (t
+           (line-number-at-pos mark)))))
+      ((eq base 'next-of-prev-search)
+       (error "Next-of-prev-search not yet implemented"))
+      ((eq base 'prev-of-prev-search)
+       (error "Prev-of-prev-search not yet implemented"))
+      ((eq base 'next-of-prev-subst)
+       (error "Next-of-prev-subst not yet implemented"))
+      (t
+       (error "Invalid address: %s" base)))))
+
+(defun evil-ex-first-line ()
+  "Return the line number of the first line."
+  1)
+
+(defun evil-ex-current-line ()
+  "Return the line number of the current line."
+  (line-number-at-pos (point)))
+
+(defun evil-ex-last-line ()
+  "Return the line number of the last line."
+  (line-number-at-pos (point-max)))
+
+(defun evil-ex-range (beg-line &optional end-line)
+  "Returns the first and last position of the current range."
+  (evil-range
+   (evil-line-position beg-line)
+   (evil-line-position (or end-line beg-line) -1)
+   'line))
+
+(defun evil-ex-full-range ()
+  "Return a range encompassing the whole buffer."
+  (evil-range (point-min) (point-max) 'line))
+
+(defun evil-ex-marker (marker)
+  "Return MARKER's line number in the current buffer.
+Signal an error if MARKER is in a different buffer."
+  (when (stringp marker)
+    (setq marker (aref marker 0)))
+  (setq marker (evil-get-marker marker))
+  (if (numberp marker)
+      (line-number-at-pos marker)
+    (error "Ex does not support markers in other files")))
+
+(defun evil-ex-re-fwd (pattern)
+  "Search forward for PATTERN.
+Returns the line number of the match."
+  (save-excursion
+    (set-text-properties 0 (length pattern) nil pattern)
+    (beginning-of-line 2)
+    (and (re-search-forward pattern)
+         (line-number-at-pos (1- (match-end 0))))))
+
+(defun evil-ex-re-bwd (pattern)
+  "Search backward for PATTERN.
+Returns the line number of the match."
+  (save-excursion
+    (set-text-properties 0 (length pattern) nil pattern)
+    (beginning-of-line 0)
+    (and (re-search-backward pattern)
+         (line-number-at-pos (match-beginning 0)))))
+
+(defun evil-ex-prev-search ()
+  (error "Previous search not yet implemented"))
+
+(defun evil-ex-signed-number (sign &optional number)
+  "Return a signed number like -3 and +1.
+NUMBER defaults to 1."
+  (funcall sign (or number 1)))
+
+(defun evil-ex-eval (string &optional start)
+  "Evaluate STRING as an Ex command.
+START is the start symbol, which defaults to `expression'."
+  (let ((form (evil-ex-parse string nil start)))
+    (eval form)))
+
+(defun evil-ex-parse (string &optional syntax start)
+  "Parse STRING as an Ex command and return an evaluation tree.
+If SYNTAX is non-nil, return a syntax tree instead.
+START is the start symbol, which defaults to `expression'."
+  (let* ((start (or start (car-safe (car-safe evil-ex-grammar))))
+         (match (evil-parser
+                 string start evil-ex-grammar t syntax)))
+    (car-safe match)))
+
+(defun evil-flatten-syntax-tree (tree)
+  "Find all paths from the root of TREE to its leaves.
+TREE is a syntax tree, i.e., all its leave nodes are strings.
+The `nth' element in the result is the syntactic context
+for the corresponding string index (counted from zero)."
+  (let* ((result nil)
+         (traverse nil)
+         (traverse
+          (lambda (tree path)
+            (if (stringp tree)
+                (dotimes (char (length tree))
+                  (push path result))
+              (let ((path (cons (car tree) path)))
+                (dolist (subtree (cdr tree))
+                  (funcall traverse subtree path)))))))
+    (funcall traverse tree nil)
+    (nreverse result)))
+
+(defun evil-ex-syntactic-context (&optional pos)
+  "Return the syntactical context of the character at POS.
+POS defaults to the current position of point."
+  (let* ((contexts (evil-flatten-syntax-tree evil-ex-tree))
+         (length (length contexts))
+         (pos (- (or pos (point)) (minibuffer-prompt-end))))
+    (when (>= pos length)
+      (setq pos (1- length)))
+    (when (< pos 0)
+      (setq pos 0))
+    (when contexts
+      (nth pos contexts))))
 
 (defun evil-parser (string symbol grammar &optional greedy syntax)
   "Parse STRING as a SYMBOL in GRAMMAR.

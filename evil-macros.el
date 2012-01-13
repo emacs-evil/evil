@@ -521,8 +521,7 @@ depending on RETURN-TYPE. Instead of reading from the keyboard,
 a predefined motion may be specified with MOTION. Likewise,
 a predefined type may be specified with TYPE."
   (let ((motion (or evil-operator-range-motion
-                    (when (and (fboundp 'evil-ex-state-p)
-                               (evil-ex-state-p))
+                    (when (and (fboundp 'evil-ex-p) (evil-ex-p))
                       'evil-line)))
         (type evil-operator-range-type)
         (range (evil-range (point) (point)))
@@ -533,11 +532,10 @@ a predefined type may be specified with TYPE."
        ((evil-visual-state-p)
         (setq range (evil-visual-range)))
        ;; Ex mode
-       ((and (fboundp 'evil-ex-state-p)
-             (evil-ex-state-p)
-             evil-ex-current-range)
-        (setq range (and (fboundp 'evil-ex-range)
-                         (evil-ex-range))))
+       ((and (fboundp 'evil-ex-p)
+             (evil-ex-p)
+             evil-ex-range)
+        (setq range evil-ex-range))
        ;; active region
        ((region-active-p)
         (setq range (evil-range (region-beginning)

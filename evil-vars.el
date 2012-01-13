@@ -959,51 +959,52 @@ They are reused to minimize flicker.")
   "Association list of Visual selection functions.
 Elements have the form (NAME . FUNCTION).")
 
-;;; ex-mode
+;;; Ex
 
-(defvar evil-ex-minibuffer nil
-  "The currently active ex minibuffer.")
+(defvar evil-ex-map (make-sparse-keymap)
+  "Keymap for Ex.
+Key sequences bound in this map are immediately executed.")
 
-(defvar evil-ex-current-buffer nil
-  "The buffer from which the current ex-mode has been started.")
-
-(defvar evil-ex-last-cmd nil
-  "The previously executed command.")
-
-(defvar evil-ex-current-cmd nil
-  "The currently parsed command.")
-
-(defvar evil-ex-current-cmd-begin nil
-  "The begin-position of the currently parsed command.")
-
-(defvar evil-ex-current-cmd-end nil
-  "The end-position of the currently parsed command.")
-
-(defvar evil-ex-current-cmd-force nil
-  "The force argument of the currently parsed command.")
-
-(defvar evil-ex-current-arg nil
-  "The currently parsed argument.")
-
-(defvar evil-ex-current-range nil
-  "The currenty parsed range.")
-
-(defvar evil-ex-history nil
-  "History of ex-commands.")
-
-(defvar evil-ex-keymap (make-sparse-keymap)
-  "Keymap used in ex-mode.")
-(set-keymap-parent evil-ex-keymap minibuffer-local-completion-map)
-(define-key evil-ex-keymap (kbd "SPC") #'self-insert-command)
+(defvar evil-ex-completion-map (make-sparse-keymap)
+  "Completion keymap for Ex.")
+(set-keymap-parent evil-ex-completion-map minibuffer-local-completion-map)
+(define-key evil-ex-completion-map (kbd "SPC") #'self-insert-command)
 
 (defvar evil-ex-commands nil
-  "An alist of command-bindings to functions.")
+  "Association list of command bindings and functions.")
 
-(defvar evil-ex-current-arg-handler nil
-  "Currently active argument handler depending on current command.")
+(defvar evil-ex-history nil
+  "History of Ex commands.")
 
-(defvar evil-ex-arg-types-alist nil
-  "An alist of defined argument handlers.")
+(defvar evil-ex-current-buffer nil
+  "The buffer from which Ex was started.")
+
+(defvar evil-ex-expression nil
+  "The evaluation tree.")
+
+(defvar evil-ex-tree nil
+  "The syntax tree.")
+
+(defvar evil-ex-command nil
+  "The current Ex command.")
+
+(defvar evil-ex-previous-command nil
+  "The previously executed Ex command.")
+
+(defvar evil-ex-range nil
+  "The current range of the Ex command.")
+
+(defvar evil-ex-force nil
+  "The \"!\" argument of the current Ex command.")
+
+(defvar evil-ex-argument nil
+  "The current argument of the Ex command.")
+
+(defvar evil-ex-argument-handler nil
+  "The argument handler for the current Ex command.")
+
+(defvar evil-ex-argument-types nil
+  "Association list of argument handlers.")
 
 (defvar evil-previous-shell-command nil
   "The last shell command.")

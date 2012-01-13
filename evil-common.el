@@ -797,6 +797,20 @@ to the current field as recognized by `line-beginning-position'."
     (unless (= (point) (line-beginning-position))
       (backward-char))))
 
+(defun evil-line-position (line &optional column)
+  "Return the position of LINE.
+If COLUMN is specified, return its position on the line.
+A negative number means the end of the line."
+  (save-excursion
+    (when (fboundp 'evil-goto-line)
+      (evil-goto-line line))
+    (if (numberp column)
+        (if (< column 0)
+            (end-of-line)
+          (move-to-column column))
+      (beginning-of-line))
+    (point)))
+
 (defun evil-column (&optional pos)
   "Return the horizontal position of POS.
 POS defaults to point."
