@@ -2256,6 +2256,108 @@ in `evil-temporary-undo' instead."
           (setq evil-temporary-undo nil)
         (setq buffer-undo-list undo-list)))))
 
+;;; Substitute
+
+(defun evil-downcase-first (str)
+  "Return STR with the first letter downcased."
+  (if (zerop (length str))
+      str
+    (concat (downcase (substring str 0 1))
+            (substring str 1))))
+
+(defun evil-upcase-first (str)
+  "Return STR with the first letter upcased."
+  (if (zerop (length str))
+      str
+    (concat (upcase (substring str 0 1))
+            (substring str 1))))
+
+(defun evil-compile-subreplacement (to)
+  "Maybe convert a regexp replacement TO to Lisp from START until \e or \E.
+Returns a pair (result . rest).  RESULT is a list suitable for
+`perform-replace' if necessary, the original string if not and
+REST is the unparsed rest of TO."
+  (if (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[,#ntrlLuUeE]" to)
+      (let (pos list char (rest ""))
+        (while
+            (progn
+              (setq pos (match-end 0))
+              (push (substring to 0 (- pos 2)) list)
+              (setq char (aref to (1- pos))
+                    to (substring to pos))
+              (cond ((eq char ?\#)
+                     (push '(number-to-string replace-count) list))
+                    ((eq char ?n) (push "\n" list))
+                    ((eq char ?t) (push "\t" list))
+                    ((eq char ?r) (push "\r" list))
+                    ((memq char '(?e ?E))
+                     (setq rest to to ""))
+                    ((memq char '(?l ?L ?u ?U))
+                     (let ((func (cdr (assoc char '((?l . evil-downcase-first)
+                                                    (?L . downcase)
+                                                    (?u . evil-upcase-first)
+                                                    (?U . upcase))))))
+                       (let ((result (evil-compile-subreplacement to)))
+                         (push `(,func
+                                 (replace-quote
+                                  (evil-match-substitute-replacement
+                                   ,(car result) t)))
+                               list)
+                         (setq to (cdr result)))))
+                    ((eq char ?\,)
+                     (setq pos (read-from-string to))
+                     (push `(replace-quote ,(car pos)) list)
+                     (let ((end
+                            ;; Swallow a space after a symbol
+                            ;; if there is a space.
+                            (if (and (or (symbolp (car pos))
+                                         ;; Swallow a space after 'foo
+                                         ;; but not after (quote foo).
+                                         (and (eq (car-safe (car pos)) 'quote)
+                                              (not (= ?\( (aref to 0)))))
+                                     (eq (string-match " " to (cdr pos))
+                                         (cdr pos)))
+                                (1+ (cdr pos))
+                              (cdr pos))))
+                       (setq to (substring to end)))))
+              (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[,#ntrlLuUeE]" to)))
+        (setq to (nreverse (delete "" (cons to list))))
+        (replace-match-string-symbols to)
+        (cons (if (cdr to)
+                  (cons 'concat to)
+                (car to))
+              rest))
+    (cons to "")))
+
+(defun evil-compile-replacement (to)
+  "Maybe convert a regexp replacement TO to Lisp.
+Returns a list suitable for `perform-replace' if necessary,
+the original string if not."
+  (save-match-data
+    (cons 'replace-eval-replacement
+          (car (evil-compile-subreplacement to)))))
+
+(defun evil-replace-match (replacement &optional fixedcase string)
+  "Replace text match by last search with REPLACEMENT.
+If REPLACEMENT is an expression it will be evaluated to compute
+the replacement text, otherwise the function behaves as
+`replace-match'."
+  (if (stringp replacement)
+      (replace-match replacement fixedcase nil string)
+    (replace-match (funcall (car replacement)
+                            (cdr replacement)
+                            0)
+                   fixedcase nil string)))
+
+(defun evil-match-substitute-replacement (replacement &optional fixedcase string)
+  "Return REPLACEMENT as it will be inserted by `evil-replace-match'."
+  (if (stringp replacement)
+      (match-substitute-replacement replacement fixedcase nil string)
+    (match-substitute-replacement (funcall (car replacement)
+                                           (cdr replacement)
+                                           0)
+                                  fixedcase nil string)))
+
 ;;; Highlighting
 
 (when (fboundp 'font-lock-add-keywords)

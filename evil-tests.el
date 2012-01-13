@@ -4215,6 +4215,50 @@ if no previous selection")
         (":%s/bc/xy/g" (kbd "RET"))
         "AxyAxyAxy\naXyaXyaXy\nAXYAXYAXY\n[a]xyaxyaxy"))))
 
+(ert-deftest evil-test-ex-substitute-replacement ()
+  "Test `evil-ex-substitute' with special replacements."
+  :tags '(evil ex search)
+  (ert-info ("Substitute upper first on first match in line")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar"
+      (":s/\\(foo\\|bar\\)/\\u\\1" [return])
+      "[x]xx Foo bar foo bar foo bar"))
+  (ert-info ("Substitute upper first on first match in line with confirm")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar"
+      (":s/\\(foo\\|bar\\)/\\u\\1/c" [return] "y")
+      "[x]xx Foo bar foo bar foo bar"))
+  (ert-info ("Substitute upper first on whole line")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar"
+      (":s/\\(foo\\|bar\\)/\\u\\1/g" [return])
+      "[x]xx Foo Bar Foo Bar Foo Bar"))
+  (ert-info ("Substitute upper first on whole line")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar"
+      (":s/\\(foo\\|bar\\)/\\u\\1/gc" [return] "yynyyn")
+      "[x]xx Foo Bar foo Bar Foo bar"))
+  (ert-info ("Substitute upper/lower on first match in line")
+    (evil-test-buffer
+      "[x]xx foo BAR foo BAR foo BAR"
+      (":s/\\(f[[:alpha:]]*\\>\\)\\s-*\\(b[[:alpha:]]*\\>\\)/\\L\\2_\\e\\U\\1" [return])
+      "[x]xx bar_FOO foo BAR foo BAR"))
+  (ert-info ("Substitute upper/lower on first match in line with confirm")
+    (evil-test-buffer
+      "[x]xx foo BAR foo BAR foo BAR"
+      (":s/\\(f[[:alpha:]]*\\>\\)\\s-*\\(b[[:alpha:]]*\\>\\)/\\L\\2_\\e\\U\\1/c" [return] "y")
+      "[x]xx bar_FOO foo BAR foo BAR"))
+  (ert-info ("Substitute upper/lower on whole line")
+    (evil-test-buffer
+      "[x]xx foo BAR foo BAR foo BAR"
+      (":s/\\(f[[:alpha:]]*\\>\\)\\s-*\\(b[[:alpha:]]*\\>\\)/\\L\\2_\\e\\U\\1/g" [return])
+      "[x]xx bar_FOO bar_FOO bar_FOO"))
+  (ert-info ("Substitute upper/lower on whole line")
+    (evil-test-buffer
+      "[x]xx foo BAR foo BAR foo BAR"
+      (":s/\\(f[[:alpha:]]*\\>\\)\\s-*\\(b[[:alpha:]]*\\>\\)/\\L\\2_\\e\\U\\1/gc" [return] "yny")
+      "[x]xx bar_FOO foo BAR bar_FOO")))
+
 (ert-deftest evil-test-ex-goto-line ()
   "Test if :number moves point to a certain line"
   :tags '(evil ex)

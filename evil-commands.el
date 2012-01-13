@@ -2286,15 +2286,13 @@ Change to `%s'? "
                                        (match-end 0))
                          (format "Query replacing %s with %s: "
                                  (match-string 0)
-                                 (if (fboundp 'match-substitute-replacement)
-                                     (match-substitute-replacement
-                                      evil-ex-substitute-replacement
-                                      (not case-replace))
-                                   evil-ex-substitute-replacement)))
+                                 (evil-match-substitute-replacement
+                                  evil-ex-substitute-replacement
+                                  (not case-replace))))
                      #'(lambda (x)
                          (set-match-data x)
-                         (replace-match evil-ex-substitute-replacement
-                                        (not case-replace))
+                         (evil-replace-match evil-ex-substitute-replacement
+                                             (not case-replace))
                          (setq evil-ex-substitute-last-point (point))
                          (setq evil-ex-substitute-nreplaced
                                (1+ evil-ex-substitute-nreplaced))
@@ -2336,8 +2334,8 @@ Change to `%s'? "
                             evil-ex-substitute-last-line))
               (setq evil-ex-substitute-nreplaced
                     (1+ evil-ex-substitute-nreplaced))
-              (replace-match evil-ex-substitute-replacement
-                             (not case-replace))
+              (evil-replace-match evil-ex-substitute-replacement
+                                  (not case-replace))
               (setq evil-ex-substitute-last-point (point))
               (setq num 1))))
 

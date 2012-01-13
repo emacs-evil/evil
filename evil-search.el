@@ -886,28 +886,35 @@ The DIRECTION argument should be either `forward' or
         (evil-ex-delete-hl 'evil-ex-substitute))))
 
     (when (and (eq flag 'update) evil-ex-substitute-highlight-all)
-      (let* ((result (evil-ex-parse-substitute (or (car args) "")))
-             (pattern (pop result))
-             (replacement (pop result))
-             (flags (append (pop result) nil)))
+      (condition-case lossage
+          (let* ((result (evil-ex-parse-substitute (or (car args) "")))
+                 (pattern (pop result))
+                 (replacement (pop result))
+                 (flags (append (pop result) nil)))
 
-        (setq evil-ex-substitute-pattern
-              (and pattern
-                   (evil-ex-make-pattern
-                    pattern
-                    (or (and (memq ?i flags) 'insensitive)
-                        (and (memq ?I flags) 'sensitive)
-                        evil-ex-substitute-case
-                        evil-ex-search-case)
-                    (memq ?g flags)))
-              evil-ex-substitute-replacement replacement)
-        (apply #'evil-ex-hl-set-region
-               'evil-ex-substitute
-               (or (evil-ex-range)
-                   (evil-range (line-beginning-position)
-                               (line-end-position))))
-        (evil-ex-hl-change 'evil-ex-substitute
-                           evil-ex-substitute-pattern)))))
+            (setq evil-ex-substitute-pattern
+                  (and pattern
+                       (evil-ex-make-pattern
+                        pattern
+                        (or (and (memq ?i flags) 'insensitive)
+                            (and (memq ?I flags) 'sensitive)
+                            evil-ex-substitute-case
+                            evil-ex-search-case)
+                        (memq ?g flags)))
+                  evil-ex-substitute-replacement replacement)
+            (apply #'evil-ex-hl-set-region
+                   'evil-ex-substitute
+                   (or (evil-ex-range)
+                       (evil-range (line-beginning-position)
+                                   (line-end-position))))
+            (evil-ex-hl-change 'evil-ex-substitute
+                               evil-ex-substitute-pattern))
+        (end-of-file
+         (evil-ex-pattern-update-ex-info nil
+                                         "incomplete replacement"))
+        (error
+         (evil-ex-pattern-update-ex-info nil
+                                         (format "%s" lossage)))))))
 
 (defun evil-ex-pattern-update-ex-info (hl result)
   "Update the Ex info string."
@@ -918,13 +925,14 @@ The DIRECTION argument should be either `forward' or
 
 (defun evil-ex-pattern-update-replacement (hl overlay)
   "Update the replacement display."
-  (let (repl)
-    (when (fboundp 'match-substitute-replacement)
-      (setq repl (match-substitute-replacement
+  (when (fboundp 'match-substitute-replacement)
+    (let ((fixedcase (not (eq (evil-ex-pattern-case-fold
+                               (evil-ex-hl-pattern hl))
+                              'insensitive)))
+          repl)
+      (setq repl (evil-match-substitute-replacement
                   evil-ex-substitute-replacement
-                  (not (eq (evil-ex-pattern-case-fold
-                            (evil-ex-hl-pattern hl))
-                           'insensitive))))
+                  fixedcase))
       (put-text-property 0 (length repl)
                          'face 'evil-ex-substitute
                          repl)
@@ -950,29 +958,10 @@ The DIRECTION argument should be either `forward' or
                  newrepl
                  (idx 0) (n (length replacement)))
 
-            ;; handle escaped chars
-            (while (< idx n)
-              (if (and (= (aref replacement idx) ?\\)
-                       (< (1+ idx) n))
-                  (let ((c (aref replacement (1+ idx))))
-                    (cond
-                     ((eq c ?n)
-                      (push ?\n newrepl))
-                     ((eq c ?t)
-                      (push ?\t newrepl))
-                     ((eq c ?r)
-                      (push ?\r newrepl))
-                     ((eq c delim-ch)
-                      (push delim-ch newrepl))
-                     (t
-                      (push ?\\ newrepl)
-                      (push c newrepl)))
-                    (setq idx (+ idx 2)))
-                (push (aref replacement idx) newrepl)
-                (setq idx (1+ idx))))
-
             (list pattern
-                  (apply #'string (reverse newrepl))
+                  (if replacement
+                      (evil-compile-replacement replacement)
+                    "")
                   flags)))))))
 
 (defun evil-ex-nohighlight ()
