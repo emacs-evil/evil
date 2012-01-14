@@ -479,6 +479,7 @@ a keymap variable and EVAL-AFTER is the file or package defining it
     mouse-save-then-kill
     mouse-set-point
     mouse-set-region
+    mwheel-scroll
     move-beginning-of-line
     move-end-of-line
     next-error
