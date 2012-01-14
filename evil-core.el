@@ -173,13 +173,15 @@ Restore the previous state afterwards."
        (evil-change-state ',state)
        ,@body)))
 
-(defun evil-initialize-state (&optional buffer)
+(defun evil-initialize-state (&optional state buffer)
   "Set up the initial state for BUFFER.
-This is the state the buffer comes up in.
+BUFFER defaults to the current buffer.
+Uses STATE if specified, or calls `evil-initial-state-for-buffer'.
 See also `evil-set-initial-state'."
   (with-current-buffer (or buffer (current-buffer))
     (remove-hook 'post-command-hook 'evil-initialize-state t)
-    (evil-change-to-initial-state buffer)))
+    (if state (evil-change-state state)
+      (evil-change-to-initial-state buffer))))
 (put 'evil-initialize-state 'permanent-local-hook t)
 
 (defun evil-initial-state-for-buffer (&optional buffer default)
