@@ -404,12 +404,14 @@ may be specified before the body code:
        (unless (get ',mode 'variable-documentation)
          (put ',mode 'variable-documentation ,doc))
        (make-variable-buffer-local ',mode)
+       (put ',mode 'permanent-local t)
        (when ,intercept
          (evil-make-intercept-map ,keymap))
        (when ,overriding
          (evil-make-overriding-map ,keymap))
        ,@(if local
              `((make-variable-buffer-local ',keymap)
+               (put ',keymap 'permanent-local t)
                (evil-add-to-alist 'evil-local-keymaps-alist
                                   ',mode ',keymap))
            `((evil-add-to-alist 'evil-global-keymaps-alist
