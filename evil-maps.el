@@ -303,6 +303,8 @@
 (define-key evil-insert-state-map "\C-p" 'evil-complete-previous)
 (define-key evil-insert-state-map "\C-x\C-n" 'evil-complete-next-line)
 (define-key evil-insert-state-map "\C-x\C-p" 'evil-complete-previous-line)
+(define-key evil-insert-state-map [remap newline] 'evil-ret)
+(define-key evil-insert-state-map [remap newline-and-indent] 'evil-ret)
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
 (define-key evil-insert-state-map
   (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
