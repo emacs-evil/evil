@@ -161,7 +161,7 @@ not be performed.
      (narrow-to-region
       (line-beginning-position)
       (if (and evil-move-cursor-back
-               (evil-normal-state-p))
+               (not (evil-operator-state-p)))
           (max (line-beginning-position)
                (1- (line-end-position)))
         (line-end-position)))
@@ -274,8 +274,9 @@ of the object; otherwise it is placed at the end of the object."
           (funcall forward 1)
           (when inclusive
             (unless (bobp) (backward-char)))
-          (when (evil-normal-state-p)
-            (evil-adjust-eol t)))))
+          (when (or (evil-normal-state-p)
+                    (evil-motion-state-p))
+            (evil-adjust-cursor t)))))
      ((> count 0)
       (when (evil-eobp)
         (signal 'end-of-buffer nil))
@@ -288,8 +289,9 @@ of the object; otherwise it is placed at the end of the object."
             (goto-char (point-max))
           (when inclusive
             (unless (bobp) (backward-char)))
-          (when (evil-normal-state-p)
-            (evil-adjust-eol t)))))
+          (when (or (evil-normal-state-p)
+                    (evil-motion-state-p))
+            (evil-adjust-cursor t)))))
      (t
       count))))
 
@@ -748,6 +750,23 @@ via KEY-VALUE pairs. BODY should evaluate to a list of values.
              (setcdr entry value)
            (push (cons code value) evil-interactive-alist))
          code))))
+
+;;; Highlighting
+
+(when (fboundp 'font-lock-add-keywords)
+  (font-lock-add-keywords
+   'emacs-lisp-mode
+   ;; Match all `evil-define-' forms except `evil-define-key'.
+   ;; (In the interests of speed, this expression is incomplete
+   ;; and does not match all three-letter words.)
+   '(("(\\(evil-\\(?:ex-\\)?define-\\(?:[^ k][^ e][^ y]\\|[-[:word:]]\\{4,\\}\\)\\)\
+\\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
+      (1 font-lock-keyword-face)
+      (2 font-lock-function-name-face nil t))
+     ("(\\(evil-\\(?:narrow\\|save\\|with\\(?:out\\)?\\)-[-[:word:]]+\\)\\>"
+      1 font-lock-keyword-face)
+     ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>"
+      1 font-lock-keyword-face))))
 
 (provide 'evil-macros)
 

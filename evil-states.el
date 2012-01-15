@@ -29,7 +29,7 @@ If the region is activated, enter Visual state."
           evil-inhibit-operator-value nil)
     (unless (eq this-command 'evil-use-register)
       (setq evil-this-register nil))
-    (evil-adjust-eol)
+    (evil-adjust-cursor)
     (when (region-active-p)
       (and (fboundp 'evil-visual-state)
            (evil-visual-state)))))
@@ -56,7 +56,7 @@ If the region is activated, enter Visual state."
     (unless evil-want-fine-undo
       (evil-end-undo-step t))
     (when evil-move-cursor-back
-      (evil-adjust)))))
+      (evil-move-cursor-back)))))
 
 (defun evil-insert-repeat-hook ()
   "Record insertion keys in `evil-insert-repeat-info'."
@@ -94,21 +94,6 @@ Handles the repeat-count of the insertion command."
               (when (fboundp 'evil-execute-repeat-info)
                 (evil-execute-repeat-info
                  (cdr evil-insert-repeat-info))))))))))
-
-(defun evil-insert-newline-above ()
-  "Inserts a new line above point and places point in that line
-with regard to indentation."
-  (beginning-of-line)
-  (newline)
-  (forward-line -1)
-  (back-to-indentation))
-
-(defun evil-insert-newline-below ()
-  "Inserts a new line below point and places point in that line
-with regard to indentation."
-  (end-of-line)
-  (newline)
-  (back-to-indentation))
 
 ;;; Visual state
 
@@ -742,7 +727,7 @@ CORNER defaults to `upper-left'."
     (overwrite-mode -1)
     (remove-hook 'pre-command-hook 'evil-replace-pre-command t)
     (when evil-move-cursor-back
-      (evil-adjust))))
+      (evil-move-cursor-back))))
   (setq evil-replace-alist nil))
 
 (defun evil-replace-pre-command ()

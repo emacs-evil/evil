@@ -781,20 +781,21 @@ If POS is a marker, return its position."
    (t
     pos)))
 
-(defun evil-adjust-eol (&optional force)
+(defun evil-adjust-cursor (&optional force)
   "Move point one character back if at the end of a non-empty line.
-This behavior is contingent on `evil-move-cursor-back';
+This behavior is contingent on the variable `evil-move-cursor-back';
 use the FORCE parameter to override it."
-  (when (or evil-move-cursor-back force)
-    (when (eolp)
-      (evil-adjust))))
+  (when (eolp)
+    (evil-move-cursor-back force)))
 
-(defun evil-adjust ()
+(defun evil-move-cursor-back (&optional force)
   "Move point one character back within the current line.
-Honors field boundaries, i.e., constrains the movement
+Contingent on the variable `evil-move-cursor-back' or the FORCE
+argument. Honors field boundaries, i.e., constrains the movement
 to the current field as recognized by `line-beginning-position'."
-  (unless (= (point) (line-beginning-position))
-    (backward-char)))
+  (when (or evil-move-cursor-back force)
+    (unless (= (point) (line-beginning-position))
+      (backward-char))))
 
 (defun evil-column (&optional pos)
   "Return the horizontal position of POS.
@@ -813,7 +814,7 @@ is non-nil) and returns point."
   (unless force
     (when (or (not dir) (and (numberp dir) (< dir 1)))
       (when (> (current-column) column)
-        (evil-adjust))))
+        (evil-move-cursor-back))))
   (point))
 
 (defmacro evil-loop (spec &rest body)
@@ -1131,6 +1132,21 @@ Otherwise, execute BODY again, but without the restriction."
   `(or (when (or (evil-in-comment-p) (evil-in-string-p))
          (evil-narrow-to-comment ,@body))
        (progn ,@body)))
+
+(defun evil-insert-newline-above ()
+  "Inserts a new line above point and places point in that line
+with regard to indentation."
+  (beginning-of-line)
+  (newline)
+  (forward-line -1)
+  (back-to-indentation))
+
+(defun evil-insert-newline-below ()
+  "Inserts a new line below point and places point in that line
+with regard to indentation."
+  (end-of-line)
+  (newline)
+  (back-to-indentation))
 
 ;;; Markers
 
@@ -2384,23 +2400,6 @@ the replacement text, otherwise the function behaves as
                                            (cdr replacement)
                                            0)
                                   fixedcase nil string)))
-
-;;; Highlighting
-
-(when (fboundp 'font-lock-add-keywords)
-  (font-lock-add-keywords
-   'emacs-lisp-mode
-   ;; Match all `evil-define-' forms except `evil-define-key'.
-   ;; (In the interests of speed, this expression is incomplete
-   ;; and does not match all three-letter words.)
-   '(("(\\(evil-\\(?:ex-\\)?define-\\(?:[^ k][^ e][^ y]\\|[-[:word:]]\\{4,\\}\\)\\)\
-\\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
-      (1 font-lock-keyword-face)
-      (2 font-lock-function-name-face nil t))
-     ("(\\(evil-\\(?:narrow\\|save\\|with\\(?:out\\)?\\)-[-[:word:]]+\\)\\>"
-      1 font-lock-keyword-face)
-     ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>"
-      1 font-lock-keyword-face))))
 
 (provide 'evil-common)
 
