@@ -806,7 +806,7 @@ A negative number means the end of the line."
       (evil-goto-line line))
     (if (numberp column)
         (if (< column 0)
-            (end-of-line)
+            (beginning-of-line 2)
           (move-to-column column))
       (beginning-of-line))
     (point)))

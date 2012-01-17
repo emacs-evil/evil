@@ -167,10 +167,14 @@ of the current screen line."
 By default the last line."
   :jump t
   :type line
-  (if (null count)
-      (goto-char (point-max))
+  (cond
+   (count
     (goto-char (point-min))
     (forward-line (1- count)))
+   (t
+    (goto-char (point-max))
+    (when (bolp)
+      (forward-line -1))))
   (evil-first-non-blank))
 
 (evil-define-motion evil-goto-first-line (count)

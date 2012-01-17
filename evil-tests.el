@@ -2020,7 +2020,8 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.\n"
-      ("y2eG")
+      ("y2e")
+      (goto-char (point-max))
       ";; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.
 \[]"
@@ -2052,7 +2053,8 @@ This bufferThis buffe[r]"))
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.\n"
-      ("2yyG")
+      ("2yy")
+      (goto-char (point-max))
       ";; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.
 \[]"
@@ -2160,7 +2162,8 @@ This bufferThis buffe[r]"))
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.\n"
-      ("y2eG")
+      ("y2e")
+      (goto-char (point-max))
       ";; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.
 \[]"
@@ -2192,7 +2195,8 @@ This bufferThis buffe[r]"))
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.\n"
-      ("2yyG")
+      ("2yy")
+      (goto-char (point-max))
       ";; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.
 \[]"
