@@ -574,6 +574,18 @@ Note that this function ignores the whole-line property of PATTERN."
 (put 'evil-ex-hl-update-highlights-resize 'permanent-local-hook t)
 
 ;; interactive search
+(defun evil-ex-search-activate-highlight (pattern)
+  "Activate highlighting of the search pattern set to PATTERN.
+This function does nothing if `evil-ex-search-interactive' or
+`evil-ex-search-highlight-all' is nil. "
+  (when (and evil-ex-search-interactive evil-ex-search-highlight-all)
+    (with-current-buffer (or evil-ex-current-buffer (current-buffer))
+      (unless (evil-ex-hl-active-p 'evil-ex-search)
+        (evil-ex-make-hl 'evil-ex-search
+                         :win (minibuffer-selected-window)))
+      (if pattern
+          (evil-ex-hl-change 'evil-ex-search pattern)))))
+
 (defun evil-ex-find-next ()
   "Search for the next occurrence of the pattern.
 This function also handles error messages and invisible text
@@ -699,9 +711,7 @@ and updates the global search information accordingly."
   (remove-hook 'minibuffer-setup-hook #'evil-ex-search-start-session)
   (add-hook 'after-change-functions #'evil-ex-search-update-pattern nil t)
   (add-hook 'minibuffer-exit-hook #'evil-ex-search-stop-session)
-  (when (and evil-ex-search-interactive evil-ex-search-highlight-all)
-    (with-current-buffer evil-ex-current-buffer
-      (evil-ex-make-hl 'evil-ex-search :win (minibuffer-selected-window)))))
+  (evil-ex-search-activate-highlight nil))
 (put 'evil-ex-search-start-session 'permanent-local-hook t)
 
 (defun evil-ex-search-stop-session ()
