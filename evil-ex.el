@@ -31,8 +31,7 @@
     (force
      ((! space) "!" #'$1))
     (argument
-     ((\? space) ".+" #'$2)
-     (space #'""))
+     ((\? space) ".*" #'$2))
     (range
      (address (\? "[,;]" address #'$2) #'evil-ex-range)
      ("%" #'(evil-ex-full-range)))
@@ -447,11 +446,14 @@ arguments for programmable completion."
                  'complete
                  arg predicate flag)
       ;; do nothing
-      (when arg
-        (cond
-         ((null flag) nil)
-         ((eq flag t) (list arg))
-         ((eq flag 'lambda) t))))))
+      (cond
+       ((null arg)
+        nil)
+       ((null flag)
+        nil)
+       ((eq flag t)
+        (list arg))
+       ((eq flag 'lambda))))))
 
 (defun evil-ex-repeat (count)
   "Repeats the last ex command."

@@ -3977,7 +3977,7 @@ if no previous selection")
                     (evil-ex-address (string-to-number "2") nil))
                    "arg"
                    nil
-                   nil))))
+                   ""))))
 
 (ert-deftest evil-test-ex-parse-ranges ()
   "Test parsing of ranges"
