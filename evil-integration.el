@@ -42,6 +42,25 @@
   (eval-after-load (cdr map)
     `(evil-make-intercept-map ,(car map))))
 
+;;; key-binding
+
+;; disable evil-esc-mode during a call to key-binding
+(defadvice key-binding (around evil activate)
+  (let (evil-esc-mode)
+    ad-do-it))
+
+;; disable evil-esc-mode during the read of a key-sequence
+;; TODO: should we handle the special ESC-delay, too?
+(defadvice read-key-sequence (around evil activate)
+  (let (evil-esc-mode)
+    ad-do-it))
+
+;; disable evil-esc-mode during the read of a key-sequence
+;; TODO: should we handle the special ESC-delay, too?
+(defadvice read-key-sequence-vector (around evil activate)
+  (let (evil-esc-mode)
+    ad-do-it))
+
 ;;; Buffer-menu
 
 (evil-declare-key 'motion Buffer-menu-mode-map
