@@ -586,125 +586,76 @@ This function does nothing if `evil-ex-search-interactive' or
       (if pattern
           (evil-ex-hl-change 'evil-ex-search pattern)))))
 
-(defun evil-ex-find-next ()
-  "Search for the next occurrence of the pattern.
-This function also handles error messages and invisible text
-according to global isearch settings."
-  (let ((retry t))
-    (setq isearch-success nil
-          isearch-error nil)
-    (condition-case lossage
-        (progn
-          (while retry
-            (let ((search-result (evil-ex-search-next-pattern)))
-              (cond
-               ((null search-result)
-                (setq isearch-success nil
-                      isearch-wrapped nil))
-               ((eq search-result t)
-                (setq isearch-success t
-                      isearch-wrapped nil))
-               (t
-                (setq isearch-success t
-                      isearch-wrapped t))))
-            (setq isearch-success (evil-ex-search-next-pattern))
-            ;; clear `retry' unless we matched some invisible text
-            ;; and we aren't supposed to do that
-            (when (or (eq search-invisible t)
-                      (not isearch-success)
-                      (bobp) (eobp)
-                      (= (match-beginning 0) (match-end 0))
-                      (not (isearch-range-invisible
-                            (match-beginning 0) (match-end 0))))
-              (setq retry nil)))
-          (setq isearch-just-started nil))
-
-      (invalid-regexp
-       (setq isearch-error (cadr lossage)))
-
-      (search-failed
-       (setq isearch-error (nth 2 lossage)))
-
-      (error
-       (setq isearch-error (format "%s" lossage))))
-
-    (cond
-     (isearch-success
-      (setq isearch-other-end
-            (if (eq evil-ex-search-direction 'forward)
-                (match-beginning 0)
-              (match-end 0))))
-     ((not isearch-error)
-      (setq isearch-error "No match")))
-    (if isearch-wrapped
-        (if isearch-error
-            (setq isearch-message (concat "Wrapped, " isearch-error))
-          (setq isearch-message "Wrapped"))
-      (setq isearch-message isearch-error))))
-
-(defun evil-ex-search-next-pattern ()
-  "Search for next occurrence w.r.t. actual search data, with wrap.
-This function searches for the next match wrapping at eob or bob
-and updates the global search information accordingly."
-  (if (zerop (length (evil-ex-pattern-regex evil-ex-search-pattern)))
-      (progn
-        (setq evil-ex-search-match-beg nil
-              evil-ex-search-match-end nil)
-        t)
-    (let (wrapped
-          result
-          (retry t))
-      (save-excursion
-        (while retry
-          (setq retry (not wrapped))
+(defun evil-ex-find-next (&optional pattern direction nowrap)
+  "Search for the next occurrence of the PATTERN in DIRECTION.
+PATTERN must be created using `evil-ex-make-pattern', DIRECTION
+is either 'forward or 'backward. If NOWRAP is non nil, the search
+does not wrap at buffer boundaries. Furthermore this function
+only searches invisible text if `search-invisible' is t. If
+PATTERN is not specified the current global pattern
+`evil-ex-search-pattern' and if DIRECTION is not specified the
+current global direction `evil-ex-search-direction' is used.
+This function return t if the search was successful, nil if it
+was unsuccessful and 'wrapped if the search was successful but
+has been wrapped at the buffer boundaries."
+  (setq pattern (or pattern evil-ex-search-pattern)
+        direction (or direction evil-ex-search-direction))
+  (catch 'done
+    (let (wrapped)
+      (while t
+        (let ((search-result (evil-ex-search-find-next-pattern pattern
+                                                               direction)))
           (cond
-           ;; normal search
-           ((evil-ex-search-find-next-pattern evil-ex-search-pattern
-                                              evil-ex-search-direction)
-            (setq evil-ex-search-match-beg (match-beginning 0)
-                  evil-ex-search-match-end (match-end 0)
-                  result (if wrapped 1 t)
-                  retry nil))
+           ((and search-result
+                 (or (eq search-invisible t)
+                     (not (isearch-range-invisible
+                           (match-beginning 0) (match-end 0)))))
+            ;; successful search and not invisible
+            (throw 'done (if wrapped 'wrapped t)))
+           ((not search-result)
+            ;; unsuccessful search
+            (if nowrap
+                (throw 'done nil)
+              (setq nowrap t
+                    wrapped t)
+              (goto-char (if (eq direction 'forward)
+                             (point-min)
+                           (point-max)))))))))))
 
-           ;; wrap at eob and bob
-           ((not wrapped)
-            (goto-char (if (eq evil-ex-search-direction 'forward)
-                           (point-min)
-                         (point-max)))
-            (setq wrapped t))
-
-           ;; already wrapped, search failed
-           (t
-            (setq evil-ex-search-match-beg nil evil-ex-search-match-end nil
-                  result nil
-                  retry nil))))
-        result))))
-
-(defun evil-ex-search-update ()
-  "Update the highlighting and info-message for the search pattern."
-  (with-current-buffer evil-ex-current-buffer
-    (with-selected-window (minibuffer-selected-window)
-      (when evil-ex-search-interactive
-        (when isearch-success
-          (if (null evil-ex-search-match-beg)
-              (when evil-ex-search-overlay
-                (delete-overlay evil-ex-search-overlay)
-                (setq evil-ex-search-overlay nil))
-            (goto-char evil-ex-search-match-beg)
-            (if evil-ex-search-overlay
-                (move-overlay evil-ex-search-overlay
-                              evil-ex-search-match-beg
-                              evil-ex-search-match-end)
-              (setq evil-ex-search-overlay
-                    (make-overlay evil-ex-search-match-beg
-                                  evil-ex-search-match-end))
-              (overlay-put evil-ex-search-overlay 'priority 1001)
-              (overlay-put evil-ex-search-overlay 'face 'evil-ex-search))))
-        (when evil-ex-search-highlight-all
-          (evil-ex-hl-change 'evil-ex-search
-                             (and isearch-success
-                                  evil-ex-search-pattern))))))
-  (evil-ex-echo isearch-message))
+(defun evil-ex-search-update (pattern offset beg end message)
+  "Update the highlighting and info-message for the search pattern.
+PATTERN is the search pattern and OFFSET the associated offset.
+BEG and END specifiy the current match, MESSAGE is the info
+message to be shown. This function does nothing if
+`evil-ex-search-interactive' is nil."
+  (when evil-ex-search-interactive
+    (cond
+     ((and beg end)
+      ;; update overlay
+      (if evil-ex-search-overlay
+          (move-overlay evil-ex-search-overlay beg end)
+        (setq evil-ex-search-overlay
+              (make-overlay beg end))
+        (overlay-put evil-ex-search-overlay 'priority 1001)
+        (overlay-put evil-ex-search-overlay 'face 'evil-ex-search))
+      ;; move point
+      (goto-char beg)
+      (evil-ex-search-goto-offset offset)
+      ;; update highlights
+      (when evil-ex-search-highlight-all
+        (evil-ex-hl-change 'evil-ex-search pattern)))
+     (t
+      ;; no match
+      (when evil-ex-search-overlay
+        ;; remove overlay
+        (delete-overlay evil-ex-search-overlay)
+        (setq evil-ex-search-overlay nil))
+      ;; no highlights
+      (when evil-ex-search-highlight-all
+        (evil-ex-hl-change 'evil-ex-search nil))
+      ;; and go to initial position
+      (goto-char evil-ex-search-start-point)))
+    (evil-ex-echo message)))
 
 (defun evil-ex-search-start-session ()
   "Initialize Ex for interactive search."
@@ -734,40 +685,117 @@ and updates the global search information accordingly."
 (put 'evil-ex-search-stop-session 'permanent-local-hook t)
 
 (defun evil-ex-split-search-pattern (pattern direction)
-  "Split PATTERN in regexp and offset parts.
-Returns a pair (regexp . offset)."
+  "Split PATTERN in regexp, offset and next-pattern parts.
+Returns a triple (regexp  offset next-search)."
   (save-match-data
     (if (or (and (eq direction 'forward)
-                 (string-match "\\(?:^\\|[^\\\\]\\)\\(?:\\\\\\\\\\)*\\(/\\)"
+                 (string-match "\\(?:^\\|[^\\\\]\\)\\(?:\\\\\\\\\\)*\\(/\\([^;]*\\)\\(?:;\\([/?].*\\)?\\)?\\)?$"
                                pattern))
             (and (eq direction 'backward)
-                 (string-match "\\(?:^\\|[^\\\\]\\)\\(?:\\\\\\\\\\)*\\(\\?\\)"
+                 (string-match "\\(?:^\\|[^\\\\]\\)\\(?:\\\\\\\\\\)*\\(\\?\\([^;]*\\)\\(?:;\\([/?].*\\)?\\)?\\)?$"
                                pattern)))
-        (cons (substring pattern 0 (match-beginning 1))
-              (substring pattern (match-end 1)))
-      (cons pattern nil))))
+        (list (substring pattern 0 (match-beginning 1))
+              (match-string 2 pattern)
+              (match-string 3 pattern))
+      (list pattern nil nil))))
+
+(defun evil-ex-search-full-pattern (pattern-string count direction)
+  "Search for a full search pattern PATTERN-STRING in DIRECTION.
+This function split PATTERN-STRING in
+pattern/offset/;next-pattern parts and performs the search in
+DIRECTION which must be either 'forward or 'backward. The first
+search is repeated COUNT times. If the pattern part of
+PATTERN-STRING is empty, the last global pattern stored in
+`evil-ex-search-pattern' is used instead if in addition the
+offset part is nil (i.e. no pattern/offset separator), the last
+global offset stored in `evil-ex-search-offset' is used as
+offset. The current match data will correspond to the last
+successful match.  This function returns a triple (RESULT PATTERN
+OFFSET) where RESULT is
+
+  t              the search has been successful without wrap
+  'wrap          the search has been successful with wrap
+  'empty-pattern the last pattern has been empty
+  nil            the search has not been successful
+
+and PATTERN and OFFSET are the last pattern and offset this
+function searched for. Note that this function does not handle
+any error conditions."
+  (setq count (or count 1))
+  (catch 'done
+    (while t
+      (let* ((res (evil-ex-split-search-pattern pattern-string direction))
+             (pat (pop res))
+             (offset (pop res))
+             (next-pat (pop res)))
+        ;; use last pattern of no new pattern has been specified
+        (if (not (zerop (length pat)))
+            (setq pat (evil-ex-make-pattern pat
+                                            evil-ex-search-case
+                                            t))
+          (setq pat evil-ex-search-pattern
+                offset (or offset evil-ex-search-offset)))
+        (let (search-result)
+          (while (> count 0)
+            (let ((result (evil-ex-find-next pat direction)))
+              (if (not result) (setq search-result nil count 0)
+                (setq search-result
+                      (if (or (eq result 'wrap)
+                              (eq search-result 'wrap))
+                          'wrap t)
+                      count (1- count)))))
+          (cond
+           ;; search failed
+           ((not search-result) (throw 'done (list nil pat offset)))
+           ;; no next pattern, search complete
+           ((zerop (length next-pat))
+            (evil-ex-search-goto-offset offset)
+            (throw 'done (list search-result pat offset)))
+           ;; next pattern but empty
+           ((= 1 (length next-pat))
+            (evil-ex-search-goto-offset offset)
+            (throw 'done (list 'empty-pattern pat offset)))
+           ;; next non-empty pattern, next search iteration
+           (t
+            (evil-ex-search-goto-offset offset)
+            (setq count 1
+                  pattern-string (substring next-pat 1)
+                  direction (if (= (aref next-pat 0) ?/)
+                                'forward
+                              'backward)))))))))
 
 (defun evil-ex-search-update-pattern (beg end range)
   "Update the current search pattern."
-  (let ((pat (evil-ex-split-search-pattern (minibuffer-contents)
-                                           evil-ex-search-direction)))
-    (setq evil-ex-search-pattern
-          (evil-ex-make-pattern (car pat)
-                                evil-ex-search-case
-                                t)
-          evil-ex-search-offset (cdr pat)))
-  (with-current-buffer evil-ex-current-buffer
-    (with-selected-window (minibuffer-selected-window)
-      (goto-char evil-ex-search-start-point)
-      (save-excursion
-        (dotimes (i (or evil-ex-search-count 1))
-          (if (eq evil-ex-search-direction 'backward)
-              (backward-char)
-            (forward-char))
-          (evil-ex-find-next)
-          (when evil-ex-search-match-beg
-            (goto-char evil-ex-search-match-beg))))))
-  (evil-ex-search-update))
+  (let ((pattern-string (minibuffer-contents)))
+    (with-current-buffer evil-ex-current-buffer
+      (with-selected-window (minibuffer-selected-window)
+        (goto-char (1+ evil-ex-search-start-point))
+        (condition-case err
+            (let* ((result (evil-ex-search-full-pattern pattern-string
+                                                        (or evil-ex-search-count 1)
+                                                        evil-ex-search-direction))
+                   (success (pop result))
+                   (pattern (pop result))
+                   (offset (pop result)))
+              (cond
+               ((eq success 'wrap)
+                (evil-ex-search-update pattern offset
+                                       (match-beginning 0) (match-end 0)
+                                       "Wrapped"))
+               ((eq success 'empty-string)
+                (evil-ex-search-update nil nil nil nil nil))
+               (success
+                (evil-ex-search-update pattern offset
+                                       (match-beginning 0) (match-end 0)
+                                       nil))
+               (t
+                (evil-ex-search-update nil nil
+                                       nil nil
+                                       "search failed"))))
+          (invalid-regexp
+           (evil-ex-search-update nil nil nil nil (cadr err)))
+          (error
+           (evil-ex-search-update nil nil nil nil (format "%s" err))))))))
 (put 'evil-ex-search-update-pattern 'permanent-local-hook t)
 
 (defun evil-ex-search-exit ()
@@ -784,72 +812,76 @@ Returns a pair (regexp . offset)."
   (abort-recursive-edit))
 
 (defun evil-ex-search-goto-offset (offset)
-  "Move point according to search OFFSET and set `evil-this-type' accordingly."
+  "Move point according to search OFFSET and set `evil-this-type' accordingly.
+This function assumes that the current match data represents the
+current search result."
   (unless (zerop (length offset))
-    (save-match-data
-      (unless (string-match "^\\([esb]\\)?\\(\\([-+]\\)?\\([0-9]*\\)\\)$" offset)
-        (error "Invalid search offset: %s" offset))
-      (let ((count (if (= (match-beginning 4) (match-end 4))
-                       (cond
-                        ((not (match-beginning 3)) 0)
-                        ((= (aref offset (match-beginning 3)) ?+) +1)
-                        (t -1))
-                     (string-to-number (match-string 2 offset)))))
-        (cond
-         ((not (match-beginning 1))
-          (setq evil-this-type 'line)
-          (forward-line count))
-         ((= (aref offset (match-beginning 1)) ?e)
-          (goto-char (+ evil-ex-search-match-end count -1))
-          (setq evil-this-type 'inclusive))
-         ((memq (aref offset (match-beginning 1)) '(?s ?b))
-          (goto-char (+ evil-ex-search-match-beg count))
-          (setq evil-this-type 'inclusive)))))))
+    (let ((beg (match-beginning 0))
+          (end (match-end 0)))
+      (save-match-data
+        (unless
+            (string-match
+             "^\\([esb]\\)?\\(\\([-+]\\)?\\([0-9]*\\)\\)$"
+             offset)
+          (error "Invalid search offset: %s" offset))
+        (let ((count (if (= (match-beginning 4) (match-end 4))
+                         (cond
+                          ((not (match-beginning 3)) 0)
+                          ((= (aref offset (match-beginning 3)) ?+) +1)
+                          (t -1))
+                       (string-to-number (match-string 2 offset)))))
+          (cond
+           ((not (match-beginning 1))
+            (setq evil-this-type 'line)
+            (forward-line count))
+           ((= (aref offset (match-beginning 1)) ?e)
+            (goto-char (+ end count -1))
+            (setq evil-this-type 'inclusive))
+           ((memq (aref offset (match-beginning 1)) '(?s ?b))
+            (goto-char (+ beg count))
+            (setq evil-this-type 'inclusive))))))))
 
 (defun evil-ex-start-search (direction count)
   "Start a new search in a certain DIRECTION."
   ;; store buffer and window where the search started
-  (let ((evil-ex-current-buffer (current-buffer))
-        (evil-last-ex-search-pattern evil-ex-search-pattern)
-        (evil-last-ex-search-offset evil-ex-search-offset))
+  (let ((evil-ex-current-buffer (current-buffer)))
     (setq evil-ex-search-count count
           evil-ex-search-direction direction
-          evil-ex-search-start-point (point)
-          evil-ex-search-pattern nil
-          evil-ex-search-match-beg nil
-          evil-ex-search-match-end nil)
-    (condition-case err
-        (progn
-          ;; ensure minibuffer is initialized accordingly
-          (add-hook 'minibuffer-setup-hook #'evil-ex-search-start-session)
-          ;; read the search string
-          (let ((minibuffer-local-map evil-ex-search-keymap))
-            (when (read-string (if (eq evil-ex-search-direction 'forward)
+          evil-ex-search-start-point (point))
+    (progn
+      ;; ensure minibuffer is initialized accordingly
+      (add-hook 'minibuffer-setup-hook #'evil-ex-search-start-session)
+      ;; read the search string
+      (let* ((minibuffer-local-map evil-ex-search-keymap)
+             (search-string
+              (condition-case err
+                  (read-string (if (eq evil-ex-search-direction 'forward)
                                    "/" "?")
                                nil 'evil-ex-search-history)
-              (goto-char (1+ evil-ex-search-start-point))
-              ;; maybe reuse previous pattern/offset
-              (unless (and evil-ex-search-pattern
-                           (< 0 (length (evil-ex-pattern-regex
-                                         evil-ex-search-pattern))))
-                (setq evil-ex-search-pattern evil-last-ex-search-pattern)
-                (unless evil-ex-search-offset
-                  (setq evil-ex-search-offset evil-last-ex-search-offset)))
-              (unless evil-ex-search-match-beg
-                (evil-ex-find-next)
-                (evil-ex-hl-change 'evil-ex-search
-                                   (and isearch-success
-                                        evil-ex-search-pattern)))
-              (goto-char evil-ex-search-match-beg)
-              (when evil-ex-search-offset
-                (evil-ex-search-goto-offset evil-ex-search-offset)))))
-      (quit
-       (setq evil-ex-search-pattern evil-last-ex-search-pattern
-             evil-ex-search-offset evil-last-ex-search-offset)
-       (evil-ex-search-stop-session)
-       (evil-ex-delete-hl 'evil-ex-search)
-       (goto-char evil-ex-search-start-point)
-       (signal (car err) (cdr err))))))
+                (quit
+                 (evil-ex-search-stop-session)
+                 (evil-ex-delete-hl 'evil-ex-search)
+                 (goto-char evil-ex-search-start-point)
+                 (signal (car err) (cdr err))))))
+        ;; pattern entered successful
+        (goto-char (1+ evil-ex-search-start-point))
+        (let* ((result
+                (evil-ex-search-full-pattern search-string
+                                             evil-ex-search-count
+                                             evil-ex-search-direction))
+               (success (pop result))
+               (pattern (pop result))
+               (offset (pop result)))
+          (cond
+           ((memq success '(t wrap))
+            (setq evil-ex-search-pattern pattern
+                  evil-ex-search-offset offset)
+            (goto-char (match-beginning 0))
+            (setq evil-ex-search-match-beg (match-beginning 0)
+                  evil-ex-search-match-end (match-end 0))
+            (evil-ex-search-goto-offset offset))
+           (t
+            (signal 'search-failed (list search-string)))))))))
 
 (defun evil-ex-start-symbol-search (unbounded direction count)
   "Search for the symbol under point.
@@ -926,10 +958,8 @@ The DIRECTION argument should be either `forward' or
 
 (defun evil-ex-pattern-update-ex-info (hl result)
   "Update the Ex info string."
-  (with-selected-window (minibuffer-window)
-    (with-current-buffer (window-buffer (minibuffer-window))
-      (when (stringp result)
-        (evil-ex-echo result)))))
+  (when (stringp result)
+    (evil-ex-echo result)))
 
 (defun evil-ex-pattern-update-replacement (hl overlay)
   "Update the replacement display."

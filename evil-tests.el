@@ -4304,6 +4304,27 @@ if no previous selection")
         ("n")
         "foo foo\nbar bar\nbaz baz\n[A]nother line\nAnd yet another line"))))
 
+(ert-deftest evil-test-ex-search-pattern-offset ()
+  "Test pattern offsets."
+  :tags '(evil ex search)
+  (evil-without-display
+    (evil-select-search-module 'evil-search-module 'evil-search)
+    (ert-info ("Test simple pattern offsets")
+      (evil-test-buffer
+        "[f]oo foo\nbar bar\nfoo foo\nbaz baz\nAnother line\nAnd yet another line"
+        ("/bar/;/foo" [return])
+        "foo foo\nbar bar\n[f]oo foo\nbaz baz\nAnother line\nAnd yet another line"))
+    (ert-info ("Test simple pattern offsets in backward direction")
+      (evil-test-buffer
+        "[f]oo foo\nbar bar\nfoo foo\nbaz baz\nAnother line\nAnd yet another line"
+        ("/bar/;?foo" [return])
+        "foo [f]oo\nbar bar\nfoo foo\nbaz baz\nAnother line\nAnd yet another line"))
+    (ert-info ("Ensure second pattern is used for search repeat")
+      (evil-test-buffer
+        "[f]oo foo\nbar bar\nfoo foo\nbaz baz\nAnother line\nAnd yet another line"
+        ("/bar/;?foo" [return] "n")
+        "foo foo\nbar bar\n[f]oo foo\nbaz baz\nAnother line\nAnd yet another line"))))
+
 (ert-deftest evil-test-ex-search-repeat ()
   "Test repeat of search."
   :tags '(evil ex search)

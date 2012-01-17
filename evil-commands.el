@@ -2137,24 +2137,23 @@ Change to `%s'? "
   :jump t
   :type exclusive
   (setq evil-ex-search-start-point (point))
-  (dotimes (i (or count 1))
-    (if (eq evil-ex-search-direction 'backward)
-        (backward-char)
-      (forward-char))
-    (evil-ex-find-next)
-    (if isearch-success
-        (progn
-          (when (and evil-ex-search-highlight-all
-                     (not (evil-ex-hl-active-p 'evil-ex-search)))
-            (evil-ex-make-hl 'evil-ex-search)
-            (evil-ex-hl-change 'evil-ex-search evil-ex-search-pattern))
-          (goto-char evil-ex-search-match-beg))
-      (goto-char evil-ex-search-start-point))
+  (let (wrapped)
+    (dotimes (i (or count 1))
+      (if (eq evil-ex-search-direction 'backward)
+          (backward-char)
+        (forward-char))
+      (let ((res (evil-ex-find-next)))
+        (cond
+         ((not res) (signal 'search-failed (list evil-ex-search-pattern)))
+         ((eq res 'wrapped) (setq wrapped t)))))
+    (if wrapped
+        (let (message-log-max)
+          (message "Search wrapped")))
+    (goto-char (match-beginning 0))
+    (setq evil-ex-search-match-beg (match-beginning 0)
+          evil-ex-search-match-end (match-end 0))
     (evil-ex-search-goto-offset evil-ex-search-offset)
-    (when (or isearch-error isearch-wrapped) (ding))
-    (when isearch-message
-      (let (message-log-max)
-        (message "%s" isearch-message)))))
+    (evil-ex-search-activate-highlight evil-ex-search-pattern)))
 
 (evil-define-motion evil-ex-search-previous (count)
   "Goes the the previous occurrence."
