@@ -1137,6 +1137,14 @@ POS defaults to the current position of point."
        (narrow-to-region (evil-string-beginning) (evil-string-end))))
      ,@body))
 
+(defmacro evil-narrow-to-field (&rest body)
+  "Narrow to the current field."
+  (declare (indent defun)
+           (debug t))
+  `(save-restriction
+     (narrow-to-region (field-beginning) (field-end))
+     ,@body))
+
 (defmacro evil-with-or-without-comment (&rest body)
   "Try BODY narrowed to the current comment; then try BODY unnarrowed.
 If BODY returns non-nil inside the current comment, return that.
@@ -1150,17 +1158,19 @@ Otherwise, execute BODY again, but without the restriction."
 (defun evil-insert-newline-above ()
   "Inserts a new line above point and places point in that line
 with regard to indentation."
-  (beginning-of-line)
-  (newline)
-  (forward-line -1)
-  (back-to-indentation))
+  (evil-narrow-to-field
+    (beginning-of-line)
+    (newline)
+    (forward-line -1)
+    (back-to-indentation)))
 
 (defun evil-insert-newline-below ()
   "Inserts a new line below point and places point in that line
 with regard to indentation."
-  (end-of-line)
-  (newline)
-  (back-to-indentation))
+  (evil-narrow-to-field
+    (end-of-line)
+    (newline)
+    (back-to-indentation)))
 
 ;;; Markers
 

@@ -70,7 +70,9 @@
   "Move COUNT - 1 lines down."
   :type line
   (let (line-move-visual)
-    (evil-line-move (1- (or count 1)))))
+    ;; select the previous line at the end of the buffer
+    (if (eobp) (evil-line-move -1)
+      (evil-line-move (1- (or count 1))))))
 
 (evil-define-motion evil-beginning-of-line ()
   "Move the cursor to the beginning of the current line."
@@ -986,17 +988,15 @@ If BIGWORD is non-nil, select inner WORD."
 Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (interactive "<R><x><y>")
   (evil-yank beg end type register yank-handler)
-  (cond
-   ((eq type 'block)
-    (delete-rectangle beg end))
-   ((and (eq type 'line)
-         (= (point-max) end)
-         (/= (point-min) beg))
-    (delete-region (1- beg) end))
-   (t
-    (delete-region beg end)))
-  (when (eq type 'line)
-    (back-to-indentation)))
+  (if (eq type 'block)
+      (delete-rectangle beg end)
+    (delete-region beg end))
+  ;; place cursor on beginning of line
+  (when (evil-called-interactively-p)
+    (when (eq type 'line)
+      (evil-narrow-to-field
+        (when (eobp) (forward-line -1))
+        (back-to-indentation)))))
 
 (evil-define-operator evil-delete-line (beg end type register yank-handler)
   "Delete to end of line."
@@ -1055,15 +1055,11 @@ of the block."
   (interactive "<R><x><y>")
   (let ((delete-func (or delete-func 'evil-delete))
         (nlines (1+ (- (line-number-at-pos end)
-                       (line-number-at-pos beg))))
-        (bop (= beg (buffer-end -1)))
-        (eob (= end (buffer-end 1))))
+                       (line-number-at-pos beg)))))
     (funcall delete-func beg end type register yank-handler)
     (cond
      ((eq type 'line)
-      (if (and eob (not bop))
-          (evil-open-below 1)
-        (evil-open-above 1)))
+      (evil-open-above 1))
      ((eq type 'block)
       (evil-insert 1 nlines))
      (t
@@ -1340,9 +1336,7 @@ The return value is the yanked text."
                    (not (eq (evil-visual-type) 'line)))
           (newline))
         (evil-normal-state))
-      (if (eobp)
-          (evil-paste-after count register)
-        (evil-paste-before count register)))))
+      (evil-paste-before count register))))
 
 (defun evil-paste-from-register (register)
   "Paste from REGISTER."

@@ -2448,7 +2448,7 @@ This bufferThis buffe[r]"))
 ;; [I]f you want to create a file, visit that file with C-x C-f."
     ("Vp")
     ";; This buffer is for notes you don't want to save.
-;; This buffer is for notes you don't want to save."))
+\[;]; This buffer is for notes you don't want to save."))
 
 ;;; Motions
 
