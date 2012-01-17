@@ -370,6 +370,7 @@
 (evil-ex-define-cmd "[xa]ll" "wqall")
 (evil-ex-define-cmd "[bd]elete" 'evil-delete-buffer)
 (evil-ex-define-cmd "[g]lobal" 'evil-ex-global)
+(evil-ex-define-cmd "[v]global" 'evil-ex-global-inverted)
 (evil-ex-define-cmd "[s]ubstitute" 'evil-ex-substitute)
 (evil-ex-define-cmd "registers" 'evil-show-registers)
 (evil-ex-define-cmd "marks" 'evil-show-marks)

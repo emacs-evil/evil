@@ -2216,7 +2216,7 @@ Change to `%s'? "
 (evil-define-operator evil-ex-substitute
   (beg end pattern replacement flags)
   "The Ex substitute command.
-\[BEG,END]s/PATTERN/REPLACEMENT/FLAGS"
+\[BEG,END]substitute/PATTERN/REPLACEMENT/FLAGS"
   :repeat nil
   :jump t
   :move-point nil
@@ -2338,18 +2338,27 @@ Change to `%s'? "
                  (if (/= evil-ex-substitute-nreplaced 1) "s" ""))))
     (evil-first-non-blank)))
 
-(evil-define-operator evil-ex-global (beg end pattern command)
+(evil-define-operator evil-ex-global
+  (beg end pattern command &optional invert)
   "The Ex global command.
-\[BEG,END]g/PATTERN/COMMAND"
+\[BEG,END]global[!]/PATTERN/COMMAND"
   :motion mark-whole-buffer
   :move-point nil
-  (interactive "<r><g/>")
-  (let (markers)
+  (interactive "<r><g/><!>")
+  (let ((case-fold-search
+         (eq (evil-ex-regex-case pattern 'smart) 'insensitive))
+        match markers)
     (when (and pattern command)
       (goto-char beg)
-      (while (re-search-forward pattern end t)
-        (push (move-marker (make-marker) (match-beginning 0))
-              markers))
+      (beginning-of-line)
+      (while (< (point) end)
+        (setq match
+              (save-excursion
+                (re-search-forward pattern (line-end-position) t)))
+        (when (or (and match (not invert))
+                  (and invert (not match)))
+          (push (move-marker (make-marker) (point)) markers))
+        (forward-line))
       (setq markers (nreverse markers))
       (unwind-protect
           (dolist (marker markers)
@@ -2359,6 +2368,15 @@ Change to `%s'? "
         ;; even in the event of failure
         (dolist (marker markers)
           (set-marker marker nil))))))
+
+(evil-define-operator evil-ex-global-inverted
+  (beg end pattern command &optional invert)
+  "The Ex vglobal command.
+\[BEG,END]vglobal/PATTERN/COMMAND"
+  :motion mark-whole-buffer
+  :move-point nil
+  (interactive "<r><g/><!>")
+  (evil-ex-global beg end pattern command (not invert)))
 
 (evil-define-command evil-goto-char (position)
   "Go to POSITION in the buffer.
