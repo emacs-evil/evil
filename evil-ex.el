@@ -300,11 +300,9 @@ Otherwise behaves like `delete-backward-char'."
 
 (defun evil-ex-completed-binding (command &optional noerror)
   "Returns the final binding of the completion of COMMAND."
-  (let ((completed-command (try-completion
-                            command evil-ex-commands nil)))
-    (evil-ex-binding (if (eq completed-command t)
-                         command
-                       completed-command)
+  (let ((completion (try-completion command evil-ex-commands)))
+    (evil-ex-binding (if (eq completion t) command
+                       (or completion command))
                      noerror)))
 
 ;;; TODO: extensions likes :p :~ <cfile> ...
