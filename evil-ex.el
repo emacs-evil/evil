@@ -31,7 +31,7 @@
     (force
      ((! space) "!" #'$1))
     (argument
-     ((\? space) ".*" #'$2))
+     ((\? space) (\? ".+") #'$2))
     (range
      (address (\? "[,;]" address #'$2) #'evil-ex-range)
      ("%" #'(evil-ex-full-range)))
