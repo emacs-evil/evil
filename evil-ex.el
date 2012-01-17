@@ -181,7 +181,7 @@ Otherwise behaves like `delete-backward-char'."
             (when (evil-range-p range) range))
       ;; test the current command
       (when (and cmd (minibufferp))
-        (setq func (evil-ex-binding cmd t))
+        (setq func (evil-ex-completed-binding cmd t))
         (cond
          ;; update arg-handler
          (func
@@ -298,13 +298,14 @@ Otherwise behaves like `delete-backward-char'."
         (unless noerror
           (error "Unknown command: `%s'" command))))))
 
-(defun evil-ex-completed-binding (command)
+(defun evil-ex-completed-binding (command &optional noerror)
   "Returns the final binding of the completion of COMMAND."
   (let ((completed-command (try-completion
                             command evil-ex-commands nil)))
     (evil-ex-binding (if (eq completed-command t)
                          command
-                       completed-command))))
+                       completed-command)
+                     noerror)))
 
 ;;; TODO: extensions likes :p :~ <cfile> ...
 (defun evil-ex-replace-special-filenames (file-name)
@@ -471,7 +472,7 @@ arguments for programmable completion."
 
 (defun evil-ex-call-command (range command force argument)
   "Execute the given command COMMAND."
-  (let* ((evil-ex-command (evil-ex-binding command))
+  (let* ((evil-ex-command (evil-ex-completed-binding command))
          (evil-ex-force (and force t))
          (evil-ex-argument (copy-sequence argument))
          (current-prefix-arg
