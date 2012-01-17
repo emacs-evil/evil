@@ -2150,6 +2150,7 @@ Change to `%s'? "
             (evil-ex-hl-change 'evil-ex-search evil-ex-search-pattern))
           (goto-char evil-ex-search-match-beg))
       (goto-char evil-ex-search-start-point))
+    (evil-ex-search-goto-offset evil-ex-search-offset)
     (when (or isearch-error isearch-wrapped) (ding))
     (when isearch-message
       (let (message-log-max)

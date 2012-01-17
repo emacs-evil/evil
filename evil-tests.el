@@ -4295,7 +4295,14 @@ if no previous selection")
         ("/baz/b+2")
         "foo foo\nbar bar\nba[z] baz\nAnother line\nAnd yet another line"
         ("/line/b-")
-        "foo foo\nbar bar\nbaz baz\nAnother[ ]line\nAnd yet another line"))))
+        "foo foo\nbar bar\nbaz baz\nAnother[ ]line\nAnd yet another line"))
+    (ert-info ("Test search-next with offset")
+      (evil-test-buffer
+        "[f]oo foo\nbar bar\nbaz baz\nAnother line\nAnd yet another line"
+        ("/ ba/+1" [return])
+        "foo foo\nbar bar\n[b]az baz\nAnother line\nAnd yet another line"
+        ("n")
+        "foo foo\nbar bar\nbaz baz\n[A]nother line\nAnd yet another line"))))
 
 (ert-deftest evil-test-ex-search-repeat ()
   "Test repeat of search."
