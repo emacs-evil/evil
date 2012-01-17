@@ -2352,13 +2352,11 @@ Change to `%s'? "
       (goto-char beg)
       (beginning-of-line)
       (while (< (point) end)
-        (setq match
-              (save-excursion
-                (re-search-forward pattern (line-end-position) t)))
+        (setq match (re-search-forward pattern (line-end-position) t))
         (when (or (and match (not invert))
                   (and invert (not match)))
           (push (move-marker (make-marker)
-                             (or (match-beginning 0)
+                             (or (and match (match-beginning 0))
                                  (line-beginning-position)))
                 markers))
         (forward-line))
