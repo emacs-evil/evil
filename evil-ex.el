@@ -31,7 +31,8 @@
     (force
      ((! space) "!" #'$1))
     (argument
-     ((\? space) ".+" #'$2))
+     ((\? space) ".+" #'$2)
+     (space #'""))
     (range
      (address (\? "[,;]" address #'$2) #'evil-ex-range)
      ("%" #'(evil-ex-full-range)))
@@ -368,17 +369,18 @@ Temporarily disables update functions."
                         predicate flag))))
        ;; complete argument
        ((memq 'argument context)
-        (setq start (or (get-text-property
-                         0 'ex-index evil-ex-argument) (point))
-              prefix (buffer-substring prompt start))
-        (if boundaries
-            (setq boundaries (cons 'boundaries
-                                   (cons (- start prompt)
-                                         (length (cdr flag)))))
-          (setq result (evil-ex-complete-argument
-                        evil-ex-command
-                        evil-ex-argument
-                        predicate flag)))))
+        (let ((arg (or evil-ex-argument "")))
+          (setq start (or (get-text-property
+                           0 'ex-index arg) (point))
+                prefix (buffer-substring prompt start))
+          (if boundaries
+              (setq boundaries (cons 'boundaries
+                                     (cons (- start prompt)
+                                           (length (cdr flag)))))
+            (setq result (evil-ex-complete-argument
+                          evil-ex-command
+                          arg
+                          predicate flag))))))
       ;; return result
       (cond
        (boundaries)
