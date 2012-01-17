@@ -208,12 +208,14 @@ Otherwise behaves like `delete-backward-char'."
 
 (defun evil-ex-echo (string &optional args)
   "Display a message after the current Ex command."
-  (unless evil-no-display
-    (unless (zerop (length string))
-      (let ((string (format " [%s]" (apply #'format string args)))
-            after-change-functions before-change-functions)
-        (put-text-property 0 (length string) 'face 'evil-ex-info string)
-        (minibuffer-message string)))))
+  (with-selected-window (minibuffer-window)
+    (with-current-buffer (window-buffer (minibuffer-window))
+      (unless (or evil-no-display
+                  (zerop (length string)))
+        (let ((string (format " [%s]" (apply #'format string args)))
+              after-change-functions before-change-functions)
+          (put-text-property 0 (length string) 'face 'evil-ex-info string)
+          (minibuffer-message string))))))
 
 (defun evil-ex-define-cmd (cmd function)
   "Binds the function FUNCTION to the command CMD."
