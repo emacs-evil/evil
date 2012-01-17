@@ -2357,7 +2357,10 @@ Change to `%s'? "
                 (re-search-forward pattern (line-end-position) t)))
         (when (or (and match (not invert))
                   (and invert (not match)))
-          (push (move-marker (make-marker) (point)) markers))
+          (push (move-marker (make-marker)
+                             (or (match-beginning 0)
+                                 (line-beginning-position)))
+                markers))
         (forward-line))
       (setq markers (nreverse markers))
       (unwind-protect
