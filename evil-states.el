@@ -217,19 +217,17 @@ the selection is enabled.
     (remove-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook t)
     (evil-visual-highlight -1))))
 
-(defun evil-visual-pre-command ()
+(defun evil-visual-pre-command (&optional command)
   "Run before each command in Visual state.
-Unless `this-command' is a motion, expand the region
-to the selection."
+Unless COMMAND is a motion, expand the region to the selection."
+  (setq command (or command this-command))
   (when (evil-visual-state-p)
-    (unless (evil-get-command-property
-             this-command :keep-visual)
+    (unless (evil-get-command-property command :keep-visual)
       (evil-visual-expand-region
        ;; exclude final newline from linewise selection
        ;; unless the command has real need of it
        (and (eq (evil-visual-type) 'line)
-            (evil-get-command-property
-             this-command :exclude-newline))))))
+            (evil-get-command-property command :exclude-newline))))))
 (put 'evil-visual-pre-command 'permanent-local-hook t)
 
 (defun evil-visual-post-command ()

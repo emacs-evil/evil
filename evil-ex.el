@@ -151,7 +151,7 @@ Otherwise behaves like `delete-backward-char'."
   "Update Ex variables when the minibuffer changes."
   (let* ((prompt (minibuffer-prompt-end))
          (string (or string (buffer-substring prompt (point-max))))
-         arg arg-handler arg-type cmd expr force func range tree)
+         arg arg-handler arg-type cmd count expr force func range tree)
     (cond
      ((commandp (setq cmd (lookup-key evil-ex-map string)))
       (setq evil-ex-expression `(call-interactively ',cmd))
@@ -168,17 +168,21 @@ Otherwise behaves like `delete-backward-char'."
         (setq tree (evil-ex-parse string t)
               expr (evil-ex-parse string))
         (when (eq (car-safe expr) 'evil-ex-call-command)
-          (setq range (eval (nth 1 expr))
+          (setq count (eval (nth 1 expr))
                 cmd (eval (nth 2 expr))
                 force (eval (nth 3 expr))
-                arg (eval (nth 4 expr)))))
+                arg (eval (nth 4 expr))
+                range (cond
+                       ((evil-range-p count)
+                        count)
+                       ((numberp count)
+                        (evil-ex-range count count))))))
       (setq evil-ex-tree tree
             evil-ex-expression expr
+            evil-ex-range range
             evil-ex-command cmd
             evil-ex-force force
-            evil-ex-argument arg
-            evil-ex-range
-            (when (evil-range-p range) range))
+            evil-ex-argument arg)
       ;; test the current command
       (when (and cmd (minibufferp))
         (setq func (evil-ex-completed-binding cmd t))
@@ -474,17 +478,17 @@ arguments for programmable completion."
 
 (defun evil-ex-call-command (range command force argument)
   "Execute the given command COMMAND."
-  (let* ((evil-ex-command (evil-ex-completed-binding command))
+  (let* ((count (when (numberp range) range))
+         (range (when (evil-range-p range) range))
+         (visual (and range (not (evil-visual-state-p))))
+         (evil-ex-range
+          (or range (and count (evil-ex-range count count))))
+         (evil-ex-command (evil-ex-completed-binding command))
          (evil-ex-force (and force t))
          (evil-ex-argument (copy-sequence argument))
-         (current-prefix-arg
-          (when (numberp range) range))
-         (prefix-arg current-prefix-arg)
-         (evil-ex-range
-          (when (evil-range-p range) range))
-         (evil-this-type
-          (evil-type evil-ex-range))
-         (visual (and evil-ex-range (not (evil-visual-state-p)))))
+         (evil-this-type (evil-type evil-ex-range))
+         (current-prefix-arg count)
+         (prefix-arg current-prefix-arg))
     (when (stringp evil-ex-argument)
       (set-text-properties
        0 (length evil-ex-argument) nil evil-ex-argument))
@@ -493,8 +497,7 @@ arguments for programmable completion."
                           (evil-range-end evil-ex-range)
                           (evil-type evil-ex-range 'line) -1))
     (when (evil-visual-state-p)
-      (unless (evil-get-command-property evil-ex-command :keep-visual)
-        (evil-visual-expand-region)))
+      (evil-visual-pre-command evil-ex-command))
     (unwind-protect
         (call-interactively evil-ex-command)
       (when visual
@@ -558,7 +561,11 @@ arguments for programmable completion."
 
 (defun evil-ex-last-line ()
   "Return the line number of the last line."
-  (line-number-at-pos (point-max)))
+  (save-excursion
+    (goto-char (point-max))
+    (when (bolp)
+      (forward-line -1))
+    (line-number-at-pos)))
 
 (defun evil-ex-range (beg-line &optional end-line)
   "Returns the first and last position of the current range."
