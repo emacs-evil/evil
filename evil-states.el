@@ -20,19 +20,20 @@ AKA \"Command\" state."
   "Reset command loop variables in Normal state.
 Also prevent point from reaching the end of the line.
 If the region is activated, enter Visual state."
-  (when (evil-normal-state-p)
-    (setq evil-this-type nil
-          evil-this-operator nil
-          evil-this-motion nil
-          evil-this-motion-count nil
-          evil-inhibit-operator nil
-          evil-inhibit-operator-value nil)
-    (unless (eq this-command 'evil-use-register)
-      (setq evil-this-register nil))
-    (evil-adjust-cursor)
-    (when (region-active-p)
-      (and (fboundp 'evil-visual-state)
-           (evil-visual-state)))))
+  (unless (evil-initializing-p)
+    (when (evil-normal-state-p)
+      (setq evil-this-type nil
+            evil-this-operator nil
+            evil-this-motion nil
+            evil-this-motion-count nil
+            evil-inhibit-operator nil
+            evil-inhibit-operator-value nil)
+      (unless (eq this-command 'evil-use-register)
+        (setq evil-this-register nil))
+      (evil-adjust-cursor)
+      (when (region-active-p)
+        (and (fboundp 'evil-visual-state)
+             (evil-visual-state))))))
 (put 'evil-normal-post-command 'permanent-local-hook t)
 
 ;;; Insert state

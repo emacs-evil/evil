@@ -173,6 +173,11 @@ Restore the previous state afterwards."
        (evil-change-state ',state)
        ,@body)))
 
+(defun evil-initializing-p (&optional buffer)
+  "Whether Evil is in the process of being initialized."
+  (with-current-buffer (or buffer (current-buffer))
+    (memq 'evil-initialize-state post-command-hook)))
+
 (defun evil-initialize-state (&optional state buffer)
   "Set up the initial state for BUFFER.
 BUFFER defaults to the current buffer.
