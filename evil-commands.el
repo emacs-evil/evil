@@ -1008,20 +1008,22 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   :keep-visual t
   (interactive "<R><x>")
   ;; act linewise in Visual state
-  (when (evil-visual-state-p)
-    (unless (memq type '(line block))
-      (let ((range (evil-expand beg end 'line)))
-        (setq beg (evil-range-beginning range)
-              end (evil-range-end range)
-              type (evil-type range))))
-    (evil-exit-visual-state))
-  (cond
-   ((eq type 'block)
-    (evil-apply-on-block 'evil-delete-line beg end nil register yank-handler))
-   ((eq type 'line)
-    (evil-delete beg end type register yank-handler))
-   (t
-    (evil-delete beg (line-end-position) type register yank-handler))))
+  (let* ((beg (or beg (point)))
+         (end (or end beg)))
+    (when (evil-visual-state-p)
+      (unless (memq type '(line block))
+        (let ((range (evil-expand beg end 'line)))
+          (setq beg (evil-range-beginning range)
+                end (evil-range-end range)
+                type (evil-type range))))
+      (evil-exit-visual-state))
+    (cond
+     ((eq type 'block)
+      (evil-apply-on-block 'evil-delete-line beg end nil register yank-handler))
+     ((eq type 'line)
+      (evil-delete beg end type register yank-handler))
+     (t
+      (evil-delete beg (line-end-position) type register yank-handler)))))
 
 (evil-define-operator evil-delete-whole-line
   (beg end type register yank-handler)
@@ -2048,12 +2050,12 @@ the previous shell command is executed instead."
    ((zerop (length command))
     (if previous (error "No previous shell command")
       (error "No shell command")))
-   ((and (evil-ex-p) (not evil-ex-range))
-    (shell-command command))
-   (t
+   ((and beg end)
     (shell-command-on-region beg end command t)
     (goto-char beg)
-    (evil-first-non-blank))))
+    (evil-first-non-blank))
+   (t
+    (shell-command command))))
 
 ;; TODO: escape special characters (currently only \n) ... perhaps
 ;; there is some Emacs function doing this?

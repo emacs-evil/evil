@@ -161,6 +161,7 @@ not be performed.
      (narrow-to-region
       (line-beginning-position)
       (if (and evil-move-cursor-back
+               (not (evil-visual-state-p))
                (not (evil-operator-state-p)))
           (max (line-beginning-position)
                (1- (line-end-position)))
@@ -570,7 +571,8 @@ a predefined type may be specified with TYPE."
               (evil-repeat-abort))
             (setq quit-flag t))
            ((eq motion 'undefined)
-            (setq motion nil))
+            (setq range (if return-type '(nil nil nil) '(nil nil))
+                  motion nil))
            (evil-repeat-count
             (setq count evil-repeat-count
                   ;; only the first operator's count is overwritten
@@ -593,15 +595,16 @@ a predefined type may be specified with TYPE."
                 evil-this-motion-count count
                 type (evil-type range type)
                 evil-this-type type))))
-      (unless (or (null type) (eq (evil-type range) type))
-        (evil-set-type range type)
-        (evil-expand-range range))
-      (evil-set-range-properties range nil)
-      (unless return-type
-        (evil-set-type range nil))
-      (setq evil-operator-range-beginning (evil-range-beginning range)
-            evil-operator-range-end (evil-range-end range)
-            evil-operator-range-type (evil-type range))
+      (when (evil-range-p range)
+        (unless (or (null type) (eq (evil-type range) type))
+          (evil-set-type range type)
+          (evil-expand-range range))
+        (evil-set-range-properties range nil)
+        (unless return-type
+          (evil-set-type range nil))
+        (setq evil-operator-range-beginning (evil-range-beginning range)
+              evil-operator-range-end (evil-range-end range)
+              evil-operator-range-type (evil-type range)))
       range)))
 
 (defmacro evil-define-type (type doc &rest body)
