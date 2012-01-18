@@ -1944,9 +1944,15 @@ If no FILE is specified, reload the current buffer from disk."
     (when (or (not (zerop (forward-line (or count 1))))
               (not (bolp)))
       (newline))
-    (if (= (aref file 0) ?!)
-        (shell-command (substring file 1) 42)
-      (insert-file-contents file))))
+    (if (/= (aref file 0) ?!)
+        (let ((result (insert-file-contents file)))
+          (save-excursion
+            (forward-char (cadr result))
+            (unless (bolp) (newline))))
+      (shell-command (substring file 1) 42)
+      (save-excursion
+        (goto-char (mark))
+        (unless (bolp) (newline))))))
 
 (evil-define-command evil-show-buffers ()
   "Shows the buffer-list."

@@ -4380,6 +4380,50 @@ if no previous selection")
         ("/bar/e" [return] "//b+1" [return])
         "foo foo\nbar b[a]r\nbaz baz\nAnother line\nAnd yet another line"))))
 
+(ert-deftest evil-test-read ()
+  "Test of `evil-read'"
+  :tags '(evil ex)
+  (ert-info ("Test insertion of file with trailing newline")
+    (evil-with-temp-file name
+        "temp file 1\ntemp file 2\n"
+      (ert-info ("At first line")
+        (evil-test-buffer
+          "[l]ine 1\nline 2"
+          ((vconcat ":read " name [return]))
+          "line 1\n[t]emp file 1\ntemp file 2\nline 2"))
+      (ert-info ("At last line")
+        (evil-test-buffer
+          "line 1\n[l]ine 2"
+          ((vconcat ":read " name [return]))
+          "line 1\nline 2\n[t]emp file 1\ntemp file 2\n"))
+      (ert-info ("After specified line number")
+        (evil-test-buffer
+          "[l]ine 1\nline 2\nline 3\nline 4\line 5"
+          ((vconcat ":3read " name [return]))
+          "line 1\nline 2\nline 3\n[t]emp file 1\ntemp file 2\nline 4\line 5"))
+      (ert-info ("After specified line 0")
+        (evil-test-buffer
+          "line 1\nline [2]\nline 3\nline 4\line 5"
+          ((vconcat ":0read " name [return]))
+          "[t]emp file 1\ntemp file 2\nline 1\nline 2\nline 3\nline 4\line 5"))))
+  (ert-info ("Test insertion of file without trailing newline")
+    (evil-with-temp-file name
+        "temp file 1\ntemp file 2"
+      (evil-test-buffer
+        "[l]ine 1\nline 2"
+        ((vconcat ":read " name [return]))
+        "line 1\n[t]emp file 1\ntemp file 2\nline 2")))
+  (ert-info ("Test insertion of shell command")
+    (evil-test-buffer
+      "[l]line 1\nline 2"
+      (":read !echo cmd line 1" [return])
+      "line 1\n[c]md line 1\nline 2"))
+  (ert-info ("Test insertion of shell command without trailing newline")
+    (evil-test-buffer
+      "[l]line 1\nline 2"
+      (":read !echo -n cmd line 1" [return])
+      "line 1\n[c]md line 1\nline 2")))
+
 ;;; Utilities
 
 (ert-deftest evil-test-parser ()
