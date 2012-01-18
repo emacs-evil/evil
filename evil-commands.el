@@ -2055,7 +2055,9 @@ the previous shell command is executed instead."
    ((and (evil-ex-p) (not evil-ex-range))
     (shell-command command))
    (t
-    (shell-command-on-region beg end command t))))
+    (shell-command-on-region beg end command t)
+    (goto-char beg)
+    (evil-first-non-blank))))
 
 ;; TODO: escape special characters (currently only \n) ... perhaps
 ;; there is some Emacs function doing this?
