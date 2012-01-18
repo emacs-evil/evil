@@ -13,60 +13,62 @@ The return value is a list (BEG END TYPE)."
         (obuffer  (current-buffer))
         (evil-motion-marker (move-marker (make-marker) (point)))
         range)
-    (evil-save-transient-mark
-      (evil-transient-mark 1)
-      (unwind-protect
-          (let ((current-prefix-arg count)
-                ;; Store type in the global variable `evil-this-type'.
-                ;; If necessary, motions can change their type
-                ;; during execution by setting this variable.
-                (evil-this-type
-                 (or type (evil-type motion 'exclusive))))
-            (condition-case err
-                (let ((repeat-type (evil-repeat-type motion t)))
-                  (if (functionp repeat-type)
-                      (funcall repeat-type 'pre))
-                  (unless (with-local-quit
-                            (setq range (call-interactively motion))
-                            t)
-                    (evil-repeat-abort)
-                    (setq quit-flag t))
-                  (if (functionp repeat-type)
-                      (funcall repeat-type 'post)))
-              (error (prog1 nil
-                       (evil-repeat-abort)
-                       (setq evil-this-type 'exclusive
-                             evil-write-echo-area t)
-                       (message (error-message-string err)))))
-            (cond
-             ;; the motion returned a range
-             ((evil-range-p range))
-             ;; the motion made a Visual selection
-             ((evil-visual-state-p)
-              (setq range (evil-visual-range)))
-             ;; the motion made an active region
-             ((region-active-p)
-              (setq range (evil-range (region-beginning)
-                                      (region-end)
-                                      evil-this-type)))
-             ;; default case: range from previous position to current
-             (t
-              (setq range (evil-expand-range
-                           (evil-normalize
-                            evil-motion-marker (point) evil-this-type)))))
-            (unless (or (null type) (eq (evil-type range) type))
-              (evil-set-type range type)
-              (evil-expand-range range))
-            (evil-set-range-properties range nil)
-            range)
-        ;; restore point and mark like `save-excursion',
-        ;; but only if the motion hasn't disabled the operator
-        (unless evil-inhibit-operator
-          (set-buffer obuffer)
-          (evil-move-mark omark)
-          (goto-char opoint))
-        ;; delete marker so it doesn't slow down editing
-        (move-marker evil-motion-marker nil)))))
+    (evil-narrow-to-field
+      (evil-save-transient-mark
+        (evil-transient-mark 1)
+        (unwind-protect
+            (let ((current-prefix-arg count)
+                  ;; Store type in global variable `evil-this-type'.
+                  ;; If necessary, motions can change their type
+                  ;; during execution by setting this variable.
+                  (evil-this-type
+                   (or type (evil-type motion 'exclusive))))
+              (condition-case err
+                  (let ((repeat-type (evil-repeat-type motion t)))
+                    (if (functionp repeat-type)
+                        (funcall repeat-type 'pre))
+                    (unless (with-local-quit
+                              (setq range (call-interactively motion))
+                              t)
+                      (evil-repeat-abort)
+                      (setq quit-flag t))
+                    (if (functionp repeat-type)
+                        (funcall repeat-type 'post)))
+                (error (prog1 nil
+                         (evil-repeat-abort)
+                         (setq evil-this-type 'exclusive
+                               evil-write-echo-area t)
+                         (message (error-message-string err)))))
+              (cond
+               ;; the motion returned a range
+               ((evil-range-p range))
+               ;; the motion made a Visual selection
+               ((evil-visual-state-p)
+                (setq range (evil-visual-range)))
+               ;; the motion made an active region
+               ((region-active-p)
+                (setq range (evil-range (region-beginning)
+                                        (region-end)
+                                        evil-this-type)))
+               ;; default: range from previous position to current
+               (t
+                (setq range (evil-expand-range
+                             (evil-normalize evil-motion-marker
+                                             (point)
+                                             evil-this-type)))))
+              (unless (or (null type) (eq (evil-type range) type))
+                (evil-set-type range type)
+                (evil-expand-range range))
+              (evil-set-range-properties range nil)
+              range)
+          ;; restore point and mark like `save-excursion',
+          ;; but only if the motion hasn't disabled the operator
+          (unless evil-inhibit-operator
+            (set-buffer obuffer)
+            (evil-move-mark omark)
+            (goto-char opoint))
+          ;; delete marker so it doesn't slow down editing
+          (move-marker evil-motion-marker nil))))))
 
 (defmacro evil-define-motion (motion args &rest body)
   "Define an motion command MOTION.
