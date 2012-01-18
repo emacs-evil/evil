@@ -2052,7 +2052,7 @@ the previous shell command is executed instead."
    ((zerop (length command))
     (if previous (error "No previous shell command")
       (error "No shell command")))
-   ((eq beg end) ; empty range
+   ((and (evil-ex-p) (not evil-ex-range))
     (shell-command command))
    (t
     (shell-command-on-region beg end command t))))
