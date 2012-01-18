@@ -408,6 +408,26 @@ is executed at the end."
        (goto-char (overlay-end ,overlay))
        (evil-test-text (or ,end-string ,string) nil nil ,after-predicate))))
 
+(defmacro evil-with-temp-file (file-var content &rest body)
+  "Create a temp file with CONTENT and bind its name to FILE-VAR within BODY.
+FILE-VAR must be a symbol which contains the name of the
+temporary file within the macro body. CONTENT is either a string
+to be used as the content of the temporary file or a form to be
+executed with the temporary file's buffer as \(current-buffer),
+see `with-temp-file'. BODY contains the forms to be executed
+while the temporary file exists. The temporary file is deleted at
+the end of the execution of BODY."
+  (declare (indent 2)
+           (debug (symbolp form body)))
+  `(let ((,file-var (make-temp-name
+                     (expand-file-name "evil-test" temporary-file-directory))))
+     (with-temp-file ,file-var
+       ,(if (stringp content)
+            `(insert ,content)
+          content))
+     ,@body
+     (delete-file ,file-var)))
+
 ;;; States
 
 (defun evil-test-local-mode-enabled ()
