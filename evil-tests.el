@@ -4414,15 +4414,27 @@ if no previous selection")
         ((vconcat ":read " name [return]))
         "line 1\n[t]emp file 1\ntemp file 2\nline 2")))
   (ert-info ("Test insertion of shell command")
-    (evil-test-buffer
-      "[l]line 1\nline 2"
-      (":read !echo cmd line 1" [return])
-      "line 1\n[c]md line 1\nline 2"))
+    (ert-info ("with space")
+      (evil-test-buffer
+        "[l]line 1\nline 2"
+        (":read !echo cmd line 1" [return])
+        "line 1\n[c]md line 1\nline 2"))
+    (ert-info ("without space")
+      (evil-test-buffer
+        "[l]line 1\nline 2"
+        (":read!echo cmd line 1" [return])
+        "line 1\n[c]md line 1\nline 2")))
   (ert-info ("Test insertion of shell command without trailing newline")
-    (evil-test-buffer
-      "[l]line 1\nline 2"
-      (":read !echo -n cmd line 1" [return])
-      "line 1\n[c]md line 1\nline 2")))
+    (ert-info ("with space")
+      (evil-test-buffer
+        "[l]line 1\nline 2"
+        (":read !echo -n cmd line 1" [return])
+        "line 1\n[c]md line 1\nline 2"))
+    (ert-info ("without space")
+      (evil-test-buffer
+        "[l]line 1\nline 2"
+        (":read!echo -n cmd line 1" [return])
+        "line 1\n[c]md line 1\nline 2"))))
 
 ;;; Utilities
 
