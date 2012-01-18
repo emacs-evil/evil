@@ -309,8 +309,9 @@
 (define-key evil-insert-state-map
   (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
 
-(when evil-want-C-w-delete
-  (define-key evil-insert-state-map (kbd "C-w") 'evil-delete-backward-word))
+(if evil-want-C-w-delete
+    (define-key evil-insert-state-map "\C-w" 'evil-delete-backward-word)
+  (define-key evil-insert-state-map "\C-w" 'evil-window-map))
 
 ;;; Replace state
 
