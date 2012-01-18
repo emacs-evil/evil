@@ -1934,26 +1934,22 @@ If no FILE is specified, reload the current buffer from disk."
       (find-file file)
     (revert-buffer nil (or force (not (buffer-modified-p))) t)))
 
-(evil-define-command evil-read (count file &optional shell)
+(evil-define-command evil-read (count file)
   "Inserts the contents of FILE below the current line or line COUNT."
   :repeat nil
   :move-point nil
-  (interactive "P<f><!>")
+  (interactive "P<f>")
   (when (and file (not (zerop (length file))))
     (when count (goto-char (point-min)))
     (when (or (not (zerop (forward-line (or count 1))))
               (not (bolp)))
       (newline))
-    (when (and (not shell)
-               (= (aref file 0) ?!))
-      (setq shell t
-            file (substring file 1)))
-    (if (not shell)
+    (if (/= (aref file 0) ?!)
         (let ((result (insert-file-contents file)))
           (save-excursion
             (forward-char (cadr result))
             (unless (bolp) (newline))))
-      (shell-command file 42)
+      (shell-command (substring file 1) t)
       (save-excursion
         (goto-char (mark))
         (unless (bolp) (newline))))))

@@ -3984,23 +3984,20 @@ if no previous selection")
                     (evil-ex-address (string-to-number "5") nil)
                     (evil-ex-address (string-to-number "2") nil))
                    "cmd"
-                   nil
                    "arg")))
-  (should (equal (evil-ex-parse "5,2cmd! arg")
+  (should (equal (evil-ex-parse "5,2cmd !arg")
                  '(evil-ex-call-command
                    (evil-ex-range
                     (evil-ex-address (string-to-number "5") nil)
                     (evil-ex-address (string-to-number "2") nil))
                    "cmd"
-                   "!"
-                   "arg")))
+                   "!arg")))
   (should (equal (evil-ex-parse "5,2 arg")
                  '(evil-ex-call-command
                    (evil-ex-range
                     (evil-ex-address (string-to-number "5") nil)
                     (evil-ex-address (string-to-number "2") nil))
                    "arg"
-                   nil
                    nil))))
 
 (ert-deftest evil-test-ex-parse-ranges ()
@@ -4383,58 +4380,59 @@ if no previous selection")
 (ert-deftest evil-test-read ()
   "Test of `evil-read'"
   :tags '(evil ex)
-  (ert-info ("Test insertion of file with trailing newline")
-    (evil-with-temp-file name
-        "temp file 1\ntemp file 2\n"
-      (ert-info ("At first line")
+  (evil-without-display
+    (ert-info ("Test insertion of file with trailing newline")
+      (evil-with-temp-file name
+          "temp file 1\ntemp file 2\n"
+        (ert-info ("At first line")
+          (evil-test-buffer
+            "[l]ine 1\nline 2"
+            ((vconcat ":read " name [return]))
+            "line 1\n[t]emp file 1\ntemp file 2\nline 2"))
+        (ert-info ("At last line")
+          (evil-test-buffer
+            "line 1\n[l]ine 2"
+            ((vconcat ":read " name [return]))
+            "line 1\nline 2\n[t]emp file 1\ntemp file 2\n"))
+        (ert-info ("After specified line number")
+          (evil-test-buffer
+            "[l]ine 1\nline 2\nline 3\nline 4\line 5"
+            ((vconcat ":3read " name [return]))
+            "line 1\nline 2\nline 3\n[t]emp file 1\ntemp file 2\nline 4\line 5"))
+        (ert-info ("After specified line 0")
+          (evil-test-buffer
+            "line 1\nline [2]\nline 3\nline 4\line 5"
+            ((vconcat ":0read " name [return]))
+            "[t]emp file 1\ntemp file 2\nline 1\nline 2\nline 3\nline 4\line 5"))))
+    (ert-info ("Test insertion of file without trailing newline")
+      (evil-with-temp-file name
+          "temp file 1\ntemp file 2"
         (evil-test-buffer
           "[l]ine 1\nline 2"
           ((vconcat ":read " name [return]))
-          "line 1\n[t]emp file 1\ntemp file 2\nline 2"))
-      (ert-info ("At last line")
+          "line 1\n[t]emp file 1\ntemp file 2\nline 2")))
+    (ert-info ("Test insertion of shell command")
+      (ert-info ("with space")
         (evil-test-buffer
-          "line 1\n[l]ine 2"
-          ((vconcat ":read " name [return]))
-          "line 1\nline 2\n[t]emp file 1\ntemp file 2\n"))
-      (ert-info ("After specified line number")
+          "[l]line 1\nline 2"
+          (":read !echo cmd line 1" [return])
+          "line 1\n[c]md line 1\nline 2"))
+      (ert-info ("without space")
         (evil-test-buffer
-          "[l]ine 1\nline 2\nline 3\nline 4\line 5"
-          ((vconcat ":3read " name [return]))
-          "line 1\nline 2\nline 3\n[t]emp file 1\ntemp file 2\nline 4\line 5"))
-      (ert-info ("After specified line 0")
+          "[l]line 1\nline 2"
+          (":read!echo cmd line 1" [return])
+          "line 1\n[c]md line 1\nline 2")))
+    (ert-info ("Test insertion of shell command without trailing newline")
+      (ert-info ("with space")
         (evil-test-buffer
-          "line 1\nline [2]\nline 3\nline 4\line 5"
-          ((vconcat ":0read " name [return]))
-          "[t]emp file 1\ntemp file 2\nline 1\nline 2\nline 3\nline 4\line 5"))))
-  (ert-info ("Test insertion of file without trailing newline")
-    (evil-with-temp-file name
-        "temp file 1\ntemp file 2"
-      (evil-test-buffer
-        "[l]ine 1\nline 2"
-        ((vconcat ":read " name [return]))
-        "line 1\n[t]emp file 1\ntemp file 2\nline 2")))
-  (ert-info ("Test insertion of shell command")
-    (ert-info ("with space")
-      (evil-test-buffer
-        "[l]line 1\nline 2"
-        (":read !echo cmd line 1" [return])
-        "line 1\n[c]md line 1\nline 2"))
-    (ert-info ("without space")
-      (evil-test-buffer
-        "[l]line 1\nline 2"
-        (":read!echo cmd line 1" [return])
-        "line 1\n[c]md line 1\nline 2")))
-  (ert-info ("Test insertion of shell command without trailing newline")
-    (ert-info ("with space")
-      (evil-test-buffer
-        "[l]line 1\nline 2"
-        (":read !echo -n cmd line 1" [return])
-        "line 1\n[c]md line 1\nline 2"))
-    (ert-info ("without space")
-      (evil-test-buffer
-        "[l]line 1\nline 2"
-        (":read!echo -n cmd line 1" [return])
-        "line 1\n[c]md line 1\nline 2"))))
+          "[l]line 1\nline 2"
+          (":read !echo -n cmd line 1" [return])
+          "line 1\n[c]md line 1\nline 2"))
+      (ert-info ("without space")
+        (evil-test-buffer
+          "[l]line 1\nline 2"
+          (":read!echo -n cmd line 1" [return])
+          "line 1\n[c]md line 1\nline 2")))))
 
 ;;; Utilities
 

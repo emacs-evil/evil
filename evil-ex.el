@@ -18,18 +18,17 @@
 
 (defconst evil-ex-grammar
   '((expression
-     (count command (\? force) (\? argument)
-            #'evil-ex-call-command)
-     ((\? range) command (\? force) (\? argument)
-      #'evil-ex-call-command)
+     (count command (\? argument) #'evil-ex-call-command)
+     ((\? range) command (\? argument) #'evil-ex-call-command)
      (line #'evil-goto-line)
      (sexp #'eval-expression))
     (count
      number)
-    (command
+    (command #'evil-ex-parse-command)
+    (binding
      "[*@<>=:a-zA-Z_-]+\\|!")
     (force
-     ((! space) "!" #'$1))
+     (\? (! space) "!" #'$1))
     (argument
      ((\? space) (\? ".+") #'$2))
     (range
@@ -170,13 +169,13 @@ Otherwise behaves like `delete-backward-char'."
         (when (eq (car-safe expr) 'evil-ex-call-command)
           (setq count (eval (nth 1 expr))
                 cmd (eval (nth 2 expr))
-                force (eval (nth 3 expr))
-                arg (eval (nth 4 expr))
+                arg (eval (nth 3 expr))
                 range (cond
                        ((evil-range-p count)
                         count)
                        ((numberp count)
-                        (evil-ex-range count count))))))
+                        (evil-ex-range count count)))
+                force (and (string-match ".!$" cmd) t))))
       (setq evil-ex-tree tree
             evil-ex-expression expr
             evil-ex-range range
@@ -292,6 +291,8 @@ Otherwise behaves like `delete-backward-char'."
   "Returns the final binding of COMMAND."
   (let ((binding command))
     (when binding
+      (string-match "^\\(.+?\\)\\!?$" binding)
+      (setq binding (match-string 1 binding))
       (while (progn
                (setq binding (cdr (assoc binding evil-ex-commands)))
                (stringp binding)))
@@ -399,42 +400,37 @@ Temporarily disables update functions."
 
 (defun evil-ex-complete-command (cmd force predicate flag)
   "Called to complete a command."
-  (let ((has-force #'(lambda (x)
-                       (let ((bnd (evil-ex-binding x)))
-                         (when bnd
-                           (evil-get-command-property
-                            bnd :ex-force))))))
-    (cond
-     (force
-      (let ((pred #'(lambda (x)
-                      (when (or (null predicate)
-                                (funcall predicate x))
-                        (funcall has-force x)))))
-        (cond
-         ((eq flag nil)
-          (try-completion cmd evil-ex-commands pred))
-         ((eq flag t)
-          (all-completions cmd evil-ex-commands pred))
-         ((eq flag 'lambda)
-          (test-completion cmd evil-ex-commands pred)))))
-     (t
+  (cond
+   (force
+    (let ((pred #'(lambda (x)
+                    (when (or (null predicate)
+                              (funcall predicate x))
+                      (evil-ex-command-force-p x)))))
       (cond
        ((eq flag nil)
-        (let ((result (try-completion cmd evil-ex-commands predicate)))
-          (if (and (eq result t) (funcall has-force cmd))
-              cmd
-            result)))
+        (try-completion cmd evil-ex-commands pred))
        ((eq flag t)
-        (let ((result (all-completions cmd evil-ex-commands predicate))
-              new-result)
-          (mapc #'(lambda (x)
-                    (push x new-result)
-                    (when (funcall has-force cmd)
-                      (push (concat x "!") new-result)))
-                result)
-          new-result))
+        (all-completions cmd evil-ex-commands pred))
        ((eq flag 'lambda)
-        (test-completion cmd evil-ex-commands predicate)))))))
+        (test-completion cmd evil-ex-commands pred)))))
+   (t
+    (cond
+     ((eq flag nil)
+      (let ((result (try-completion cmd evil-ex-commands predicate)))
+        (if (and (eq result t) (evil-ex-command-force-p cmd))
+            cmd
+          result)))
+     ((eq flag t)
+      (let ((result (all-completions cmd evil-ex-commands predicate))
+            new-result)
+        (mapc #'(lambda (x)
+                  (push x new-result)
+                  (when (evil-ex-command-force-p cmd)
+                    (push (concat x "!") new-result)))
+              result)
+        new-result))
+     ((eq flag 'lambda)
+      (test-completion cmd evil-ex-commands predicate))))))
 
 (defun evil-ex-complete-argument (cmd arg predicate flag)
   "Called to complete the argument of a command.
@@ -476,11 +472,12 @@ arguments for programmable completion."
                   (eval evil-ex-expression)
                 (error "Ex: syntax error")))))))))
 
-(defun evil-ex-call-command (range command force argument)
+(defun evil-ex-call-command (range command argument)
   "Execute the given command COMMAND."
   (let* ((count (when (numberp range) range))
          (range (when (evil-range-p range) range))
          (visual (and range (not (evil-visual-state-p))))
+         (force (and (string-match ".!$" command) t))
          (evil-ex-range
           (or range (and count (evil-ex-range count count))))
          (evil-ex-command (evil-ex-completed-binding command))
@@ -621,13 +618,35 @@ START is the start symbol, which defaults to `expression'."
     (eval form)))
 
 (defun evil-ex-parse (string &optional syntax start)
-  "Parse STRING as an Ex command and return an evaluation tree.
+  "Parse STRING as an Ex expression and return an evaluation tree.
 If SYNTAX is non-nil, return a syntax tree instead.
 START is the start symbol, which defaults to `expression'."
   (let* ((start (or start (car-safe (car-safe evil-ex-grammar))))
          (match (evil-parser
                  string start evil-ex-grammar t syntax)))
     (car-safe match)))
+
+(defun evil-ex-parse-command (string)
+  "Parse STRING as an Ex binding."
+  (let ((result (evil-parser string 'binding evil-ex-grammar))
+        force command)
+    (when result
+      (setq command (car-safe result)
+            string (cdr-safe result))
+      ;; parse a following "!" as force only if
+      ;; the command has the property :ex-force t
+      (when (evil-ex-command-force-p command)
+        (setq result (evil-parser string 'force evil-ex-grammar)
+              force (or (car-safe result) "")
+              string (cdr-safe result)
+              command (concat command force)))
+      (cons command string))))
+
+(defun evil-ex-command-force-p (command)
+  "Whether COMMAND accepts the force argument."
+  (let ((binding (evil-ex-completed-binding command t)))
+    (when binding
+      (evil-get-command-property binding :ex-force))))
 
 (defun evil-flatten-syntax-tree (tree)
   "Find all paths from the root of TREE to its leaves.
