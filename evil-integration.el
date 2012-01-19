@@ -63,21 +63,12 @@
 
 ;;; Buffer-menu
 
-(evil-declare-key 'motion Buffer-menu-mode-map
-  "h" 'evil-backward-char
-  "j" 'evil-next-line
-  "k" 'evil-previous-line
-  "l" 'evil-forward-char)
+(evil-add-hjkl-bindings Buffer-menu-mode-map 'motion)
 
 ;; dictionary.el
 
-(eval-after-load 'dictionary
-  '(evil-define-key 'motion dictionary-mode-map
-     "h" 'evil-backward-char
-     "j" 'evil-next-line
-     "k" 'evil-previous-line
-     "l" 'evil-forward-char
-     "?" 'dictionary-help)) ; "h"
+(evil-add-hjkl-bindings Buffer-menu-mode-map 'motion
+  "?" 'dictionary-help) ; "h"
 
 ;;; Dired
 
@@ -85,11 +76,7 @@
   '(progn
      ;; use the standard Dired bindings as a base
      (evil-make-overriding-map dired-mode-map 'normal t)
-     (evil-define-key 'normal dired-mode-map
-       "h" 'evil-backward-char
-       "j" 'evil-next-line
-       "k" 'evil-previous-line
-       "l" 'evil-forward-char
+     (evil-add-hjkl-bindings dired-mode-map 'normal
        "J" 'dired-goto-file       ; "j"
        "K" 'dired-do-kill-lines   ; "k"
        "r" 'dired-do-redisplay))) ; "l"
@@ -129,12 +116,12 @@
 
 ;;; Info
 
-(evil-declare-key 'motion Info-mode-map
+(evil-add-hjkl-bindings Info-mode-map 'motion
+  "0" 'evil-digit-argument-or-evil-beginning-of-line
   (kbd "\M-h") 'Info-help   ; "h"
   "\C-t" 'Info-history-back ; "l"
   "\C-o" 'Info-history-back
   " " 'Info-scroll-up
-  (kbd "RET") 'Info-follow-nearest-node
   "\C-]" 'Info-follow-nearest-node
   (kbd "DEL") 'Info-scroll-down)
 
@@ -175,7 +162,7 @@
 
 ;;; Speedbar
 
-(evil-declare-key 'motion speedbar-key-map
+(evil-add-hjkl-bindings speedbar-key-map 'motion
   "h" 'backward-char
   "j" 'speedbar-next
   "k" 'speedbar-prev

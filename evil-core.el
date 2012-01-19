@@ -763,6 +763,17 @@ and should be quoted as such."
              (remove-hook 'after-load-functions ',func)))
          (add-hook 'after-load-functions ',func))))))
 
+(defmacro evil-add-hjkl-bindings (keymap &optional state &rest bindings)
+  "Add \"h\", \"j\", \"k\", \"l\" bindings to KEYMAP in STATE.
+Add additional BINDINGS if specified."
+  (declare (indent defun))
+  `(evil-declare-key ,state ,keymap
+     "h" (lookup-key evil-motion-state-map "h")
+     "j" (lookup-key evil-motion-state-map "j")
+     "k" (lookup-key evil-motion-state-map "k")
+     "l" (lookup-key evil-motion-state-map "l")
+     ,@bindings))
+
 (put 'evil-define-key 'lisp-indent-function 'defun)
 (put 'evil-set-auxiliary-keymap 'lisp-indent-function 'defun)
 

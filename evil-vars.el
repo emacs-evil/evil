@@ -396,6 +396,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     (comint-mode-map . comint)
     (compilation-mode-map . compile)
     (dictionary-mode-map . dictionary)
+    (Info-mode-map . info)
     (speedbar-key-map . speedbar)
     (speedbar-file-key-map . speedbar)
     (speedbar-buffers-key-map . speedbar))
