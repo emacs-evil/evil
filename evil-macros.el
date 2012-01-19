@@ -502,8 +502,10 @@ if COUNT is positive, and to the left of it if negative.
                 (evil-exit-visual-state))
               (when (region-active-p)
                 (evil-active-region -1)))
-            (if (or (evil-get-command-property ',operator :move-point)
-                    (evil-visual-state-p state))
+            (if (or (evil-visual-state-p state)
+                    (and (evil-get-command-property ',operator :move-point)
+                         evil-operator-range-beginning
+                         evil-operator-range-end))
                 (evil-visual-rotate 'upper-left
                                     evil-operator-range-beginning
                                     evil-operator-range-end
