@@ -2038,6 +2038,14 @@ If no FILE is specified, reload the current buffer from disk."
   (evil-write (point-min) (point-max) 'line file force)
   (evil-quit))
 
+(evil-define-command evil-save-modified-and-close (file &optional force)
+  "Saves the current buffer and closes the window."
+  :repeat nil
+  (interactive "<f><!>")
+  (when (buffer-modified-p)
+    (evil-write (point-min) (point-max) 'line file force))
+  (evil-quit))
+
 (evil-define-operator evil-shell-command
   (beg end command &optional previous)
   "Execute a shell command.
