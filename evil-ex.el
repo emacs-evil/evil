@@ -222,9 +222,9 @@ Otherwise behaves like `delete-backward-char'."
 
 (defun evil-ex-define-cmd (cmd function)
   "Binds the function FUNCTION to the command CMD."
-  (if (string-match "\\[\\(.*\\)\\]" cmd)
-      (let ((abbrev (match-string 1 cmd))
-            (full (replace-match "\\1" nil nil cmd)))
+  (if (string-match "^[^][]*\\(\\[\\(.*\\)\\]\\)[^][]*$" cmd)
+      (let ((abbrev (replace-match "" nil t cmd 1))
+            (full (replace-match "\\2" nil nil cmd 1)))
         (evil-add-to-alist 'evil-ex-commands full function)
         (evil-add-to-alist 'evil-ex-commands abbrev full))
     (evil-add-to-alist 'evil-ex-commands cmd function)))
