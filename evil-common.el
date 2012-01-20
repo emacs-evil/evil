@@ -409,8 +409,12 @@ This ensures that it behaves correctly in Visual state."
 
 (defun evil-delimited-arguments (string &optional num)
   "Parse STRING as a sequence of delimited arguments.
-The first non-blank character in the string is taken to be
-the delimiter. Returns a list of NUM strings."
+The first non-blank character in the string is taken to be the
+delimiter. Returns a list of NUM strings. If two delimiters
+follow directly one after the other, an empty return value is
+generated at the corresponding position in the list. If some
+arguments are missing from STRING, the result list contains nil
+values."
   (save-match-data
     (let ((string (or string ""))
           (count 0) (idx 0)
@@ -427,8 +431,7 @@ the delimiter. Returns a list of NUM strings."
                     idx (length string))
             (setq match (match-string 1 string)
                   idx (match-end 1)))
-          (unless (zerop (length match))
-            (push match result))))
+          (push match result)))
       (while (and num (< (length result) num))
         (push nil result))
       (nreverse result))))
