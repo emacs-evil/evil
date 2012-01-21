@@ -95,7 +95,11 @@ of the syntax.")
   "Enter an Ex command."
   :keep-visual t
   (interactive
-   (when (evil-visual-state-p) '("'<,'>")))
+   (cond
+    ((evil-visual-state-p)
+     '("'<,'>"))
+    (current-prefix-arg
+     `(,(format ".,.+%s" (prefix-numeric-value current-prefix-arg))))))
   (let ((minibuffer-local-completion-map evil-ex-completion-map)
         (evil-ex-current-buffer (current-buffer))
         (evil-ex-previous-command (unless initial-input
