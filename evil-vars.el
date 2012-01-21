@@ -149,24 +149,24 @@ which causes the parenthesis to be highlighted."
   :group 'evil)
 
 (defcustom evil-complete-next-func
-  (lambda (arg)
-    (let ((dabbrev-search-these-buffers-only (list (current-buffer)))
-          dabbrev-case-distinction)
-      (condition-case nil
-          (if (eq last-command this-command)
-              (dabbrev-expand nil)
-            (dabbrev-expand (- (abs (or arg 1)))))
-        (error (dabbrev-expand nil)))))
+  #'(lambda (arg)
+      (let ((dabbrev-search-these-buffers-only (list (current-buffer)))
+            dabbrev-case-distinction)
+        (condition-case nil
+            (if (eq last-command this-command)
+                (dabbrev-expand nil)
+              (dabbrev-expand (- (abs (or arg 1)))))
+          (error (dabbrev-expand nil)))))
   "Completion function used by \
 \\<evil-insert-state-map>\\[evil-complete-next]."
   :type 'function
   :group 'evil)
 
 (defcustom evil-complete-previous-func
-  (lambda (arg)
-    (let ((dabbrev-search-these-buffers-only (list (current-buffer)))
-          dabbrev-case-distinction)
-      (dabbrev-expand arg)))
+  #'(lambda (arg)
+      (let ((dabbrev-search-these-buffers-only (list (current-buffer)))
+            dabbrev-case-distinction)
+        (dabbrev-expand arg)))
   "Completion function used by \
 \\<evil-insert-state-map>\\[evil-complete-previous]."
   :type 'function
@@ -185,11 +185,11 @@ which causes the parenthesis to be highlighted."
   :group 'evil)
 
 (defcustom evil-complete-next-line-func
-  (lambda (arg)
-    (let ((hippie-expand-try-functions-list
-           '(try-expand-line
-             try-expand-line-all-buffers)))
-      (hippie-expand arg)))
+  #'(lambda (arg)
+      (let ((hippie-expand-try-functions-list
+             '(try-expand-line
+               try-expand-line-all-buffers)))
+        (hippie-expand arg)))
   "Minibuffer completion function used by \
 \\<evil-insert-state-map>\\[evil-complete-next-line]."
   :type 'function
@@ -213,9 +213,9 @@ which causes the parenthesis to be highlighted."
 Must be readable by `read-kbd-macro'. For example: \"C-z\"."
   :type 'string
   :group 'evil
-  :set (lambda (sym value)
-         (evil-set-toggle-key value)
-         (set-default sym value)))
+  :set #'(lambda (sym value)
+           (evil-set-toggle-key value)
+           (set-default sym value)))
 
 (defcustom evil-default-state 'normal
   "The default state.

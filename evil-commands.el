@@ -114,11 +114,11 @@ if it is not the first event."
   :type exclusive
   (cond
    (current-prefix-arg
-    (setq this-command 'digit-argument)
-    (call-interactively 'digit-argument))
+    (setq this-command #'digit-argument)
+    (call-interactively #'digit-argument))
    (t
-    (setq this-command 'evil-beginning-of-line)
-    (call-interactively 'evil-beginning-of-line))))
+    (setq this-command #'evil-beginning-of-line)
+    (call-interactively #'evil-beginning-of-line))))
 
 (evil-define-motion evil-first-non-blank ()
   "Move the cursor to the first non-blank character of the current line."
@@ -220,7 +220,7 @@ If BIGWORD is non-nil, move by WORDS."
   :type exclusive
   (let ((move (if bigword #'evil-move-WORD #'evil-move-word))
         (orig (point)))
-    (prog1 (if (eq evil-this-operator 'evil-change)
+    (prog1 (if (eq evil-this-operator #'evil-change)
                (evil-move-end count move)
              (evil-move-beginning count move))
       ;; if we reached the beginning of a new line in Operator-Pending
@@ -346,14 +346,14 @@ If BIGWORD is non-nil, move by WORDS."
   "Move to the end of the COUNT-th next paragraph."
   :jump t
   :type exclusive
-  (evil-move-end count 'forward-paragraph 'backward-paragraph))
+  (evil-move-end count #'forward-paragraph #'backward-paragraph))
 
 (evil-define-motion evil-backward-paragraph (count)
   "Move to the beginning of the COUNT-th previous paragraph."
   :jump t
   :type exclusive
   (evil-move-beginning (- (or count 1))
-                       'forward-paragraph 'backward-paragraph))
+                       #'forward-paragraph #'backward-paragraph))
 
 ;; TODO: this is a very basic implementation considering only
 ;; (), [], {}, and not blocks like #if ... #endif
@@ -849,15 +849,15 @@ or line COUNT to the top of the window."
   "Select a word.
 If BIGWORD is non-nil, select a WORD."
   (evil-an-object-range count (if bigword
-                                  'evil-move-WORD
-                                'evil-move-word)))
+                                  #'evil-move-WORD
+                                #'evil-move-word)))
 
 (evil-define-text-object evil-inner-word (count &optional bigword)
   "Select inner word.
 If BIGWORD is non-nil, select inner WORD."
   (evil-inner-object-range count (if bigword
-                                     'evil-move-WORD
-                                   'evil-move-word)))
+                                     #'evil-move-WORD
+                                   #'evil-move-word)))
 
 (evil-define-text-object evil-a-WORD (count)
   "Select a WORD."
@@ -869,21 +869,21 @@ If BIGWORD is non-nil, select inner WORD."
 
 (evil-define-text-object evil-a-sentence (count)
   "Select a sentence."
-  (evil-an-object-range count 'evil-move-sentence nil nil t))
+  (evil-an-object-range count #'evil-move-sentence nil nil t))
 
 (evil-define-text-object evil-inner-sentence (count)
   "Select inner sentence."
-  (evil-inner-object-range count 'evil-move-sentence))
+  (evil-inner-object-range count #'evil-move-sentence))
 
 (evil-define-text-object evil-a-paragraph (count)
   "Select a paragraph."
   :type line
-  (evil-an-object-range count 'evil-move-paragraph nil nil t))
+  (evil-an-object-range count #'evil-move-paragraph nil nil t))
 
 (evil-define-text-object evil-inner-paragraph (count)
   "Select inner paragraph."
   :type line
-  (evil-inner-object-range count 'evil-move-paragraph))
+  (evil-inner-object-range count #'evil-move-paragraph))
 
 (evil-define-text-object evil-a-paren (count)
   "Select a parenthesis."
@@ -966,7 +966,7 @@ If BIGWORD is non-nil, select inner WORD."
   (cond
    ((and (evil-called-interactively-p)
          (eq last-command this-command))
-    (setq this-command 'evil-a-tag)
+    (setq this-command #'evil-a-tag)
     (evil-a-tag count))
    (t
     (evil-xml-range count t))))
@@ -1025,7 +1025,8 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
       (evil-exit-visual-state))
     (cond
      ((eq type 'block)
-      (evil-apply-on-block 'evil-delete-line beg end nil register yank-handler))
+      (evil-apply-on-block #'evil-delete-line
+                           beg end nil register yank-handler))
      ((eq type 'line)
       (evil-delete beg end type register yank-handler))
      (t
@@ -1065,7 +1066,7 @@ If TYPE is `line', insertion starts on an empty line.
 If TYPE is `block', the inserted text in inserted at each line
 of the block."
   (interactive "<R><x><y>")
-  (let ((delete-func (or delete-func 'evil-delete))
+  (let ((delete-func (or delete-func #'evil-delete))
         (nlines (1+ (- (line-number-at-pos end)
                        (line-number-at-pos beg)))))
     (funcall delete-func beg end type register yank-handler)
@@ -1081,14 +1082,14 @@ of the block."
   "Change to end of line."
   :motion evil-end-of-line
   (interactive "<R><x><y>")
-  (evil-change beg end type register yank-handler 'evil-delete-line))
+  (evil-change beg end type register yank-handler #'evil-delete-line))
 
 (evil-define-operator evil-change-whole-line
   (beg end type register yank-handler)
   "Change whole line."
   :motion evil-line
   (interactive "<R><x>")
-  (evil-change beg end type register yank-handler 'evil-delete-whole-line))
+  (evil-change beg end type register yank-handler #'evil-delete-whole-line))
 
 (evil-define-operator evil-substitute (beg end type register)
   "Change a character."
@@ -1099,20 +1100,20 @@ of the block."
 (evil-define-operator evil-upcase (beg end type)
   "Convert text to upper case."
   (if (eq type 'block)
-      (evil-apply-on-block 'evil-upcase beg end)
+      (evil-apply-on-block #'evil-upcase beg end)
     (upcase-region beg end)))
 
 (evil-define-operator evil-downcase (beg end type)
   "Convert text to lower case."
   (if (eq type 'block)
-      (evil-apply-on-block 'evil-downcase beg end)
+      (evil-apply-on-block #'evil-downcase beg end)
     (downcase-region beg end)))
 
 (evil-define-operator evil-invert-case (beg end type)
   "Invert case of text."
   (let (char)
     (if (eq type 'block)
-        (evil-apply-on-block 'evil-invert-case beg end)
+        (evil-apply-on-block #'evil-invert-case beg end)
       (save-excursion
         (goto-char beg)
         (while (< beg end)
@@ -1127,7 +1128,7 @@ of the block."
   "Invert case of character."
   :motion evil-forward-char
   (if (eq type 'block)
-      (evil-apply-on-block 'evil-invert-case beg end)
+      (evil-apply-on-block #'evil-invert-case beg end)
     (evil-invert-case beg end)
     (when evil-this-motion
       (goto-char end))))
@@ -1135,7 +1136,7 @@ of the block."
 (evil-define-operator evil-rot13 (beg end type)
   "ROT13 encrypt text."
   (if (eq type 'block)
-      (evil-apply-on-block 'evil-rot13 beg end)
+      (evil-apply-on-block #'evil-rot13 beg end)
     (rot13-region beg end)))
 
 (evil-define-operator evil-join (beg end)
@@ -1224,7 +1225,7 @@ See also `evil-shift-left'."
   (when char
     (if (eq type 'block)
         (save-excursion
-          (evil-apply-on-block 'evil-replace beg end nil char))
+          (evil-apply-on-block #'evil-replace beg end nil char))
       (goto-char beg)
       (while (< (point) end)
         (if (eq (char-after) ?\n)
@@ -1258,7 +1259,7 @@ The return value is the yanked text."
           (if (functionp yank-handler)
               (let ((evil-paste-count count)
                     ;; for non-interactive use
-                    (this-command 'evil-paste-before))
+                    (this-command #'evil-paste-before))
                 (push-mark opoint t)
                 (insert-for-yank text))
             ;; no yank-handler, default
@@ -1267,7 +1268,7 @@ The return value is the yanked text."
             (dotimes (i (or count 1))
               (insert-for-yank text))
             (setq evil-last-paste
-                  (list 'evil-paste-before
+                  (list #'evil-paste-before
                         count
                         opoint
                         opoint    ; beg
@@ -1298,7 +1299,8 @@ The return value is the yanked text."
         (when text
           (if (functionp yank-handler)
               (let ((evil-paste-count count)
-                    (this-command 'evil-paste-after)) ; for non-interactive use
+                    ;; for non-interactive use
+                    (this-command #'evil-paste-after))
                 (insert-for-yank text))
             ;; no yank-handler, default
             (set-text-properties 0 (length text) nil text)
@@ -1312,7 +1314,7 @@ The return value is the yanked text."
               (dotimes (i (or count 1))
                 (insert-for-yank text))
               (setq evil-last-paste
-                    (list 'evil-paste-after
+                    (list #'evil-paste-after
                           count
                           opoint
                           beg       ; beg
@@ -1344,7 +1346,7 @@ The return value is the yanked text."
                      (evil-visual-type))
         (unless register
           (kill-new text))
-        (when (and (eq yank-handler 'evil-yank-line-handler)
+        (when (and (eq yank-handler #'evil-yank-line-handler)
                    (not (eq (evil-visual-type) 'line)))
           (newline))
         (evil-normal-state))
@@ -1623,11 +1625,12 @@ on the current line. The insertion will be repeated COUNT times."
     (beginning-of-line))
   (setq evil-insert-count count
         evil-insert-lines nil
-        evil-insert-vcount (and vcount
-                                (> vcount 1)
-                                (list (line-number-at-pos)
-                                      #'evil-first-non-blank
-                                      vcount)))
+        evil-insert-vcount
+        (and vcount
+             (> vcount 1)
+             (list (line-number-at-pos)
+                   #'evil-first-non-blank
+                   vcount)))
   (evil-insert-state 1))
 
 (defun evil-append-line (count &optional vcount)
@@ -1637,11 +1640,12 @@ The insertion will be repeated COUNT times."
   (end-of-line)
   (setq evil-insert-count count
         evil-insert-lines nil
-        evil-insert-vcount (and vcount
-                                (> vcount 1)
-                                (list (line-number-at-pos)
-                                      #'end-of-line
-                                      vcount)))
+        evil-insert-vcount
+        (and vcount
+             (> vcount 1)
+             (list (line-number-at-pos)
+                   #'end-of-line
+                   vcount)))
   (evil-insert-state 1))
 
 (defun evil-insert-digraph (count digraph)
@@ -1681,7 +1685,7 @@ ARG is the number of lines to move backward."
    (cond
     ;; if a prefix argument was given, repeat it for subsequent calls
     ((and (null current-prefix-arg)
-          (eq last-command 'evil-copy-from-above))
+          (eq last-command #'evil-copy-from-above))
      (setq current-prefix-arg last-prefix-arg)
      (list (prefix-numeric-value current-prefix-arg)))
     (t
@@ -1695,7 +1699,7 @@ ARG is the number of lines to move forward."
   (interactive
    (cond
     ((and (null current-prefix-arg)
-          (eq last-command 'evil-copy-from-below))
+          (eq last-command #'evil-copy-from-below))
      (setq current-prefix-arg last-prefix-arg)
      (list (prefix-numeric-value current-prefix-arg)))
     (t
@@ -2111,8 +2115,8 @@ the previous shell command is executed instead."
           (flag (pop args))
           (completions
            (append '("nil")
-                   (mapcar (lambda (state)
-                             (format "%s" (car state)))
+                   (mapcar #'(lambda (state)
+                               (format "%s" (car state)))
                            evil-state-properties))))
       (when arg
         (cond
@@ -2770,17 +2774,17 @@ if the previous state was Emacs state."
   ;; what we really want is a closure
   (setq evil-old-move-cursor-back evil-move-cursor-back
         evil-move-cursor-back nil)
-  (add-hook 'post-command-hook 'evil-execute-in-normal-state-hook))
+  (add-hook 'post-command-hook #'evil-execute-in-normal-state-hook))
 
 (defun evil-execute-in-normal-state-hook ()
   "Return to Insert state."
-  (unless (eq this-command 'evil-execute-in-normal-state)
+  (unless (eq this-command #'evil-execute-in-normal-state)
     (let (evil-move-cursor-back)
       (evil-insert-state))
     (setq evil-move-cursor-back evil-old-move-cursor-back
           evil-old-move-cursor-back nil)
     (remove-hook 'post-command-hook
-                 'evil-execute-in-normal-state-hook)))
+                 #'evil-execute-in-normal-state-hook)))
 (put 'evil-execute-in-normal-state-hook 'permanent-local-hook t)
 
 ;; TODO: this will probably not work well with the repeat-system.
@@ -2796,7 +2800,7 @@ Otherwise send [escape]."
     (setq prefix-arg arg))
   ;; disable interception for the next key sequence
   (evil-esc-mode -1)
-  (add-hook 'pre-command-hook 'evil-turn-on-esc-mode nil t))
+  (add-hook 'pre-command-hook #'evil-turn-on-esc-mode nil t))
 
 (provide 'evil-commands)
 

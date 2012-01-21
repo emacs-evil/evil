@@ -12,15 +12,16 @@ AKA \"Command\" state."
   :exit-hook (evil-repeat-start-hook)
   (cond
    ((evil-normal-state-p)
-    (add-hook 'post-command-hook 'evil-normal-post-command nil t))
+    (add-hook 'post-command-hook #'evil-normal-post-command nil t))
    (t
-    (remove-hook 'post-command-hook 'evil-normal-post-command t))))
+    (remove-hook 'post-command-hook #'evil-normal-post-command t))))
 
-(defun evil-normal-post-command ()
+(defun evil-normal-post-command (&optional command)
   "Reset command loop variables in Normal state.
 Also prevent point from reaching the end of the line.
 If the region is activated, enter Visual state."
   (unless (evil-initializing-p)
+    (setq command (or command this-command))
     (when (evil-normal-state-p)
       (setq evil-this-type nil
             evil-this-operator nil
@@ -28,7 +29,7 @@ If the region is activated, enter Visual state."
             evil-this-motion-count nil
             evil-inhibit-operator nil
             evil-inhibit-operator-value nil)
-      (unless (eq this-command 'evil-use-register)
+      (unless (eq command #'evil-use-register)
         (setq evil-this-register nil))
       (evil-adjust-cursor)
       (when (region-active-p)
@@ -47,11 +48,11 @@ If the region is activated, enter Visual state."
   :input-method t
   (cond
    ((evil-insert-state-p)
-    (add-hook 'pre-command-hook 'evil-insert-repeat-hook)
+    (add-hook 'pre-command-hook #'evil-insert-repeat-hook)
     (unless evil-want-fine-undo
       (evil-start-undo-step t)))
    (t
-    (remove-hook 'pre-command-hook 'evil-insert-repeat-hook)
+    (remove-hook 'pre-command-hook #'evil-insert-repeat-hook)
     (setq evil-insert-repeat-info evil-repeat-info)
     (evil-set-marker ?^ nil t)
     (unless evil-want-fine-undo
@@ -62,7 +63,7 @@ If the region is activated, enter Visual state."
 (defun evil-insert-repeat-hook ()
   "Record insertion keys in `evil-insert-repeat-info'."
   (setq evil-insert-repeat-info (last evil-repeat-info))
-  (remove-hook 'pre-command-hook 'evil-insert-repeat-hook))
+  (remove-hook 'pre-command-hook #'evil-insert-repeat-hook))
 (put 'evil-insert-repeat-hook 'permanent-local-hook t)
 
 (defun evil-cleanup-insert-state ()
@@ -200,9 +201,9 @@ the selection is enabled.
       (evil-visual-highlight))
      (t
       (evil-visual-make-region (point) (point) evil-visual-char)))
-    (add-hook 'pre-command-hook 'evil-visual-pre-command nil t)
-    (add-hook 'post-command-hook 'evil-visual-post-command nil t)
-    (add-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook nil t))
+    (add-hook 'pre-command-hook #'evil-visual-pre-command nil t)
+    (add-hook 'post-command-hook #'evil-visual-post-command nil t)
+    (add-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook nil t))
    (t
     ;; Postpone deactivation of region if next state is Insert.
     ;; This gives certain insertion commands (auto-pairing characters,
@@ -210,19 +211,19 @@ the selection is enabled.
     (if (and (eq evil-next-state 'insert)
              (eq evil-visual-selection 'char))
         (add-hook 'evil-normal-state-entry-hook
-                  'evil-visual-deactivate-hook nil t)
+                  #'evil-visual-deactivate-hook nil t)
       (evil-visual-deactivate-hook))
     (setq evil-visual-region-expanded nil)
-    (remove-hook 'pre-command-hook 'evil-visual-pre-command t)
-    (remove-hook 'post-command-hook 'evil-visual-post-command t)
-    (remove-hook 'deactivate-mark-hook 'evil-visual-deactivate-hook t)
+    (remove-hook 'pre-command-hook #'evil-visual-pre-command t)
+    (remove-hook 'post-command-hook #'evil-visual-post-command t)
+    (remove-hook 'deactivate-mark-hook #'evil-visual-deactivate-hook t)
     (evil-visual-highlight -1))))
 
 (defun evil-visual-pre-command (&optional command)
-  "Run before each command in Visual state.
-Unless COMMAND is a motion, expand the region to the selection."
-  (setq command (or command this-command))
+  "Run before each COMMAND in Visual state.
+Expand the region to the selection unless COMMAND is a motion."
   (when (evil-visual-state-p)
+    (setq command (or command this-command))
     (unless (evil-get-command-property command :keep-visual)
       (evil-visual-expand-region
        ;; exclude final newline from linewise selection
@@ -231,14 +232,15 @@ Unless COMMAND is a motion, expand the region to the selection."
             (evil-get-command-property command :exclude-newline))))))
 (put 'evil-visual-pre-command 'permanent-local-hook t)
 
-(defun evil-visual-post-command ()
-  "Run after each command in Visual state.
-If `this-command' was a motion, refresh the selection;
+(defun evil-visual-post-command (&optional command)
+  "Run after each COMMAND in Visual state.
+If COMMAND is a motion, refresh the selection;
 otherwise exit Visual state."
   (when (evil-visual-state-p)
+    (setq command (or command this-command))
     (cond
      ((or quit-flag
-          (eq this-command 'keyboard-quit)
+          (eq command #'keyboard-quit)
           ;; Is `mark-active' nil for an unexpanded region?
           (and (not evil-visual-region-expanded)
                (not (region-active-p))
@@ -252,17 +254,16 @@ otherwise exit Visual state."
       (evil-visual-highlight)))))
 (put 'evil-visual-post-command 'permanent-local-hook t)
 
-(defun evil-visual-deactivate-hook ()
+(defun evil-visual-deactivate-hook (&optional command)
   "Deactivate the region and restore Transient Mark mode."
+  (setq command (or command this-command))
   (remove-hook 'deactivate-mark-hook
-               'evil-visual-deactivate-hook t)
+               #'evil-visual-deactivate-hook t)
   (remove-hook 'evil-normal-state-entry-hook
-               'evil-visual-deactivate-hook t)
+               #'evil-visual-deactivate-hook t)
   (cond
-   ((and (evil-visual-state-p)
-         this-command
-         (not (evil-get-command-property
-               this-command :keep-visual)))
+   ((and (evil-visual-state-p) command
+         (not (evil-get-command-property command :keep-visual)))
     (evil-exit-visual-state)
     (evil-active-region -1)
     (evil-transient-restore))
@@ -457,7 +458,7 @@ With negative ARG, disable highlighting."
       (delete-overlay evil-visual-overlay)
       (setq evil-visual-overlay nil))
     (when evil-visual-block-overlays
-      (mapc 'delete-overlay evil-visual-block-overlays)
+      (mapc #'delete-overlay evil-visual-block-overlays)
       (setq evil-visual-block-overlays nil)))
    ((eq evil-visual-selection 'block)
     (when evil-visual-overlay
@@ -615,8 +616,8 @@ selection type and is contained in the visual selection."
 
 (defun evil-visual-alist ()
   "Return an association list from types to selection symbols."
-  (mapcar (lambda (e)
-            (cons (symbol-value (cdr-safe e)) (cdr-safe e)))
+  (mapcar #'(lambda (e)
+              (cons (symbol-value (cdr-safe e)) (cdr-safe e)))
           evil-visual-alist))
 
 (defun evil-visual-selection-function (selection)
@@ -721,10 +722,10 @@ CORNER defaults to `upper-left'."
   (cond
    ((evil-replace-state-p)
     (overwrite-mode 1)
-    (add-hook 'pre-command-hook 'evil-replace-pre-command nil t))
+    (add-hook 'pre-command-hook #'evil-replace-pre-command nil t))
    (t
     (overwrite-mode -1)
-    (remove-hook 'pre-command-hook 'evil-replace-pre-command t)
+    (remove-hook 'pre-command-hook #'evil-replace-pre-command t)
     (when evil-move-cursor-back
       (evil-move-cursor-back))))
   (setq evil-replace-alist nil))

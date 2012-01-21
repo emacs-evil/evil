@@ -2,18 +2,18 @@
 
 (require 'evil-maps)
 
-(mapc 'evil-declare-motion evil-motions)
-(mapc 'evil-declare-not-repeat
+(mapc #'evil-declare-motion evil-motions)
+(mapc #'evil-declare-not-repeat
       '(digit-argument
         negative-argument
         universal-argument
         universal-argument-minus
         universal-argument-other-key
         what-cursor-position))
-(mapc 'evil-declare-change-repeat
+(mapc #'evil-declare-change-repeat
       '(dabbrev-expand
         hippie-expand))
-(mapc 'evil-declare-abort-repeat
+(mapc #'evil-declare-abort-repeat
       '(balance-windows
         eval-expression
         execute-extended-command
@@ -28,8 +28,8 @@
         split-window-horizontally
         split-window-vertically))
 
-(evil-set-type 'previous-line 'line)
-(evil-set-type 'next-line 'line)
+(evil-set-type #'previous-line 'line)
+(evil-set-type #'next-line 'line)
 
 (dolist (cmd evil-visual-newline-commands)
   (evil-add-command-properties cmd :exclude-newline t))
@@ -83,7 +83,7 @@
 
 (eval-after-load 'wdired
   '(progn
-     (add-hook 'wdired-mode-hook 'evil-change-to-initial-state)
+     (add-hook 'wdired-mode-hook #'evil-change-to-initial-state)
      (defadvice wdired-change-to-dired-mode (after evil activate)
        (evil-change-to-initial-state nil t))))
 
@@ -107,7 +107,7 @@
        (define-key evil-normal-state-map "zr" 'hs-show-all)
        (define-key evil-normal-state-map "zo" 'hs-show-block)
        (define-key evil-normal-state-map "zc" 'hs-hide-block))
-     (add-hook 'hs-minor-mode-hook 'evil-hs-setup)))
+     (add-hook 'hs-minor-mode-hook #'evil-hs-setup)))
 
 ;; load goto-chg.el if available
 (condition-case nil

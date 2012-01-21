@@ -69,7 +69,7 @@ to display in the echo area."
   (let ((lazy-highlight-initial-delay 0)
         (isearch-search-fun-function 'evil-isearch-function)
         (isearch-case-fold-search case-fold-search)
-        (disable (lambda (&optional arg) (evil-flash-hook t))))
+        (disable #'(lambda (&optional arg) (evil-flash-hook t))))
     (when evil-flash-timer
       (cancel-timer evil-flash-timer))
     (unless (or (null string)
@@ -84,15 +84,15 @@ to display in the echo area."
         (isearch-lazy-highlight-new-loop)
         (unless isearch-lazy-highlight-overlays
           (isearch-lazy-highlight-update)))
-      (add-hook 'pre-command-hook 'evil-flash-hook nil t)
-      (add-hook 'evil-operator-state-exit-hook 'evil-flash-hook nil t)
-      (add-hook 'pre-command-hook 'evil-clean-isearch-overlays nil t)
+      (add-hook 'pre-command-hook #'evil-flash-hook nil t)
+      (add-hook 'evil-operator-state-exit-hook #'evil-flash-hook nil t)
+      (add-hook 'pre-command-hook #'evil-clean-isearch-overlays nil t)
       (setq evil-flash-timer
             (run-at-time evil-flash-delay nil disable)))))
 
 (defun evil-clean-isearch-overlays ()
   "Clean isearch overlays unless `this-command' is search."
-  (remove-hook 'pre-command-hook 'evil-clean-isearch-overlays t)
+  (remove-hook 'pre-command-hook #'evil-clean-isearch-overlays t)
   (unless (memq this-command
                 '(evil-search-backward
                   evil-search-forward
@@ -122,8 +122,8 @@ Disable anyway if FORCE is t."
     (lazy-highlight-cleanup t)
     (when evil-flash-timer
       (cancel-timer evil-flash-timer)))
-  (remove-hook 'pre-command-hook 'evil-flash-hook t)
-  (remove-hook 'evil-operator-state-exit-hook 'evil-flash-hook t))
+  (remove-hook 'pre-command-hook #'evil-flash-hook t)
+  (remove-hook 'evil-operator-state-exit-hook #'evil-flash-hook t))
 (put 'evil-flash-hook 'permanent-local-hook t)
 
 (defun evil-search-function (&optional forward regexp-p wrap)
@@ -206,8 +206,8 @@ one more than the current position."
   "Search for symbol near point.
 If FORWARD is nil, search backward, otherwise forward."
   (let ((string (car-safe regexp-search-ring))
-        (move (if forward 'forward-char 'backward-char))
-        (end (if forward 'eobp 'bobp)))
+        (move (if forward #'forward-char #'backward-char))
+        (end (if forward #'eobp #'bobp)))
     (setq isearch-forward forward)
     (cond
      ((and (memq last-command
@@ -227,8 +227,8 @@ If FORWARD is nil, search backward, otherwise forward."
   "Return symbol near point as a string.
 If FORWARD is nil, search backward, otherwise forward.
 Returns nil if nothing is found."
-  (let ((move (if forward 'forward-char 'backward-char))
-        (end (if forward 'eobp 'bobp))
+  (let ((move (if forward #'forward-char #'backward-char))
+        (end (if forward #'eobp #'bobp))
         string)
     (save-excursion
       (setq string (thing-at-point 'symbol))

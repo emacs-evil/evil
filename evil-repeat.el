@@ -506,7 +506,7 @@ If COUNT is negative, this is a more recent kill."
   (interactive (list (prefix-numeric-value current-prefix-arg)
                      (not evil-repeat-move-cursor)))
   (cond
-   ((not (and (eq last-command 'evil-repeat)
+   ((not (and (eq last-command #'evil-repeat)
               evil-last-repeat))
     (error "Previous command was not evil-repeat: %s" last-command))
    (save-point
@@ -527,7 +527,7 @@ If COUNT is negative, this is a more recent kill."
         (ring-insert evil-repeat-ring
                      (ring-remove evil-repeat-ring)))
       (setq count (1+ count)))
-    (setq this-command 'evil-repeat)
+    (setq this-command #'evil-repeat)
     (evil-repeat (cadr evil-last-repeat)))))
 
 (evil-define-command evil-repeat-pop-next (count &optional save-point)

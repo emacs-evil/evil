@@ -100,7 +100,7 @@ The return value is a list (BEG END TYPE)."
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive (cdr (pop body))))
     (when interactive
-      (setq interactive (apply 'evil-interactive-form interactive))
+      (setq interactive (apply #'evil-interactive-form interactive))
       (setq keys (evil-concat-plists keys (cdr-safe interactive))
             interactive (car-safe interactive)))
     ;; macro expansion
@@ -204,11 +204,11 @@ BACKWARD is a function which moves to the beginning.
 If one is unspecified, the other is used with a negative argument."
   (let* ((count (or count 1))
          (backward (or backward
-                       (lambda (count)
-                         (funcall forward (- count)))))
+                       #'(lambda (count)
+                           (funcall forward (- count)))))
          (forward (or forward
-                      (lambda (count)
-                        (funcall backward (- count)))))
+                      #'(lambda (count)
+                          (funcall backward (- count)))))
          (opoint (point)))
     (cond
      ((< count 0)
@@ -249,11 +249,11 @@ If INCLUSIVE is non-nil, then point is placed at the last character
 of the object; otherwise it is placed at the end of the object."
   (let* ((count (or count 1))
          (backward (or backward
-                       (lambda (count)
-                         (funcall forward (- count)))))
+                       #'(lambda (count)
+                           (funcall forward (- count)))))
          (forward (or forward
-                      (lambda (count)
-                        (funcall backward (- count)))))
+                      #'(lambda (count)
+                          (funcall backward (- count)))))
          (opoint (point)))
     (cond
      ((< count 0)
@@ -467,7 +467,7 @@ if COUNT is positive, and to the left of it if negative.
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive (cdr-safe (pop body))))
     ;; transform extended interactive specs
-    (setq interactive (apply 'evil-interactive-form interactive))
+    (setq interactive (apply #'evil-interactive-form interactive))
     (setq keys (evil-concat-plists keys (cdr-safe interactive))
           interactive (car-safe interactive))
     ;; macro expansion
@@ -481,7 +481,7 @@ if COUNT is positive, and to the left of it if negative.
                 (when (evil-has-command-property-p ',operator :motion)
                   ;; :motion nil is equivalent to :motion undefined
                   (or (evil-get-command-property ',operator :motion)
-                      'undefined)))
+                      #'undefined)))
                (evil-operator-range-type
                 (evil-get-command-property ',operator :type))
                (orig (point))
@@ -527,7 +527,7 @@ a predefined motion may be specified with MOTION. Likewise,
 a predefined type may be specified with TYPE."
   (let ((motion (or evil-operator-range-motion
                     (when (and (fboundp 'evil-ex-p) (evil-ex-p))
-                      'evil-line)))
+                      #'evil-line)))
         (type evil-operator-range-type)
         (range (evil-range (point) (point)))
         command count modifier)
@@ -574,7 +574,7 @@ a predefined type may be specified with TYPE."
             (when (fboundp 'evil-repeat-abort)
               (evil-repeat-abort))
             (setq quit-flag t))
-           ((eq motion 'undefined)
+           ((eq motion #'undefined)
             (setq range (if return-type '(nil nil nil) '(nil nil))
                   motion nil))
            (evil-repeat-count
@@ -671,7 +671,7 @@ with PROPERTIES.\n\n%s%s" type string doc)
                   (save-excursion
                     (evil-sort beg end)
                     (unless (plist-get properties :expanded)
-                      (setq range (apply 'evil-expand
+                      (setq range (apply #'evil-expand
                                          beg end type properties)
                             beg (evil-range-beginning range)
                             end (evil-range-end range)
@@ -679,7 +679,7 @@ with PROPERTIES.\n\n%s%s" type string doc)
                             plist (evil-range-properties range))
                       (setq properties
                             (evil-concat-plists properties plist)))
-                    (or (apply ',func beg end
+                    (or (apply #',func beg end
                                (when ,(> (length args) 2)
                                  properties))
                         ""))))))
@@ -699,10 +699,10 @@ with PROPERTIES.\n\n%s%s" sym type string doc)
                             (plist-put properties
                                        :expanded
                                        ,(eq key :expand))))
-                    (setq range (or (apply ',func beg end
+                    (setq range (or (apply #',func beg end
                                            (when ,(> (length args) 2)
                                              properties))
-                                    (apply 'evil-range
+                                    (apply #'evil-range
                                            beg end type properties))
                           beg (evil-range-beginning range)
                           end (evil-range-end range)
@@ -710,7 +710,7 @@ with PROPERTIES.\n\n%s%s" sym type string doc)
                           plist (evil-range-properties range))
                     (setq properties
                           (evil-concat-plists properties plist))
-                    (apply 'evil-range beg end type properties)))))))
+                    (apply #'evil-range beg end type properties)))))))
          t)))
     ;; :one-to-one requires both or neither of :expand and :contract
     (when (plist-get plist :expand)

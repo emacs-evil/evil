@@ -153,7 +153,7 @@ Otherwise behaves like `delete-backward-char'."
          arg arg-handler arg-type cmd count expr force func range tree)
     (cond
      ((commandp (setq cmd (lookup-key evil-ex-map string)))
-      (setq evil-ex-expression `(call-interactively ',cmd))
+      (setq evil-ex-expression `(call-interactively #',cmd))
       (when (minibufferp)
         (exit-minibuffer)))
      (t
@@ -656,13 +656,13 @@ for the corresponding string index (counted from zero)."
   (let* ((result nil)
          (traverse nil)
          (traverse
-          (lambda (tree path)
-            (if (stringp tree)
-                (dotimes (char (length tree))
-                  (push path result))
-              (let ((path (cons (car tree) path)))
-                (dolist (subtree (cdr tree))
-                  (funcall traverse subtree path)))))))
+          #'(lambda (tree path)
+              (if (stringp tree)
+                  (dotimes (char (length tree))
+                    (push path result))
+                (let ((path (cons (car tree) path)))
+                  (dolist (subtree (cdr tree))
+                    (funcall traverse subtree path)))))))
     (funcall traverse tree nil)
     (nreverse result)))
 
@@ -876,25 +876,25 @@ The following symbols have reserved meanings within a grammar:
       (when (and pair func (not syntax))
         (setq result (car pair))
         (let* ((dexp
-                (lambda (obj)
-                  (when (symbolp obj)
-                    (let ((str (symbol-name obj)))
-                      (when (string-match "\\$\\([0-9]+\\)" str)
-                        (string-to-number (match-string 1 str)))))))
+                #'(lambda (obj)
+                    (when (symbolp obj)
+                      (let ((str (symbol-name obj)))
+                        (when (string-match "\\$\\([0-9]+\\)" str)
+                          (string-to-number (match-string 1 str)))))))
                ;; traverse a tree for dollar expressions
                (dval nil)
                (dval
-                (lambda (obj)
-                  (if (listp obj)
-                      (mapcar dval obj)
-                    (let ((num (funcall dexp obj)))
-                      (if num
-                          (if (not (listp result))
-                              result
-                            (if (eq num 0)
-                                `(list ,@result)
-                              (nth (1- num) result)))
-                        obj))))))
+                #'(lambda (obj)
+                    (if (listp obj)
+                        (mapcar dval obj)
+                      (let ((num (funcall dexp obj)))
+                        (if num
+                            (if (not (listp result))
+                                result
+                              (if (eq num 0)
+                                  `(list ,@result)
+                                (nth (1- num) result)))
+                          obj))))))
           (cond
            ((null func)
             (setq result nil))

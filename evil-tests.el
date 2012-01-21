@@ -70,11 +70,11 @@ with `M-x evil-tests-run'"))
   (let ((elp-use-standard-output (not interactive)))
     (setq tests
           (or (null tests)
-              `(or ,@(mapcar (lambda (test)
-                               (or (null test)
-                                   (and (memq test '(evil t)) t)
-                                   `(or (tag ,test)
-                                        ,(format "^%s$" test))))
+              `(or ,@(mapcar #'(lambda (test)
+                                 (or (null test)
+                                     (and (memq test '(evil t)) t)
+                                     `(or (tag ,test)
+                                          ,(format "^%s$" test))))
                              tests))))
     (cond
      (interactive
@@ -170,29 +170,27 @@ Remaining forms are evaluated as-is.
                (buffer-enable-undo)
                ;; parse remaining forms
                ,@(mapcar
-                  (lambda (form)
-                    (cond
-                     ((stringp form)
-                      `(evil-test-buffer-string
-                        ,form
-                        ',point-start ',point-end
-                        ',visual-start ',visual-end))
-                     ((or (stringp (car-safe form))
-                          (vectorp (car-safe form))
-                          (memq (car-safe (car-safe form))
-                                '(kbd vconcat)))
-                      ;; list of strings and vectors: it would be more
-                      ;; intuitive to do (mapc 'execute-kbd-macro form),
-                      ;; but we need to execute everything as a single
-                      ;; sequence for command loop hooks to work properly
-                      `(execute-kbd-macro
-                        (apply 'vconcat
-                               (mapcar 'listify-key-sequence
-                                       (mapcar 'eval ',form)))))
-                     ((memq (car-safe form) '(kbd vconcat))
-                      `(execute-kbd-macro ,form))
-                     (t
-                      form)))
+                  #'(lambda (form)
+                      (cond
+                       ((stringp form)
+                        `(evil-test-buffer-string
+                          ,form
+                          ',point-start ',point-end
+                          ',visual-start ',visual-end))
+                       ((or (stringp (car-safe form))
+                            (vectorp (car-safe form))
+                            (memq (car-safe (car-safe form))
+                                  '(kbd vconcat)))
+                        ;; we need to execute everything as a single
+                        ;; sequence for command loop hooks to work
+                        `(execute-kbd-macro
+                          (apply #'vconcat
+                                 (mapcar #'listify-key-sequence
+                                         (mapcar #'eval ',form)))))
+                       ((memq (car-safe form) '(kbd vconcat))
+                        `(execute-kbd-macro ,form))
+                       (t
+                        form)))
                   body)))
          (and (buffer-name buffer)
               (kill-buffer buffer))))))
@@ -232,7 +230,7 @@ VISUAL-START and VISUAL-END default to < and >."
               ;; if the cursor isn't specified, just test the whole buffer
               (save-excursion
                 (goto-char (point-min))
-                (evil-test-text nil string 'bobp 'eobp)))
+                (evil-test-text nil string #'bobp #'eobp)))
             (when selection
               (evil-test-selection selection))))
       (kill-buffer marker-buffer))))
@@ -257,7 +255,7 @@ VISUAL is the Visual selection: it defaults to `char'."
       (prog1 buffer
         (evil-change-state state)
         ;; let the buffer change its major mode without disabling Evil
-        (add-hook 'after-change-major-mode-hook 'evil-initialize)
+        (add-hook 'after-change-major-mode-hook #'evil-initialize)
         (when (and (markerp evil-test-visual-start)
                    (markerp evil-test-visual-end))
           (evil-visual-select
@@ -461,7 +459,7 @@ the end of the execution of BODY."
   (ert-info ("Set `evil-state' to nil")
     (should-not evil-state))
   (ert-info ("Disable all state keymaps")
-    (dolist (state (mapcar 'car evil-state-properties) t)
+    (dolist (state (mapcar #'car evil-state-properties) t)
       (should-not (evil-state-property state :mode t))
       (should-not (memq (evil-state-property state :keymap t)
                         (current-active-maps)))
@@ -579,7 +577,7 @@ the end of the execution of BODY."
 suppression keymap comes first")
       (setq evil-operator-state-minor-mode nil
             evil-operator-state-local-minor-mode nil))
-    (should (eq (key-binding "Q") 'undefined))
+    (should (eq (key-binding "Q") #'undefined))
     (ert-info ("Don't insert text")
       ;; may or may not signal an error, depending on batch mode
       (condition-case nil
@@ -1431,7 +1429,7 @@ the `evil-repeat' command")
       (setq evil-repeat-ring (make-ring 10))
       (ring-insert evil-repeat-ring '((kill-buffer nil)))
       (evil-execute-repeat-info (ring-ref evil-repeat-ring 0))
-      (should-error (call-interactively 'evil-repeat)))))
+      (should-error (call-interactively #'evil-repeat)))))
 
 (ert-deftest evil-test-repeat-pop ()
   "Test `repeat-pop'."
@@ -4569,28 +4567,28 @@ if no previous selection")
   "Test `evil-filter-list'"
   :tags '(evil util)
   (ert-info ("Return filtered list")
-    (should (equal (evil-filter-list 'null '(nil)) nil))
-    (should (equal (evil-filter-list 'null '(nil 1)) '(1)))
-    (should (equal (evil-filter-list 'null '(nil 1 2 nil)) '(1 2)))
-    (should (equal (evil-filter-list 'null '(nil nil 1)) '(1)))
-    (should (equal (evil-filter-list 'null '(nil 1 nil 2 nil 3))
+    (should (equal (evil-filter-list #'null '(nil)) nil))
+    (should (equal (evil-filter-list #'null '(nil 1)) '(1)))
+    (should (equal (evil-filter-list #'null '(nil 1 2 nil)) '(1 2)))
+    (should (equal (evil-filter-list #'null '(nil nil 1)) '(1)))
+    (should (equal (evil-filter-list #'null '(nil 1 nil 2 nil 3))
                    '(1 2 3))))
   (ert-info ("Remove matches by side-effect when possible")
     (let (list)
       (setq list '(1 nil))
-      (evil-filter-list 'null list)
+      (evil-filter-list #'null list)
       (should (equal list '(1)))
 
       (setq list '(1 nil nil))
-      (evil-filter-list 'null list)
+      (evil-filter-list #'null list)
       (should (equal list '(1)))
 
       (setq list '(1 nil nil 2))
-      (evil-filter-list 'null list)
+      (evil-filter-list #'null list)
       (should (equal list '(1 2)))
 
       (setq list '(1 nil 2 nil 3))
-      (evil-filter-list 'null list)
+      (evil-filter-list #'null list)
       (should (equal list '(1 2 3))))))
 
 (ert-deftest evil-test-concat-lists ()

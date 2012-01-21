@@ -172,7 +172,7 @@ and `lower-right'."
               (setq end (point))
               (setq properties (plist-put properties
                                           :corner corner))
-              (apply 'evil-range beg end properties))))
+              (apply #'evil-range beg end properties))))
 
 (evil-define-type rectangle
   "Like `exclusive', but for rectangles:

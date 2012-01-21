@@ -94,16 +94,16 @@
       (evil-initialize-state)
       ;; re-determine the initial state in `post-command-hook' since
       ;; the major mode may not have been initialized yet
-      (add-hook 'post-command-hook 'evil-initialize-state t t))
-    (add-hook 'input-method-activate-hook 'evil-activate-input-method t t)
-    (add-hook 'input-method-inactivate-hook 'evil-inactivate-input-method t t)
-    (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
-    (add-hook 'post-command-hook 'evil-repeat-post-hook)
-    (add-hook 'post-command-hook 'evil-refresh-cursor))
+      (add-hook 'post-command-hook #'evil-initialize-state t t))
+    (add-hook 'input-method-activate-hook #'evil-activate-input-method t t)
+    (add-hook 'input-method-inactivate-hook #'evil-inactivate-input-method t t)
+    (add-hook 'pre-command-hook #'evil-repeat-pre-hook)
+    (add-hook 'post-command-hook #'evil-repeat-post-hook)
+    (add-hook 'post-command-hook #'evil-refresh-cursor))
    (t
     (evil-refresh-mode-line)
-    (remove-hook 'input-method-activate-hook 'evil-activate-input-method t)
-    (remove-hook 'input-method-inactivate-hook 'evil-inactivate-input-method t)
+    (remove-hook 'input-method-activate-hook #'evil-activate-input-method t)
+    (remove-hook 'input-method-inactivate-hook #'evil-inactivate-input-method t)
     (evil-change-state nil))))
 
 (defun evil-initialize ()
@@ -176,7 +176,7 @@ Restore the previous state afterwards."
 (defun evil-initializing-p (&optional buffer)
   "Whether Evil is in the process of being initialized."
   (with-current-buffer (or buffer (current-buffer))
-    (memq 'evil-initialize-state post-command-hook)))
+    (memq #'evil-initialize-state post-command-hook)))
 
 (defun evil-initialize-state (&optional state buffer)
   "Set up the initial state for BUFFER.
@@ -184,7 +184,7 @@ BUFFER defaults to the current buffer.
 Uses STATE if specified, or calls `evil-initial-state-for-buffer'.
 See also `evil-set-initial-state'."
   (with-current-buffer (or buffer (current-buffer))
-    (remove-hook 'post-command-hook 'evil-initialize-state t)
+    (remove-hook 'post-command-hook #'evil-initialize-state t)
     (if state (evil-change-state state)
       (evil-change-to-initial-state buffer))))
 (put 'evil-initialize-state 'permanent-local-hook t)
@@ -293,7 +293,7 @@ This is the state the buffer came up in."
       (setq global-mode-string (nreverse temp)))
     (when evil-local-mode
       (when (eq evil-mode-line-format 'before)
-        (add-to-list 'mode-line-position 'evil-mode-line-tag t 'eq))
+        (add-to-list 'mode-line-position 'evil-mode-line-tag t #'eq))
       (when (eq evil-mode-line-format 'after)
         (unless (memq 'evil-mode-line-tag global-mode-string)
           (setq global-mode-string
@@ -457,9 +457,9 @@ may be specified before the body code:
 
 (defun evil-turn-on-esc-mode ()
   "Enable interception of ESC."
-  (unless (eq this-command 'evil-esc)
+  (unless (eq this-command #'evil-esc)
     (evil-esc-mode 1)
-    (remove-hook 'pre-command-hook 'evil-turn-on-esc-mode t)))
+    (remove-hook 'pre-command-hook #'evil-turn-on-esc-mode t)))
 (put 'evil-turn-on-esc-mode 'permanent-local-hook t)
 
 ;; `evil-esc' is bound to (kbd "ESC"), while other commands
@@ -509,7 +509,7 @@ recursion, keeping track of earlier states."
        ;; the keymaps for another state
        ((evil-state-p entry)
         (setq result `(,@result
-                       ,(apply 'evil-state-keymaps entry excluded))))
+                       ,(apply #'evil-state-keymaps entry excluded))))
        ;; a single keymap
        ((or (keymapp entry)
             (and (keymapp (symbol-value entry))
@@ -520,8 +520,8 @@ recursion, keeping track of earlier states."
                          ,entry)))))))
     ;; postpone the expensive filtering of duplicates to the top level
     (if remove-duplicates
-        (apply 'evil-concat-keymap-alists result)
-      (apply 'append result))))
+        (apply #'evil-concat-keymap-alists result)
+      (apply #'append result))))
 
 (defun evil-normalize-keymaps (&optional state)
   "Create a buffer-local value for `evil-mode-map-alist'.
@@ -580,11 +580,11 @@ See also `evil-keymap-for-mode'."
     (or (when var
           (or (car (rassq var evil-global-keymaps-alist))
               (car (rassq var evil-local-keymaps-alist))))
-        (car (rassq map (mapcar (lambda (e)
-                                  ;; from (MODE-VAR . MAP-VAR)
-                                  ;; to (MODE-VAR . MAP)
-                                  (cons (car-safe e)
-                                        (symbol-value (cdr-safe e))))
+        (car (rassq map (mapcar #'(lambda (e)
+                                    ;; from (MODE-VAR . MAP-VAR)
+                                    ;; to (MODE-VAR . MAP)
+                                    (cons (car-safe e)
+                                          (symbol-value (cdr-safe e))))
                                 (append evil-global-keymaps-alist
                                         evil-local-keymaps-alist))))
         (car (rassq map minor-mode-map-alist))
@@ -769,8 +769,8 @@ and should be quoted as such."
              (unless (keymapp ,keymap)
                (setq ,keymap (make-sparse-keymap)))
              (evil-define-key ,state ,keymap ,key ,def ,@bindings)
-             (remove-hook 'after-load-functions ',func)))
-         (add-hook 'after-load-functions ',func t))))))
+             (remove-hook 'after-load-functions #',func)))
+         (add-hook 'after-load-functions #',func t))))))
 
 (defmacro evil-add-hjkl-bindings (keymap &optional state &rest bindings)
   "Add \"h\", \"j\", \"k\", \"l\" bindings to KEYMAP in STATE.
