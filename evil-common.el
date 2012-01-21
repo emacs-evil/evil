@@ -1382,6 +1382,8 @@ Enable with positive ARG, disable with negative ARG."
     (when (or transient-mark-mode mark-active)
       (setq mark-active nil
             deactivate-mark nil)
+      (when (boundp 'cua--explicit-region-start)
+        (setq cua--explicit-region-start nil))
       (run-hooks 'deactivate-mark-hook)))
    (t
     (evil-transient-mark 1)
@@ -1390,7 +1392,9 @@ Enable with positive ARG, disable with negative ARG."
     (unless (mark t)
       (evil-move-mark (point)))
     (unless (region-active-p)
-      (set-mark (mark t))))))
+      (set-mark (mark t)))
+    (when (boundp 'cua--explicit-region-start)
+      (setq cua--explicit-region-start t)))))
 
 (defmacro evil-save-transient-mark (&rest body)
   "Save Transient Mark mode; execute BODY; then restore it."
