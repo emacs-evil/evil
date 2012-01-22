@@ -910,51 +910,55 @@ The DIRECTION argument should be either `forward' or
         (evil-ex-search-next count)))))
 
 ;; substitute
-(evil-ex-define-argument-type substitution (flag &rest args)
-  (with-selected-window (minibuffer-selected-window)
-    (with-current-buffer evil-ex-current-buffer
-      (cond
-       ((eq flag 'start)
-        (evil-ex-make-hl
-         'evil-ex-substitute
-         :update-hook #'evil-ex-pattern-update-ex-info
-         :match-hook (and evil-ex-substitute-interactive-replace
-                          #'evil-ex-pattern-update-replacement))
-        (setq flag 'update))
+(evil-ex-define-argument-type substitution
+  "A substitution pattern argument /pattern/replacement/flags.
+This handler highlights the pattern of the current substitution."
+  :runner
+  (lambda (flag &optional arg)
+    (with-selected-window (minibuffer-selected-window)
+      (with-current-buffer evil-ex-current-buffer
+        (cond
+         ((eq flag 'start)
+          (evil-ex-make-hl
+           'evil-ex-substitute
+           :update-hook #'evil-ex-pattern-update-ex-info
+           :match-hook (and evil-ex-substitute-interactive-replace
+                            #'evil-ex-pattern-update-replacement))
+          (setq flag 'update))
 
-       ((eq flag 'stop)
-        (evil-ex-delete-hl 'evil-ex-substitute))))
+         ((eq flag 'stop)
+          (evil-ex-delete-hl 'evil-ex-substitute))))
 
-    (when (and (eq flag 'update) evil-ex-substitute-highlight-all)
-      (condition-case lossage
-          (let* ((result (evil-ex-parse-substitute (car args)))
-                 (pattern (pop result))
-                 (replacement (or (pop result) ""))
-                 (flags (append (pop result) nil)))
+      (when (and (eq flag 'update) evil-ex-substitute-highlight-all)
+        (condition-case lossage
+            (let* ((result (evil-ex-parse-substitute arg))
+                   (pattern (pop result))
+                   (replacement (or (pop result) ""))
+                   (flags (append (pop result) nil)))
 
-            (setq evil-ex-substitute-pattern
-                  (and pattern
-                       (evil-ex-make-pattern
-                        pattern
-                        (or (and (memq ?i flags) 'insensitive)
-                            (and (memq ?I flags) 'sensitive)
-                            evil-ex-substitute-case
-                            evil-ex-search-case)
-                        (memq ?g flags)))
-                  evil-ex-substitute-replacement replacement)
-            (apply #'evil-ex-hl-set-region
-                   'evil-ex-substitute
-                   (or evil-ex-range
-                       (evil-range (line-beginning-position)
-                                   (line-end-position))))
-            (evil-ex-hl-change 'evil-ex-substitute
-                               evil-ex-substitute-pattern))
-        (end-of-file
-         (evil-ex-pattern-update-ex-info nil
-                                         "incomplete replacement"))
-        (error
-         (evil-ex-pattern-update-ex-info nil
-                                         (format "%s" lossage)))))))
+              (setq evil-ex-substitute-pattern
+                    (and pattern
+                         (evil-ex-make-pattern
+                          pattern
+                          (or (and (memq ?i flags) 'insensitive)
+                              (and (memq ?I flags) 'sensitive)
+                              evil-ex-substitute-case
+                              evil-ex-search-case)
+                          (memq ?g flags)))
+                    evil-ex-substitute-replacement replacement)
+              (apply #'evil-ex-hl-set-region
+                     'evil-ex-substitute
+                     (or evil-ex-range
+                         (evil-range (line-beginning-position)
+                                     (line-end-position))))
+              (evil-ex-hl-change 'evil-ex-substitute
+                                 evil-ex-substitute-pattern))
+          (end-of-file
+           (evil-ex-pattern-update-ex-info nil
+                                           "incomplete replacement"))
+          (error
+           (evil-ex-pattern-update-ex-info nil
+                                           (format "%s" lossage))))))))
 
 (defun evil-ex-pattern-update-ex-info (hl result)
   "Update the Ex info string."
