@@ -1950,7 +1950,7 @@ If no FILE is specified, reload the current buffer from disk."
   "Inserts the contents of FILE below the current line or line COUNT."
   :repeat nil
   :move-point nil
-  (interactive "P<f>")
+  (interactive "P<fsh>")
   (when (and file (not (zerop (length file))))
     (when count (goto-char (point-min)))
     (when (or (not (zerop (forward-line (or count 1))))
@@ -2058,7 +2058,7 @@ which is replaced with the command's output. Otherwise, the
 output is displayed in its own buffer. If PREVIOUS is non-nil,
 the previous shell command is executed instead."
   :motion nil
-  (interactive "<r><a><!>")
+  (interactive "<r><sh><!>")
   (when command
     (setq command (evil-ex-replace-special-filenames command)))
   (if (zerop (length command))

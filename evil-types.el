@@ -245,6 +245,16 @@ the last column is excluded."
   :ex-arg buffer
   (list (when (evil-ex-p) evil-ex-argument)))
 
+(evil-define-interactive-code "<sh>"
+  "Ex shell command argument."
+  :ex-arg shell
+  (list (when (evil-ex-p) evil-ex-argument)))
+
+(evil-define-interactive-code "<fsh>"
+  "Ex file or shell command argument."
+  :ex-arg file-or-shell
+  (list (when (evil-ex-p) evil-ex-argument)))
+
 (evil-define-interactive-code "<sym>"
   "Ex symbolic argument."
   :ex-arg sym

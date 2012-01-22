@@ -346,6 +346,39 @@ keywords and function:
                        ((eq 'lambda flag)
                         (test-completion arg buffers predicate)))))))))
 
+(declare-function shell-completion-vars "shell" ())
+
+(defun evil-ex-init-shell-argument-completion (flag &optional arg)
+  "Prepares the current minibuffer for completion of shell commands.
+This function must be called from the :runner function of some
+argument handler that requires shell completion."
+  (when (and (eq flag 'start)
+             (not evil-ex-shell-argument-initialized))
+    (set (make-local-variable 'evil-ex-shell-argument-initialized)
+         t)
+    (shell-completion-vars)
+    (setq completion-at-point-functions
+          '(evil-ex-completion-at-point))))
+
+(evil-ex-define-argument-type shell
+  "Shell argument type, supports completion."
+  :completer comint-completion-at-point
+  :runner evil-ex-init-shell-argument-completion)
+
+(evil-ex-define-argument-type file-or-shell
+  "File or shell argument type.
+If the current argument starts with a ! the rest of the argument
+is considered a shell command, otherwise a file-name. Completion
+works accordingly."
+  :completer (lambda ()
+               (if (and (< (point-min) (point-max))
+                        (= (char-after (point-min)) ?!))
+                   (save-restriction
+                     (narrow-to-region (1+ (point-min)) (point-max))
+                     (comint-completion-at-point))
+                 (evil-ex-filename-completion-at-point)))
+  :runner evil-ex-init-shell-argument-completion)
+
 (defun evil-ex-binding (command &optional noerror)
   "Returns the final binding of COMMAND."
   (let ((binding command))
