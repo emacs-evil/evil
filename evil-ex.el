@@ -99,7 +99,11 @@ of the syntax.")
     ((evil-visual-state-p)
      '("'<,'>"))
     (current-prefix-arg
-     `(,(format ".,.+%s" (prefix-numeric-value current-prefix-arg))))))
+     (let ((arg (prefix-numeric-value current-prefix-arg)))
+       (cond ((< arg 0) (setq arg (1+ arg)))
+             ((> arg 0) (setq arg (1- arg))))
+       (if (= arg 0) '(".")
+         `(,(format ".,.%+d" arg)))))))
   (let ((minibuffer-local-completion-map evil-ex-completion-map)
         (evil-ex-current-buffer (current-buffer))
         (evil-ex-previous-command (unless initial-input
@@ -506,51 +510,8 @@ arguments for programmable completion."
 
 (defun evil-ex-address (base &optional offset)
   "Return the line number of BASE plus OFFSET."
-  (+ (or offset 0)
-     (cond
-      ((integerp base)
-       base)
-      ((null base)
-       (line-number-at-pos))
-      ((eq (car-safe base) 'abs)
-       (cdr base))
-      ;; TODO: (1- ...) may be wrong if the match is the empty string
-      ((eq base 're-fwd)
-       (save-excursion
-         (beginning-of-line 2)
-         (and (re-search-forward (cdr base))
-              (line-number-at-pos (1- (match-end 0))))))
-      ((eq base 're-bwd)
-       (save-excursion
-         (beginning-of-line 0)
-         (and (re-search-backward (cdr base))
-              (line-number-at-pos (match-beginning 0)))))
-      ;; $, %, ., etc.
-      ((eq base 'current-line)
-       (line-number-at-pos (point)))
-      ((eq base 'first-line)
-       (line-number-at-pos (point-min)))
-      ((eq base 'last-line)
-       (line-number-at-pos (point-max)))
-      ((eq (car-safe base) 'mark)
-       (setq base (cadr base))
-       (let* ((base (cadr base))
-              (mark (evil-get-marker base)))
-         (cond
-          ((null mark)
-           (error "Marker <%c> not defined" base))
-          ((consp mark)
-           (error "Ex-mode ranges do not support markers in other files"))
-          (t
-           (line-number-at-pos mark)))))
-      ((eq base 'next-of-prev-search)
-       (error "Next-of-prev-search not yet implemented"))
-      ((eq base 'prev-of-prev-search)
-       (error "Prev-of-prev-search not yet implemented"))
-      ((eq base 'next-of-prev-subst)
-       (error "Next-of-prev-subst not yet implemented"))
-      (t
-       (error "Invalid address: %s" base)))))
+  (+ (or base (line-number-at-pos))
+     (or offset 0)))
 
 (defun evil-ex-first-line ()
   "Return the line number of the first line."
