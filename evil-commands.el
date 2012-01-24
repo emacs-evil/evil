@@ -223,12 +223,21 @@ If BIGWORD is non-nil, move by WORDS."
     (prog1 (if (eq evil-this-operator #'evil-change)
                (evil-move-end count move)
              (evil-move-beginning count move))
-      ;; if we reached the beginning of a new line in Operator-Pending
-      ;; state, go back to the end of the previous line
+      ;; if we reached the beginning of a word on a new line in
+      ;; Operator-Pending state, go back to the end of the previous
+      ;; line
       (when (and (evil-operator-state-p)
                  (> (point) (1+ orig))
-                 (bolp))
-        (backward-char)))))
+                 (looking-back "^[[:space:]]*"))
+        ;; move cursor back as long as the line contains only
+        ;; whitespaces and is non-empty
+        (end-of-line 0)
+        ;; skip non-empty lines containing only spaces
+        (while (and (looking-back "^[[:space:]]+$")
+                    (not (<= (line-beginning-position) orig)))
+          (end-of-line 0))
+        ;; but if the previous line is empty, delete this line
+        (when (bolp) (forward-char))))))
 
 (evil-define-motion evil-forward-word-end (count &optional bigword)
   "Move the cursor to the end of the COUNT-th next word.

@@ -2856,6 +2856,19 @@ Below some empty line"
       ("dw")
       "[B]elow some empty line")
     (evil-test-buffer
+      "[A]bove
+
+    Below some empty line with leading whitespace"
+      ("dw")
+      "[]
+
+    Below some empty line with leading whitespace"
+      ("dw")
+      "[]
+    Below some empty line with leading whitespace"
+      ("dw")
+      "    [B]elow some empty line")
+    (evil-test-buffer
       "[A]\n"
       ("dw")
       "[]\n"))
