@@ -2889,6 +2889,10 @@ Below some empty line"
       ("dw")
       "    [B]elow some empty line")
     (evil-test-buffer
+      "Some line with trailing whitespace  [ ]     \n    next line\n"
+      ("dw")
+      "Some line with trailing whitespace [ ]\n    next line\n")
+    (evil-test-buffer
       "[A]\n"
       ("dw")
       "[]\n"))

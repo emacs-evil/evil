@@ -227,7 +227,7 @@ If BIGWORD is non-nil, move by WORDS."
       ;; Operator-Pending state, go back to the end of the previous
       ;; line
       (when (and (evil-operator-state-p)
-                 (> (point) (1+ orig))
+                 (> (line-beginning-position) orig)
                  (looking-back "^[[:space:]]*"))
         ;; move cursor back as long as the line contains only
         ;; whitespaces and is non-empty
