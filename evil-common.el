@@ -2433,6 +2433,38 @@ the replacement text, otherwise the function behaves as
                                            0)
                                   fixedcase nil string)))
 
+;;; Alignment
+
+(defun evil-justify-lines (beg end justify position)
+  "Justifes all lines in a range.
+BEG and END specify the range of those lines to be
+justified. JUSTIFY is either 'left, 'right or 'center according
+to the justification type. POSITION is the maximal text width for
+right and center justification or the column at which the lines
+should be left-aligned for left justification."
+  (let ((fill-column position)
+        adaptive-fill-mode fill-prefix)
+    (save-restriction
+      (narrow-to-region (save-excursion
+                          (goto-char beg)
+                          (line-beginning-position))
+                        (save-excursion
+                          (goto-char end)
+                          (if (bolp)
+                              (line-end-position 0)
+                            (line-end-position))))
+      (goto-char (point-min))
+      (while (progn
+               (if (eq justify 'left)
+                   (indent-line-to position)
+                 (when (re-search-forward "^[[:space:]]*" nil t)
+                   (delete-region (match-beginning 0)
+                                  (match-end 0)))
+                 (justify-current-line justify nil t))
+               (and (zerop (forward-line)) (bolp))))
+      (goto-char (point-min))
+      (back-to-indentation))))
+
 (provide 'evil-common)
 
 ;;; evil-common.el ends here

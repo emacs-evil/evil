@@ -1224,6 +1224,36 @@ See also `evil-shift-left'."
            (offset (- evil-shift-width (mod indent evil-shift-width))))
       (indent-rigidly beg end offset))))
 
+(evil-define-operator evil-align-left (beg end type &optional width)
+  "Right-align lines in the region at WIDTH columns.
+The default for width is the value of `fill-column'."
+  :motion evil-line
+  :type line
+  (interactive "<R><a>")
+  (evil-justify-lines beg end 'left (if width
+                                        (string-to-number width)
+                                      0)))
+
+(evil-define-operator evil-align-right (beg end type &optional width)
+  "Right-align lines in the region at WIDTH columns.
+The default for width is the value of `fill-column'."
+  :motion evil-line
+  :type line
+  (interactive "<R><a>")
+  (evil-justify-lines beg end 'right (if width
+                                         (string-to-number width)
+                                       fill-column)))
+
+(evil-define-operator evil-align-center (beg end type &optional width)
+  "Centers lines in the region between WIDTH columns.
+The default for width is the value of `fill-column'."
+  :motion evil-line
+  :type line
+  (interactive "<R><a>")
+  (evil-justify-lines beg end 'center (if width
+                                          (string-to-number width)
+                                        fill-column)))
+
 (evil-define-operator evil-replace (beg end type char)
   "Replace text from BEG to END with CHAR."
   :motion evil-forward-char
