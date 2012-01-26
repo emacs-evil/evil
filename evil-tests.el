@@ -2475,22 +2475,23 @@ This bufferThis buffe[r]"))
 (ert-deftest evil-test-align ()
   "Test `evil-align-left', `evil-align-right' and `evil-align-center'."
   :tags '(evil operator)
-  (let ((fill-column 70)
-        indent-tabs-mode)
-    (evil-test-buffer
-      "before\n[l]ine 1\nthis is line number 2\nline number 3\nafter\n"
-      (":.,+2ri" [return] (kbd "M-x") "untabify" [return])
-      "before\n                                                                [l]ine 1\n                                                 this is line number 2\n                                                         line number 3\nafter\n"
-      (":.,+2ri 60" [return] (kbd "M-x") "untabify" [return])
-      "before\n                                                      [l]ine 1\n                                       this is line number 2\n                                               line number 3\nafter\n"
-      (":.,+2le" [return] (kbd "M-x") "untabify" [return])
-      "before\n[l]ine 1\nthis is line number 2\nline number 3\nafter\n"
-      (":.,+2le 10" [return])
-      "before\n          [l]ine 1\n          this is line number 2\n          line number 3\nafter\n"
-      (":.,+2ce" [return] (kbd "M-x") "untabify" [return])
-      "before\n                                [l]ine 1\n                        this is line number 2\n                            line number 3\nafter\n"
-      (":.,+2ce 40" [return] (kbd "M-x") "untabify" [return])
-      "before\n                 [l]ine 1\n         this is line number 2\n             line number 3\nafter\n")))
+  (evil-without-display
+    (let ((fill-column 70)
+          indent-tabs-mode)
+      (evil-test-buffer
+        "before\n[l]ine 1\nthis is line number 2\nline number 3\nafter\n"
+        (":.,+2ri" [return] (kbd "M-x") "untabify" [return])
+        "before\n                                                                [l]ine 1\n                                                 this is line number 2\n                                                         line number 3\nafter\n"
+        (":.,+2ri 60" [return] (kbd "M-x") "untabify" [return])
+        "before\n                                                      [l]ine 1\n                                       this is line number 2\n                                               line number 3\nafter\n"
+        (":.,+2le" [return] (kbd "M-x") "untabify" [return])
+        "before\n[l]ine 1\nthis is line number 2\nline number 3\nafter\n"
+        (":.,+2le 10" [return])
+        "before\n          [l]ine 1\n          this is line number 2\n          line number 3\nafter\n"
+        (":.,+2ce" [return] (kbd "M-x") "untabify" [return])
+        "before\n                                [l]ine 1\n                        this is line number 2\n                            line number 3\nafter\n"
+        (":.,+2ce 40" [return] (kbd "M-x") "untabify" [return])
+        "before\n                 [l]ine 1\n         this is line number 2\n             line number 3\nafter\n"))))
 
 ;;; Motions
 
