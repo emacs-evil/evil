@@ -410,31 +410,36 @@ This ensures that it behaves correctly in Visual state."
 
 (defun evil-delimited-arguments (string &optional num)
   "Parse STRING as a sequence of delimited arguments.
-The first non-blank character in the string is taken to be the
-delimiter. Returns a list of NUM strings. If two delimiters
-follow directly one after the other, an empty return value is
-generated at the corresponding position in the list. If some
-arguments are missing from STRING, the result list contains nil
-values."
+Returns a list of NUM strings, or as many arguments as
+the string contains. The first non-blank character is
+taken to be the delimiter. If some arguments are missing
+from STRING, the resulting list is padded with nil values.
+Two delimiters following directly after each other gives
+an empty string."
   (save-match-data
     (let ((string (or string ""))
-          (count 0) (idx 0)
+          (count (or num -1)) (idx 0)
           argument delim match result)
-      (when (string-match "^[[:space:]]*\\(.\\)" string)
+      (when (string-match "^[[:space:]]*\\([^[:space:]]\\)" string)
         (setq delim (match-string 1 string)
               argument (format "%s\\(\\(?:[\\].\\|[^%s]\\)*\\)"
                                (regexp-quote delim)
                                delim))
-        (while (string-match argument string idx)
-          (setq count (1+ count))
-          (if (eq count num)
-              (setq match (substring string (match-beginning 1))
-                    idx (length string))
-            (setq match (match-string 1 string)
-                  idx (match-end 1)))
-          (push match result)))
-      (while (and num (< (length result) num))
-        (push nil result))
+        (while (and (/= count 0) (string-match argument string idx))
+          (setq match (match-string 1 string)
+                idx (match-end 1)
+                count (1- count))
+          (when (= count 0)
+            (unless (save-match-data
+                      (string-match
+                       (format "%s[[:space:]]*$" delim) string idx))
+              (setq match (substring string (match-beginning 1)))))
+          (unless (and (zerop (length match))
+                       (zerop (length (substring string idx))))
+            (push match result))))
+      (when (and num (< (length result) num))
+        (dotimes (i (- num (length result)))
+          (push nil result)))
       (nreverse result))))
 
 ;;; Key sequences
