@@ -124,9 +124,10 @@ it is taken to be a buffer description as passed to
 `evil-test-buffer-from-string', and initializes the buffer.
 Subsequent string forms validate the buffer.
 
-If a form is a list of strings or vectors, it is taken
-to be a key sequence and is passed to `execute-kbd-macro'.
-Remaining forms are evaluated as-is.
+If a form is a list of strings or vectors, it is taken to be a
+key sequence and is passed to `execute-kbd-macro'.  Remaining
+forms are evaluated as-is. If the form is \(error SYMBOL ...)
+then the test fails unless an error of type SYMBOL is raised.
 
 \(fn [[KEY VALUE]...] FORMS...)"
   (declare (indent defun))
@@ -171,26 +172,35 @@ Remaining forms are evaluated as-is.
                ;; parse remaining forms
                ,@(mapcar
                   #'(lambda (form)
-                      (cond
-                       ((stringp form)
-                        `(evil-test-buffer-string
-                          ,form
-                          ',point-start ',point-end
-                          ',visual-start ',visual-end))
-                       ((or (stringp (car-safe form))
-                            (vectorp (car-safe form))
-                            (memq (car-safe (car-safe form))
-                                  '(kbd vconcat)))
-                        ;; we need to execute everything as a single
-                        ;; sequence for command loop hooks to work
-                        `(execute-kbd-macro
-                          (apply #'vconcat
-                                 (mapcar #'listify-key-sequence
-                                         (mapcar #'eval ',form)))))
-                       ((memq (car-safe form) '(kbd vconcat))
-                        `(execute-kbd-macro ,form))
-                       (t
-                        form)))
+                      (let (error-symbol)
+                        (when (and (listp form)
+                                   (eq (car-safe form) 'error))
+                          (setq error-symbol (car-safe (cdr-safe form))
+                                form (cdr-safe (cdr-safe form))))
+                        (let ((result
+                               (cond
+                                ((stringp form)
+                                 `(evil-test-buffer-string
+                                   ,form
+                                   ',point-start ',point-end
+                                   ',visual-start ',visual-end))
+                                ((or (stringp (car-safe form))
+                                     (vectorp (car-safe form))
+                                     (memq (car-safe (car-safe form))
+                                           '(kbd vconcat)))
+                                 ;; we need to execute everything as a single
+                                 ;; sequence for command loop hooks to work
+                                 `(execute-kbd-macro
+                                   (apply #'vconcat
+                                          (mapcar #'listify-key-sequence
+                                                  (mapcar #'eval ',form)))))
+                                ((memq (car-safe form) '(kbd vconcat))
+                                 `(execute-kbd-macro ,form))
+                                (t
+                                 form))))
+                          (if error-symbol
+                              `(should-error ,result :type ',error-symbol)
+                            result))))
                   body)))
          (and (buffer-name buffer)
               (kill-buffer buffer))))))
