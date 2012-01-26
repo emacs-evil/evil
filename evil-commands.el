@@ -2839,6 +2839,7 @@ Otherwise send [escape]."
     (setq prefix-arg arg))
   ;; disable interception for the next key sequence
   (evil-esc-mode -1)
+  (setq this-command last-command)
   (add-hook 'pre-command-hook #'evil-turn-on-esc-mode nil t))
 
 (provide 'evil-commands)
