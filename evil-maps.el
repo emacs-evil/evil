@@ -384,6 +384,7 @@
 (evil-ex-define-cmd "marks" 'evil-show-marks)
 (evil-ex-define-cmd "ju[mps]" 'evil-show-jumps)
 (evil-ex-define-cmd "noh[lsearch]" 'evil-ex-nohighlight)
+(evil-ex-define-cmd "f[ile]" 'evil-show-file-info)
 (evil-ex-define-cmd "<" 'evil-shift-left)
 (evil-ex-define-cmd ">" 'evil-shift-right)
 (evil-ex-define-cmd "=" 'evil-ex-line-number)

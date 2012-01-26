@@ -2465,6 +2465,19 @@ Default position is the beginning of the buffer."
   (interactive "<r>")
   (message "%d" (count-lines (point-min) end)))
 
+(evil-define-command evil-show-file-info ()
+  "Shows basic file information."
+  (interactive)
+  (let* ((nlines   (count-lines (point-min) (point-max)))
+         (curr     (line-number-at-pos (point)))
+         (perc     (* (/ (float curr) (float nlines)) 100.0))
+         (file     (buffer-file-name))
+         (writable (and file (file-writable-p file)))
+         (readonly (if (and file (not writable)) "[readonly] " "")))
+    (if file
+        (message "\"%s\" %d %slines --%d%%--" file nlines readonly perc)
+      (message "%d lines --%d%%--" nlines perc))))
+
 ;;; Window navigation
 
 (defun evil-resize-window (new-size &optional horizontal)
