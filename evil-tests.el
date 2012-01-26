@@ -4329,7 +4329,20 @@ if no previous selection")
         ("/\\Cyou" [return])
         "start [y]ou YOU You you YOU You"
         ("n")
-        "start you YOU You [y]ou YOU You"))))
+        "start you YOU You [y]ou YOU You"))
+    (ert-info ("Test failing search does not move point")
+      (evil-test-buffer
+        "foo [f]oo foo\nbar bar2 bar\nbaz baz baz\n"
+        (error search-failed "/foofoo" [return])
+        "foo [f]oo foo\nbar bar2 bar\nbaz baz baz\n"
+        ("/bar2" [return])
+        "foo foo foo\nbar [b]ar2 bar\nbaz baz baz\n"
+        ("dw")
+        "foo foo foo\nbar [b]ar\nbaz baz baz\n"
+        (error search-failed "n")
+        "foo foo foo\nbar [b]ar\nbaz baz baz\n"
+        (error search-failed "N")
+        "foo foo foo\nbar [b]ar\nbaz baz baz\n"))))
 
 (ert-deftest evil-test-ex-search-offset ()
   "Test search offsets."

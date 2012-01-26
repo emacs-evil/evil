@@ -881,6 +881,7 @@ current search result."
                   evil-ex-search-match-end (match-end 0))
             (evil-ex-search-goto-offset offset))
            (t
+            (goto-char evil-ex-search-start-point)
             (signal 'search-failed (list search-string)))))))))
 
 (defun evil-ex-start-symbol-search (unbounded direction count)

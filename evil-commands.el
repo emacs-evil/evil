@@ -2202,7 +2202,8 @@ Change to `%s'? "
   :jump t
   :type exclusive
   (setq evil-ex-search-start-point (point))
-  (let (wrapped)
+  (let ((orig (point))
+        wrapped)
     (dotimes (i (or count 1))
       (if (eq evil-ex-search-direction 'backward)
           (backward-char)
@@ -2210,6 +2211,7 @@ Change to `%s'? "
       (let ((res (evil-ex-find-next)))
         (cond
          ((not res)
+          (goto-char orig)
           (signal 'search-failed
                   (list (evil-ex-pattern-regex evil-ex-search-pattern))))
          ((eq res 'wrapped) (setq wrapped t)))))
