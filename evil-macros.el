@@ -13,9 +13,8 @@ The return value is a list (BEG END TYPE)."
         (obuffer  (current-buffer))
         (evil-motion-marker (move-marker (make-marker) (point)))
         range)
-    (evil-narrow-to-field
-      (evil-save-transient-mark
-        (evil-transient-mark 1)
+    (evil-with-transient-mark-mode
+      (evil-narrow-to-field
         (unwind-protect
             (let ((current-prefix-arg count)
                   ;; Store type in global variable `evil-this-type'.
@@ -502,15 +501,16 @@ if COUNT is positive, and to the left of it if negative.
                 (evil-exit-visual-state))
               (when (region-active-p)
                 (evil-active-region -1)))
-            (if (or (evil-visual-state-p state)
-                    (and (evil-get-command-property ',operator :move-point)
-                         evil-operator-range-beginning
-                         evil-operator-range-end))
-                (evil-visual-rotate 'upper-left
-                                    evil-operator-range-beginning
-                                    evil-operator-range-end
-                                    evil-operator-range-type)
-              (goto-char orig)))))
+            (cond
+             ((evil-visual-state-p state)
+              (evil-visual-rotate 'upper-left
+                                  evil-operator-range-beginning
+                                  evil-operator-range-end
+                                  evil-operator-range-type))
+             ((evil-get-command-property ',operator :move-point)
+              (goto-char (or evil-operator-range-beginning orig)))
+             (t
+              (goto-char orig))))))
        (unwind-protect
            (let ((evil-inhibit-operator evil-inhibit-operator-value))
              (unless (and evil-inhibit-operator
@@ -768,9 +768,10 @@ via KEY-VALUE pairs. BODY should evaluate to a list of values.
 \\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
       (1 font-lock-keyword-face)
       (2 font-lock-function-name-face nil t))
-     ("(\\(evil-\\(?:narrow\\|save\\|with\\(?:out\\)?\\)-[-[:word:]]+\\)\\>"
+     ("(\\(evil-\\(?:narrow\\|save\\|with\\(?:out\\)?\\)-[-[:word:]]+\\)\\>\
+\[ \f\t\n\r\v]+"
       1 font-lock-keyword-face)
-     ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>"
+     ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>[ \f\t\n\r\v]+"
       1 font-lock-keyword-face))))
 
 (provide 'evil-macros)

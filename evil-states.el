@@ -189,7 +189,7 @@ the selection is enabled.
   :message 'evil-visual-message
   (cond
    ((evil-visual-state-p)
-    (evil-transient-save)
+    (evil-save-mark)
     (cond
      ((region-active-p)
       (if (< (evil-visual-direction) 0)
@@ -266,10 +266,10 @@ otherwise exit Visual state."
          (not (evil-get-command-property command :keep-visual)))
     (evil-exit-visual-state)
     (evil-active-region -1)
-    (evil-transient-restore))
+    (evil-restore-mark))
    ((not (evil-visual-state-p))
     (evil-active-region -1)
-    (evil-transient-restore))))
+    (evil-restore-mark))))
 (put 'evil-visual-deactivate-hook 'permanent-local-hook t)
 
 (evil-define-command evil-exit-visual-state (&optional buffer message)

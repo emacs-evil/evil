@@ -1329,10 +1329,11 @@ If POS is nil, delete the mark."
     (setq pos (evil-normalize-position pos)))
   (set-marker (mark-marker) pos))
 
-(defun evil-transient-save ()
+(defun evil-save-transient-mark-mode ()
   "Save Transient Mark mode and make the new setup buffer-local.
 The variables to save are listed in `evil-transient-vars'.
-Their values are stored in `evil-transient-vals'."
+Their values are stored in `evil-transient-vals'.
+See also `evil-restore-transient-mark-mode'."
   (dolist (var evil-transient-vars)
     (when (and (boundp var)
                (not (assq var evil-transient-vals)))
@@ -1342,8 +1343,9 @@ Their values are stored in `evil-transient-vals'."
       (make-variable-buffer-local var)
       (put var 'permanent-local t))))
 
-(defun evil-transient-restore ()
-  "Restore Transient Mark mode from `evil-transient-vals'."
+(defun evil-restore-transient-mark-mode ()
+  "Restore Transient Mark mode from `evil-transient-vals'.
+See also `evil-save-transient-mark-mode'."
   (let (entry local var val)
     (while (setq entry (pop evil-transient-vals))
       (setq var (pop entry)
@@ -1355,6 +1357,18 @@ Their values are stored in `evil-transient-vals'."
         (if (fboundp var)
             (funcall var (if var 1 -1))
           (setq var val))))))
+
+(defun evil-save-mark ()
+  "Save the current mark, including whether it is transient.
+See also `evil-restore-mark'."
+  (setq evil-visual-previous-mark (mark t))
+  (evil-save-transient-mark-mode))
+
+(defun evil-restore-mark ()
+  "Restore the mark, including whether it was transient.
+See also `evil-save-mark'."
+  (evil-restore-transient-mark-mode)
+  (evil-move-mark evil-visual-previous-mark))
 
 ;; In theory, an active region implies Transient Mark mode, and
 ;; disabling Transient Mark mode implies deactivating the region.
@@ -1406,26 +1420,19 @@ Enable with positive ARG, disable with negative ARG."
     (when (boundp 'cua--explicit-region-start)
       (setq cua--explicit-region-start t)))))
 
-(defmacro evil-save-transient-mark (&rest body)
-  "Save Transient Mark mode; execute BODY; then restore it."
+(defmacro evil-with-transient-mark-mode (&rest body)
+  "Execute BODY with Transient Mark mode.
+Then restore Transient Mark mode to its previous setting."
   (declare (indent defun)
            (debug t))
   `(let ((inhibit-quit t)
          evil-transient-vals)
      (unwind-protect
          (progn
-           (evil-transient-save)
+           (evil-save-transient-mark-mode)
+           (evil-transient-mark 1)
            ,@body)
-       (evil-transient-restore))))
-
-(defmacro evil-save-region (&rest body)
-  "Save Transient Mark mode, mark activation, mark and point.
-Execute BODY, then restore those things."
-  (declare (indent defun)
-           (debug t))
-  `(evil-save-transient-mark
-     (save-excursion
-       ,@body)))
+       (evil-restore-transient-mark-mode))))
 
 (defun evil-exchange-point-and-mark ()
   "Exchange point and mark without activating the region."

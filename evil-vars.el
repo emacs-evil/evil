@@ -646,7 +646,8 @@ having higher priority.")
 (defvar evil-command-properties nil
   "Specifications made by `evil-define-command'.")
 
-(defvar evil-transient-vars '(cua-mode transient-mark-mode)
+(defvar evil-transient-vars
+  '(cua-mode transient-mark-mode evil-visual-previous-mark)
   "List of variables pertaining to Transient Mark mode.")
 
 (defvar evil-transient-vals nil
@@ -908,15 +909,20 @@ instead of `buffer-undo-list'.")
 (make-variable-buffer-local 'evil-visual-end)
 (put 'evil-visual-end 'permanent-local t)
 
+(defvar evil-visual-point nil
+  "The position of point in Visual state, a marker.")
+(make-variable-buffer-local 'evil-visual-point)
+(put 'evil-visual-point 'permanent-local t)
+
 (defvar evil-visual-mark nil
   "The position of mark in Visual state, a marker.")
 (make-variable-buffer-local 'evil-visual-mark)
 (put 'evil-visual-mark 'permanent-local t)
 
-(defvar evil-visual-point nil
-  "The position of point in Visual state, a marker.")
-(make-variable-buffer-local 'evil-visual-point)
-(put 'evil-visual-point 'permanent-local t)
+(defvar evil-visual-previous-mark nil
+  "The position of mark before Visual state, a marker.")
+(make-variable-buffer-local 'evil-visual-previous-mark)
+(put 'evil-visual-previous-mark 'permanent-local t)
 
 (defvar evil-visual-selection nil
   "The kind of Visual selection.
