@@ -2209,7 +2209,9 @@ Change to `%s'? "
         (forward-char))
       (let ((res (evil-ex-find-next)))
         (cond
-         ((not res) (signal 'search-failed (list evil-ex-search-pattern)))
+         ((not res)
+          (signal 'search-failed
+                  (list (evil-ex-pattern-regex evil-ex-search-pattern))))
          ((eq res 'wrapped) (setq wrapped t)))))
     (if wrapped
         (let (message-log-max)
