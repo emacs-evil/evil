@@ -2851,27 +2851,26 @@ if the previous state was Emacs state."
       (when (evil-emacs-state-p)
         (evil-normal-state (and message 1))))))
 
-(defun evil-execute-in-normal-state ()
+(defun evil-execute-in-normal-state (&optional arg)
   "Execute the next command in Normal state."
-  (interactive)
-  (let (evil-move-cursor-back)
-    (evil-normal-state))
-  ;; kludgy way to protect the old value;
-  ;; what we really want is a closure
-  (setq evil-old-move-cursor-back evil-move-cursor-back
-        evil-move-cursor-back nil)
-  (add-hook 'post-command-hook #'evil-execute-in-normal-state-hook))
-
-(defun evil-execute-in-normal-state-hook ()
-  "Return to Insert state."
-  (unless (eq this-command #'evil-execute-in-normal-state)
+  (interactive "p")
+  (cond
+   (arg
+    (let (evil-move-cursor-back)
+      (evil-normal-state))
+    ;; kludgy way to protect the old value;
+    ;; what we really want is a closure
+    (setq evil-old-move-cursor-back evil-move-cursor-back
+          evil-move-cursor-back nil)
+    (add-hook 'post-command-hook #'evil-execute-in-normal-state))
+   ((not (eq this-command #'evil-execute-in-normal-state))
     (let (evil-move-cursor-back)
       (evil-insert-state))
     (setq evil-move-cursor-back evil-old-move-cursor-back
           evil-old-move-cursor-back nil)
     (remove-hook 'post-command-hook
-                 #'evil-execute-in-normal-state-hook)))
-(put 'evil-execute-in-normal-state-hook 'permanent-local-hook t)
+                 #'evil-execute-in-normal-state))))
+(put 'evil-execute-in-normal-state 'permanent-local-hook t)
 
 ;; TODO: this will probably not work well with the repeat-system.
 (evil-define-command evil-esc (arg)
