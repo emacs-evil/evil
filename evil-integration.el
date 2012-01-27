@@ -93,22 +93,6 @@
   '(defadvice elp-results (after evil activate)
      (evil-motion-state)))
 
-;;; Folding
-
-(eval-after-load 'hideshow
-  '(progn
-     (defun evil-za ()
-       (interactive)
-       (hs-toggle-hiding)
-       (hs-hide-level evil-fold-level))
-     (defun evil-hs-setup ()
-       (define-key evil-normal-state-map "za" 'evil-za)
-       (define-key evil-normal-state-map "zm" 'hs-hide-all)
-       (define-key evil-normal-state-map "zr" 'hs-show-all)
-       (define-key evil-normal-state-map "zo" 'hs-show-block)
-       (define-key evil-normal-state-map "zc" 'hs-hide-block))
-     (add-hook 'hs-minor-mode-hook #'evil-hs-setup)))
-
 ;; load goto-chg.el if available
 (condition-case nil
     (require 'goto-chg)

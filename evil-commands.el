@@ -1931,6 +1931,52 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
        (t
         (evil-search search t t (point-min)))))))
 
+;;; Folding
+
+;; load hideshow.el if available
+(condition-case nil
+    (require 'hideshow)
+  (error nil))
+
+(evil-define-command evil-toggle-fold ()
+  "Open or close a fold."
+  (when (fboundp 'hs-minor-mode)
+    (hs-minor-mode 1))
+  (when (fboundp 'hs-toggle-hiding)
+    (hs-toggle-hiding)))
+
+(evil-define-command evil-open-folds ()
+  "Open all folds.
+See also `evil-close-folds'."
+  (when (fboundp 'hs-minor-mode)
+    (hs-minor-mode 1))
+  (when (fboundp 'hs-show-all)
+    (hs-show-all)))
+
+(evil-define-command evil-close-folds ()
+  "Close all folds.
+See also `evil-open-folds'."
+  (when (fboundp 'hs-minor-mode)
+    (hs-minor-mode 1))
+  (when (fboundp 'hs-hide-all)
+    (hs-hide-all)))
+
+(evil-define-command evil-open-fold ()
+  "Open fold.
+See also `evil-close-fold'."
+  (when (fboundp 'hs-minor-mode)
+    (hs-minor-mode 1))
+  (when (fboundp 'hs-show-block)
+    (hs-show-block)))
+
+(evil-define-command evil-close-fold ()
+  "Close fold.
+See also `evil-open-fold'."
+  (when (fboundp 'hs-minor-mode)
+    (hs-minor-mode 1))
+  (when (fboundp 'hs-hide-block)
+    (hs-hide-block)))
+
 ;;; Ex
 
 (evil-define-operator evil-write (beg end type file-name &optional force)
