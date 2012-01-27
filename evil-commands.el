@@ -220,7 +220,8 @@ If BIGWORD is non-nil, move by WORDS."
   :type exclusive
   (let ((move (if bigword #'evil-move-WORD #'evil-move-word))
         (orig (point)))
-    (prog1 (if (eq evil-this-operator #'evil-change)
+    (prog1 (if (and evil-want-change-word-to-end
+                    (eq evil-this-operator #'evil-change))
                (evil-move-end count move)
              (evil-move-beginning count move))
       ;; if we reached the beginning of a word on a new line in

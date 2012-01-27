@@ -143,6 +143,11 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-want-change-word-to-end t
+  "Whether \"cw\" behaves like \"ce\"."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-echo-state t
   "Whether to signal the current state in the echo area."
   :type 'boolean
