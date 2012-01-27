@@ -881,6 +881,16 @@ abc
 de[f]
 ;; and for Lisp evaluation."))
 
+(ert-deftest evil-test-open-below-folded ()
+  "Test `evil-open-below' on folded lines"
+  :tags '(evil insert)
+  (evil-test-buffer
+    "[l]ine1\n\n(let ()\n  var)\n\nlast line\n"
+    (emacs-lisp-mode)
+    (hs-minor-mode 1)
+    ("zm2joABC" [escape])
+    "line1\n\n(let ()\n  var)\nAB[C]\n\nlast line\n"))
+
 (ert-deftest evil-test-insert-line ()
   "Test `evil-insert-line'"
   :tags '(evil insert)

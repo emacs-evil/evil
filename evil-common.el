@@ -1177,7 +1177,12 @@ with regard to indentation."
   "Inserts a new line below point and places point in that line
 with regard to indentation."
   (evil-narrow-to-field
-    (end-of-line)
+    (condition-case nil
+        (let (line-move-visual)
+          (with-no-warnings
+            (next-line 1))
+          (end-of-line 0))
+      (end-of-buffer (end-of-line)))
     (newline)
     (back-to-indentation)))
 
