@@ -1908,6 +1908,24 @@ and for Lisp evaluation."
       ";; This buffer is for[ ]
 ;; and for Lisp evalua")))
 
+(ert-deftest evil-test-delete-folded ()
+  "Test `evil-delete' on folded lines."
+  :tags '(evil operator)
+  (ert-info ("Delete folded lines")
+    (evil-test-buffer
+      "[l]ine1\n\n(let ()\n  var)\n\n(let ()\n  var2)\n"
+      (emacs-lisp-mode)
+      (hs-minor-mode 1)
+      ("zm2jdd")
+      "line1\n\n[\n](let ()\n  var2)\n"))
+  (ert-info ("Delete folded lines with count")
+    (evil-test-buffer
+      "[l]ine1\n\n(let ()\n  var)\n\n(let ()\n  var2)\n\nlast line\n"
+      (emacs-lisp-mode)
+      (hs-minor-mode 1)
+      ("zm2j3dd")
+      "line1\n\n[\n]last line\n")))
+
 (ert-deftest evil-test-change ()
   "Test `evil-change'"
   :tags '(evil operator)

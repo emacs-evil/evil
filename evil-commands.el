@@ -72,7 +72,17 @@
   (let (line-move-visual)
     ;; select the previous line at the end of the buffer
     (if (eobp) (evil-line-move -1)
-      (evil-line-move (1- (or count 1))))))
+      ;; if the current line contains some folded lines, the end of
+      ;; the current buffer line may differ from the end of the
+      ;; current visible line. Therefore we try to move one line
+      ;; further and if this is successful back to the end of the
+      ;; previous line. This ensures the motion contains all lines,
+      ;; even folded ones.
+      (condition-case nil
+          (with-no-warnings
+            (next-line (or count 1))
+            (forward-line -1))
+        (end-of-buffer)))))
 
 (evil-define-motion evil-beginning-of-line ()
   "Move the cursor to the beginning of the current line."
