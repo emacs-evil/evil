@@ -794,7 +794,10 @@ If POS is a marker, return its position."
   "Move point one character back if at the end of a non-empty line.
 This behavior is contingent on the variable `evil-move-cursor-back';
 use the FORCE parameter to override it."
-  (when (eolp)
+  (when (= (point)
+           (save-excursion
+             (move-end-of-line nil)
+             (point)))
     (evil-move-cursor-back force)))
 
 (defun evil-move-cursor-back (&optional force)
@@ -1168,7 +1171,7 @@ Otherwise, execute BODY again, but without the restriction."
   "Inserts a new line above point and places point in that line
 with regard to indentation."
   (evil-narrow-to-field
-    (beginning-of-line)
+    (move-beginning-of-line nil)
     (newline)
     (forward-line -1)
     (back-to-indentation)))
@@ -1177,12 +1180,7 @@ with regard to indentation."
   "Inserts a new line below point and places point in that line
 with regard to indentation."
   (evil-narrow-to-field
-    (condition-case nil
-        (let (line-move-visual)
-          (with-no-warnings
-            (next-line 1))
-          (end-of-line 0))
-      (end-of-buffer (end-of-line)))
+    (move-end-of-line nil)
     (newline)
     (back-to-indentation)))
 
@@ -1540,7 +1538,7 @@ each line. Extra arguments to FUNC may be passed via ARGS."
      0 (length text) yank-excluded-properties text)
     (cond
      ((eq this-command #'evil-paste-after)
-      (end-of-line)
+      (move-end-of-line nil)
       (evil-move-mark (point))
       (newline)
       (insert text)
@@ -1553,7 +1551,7 @@ each line. Extra arguments to FUNC may be passed via ARGS."
                   (point)))
       (evil-move-mark (1+ (mark t))))
      (t
-      (beginning-of-line)
+      (move-beginning-of-line nil)
       (evil-move-mark (point))
       (insert text)
       (setq evil-last-paste
@@ -2043,7 +2041,7 @@ Returns t if RANGE was successfully adjusted and nil otherwise."
         (forward-line)
         (if (and shrink evil-auto-indent)
             (back-to-indentation)
-          (beginning-of-line))
+          (move-beginning-of-line nil))
         (evil-set-range range (point) nil))
       (goto-char (evil-range-end range))
       (when (and shrink (looking-back (concat "^" regexp)))

@@ -72,28 +72,18 @@
   (let (line-move-visual)
     ;; select the previous line at the end of the buffer
     (if (eobp) (evil-line-move -1)
-      ;; if the current line contains some folded lines, the end of
-      ;; the current buffer line may differ from the end of the
-      ;; current visible line. Therefore we try to move one line
-      ;; further and if this is successful back to the end of the
-      ;; previous line. This ensures the motion contains all lines,
-      ;; even folded ones.
-      (condition-case nil
-          (with-no-warnings
-            (next-line (or count 1))
-            (forward-line -1))
-        (end-of-buffer)))))
+      (evil-line-move (1- (or count 1))))))
 
 (evil-define-motion evil-beginning-of-line ()
   "Move the cursor to the beginning of the current line."
   :type exclusive
-  (beginning-of-line))
+  (move-beginning-of-line nil))
 
 (evil-define-motion evil-end-of-line (count)
   "Move the cursor to the end of the current line.
 If COUNT is given, move COUNT - 1 lines downward first."
   :type inclusive
-  (end-of-line count)
+  (move-end-of-line count)
   (unless (evil-visual-state-p)
     (evil-adjust-cursor)
     (when (eolp)
@@ -141,7 +131,7 @@ If COUNT is given, move COUNT - 1 lines downward first."
   :type inclusive
   (goto-char
    (save-excursion
-     (beginning-of-line count)
+     (move-beginning-of-line count)
      (if (re-search-forward "[ \t]*$")
          (max (line-beginning-position)
               (1- (match-beginning 0)))
@@ -242,11 +232,11 @@ If BIGWORD is non-nil, move by WORDS."
                  (looking-back "^[[:space:]]*"))
         ;; move cursor back as long as the line contains only
         ;; whitespaces and is non-empty
-        (end-of-line 0)
+        (move-end-of-line 0)
         ;; skip non-empty lines containing only spaces
         (while (and (looking-back "^[[:space:]]+$")
                     (not (<= (line-beginning-position) orig)))
-          (end-of-line 0))
+          (move-end-of-line 0))
         ;; but if the previous line is empty, delete this line
         (when (bolp) (forward-char))))))
 
@@ -1207,7 +1197,7 @@ See also `evil-shift-right'."
     (let* ((indent
             (save-excursion
               (goto-char beg)
-              (beginning-of-line)
+              (move-beginning-of-line nil)
               ;; ignore blank lines
               (while (and (< (point) end) (looking-at "[ \t]*$"))
                 (forward-line))
@@ -1227,7 +1217,7 @@ See also `evil-shift-left'."
     (let* ((indent
             (save-excursion
               (goto-char beg)
-              (beginning-of-line)
+              (move-beginning-of-line nil)
               (while (and (< (point) end) (looking-at "[ \t]*$"))
                 (forward-line))
               (if (> (point) end) 0
@@ -1672,7 +1662,7 @@ on the current line. The insertion will be repeated COUNT times."
   (interactive "p")
   (if evil-auto-indent
       (back-to-indentation)
-    (beginning-of-line))
+    (move-beginning-of-line nil))
   (setq evil-insert-count count
         evil-insert-lines nil
         evil-insert-vcount
@@ -1687,7 +1677,7 @@ on the current line. The insertion will be repeated COUNT times."
   "Switch to Insert state at the end of the current line.
 The insertion will be repeated COUNT times."
   (interactive "p")
-  (end-of-line)
+  (move-end-of-line nil)
   (setq evil-insert-count count
         evil-insert-lines nil
         evil-insert-vcount
@@ -1769,7 +1759,7 @@ COL defaults to the current column."
         (if (< num 0)
             (skip-chars-backward " \t\n")
           (skip-chars-forward " \t\n")))
-      (beginning-of-line)
+      (move-beginning-of-line nil)
       (move-to-column col)
       ;; if the column winds up in middle of a tab,
       ;; return the appropriate number of spaces
@@ -2432,7 +2422,7 @@ Change to `%s'? "
         match markers)
     (when (and pattern command)
       (goto-char beg)
-      (beginning-of-line)
+      (move-beginning-of-line nil)
       (while (< (point) end)
         (setq match (re-search-forward pattern (line-end-position) t))
         (when (or (and match (not invert))

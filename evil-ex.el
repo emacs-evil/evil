@@ -555,7 +555,7 @@ Signal an error if MARKER is in a different buffer."
 Returns the line number of the match."
   (save-excursion
     (set-text-properties 0 (length pattern) nil pattern)
-    (beginning-of-line 2)
+    (move-end-of-line nil)
     (and (re-search-forward pattern)
          (line-number-at-pos (1- (match-end 0))))))
 
@@ -564,7 +564,7 @@ Returns the line number of the match."
 Returns the line number of the match."
   (save-excursion
     (set-text-properties 0 (length pattern) nil pattern)
-    (beginning-of-line 0)
+    (move-beginning-of-line nil)
     (and (re-search-backward pattern)
          (line-number-at-pos (match-beginning 0)))))
 

@@ -87,7 +87,7 @@ Handles the repeat-count of the insertion command."
           (when (or (not evil-insert-skip-empty-lines)
                     (not (integerp col))
                     (save-excursion
-                      (end-of-line)
+                      (move-end-of-line nil)
                       (>= (current-column) col)))
             (if (integerp col)
                 (move-to-column col t)

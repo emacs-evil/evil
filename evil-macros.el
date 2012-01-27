@@ -158,22 +158,24 @@ not be performed.
   "Narrow BODY to the current line."
   (declare (indent defun)
            (debug t))
-  `(save-restriction
-     (narrow-to-region
-      (line-beginning-position)
-      (if (and evil-move-cursor-back
-               (not (evil-visual-state-p))
-               (not (evil-operator-state-p)))
-          (max (line-beginning-position)
-               (1- (line-end-position)))
-        (line-end-position)))
-     (evil-signal-without-movement
-       (condition-case nil
-           (progn ,@body)
-         (beginning-of-buffer
-          (error "Beginning of line"))
-         (end-of-buffer
-          (error "End of line"))))))
+  `(let* ((range (evil-expand (point) (point) 'line))
+          (beg (evil-range-beginning range))
+          (end (evil-range-end range)))
+     (when (save-excursion (goto-char end) (bolp))
+       (setq end (max beg (1- end))))
+     (when (and evil-move-cursor-back
+                (not (evil-visual-state-p))
+                (not (evil-operator-state-p)))
+       (setq end (max beg (1- end))))
+     (save-restriction
+       (narrow-to-region beg end)
+       (evil-signal-without-movement
+         (condition-case nil
+             (progn ,@body)
+           (beginning-of-buffer
+            (error "Beginning of line"))
+           (end-of-buffer
+            (error "End of line")))))))
 
 ;; we don't want line boundaries to trigger the debugger
 ;; when `debug-on-error' is t
