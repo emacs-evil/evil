@@ -232,7 +232,6 @@ This is the state the buffer comes up in."
   "Change the state of BUFFER to its initial state.
 This is the state the buffer came up in."
   :keep-visual t
-  (interactive)
   (with-current-buffer (or buffer (current-buffer))
     (evil-change-state (evil-initial-state-for-buffer
                         buffer (or evil-default-state 'normal))
@@ -243,7 +242,6 @@ This is the state the buffer came up in."
   "Change the state of BUFFER to its previous state."
   :keep-visual t
   :repeat abort
-  (interactive)
   (with-current-buffer (or buffer (current-buffer))
     (evil-change-state (or evil-previous-state evil-default-state 'normal)
                        message)))
@@ -948,8 +946,7 @@ cursor, or a list of the above." name))
               (eq (or state evil-state) ',state)))
 
        ;; define state function
-       (evil-define-command ,toggle (&optional arg)
-         :keep-visual t
+       (defun ,toggle (&optional arg)
          ,(format "Enable %s. Disable with negative ARG.
 If ARG is nil, don't display a message in the echo area.%s" name doc)
          (interactive "p")
@@ -992,6 +989,8 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                  (if (functionp ,message)
                      (funcall ,message)
                    (evil-echo ,message))))))))
+
+       (evil-set-command-property ',toggle :keep-visual t)
 
        (evil-define-keymap ,keymap nil
          :mode ,mode

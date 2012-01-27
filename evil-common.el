@@ -266,7 +266,8 @@ sorting in between."
                            [&rest keywordp sexp]
                            [&optional ("interactive" [&rest form])]
                            def-body)))
-  (let (arg args doc doc-form key keys)
+  (let ((interactive '(interactive))
+        arg args doc doc-form key keys)
     ;; collect arguments
     (when (listp (car-safe body))
       (setq args (pop body)))
@@ -283,15 +284,15 @@ sorting in between."
             arg (pop body))
       (unless nil ; TODO: add keyword check
         (setq keys (plist-put keys key arg))))
-    ;; collect interactive
+    ;; collect `interactive' form
     (when (and body
                (consp (car body))
                (eq (car (car body)) 'interactive))
-      (let* ((interactive (pop body))
-             (result (apply #'evil-interactive-form (cdr interactive)))
+      (let* ((iform (pop body))
+             (result (apply #'evil-interactive-form (cdr iform)))
              (form (car result))
              (attrs (cdr result)))
-        (push (list 'interactive form) body)
+        (setq interactive `(interactive ,form))
         ;; The next code is a copy of the previous one but does not
         ;; overwrite properties.
         (while (keywordp (car-safe attrs))
@@ -305,12 +306,15 @@ sorting in between."
        ,(when (and command body)
           `(defun ,command ,args
              ,@(when doc `(,doc))
+             ,interactive
              ,@body))
        ,(when (and command doc-form)
           `(put ',command 'function-documentation ,doc-form))
        ;; set command properties for symbol or lambda function
        (let ((func ',(if (and (null command) body)
-                         `(lambda ,args ,@body)
+                         `(lambda ,args
+                            ,interactive
+                            ,@body)
                        command)))
          (apply #'evil-set-command-properties func ',keys)
          func))))
@@ -1719,7 +1723,7 @@ list of command properties as passed to `evil-define-command'."
           (setq pos (1+ pos))
         (setq match (evil-match-interactive-code string pos))
         (if (null match)
-            (error "Unknown interactive code: `%c'"
+            (error "Unknown interactive code: `%s'"
                    (substring string pos))
           (setq code (car match)
                 expr (car (cdr match))
@@ -1746,8 +1750,8 @@ list of command properties as passed to `evil-define-command'."
     (dolist (arg args)
       (if (not (stringp arg))
           (setq forms (append forms (list arg)))
-        (setq arg (evil-interactive-string arg))
-        (setq forms (append forms (cdr (car arg)))
+        (setq arg (evil-interactive-string arg)
+              forms (append forms (cdr (car arg)))
               properties (append properties (cdr arg)))))
     (cons (apply #'evil-concatenate-interactive-forms forms)
           properties)))

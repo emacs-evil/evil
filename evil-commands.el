@@ -2009,7 +2009,6 @@ If no FILE is specified, reload the current buffer from disk."
 (evil-define-command evil-show-buffers ()
   "Shows the buffer-list."
   :repeat nil
-  (interactive)
   (let (message-truncate-lines message-log-max)
     (message "%s"
              (mapconcat #'buffer-name (buffer-list) "\n"))))
@@ -2072,7 +2071,6 @@ If no FILE is specified, reload the current buffer from disk."
 
 (evil-define-command evil-save-and-quit ()
   "Exits Emacs, without saving."
-  (interactive)
   (save-buffers-kill-emacs 1))
 
 (evil-define-command evil-save-and-close (file &optional force)
@@ -2120,7 +2118,6 @@ the previous shell command is executed instead."
 (evil-define-command evil-show-registers ()
   "Shows the contents of all registers."
   :repeat nil
-  (interactive)
   (let (message-truncate-lines message-log-max)
     (message "%s"
              (mapconcat #'(lambda (reg)
@@ -2132,7 +2129,6 @@ the previous shell command is executed instead."
 (eval-when-compile (require 'ffap))
 (evil-define-command evil-find-file-at-point-with-line ()
   "Opens the file at point and goes to line-number."
-  (interactive)
   (let ((fname (ffap-file-at-point)))
     (if fname
         (let ((line
@@ -2195,7 +2191,6 @@ Change to `%s'? "
 (evil-define-command evil-force-normal-state ()
   "Switch to normal state without recording current command."
   :repeat abort
-  (interactive)
   (evil-normal-state))
 
 (evil-define-motion evil-ex-search-next (count)
@@ -2468,7 +2463,6 @@ Default position is the beginning of the buffer."
 
 (evil-define-command evil-show-file-info ()
   "Shows basic file information."
-  (interactive)
   (let* ((nlines   (count-lines (point-min) (point-max)))
          (curr     (line-number-at-pos (point)))
          (perc     (* (/ (float curr) (float nlines)) 100.0))
@@ -2591,7 +2585,6 @@ editing a certain FILE."
 (evil-define-command evil-window-bottom-right ()
   "Move the cursor to bottom-right window."
   :repeat nil
-  (interactive)
   (while (let (success)
            (condition-case nil
                (progn
@@ -2608,7 +2601,6 @@ editing a certain FILE."
 (evil-define-command evil-window-top-left ()
   "Move the cursor to top-left window."
   :repeat nil
-  (interactive)
   (while (let (success)
            (condition-case nil
                (progn
@@ -2625,7 +2617,6 @@ editing a certain FILE."
 (evil-define-command evil-window-lru ()
   "Move the cursor to the previous (last accessed) window."
   :repeat nil
-  (interactive)
   (select-window (get-lru-window)))
 
 (evil-define-command evil-window-next (count)
@@ -2715,7 +2706,6 @@ and opens a new buffer name or edits a certain FILE."
 (evil-define-command evil-window-rotate-upwards ()
   "Rotates the windows according to the currenty cyclic ordering."
   :repeat nil
-  (interactive)
   (let ((wlist (window-list))
         (blist (mapcar #'(lambda (w) (window-buffer w))
                        (window-list))))
@@ -2729,7 +2719,6 @@ and opens a new buffer name or edits a certain FILE."
 (evil-define-command evil-window-rotate-downwards ()
   "Rotates the windows according to the currenty cyclic ordering."
   :repeat nil
-  (interactive)
   (let ((wlist (window-list))
         (blist (mapcar #'(lambda (w) (window-buffer w))
                        (window-list))))
@@ -2744,7 +2733,6 @@ and opens a new buffer name or edits a certain FILE."
   "Closes the current window, splits the upper-left one horizontally
 and redisplays the current buffer there."
   :repeat nil
-  (interactive)
   (unless (one-window-p)
     (let ((b (current-buffer)))
       (delete-window)
@@ -2761,7 +2749,6 @@ and redisplays the current buffer there."
   "Closes the current window, splits the upper-left one vertically
 and redisplays the current buffer there."
   :repeat nil
-  (interactive)
   (unless (one-window-p)
     (let ((b (current-buffer)))
       (delete-window)
@@ -2778,7 +2765,6 @@ and redisplays the current buffer there."
   "Closes the current window, splits the lower-right one vertically
 and redisplays the current buffer there."
   :repeat nil
-  (interactive)
   (unless (one-window-p)
     (let ((b (current-buffer)))
       (delete-window)
@@ -2795,7 +2781,6 @@ and redisplays the current buffer there."
   "Closes the current window, splits the lower-right one horizontally
 and redisplays the current buffer there."
   :repeat nil
-  (interactive)
   (unless (one-window-p)
     (let ((b (current-buffer)))
       (delete-window)
