@@ -2851,26 +2851,34 @@ if the previous state was Emacs state."
       (when (evil-emacs-state-p)
         (evil-normal-state (and message 1))))))
 
-(defun evil-execute-in-normal-state (&optional arg)
+(defun evil-execute-in-normal-state ()
   "Execute the next command in Normal state."
+  (interactive)
+  (let* ((fun (make-symbol "evil-execute-in-normal-state-hook"))
+         (old-move-cursor-back evil-move-cursor-back))
+    (setq evil-move-cursor-back nil)
+    (fset fun
+          `(lambda ()
+             (unless (eq this-command #'evil-execute-in-normal-state)
+               (evil-change-to-previous-state)
+               (setq evil-move-cursor-back ',old-move-cursor-back)
+               (remove-hook 'post-command-hook #',fun))))
+    (put fun 'permanent-local-hook t)
+    (add-hook 'post-command-hook fun)
+    (evil-normal-state)
+    (evil-echo "Switched to Normal state for the next command ...")))
+
+(defun evil-execute-in-emacs-state (&optional arg)
+  "Execute the next command in Emacs state."
   (interactive "p")
   (cond
    (arg
-    (let (evil-move-cursor-back)
-      (evil-normal-state))
-    ;; kludgy way to protect the old value;
-    ;; what we really want is a closure
-    (setq evil-old-move-cursor-back evil-move-cursor-back
-          evil-move-cursor-back nil)
-    (add-hook 'post-command-hook #'evil-execute-in-normal-state))
-   ((not (eq this-command #'evil-execute-in-normal-state))
-    (let (evil-move-cursor-back)
-      (evil-insert-state))
-    (setq evil-move-cursor-back evil-old-move-cursor-back
-          evil-old-move-cursor-back nil)
-    (remove-hook 'post-command-hook
-                 #'evil-execute-in-normal-state))))
-(put 'evil-execute-in-normal-state 'permanent-local-hook t)
+    (add-hook 'post-command-hook #'evil-execute-in-emacs-state t)
+    (evil-emacs-state)
+    (evil-echo "Switched to Emacs state for the next command ..."))
+   ((not (eq this-command #'evil-execute-in-emacs-state))
+    (remove-hook 'post-command-hook 'evil-execute-in-emacs-state)
+    (evil-change-to-previous-state))))
 
 ;; TODO: this will probably not work well with the repeat-system.
 (evil-define-command evil-esc (arg)

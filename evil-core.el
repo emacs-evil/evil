@@ -634,7 +634,9 @@ If AUX is nil, create a new auxiliary keymap."
     (setq aux (make-sparse-keymap)))
   (unless (evil-auxiliary-keymap-p aux)
     (evil-set-keymap-prompt
-     aux (format "Auxiliary keymap for %s state" state)))
+     aux (format "Auxiliary keymap for %s"
+                 (or (evil-state-property state :name)
+                     (format "%s state" state)))))
   (define-key map
     (vconcat (list (intern (format "%s-state" state)))) aux)
   aux)
@@ -751,7 +753,7 @@ the execution is postponed until KEYMAP is bound. For example:
 The arguments are exactly like those of `evil-define-key',
 and should be quoted as such."
   (declare (indent defun))
-  (let ((func (evil-generate-symbol)))
+  (let ((fun (make-symbol (format "evil-define-key-in-%s" keymap))))
     `(let (package)
        (cond
         ((boundp ',keymap)
@@ -762,13 +764,12 @@ and should be quoted as such."
          (eval-after-load package
            '(evil-define-key ,state ,keymap ,key ,def ,@bindings)))
         (t
-         (defun ,func (&rest args)
-           (when (boundp ',keymap)
-             (unless (keymapp ,keymap)
-               (setq ,keymap (make-sparse-keymap)))
-             (evil-define-key ,state ,keymap ,key ,def ,@bindings)
-             (remove-hook 'after-load-functions #',func)))
-         (add-hook 'after-load-functions #',func t))))))
+         (fset ',fun
+               (lambda (&rest args)
+                 (when (and (boundp ',keymap) (keymapp ,keymap))
+                   (evil-define-key ,state ,keymap ,key ,def ,@bindings)
+                   (remove-hook 'after-load-functions #',fun))))
+         (add-hook 'after-load-functions #',fun t))))))
 
 (defmacro evil-add-hjkl-bindings (keymap &optional state &rest bindings)
   "Add \"h\", \"j\", \"k\", \"l\" bindings to KEYMAP in STATE.

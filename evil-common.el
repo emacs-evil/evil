@@ -37,15 +37,6 @@ no arguments. In Emacs 23.2 and newer, it takes one argument."
 (unless (get 'display-table 'char-table-extra-slots)
   (put 'display-table 'char-table-extra-slots 0))
 
-;; custom version of `gensym'
-(defun evil-generate-symbol (&optional intern)
-  "Return a new uninterned symbol.
-If INTERN is non-nil, intern the symbol."
-  (setq evil-symbol-counter (1+ evil-symbol-counter))
-  (if intern
-      (intern (format "evil-symbol-%d" evil-symbol-counter))
-    (make-symbol (format "evil-symbol-%d" evil-symbol-counter))))
-
 ;; macro helper
 (eval-and-compile
   (defun evil-unquote (exp)

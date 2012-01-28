@@ -52,6 +52,7 @@
 (define-key evil-normal-state-map "." 'evil-repeat)
 (define-key evil-normal-state-map "@" 'evil-execute-macro)
 (define-key evil-normal-state-map "\"" 'evil-use-register)
+(define-key evil-normal-state-map "\\" 'evil-execute-in-emacs-state)
 (define-key evil-normal-state-map "~" 'evil-invert-char)
 (define-key evil-normal-state-map "=" 'evil-indent)
 (define-key evil-normal-state-map "<" 'evil-shift-left)
