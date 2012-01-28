@@ -45,34 +45,38 @@
   "Move the cursor COUNT lines down."
   :type line
   (let (line-move-visual)
-    (evil-line-move (or count 1))))
+    (evil-line-move (or count 1))
+    (evil-adjust-cursor)))
 
 (evil-define-motion evil-previous-line (count)
   "Move the cursor COUNT lines up."
   :type line
   (let (line-move-visual)
-    (evil-line-move (- (or count 1)))))
+    (evil-line-move (- (or count 1)))
+    (evil-adjust-cursor)))
 
 (evil-define-motion evil-next-visual-line (count)
   "Move the cursor COUNT screen lines down."
   :type exclusive
   (let ((line-move-visual t))
-    (evil-line-move (or count 1))))
+    (evil-line-move (or count 1))
+    (evil-adjust-cursor)))
 
 (evil-define-motion evil-previous-visual-line (count)
   "Move the cursor COUNT screen lines up."
   :type exclusive
   (let ((line-move-visual t))
-    (evil-line-move (- (or count 1)))))
+    (evil-line-move (- (or count 1)))
+    (evil-adjust-cursor)))
 
 ;; used for repeated commands like "dd"
 (evil-define-motion evil-line (count)
   "Move COUNT - 1 lines down."
   :type line
   (let (line-move-visual)
+    (evil-line-move (1- (or count 1)))
     ;; select the previous line at the end of the buffer
-    (if (eobp) (evil-line-move -1)
-      (evil-line-move (1- (or count 1))))))
+    (evil-adjust-cursor)))
 
 (evil-define-motion evil-beginning-of-line ()
   "Move the cursor to the beginning of the current line."
@@ -167,14 +171,11 @@ of the current screen line."
 By default the last line."
   :jump t
   :type line
-  (cond
-   (count
+  (if (null count)
+      (goto-char (point-max))
     (goto-char (point-min))
     (forward-line (1- count)))
-   (t
-    (goto-char (point-max))
-    (when (bolp)
-      (forward-line -1))))
+  (evil-adjust-cursor)
   (evil-first-non-blank))
 
 (evil-define-motion evil-goto-first-line (count)
@@ -1012,11 +1013,8 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
       (delete-rectangle beg end)
     (delete-region beg end))
   ;; place cursor on beginning of line
-  (when (evil-called-interactively-p)
-    (when (eq type 'line)
-      (evil-narrow-to-field
-        (when (eobp) (forward-line -1))
-        (back-to-indentation)))))
+  (when (eq type 'line)
+    (evil-first-non-blank)))
 
 (evil-define-operator evil-delete-line (beg end type register yank-handler)
   "Delete to end of line."

@@ -190,12 +190,25 @@ not be performed.
        (evil-narrow-to-line ,@body)
      ,@body))
 
-(defun evil-eobp ()
+(defun evil-eobp (&optional pos)
   "Whether point is at end-of-buffer with regard to end-of-line."
-  (or (eobp)
-      (and (evil-normal-state-p)
-           (= (point) (1- (point-max)))
-           (not (eolp)))))
+  (save-excursion
+    (when pos (goto-char pos))
+    (cond
+     ((eobp))
+     ;; the rest only pertains to Normal state
+     ((not (evil-normal-state-p))
+      nil)
+     ;; at the end of the last line
+     ((eolp)
+      (forward-char)
+      (eobp))
+     ;; at the last character of the last line
+     (t
+      (forward-char)
+      (if (eobp) t
+        (forward-char)
+        (eobp))))))
 
 (defun evil-move-beginning (count forward &optional backward)
   "Move to the beginning of the COUNT next object.

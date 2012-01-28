@@ -796,13 +796,18 @@ If POS is a marker, return its position."
 
 (defun evil-adjust-cursor (&optional force)
   "Move point one character back if at the end of a non-empty line.
+If at the end of the buffer, move point to the previous line.
 This behavior is contingent on the variable `evil-move-cursor-back';
 use the FORCE parameter to override it."
-  (when (= (point)
-           (save-excursion
-             (move-end-of-line nil)
-             (point)))
-    (evil-move-cursor-back force)))
+  (cond
+   ((and (eobp) (bolp))
+    (forward-line -1)
+    (back-to-indentation))
+   ((= (point)
+       (save-excursion
+         (move-end-of-line nil)
+         (point)))
+    (evil-move-cursor-back force))))
 
 (defun evil-move-cursor-back (&optional force)
   "Move point one character back within the current line.

@@ -2072,19 +2072,6 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       ("2P")
       ";; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluationThis bufferThis buffe[r]."))
-  (ert-info ("Paste characters at end-of-buffer on empty line")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes you don't want to save,
-;; and for Lisp evaluation.\n"
-      ("y2e")
-      (goto-char (point-max))
-      ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-\[]"
-      ("2P")
-      ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-This bufferThis buffe[r]"))
   (ert-info ("Paste lines")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
@@ -2109,17 +2096,15 @@ This bufferThis buffe[r]"))
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.\n"
-      ("2yy")
-      (goto-char (point-max))
+      ("2yyG$")
       ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-\[]"
+;; and for Lisp evaluation[.]\n"
       ("2P")
       ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
 \[;]; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.
 ;; This buffer is for notes you don't want to save,
+;; and for Lisp evaluation.
 ;; and for Lisp evaluation.\n"))
   (ert-info ("Paste block")
     (evil-test-buffer
@@ -2214,19 +2199,6 @@ This bufferThis buffe[r]"))
       ("2p")
       ";; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.This bufferThis buffe[r]"))
-  (ert-info ("Paste characters at end-of-buffer on empty line")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes you don't want to save,
-;; and for Lisp evaluation.\n"
-      ("y2e")
-      (goto-char (point-max))
-      ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-\[]"
-      ("2p")
-      ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-This bufferThis buffe[r]"))
   (ert-info ("Paste lines")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
@@ -2251,15 +2223,12 @@ This bufferThis buffe[r]"))
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.\n"
-      ("2yy")
-      (goto-char (point-max))
+      ("2yyG$")
       ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-\[]"
+;; and for Lisp evaluation[.]\n"
       ("2p")
       ";; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.
-
 \[;]; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.
 ;; This buffer is for notes you don't want to save,
@@ -3174,7 +3143,7 @@ Below some empty lin[e]"))
     (evil-test-buffer
       "[B]elow some empty line\n\n"
       ("100}")
-      "Below some empty line\n\n[]"
+      "Below some empty line\n[\n]"
       (should-error (execute-kbd-macro "}"))
       (should-error (execute-kbd-macro "42}")))))
 
@@ -3279,8 +3248,8 @@ Below some empty line[.]"))
   (ert-info ("End of buffer with newline")
     (evil-test-buffer
       "[B]elow some empty line.\n\n"
-      ("100)")
-      "Below some empty line.\n\n[]"
+      (")")
+      "Below some empty line.\n[\n]"
       (should-error (execute-kbd-macro ")"))
       (should-error (execute-kbd-macro "42)")))))
 
