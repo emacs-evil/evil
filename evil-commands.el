@@ -1936,11 +1936,6 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
 
 ;;; Folding
 
-;; load hideshow.el if available
-(condition-case nil
-    (require 'hideshow)
-  (error nil))
-
 (evil-define-command evil-toggle-fold ()
   "Open or close a fold."
   (when (fboundp 'hs-minor-mode)
