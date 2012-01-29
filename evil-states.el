@@ -264,6 +264,7 @@ otherwise exit Visual state."
   (cond
    ((and (evil-visual-state-p) command
          (not (evil-get-command-property command :keep-visual)))
+    (setq evil-visual-region-expanded nil)
     (evil-exit-visual-state)
     (evil-active-region -1)
     (evil-restore-mark))
@@ -276,7 +277,6 @@ otherwise exit Visual state."
   "Exit from Visual state to the previous state."
   :keep-visual t
   :repeat abort
-  (interactive)
   (with-current-buffer (or buffer (current-buffer))
     (when (evil-visual-state-p)
       (when evil-visual-region-expanded
@@ -608,11 +608,12 @@ If SELECTION is specified, return the type of that instead."
     (setq selection (or selection evil-visual-selection))
     (symbol-value (cdr-safe (assq selection evil-visual-alist)))))
 
-(defun evil-visual-end-mark ()
-  "Return the position of the mark to then end of last visual selection.
-This position may differ from `evil-visual-end' depending on the
-selection type and is contained in the visual selection."
-  (evil-range-end (evil-contract-range (evil-visual-range))))
+(defun evil-visual-goto-end ()
+  "Go to the last line of the Visual selection.
+This position may differ from `evil-visual-end' depending on
+the selection type, and is contained in the selection."
+  (let ((range (evil-contract-range (evil-visual-range))))
+    (goto-char (evil-range-end range))))
 
 (defun evil-visual-alist ()
   "Return an association list from types to selection symbols."
