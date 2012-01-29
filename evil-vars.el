@@ -384,6 +384,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
   '(apropos-mode
     Buffer-menu-mode
     calendar-mode
+    color-theme-mode
     command-history-mode
     compilation-mode
     dictionary-mode
@@ -398,6 +399,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
 
 (defcustom evil-overriding-maps
   '((Buffer-menu-mode-map . "buff-menu")
+    (color-theme-mode-map . color-theme)
     (comint-mode-map . comint)
     (compilation-mode-map . compile)
     (dictionary-mode-map . dictionary)
