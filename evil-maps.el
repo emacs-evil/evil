@@ -299,6 +299,7 @@
 
 (define-key evil-operator-state-map "a" evil-outer-text-objects-map)
 (define-key evil-operator-state-map "i" evil-inner-text-objects-map)
+(define-key evil-operator-state-map [escape] 'keyboard-quit)
 
 ;;; Insert state
 

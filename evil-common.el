@@ -448,8 +448,13 @@ Both COUNT and CMD may be nil."
         char cmd count digit seq)
     (while (progn
              (setq char (or (pop input) (read-event)))
-             (when (symbolp char)
-               (setq char (or (get char 'ascii-character) char)))
+             (cond
+              ((eq char 'escape))
+              ((eq char ?\e)
+               (when (sit-for evil-esc-delay t)
+                 (setq char 'escape)))
+              ((symbolp char)
+               (setq char (or (get char 'ascii-character) char))))
              ;; this trick from simple.el's `digit-argument'
              ;; converts keystrokes like C-0 and C-M-1 to digits
              (if (or (characterp char) (integerp char))

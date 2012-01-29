@@ -579,13 +579,8 @@ a predefined type may be specified with TYPE."
                   count (nth 1 command)
                   type (or type (nth 2 command))))
           (cond
-           ;; ESC cancels the current operator
-           ;; TODO: is there a better way to detect this canceling?
-           ((memq motion '(nil evil-esc))
-            (when (fboundp 'evil-repeat-abort)
-              (evil-repeat-abort))
-            (setq quit-flag t))
-           ((evil-get-command-property motion :suppress-operator)
+           ((or (null motion) ; keyboard-quit
+                (evil-get-command-property motion :suppress-operator))
             (when (fboundp 'evil-repeat-abort)
               (evil-repeat-abort))
             (setq quit-flag t))
@@ -601,14 +596,13 @@ a predefined type may be specified with TYPE."
             (setq count
                   (* (prefix-numeric-value count)
                      (prefix-numeric-value current-prefix-arg)))))
-          (when motion
-            (let ((evil-state 'operator))
-              ;; calculate motion range
-              (setq range (evil-motion-range
-                           motion
-                           count
-                           type))
-              (evil-set-marker ?. (evil-range-end range) t)))
+          (let ((evil-state 'operator))
+            ;; calculate motion range
+            (setq range (evil-motion-range
+                         motion
+                         count
+                         type))
+            (evil-set-marker ?. (evil-range-end range) t))
           ;; update global variables
           (setq evil-this-motion motion
                 evil-this-motion-count count
