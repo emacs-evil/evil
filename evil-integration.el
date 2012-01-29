@@ -31,8 +31,11 @@
 (evil-set-type #'previous-line 'line)
 (evil-set-type #'next-line 'line)
 
+(dolist (cmd '(keyboard-quit keyboard-escape-quit))
+  (evil-set-command-property cmd :suppress-operator t))
+
 (dolist (cmd evil-visual-newline-commands)
-  (evil-add-command-properties cmd :exclude-newline t))
+  (evil-set-command-property cmd :exclude-newline t))
 
 (dolist (map evil-overriding-maps)
   (eval-after-load (cdr map)

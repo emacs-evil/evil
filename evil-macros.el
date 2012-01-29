@@ -579,13 +579,14 @@ a predefined type may be specified with TYPE."
                   count (nth 1 command)
                   type (or type (nth 2 command))))
           (cond
+           ((eq motion #'undefined)
+            (setq range (if return-type '(nil nil nil) '(nil nil))
+                  motion nil))
            ((or (null motion) ; keyboard-quit
                 (evil-get-command-property motion :suppress-operator))
             (when (fboundp 'evil-repeat-abort)
               (evil-repeat-abort))
-            (setq quit-flag t))
-           ((eq motion #'undefined)
-            (setq range (if return-type '(nil nil nil) '(nil nil))
+            (setq quit-flag t
                   motion nil))
            (evil-repeat-count
             (setq count evil-repeat-count
@@ -596,13 +597,14 @@ a predefined type may be specified with TYPE."
             (setq count
                   (* (prefix-numeric-value count)
                      (prefix-numeric-value current-prefix-arg)))))
-          (let ((evil-state 'operator))
-            ;; calculate motion range
-            (setq range (evil-motion-range
-                         motion
-                         count
-                         type))
-            (evil-set-marker ?. (evil-range-end range) t))
+          (when motion
+            (let ((evil-state 'operator))
+              ;; calculate motion range
+              (setq range (evil-motion-range
+                           motion
+                           count
+                           type))
+              (evil-set-marker ?. (evil-range-end range) t)))
           ;; update global variables
           (setq evil-this-motion motion
                 evil-this-motion-count count

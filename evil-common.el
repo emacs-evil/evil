@@ -445,31 +445,30 @@ Returns (CMD COUNT), where COUNT is the numeric prefix argument.
 Both COUNT and CMD may be nil."
   (let ((input (listify-key-sequence input))
         (inhibit-quit t)
-        char cmd count digit seq)
+        char cmd count digit event seq)
     (while (progn
-             (setq char (or (pop input) (read-event)))
-             (cond
-              ((eq char 'escape))
-              ((eq char ?\e)
+             (setq event (or (pop input) (read-event)))
+             (when (eq event ?\e)
                (when (sit-for evil-esc-delay t)
-                 (setq char 'escape)))
-              ((symbolp char)
-               (setq char (or (get char 'ascii-character) char))))
+                 (setq event 'escape)))
+             (setq char (or (when (characterp event) event)
+                            (when (symbolp event)
+                              (get event 'ascii-character))))
              ;; this trick from simple.el's `digit-argument'
              ;; converts keystrokes like C-0 and C-M-1 to digits
              (if (or (characterp char) (integerp char))
                  (setq digit (- (logand char ?\177) ?0))
                (setq digit nil))
              (if (keymapp cmd)
-                 (setq seq (append seq (list char)))
-               (setq seq (list char)))
+                 (setq seq (append seq (list event)))
+               (setq seq (list event)))
              (setq cmd (key-binding (vconcat seq) t))
              (cond
               ;; if CMD is a keymap, we need to read more
               ((keymapp cmd)
                t)
               ;; numeric prefix argument
-              ((or (memq cmd '(digit-argument))
+              ((or (eq cmd #'digit-argument)
                    (and (eq (length seq) 1)
                         (not (keymapp cmd))
                         count
@@ -492,10 +491,7 @@ Both COUNT and CMD may be nil."
                t)
               ((eq cmd 'negative-argument)
                (unless count
-                 (setq count "-")))
-              ;; user pressed C-g, so return nil for CMD
-              ((memq cmd '(keyboard-quit undefined))
-               (setq cmd nil)))))
+                 (setq count "-"))))))
     ;; determine COUNT
     (when (stringp count)
       (if (string= count "-")

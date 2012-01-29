@@ -473,6 +473,7 @@ and only if COUNT is non-nil."
   "Repeat the last editing command with count replaced by COUNT.
 If SAVE-POINT is non-nil, do not move point."
   :repeat ignore
+  :suppress-operator t
   (interactive (list current-prefix-arg
                      (not evil-repeat-move-cursor)))
   (cond
@@ -503,6 +504,7 @@ was used for the first repeat.
 The COUNT argument inserts the COUNT-th previous kill.
 If COUNT is negative, this is a more recent kill."
   :repeat nil
+  :suppress-operator t
   (interactive (list (prefix-numeric-value current-prefix-arg)
                      (not evil-repeat-move-cursor)))
   (cond
@@ -533,6 +535,7 @@ If COUNT is negative, this is a more recent kill."
 (evil-define-command evil-repeat-pop-next (count &optional save-point)
   "Same as `evil-repeat-pop', but with negative COUNT."
   :repeat nil
+  :suppress-operator t
   (interactive (list (prefix-numeric-value current-prefix-arg)
                      (not evil-repeat-move-cursor)))
   (evil-repeat-pop (- count) save-point))

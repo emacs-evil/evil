@@ -1281,6 +1281,7 @@ The default for width is the value of `fill-column'."
   (count &optional register yank-handler)
   "Pastes the latest yanked text before the cursor position.
 The return value is the yanked text."
+  :suppress-operator t
   (interactive "P<x>")
   (if (evil-visual-state-p)
       (evil-visual-paste count register)
@@ -1322,6 +1323,7 @@ The return value is the yanked text."
   (count &optional register yank-handler)
   "Pastes the latest yanked text behind point.
 The return value is the yanked text."
+  :suppress-operator t
   (interactive "P<x>")
   (if (evil-visual-state-p)
       (evil-visual-paste count register)
@@ -1365,6 +1367,7 @@ The return value is the yanked text."
 
 (evil-define-command evil-visual-paste (count &optional register)
   "Paste over Visual selection."
+  :suppress-operator t
   (interactive "P<x>")
   (let* ((text (if register
                    (evil-get-register register)
@@ -1417,6 +1420,7 @@ The return value is the yanked text."
 (evil-define-command evil-record-macro (register)
   "Record a keyboard macro into REGISTER."
   :keep-visual t
+  :suppress-operator t
   (interactive
    (list (unless evil-this-macro
            (or evil-this-register (read-char)))))
@@ -1442,6 +1446,7 @@ When called with a non-numerical prefix \
 COUNT is infinite. MACRO is read from a register
 when called interactively."
   :keep-visual t
+  :suppress-operator t
   (interactive
    (let (count macro register)
      (setq count (if current-prefix-arg
@@ -2235,6 +2240,7 @@ Change to `%s'? "
 (evil-define-command evil-force-normal-state ()
   "Switch to normal state without recording current command."
   :repeat abort
+  :suppress-operator t
   (evil-normal-state))
 
 (evil-define-motion evil-ex-search-next (count)
@@ -2844,6 +2850,7 @@ and redisplays the current buffer there."
 Changes the state to the previous state, or to Normal state
 if the previous state was Emacs state."
   :keep-visual t
+  :suppress-operator t
   (interactive '(nil t))
   (with-current-buffer (or buffer (current-buffer))
     (when (evil-emacs-state-p)
