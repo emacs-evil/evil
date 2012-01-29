@@ -756,22 +756,14 @@ The arguments are exactly like those of `evil-define-key',
 and should be quoted as such."
   (declare (indent defun))
   (let ((fun (make-symbol (format "evil-define-key-in-%s" keymap))))
-    `(let (package)
-       (cond
-        ((boundp ',keymap)
-         (evil-define-key ,state ,keymap ,key ,def ,@bindings))
-        ((setq package
-               (or (cdr-safe (assq ',keymap evil-overriding-maps))
-                   (cdr-safe (assq ',keymap evil-intercept-maps))))
-         (eval-after-load package
-           '(evil-define-key ,state ,keymap ,key ,def ,@bindings)))
-        (t
-         (fset ',fun
-               (lambda (&rest args)
-                 (when (and (boundp ',keymap) (keymapp ,keymap))
-                   (evil-define-key ,state ,keymap ,key ,def ,@bindings)
-                   (remove-hook 'after-load-functions #',fun))))
-         (add-hook 'after-load-functions #',fun t))))))
+    `(if (boundp ',keymap)
+         (evil-define-key ,state ,keymap ,key ,def ,@bindings)
+       (fset ',fun
+             (lambda (&rest args)
+               (when (and (boundp ',keymap) (keymapp ,keymap))
+                 (evil-define-key ,state ,keymap ,key ,def ,@bindings)
+                 (remove-hook 'after-load-functions #',fun))))
+       (add-hook 'after-load-functions #',fun t))))
 
 (defmacro evil-add-hjkl-bindings (keymap &optional state &rest bindings)
   "Add \"h\", \"j\", \"k\", \"l\" bindings to KEYMAP in STATE.
