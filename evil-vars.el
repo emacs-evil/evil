@@ -339,6 +339,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     vc-annotate-mode
     vc-dir-mode
     vc-git-log-view-mode
+    vc-svn-log-view-mode
     vm-mode
     vm-summary-mode
     w3m-mode
