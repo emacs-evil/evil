@@ -769,6 +769,14 @@ Inhibits echo area messages, mode line updates and cursor changes."
 
 ;;; Movement
 
+(defmacro evil-narrow-to-field (&rest body)
+  "Narrow to the current field."
+  (declare (indent defun)
+           (debug t))
+  `(save-restriction
+     (narrow-to-region (field-beginning) (field-end))
+     ,@body))
+
 (defun evil-normalize-position (pos)
   "Return POS if it does not exceed the buffer boundaries.
 If POS is less than `point-min', return `point-min'.
@@ -1149,14 +1157,6 @@ POS defaults to the current position of point."
        (narrow-to-region (evil-comment-beginning) (evil-comment-end)))
       ((evil-in-string-p)
        (narrow-to-region (evil-string-beginning) (evil-string-end))))
-     ,@body))
-
-(defmacro evil-narrow-to-field (&rest body)
-  "Narrow to the current field."
-  (declare (indent defun)
-           (debug t))
-  `(save-restriction
-     (narrow-to-region (field-beginning) (field-end))
      ,@body))
 
 (defmacro evil-with-or-without-comment (&rest body)
