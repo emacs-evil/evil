@@ -2101,17 +2101,21 @@ If no FILE is specified, reload the current buffer from disk."
      (condition-case nil
          (delete-frame)
        (error
-        (if force
-            (kill-emacs)
-          (save-buffers-kill-emacs)))))))
+        (if (null force)
+            (save-buffers-kill-emacs)
+          (dolist (process (process-list))
+            (set-process-query-on-exit-flag process nil))
+          (kill-emacs)))))))
 
 (evil-define-command evil-quit-all (&optional force)
   "Exits Emacs, asking for saving."
   :repeat nil
   (interactive "<!>")
-  (if force
-      (kill-emacs)
-    (save-buffers-kill-emacs)))
+  (if (null force)
+      (save-buffers-kill-emacs)
+    (dolist (process (process-list))
+      (set-process-query-on-exit-flag process nil))
+    (kill-emacs)))
 
 (evil-define-command evil-save-and-quit ()
   "Exits Emacs, without saving."
