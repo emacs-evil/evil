@@ -305,6 +305,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     rcirc-mode
     rebase-mode
     recentf-dialog-mode
+    reftex-select-bib-mode
     reftex-toc-mode
     sldb-mode
     slime-inspector-mode
