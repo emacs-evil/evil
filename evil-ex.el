@@ -26,7 +26,7 @@
      number)
     (command #'evil-ex-parse-command)
     (binding
-     "[*@<>=:a-zA-Z_-]+\\|!")
+     "[*@<>=:]+\\|[[:alpha:]-]+\\|!")
     (force
      (\? (! space) "!" #'$1))
     (argument
