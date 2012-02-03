@@ -70,8 +70,9 @@
 
 ;; dictionary.el
 
-(evil-add-hjkl-bindings Buffer-menu-mode-map 'motion
-  "?" 'dictionary-help) ; "h"
+(evil-add-hjkl-bindings dictionary-mode-map 'motion
+  "?" 'dictionary-help        ; "h"
+  "C-o" 'dictionary-previous) ; "l"
 
 ;;; Dired
 
