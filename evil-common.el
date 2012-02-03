@@ -2368,7 +2368,7 @@ in `evil-temporary-undo' instead."
 Returns a pair (result . rest).  RESULT is a list suitable for
 `perform-replace' if necessary, the original string if not and
 REST is the unparsed rest of TO."
-  (if (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[,#ntrlLuUeE]" to)
+  (if (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[^0-9&]" to)
       (let (pos list char (rest ""))
         (while
             (progn
@@ -2410,8 +2410,10 @@ REST is the unparsed rest of TO."
                                          (cdr pos)))
                                 (1+ (cdr pos))
                               (cdr pos))))
-                       (setq to (substring to end)))))
-              (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[,#ntrlLuUeE]" to)))
+                       (setq to (substring to end))))
+                    (t ; simple escaped character
+                     (push (char-to-string char) list)))
+              (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[^0-9&]" to)))
         (setq to (nreverse (delete "" (cons to list))))
         (replace-match-string-symbols to)
         (cons (if (cdr to)

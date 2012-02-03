@@ -4256,7 +4256,12 @@ if no previous selection")
     (evil-test-buffer
       "[x]xx foo BAR foo BAR foo BAR"
       (":s/\\(f[[:alpha:]]*\\>\\)\\s-*\\(b[[:alpha:]]*\\>\\)/\\L\\2_\\e\\U\\1/gc" [return] "yny")
-      "[x]xx bar_FOO foo BAR bar_FOO")))
+      "[x]xx bar_FOO foo BAR bar_FOO"))
+  (ert-info ("Substitute with escaped characters in replacement")
+    (evil-test-buffer
+      "[a]bcXdefXghiXjkl\n"
+      (":s/X/\\|\\/\\|/g" [return])
+      "[a]bc|/|def|/|ghi|/|jkl\n")))
 
 (ert-deftest evil-test-ex-regex-without-case ()
   "Test `evil-ex-regex-without-case'"
