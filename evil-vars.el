@@ -153,9 +153,16 @@ which causes the parenthesis to be highlighted."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-complete-all-buffers t
+  "Whether completion looks for matches in all buffers."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-complete-next-func
   #'(lambda (arg)
-      (let ((dabbrev-search-these-buffers-only (list (current-buffer)))
+      (let ((dabbrev-search-these-buffers-only
+             (unless evil-complete-all-buffers
+               (list (current-buffer))))
             dabbrev-case-distinction)
         (condition-case nil
             (if (eq last-command this-command)
@@ -169,7 +176,9 @@ which causes the parenthesis to be highlighted."
 
 (defcustom evil-complete-previous-func
   #'(lambda (arg)
-      (let ((dabbrev-search-these-buffers-only (list (current-buffer)))
+      (let ((dabbrev-search-these-buffers-only
+             (unless evil-complete-all-buffers
+               (list (current-buffer))))
             dabbrev-case-distinction)
         (dabbrev-expand arg)))
   "Completion function used by \
