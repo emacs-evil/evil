@@ -2054,8 +2054,9 @@ If no FILE is specified, reload the current buffer from disk."
   "Shows the buffer-list."
   :repeat nil
   (let (message-truncate-lines message-log-max)
-    (message "%s"
-             (mapconcat #'buffer-name (buffer-list) "\n"))))
+    (display-message-or-buffer
+     (mapconcat #'buffer-name (buffer-list) "\n")
+     "*Buffers*")))
 
 (evil-define-command evil-buffer (buffer)
   "Switches to another buffer."
