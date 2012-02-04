@@ -177,8 +177,6 @@ ALIST is an association list with entries of the form
 If PROP is nil, return all properties for KEY.
 If KEY is t, return an association list of keys
 and their PROP values."
-  (unless (or (keywordp prop) (null prop))
-    (setq prop (intern (format ":%s" prop))))
   (cond
    ((null prop)
     (cdr (assq key alist)))
@@ -200,14 +198,13 @@ ALIST-VAR points to an association list with entries of the form
   (set alist-var
        (let* ((alist (symbol-value alist-var))
               (plist (cdr (assq key alist))))
-         (while prop
-           (unless (keywordp prop)
-             (setq prop (intern (format ":%s" prop))))
-           (setq plist (plist-put plist prop val)
-                 prop (pop properties)
-                 val (pop properties)))
+         (setq plist (plist-put plist prop val))
+         (when properties
+           (setq plist (evil-concat-plists plist properties)
+                 val (car (last properties))))
          (setq alist (assq-delete-all key alist))
-         (push (cons key plist) alist))))
+         (push (cons key plist) alist)))
+  val)
 
 (defun evil-state-property (state prop &optional value)
   "Return the value of property PROP for STATE.
@@ -276,22 +273,14 @@ sorting in between."
       (unless nil ; TODO: add keyword check
         (setq keys (plist-put keys key arg))))
     ;; collect `interactive' form
-    (when (and body
-               (consp (car body))
+    (when (and body (consp (car body))
                (eq (car (car body)) 'interactive))
       (let* ((iform (pop body))
              (result (apply #'evil-interactive-form (cdr iform)))
              (form (car result))
              (attrs (cdr result)))
-        (setq interactive `(interactive ,form))
-        ;; The next code is a copy of the previous one but does not
-        ;; overwrite properties.
-        (while (keywordp (car-safe attrs))
-          (setq key (pop attrs)
-                arg (pop attrs))
-          (unless (or nil ; TODO: add keyword check
-                      (plist-member keys key))
-            (plist-put keys key arg)))))
+        (setq interactive `(interactive ,form)
+              keys (evil-concat-plists keys attrs))))
     `(progn
        ;; the compiler does not recognize `defun' inside `let'
        ,(when (and command body)
@@ -347,9 +336,8 @@ To set multiple properties at once, see
   "Add PROPERTIES to COMMAND.
 PROPERTIES should be a property list.
 To replace all properties at once, use `evil-set-command-properties'."
-  (while properties
-    (evil-put-command-property command
-                               (pop properties) (pop properties))))
+  (apply #'evil-put-property
+         'evil-command-properties command properties))
 
 (defun evil-set-command-properties (command &rest properties)
   "Replace all of COMMAND's properties with PROPERTIES.
@@ -1259,8 +1247,15 @@ or a marker object pointing nowhere."
                                   (marker-position (cdr entry))))))))
 (put 'evil-swap-out-markers 'permanent-local-hook t)
 
+(defun evil-jump-hook (&optional command)
+  "Set jump point if COMMAND has a non-nil :jump property."
+  (setq command (or command this-command))
+  (when (evil-get-command-property command :jump)
+    (evil-set-jump)))
+
 (defun evil-set-jump (&optional pos)
-  "Set jump point at POS."
+  "Set jump point at POS.
+POS defaults to point."
   (unless (region-active-p)
     (evil-save-echo-area
       (mapc #'(lambda (marker)
@@ -1811,13 +1806,13 @@ may contain a property list."
   "Contract BEG and END as TYPE with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list."
-  (apply #'evil-transform 'contract beg end type properties))
+  (apply #'evil-transform :contract beg end type properties))
 
 (defun evil-normalize (beg end type &rest properties)
   "Normalize BEG and END as TYPE with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list."
-  (apply #'evil-transform 'normalize beg end type properties))
+  (apply #'evil-transform :normalize beg end type properties))
 
 (defun evil-transform
   (transform beg end type &rest properties)
@@ -2237,12 +2232,12 @@ Return a new range if COPY is non-nil."
 (defun evil-contract-range (range &optional copy)
   "Contract RANGE according to its type.
 Return a new range if COPY is non-nil."
-  (evil-transform-range 'contract range copy))
+  (evil-transform-range :contract range copy))
 
 (defun evil-normalize-range (range &optional copy)
   "Normalize RANGE according to its type.
 Return a new range if COPY is non-nil."
-  (evil-transform-range 'normalize range copy))
+  (evil-transform-range :normalize range copy))
 
 (defun evil-transform-range (transform range &optional copy)
   "Apply TRANSFORM to RANGE according to its type.

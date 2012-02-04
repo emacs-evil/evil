@@ -98,10 +98,6 @@ The return value is a list (BEG END TYPE)."
     ;; collect `interactive' specification
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive (cdr (pop body))))
-    (when interactive
-      (setq interactive (apply #'evil-interactive-form interactive))
-      (setq keys (evil-concat-plists keys (cdr-safe interactive))
-            interactive (car-safe interactive)))
     ;; macro expansion
     `(progn
        ;; refresh echo area in Eldoc mode
@@ -112,13 +108,7 @@ The return value is a list (BEG END TYPE)."
          ,@(when doc `(,doc))          ; avoid nil before `interactive'
          ,@keys
          :keep-visual t
-         (interactive
-          (progn
-            (when (evil-get-command-property ',motion :jump)
-              (unless (or (evil-visual-state-p)
-                          (evil-operator-state-p))
-                (evil-set-jump)))
-            ,interactive))
+         (interactive ,@interactive)
          ,@body))))
 
 (defmacro evil-define-union-move (name args &rest moves)

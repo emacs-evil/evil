@@ -98,10 +98,12 @@
     (add-hook 'input-method-activate-hook #'evil-activate-input-method t t)
     (add-hook 'input-method-inactivate-hook #'evil-inactivate-input-method t t)
     (add-hook 'pre-command-hook #'evil-repeat-pre-hook)
+    (add-hook 'pre-command-hook #'evil-jump-hook nil t)
     (add-hook 'post-command-hook #'evil-repeat-post-hook)
     (add-hook 'post-command-hook #'evil-refresh-cursor))
    (t
     (evil-refresh-mode-line)
+    (remove-hook 'pre-command-hook #'evil-jump-hook t)
     (remove-hook 'input-method-activate-hook #'evil-activate-input-method t)
     (remove-hook 'input-method-inactivate-hook #'evil-inactivate-input-method t)
     (evil-change-state nil))))
