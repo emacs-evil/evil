@@ -27,7 +27,7 @@
     (command #'evil-ex-parse-command)
     (binding
      "[*@<>=:]+\\|[[:alpha:]-]+\\|!")
-    (force
+    (bang
      (\? (! space) "!" #'$1))
     (argument
      ((\? space) (\? ".+") #'$2))
@@ -158,7 +158,7 @@ Otherwise behaves like `delete-backward-char'."
   "Update Ex variables when the minibuffer changes."
   (let* ((prompt (minibuffer-prompt-end))
          (string (or string (buffer-substring prompt (point-max))))
-         arg arg-handler arg-type cmd count expr force func range tree)
+         arg arg-handler arg-type cmd count expr bang func range tree)
     (cond
      ((commandp (setq cmd (lookup-key evil-ex-map string)))
       (setq evil-ex-expression `(call-interactively #',cmd))
@@ -183,12 +183,12 @@ Otherwise behaves like `delete-backward-char'."
                         count)
                        ((numberp count)
                         (evil-ex-range count count)))
-                force (and (string-match ".!$" cmd) t))))
+                bang (and (string-match ".!$" cmd) t))))
       (setq evil-ex-tree tree
             evil-ex-expression expr
             evil-ex-range range
             evil-ex-command cmd
-            evil-ex-force force
+            evil-ex-bang bang
             evil-ex-argument arg)
       ;; test the current command
       (when (and cmd (minibufferp))
@@ -375,7 +375,7 @@ Temporarily disables update functions."
                                    (cons (- start prompt) 0)))
           (setq result (evil-ex-complete-command
                         evil-ex-command
-                        evil-ex-force
+                        evil-ex-bang
                         predicate flag))))
        ;; complete argument
        ((memq 'argument context)
@@ -406,10 +406,10 @@ Temporarily disables update functions."
        (t
         (error "Completion returned unexpected value"))))))
 
-(defun evil-ex-complete-command (cmd force predicate flag)
+(defun evil-ex-complete-command (cmd bang predicate flag)
   "Called to complete a command."
   (cond
-   (force
+   (bang
     (let ((pred #'(lambda (x)
                     (when (or (null predicate)
                               (funcall predicate x))
@@ -485,11 +485,11 @@ arguments for programmable completion."
   (let* ((count (when (numberp range) range))
          (range (when (evil-range-p range) range))
          (visual (and range (not (evil-visual-state-p))))
-         (force (and (string-match ".!$" command) t))
+         (bang (and (string-match ".!$" command) t))
          (evil-ex-range
           (or range (and count (evil-ex-range count count))))
          (evil-ex-command (evil-ex-completed-binding command))
-         (evil-ex-force (and force t))
+         (evil-ex-bang (and bang t))
          (evil-ex-argument (copy-sequence argument))
          (evil-this-type (evil-type evil-ex-range))
          (current-prefix-arg count)
@@ -594,24 +594,24 @@ START is the start symbol, which defaults to `expression'."
 (defun evil-ex-parse-command (string)
   "Parse STRING as an Ex binding."
   (let ((result (evil-parser string 'binding evil-ex-grammar))
-        force command)
+        bang command)
     (when result
       (setq command (car-safe result)
             string (cdr-safe result))
-      ;; parse a following "!" as force only if
-      ;; the command has the property :ex-force t
+      ;; parse a following "!" as bang only if
+      ;; the command has the property :ex-bang t
       (when (evil-ex-command-force-p command)
-        (setq result (evil-parser string 'force evil-ex-grammar)
-              force (or (car-safe result) "")
+        (setq result (evil-parser string 'bang evil-ex-grammar)
+              bang (or (car-safe result) "")
               string (cdr-safe result)
-              command (concat command force)))
+              command (concat command bang)))
       (cons command string))))
 
 (defun evil-ex-command-force-p (command)
-  "Whether COMMAND accepts the force argument."
+  "Whether COMMAND accepts the bang argument."
   (let ((binding (evil-ex-completed-binding command t)))
     (when binding
-      (evil-get-command-property binding :ex-force))))
+      (evil-get-command-property binding :ex-bang))))
 
 (defun evil-flatten-syntax-tree (tree)
   "Find all paths from the root of TREE to its leaves.

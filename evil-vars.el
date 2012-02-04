@@ -1013,7 +1013,7 @@ Key sequences bound in this map are immediately executed.")
 (defvar evil-ex-range nil
   "The current range of the Ex command.")
 
-(defvar evil-ex-force nil
+(defvar evil-ex-bang nil
   "The \"!\" argument of the current Ex command.")
 
 (defvar evil-ex-argument nil

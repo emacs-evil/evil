@@ -260,9 +260,9 @@ the last column is excluded."
           (intern evil-ex-argument))))
 
 (evil-define-interactive-code "<!>"
-  "Ex force argument."
-  :ex-force t
-  (list (when (evil-ex-p) evil-ex-force)))
+  "Ex bang argument."
+  :ex-bang t
+  (list (when (evil-ex-p) evil-ex-bang)))
 
 (evil-define-interactive-code "</>"
   "Ex delimited argument."

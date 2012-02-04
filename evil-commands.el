@@ -1977,10 +1977,10 @@ See also `evil-open-fold'."
 
 ;;; Ex
 
-(evil-define-operator evil-write (beg end type file-name &optional force)
-  "Saves the current buffer or the region from BEG to END to FILE-NAME without changing the current buffer's name.
-If the argument FORCE is non-nil, the file will be overwritten if
-already existing."
+(evil-define-operator evil-write (beg end type file-name &optional bang)
+  "Save the current buffer, from BEG to END, to FILE-NAME.
+If the BANG argument is non-nil, the file will be overwritten
+if already existing. Does not change the current buffer's name."
   :motion mark-whole-buffer
   :move-point nil
   :type line
@@ -1997,18 +1997,18 @@ already existing."
     (save-buffer))
    ((and (= beg (point-min)) (= end (point-max))
          (null (buffer-file-name)))
-    (write-file file-name (not force)))
+    (write-file file-name (not bang)))
    (t
-    (write-region beg end file-name nil nil nil (not force)))))
+    (write-region beg end file-name nil nil nil (not bang)))))
 
-(evil-define-command evil-write-all (force)
+(evil-define-command evil-write-all (bang)
   "Saves all buffers."
   :repeat nil
   :move-point nil
   (interactive "<!>")
-  (save-some-buffers force))
+  (save-some-buffers bang))
 
-(evil-define-command evil-save (file &optional force)
+(evil-define-command evil-save (file &optional bang)
   "Save the current buffer to FILE.
 Changes the file name of the current buffer to this name.
 If no FILE is given, the current file name is used."
@@ -2019,16 +2019,16 @@ If no FILE is given, the current file name is used."
     (setq file (buffer-file-name))
     (unless file
       (error "Please specify a file name for this buffer!")))
-  (write-file file (not force)))
+  (write-file file (not bang)))
 
-(evil-define-command evil-edit (file &optional force)
+(evil-define-command evil-edit (file &optional bang)
   "Open FILE.
 If no FILE is specified, reload the current buffer from disk."
   :repeat nil
   (interactive "<f><!>")
   (if file
       (find-file file)
-    (revert-buffer nil (or force (not (buffer-modified-p))) t)))
+    (revert-buffer nil (or bang (not (buffer-modified-p))) t)))
 
 (evil-define-command evil-read (count file)
   "Inserts the contents of FILE below the current line or line COUNT."
@@ -2082,17 +2082,17 @@ If no FILE is specified, reload the current buffer from disk."
   (dotimes (i (or count 1))
     (previous-buffer)))
 
-(evil-define-command evil-delete-buffer (buffer &optional force)
+(evil-define-command evil-delete-buffer (buffer &optional bang)
   "Deletes a buffer."
   (interactive "<b><!>")
-  (when force
+  (when bang
     (if buffer
         (with-current-buffer buffer
           (set-buffer-modified-p nil))
       (set-buffer-modified-p nil)))
   (kill-buffer buffer))
 
-(evil-define-command evil-quit (&optional force)
+(evil-define-command evil-quit (&optional bang)
   "Closes the current window, exits Emacs if this is the last window."
   :repeat nil
   (interactive "<!>")
@@ -2102,17 +2102,17 @@ If no FILE is specified, reload the current buffer from disk."
      (condition-case nil
          (delete-frame)
        (error
-        (if (null force)
+        (if (null bang)
             (save-buffers-kill-emacs)
           (dolist (process (process-list))
             (set-process-query-on-exit-flag process nil))
           (kill-emacs)))))))
 
-(evil-define-command evil-quit-all (&optional force)
+(evil-define-command evil-quit-all (&optional bang)
   "Exits Emacs, asking for saving."
   :repeat nil
   (interactive "<!>")
-  (if (null force)
+  (if (null bang)
       (save-buffers-kill-emacs)
     (dolist (process (process-list))
       (set-process-query-on-exit-flag process nil))
@@ -2122,19 +2122,19 @@ If no FILE is specified, reload the current buffer from disk."
   "Exits Emacs, without saving."
   (save-buffers-kill-emacs 1))
 
-(evil-define-command evil-save-and-close (file &optional force)
+(evil-define-command evil-save-and-close (file &optional bang)
   "Saves the current buffer and closes the window."
   :repeat nil
   (interactive "<f><!>")
-  (evil-write (point-min) (point-max) 'line file force)
+  (evil-write (point-min) (point-max) 'line file bang)
   (evil-quit))
 
-(evil-define-command evil-save-modified-and-close (file &optional force)
+(evil-define-command evil-save-modified-and-close (file &optional bang)
   "Saves the current buffer and closes the window."
   :repeat nil
   (interactive "<f><!>")
   (when (buffer-modified-p)
-    (evil-write (point-min) (point-max) 'line file force))
+    (evil-write (point-min) (point-max) 'line file bang))
   (evil-quit))
 
 (evil-define-operator evil-shell-command
