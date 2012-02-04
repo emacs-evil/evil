@@ -298,7 +298,7 @@ or `block'."
        ((functionp message)
         (funcall message))
        ((stringp message)
-        (evil-echo message))))))
+        (evil-echo "%s" message))))))
 
 (defun evil-visual-select (beg end &optional type dir message)
   "Create a Visual selection of type TYPE from BEG to END.
@@ -355,11 +355,11 @@ If MESSAGE is given, display it in the echo area."
     (cond
      ((null evil-echo-state))
      ((stringp message)
-      (evil-echo message))
+      (evil-echo "%s" message))
      (message
       (cond
        ((stringp evil-visual-state-message)
-        (evil-echo evil-visual-state-message))
+        (evil-echo "%s" evil-visual-state-message))
        ((functionp evil-visual-state-message)
         (funcall evil-visual-state-message)))))))
 

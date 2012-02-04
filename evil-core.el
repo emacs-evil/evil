@@ -983,7 +983,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                           arg (not evil-no-display) ,message)
                  (if (functionp ,message)
                      (funcall ,message)
-                   (evil-echo ,message))))))))
+                   (evil-echo "%s" ,message))))))))
 
        (evil-set-command-property ',toggle :keep-visual t)
        (evil-set-command-property ',toggle :suppress-operator t)

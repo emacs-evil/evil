@@ -75,7 +75,7 @@ to display in the echo area."
     (unless (or (null string)
                 (string= string ""))
       (evil-echo-area-save)
-      (evil-echo string)
+      (evil-echo "%s" string)
       (isearch-highlight (match-beginning 0) (match-end 0))
       (when all
         (setq isearch-lazy-highlight-wrapped nil
@@ -655,7 +655,7 @@ message to be shown. This function does nothing if
         (evil-ex-hl-change 'evil-ex-search nil))
       ;; and go to initial position
       (goto-char evil-ex-search-start-point)))
-    (evil-ex-echo message)))
+    (evil-ex-echo "%s" message)))
 
 (defun evil-ex-search-start-session ()
   "Initialize Ex for interactive search."
@@ -960,7 +960,7 @@ The DIRECTION argument should be either `forward' or
 (defun evil-ex-pattern-update-ex-info (hl result)
   "Update the Ex info string."
   (when (stringp result)
-    (evil-ex-echo result)))
+    (evil-ex-echo "%s" result)))
 
 (defun evil-ex-pattern-update-replacement (hl overlay)
   "Update the replacement display."
