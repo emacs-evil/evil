@@ -26,7 +26,7 @@
       (forward-char)
       ;; don't put the cursor on a newline
       (when (and evil-cross-lines evil-move-cursor-back)
-        (unless (evil-operator-state-p)
+        (unless (or (evil-visual-state-p) (evil-operator-state-p))
           (when (and (eolp) (not (eobp)) (not (bolp)))
             (forward-char)))))))
 
@@ -38,7 +38,7 @@
     (evil-motion-loop (nil (or count 1))
       (backward-char)
       ;; don't put the cursor on a newline
-      (unless (evil-operator-state-p)
+      (unless (or (evil-visual-state-p) (evil-operator-state-p))
         (evil-adjust-cursor)))))
 
 (evil-define-motion evil-next-line (count)
