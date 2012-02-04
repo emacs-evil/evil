@@ -3682,7 +3682,11 @@ Below some empty line."))
     (evil-test-buffer
       "This is 'a [t]est' for quote objects."
       ("vi'")
-      "This is '<a tes[t]>' for quote objects."))
+      "This is '<a tes[t]>' for quote objects.")
+    (evil-test-buffer
+      "This is \"a '[t]est'\" for quote objects."
+      ("vi'")
+      "This is \"a '<tes[t]>'\" for quote objects."))
   (ert-info ("Select text including enclosing quotes")
     (evil-test-buffer
       "This is 'a [t]est' for quote objects."

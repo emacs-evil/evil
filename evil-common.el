@@ -2105,8 +2105,7 @@ use `evil-regexp-range'."
         (count (or count 1))
         level beg end range)
     (save-excursion
-      (if (or (evil-in-comment-p)
-              (and (evil-in-string-p) (not (eq open close))))
+      (if (or (evil-in-comment-p) (evil-in-string-p))
           ;; if in a comment, first look inside the comment only;
           ;; failing that, look outside it
           (or (evil-regexp-range count open-regexp close-regexp exclusive)
