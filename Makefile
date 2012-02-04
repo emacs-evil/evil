@@ -16,7 +16,6 @@ ELCFILES = $(FILES:.el=.elc)
 all: compile
 compile: $(ELCFILES)
 
-
 .depend: $(FILES)
 	@echo Compute dependencies
 	@rm -f .depend
@@ -58,7 +57,7 @@ test:
 --eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
 
 # Byte-compile Evil and run all tests.
-tests: compile-batch
+tests: compile
 	$(EMACS) --batch -Q -L . $(LIBS) -l evil-tests.el \
 --eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
 	rm -f *.elc
