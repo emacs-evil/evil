@@ -31,10 +31,7 @@ If the region is activated, enter Visual state."
             evil-inhibit-operator-value nil)
       (unless (eq command #'evil-use-register)
         (setq evil-this-register nil))
-      (evil-adjust-cursor)
-      (when (region-active-p)
-        (and (fboundp 'evil-visual-state)
-             (evil-visual-state))))))
+      (evil-adjust-cursor))))
 (put 'evil-normal-post-command 'permanent-local-hook t)
 
 ;;; Insert state
@@ -253,6 +250,17 @@ otherwise exit Visual state."
       (evil-visual-refresh)
       (evil-visual-highlight)))))
 (put 'evil-visual-post-command 'permanent-local-hook t)
+
+(defun evil-visual-activate-hook (&optional command)
+  "Enable Visual state if the region is activated."
+  (evil-delay #'post-command-hook nil
+    ;; the activation may only be momentary, so re-check
+    ;; in `post-command-hook' before entering Visual state
+    '(unless (or (evil-visual-state-p) (evil-insert-state-p))
+       (when (region-active-p)
+         (evil-visual-state)))
+    "evil-activate-visual-state" nil t))
+(put 'evil-visual-activate-hook 'permanent-local-hook t)
 
 (defun evil-visual-deactivate-hook (&optional command)
   "Deactivate the region and restore Transient Mark mode."
