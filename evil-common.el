@@ -443,6 +443,25 @@ an empty string."
           (push nil result)))
       (nreverse result))))
 
+(defun evil-concat-charsets (&rest sets)
+  "Concatenate character sets.
+A character set is the part between [ and ] in a regular expression.
+If any character set is complemented, the result is also complemented."
+  (let ((bracket "") (complement "") (hyphen "") result)
+    (save-match-data
+      (dolist (set sets)
+        (when (string-match "^\\^" set)
+          (setq set (substring set 1)
+                complement "^"))
+        (when (string-match "^]" set)
+          (setq set (substring set 1)
+                bracket "]"))
+        (when (string-match "^-" set)
+          (setq set (substring set 1)
+                hyphen "-"))
+        (setq result (concat result set)))
+      (format "%s%s%s%s" complement bracket hyphen result))))
+
 ;;; Key sequences
 
 (defun evil-keypress-parser (&optional input)

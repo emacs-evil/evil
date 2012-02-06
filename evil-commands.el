@@ -207,7 +207,7 @@ By default the first line."
 (evil-define-union-move evil-move-word (count)
   "Move by words."
   (evil-move-chars evil-word count)
-  (evil-move-chars (concat "^ \t\r\n" evil-word) count)
+  (evil-move-chars (evil-concat-charsets "^ \t\r\n" evil-word) count)
   (evil-move-empty-lines count))
 
 (evil-define-union-move evil-move-WORD (count)
