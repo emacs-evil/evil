@@ -160,6 +160,7 @@ which causes the parenthesis to be highlighted."
 
 (defcustom evil-complete-next-func
   #'(lambda (arg)
+      (require 'dabbrev)
       (let ((dabbrev-search-these-buffers-only
              (unless evil-complete-all-buffers
                (list (current-buffer))))
@@ -176,6 +177,7 @@ which causes the parenthesis to be highlighted."
 
 (defcustom evil-complete-previous-func
   #'(lambda (arg)
+      (require 'dabbrev)
       (let ((dabbrev-search-these-buffers-only
              (unless evil-complete-all-buffers
                (list (current-buffer))))
