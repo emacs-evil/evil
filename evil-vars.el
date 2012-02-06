@@ -409,29 +409,31 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
   :group 'evil)
 
 (defcustom evil-overriding-maps
-  '((Buffer-menu-mode-map . "buff-menu")
-    (color-theme-mode-map . color-theme)
-    (comint-mode-map . comint)
-    (compilation-mode-map . compile)
-    (dictionary-mode-map . dictionary)
-    (Info-mode-map . info)
-    (speedbar-key-map . speedbar)
-    (speedbar-file-key-map . speedbar)
-    (speedbar-buffers-key-map . speedbar))
-  "Keymaps that should override global Evil maps.
-Entries have the form (MAP-VAR . EVAL-AFTER), where MAP-VAR is
-a keymap variable and EVAL-AFTER is the file or package defining it
-\(ref. `eval-after-load')."
-  :type '(alist :key-type symbol :value-type (choice symbol string))
+  '((Buffer-menu-mode-map . nil)
+    (color-theme-mode-map . nil)
+    (comint-mode-map . nil)
+    (compilation-mode-map . nil)
+    (dictionary-mode-map . nil)
+    (Info-mode-map . motion)
+    (speedbar-key-map . nil)
+    (speedbar-file-key-map . nil)
+    (speedbar-buffers-key-map . nil))
+  "Keymaps that should override Evil maps.
+Entries have the form (MAP-VAR . STATE), where MAP-VAR is
+a keymap variable and STATE is the state whose bindings
+should be overridden. If STATE is nil, all states are
+overridden."
+  :type '(alist :key-type symbol :value-type symbol)
   :group 'evil)
 
 (defcustom evil-intercept-maps
-  '((edebug-mode-map . edebug))
-  "Keymaps that should override all Evil maps.
-Entries have the form (MAP-VAR . EVAL-AFTER), where MAP-VAR is
-a keymap variable and EVAL-AFTER is the file or package defining it
-\(ref. `eval-after-load')."
-  :type '(alist :key-type symbol :value-type (choice symbol string))
+  '((edebug-mode-map . nil))
+  "Keymaps that should intercept Evil maps.
+Entries have the form (MAP-VAR . STATE), where MAP-VAR is
+a keymap variable and STATE is the state whose bindings
+should be intercepted. If STATE is nil, all states are
+intercepted."
+  :type '(alist :key-type symbol :value-type symbol)
   :group 'evil)
 
 (defcustom evil-motions
