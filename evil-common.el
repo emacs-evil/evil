@@ -45,6 +45,24 @@ no arguments. In Emacs 23.2 and newer, it takes one argument."
       (setq exp (cadr exp)))
     exp))
 
+(defun evil-delay (hook condition form &optional name append local)
+  "Execute FORM when CONDITION becomes true, checking with HOOK.
+NAME specifies the name of the entry added to HOOK. If APPEND is
+non-nil, the entry is appended to the hook. If LOCAL is non-nil,
+the buffer-local value of HOOK is modified."
+  (if (and (not (booleanp condition)) (eval condition))
+      (eval form)
+    (let* ((name (or name (format "evil-delay-form-in-%s" hook)))
+           (fun (make-symbol name))
+           (condition (or condition t)))
+      (fset fun `(lambda (&rest args)
+                   (when ,condition
+                     (remove-hook ',hook #',fun ',local)
+                     ,form)))
+      (put fun 'permanent-local-hook t)
+      (add-hook hook fun append local))))
+(put 'evil-delay 'lisp-indent-function 2)
+
 ;;; List functions
 
 (defun evil-add-to-alist (list-var key val &rest elements)

@@ -2861,19 +2861,14 @@ if the previous state was Emacs state."
 (defun evil-execute-in-normal-state ()
   "Execute the next command in Normal state."
   (interactive)
-  (let* ((fun (make-symbol "evil-execute-in-normal-state-hook"))
-         (old-move-cursor-back evil-move-cursor-back))
-    (setq evil-move-cursor-back nil)
-    (fset fun
-          `(lambda ()
-             (unless (eq this-command #'evil-execute-in-normal-state)
-               (evil-change-to-previous-state)
-               (setq evil-move-cursor-back ',old-move-cursor-back)
-               (remove-hook 'post-command-hook #',fun))))
-    (put fun 'permanent-local-hook t)
-    (add-hook 'post-command-hook fun)
-    (evil-normal-state)
-    (evil-echo "Switched to Normal state for the next command ...")))
+  (evil-delay 'post-command-hook
+      '(not (eq this-command #'evil-execute-in-normal-state))
+    `(progn
+       (evil-change-to-previous-state)
+       (setq evil-move-cursor-back ',evil-move-cursor-back)))
+  (setq evil-move-cursor-back nil)
+  (evil-normal-state)
+  (evil-echo "Switched to Normal state for the next command ..."))
 
 (defun evil-execute-in-emacs-state (&optional arg)
   "Execute the next command in Emacs state."

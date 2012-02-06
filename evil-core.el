@@ -757,15 +757,11 @@ the execution is postponed until KEYMAP is bound. For example:
 The arguments are exactly like those of `evil-define-key',
 and should be quoted as such."
   (declare (indent defun))
-  (let ((fun (make-symbol (format "evil-define-key-in-%s" keymap))))
-    `(if (boundp ',keymap)
-         (evil-define-key ,state ,keymap ,key ,def ,@bindings)
-       (fset ',fun
-             (lambda (&rest args)
-               (when (and (boundp ',keymap) (keymapp ,keymap))
-                 (evil-define-key ,state ,keymap ,key ,def ,@bindings)
-                 (remove-hook 'after-load-functions #',fun))))
-       (add-hook 'after-load-functions #',fun t))))
+  `(evil-delay 'after-load-functions
+       '(and (boundp ',keymap) (keymapp ,keymap))
+     '(evil-define-key ,state ,keymap ,key ,def ,@bindings)
+     (format "evil-define-key-in-%s"
+             ',(if (symbolp keymap) keymap 'keymap)) t))
 
 (defmacro evil-add-hjkl-bindings (keymap &optional state &rest bindings)
   "Add \"h\", \"j\", \"k\", \"l\" bindings to KEYMAP in STATE.

@@ -765,12 +765,13 @@ via KEY-VALUE pairs. BODY should evaluate to a list of values.
    ;; Match all `evil-define-' forms except `evil-define-key'.
    ;; (In the interests of speed, this expression is incomplete
    ;; and does not match all three-letter words.)
-   '(("(\\(evil-\\(?:ex-\\)?define-\\(?:[^ k][^ e][^ y]\\|[-[:word:]]\\{4,\\}\\)\\)\
+   '(("(\\(evil-\\(?:ex-\\)?define-\
+\\(?:[^ k][^ e][^ y]\\|[-[:word:]]\\{4,\\}\\)\\)\
 \\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
       (1 font-lock-keyword-face)
       (2 font-lock-function-name-face nil t))
-     ("(\\(evil-\\(?:narrow\\|save\\|with\\(?:out\\)?\\)-[-[:word:]]+\\)\\>\
-\[ \f\t\n\r\v]+"
+     ("(\\(evil-\\(?:delay\\|narrow\\|save\\|with\\(?:out\\)?\\)\
+\\(?:-[-[:word:]]+\\)?\\)\\>\[ \f\t\n\r\v]+"
       1 font-lock-keyword-face)
      ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>[ \f\t\n\r\v]+"
       1 font-lock-keyword-face))))
