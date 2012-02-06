@@ -794,14 +794,6 @@ Inhibits echo area messages, mode line updates and cursor changes."
 
 ;;; Movement
 
-(defmacro evil-narrow-to-field (&rest body)
-  "Narrow to the current field."
-  (declare (indent defun)
-           (debug t))
-  `(save-restriction
-     (narrow-to-region (field-beginning) (field-end))
-     ,@body))
-
 (defun evil-normalize-position (pos)
   "Return POS if it does not exceed the buffer boundaries.
 If POS is less than `point-min', return `point-min'.
@@ -819,6 +811,32 @@ If POS is a marker, return its position."
    (t
     pos)))
 
+(defmacro evil-save-column (&rest body)
+  "Restores the column after execution of BODY.
+See also `evil-save-goal-column'."
+  (declare (indent defun)
+           (debug t))
+  `(let ((col (current-column)))
+     ,@body
+     (move-to-column col)))
+
+(defmacro evil-save-goal-column (&rest body)
+  "Restores the goal column after execution of BODY.
+See also `evil-save-column'."
+  (declare (indent defun)
+           (debug t))
+  `(let ((goal-column goal-column)
+         (temporary-goal-column temporary-goal-column))
+     ,@body))
+
+(defmacro evil-narrow-to-field (&rest body)
+  "Narrow to the current field."
+  (declare (indent defun)
+           (debug t))
+  `(save-restriction
+     (narrow-to-region (field-beginning) (field-end))
+     ,@body))
+
 (defun evil-adjust-cursor (&optional force)
   "Move point one character back if at the end of a non-empty line.
 If at the end of the buffer, move point to the previous line.
@@ -830,9 +848,10 @@ use the FORCE parameter to override it."
       (forward-line -1)
       (back-to-indentation))
      ((= (point)
-         (save-excursion
-           (move-end-of-line nil)
-           (point)))
+         (evil-save-goal-column
+           (save-excursion
+             (move-end-of-line nil)
+             (point))))
       (evil-move-cursor-back force)))))
 
 (defun evil-move-cursor-back (&optional force)
@@ -1063,14 +1082,6 @@ CHARS is a character set as inside [...] in a regular expression."
           (skip-chars-backward " \t\n")
           (when (<= (point) opoint)
             (goto-char opoint))))))))
-
-(defmacro evil-save-column (&rest body)
-  "Restores the column after execution of BODY."
-  (declare (indent defun)
-           (debug t))
-  `(let ((col (current-column)))
-     ,@body
-     (move-to-column col)))
 
 (defun evil-in-regexp-p (regexp &optional pos)
   "Whether POS is inside a match for REGEXP.
