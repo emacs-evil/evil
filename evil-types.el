@@ -85,14 +85,14 @@ If the end position is at the beginning of a line, then:
                (min (line-beginning-position)
                     (progn
                       ;; move to beginning of line as displayed
-                      (move-beginning-of-line nil)
+                      (evil-move-beginning-of-line)
                       (line-beginning-position))))
              (progn
                (goto-char end)
                (max (line-beginning-position 2)
                     (progn
                       ;; move to end of line as displayed
-                      (move-end-of-line nil)
+                      (evil-move-end-of-line)
                       (line-beginning-position 2))))))
   :contract (lambda (beg end)
               (evil-range beg (max beg (1- end))))

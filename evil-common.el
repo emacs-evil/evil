@@ -811,15 +811,6 @@ If POS is a marker, return its position."
    (t
     pos)))
 
-(defmacro evil-save-column (&rest body)
-  "Restores the column after execution of BODY.
-See also `evil-save-goal-column'."
-  (declare (indent defun)
-           (debug t))
-  `(let ((col (current-column)))
-     ,@body
-     (move-to-column col)))
-
 (defmacro evil-save-goal-column (&rest body)
   "Restores the goal column after execution of BODY.
 See also `evil-save-column'."
@@ -829,6 +820,16 @@ See also `evil-save-column'."
          (temporary-goal-column temporary-goal-column))
      ,@body))
 
+(defmacro evil-save-column (&rest body)
+  "Restores the column after execution of BODY.
+See also `evil-save-goal-column'."
+  (declare (indent defun)
+           (debug t))
+  `(let ((col (current-column)))
+     (evil-save-goal-column
+       ,@body
+       (move-to-column col))))
+
 (defmacro evil-narrow-to-field (&rest body)
   "Narrow to the current field."
   (declare (indent defun)
@@ -836,6 +837,18 @@ See also `evil-save-column'."
   `(save-restriction
      (narrow-to-region (field-beginning) (field-end))
      ,@body))
+
+(defun evil-move-beginning-of-line (&optional arg)
+  "Move to the beginning of the line as displayed.
+Like `move-beginning-of-line', but retains the goal column."
+  (evil-save-goal-column
+    (move-beginning-of-line arg)))
+
+(defun evil-move-end-of-line (&optional arg)
+  "Move to the end of the line as displayed.
+Like `move-end-of-line', but retains the goal column."
+  (evil-save-goal-column
+    (move-end-of-line arg)))
 
 (defun evil-adjust-cursor (&optional force)
   "Move point one character back if at the end of a non-empty line.
@@ -848,10 +861,9 @@ use the FORCE parameter to override it."
       (forward-line -1)
       (back-to-indentation))
      ((= (point)
-         (evil-save-goal-column
-           (save-excursion
-             (move-end-of-line nil)
-             (point))))
+         (save-excursion
+           (evil-move-end-of-line)
+           (point)))
       (evil-move-cursor-back force)))))
 
 (defun evil-move-cursor-back (&optional force)
@@ -1209,7 +1221,7 @@ Otherwise, execute BODY again, but without the restriction."
   "Inserts a new line above point and places point in that line
 with regard to indentation."
   (evil-narrow-to-field
-    (move-beginning-of-line nil)
+    (evil-move-beginning-of-line)
     (newline)
     (forward-line -1)
     (back-to-indentation)))
@@ -1218,7 +1230,7 @@ with regard to indentation."
   "Inserts a new line below point and places point in that line
 with regard to indentation."
   (evil-narrow-to-field
-    (move-end-of-line nil)
+    (evil-move-end-of-line)
     (newline)
     (back-to-indentation)))
 
@@ -1583,7 +1595,7 @@ each line. Extra arguments to FUNC may be passed via ARGS."
      0 (length text) yank-excluded-properties text)
     (cond
      ((eq this-command #'evil-paste-after)
-      (move-end-of-line nil)
+      (evil-move-end-of-line)
       (evil-move-mark (point))
       (newline)
       (insert text)
@@ -1596,7 +1608,7 @@ each line. Extra arguments to FUNC may be passed via ARGS."
                   (point)))
       (evil-move-mark (1+ (mark t))))
      (t
-      (move-beginning-of-line nil)
+      (evil-move-beginning-of-line)
       (evil-move-mark (point))
       (insert text)
       (setq evil-last-paste
@@ -2086,7 +2098,7 @@ Returns t if RANGE was successfully adjusted and nil otherwise."
         (forward-line)
         (if (and shrink evil-auto-indent)
             (back-to-indentation)
-          (move-beginning-of-line nil))
+          (evil-move-beginning-of-line))
         (evil-set-range range (point) nil))
       (goto-char (evil-range-end range))
       (when (and shrink (looking-back (concat "^" regexp)))

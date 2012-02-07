@@ -135,7 +135,7 @@ If COUNT is given, move COUNT - 1 lines downward first."
   :type inclusive
   (goto-char
    (save-excursion
-     (move-beginning-of-line count)
+     (evil-move-beginning-of-line count)
      (if (re-search-forward "[ \t]*$")
          (max (line-beginning-position)
               (1- (match-beginning 0)))
@@ -233,11 +233,11 @@ If BIGWORD is non-nil, move by WORDS."
                  (looking-back "^[[:space:]]*"))
         ;; move cursor back as long as the line contains only
         ;; whitespaces and is non-empty
-        (move-end-of-line 0)
+        (evil-move-end-of-line 0)
         ;; skip non-empty lines containing only spaces
         (while (and (looking-back "^[[:space:]]+$")
                     (not (<= (line-beginning-position) orig)))
-          (move-end-of-line 0))
+          (evil-move-end-of-line 0))
         ;; but if the previous line is empty, delete this line
         (when (bolp) (forward-char))))))
 
@@ -1165,7 +1165,7 @@ but doesn't insert or remove any spaces."
     (when (> count 1)
       (setq count (1- count)))
     (dotimes (var count)
-      (move-end-of-line 1)
+      (evil-move-end-of-line 1)
       (unless (eobp)
         (delete-char 1)))))
 
@@ -1195,7 +1195,7 @@ See also `evil-shift-right'."
     (let* ((indent
             (save-excursion
               (goto-char beg)
-              (move-beginning-of-line nil)
+              (evil-move-beginning-of-line)
               ;; ignore blank lines
               (while (and (< (point) end) (looking-at "[ \t]*$"))
                 (forward-line))
@@ -1215,7 +1215,7 @@ See also `evil-shift-left'."
     (let* ((indent
             (save-excursion
               (goto-char beg)
-              (move-beginning-of-line nil)
+              (evil-move-beginning-of-line nil)
               (while (and (< (point) end) (looking-at "[ \t]*$"))
                 (forward-line))
               (if (> (point) end) 0
@@ -1665,7 +1665,7 @@ on the current line. The insertion will be repeated COUNT times."
   (interactive "p")
   (if evil-auto-indent
       (back-to-indentation)
-    (move-beginning-of-line nil))
+    (evil-move-beginning-of-line))
   (setq evil-insert-count count
         evil-insert-lines nil
         evil-insert-vcount
@@ -1680,7 +1680,7 @@ on the current line. The insertion will be repeated COUNT times."
   "Switch to Insert state at the end of the current line.
 The insertion will be repeated COUNT times."
   (interactive "p")
-  (move-end-of-line nil)
+  (evil-move-end-of-line)
   (setq evil-insert-count count
         evil-insert-lines nil
         evil-insert-vcount
@@ -1762,7 +1762,7 @@ COL defaults to the current column."
         (if (< num 0)
             (skip-chars-backward " \t\n")
           (skip-chars-forward " \t\n")))
-      (move-beginning-of-line nil)
+      (evil-move-beginning-of-line)
       (move-to-column col)
       ;; if the column winds up in middle of a tab,
       ;; return the appropriate number of spaces
@@ -2467,7 +2467,7 @@ Change to `%s'? "
         match markers)
     (when (and pattern command)
       (goto-char beg)
-      (move-beginning-of-line nil)
+      (evil-move-beginning-of-line)
       (while (< (point) end)
         (setq match (re-search-forward pattern (line-end-position) t))
         (when (or (and match (not invert))

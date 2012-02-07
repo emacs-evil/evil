@@ -515,7 +515,7 @@ arguments for programmable completion."
 
 (defun evil-ex-first-line ()
   "Return the line number of the first line."
-  1)
+  (line-number-at-pos (point-min)))
 
 (defun evil-ex-current-line ()
   "Return the line number of the current line."
@@ -555,7 +555,7 @@ Signal an error if MARKER is in a different buffer."
 Returns the line number of the match."
   (save-excursion
     (set-text-properties 0 (length pattern) nil pattern)
-    (move-end-of-line nil)
+    (evil-move-end-of-line)
     (and (re-search-forward pattern)
          (line-number-at-pos (1- (match-end 0))))))
 
@@ -564,7 +564,7 @@ Returns the line number of the match."
 Returns the line number of the match."
   (save-excursion
     (set-text-properties 0 (length pattern) nil pattern)
-    (move-beginning-of-line nil)
+    (evil-move-beginning-of-line)
     (and (re-search-backward pattern)
          (line-number-at-pos (match-beginning 0)))))
 
