@@ -2085,12 +2085,17 @@ If no FILE is specified, reload the current buffer from disk."
 (evil-define-command evil-delete-buffer (buffer &optional bang)
   "Deletes a buffer."
   (interactive "<b><!>")
-  (when bang
-    (if buffer
-        (with-current-buffer buffer
-          (set-buffer-modified-p nil))
-      (set-buffer-modified-p nil)))
-  (kill-buffer buffer))
+  (with-current-buffer (or buffer (current-buffer))
+    (when bang
+      (set-buffer-modified-p nil))
+    ;; if the buffer which was initiated by emacsclient,
+    ;; call `server-edit' from server.el to avoid
+    ;; "Buffer still has clients" message
+    (if (and (fboundp 'server-edit)
+             (boundp 'server-buffer-clients)
+             server-buffer-clients)
+        (server-edit)
+      (kill-buffer nil))))
 
 (evil-define-command evil-quit (&optional bang)
   "Closes the current window, exits Emacs if this is the last window."
