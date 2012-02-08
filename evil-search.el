@@ -655,7 +655,8 @@ message to be shown. This function does nothing if
         (evil-ex-hl-change 'evil-ex-search nil))
       ;; and go to initial position
       (goto-char evil-ex-search-start-point)))
-    (evil-ex-echo "%s" message)))
+    (when (stringp message)
+      (evil-ex-echo "%s" message))))
 
 (defun evil-ex-search-start-session ()
   "Initialize Ex for interactive search."
