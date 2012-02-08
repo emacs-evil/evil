@@ -217,7 +217,7 @@ Otherwise behaves like `delete-backward-char'."
           (evil-ex-echo "Unknown command"))))))))
 (put 'evil-ex-update 'permanent-local-hook t)
 
-(defun evil-ex-echo (string &optional args)
+(defun evil-ex-echo (string &rest args)
   "Display a message after the current Ex command."
   (with-selected-window (minibuffer-window)
     (with-current-buffer (window-buffer (minibuffer-window))
