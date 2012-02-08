@@ -256,7 +256,9 @@ otherwise exit Visual state."
   (evil-delay #'post-command-hook nil
     ;; the activation may only be momentary, so re-check
     ;; in `post-command-hook' before entering Visual state
-    '(unless (or (evil-visual-state-p) (evil-insert-state-p))
+    '(unless (or (evil-visual-state-p)
+                 (evil-insert-state-p)
+                 (evil-emacs-state-p))
        (when (region-active-p)
          (evil-visual-state)))
     "evil-activate-visual-state" nil t))
