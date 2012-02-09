@@ -298,9 +298,11 @@ keywords and function:
           (setq runner func))
          ((eq key :completer)
           (setq completer func)))))
-    `(evil-add-to-alist 'evil-ex-argument-types
-                        ',arg-type
-                        ',(evil-ex-make-argument-handler runner completer))))
+    `(eval-and-compile
+       (evil-add-to-alist
+        'evil-ex-argument-types
+        ',arg-type
+        '(,runner ,completer)))))
 
 (defun evil-ex-filename-completion-at-point ()
   "Completion at point function for file arguments."
