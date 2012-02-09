@@ -593,8 +593,7 @@ a predefined type may be specified with TYPE."
               (setq range (evil-motion-range
                            motion
                            count
-                           type))
-              (evil-set-marker ?. (evil-range-end range) t)))
+                           type))))
           ;; update global variables
           (setq evil-this-motion motion
                 evil-this-motion-count count
