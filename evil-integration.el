@@ -101,11 +101,6 @@
   '(defadvice elp-results (after evil activate)
      (evil-motion-state)))
 
-;; load goto-chg.el if available
-(condition-case nil
-    (require 'goto-chg)
-  (error nil))
-
 ;;; Info
 
 (evil-add-hjkl-bindings Info-mode-map 'motion

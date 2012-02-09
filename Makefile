@@ -64,18 +64,20 @@ tests: compile
 
 # Load Evil in a fresh instance of Emacs and run all tests.
 emacs:
-	$(EMACS) -Q -L . $(LIBS) -l evil-tests.el --eval "(evil-mode 1)" \
+	$(EMACS) -Q -L . $(LIBS) -l goto-chg.el -l evil-tests.el \
+--eval "(evil-mode 1)" \
 --eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)" &
 
 # Load Evil in a terminal Emacs and run all tests.
 term: terminal
 terminal:
-	$(EMACS) -nw -Q -L . $(LIBS) -l evil-tests.el --eval "(evil-mode 1)" \
+	$(EMACS) -nw -Q -L . $(LIBS) -l goto-chg.el -l evil-tests.el \
+--eval "(evil-mode 1)" \
 --eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)"
 
 # Run all tests with profiler.
 profiler:
-	$(EMACS) --batch -Q -L . $(LIBS) -l evil-tests.el \
+	$(EMACS) --batch -Q -L . $(LIBS) -l goto-chg.el -l evil-tests.el \
 --eval "(evil-tests-initialize '(${TAG}) (or '(${PROFILER}) t))"
 
 # Re-indent all Evil code.

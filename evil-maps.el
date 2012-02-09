@@ -65,10 +65,8 @@
 (define-key evil-normal-state-map [remap yank-pop] 'evil-paste-pop)
 
 ;; go to last change
-(when (fboundp 'goto-last-change)
-  (define-key evil-normal-state-map "g;" 'goto-last-change))
-(when (fboundp 'goto-last-change-reverse)
-  (define-key evil-normal-state-map "g," 'goto-last-change-reverse))
+(define-key evil-normal-state-map "g;" 'goto-last-change)
+(define-key evil-normal-state-map "g," 'goto-last-change-reverse)
 
 ;; undo
 (define-key evil-normal-state-map "u" 'undo)
