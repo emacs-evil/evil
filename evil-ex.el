@@ -26,8 +26,8 @@
      number)
     (command #'evil-ex-parse-command)
     (binding
-     "[*@<>=:a-zA-Z_-]+\\|!")
-    (force
+     "[*@<>=:]+\\|[[:alpha:]-]+\\|!")
+    (bang
      (\? (! space) "!" #'$1))
     (argument
      ((\? space) (\? ".+") #'$2))
@@ -99,7 +99,11 @@ of the syntax.")
     ((evil-visual-state-p)
      '("'<,'>"))
     (current-prefix-arg
-     `(,(format ".,.+%s" (prefix-numeric-value current-prefix-arg))))))
+     (let ((arg (prefix-numeric-value current-prefix-arg)))
+       (cond ((< arg 0) (setq arg (1+ arg)))
+             ((> arg 0) (setq arg (1- arg))))
+       (if (= arg 0) '(".")
+         `(,(format ".,.%+d" arg)))))))
   (let ((minibuffer-local-completion-map evil-ex-completion-map)
         (evil-ex-current-buffer (current-buffer))
         (evil-ex-previous-command (unless initial-input
@@ -161,7 +165,7 @@ Otherwise behaves like `delete-backward-char'."
   "Update Ex variables when the minibuffer changes."
   (let* ((prompt (minibuffer-prompt-end))
          (string (or string (buffer-substring prompt (point-max))))
-         arg arg-handler arg-type cmd count expr force func range tree)
+         arg arg-handler arg-type cmd count expr bang func range tree)
     (cond
      ((commandp (setq cmd (lookup-key evil-ex-map string)))
       (setq evil-ex-expression `(call-interactively #',cmd))
@@ -186,12 +190,12 @@ Otherwise behaves like `delete-backward-char'."
                         count)
                        ((numberp count)
                         (evil-ex-range count count)))
-                force (and (string-match ".!$" cmd) t))))
+                bang (and (string-match ".!$" cmd) t))))
       (setq evil-ex-tree tree
             evil-ex-expression expr
             evil-ex-range range
             evil-ex-command cmd
-            evil-ex-force force
+            evil-ex-bang bang
             evil-ex-argument arg)
       ;; test the current command
       (when (and cmd (minibufferp))
@@ -224,7 +228,7 @@ Otherwise behaves like `delete-backward-char'."
           (evil-ex-echo "Unknown command"))))))))
 (put 'evil-ex-update 'permanent-local-hook t)
 
-(defun evil-ex-echo (string &optional args)
+(defun evil-ex-echo (string &rest args)
   "Display a message after the current Ex command."
   (with-selected-window (minibuffer-window)
     (with-current-buffer (window-buffer (minibuffer-window))
@@ -507,11 +511,11 @@ This function interprets special file names like # and %."
   (let* ((count (when (numberp range) range))
          (range (when (evil-range-p range) range))
          (visual (and range (not (evil-visual-state-p))))
-         (force (and (string-match ".!$" command) t))
+         (bang (and (string-match ".!$" command) t))
          (evil-ex-range
           (or range (and count (evil-ex-range count count))))
          (evil-ex-command (evil-ex-completed-binding command))
-         (evil-ex-force (and force t))
+         (evil-ex-bang (and bang t))
          (evil-ex-argument (copy-sequence argument))
          (evil-this-type (evil-type evil-ex-range))
          (current-prefix-arg count)
@@ -532,55 +536,12 @@ This function interprets special file names like # and %."
 
 (defun evil-ex-address (base &optional offset)
   "Return the line number of BASE plus OFFSET."
-  (+ (or offset 0)
-     (cond
-      ((integerp base)
-       base)
-      ((null base)
-       (line-number-at-pos))
-      ((eq (car-safe base) 'abs)
-       (cdr base))
-      ;; TODO: (1- ...) may be wrong if the match is the empty string
-      ((eq base 're-fwd)
-       (save-excursion
-         (beginning-of-line 2)
-         (and (re-search-forward (cdr base))
-              (line-number-at-pos (1- (match-end 0))))))
-      ((eq base 're-bwd)
-       (save-excursion
-         (beginning-of-line 0)
-         (and (re-search-backward (cdr base))
-              (line-number-at-pos (match-beginning 0)))))
-      ;; $, %, ., etc.
-      ((eq base 'current-line)
-       (line-number-at-pos (point)))
-      ((eq base 'first-line)
-       (line-number-at-pos (point-min)))
-      ((eq base 'last-line)
-       (line-number-at-pos (point-max)))
-      ((eq (car-safe base) 'mark)
-       (setq base (cadr base))
-       (let* ((base (cadr base))
-              (mark (evil-get-marker base)))
-         (cond
-          ((null mark)
-           (error "Marker <%c> not defined" base))
-          ((consp mark)
-           (error "Ex-mode ranges do not support markers in other files"))
-          (t
-           (line-number-at-pos mark)))))
-      ((eq base 'next-of-prev-search)
-       (error "Next-of-prev-search not yet implemented"))
-      ((eq base 'prev-of-prev-search)
-       (error "Prev-of-prev-search not yet implemented"))
-      ((eq base 'next-of-prev-subst)
-       (error "Next-of-prev-subst not yet implemented"))
-      (t
-       (error "Invalid address: %s" base)))))
+  (+ (or base (line-number-at-pos))
+     (or offset 0)))
 
 (defun evil-ex-first-line ()
   "Return the line number of the first line."
-  1)
+  (line-number-at-pos (point-min)))
 
 (defun evil-ex-current-line ()
   "Return the line number of the current line."
@@ -620,7 +581,7 @@ Signal an error if MARKER is in a different buffer."
 Returns the line number of the match."
   (save-excursion
     (set-text-properties 0 (length pattern) nil pattern)
-    (beginning-of-line 2)
+    (evil-move-end-of-line)
     (and (re-search-forward pattern)
          (line-number-at-pos (1- (match-end 0))))))
 
@@ -629,7 +590,7 @@ Returns the line number of the match."
 Returns the line number of the match."
   (save-excursion
     (set-text-properties 0 (length pattern) nil pattern)
-    (beginning-of-line 0)
+    (evil-move-beginning-of-line)
     (and (re-search-backward pattern)
          (line-number-at-pos (match-beginning 0)))))
 
@@ -659,24 +620,24 @@ START is the start symbol, which defaults to `expression'."
 (defun evil-ex-parse-command (string)
   "Parse STRING as an Ex binding."
   (let ((result (evil-parser string 'binding evil-ex-grammar))
-        force command)
+        bang command)
     (when result
       (setq command (car-safe result)
             string (cdr-safe result))
-      ;; parse a following "!" as force only if
-      ;; the command has the property :ex-force t
+      ;; parse a following "!" as bang only if
+      ;; the command has the property :ex-bang t
       (when (evil-ex-command-force-p command)
-        (setq result (evil-parser string 'force evil-ex-grammar)
-              force (or (car-safe result) "")
+        (setq result (evil-parser string 'bang evil-ex-grammar)
+              bang (or (car-safe result) "")
               string (cdr-safe result)
-              command (concat command force)))
+              command (concat command bang)))
       (cons command string))))
 
 (defun evil-ex-command-force-p (command)
-  "Whether COMMAND accepts the force argument."
+  "Whether COMMAND accepts the bang argument."
   (let ((binding (evil-ex-completed-binding command t)))
     (when binding
-      (evil-get-command-property binding :ex-force))))
+      (evil-get-command-property binding :ex-bang))))
 
 (defun evil-flatten-syntax-tree (tree)
   "Find all paths from the root of TREE to its leaves.

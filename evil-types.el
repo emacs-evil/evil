@@ -82,10 +82,18 @@ If the end position is at the beginning of a line, then:
             (evil-range
              (progn
                (goto-char beg)
-               (line-beginning-position))
+               (min (line-beginning-position)
+                    (progn
+                      ;; move to beginning of line as displayed
+                      (evil-move-beginning-of-line)
+                      (line-beginning-position))))
              (progn
                (goto-char end)
-               (line-beginning-position 2))))
+               (max (line-beginning-position 2)
+                    (progn
+                      ;; move to end of line as displayed
+                      (evil-move-end-of-line)
+                      (line-beginning-position 2))))))
   :contract (lambda (beg end)
               (evil-range beg (max beg (1- end))))
   :string (lambda (beg end)
@@ -262,9 +270,9 @@ the last column is excluded."
           (intern evil-ex-argument))))
 
 (evil-define-interactive-code "<!>"
-  "Ex force argument."
-  :ex-force t
-  (list (when (evil-ex-p) evil-ex-force)))
+  "Ex bang argument."
+  :ex-bang t
+  (list (when (evil-ex-p) evil-ex-bang)))
 
 (evil-define-interactive-code "</>"
   "Ex delimited argument."

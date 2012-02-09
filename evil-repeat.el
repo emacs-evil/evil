@@ -199,8 +199,9 @@ buffer is known and different from the current buffer."
   "Return the :repeat property of COMMAND.
 If COMMAND doesn't have this property, return DEFAULT."
   (when (functionp command) ; ignore keyboard macros
-    (let ((type (evil-get-command-property command :repeat default)))
-      (or (cdr-safe (assq type evil-repeat-types)) type))))
+    (let* ((type (evil-get-command-property command :repeat default))
+           (repeat-type (assq type evil-repeat-types)))
+      (if repeat-type (cdr repeat-type) type))))
 
 (defun evil-repeat-force-abort-p (repeat-type)
   "Returns non-nil iff the current command should abort the recording of repeat information."
@@ -473,6 +474,7 @@ and only if COUNT is non-nil."
   "Repeat the last editing command with count replaced by COUNT.
 If SAVE-POINT is non-nil, do not move point."
   :repeat ignore
+  :suppress-operator t
   (interactive (list current-prefix-arg
                      (not evil-repeat-move-cursor)))
   (cond
@@ -503,6 +505,7 @@ was used for the first repeat.
 The COUNT argument inserts the COUNT-th previous kill.
 If COUNT is negative, this is a more recent kill."
   :repeat nil
+  :suppress-operator t
   (interactive (list (prefix-numeric-value current-prefix-arg)
                      (not evil-repeat-move-cursor)))
   (cond
@@ -533,6 +536,7 @@ If COUNT is negative, this is a more recent kill."
 (evil-define-command evil-repeat-pop-next (count &optional save-point)
   "Same as `evil-repeat-pop', but with negative COUNT."
   :repeat nil
+  :suppress-operator t
   (interactive (list (prefix-numeric-value current-prefix-arg)
                      (not evil-repeat-move-cursor)))
   (evil-repeat-pop (- count) save-point))

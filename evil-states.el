@@ -31,10 +31,7 @@ If the region is activated, enter Visual state."
             evil-inhibit-operator-value nil)
       (unless (eq command #'evil-use-register)
         (setq evil-this-register nil))
-      (evil-adjust-cursor)
-      (when (region-active-p)
-        (and (fboundp 'evil-visual-state)
-             (evil-visual-state))))))
+      (evil-adjust-cursor))))
 (put 'evil-normal-post-command 'permanent-local-hook t)
 
 ;;; Insert state
@@ -87,7 +84,7 @@ Handles the repeat-count of the insertion command."
           (when (or (not evil-insert-skip-empty-lines)
                     (not (integerp col))
                     (save-excursion
-                      (end-of-line)
+                      (evil-move-end-of-line)
                       (>= (current-column) col)))
             (if (integerp col)
                 (move-to-column col t)
@@ -189,7 +186,7 @@ the selection is enabled.
   :message 'evil-visual-message
   (cond
    ((evil-visual-state-p)
-    (evil-transient-save)
+    (evil-save-mark)
     (cond
      ((region-active-p)
       (if (< (evil-visual-direction) 0)
@@ -254,6 +251,19 @@ otherwise exit Visual state."
       (evil-visual-highlight)))))
 (put 'evil-visual-post-command 'permanent-local-hook t)
 
+(defun evil-visual-activate-hook (&optional command)
+  "Enable Visual state if the region is activated."
+  (evil-delay #'post-command-hook nil
+    ;; the activation may only be momentary, so re-check
+    ;; in `post-command-hook' before entering Visual state
+    '(unless (or (evil-visual-state-p)
+                 (evil-insert-state-p)
+                 (evil-emacs-state-p))
+       (when (region-active-p)
+         (evil-visual-state)))
+    "evil-activate-visual-state" nil t))
+(put 'evil-visual-activate-hook 'permanent-local-hook t)
+
 (defun evil-visual-deactivate-hook (&optional command)
   "Deactivate the region and restore Transient Mark mode."
   (setq command (or command this-command))
@@ -264,19 +274,19 @@ otherwise exit Visual state."
   (cond
    ((and (evil-visual-state-p) command
          (not (evil-get-command-property command :keep-visual)))
+    (setq evil-visual-region-expanded nil)
     (evil-exit-visual-state)
     (evil-active-region -1)
-    (evil-transient-restore))
+    (evil-restore-mark))
    ((not (evil-visual-state-p))
     (evil-active-region -1)
-    (evil-transient-restore))))
+    (evil-restore-mark))))
 (put 'evil-visual-deactivate-hook 'permanent-local-hook t)
 
 (evil-define-command evil-exit-visual-state (&optional buffer message)
   "Exit from Visual state to the previous state."
   :keep-visual t
   :repeat abort
-  (interactive)
   (with-current-buffer (or buffer (current-buffer))
     (when (evil-visual-state-p)
       (when evil-visual-region-expanded
@@ -298,7 +308,7 @@ or `block'."
        ((functionp message)
         (funcall message))
        ((stringp message)
-        (evil-echo message))))))
+        (evil-echo "%s" message))))))
 
 (defun evil-visual-select (beg end &optional type dir message)
   "Create a Visual selection of type TYPE from BEG to END.
@@ -355,11 +365,11 @@ If MESSAGE is given, display it in the echo area."
     (cond
      ((null evil-echo-state))
      ((stringp message)
-      (evil-echo message))
+      (evil-echo "%s" message))
      (message
       (cond
        ((stringp evil-visual-state-message)
-        (evil-echo evil-visual-state-message))
+        (evil-echo "%s" evil-visual-state-message))
        ((functionp evil-visual-state-message)
         (funcall evil-visual-state-message)))))))
 
@@ -608,11 +618,12 @@ If SELECTION is specified, return the type of that instead."
     (setq selection (or selection evil-visual-selection))
     (symbol-value (cdr-safe (assq selection evil-visual-alist)))))
 
-(defun evil-visual-end-mark ()
-  "Return the position of the mark to then end of last visual selection.
-This position may differ from `evil-visual-end' depending on the
-selection type and is contained in the visual selection."
-  (evil-range-end (evil-contract-range (evil-visual-range))))
+(defun evil-visual-goto-end ()
+  "Go to the last line of the Visual selection.
+This position may differ from `evil-visual-end' depending on
+the selection type, and is contained in the selection."
+  (let ((range (evil-contract-range (evil-visual-range))))
+    (goto-char (evil-range-end range))))
 
 (defun evil-visual-alist ()
   "Return an association list from types to selection symbols."

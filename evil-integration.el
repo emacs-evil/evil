@@ -31,16 +31,23 @@
 (evil-set-type #'previous-line 'line)
 (evil-set-type #'next-line 'line)
 
+(dolist (cmd '(keyboard-quit keyboard-escape-quit))
+  (evil-set-command-property cmd :suppress-operator t))
+
 (dolist (cmd evil-visual-newline-commands)
-  (evil-add-command-properties cmd :exclude-newline t))
+  (evil-set-command-property cmd :exclude-newline t))
 
 (dolist (map evil-overriding-maps)
-  (eval-after-load (cdr map)
-    `(evil-make-overriding-map ,(car map))))
+  (evil-delay 'after-load-functions
+      `(and (boundp ',(car map)) (keymapp ,(car map)))
+    `(evil-make-overriding-map ,(car map) ',(cdr map))
+    (format "evil-make-overriding-%s" (car map))))
 
 (dolist (map evil-intercept-maps)
-  (eval-after-load (cdr map)
-    `(evil-make-intercept-map ,(car map))))
+  (evil-delay 'after-load-functions
+      `(and (boundp ',(car map)) (keymapp ,(car map)))
+    `(evil-make-intercept-map ,(car map) ',(cdr map))
+    (format "evil-make-intercept-%s" (car map))))
 
 ;;; key-binding
 
@@ -67,8 +74,9 @@
 
 ;; dictionary.el
 
-(evil-add-hjkl-bindings Buffer-menu-mode-map 'motion
-  "?" 'dictionary-help) ; "h"
+(evil-add-hjkl-bindings dictionary-mode-map 'motion
+  "?" 'dictionary-help        ; "h"
+  "C-o" 'dictionary-previous) ; "l"
 
 ;;; Dired
 
@@ -92,27 +100,6 @@
 (eval-after-load 'elp
   '(defadvice elp-results (after evil activate)
      (evil-motion-state)))
-
-;;; Folding
-
-(eval-after-load 'hideshow
-  '(progn
-     (defun evil-za ()
-       (interactive)
-       (hs-toggle-hiding)
-       (hs-hide-level evil-fold-level))
-     (defun evil-hs-setup ()
-       (define-key evil-normal-state-map "za" 'evil-za)
-       (define-key evil-normal-state-map "zm" 'hs-hide-all)
-       (define-key evil-normal-state-map "zr" 'hs-show-all)
-       (define-key evil-normal-state-map "zo" 'hs-show-block)
-       (define-key evil-normal-state-map "zc" 'hs-hide-block))
-     (add-hook 'hs-minor-mode-hook #'evil-hs-setup)))
-
-;; load goto-chg.el if available
-(condition-case nil
-    (require 'goto-chg)
-  (error nil))
 
 ;;; Info
 

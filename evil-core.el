@@ -97,11 +97,15 @@
       (add-hook 'post-command-hook #'evil-initialize-state t t))
     (add-hook 'input-method-activate-hook #'evil-activate-input-method t t)
     (add-hook 'input-method-inactivate-hook #'evil-inactivate-input-method t t)
+    (add-hook 'activate-mark-hook #'evil-visual-activate-hook)
     (add-hook 'pre-command-hook #'evil-repeat-pre-hook)
+    (add-hook 'pre-command-hook #'evil-jump-hook nil t)
     (add-hook 'post-command-hook #'evil-repeat-post-hook)
     (add-hook 'post-command-hook #'evil-refresh-cursor))
    (t
     (evil-refresh-mode-line)
+    (remove-hook 'pre-command-hook #'evil-jump-hook t)
+    (remove-hook 'activate-mark-hook #'evil-visual-activate-hook)
     (remove-hook 'input-method-activate-hook #'evil-activate-input-method t)
     (remove-hook 'input-method-inactivate-hook #'evil-inactivate-input-method t)
     (evil-change-state nil))))
@@ -232,7 +236,7 @@ This is the state the buffer comes up in."
   "Change the state of BUFFER to its initial state.
 This is the state the buffer came up in."
   :keep-visual t
-  (interactive)
+  :suppress-operator t
   (with-current-buffer (or buffer (current-buffer))
     (evil-change-state (evil-initial-state-for-buffer
                         buffer (or evil-default-state 'normal))
@@ -243,7 +247,7 @@ This is the state the buffer came up in."
   "Change the state of BUFFER to its previous state."
   :keep-visual t
   :repeat abort
-  (interactive)
+  :suppress-operator t
   (with-current-buffer (or buffer (current-buffer))
     (evil-change-state (or evil-previous-state evil-default-state 'normal)
                        message)))
@@ -636,7 +640,9 @@ If AUX is nil, create a new auxiliary keymap."
     (setq aux (make-sparse-keymap)))
   (unless (evil-auxiliary-keymap-p aux)
     (evil-set-keymap-prompt
-     aux (format "Auxiliary keymap for %s state" state)))
+     aux (format "Auxiliary keymap for %s"
+                 (or (evil-state-property state :name)
+                     (format "%s state" state)))))
   (define-key map
     (vconcat (list (intern (format "%s-state" state)))) aux)
   aux)
@@ -753,24 +759,11 @@ the execution is postponed until KEYMAP is bound. For example:
 The arguments are exactly like those of `evil-define-key',
 and should be quoted as such."
   (declare (indent defun))
-  (let ((func (evil-generate-symbol)))
-    `(let (package)
-       (cond
-        ((boundp ',keymap)
-         (evil-define-key ,state ,keymap ,key ,def ,@bindings))
-        ((setq package
-               (or (cdr-safe (assq ',keymap evil-overriding-maps))
-                   (cdr-safe (assq ',keymap evil-intercept-maps))))
-         (eval-after-load package
-           '(evil-define-key ,state ,keymap ,key ,def ,@bindings)))
-        (t
-         (defun ,func (&rest args)
-           (when (boundp ',keymap)
-             (unless (keymapp ,keymap)
-               (setq ,keymap (make-sparse-keymap)))
-             (evil-define-key ,state ,keymap ,key ,def ,@bindings)
-             (remove-hook 'after-load-functions #',func)))
-         (add-hook 'after-load-functions #',func t))))))
+  `(evil-delay 'after-load-functions
+       '(and (boundp ',keymap) (keymapp ,keymap))
+     '(evil-define-key ,state ,keymap ,key ,def ,@bindings)
+     (format "evil-define-key-in-%s"
+             ',(if (symbolp keymap) keymap 'keymap)) t))
 
 (defmacro evil-add-hjkl-bindings (keymap &optional state &rest bindings)
   "Add \"h\", \"j\", \"k\", \"l\" bindings to KEYMAP in STATE.
@@ -948,8 +941,7 @@ cursor, or a list of the above." name))
               (eq (or state evil-state) ',state)))
 
        ;; define state function
-       (evil-define-command ,toggle (&optional arg)
-         :keep-visual t
+       (defun ,toggle (&optional arg)
          ,(format "Enable %s. Disable with negative ARG.
 If ARG is nil, don't display a message in the echo area.%s" name doc)
          (interactive "p")
@@ -991,7 +983,10 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                           arg (not evil-no-display) ,message)
                  (if (functionp ,message)
                      (funcall ,message)
-                   (evil-echo ,message))))))))
+                   (evil-echo "%s" ,message))))))))
+
+       (evil-set-command-property ',toggle :keep-visual t)
+       (evil-set-command-property ',toggle :suppress-operator t)
 
        (evil-define-keymap ,keymap nil
          :mode ,mode

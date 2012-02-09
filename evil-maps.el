@@ -39,6 +39,11 @@
 (define-key evil-normal-state-map "gF" 'evil-find-file-at-point-with-line)
 (define-key evil-normal-state-map "g?" 'evil-rot13)
 (define-key evil-normal-state-map "g~" 'evil-invert-case)
+(define-key evil-normal-state-map "zo" 'evil-open-fold)
+(define-key evil-normal-state-map "zc" 'evil-close-fold)
+(define-key evil-normal-state-map "za" 'evil-toggle-fold)
+(define-key evil-normal-state-map "zr" 'evil-open-folds)
+(define-key evil-normal-state-map "zm" 'evil-close-folds)
 (define-key evil-normal-state-map "\C-n" 'evil-paste-pop-next)
 (define-key evil-normal-state-map "\C-p" 'evil-paste-pop)
 (define-key evil-normal-state-map "\C-t" 'pop-tag-mark)
@@ -47,6 +52,7 @@
 (define-key evil-normal-state-map "." 'evil-repeat)
 (define-key evil-normal-state-map "@" 'evil-execute-macro)
 (define-key evil-normal-state-map "\"" 'evil-use-register)
+(define-key evil-normal-state-map "\\" 'evil-execute-in-emacs-state)
 (define-key evil-normal-state-map "~" 'evil-invert-char)
 (define-key evil-normal-state-map "=" 'evil-indent)
 (define-key evil-normal-state-map "<" 'evil-shift-left)
@@ -59,10 +65,8 @@
 (define-key evil-normal-state-map [remap yank-pop] 'evil-paste-pop)
 
 ;; go to last change
-(when (fboundp 'goto-last-change)
-  (define-key evil-normal-state-map "g;" 'goto-last-change))
-(when (fboundp 'goto-last-change-reverse)
-  (define-key evil-normal-state-map "g," 'goto-last-change-reverse))
+(define-key evil-normal-state-map "g;" 'goto-last-change)
+(define-key evil-normal-state-map "g," 'goto-last-change-reverse)
 
 ;; undo
 (define-key evil-normal-state-map "u" 'undo)
@@ -293,6 +297,7 @@
 
 (define-key evil-operator-state-map "a" evil-outer-text-objects-map)
 (define-key evil-operator-state-map "i" evil-inner-text-objects-map)
+;; (define-key evil-operator-state-map [escape] 'keyboard-quit)
 
 ;;; Insert state
 
@@ -359,6 +364,9 @@
 (evil-ex-define-cmd "d[elete]" 'evil-delete)
 (evil-ex-define-cmd "go[to]" 'evil-goto-char)
 (evil-ex-define-cmd "join" 'evil-join)
+(evil-ex-define-cmd "le[ft]" 'evil-align-left)
+(evil-ex-define-cmd "ri[ght]" 'evil-align-right)
+(evil-ex-define-cmd "ce[nter]" 'evil-align-center)
 (evil-ex-define-cmd "sp[lit]" 'evil-window-split)
 (evil-ex-define-cmd "vs[plit]" 'evil-window-vsplit)
 (evil-ex-define-cmd "new" 'evil-window-new)
@@ -381,6 +389,7 @@
 (evil-ex-define-cmd "marks" 'evil-show-marks)
 (evil-ex-define-cmd "ju[mps]" 'evil-show-jumps)
 (evil-ex-define-cmd "noh[lsearch]" 'evil-ex-nohighlight)
+(evil-ex-define-cmd "f[ile]" 'evil-show-file-info)
 (evil-ex-define-cmd "<" 'evil-shift-left)
 (evil-ex-define-cmd ">" 'evil-shift-right)
 (evil-ex-define-cmd "=" 'evil-ex-line-number)

@@ -124,9 +124,10 @@ it is taken to be a buffer description as passed to
 `evil-test-buffer-from-string', and initializes the buffer.
 Subsequent string forms validate the buffer.
 
-If a form is a list of strings or vectors, it is taken
-to be a key sequence and is passed to `execute-kbd-macro'.
-Remaining forms are evaluated as-is.
+If a form is a list of strings or vectors, it is taken to be a
+key sequence and is passed to `execute-kbd-macro'.  Remaining
+forms are evaluated as-is. If the form is \(error SYMBOL ...)
+then the test fails unless an error of type SYMBOL is raised.
 
 \(fn [[KEY VALUE]...] FORMS...)"
   (declare (indent defun))
@@ -171,26 +172,35 @@ Remaining forms are evaluated as-is.
                ;; parse remaining forms
                ,@(mapcar
                   #'(lambda (form)
-                      (cond
-                       ((stringp form)
-                        `(evil-test-buffer-string
-                          ,form
-                          ',point-start ',point-end
-                          ',visual-start ',visual-end))
-                       ((or (stringp (car-safe form))
-                            (vectorp (car-safe form))
-                            (memq (car-safe (car-safe form))
-                                  '(kbd vconcat)))
-                        ;; we need to execute everything as a single
-                        ;; sequence for command loop hooks to work
-                        `(execute-kbd-macro
-                          (apply #'vconcat
-                                 (mapcar #'listify-key-sequence
-                                         (mapcar #'eval ',form)))))
-                       ((memq (car-safe form) '(kbd vconcat))
-                        `(execute-kbd-macro ,form))
-                       (t
-                        form)))
+                      (let (error-symbol)
+                        (when (and (listp form)
+                                   (eq (car-safe form) 'error))
+                          (setq error-symbol (car-safe (cdr-safe form))
+                                form (cdr-safe (cdr-safe form))))
+                        (let ((result
+                               (cond
+                                ((stringp form)
+                                 `(evil-test-buffer-string
+                                   ,form
+                                   ',point-start ',point-end
+                                   ',visual-start ',visual-end))
+                                ((or (stringp (car-safe form))
+                                     (vectorp (car-safe form))
+                                     (memq (car-safe (car-safe form))
+                                           '(kbd vconcat)))
+                                 ;; we need to execute everything as a single
+                                 ;; sequence for command loop hooks to work
+                                 `(execute-kbd-macro
+                                   (apply #'vconcat
+                                          (mapcar #'listify-key-sequence
+                                                  (mapcar #'eval ',form)))))
+                                ((memq (car-safe form) '(kbd vconcat))
+                                 `(execute-kbd-macro ,form))
+                                (t
+                                 form))))
+                          (if error-symbol
+                              `(should-error ,result :type ',error-symbol)
+                            result))))
                   body)))
          (and (buffer-name buffer)
               (kill-buffer buffer))))))
@@ -792,12 +802,12 @@ and the beginning")
 for TYPE or TRANSFORM")
       (should (equal (evil-transform nil 1 2 'block)
                      '(1 2 block)))
-      (should (equal (evil-transform 'expand 1 2 nil)
+      (should (equal (evil-transform :expand 1 2 nil)
                      '(1 2)))
       (should (equal (evil-transform nil 1 2 nil)
                      '(1 2))))
     (ert-info ("Accept markers, but return positions")
-      (should (equal (evil-transform 'expand
+      (should (equal (evil-transform :expand
                                      (move-marker (make-marker) 1) 1
                                      'inclusive)
                      '(1 2 inclusive :expanded t)))
@@ -870,6 +880,16 @@ de[f]
 abc
 de[f]
 ;; and for Lisp evaluation."))
+
+(ert-deftest evil-test-open-below-folded ()
+  "Test `evil-open-below' on folded lines"
+  :tags '(evil insert)
+  (evil-test-buffer
+    "[l]ine1\n\n(let ()\n  var)\n\nlast line\n"
+    (emacs-lisp-mode)
+    (hs-minor-mode 1)
+    ("zm2joABC" [escape])
+    "line1\n\n(let ()\n  var)\nAB[C]\n\nlast line\n"))
 
 (ert-deftest evil-test-insert-line ()
   "Test `evil-insert-line'"
@@ -1898,6 +1918,24 @@ and for Lisp evaluation."
       ";; This buffer is for[ ]
 ;; and for Lisp evalua")))
 
+(ert-deftest evil-test-delete-folded ()
+  "Test `evil-delete' on folded lines."
+  :tags '(evil operator)
+  (ert-info ("Delete folded lines")
+    (evil-test-buffer
+      "[l]ine1\n\n(let ()\n  var)\n\n(let ()\n  var2)\n"
+      (emacs-lisp-mode)
+      (hs-minor-mode 1)
+      ("zm2jdd")
+      "line1\n\n[\n](let ()\n  var2)\n"))
+  (ert-info ("Delete folded lines with count")
+    (evil-test-buffer
+      "[l]ine1\n\n(let ()\n  var)\n\n(let ()\n  var2)\n\nlast line\n"
+      (emacs-lisp-mode)
+      (hs-minor-mode 1)
+      ("zm2j3dd")
+      "line1\n\n[\n]last line\n")))
+
 (ert-deftest evil-test-change ()
   "Test `evil-change'"
   :tags '(evil operator)
@@ -2034,19 +2072,6 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       ("2P")
       ";; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluationThis bufferThis buffe[r]."))
-  (ert-info ("Paste characters at end-of-buffer on empty line")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes you don't want to save,
-;; and for Lisp evaluation.\n"
-      ("y2e")
-      (goto-char (point-max))
-      ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-\[]"
-      ("2P")
-      ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-This bufferThis buffe[r]"))
   (ert-info ("Paste lines")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
@@ -2071,17 +2096,15 @@ This bufferThis buffe[r]"))
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.\n"
-      ("2yy")
-      (goto-char (point-max))
+      ("2yyG$")
       ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-\[]"
+;; and for Lisp evaluation[.]\n"
       ("2P")
       ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
 \[;]; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.
 ;; This buffer is for notes you don't want to save,
+;; and for Lisp evaluation.
 ;; and for Lisp evaluation.\n"))
   (ert-info ("Paste block")
     (evil-test-buffer
@@ -2176,19 +2199,6 @@ This bufferThis buffe[r]"))
       ("2p")
       ";; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.This bufferThis buffe[r]"))
-  (ert-info ("Paste characters at end-of-buffer on empty line")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes you don't want to save,
-;; and for Lisp evaluation.\n"
-      ("y2e")
-      (goto-char (point-max))
-      ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-\[]"
-      ("2p")
-      ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-This bufferThis buffe[r]"))
   (ert-info ("Paste lines")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
@@ -2213,15 +2223,12 @@ This bufferThis buffe[r]"))
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.\n"
-      ("2yy")
-      (goto-char (point-max))
+      ("2yyG$")
       ";; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-\[]"
+;; and for Lisp evaluation[.]\n"
       ("2p")
       ";; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.
-
 \[;]; This buffer is for notes you don't want to save,
 ;; and for Lisp evaluation.
 ;; This buffer is for notes you don't want to save,
@@ -2471,6 +2478,27 @@ This bufferThis buffe[r]"))
     ("Vp")
     ";; This buffer is for notes you don't want to save.
 \[;]; This buffer is for notes you don't want to save."))
+
+(ert-deftest evil-test-align ()
+  "Test `evil-align-left', `evil-align-right' and `evil-align-center'."
+  :tags '(evil operator)
+  (evil-without-display
+    (let ((fill-column 70)
+          indent-tabs-mode)
+      (evil-test-buffer
+        "before\n[l]ine 1\nthis is line number 2\nline number 3\nafter\n"
+        (":.,+2ri" [return] (kbd "M-x") "untabify" [return])
+        "before\n                                                                [l]ine 1\n                                                 this is line number 2\n                                                         line number 3\nafter\n"
+        (":.,+2ri 60" [return] (kbd "M-x") "untabify" [return])
+        "before\n                                                      [l]ine 1\n                                       this is line number 2\n                                               line number 3\nafter\n"
+        (":.,+2le" [return] (kbd "M-x") "untabify" [return])
+        "before\n[l]ine 1\nthis is line number 2\nline number 3\nafter\n"
+        (":.,+2le 10" [return])
+        "before\n          [l]ine 1\n          this is line number 2\n          line number 3\nafter\n"
+        (":.,+2ce" [return] (kbd "M-x") "untabify" [return])
+        "before\n                                [l]ine 1\n                        this is line number 2\n                            line number 3\nafter\n"
+        (":.,+2ce 40" [return] (kbd "M-x") "untabify" [return])
+        "before\n                 [l]ine 1\n         this is line number 2\n             line number 3\nafter\n"))))
 
 ;;; Motions
 
@@ -2856,6 +2884,23 @@ Below some empty line"
       ("dw")
       "[B]elow some empty line")
     (evil-test-buffer
+      "[A]bove
+
+    Below some empty line with leading whitespace"
+      ("dw")
+      "[]
+
+    Below some empty line with leading whitespace"
+      ("dw")
+      "[]
+    Below some empty line with leading whitespace"
+      ("dw")
+      "    [B]elow some empty line")
+    (evil-test-buffer
+      "Some line with trailing whitespace  [ ]     \n    next line\n"
+      ("dw")
+      "Some line with trailing whitespace [ ]\n    next line\n")
+    (evil-test-buffer
       "[A]\n"
       ("dw")
       "[]\n"))
@@ -3098,7 +3143,7 @@ Below some empty lin[e]"))
     (evil-test-buffer
       "[B]elow some empty line\n\n"
       ("100}")
-      "Below some empty line\n\n[]"
+      "Below some empty line\n[\n]"
       (should-error (execute-kbd-macro "}"))
       (should-error (execute-kbd-macro "42}")))))
 
@@ -3203,8 +3248,8 @@ Below some empty line[.]"))
   (ert-info ("End of buffer with newline")
     (evil-test-buffer
       "[B]elow some empty line.\n\n"
-      ("100)")
-      "Below some empty line.\n\n[]"
+      (")")
+      "Below some empty line.\n[\n]"
       (should-error (execute-kbd-macro ")"))
       (should-error (execute-kbd-macro "42)")))))
 
@@ -3637,7 +3682,11 @@ Below some empty line."))
     (evil-test-buffer
       "This is 'a [t]est' for quote objects."
       ("vi'")
-      "This is '<a tes[t]>' for quote objects."))
+      "This is '<a tes[t]>' for quote objects.")
+    (evil-test-buffer
+      "This is \"a '[t]est'\" for quote objects."
+      ("vi'")
+      "This is \"a '<tes[t]>'\" for quote objects."))
   (ert-info ("Select text including enclosing quotes")
     (evil-test-buffer
       "This is 'a [t]est' for quote objects."
@@ -4211,7 +4260,12 @@ if no previous selection")
     (evil-test-buffer
       "[x]xx foo BAR foo BAR foo BAR"
       (":s/\\(f[[:alpha:]]*\\>\\)\\s-*\\(b[[:alpha:]]*\\>\\)/\\L\\2_\\e\\U\\1/gc" [return] "yny")
-      "[x]xx bar_FOO foo BAR bar_FOO")))
+      "[x]xx bar_FOO foo BAR bar_FOO"))
+  (ert-info ("Substitute with escaped characters in replacement")
+    (evil-test-buffer
+      "[a]bcXdefXghiXjkl\n"
+      (":s/X/\\|\\/\\|/g" [return])
+      "[a]bc|/|def|/|ghi|/|jkl\n")))
 
 (ert-deftest evil-test-ex-regex-without-case ()
   "Test `evil-ex-regex-without-case'"
@@ -4281,7 +4335,20 @@ if no previous selection")
         ("/\\Cyou" [return])
         "start [y]ou YOU You you YOU You"
         ("n")
-        "start you YOU You [y]ou YOU You"))))
+        "start you YOU You [y]ou YOU You"))
+    (ert-info ("Test failing search does not move point")
+      (evil-test-buffer
+        "foo [f]oo foo\nbar bar2 bar\nbaz baz baz\n"
+        (error search-failed "/foofoo" [return])
+        "foo [f]oo foo\nbar bar2 bar\nbaz baz baz\n"
+        ("/bar2" [return])
+        "foo foo foo\nbar [b]ar2 bar\nbaz baz baz\n"
+        ("dw")
+        "foo foo foo\nbar [b]ar\nbaz baz baz\n"
+        (error search-failed "n")
+        "foo foo foo\nbar [b]ar\nbaz baz baz\n"
+        (error search-failed "N")
+        "foo foo foo\nbar [b]ar\nbaz baz baz\n"))))
 
 (ert-deftest evil-test-ex-search-offset ()
   "Test search offsets."
@@ -4539,6 +4606,98 @@ if no previous selection")
                              (intern "+")
                              (string-to-number "1"))))))))
 
+(ert-deftest evil-test-delimited-arguments ()
+  "Test `evil-delimited-arguments'"
+  :tags '(evil util)
+  (ert-info ("Any number of arguments")
+    (should (equal (evil-delimited-arguments "/a/b/c/")
+                   '("a" "b" "c")))
+    (should (equal (evil-delimited-arguments "/a/b/c")
+                   '("a" "b" "c")))
+    (should (equal (evil-delimited-arguments "/a/b//")
+                   '("a" "b" "")))
+    (should (equal (evil-delimited-arguments "/a///")
+                   '("a" "" "")))
+    (should (equal (evil-delimited-arguments "/a/   ")
+                   '("a" "   ")))
+    (should (equal (evil-delimited-arguments "/a/")
+                   '("a")))
+    (should (equal (evil-delimited-arguments "//b//")
+                   '("" "b" "")))
+    (should (equal (evil-delimited-arguments "/a//c")
+                   '("a" "" "c")))
+    (should (equal (evil-delimited-arguments "////")
+                   '("" "" "")))
+    (should (equal (evil-delimited-arguments "/")
+                   nil))
+    (should (equal (evil-delimited-arguments "    ")
+                   nil))
+    (should (equal (evil-delimited-arguments "")
+                   nil)))
+  (ert-info ("Two arguments")
+    (should (equal (evil-delimited-arguments "/a/b/c" 2)
+                   '("a" "b/c")))
+    (should (equal (evil-delimited-arguments "/a/b/" 2)
+                   '("a" "b")))
+    (should (equal (evil-delimited-arguments "/a/b" 2)
+                   '("a" "b")))
+    (should (equal (evil-delimited-arguments "/a//" 2)
+                   '("a" "")))
+    (should (equal (evil-delimited-arguments "/a/   " 2)
+                   '("a" "   ")))
+    (should (equal (evil-delimited-arguments "/a/" 2)
+                   '("a" nil)))
+    (should (equal (evil-delimited-arguments "/a" 2)
+                   '("a" nil)))
+    (should (equal (evil-delimited-arguments "    " 2)
+                   '(nil nil)))
+    (should (equal (evil-delimited-arguments "" 2)
+                   '(nil nil))))
+  (ert-info ("One argument")
+    (should (equal (evil-delimited-arguments "/a/b/c" 1)
+                   '("a/b/c")))
+    (should (equal (evil-delimited-arguments "/a/   " 1)
+                   '("a")))
+    (should (equal (evil-delimited-arguments "/a/" 1)
+                   '("a")))
+    (should (equal (evil-delimited-arguments "/a" 1)
+                   '("a")))
+    (should (equal (evil-delimited-arguments "/" 1)
+                   '(nil)))
+    (should (equal (evil-delimited-arguments "    " 1)
+                   '(nil)))
+    (should (equal (evil-delimited-arguments "" 1)
+                   '(nil))))
+  (ert-info ("Zero arguments")
+    (should (equal (evil-delimited-arguments "/a" 0)
+                   nil))
+    (should (equal (evil-delimited-arguments "/" 0)
+                   nil))
+    (should (equal (evil-delimited-arguments "    " 0)
+                   nil))
+    (should (equal (evil-delimited-arguments "" 0)
+                   nil))))
+
+(ert-deftest evil-test-concat-charsets ()
+  "Test `evil-concat-charsets'"
+  :tags '(evil util)
+  (ert-info ("Bracket")
+    (should (equal (evil-concat-charsets "abc" "]def")
+                   "]abcdef")))
+  (ert-info ("Complement")
+    (should (equal (evil-concat-charsets "^abc" "def")
+                   "^abcdef"))
+    (should (equal (evil-concat-charsets "^abc" "^def")
+                   "^abcdef")))
+  (ert-info ("Hyphen")
+    (should (equal (evil-concat-charsets "abc" "-def")
+                   "-abcdef"))
+    (should (equal (evil-concat-charsets "^abc" "-def")
+                   "^-abcdef")))
+  (ert-info ("Newline")
+    (should (equal (evil-concat-charsets "^ \t\r\n" "[:word:]_")
+                   "^ \t\r\n[:word:]_"))))
+
 (ert-deftest evil-test-properties ()
   "Test `evil-get-property' and `evil-put-property'"
   :tags '(evil util)
@@ -4546,13 +4705,13 @@ if no previous selection")
     (ert-info ("Set properties")
       (evil-put-property 'alist 'wibble :foo t)
       (should (equal alist '((wibble . (:foo t)))))
-      (evil-put-property 'alist 'wibble 'bar nil)
+      (evil-put-property 'alist 'wibble :bar nil)
       (should (equal alist '((wibble . (:foo t :bar nil)))))
       (evil-put-property 'alist 'wobble :foo nil :bar nil :baz t)
       (should (equal alist '((wobble . (:foo nil :bar nil :baz t))
                              (wibble . (:foo t :bar nil))))))
     (ert-info ("Get properties")
-      (should (evil-get-property alist 'wibble 'foo))
+      (should (evil-get-property alist 'wibble :foo))
       (should-not (evil-get-property alist 'wibble :bar))
       (should-not (evil-get-property alist 'wobble :foo))
       (should-not (evil-get-property alist 'wibble :baz))

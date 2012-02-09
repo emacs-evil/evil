@@ -37,15 +37,6 @@ no arguments. In Emacs 23.2 and newer, it takes one argument."
 (unless (get 'display-table 'char-table-extra-slots)
   (put 'display-table 'char-table-extra-slots 0))
 
-;; custom version of `gensym'
-(defun evil-generate-symbol (&optional intern)
-  "Return a new uninterned symbol.
-If INTERN is non-nil, intern the symbol."
-  (setq evil-symbol-counter (1+ evil-symbol-counter))
-  (if intern
-      (intern (format "evil-symbol-%d" evil-symbol-counter))
-    (make-symbol (format "evil-symbol-%d" evil-symbol-counter))))
-
 ;; macro helper
 (eval-and-compile
   (defun evil-unquote (exp)
@@ -53,6 +44,24 @@ If INTERN is non-nil, intern the symbol."
     (while (eq (car-safe exp) 'quote)
       (setq exp (cadr exp)))
     exp))
+
+(defun evil-delay (hook condition form &optional name append local)
+  "Execute FORM when CONDITION becomes true, checking with HOOK.
+NAME specifies the name of the entry added to HOOK. If APPEND is
+non-nil, the entry is appended to the hook. If LOCAL is non-nil,
+the buffer-local value of HOOK is modified."
+  (if (and (not (booleanp condition)) (eval condition))
+      (eval form)
+    (let* ((name (or name (format "evil-delay-form-in-%s" hook)))
+           (fun (make-symbol name))
+           (condition (or condition t)))
+      (fset fun `(lambda (&rest args)
+                   (when ,condition
+                     (remove-hook ',hook #',fun ',local)
+                     ,form)))
+      (put fun 'permanent-local-hook t)
+      (add-hook hook fun append local))))
+(put 'evil-delay 'lisp-indent-function 2)
 
 ;;; List functions
 
@@ -186,8 +195,6 @@ ALIST is an association list with entries of the form
 If PROP is nil, return all properties for KEY.
 If KEY is t, return an association list of keys
 and their PROP values."
-  (unless (or (keywordp prop) (null prop))
-    (setq prop (intern (format ":%s" prop))))
   (cond
    ((null prop)
     (cdr (assq key alist)))
@@ -209,14 +216,13 @@ ALIST-VAR points to an association list with entries of the form
   (set alist-var
        (let* ((alist (symbol-value alist-var))
               (plist (cdr (assq key alist))))
-         (while prop
-           (unless (keywordp prop)
-             (setq prop (intern (format ":%s" prop))))
-           (setq plist (plist-put plist prop val)
-                 prop (pop properties)
-                 val (pop properties)))
+         (setq plist (plist-put plist prop val))
+         (when properties
+           (setq plist (evil-concat-plists plist properties)
+                 val (car (last properties))))
          (setq alist (assq-delete-all key alist))
-         (push (cons key plist) alist))))
+         (push (cons key plist) alist)))
+  val)
 
 (defun evil-state-property (state prop &optional value)
   "Return the value of property PROP for STATE.
@@ -266,7 +272,8 @@ sorting in between."
                            [&rest keywordp sexp]
                            [&optional ("interactive" [&rest form])]
                            def-body)))
-  (let (arg args doc doc-form key keys)
+  (let ((interactive '(interactive))
+        arg args doc doc-form key keys)
     ;; collect arguments
     (when (listp (car-safe body))
       (setq args (pop body)))
@@ -283,34 +290,29 @@ sorting in between."
             arg (pop body))
       (unless nil ; TODO: add keyword check
         (setq keys (plist-put keys key arg))))
-    ;; collect interactive
-    (when (and body
-               (consp (car body))
+    ;; collect `interactive' form
+    (when (and body (consp (car body))
                (eq (car (car body)) 'interactive))
-      (let* ((interactive (pop body))
-             (result (apply #'evil-interactive-form (cdr interactive)))
+      (let* ((iform (pop body))
+             (result (apply #'evil-interactive-form (cdr iform)))
              (form (car result))
              (attrs (cdr result)))
-        (push (list 'interactive form) body)
-        ;; The next code is a copy of the previous one but does not
-        ;; overwrite properties.
-        (while (keywordp (car-safe attrs))
-          (setq key (pop attrs)
-                arg (pop attrs))
-          (unless (or nil ; TODO: add keyword check
-                      (plist-member keys key))
-            (plist-put keys key arg)))))
+        (setq interactive `(interactive ,form)
+              keys (evil-concat-plists keys attrs))))
     `(progn
        ;; the compiler does not recognize `defun' inside `let'
        ,(when (and command body)
           `(defun ,command ,args
              ,@(when doc `(,doc))
+             ,interactive
              ,@body))
        ,(when (and command doc-form)
           `(put ',command 'function-documentation ,doc-form))
        ;; set command properties for symbol or lambda function
        (let ((func ',(if (and (null command) body)
-                         `(lambda ,args ,@body)
+                         `(lambda ,args
+                            ,interactive
+                            ,@body)
                        command)))
          (apply #'evil-set-command-properties func ',keys)
          func))))
@@ -352,9 +354,8 @@ To set multiple properties at once, see
   "Add PROPERTIES to COMMAND.
 PROPERTIES should be a property list.
 To replace all properties at once, use `evil-set-command-properties'."
-  (while properties
-    (evil-put-command-property command
-                               (pop properties) (pop properties))))
+  (apply #'evil-put-property
+         'evil-command-properties command properties))
 
 (defun evil-set-command-properties (command &rest properties)
   "Replace all of COMMAND's properties with PROPERTIES.
@@ -410,32 +411,56 @@ This ensures that it behaves correctly in Visual state."
 
 (defun evil-delimited-arguments (string &optional num)
   "Parse STRING as a sequence of delimited arguments.
-The first non-blank character in the string is taken to be the
-delimiter. Returns a list of NUM strings. If two delimiters
-follow directly one after the other, an empty return value is
-generated at the corresponding position in the list. If some
-arguments are missing from STRING, the result list contains nil
-values."
+Returns a list of NUM strings, or as many arguments as
+the string contains. The first non-blank character is
+taken to be the delimiter. If some arguments are missing
+from STRING, the resulting list is padded with nil values.
+Two delimiters following directly after each other gives
+an empty string."
   (save-match-data
     (let ((string (or string ""))
-          (count 0) (idx 0)
+          (count (or num -1)) (idx 0)
           argument delim match result)
-      (when (string-match "^[[:space:]]*\\(.\\)" string)
+      (when (string-match "^[[:space:]]*\\([^[:space:]]\\)" string)
         (setq delim (match-string 1 string)
               argument (format "%s\\(\\(?:[\\].\\|[^%s]\\)*\\)"
                                (regexp-quote delim)
                                delim))
-        (while (string-match argument string idx)
-          (setq count (1+ count))
-          (if (eq count num)
-              (setq match (substring string (match-beginning 1))
-                    idx (length string))
-            (setq match (match-string 1 string)
-                  idx (match-end 1)))
-          (push match result)))
-      (while (and num (< (length result) num))
-        (push nil result))
+        (while (and (/= count 0) (string-match argument string idx))
+          (setq match (match-string 1 string)
+                idx (match-end 1)
+                count (1- count))
+          (when (= count 0)
+            (unless (save-match-data
+                      (string-match
+                       (format "%s[[:space:]]*$" delim) string idx))
+              (setq match (substring string (match-beginning 1)))))
+          (unless (and (zerop (length match))
+                       (zerop (length (substring string idx))))
+            (push match result))))
+      (when (and num (< (length result) num))
+        (dotimes (i (- num (length result)))
+          (push nil result)))
       (nreverse result))))
+
+(defun evil-concat-charsets (&rest sets)
+  "Concatenate character sets.
+A character set is the part between [ and ] in a regular expression.
+If any character set is complemented, the result is also complemented."
+  (let ((bracket "") (complement "") (hyphen "") result)
+    (save-match-data
+      (dolist (set sets)
+        (when (string-match "^\\^" set)
+          (setq set (substring set 1)
+                complement "^"))
+        (when (string-match "^]" set)
+          (setq set (substring set 1)
+                bracket "]"))
+        (when (string-match "^-" set)
+          (setq set (substring set 1)
+                hyphen "-"))
+        (setq result (concat result set)))
+      (format "%s%s%s%s" complement bracket hyphen result))))
 
 ;;; Key sequences
 
@@ -445,26 +470,30 @@ Returns (CMD COUNT), where COUNT is the numeric prefix argument.
 Both COUNT and CMD may be nil."
   (let ((input (listify-key-sequence input))
         (inhibit-quit t)
-        char cmd count digit seq)
+        char cmd count digit event seq)
     (while (progn
-             (setq char (or (pop input) (read-event)))
-             (when (symbolp char)
-               (setq char (or (get char 'ascii-character) char)))
+             (setq event (or (pop input) (read-event)))
+             (when (eq event ?\e)
+               (when (sit-for evil-esc-delay t)
+                 (setq event 'escape)))
+             (setq char (or (when (characterp event) event)
+                            (when (symbolp event)
+                              (get event 'ascii-character))))
              ;; this trick from simple.el's `digit-argument'
              ;; converts keystrokes like C-0 and C-M-1 to digits
              (if (or (characterp char) (integerp char))
                  (setq digit (- (logand char ?\177) ?0))
                (setq digit nil))
              (if (keymapp cmd)
-                 (setq seq (append seq (list char)))
-               (setq seq (list char)))
+                 (setq seq (append seq (list event)))
+               (setq seq (list event)))
              (setq cmd (key-binding (vconcat seq) t))
              (cond
               ;; if CMD is a keymap, we need to read more
               ((keymapp cmd)
                t)
               ;; numeric prefix argument
-              ((or (memq cmd '(digit-argument))
+              ((or (eq cmd #'digit-argument)
                    (and (eq (length seq) 1)
                         (not (keymapp cmd))
                         count
@@ -487,10 +516,7 @@ Both COUNT and CMD may be nil."
                t)
               ((eq cmd 'negative-argument)
                (unless count
-                 (setq count "-")))
-              ;; user pressed C-g, so return nil for CMD
-              ((memq cmd '(keyboard-quit undefined))
-               (setq cmd nil)))))
+                 (setq count "-"))))))
     ;; determine COUNT
     (when (stringp count)
       (if (string= count "-")
@@ -785,12 +811,60 @@ If POS is a marker, return its position."
    (t
     pos)))
 
+(defmacro evil-save-goal-column (&rest body)
+  "Restores the goal column after execution of BODY.
+See also `evil-save-column'."
+  (declare (indent defun)
+           (debug t))
+  `(let ((goal-column goal-column)
+         (temporary-goal-column temporary-goal-column))
+     ,@body))
+
+(defmacro evil-save-column (&rest body)
+  "Restores the column after execution of BODY.
+See also `evil-save-goal-column'."
+  (declare (indent defun)
+           (debug t))
+  `(let ((col (current-column)))
+     (evil-save-goal-column
+       ,@body
+       (move-to-column col))))
+
+(defmacro evil-narrow-to-field (&rest body)
+  "Narrow to the current field."
+  (declare (indent defun)
+           (debug t))
+  `(save-restriction
+     (narrow-to-region (field-beginning) (field-end))
+     ,@body))
+
+(defun evil-move-beginning-of-line (&optional arg)
+  "Move to the beginning of the line as displayed.
+Like `move-beginning-of-line', but retains the goal column."
+  (evil-save-goal-column
+    (move-beginning-of-line arg)))
+
+(defun evil-move-end-of-line (&optional arg)
+  "Move to the end of the line as displayed.
+Like `move-end-of-line', but retains the goal column."
+  (evil-save-goal-column
+    (move-end-of-line arg)))
+
 (defun evil-adjust-cursor (&optional force)
   "Move point one character back if at the end of a non-empty line.
+If at the end of the buffer, move point to the previous line.
 This behavior is contingent on the variable `evil-move-cursor-back';
 use the FORCE parameter to override it."
-  (when (eolp)
-    (evil-move-cursor-back force)))
+  (evil-narrow-to-field
+    (cond
+     ((and (eobp) (bolp))
+      (forward-line -1)
+      (back-to-indentation))
+     ((= (point)
+         (save-excursion
+           (evil-move-end-of-line)
+           (point)))
+      (evil-move-cursor-back force)))))
 
 (defun evil-move-cursor-back (&optional force)
   "Move point one character back within the current line.
@@ -1021,14 +1095,6 @@ CHARS is a character set as inside [...] in a regular expression."
           (when (<= (point) opoint)
             (goto-char opoint))))))))
 
-(defmacro evil-save-column (&rest body)
-  "Restores the column after execution of BODY."
-  (declare (indent defun)
-           (debug t))
-  `(let ((col (current-column)))
-     ,@body
-     (move-to-column col)))
-
 (defun evil-in-regexp-p (regexp &optional pos)
   "Whether POS is inside a match for REGEXP.
 POS defaults to the current position of point."
@@ -1141,14 +1207,6 @@ POS defaults to the current position of point."
        (narrow-to-region (evil-string-beginning) (evil-string-end))))
      ,@body))
 
-(defmacro evil-narrow-to-field (&rest body)
-  "Narrow to the current field."
-  (declare (indent defun)
-           (debug t))
-  `(save-restriction
-     (narrow-to-region (field-beginning) (field-end))
-     ,@body))
-
 (defmacro evil-with-or-without-comment (&rest body)
   "Try BODY narrowed to the current comment; then try BODY unnarrowed.
 If BODY returns non-nil inside the current comment, return that.
@@ -1163,7 +1221,7 @@ Otherwise, execute BODY again, but without the restriction."
   "Inserts a new line above point and places point in that line
 with regard to indentation."
   (evil-narrow-to-field
-    (beginning-of-line)
+    (evil-move-beginning-of-line)
     (newline)
     (forward-line -1)
     (back-to-indentation)))
@@ -1172,7 +1230,7 @@ with regard to indentation."
   "Inserts a new line below point and places point in that line
 with regard to indentation."
   (evil-narrow-to-field
-    (end-of-line)
+    (evil-move-end-of-line)
     (newline)
     (back-to-indentation)))
 
@@ -1249,8 +1307,15 @@ or a marker object pointing nowhere."
                                   (marker-position (cdr entry))))))))
 (put 'evil-swap-out-markers 'permanent-local-hook t)
 
+(defun evil-jump-hook (&optional command)
+  "Set jump point if COMMAND has a non-nil :jump property."
+  (setq command (or command this-command))
+  (when (evil-get-command-property command :jump)
+    (evil-set-jump)))
+
 (defun evil-set-jump (&optional pos)
-  "Set jump point at POS."
+  "Set jump point at POS.
+POS defaults to point."
   (unless (region-active-p)
     (evil-save-echo-area
       (mapc #'(lambda (marker)
@@ -1319,10 +1384,11 @@ If POS is nil, delete the mark."
     (setq pos (evil-normalize-position pos)))
   (set-marker (mark-marker) pos))
 
-(defun evil-transient-save ()
+(defun evil-save-transient-mark-mode ()
   "Save Transient Mark mode and make the new setup buffer-local.
 The variables to save are listed in `evil-transient-vars'.
-Their values are stored in `evil-transient-vals'."
+Their values are stored in `evil-transient-vals'.
+See also `evil-restore-transient-mark-mode'."
   (dolist (var evil-transient-vars)
     (when (and (boundp var)
                (not (assq var evil-transient-vals)))
@@ -1332,8 +1398,9 @@ Their values are stored in `evil-transient-vals'."
       (make-variable-buffer-local var)
       (put var 'permanent-local t))))
 
-(defun evil-transient-restore ()
-  "Restore Transient Mark mode from `evil-transient-vals'."
+(defun evil-restore-transient-mark-mode ()
+  "Restore Transient Mark mode from `evil-transient-vals'.
+See also `evil-save-transient-mark-mode'."
   (let (entry local var val)
     (while (setq entry (pop evil-transient-vals))
       (setq var (pop entry)
@@ -1345,6 +1412,18 @@ Their values are stored in `evil-transient-vals'."
         (if (fboundp var)
             (funcall var (if var 1 -1))
           (setq var val))))))
+
+(defun evil-save-mark ()
+  "Save the current mark, including whether it is transient.
+See also `evil-restore-mark'."
+  (setq evil-visual-previous-mark (mark t))
+  (evil-save-transient-mark-mode))
+
+(defun evil-restore-mark ()
+  "Restore the mark, including whether it was transient.
+See also `evil-save-mark'."
+  (evil-restore-transient-mark-mode)
+  (evil-move-mark evil-visual-previous-mark))
 
 ;; In theory, an active region implies Transient Mark mode, and
 ;; disabling Transient Mark mode implies deactivating the region.
@@ -1396,26 +1475,19 @@ Enable with positive ARG, disable with negative ARG."
     (when (boundp 'cua--explicit-region-start)
       (setq cua--explicit-region-start t)))))
 
-(defmacro evil-save-transient-mark (&rest body)
-  "Save Transient Mark mode; execute BODY; then restore it."
+(defmacro evil-with-transient-mark-mode (&rest body)
+  "Execute BODY with Transient Mark mode.
+Then restore Transient Mark mode to its previous setting."
   (declare (indent defun)
            (debug t))
   `(let ((inhibit-quit t)
          evil-transient-vals)
      (unwind-protect
          (progn
-           (evil-transient-save)
+           (evil-save-transient-mark-mode)
+           (evil-transient-mark 1)
            ,@body)
-       (evil-transient-restore))))
-
-(defmacro evil-save-region (&rest body)
-  "Save Transient Mark mode, mark activation, mark and point.
-Execute BODY, then restore those things."
-  (declare (indent defun)
-           (debug t))
-  `(evil-save-transient-mark
-     (save-excursion
-       ,@body)))
+       (evil-restore-transient-mark-mode))))
 
 (defun evil-exchange-point-and-mark ()
   "Exchange point and mark without activating the region."
@@ -1523,7 +1595,7 @@ each line. Extra arguments to FUNC may be passed via ARGS."
      0 (length text) yank-excluded-properties text)
     (cond
      ((eq this-command #'evil-paste-after)
-      (end-of-line)
+      (evil-move-end-of-line)
       (evil-move-mark (point))
       (newline)
       (insert text)
@@ -1536,7 +1608,7 @@ each line. Extra arguments to FUNC may be passed via ARGS."
                   (point)))
       (evil-move-mark (1+ (mark t))))
      (t
-      (beginning-of-line)
+      (evil-move-beginning-of-line)
       (evil-move-mark (point))
       (insert text)
       (setq evil-last-paste
@@ -1704,7 +1776,7 @@ list of command properties as passed to `evil-define-command'."
           (setq pos (1+ pos))
         (setq match (evil-match-interactive-code string pos))
         (if (null match)
-            (error "Unknown interactive code: `%c'"
+            (error "Unknown interactive code: `%s'"
                    (substring string pos))
           (setq code (car match)
                 expr (car (cdr match))
@@ -1731,8 +1803,8 @@ list of command properties as passed to `evil-define-command'."
     (dolist (arg args)
       (if (not (stringp arg))
           (setq forms (append forms (list arg)))
-        (setq arg (evil-interactive-string arg))
-        (setq forms (append forms (cdr (car arg)))
+        (setq arg (evil-interactive-string arg)
+              forms (append forms (cdr (car arg)))
               properties (append properties (cdr arg)))))
     (cons (apply #'evil-concatenate-interactive-forms forms)
           properties)))
@@ -1794,13 +1866,13 @@ may contain a property list."
   "Contract BEG and END as TYPE with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list."
-  (apply #'evil-transform 'contract beg end type properties))
+  (apply #'evil-transform :contract beg end type properties))
 
 (defun evil-normalize (beg end type &rest properties)
   "Normalize BEG and END as TYPE with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list."
-  (apply #'evil-transform 'normalize beg end type properties))
+  (apply #'evil-transform :normalize beg end type properties))
 
 (defun evil-transform
   (transform beg end type &rest properties)
@@ -2026,7 +2098,7 @@ Returns t if RANGE was successfully adjusted and nil otherwise."
         (forward-line)
         (if (and shrink evil-auto-indent)
             (back-to-indentation)
-          (beginning-of-line))
+          (evil-move-beginning-of-line))
         (evil-set-range range (point) nil))
       (goto-char (evil-range-end range))
       (when (and shrink (looking-back (concat "^" regexp)))
@@ -2093,8 +2165,7 @@ use `evil-regexp-range'."
         (count (or count 1))
         level beg end range)
     (save-excursion
-      (if (or (evil-in-comment-p)
-              (and (evil-in-string-p) (not (eq open close))))
+      (if (or (evil-in-comment-p) (evil-in-string-p))
           ;; if in a comment, first look inside the comment only;
           ;; failing that, look outside it
           (or (evil-regexp-range count open-regexp close-regexp exclusive)
@@ -2220,12 +2291,12 @@ Return a new range if COPY is non-nil."
 (defun evil-contract-range (range &optional copy)
   "Contract RANGE according to its type.
 Return a new range if COPY is non-nil."
-  (evil-transform-range 'contract range copy))
+  (evil-transform-range :contract range copy))
 
 (defun evil-normalize-range (range &optional copy)
   "Normalize RANGE according to its type.
 Return a new range if COPY is non-nil."
-  (evil-transform-range 'normalize range copy))
+  (evil-transform-range :normalize range copy))
 
 (defun evil-transform-range (transform range &optional copy)
   "Apply TRANSFORM to RANGE according to its type.
@@ -2351,7 +2422,7 @@ in `evil-temporary-undo' instead."
 Returns a pair (result . rest).  RESULT is a list suitable for
 `perform-replace' if necessary, the original string if not and
 REST is the unparsed rest of TO."
-  (if (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[,#ntrlLuUeE]" to)
+  (if (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[^0-9&]" to)
       (let (pos list char (rest ""))
         (while
             (progn
@@ -2393,8 +2464,10 @@ REST is the unparsed rest of TO."
                                          (cdr pos)))
                                 (1+ (cdr pos))
                               (cdr pos))))
-                       (setq to (substring to end)))))
-              (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[,#ntrlLuUeE]" to)))
+                       (setq to (substring to end))))
+                    (t ; simple escaped character
+                     (push (char-to-string char) list)))
+              (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[^0-9&]" to)))
         (setq to (nreverse (delete "" (cons to list))))
         (replace-match-string-symbols to)
         (cons (if (cdr to)
@@ -2432,6 +2505,38 @@ the replacement text, otherwise the function behaves as
                                            (cdr replacement)
                                            0)
                                   fixedcase nil string)))
+
+;;; Alignment
+
+(defun evil-justify-lines (beg end justify position)
+  "Justifes all lines in a range.
+BEG and END specify the range of those lines to be
+justified. JUSTIFY is either 'left, 'right or 'center according
+to the justification type. POSITION is the maximal text width for
+right and center justification or the column at which the lines
+should be left-aligned for left justification."
+  (let ((fill-column position)
+        adaptive-fill-mode fill-prefix)
+    (save-restriction
+      (narrow-to-region (save-excursion
+                          (goto-char beg)
+                          (line-beginning-position))
+                        (save-excursion
+                          (goto-char end)
+                          (if (bolp)
+                              (line-end-position 0)
+                            (line-end-position))))
+      (goto-char (point-min))
+      (while (progn
+               (if (eq justify 'left)
+                   (indent-line-to position)
+                 (when (re-search-forward "^[[:space:]]*" nil t)
+                   (delete-region (match-beginning 0)
+                                  (match-end 0)))
+                 (justify-current-line justify nil t))
+               (and (zerop (forward-line)) (bolp))))
+      (goto-char (point-min))
+      (back-to-indentation))))
 
 (provide 'evil-common)
 

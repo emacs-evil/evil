@@ -75,7 +75,7 @@ to display in the echo area."
     (unless (or (null string)
                 (string= string ""))
       (evil-echo-area-save)
-      (evil-echo string)
+      (evil-echo "%s" string)
       (isearch-highlight (match-beginning 0) (match-end 0))
       (when all
         (setq isearch-lazy-highlight-wrapped nil
@@ -473,18 +473,44 @@ The following properties are supported:
           (face (evil-ex-hl-face hl))
           (match-hook (evil-ex-hl-match-hook hl))
           result)
-      (condition-case lossage
-          (save-match-data
-            (when pattern
-              (dolist (win (if (eq evil-ex-interactive-search-highlight
-                                   'all-windows)
-                               (get-buffer-window-list (current-buffer) nil t)
-                             (list (evil-ex-hl-window hl))))
-                (let ((beg (max (window-start win)
-                                (or (evil-ex-hl-min hl) (point-min))))
-                      (end (min (window-end win)
-                                (or (evil-ex-hl-max hl) (point-max)))))
-                  (when (< beg end)
+      (when pattern
+        ;; collect all visible ranges
+        (let (ranges sranges)
+          (dolist (win (if (eq evil-ex-interactive-search-highlight
+                               'all-windows)
+                           (get-buffer-window-list (current-buffer) nil t)
+                         (list (evil-ex-hl-window hl))))
+            (let ((beg (max (window-start win)
+                            (or (evil-ex-hl-min hl) (point-min))))
+                  (end (min (window-end win)
+                            (or (evil-ex-hl-max hl) (point-max)))))
+              (when (< beg end)
+                (push (cons beg end) ranges))))
+          (setq ranges
+                (sort ranges #'(lambda (r1 r2) (< (car r1) (car r2)))))
+          (while ranges
+            (let ((r1 (pop ranges))
+                  (r2 (pop ranges)))
+              (cond
+               ;; last range
+               ((null r2)
+                (push r1 sranges))
+               ;; ranges overlap, union
+               ((>= (cdr r1) (car r2))
+                (push (cons (car r1)
+                            (max (cdr r1) (cdr r2)))
+                      ranges))
+               ;; ranges distinct
+               (t
+                (push r1 sranges)
+                (push r2 ranges)))))
+
+          ;; run through all ranges
+          (condition-case lossage
+              (save-match-data
+                (dolist (r sranges)
+                  (let ((beg (car r))
+                        (end (cdr r)))
                     (save-excursion
                       (goto-char beg)
                       ;; set the overlays for the current highlight,
@@ -500,31 +526,30 @@ The following properties are supported:
                           (push ov new-ovs)
                           (when match-hook (funcall match-hook hl ov)))
                         (unless (evil-ex-pattern-whole-line pattern)
-                          (forward-line))))))))
+                          (forward-line))))))
+                (mapc #'delete-overlay old-ovs)
+                (evil-ex-hl-set-overlays hl new-ovs)
+                (if (or (null pattern) new-ovs)
+                    (setq result t)
+                  ;; Maybe the match could just not be found somewhere else?
+                  (save-excursion
+                    (goto-char (or (evil-ex-hl-min hl) (point-min)))
+                    (if (and (evil-ex-search-find-next-pattern pattern)
+                             (< (match-end 0) (or (evil-ex-hl-max hl)
+                                                  (point-max))))
+                        (setq result (format "Match in line %d"
+                                             (line-number-at-pos
+                                              (match-beginning 0))))
+                      (setq result "No match")))))
 
-            (mapc #'delete-overlay old-ovs)
-            (evil-ex-hl-set-overlays hl new-ovs)
-            (if (or (null pattern) new-ovs)
-                (setq result t)
-              ;; Maybe the match could just not be found somewhere else?
-              (save-excursion
-                (goto-char (or (evil-ex-hl-min hl) (point-min)))
-                (if (and (evil-ex-search-find-next-pattern pattern)
-                         (< (match-end 0) (or (evil-ex-hl-max hl)
-                                              (point-max))))
-                    (setq result (format "Match in line %d"
-                                         (line-number-at-pos
-                                          (match-beginning 0))))
-                  (setq result "No match")))))
+            (invalid-regexp
+             (setq result (cadr lossage)))
 
-        (invalid-regexp
-         (setq result (cadr lossage)))
+            (search-failed
+             (setq result (nth 2 lossage)))
 
-        (search-failed
-         (setq result (nth 2 lossage)))
-
-        (error
-         (setq result (format "%s" lossage))))
+            (error
+             (setq result (format "%s" lossage))))))
       (when (evil-ex-hl-update-hook hl)
         (funcall (evil-ex-hl-update-hook hl) hl result)))))
 
@@ -655,7 +680,8 @@ message to be shown. This function does nothing if
         (evil-ex-hl-change 'evil-ex-search nil))
       ;; and go to initial position
       (goto-char evil-ex-search-start-point)))
-    (evil-ex-echo message)))
+    (when (stringp message)
+      (evil-ex-echo "%s" message))))
 
 (defun evil-ex-search-start-session ()
   "Initialize Ex for interactive search."
@@ -881,6 +907,7 @@ current search result."
                   evil-ex-search-match-end (match-end 0))
             (evil-ex-search-goto-offset offset))
            (t
+            (goto-char evil-ex-search-start-point)
             (signal 'search-failed (list search-string)))))))))
 
 (defun evil-ex-start-symbol-search (unbounded direction count)
@@ -963,7 +990,7 @@ This handler highlights the pattern of the current substitution."
 (defun evil-ex-pattern-update-ex-info (hl result)
   "Update the Ex info string."
   (when (stringp result)
-    (evil-ex-echo result)))
+    (evil-ex-echo "%s" result)))
 
 (defun evil-ex-pattern-update-replacement (hl overlay)
   "Update the replacement display."

@@ -13,9 +13,8 @@ The return value is a list (BEG END TYPE)."
         (obuffer  (current-buffer))
         (evil-motion-marker (move-marker (make-marker) (point)))
         range)
-    (evil-narrow-to-field
-      (evil-save-transient-mark
-        (evil-transient-mark 1)
+    (evil-with-transient-mark-mode
+      (evil-narrow-to-field
         (unwind-protect
             (let ((current-prefix-arg count)
                   ;; Store type in global variable `evil-this-type'.
@@ -99,10 +98,6 @@ The return value is a list (BEG END TYPE)."
     ;; collect `interactive' specification
     (when (eq (car-safe (car-safe body)) 'interactive)
       (setq interactive (cdr (pop body))))
-    (when interactive
-      (setq interactive (apply #'evil-interactive-form interactive))
-      (setq keys (evil-concat-plists keys (cdr-safe interactive))
-            interactive (car-safe interactive)))
     ;; macro expansion
     `(progn
        ;; refresh echo area in Eldoc mode
@@ -113,13 +108,7 @@ The return value is a list (BEG END TYPE)."
          ,@(when doc `(,doc))          ; avoid nil before `interactive'
          ,@keys
          :keep-visual t
-         (interactive
-          (progn
-            (when (evil-get-command-property ',motion :jump)
-              (unless (or (evil-visual-state-p)
-                          (evil-operator-state-p))
-                (evil-set-jump)))
-            ,interactive))
+         (interactive ,@interactive)
          ,@body))))
 
 (defmacro evil-define-union-move (name args &rest moves)
@@ -159,22 +148,24 @@ not be performed.
   "Narrow BODY to the current line."
   (declare (indent defun)
            (debug t))
-  `(save-restriction
-     (narrow-to-region
-      (line-beginning-position)
-      (if (and evil-move-cursor-back
-               (not (evil-visual-state-p))
-               (not (evil-operator-state-p)))
-          (max (line-beginning-position)
-               (1- (line-end-position)))
-        (line-end-position)))
-     (evil-signal-without-movement
-       (condition-case nil
-           (progn ,@body)
-         (beginning-of-buffer
-          (error "Beginning of line"))
-         (end-of-buffer
-          (error "End of line"))))))
+  `(let* ((range (evil-expand (point) (point) 'line))
+          (beg (evil-range-beginning range))
+          (end (evil-range-end range)))
+     (when (save-excursion (goto-char end) (bolp))
+       (setq end (max beg (1- end))))
+     (when (and evil-move-cursor-back
+                (not (evil-visual-state-p))
+                (not (evil-operator-state-p)))
+       (setq end (max beg (1- end))))
+     (save-restriction
+       (narrow-to-region beg end)
+       (evil-signal-without-movement
+         (condition-case nil
+             (progn ,@body)
+           (beginning-of-buffer
+            (error "Beginning of line"))
+           (end-of-buffer
+            (error "End of line")))))))
 
 ;; we don't want line boundaries to trigger the debugger
 ;; when `debug-on-error' is t
@@ -189,12 +180,25 @@ not be performed.
        (evil-narrow-to-line ,@body)
      ,@body))
 
-(defun evil-eobp ()
+(defun evil-eobp (&optional pos)
   "Whether point is at end-of-buffer with regard to end-of-line."
-  (or (eobp)
-      (and (evil-normal-state-p)
-           (= (point) (1- (point-max)))
-           (not (eolp)))))
+  (save-excursion
+    (when pos (goto-char pos))
+    (cond
+     ((eobp))
+     ;; the rest only pertains to Normal state
+     ((not (evil-normal-state-p))
+      nil)
+     ;; at the end of the last line
+     ((eolp)
+      (forward-char)
+      (eobp))
+     ;; at the last character of the last line
+     (t
+      (forward-char)
+      (if (eobp) t
+        (forward-char)
+        (eobp))))))
 
 (defun evil-move-beginning (count forward &optional backward)
   "Move to the beginning of the COUNT next object.
@@ -502,15 +506,16 @@ if COUNT is positive, and to the left of it if negative.
                 (evil-exit-visual-state))
               (when (region-active-p)
                 (evil-active-region -1)))
-            (if (or (evil-visual-state-p state)
-                    (and (evil-get-command-property ',operator :move-point)
-                         evil-operator-range-beginning
-                         evil-operator-range-end))
-                (evil-visual-rotate 'upper-left
-                                    evil-operator-range-beginning
-                                    evil-operator-range-end
-                                    evil-operator-range-type)
-              (goto-char orig)))))
+            (cond
+             ((evil-visual-state-p state)
+              (evil-visual-rotate 'upper-left
+                                  evil-operator-range-beginning
+                                  evil-operator-range-end
+                                  evil-operator-range-type))
+             ((evil-get-command-property ',operator :move-point)
+              (goto-char (or evil-operator-range-beginning orig)))
+             (t
+              (goto-char orig))))))
        (unwind-protect
            (let ((evil-inhibit-operator evil-inhibit-operator-value))
              (unless (and evil-inhibit-operator
@@ -564,18 +569,14 @@ a predefined type may be specified with TYPE."
                   count (nth 1 command)
                   type (or type (nth 2 command))))
           (cond
-           ;; ESC cancels the current operator
-           ;; TODO: is there a better way to detect this canceling?
-           ((memq motion '(nil evil-esc))
-            (when (fboundp 'evil-repeat-abort)
-              (evil-repeat-abort))
-            (setq quit-flag t))
-           ((evil-get-command-property motion :suppress-operator)
-            (when (fboundp 'evil-repeat-abort)
-              (evil-repeat-abort))
-            (setq quit-flag t))
            ((eq motion #'undefined)
             (setq range (if return-type '(nil nil nil) '(nil nil))
+                  motion nil))
+           ((or (null motion) ; keyboard-quit
+                (evil-get-command-property motion :suppress-operator))
+            (when (fboundp 'evil-repeat-abort)
+              (evil-repeat-abort))
+            (setq quit-flag t
                   motion nil))
            (evil-repeat-count
             (setq count evil-repeat-count
@@ -592,8 +593,7 @@ a predefined type may be specified with TYPE."
               (setq range (evil-motion-range
                            motion
                            count
-                           type))
-              (evil-set-marker ?. (evil-range-end range) t)))
+                           type))))
           ;; update global variables
           (setq evil-this-motion motion
                 evil-this-motion-count count
@@ -764,13 +764,15 @@ via KEY-VALUE pairs. BODY should evaluate to a list of values.
    ;; Match all `evil-define-' forms except `evil-define-key'.
    ;; (In the interests of speed, this expression is incomplete
    ;; and does not match all three-letter words.)
-   '(("(\\(evil-\\(?:ex-\\)?define-\\(?:[^ k][^ e][^ y]\\|[-[:word:]]\\{4,\\}\\)\\)\
+   '(("(\\(evil-\\(?:ex-\\)?define-\
+\\(?:[^ k][^ e][^ y]\\|[-[:word:]]\\{4,\\}\\)\\)\
 \\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
       (1 font-lock-keyword-face)
       (2 font-lock-function-name-face nil t))
-     ("(\\(evil-\\(?:narrow\\|save\\|with\\(?:out\\)?\\)-[-[:word:]]+\\)\\>"
+     ("(\\(evil-\\(?:delay\\|narrow\\|save\\|with\\(?:out\\)?\\)\
+\\(?:-[-[:word:]]+\\)?\\)\\>\[ \f\t\n\r\v]+"
       1 font-lock-keyword-face)
-     ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>"
+     ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>[ \f\t\n\r\v]+"
       1 font-lock-keyword-face))))
 
 (provide 'evil-macros)
