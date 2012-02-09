@@ -334,9 +334,9 @@ keywords and function:
 
 (evil-ex-define-argument-type buffer
   "Called to complete a buffer name argument."
-  :completer (lambda (start end)
+  :completer (lambda ()
                (list
-                start end
+                (point-min) (point-max)
                 (lambda (arg predicate flag)
                   (when arg
                     (let ((buffers (mapcar #'(lambda (buffer)
