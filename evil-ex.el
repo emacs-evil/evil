@@ -18,8 +18,8 @@
 
 (defconst evil-ex-grammar
   '((expression
-     (count command (\? argument) #'evil-ex-call-command)
-     ((\? range) command (\? argument) #'evil-ex-call-command)
+     (count command argument #'evil-ex-call-command)
+     ((\? range) command argument #'evil-ex-call-command)
      (line #'evil-goto-line)
      (sexp #'eval-expression))
     (count
@@ -30,7 +30,7 @@
     (bang
      (\? (! space) "!" #'$1))
     (argument
-     ((\? space) (\? ".+") #'$2))
+     ((\? space) (\? "\\(?:.\\|\n\\)+") #'$2))
     (range
      (address (\? "[,;]" address #'$2) #'evil-ex-range)
      ("%" #'(evil-ex-full-range)))
