@@ -1,2 +1,14 @@
 *.elc
+*.aux
+*.cp
+*.fn
+*.fns
+*.info
+*.ky
+*.log
+*.pg
+*.toc
+*.tp
+*.vr
+*.vrs
 .depend
