@@ -545,6 +545,16 @@ These commands work better without this newline."
   :type  '(repeat symbol)
   :group 'evil)
 
+(defcustom evil-want-visual-char-bol-exclusive nil
+  "Visual character selection to beginning of line is exclusive.
+If non nil then a inclusive visual character selection which ends
+at the beginning of a line is turned into an exclusive
+selection. Thus the selection includes everything up to the
+newline character preceeding the end of the selection but not
+that first character itself."
+  :type 'boolean
+  :group 'evil)
+
 (defface evil-ex-info '(( ((supports :slant))
                           :slant italic
                           :foreground "red"))

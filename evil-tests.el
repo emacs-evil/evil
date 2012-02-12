@@ -3939,7 +3939,20 @@ Below some empty line."))
 ;; and for Lisp evaluation."
     ("vV")
     "<;; [ ]buffer is for notes you don't want to save,\n>\
-;; and for Lisp evaluation."))
+;; and for Lisp evaluation.")
+  (ert-info ("Test `evil-want-visual-char-bol-exclusive")
+    (let ((evil-want-visual-char-bol-exclusive t))
+      (evil-test-buffer
+        ";; [T]his buffer is for notes you don't want to save,
+;; and for Lisp evaluation.
+;; And a third line."
+        ("vjj")
+        ";; <This buffer is for notes you don't want to save,
+;; and for Lisp evaluation.
+;; [A]>nd a third line."
+        ("^")
+        ";; <This buffer is for notes you don't want to save,
+;; and for Lisp evaluation.\n>[;]; And a third line."))))
 
 (ert-deftest evil-test-visual-line ()
   "Test Visual line selection"
