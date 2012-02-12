@@ -123,6 +123,18 @@ which causes the parenthesis to be highlighted."
   :type 'integer
   :group 'evil)
 
+(defcustom evil-highlight-closing-paren-at-point-states
+  '(not emacs insert replace)
+  "The states in which the closing parenthesis at point should be highlighted.
+All states listed here highlight the closing parenthesis at
+point (which is Vim default behavior), all others highlight the
+parenthesis before point (which is Emacs default behavior). If
+this list contains the symbol 'not then its meaning is inverted,
+i.e., all states listed here highlight the closing parenthesis
+before point."
+  :type '(repeat symbol)
+  :group 'evil)
+
 (defcustom evil-want-C-i-jump t
   "Whether \"C-i\" jumps forward like in Vim."
   :type 'boolean
