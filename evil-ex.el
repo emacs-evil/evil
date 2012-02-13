@@ -400,7 +400,9 @@ argument handler that requires shell completion."
                (prev-text (buffer-substring
                            (point-min)
                            (car evil-ex-shell-argument-range)))
-               (ov (make-overlay beg beg)))
+               (ov (make-overlay beg beg))
+               (after-change-functions (remq 'evil-ex-update
+                                             after-change-functions)))
           (overlay-put ov 'before-string prev-text)
           (save-restriction
             (apply #'narrow-to-region evil-ex-shell-argument-range)
