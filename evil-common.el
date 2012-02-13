@@ -45,7 +45,7 @@ no arguments. In Emacs 23.2 and newer, it takes one argument."
       (setq exp (cadr exp)))
     exp))
 
-(defun evil-delay (hook condition form &optional name append local)
+(defun evil-delay (condition form hook &optional append local name)
   "Execute FORM when CONDITION becomes true, checking with HOOK.
 NAME specifies the name of the entry added to HOOK. If APPEND is
 non-nil, the entry is appended to the hook. If LOCAL is non-nil,

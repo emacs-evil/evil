@@ -2866,11 +2866,11 @@ if the previous state was Emacs state."
 (defun evil-execute-in-normal-state ()
   "Execute the next command in Normal state."
   (interactive)
-  (evil-delay 'post-command-hook
-      '(not (eq this-command #'evil-execute-in-normal-state))
-    `(progn
-       (evil-change-to-previous-state)
-       (setq evil-move-cursor-back ',evil-move-cursor-back)))
+  (evil-delay '(not (eq this-command #'evil-execute-in-normal-state))
+      `(progn
+         (evil-change-to-previous-state)
+         (setq evil-move-cursor-back ',evil-move-cursor-back))
+    'post-command-hook)
   (setq evil-move-cursor-back nil)
   (evil-normal-state)
   (evil-echo "Switched to Normal state for the next command ..."))

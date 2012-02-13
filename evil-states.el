@@ -253,15 +253,16 @@ otherwise exit Visual state."
 
 (defun evil-visual-activate-hook (&optional command)
   "Enable Visual state if the region is activated."
-  (evil-delay #'post-command-hook nil
-    ;; the activation may only be momentary, so re-check
-    ;; in `post-command-hook' before entering Visual state
-    '(unless (or (evil-visual-state-p)
-                 (evil-insert-state-p)
-                 (evil-emacs-state-p))
-       (when (region-active-p)
-         (evil-visual-state)))
-    "evil-activate-visual-state" nil t))
+  (evil-delay nil
+      ;; the activation may only be momentary, so re-check
+      ;; in `post-command-hook' before entering Visual state
+      '(unless (or (evil-visual-state-p)
+                   (evil-insert-state-p)
+                   (evil-emacs-state-p))
+         (when (region-active-p)
+           (evil-visual-state)))
+    'post-command-hook nil t
+    "evil-activate-visual-state"))
 (put 'evil-visual-activate-hook 'permanent-local-hook t)
 
 (defun evil-visual-deactivate-hook (&optional command)

@@ -38,15 +38,15 @@
   (evil-set-command-property cmd :exclude-newline t))
 
 (dolist (map evil-overriding-maps)
-  (evil-delay 'after-load-functions
-      `(and (boundp ',(car map)) (keymapp ,(car map)))
-    `(evil-make-overriding-map ,(car map) ',(cdr map))
+  (evil-delay `(and (boundp ',(car map)) (keymapp ,(car map)))
+      `(evil-make-overriding-map ,(car map) ',(cdr map))
+    'after-load-functions
     (format "evil-make-overriding-%s" (car map))))
 
 (dolist (map evil-intercept-maps)
-  (evil-delay 'after-load-functions
-      `(and (boundp ',(car map)) (keymapp ,(car map)))
-    `(evil-make-intercept-map ,(car map) ',(cdr map))
+  (evil-delay `(and (boundp ',(car map)) (keymapp ,(car map)))
+      `(evil-make-intercept-map ,(car map) ',(cdr map))
+    'after-load-functions
     (format "evil-make-intercept-%s" (car map))))
 
 ;;; key-binding
