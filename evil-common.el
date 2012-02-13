@@ -842,13 +842,15 @@ See also `evil-save-goal-column'."
   "Move to the beginning of the line as displayed.
 Like `move-beginning-of-line', but retains the goal column."
   (evil-save-goal-column
-    (move-beginning-of-line arg)))
+    (move-beginning-of-line arg)
+    (beginning-of-line)))
 
 (defun evil-move-end-of-line (&optional arg)
   "Move to the end of the line as displayed.
 Like `move-end-of-line', but retains the goal column."
   (evil-save-goal-column
-    (move-end-of-line arg)))
+    (move-end-of-line arg)
+    (end-of-line)))
 
 (defun evil-adjust-cursor (&optional force)
   "Move point one character back if at the end of a non-empty line.
