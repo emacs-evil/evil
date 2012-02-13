@@ -163,69 +163,71 @@ Otherwise behaves like `delete-backward-char'."
 
 (defun evil-ex-update (&optional beg end len string)
   "Update Ex variables when the minibuffer changes."
-  (let* ((prompt (minibuffer-prompt-end))
-         (string (or string (buffer-substring prompt (point-max))))
-         arg arg-handler arg-type cmd count expr bang func range tree)
-    (cond
-     ((commandp (setq cmd (lookup-key evil-ex-map string)))
-      (setq evil-ex-expression `(call-interactively #',cmd))
-      (when (minibufferp)
-        (exit-minibuffer)))
-     (t
-      (setq cmd nil)
-      ;; store the buffer position of each character
-      ;; as the `ex-index' text property
-      (dotimes (i (length string))
-        (add-text-properties
-         i (1+ i) (list 'ex-index (+ i prompt)) string))
-      (with-current-buffer evil-ex-current-buffer
-        (setq tree (evil-ex-parse string t)
-              expr (evil-ex-parse string))
-        (when (eq (car-safe expr) 'evil-ex-call-command)
-          (setq count (eval (nth 1 expr))
-                cmd (eval (nth 2 expr))
-                arg (eval (nth 3 expr))
-                range (cond
-                       ((evil-range-p count)
-                        count)
-                       ((numberp count)
-                        (evil-ex-range count count)))
-                bang (and (string-match ".!$" cmd) t))))
-      (setq evil-ex-tree tree
-            evil-ex-expression expr
-            evil-ex-range range
-            evil-ex-command cmd
-            evil-ex-bang bang
-            evil-ex-argument arg)
-      ;; test the current command
-      (when (and cmd (minibufferp))
-        (setq func (evil-ex-completed-binding cmd t))
-        (cond
-         ;; update arg-handler
-         (func
-          (when (setq arg-type (evil-get-command-property
-                                func :ex-arg))
-            (setq arg-handler (cdr-safe
-                               (assoc arg-type
-                                      evil-ex-argument-types))))
-          (unless (eq arg-handler evil-ex-argument-handler)
+  (let* (arg bang cmd count expr func handler prompt range tree type)
+    (save-restriction
+      (widen)
+      (setq prompt (minibuffer-prompt-end)
+            string (or string (buffer-substring prompt (point-max))))
+      (cond
+       ((commandp (setq cmd (lookup-key evil-ex-map string)))
+        (setq evil-ex-expression `(call-interactively #',cmd))
+        (when (minibufferp)
+          (exit-minibuffer)))
+       (t
+        (setq cmd nil)
+        ;; store the buffer position of each character
+        ;; as the `ex-index' text property
+        (dotimes (i (length string))
+          (add-text-properties
+           i (1+ i) (list 'ex-index (+ i prompt)) string))
+        (with-current-buffer evil-ex-current-buffer
+          (setq tree (evil-ex-parse string t)
+                expr (evil-ex-parse string))
+          (when (eq (car-safe expr) 'evil-ex-call-command)
+            (setq count (eval (nth 1 expr))
+                  cmd (eval (nth 2 expr))
+                  arg (eval (nth 3 expr))
+                  range (cond
+                         ((evil-range-p count)
+                          count)
+                         ((numberp count)
+                          (evil-ex-range count count)))
+                  bang (and (string-match ".!$" cmd) t))))
+        (setq evil-ex-tree tree
+              evil-ex-expression expr
+              evil-ex-range range
+              evil-ex-command cmd
+              evil-ex-bang bang
+              evil-ex-argument arg)
+        ;; test the current command
+        (when (and cmd (minibufferp))
+          (setq func (evil-ex-completed-binding cmd t))
+          (cond
+           ;; update arg-handler
+           (func
+            (when (setq type (evil-get-command-property
+                              func :ex-arg))
+              (setq handler (cdr-safe
+                             (assoc type
+                                    evil-ex-argument-types))))
+            (unless (eq handler evil-ex-argument-handler)
+              (let ((runner (and evil-ex-argument-handler
+                                 (evil-ex-argument-handler-runner
+                                  evil-ex-argument-handler))))
+                (when runner (funcall runner 'stop)))
+              (setq evil-ex-argument-handler handler)
+              (let ((runner (and evil-ex-argument-handler
+                                 (evil-ex-argument-handler-runner
+                                  evil-ex-argument-handler))))
+                (when runner (funcall runner 'start evil-ex-argument))))
             (let ((runner (and evil-ex-argument-handler
                                (evil-ex-argument-handler-runner
                                 evil-ex-argument-handler))))
-              (when runner (funcall runner 'stop)))
-            (setq evil-ex-argument-handler arg-handler)
-            (let ((runner (and evil-ex-argument-handler
-                               (evil-ex-argument-handler-runner
-                                evil-ex-argument-handler))))
-              (when runner (funcall runner 'start evil-ex-argument))))
-          (let ((runner (and evil-ex-argument-handler
-                             (evil-ex-argument-handler-runner
-                              evil-ex-argument-handler))))
-            (when runner (funcall runner 'update evil-ex-argument))))
-         ((all-completions cmd evil-ex-commands)
-          (evil-ex-echo "Incomplete command"))
-         (t
-          (evil-ex-echo "Unknown command"))))))))
+              (when runner (funcall runner 'update evil-ex-argument))))
+           ((all-completions cmd evil-ex-commands)
+            (evil-ex-echo "Incomplete command"))
+           (t
+            (evil-ex-echo "Unknown command")))))))))
 (put 'evil-ex-update 'permanent-local-hook t)
 
 (defun evil-ex-echo (string &rest args)
@@ -400,9 +402,7 @@ argument handler that requires shell completion."
                (prev-text (buffer-substring
                            (point-min)
                            (car evil-ex-shell-argument-range)))
-               (ov (make-overlay beg beg))
-               (after-change-functions (remq 'evil-ex-update
-                                             after-change-functions)))
+               (ov (make-overlay beg beg)))
           (overlay-put ov 'before-string prev-text)
           (save-restriction
             (apply #'narrow-to-region evil-ex-shell-argument-range)
