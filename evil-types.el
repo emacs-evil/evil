@@ -61,15 +61,17 @@ If the end position is at the beginning of a line, then:
 
 (evil-define-type inclusive
   "Include the character under point.
-If the end position is at the beginning of a line, then:
+If the end position is at the beginning of a line or the end of a
+line and `evil-want-visual-char-semi-exclusive', then:
 
 * If in visual state return `exclusive' (expanded)."
   :expand (lambda (beg end)
-            (if (and (evil-visual-state-p)
-                     evil-want-visual-char-bol-exclusive
+            (if (and evil-want-visual-char-semi-exclusive
+                     (evil-visual-state-p)
+                     (< beg end)
                      (save-excursion
                        (goto-char end)
-                       (bolp)))
+                       (or (bolp) (eolp))))
                 (evil-range beg end 'exclusive)
               (evil-range beg (1+ end))))
   :contract (lambda (beg end)
