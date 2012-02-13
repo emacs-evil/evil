@@ -123,6 +123,18 @@ which causes the parenthesis to be highlighted."
   :type 'integer
   :group 'evil)
 
+(defcustom evil-highlight-closing-paren-at-point-states
+  '(not emacs insert replace)
+  "The states in which the closing parenthesis at point should be highlighted.
+All states listed here highlight the closing parenthesis at
+point (which is Vim default behavior), all others highlight the
+parenthesis before point (which is Emacs default behavior). If
+this list contains the symbol 'not then its meaning is inverted,
+i.e., all states listed here highlight the closing parenthesis
+before point."
+  :type '(repeat symbol)
+  :group 'evil)
+
 (defcustom evil-want-C-i-jump t
   "Whether \"C-i\" jumps forward like in Vim."
   :type 'boolean
@@ -543,6 +555,18 @@ intercepted."
   "Commands excluding the trailing newline of a Visual Line selection.
 These commands work better without this newline."
   :type  '(repeat symbol)
+  :group 'evil)
+
+(defcustom evil-want-visual-char-semi-exclusive nil
+  "Visual character selection to beginning/end of line is exclusive.
+If non nil then an inclusive visual character selection which
+ends at the beginning or end of a line is turned into an
+exclusive selection. Thus if the selected (inclusive) range ends
+at the beginning of a line it is changed to not include the first
+character of that line, and if the selected range ends at the end
+of a line it is changed to not include the newline character of
+that line."
+  :type 'boolean
   :group 'evil)
 
 (defface evil-ex-info '(( ((supports :slant))

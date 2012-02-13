@@ -116,9 +116,9 @@
 
 (defadvice show-paren-function (around evil)
   "Match parentheses in Normal state."
-  (if (or (evil-insert-state-p)
-          (evil-replace-state-p)
-          (evil-emacs-state-p))
+  (if (if (memq 'not evil-highlight-closing-paren-at-point-states)
+          (memq evil-state evil-highlight-closing-paren-at-point-states)
+        (not (memq evil-state evil-highlight-closing-paren-at-point-states)))
       ad-do-it
     (let ((pos (point)) syntax narrow)
       (setq pos
