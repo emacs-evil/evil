@@ -495,8 +495,7 @@ if COUNT is positive, and to the left of it if negative.
                evil-inhibit-operator)
           (setq evil-inhibit-operator-value nil
                 evil-this-operator this-command)
-          (unwind-protect
-              ,interactive
+          (prog1 ,interactive
             (setq orig (point)
                   evil-inhibit-operator-value evil-inhibit-operator)
             (if ,visual
