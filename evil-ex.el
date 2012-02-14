@@ -227,9 +227,11 @@ incomplete or unknown commands is show."
                               evil-ex-argument-handler))))
             (when runner (funcall runner 'update evil-ex-argument))))
          ((all-completions cmd evil-ex-commands)
-          (evil-ex-echo "Incomplete command"))
+          ;; show error message only when called from after-change-functions
+          (when beg (evil-ex-echo "Incomplete command")))
          (t
-          (evil-ex-echo "Unknown command"))))))))
+          ;; show error message only when called from after-change-functions
+          (when beg (evil-ex-echo "Unknown command")))))))))
 (put 'evil-ex-update 'permanent-local-hook t)
 
 (defun evil-ex-echo (string &rest args)
