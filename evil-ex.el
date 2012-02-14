@@ -162,72 +162,74 @@ Otherwise behaves like `delete-backward-char'."
 (put 'evil-ex-remove-default 'permanent-local-hook t)
 
 (defun evil-ex-update (&optional beg end len string)
-  "Update Ex variables when the minibuffer changes."
-  (let* (arg bang cmd count expr func handler prompt range tree type)
-    (save-restriction
-      (widen)
-      (setq prompt (minibuffer-prompt-end)
-            string (or string (buffer-substring prompt (point-max))))
-      (cond
-       ((commandp (setq cmd (lookup-key evil-ex-map string)))
-        (setq evil-ex-expression `(call-interactively #',cmd))
-        (when (minibufferp)
-          (exit-minibuffer)))
-       (t
-        (setq cmd nil)
-        ;; store the buffer position of each character
-        ;; as the `ex-index' text property
-        (dotimes (i (length string))
-          (add-text-properties
-           i (1+ i) (list 'ex-index (+ i prompt)) string))
-        (with-current-buffer evil-ex-current-buffer
-          (setq tree (evil-ex-parse string t)
-                expr (evil-ex-parse string))
-          (when (eq (car-safe expr) 'evil-ex-call-command)
-            (setq count (eval (nth 1 expr))
-                  cmd (eval (nth 2 expr))
-                  arg (eval (nth 3 expr))
-                  range (cond
-                         ((evil-range-p count)
-                          count)
-                         ((numberp count)
-                          (evil-ex-range count count)))
-                  bang (and (string-match ".!$" cmd) t))))
-        (setq evil-ex-tree tree
-              evil-ex-expression expr
-              evil-ex-range range
-              evil-ex-command cmd
-              evil-ex-bang bang
-              evil-ex-argument arg)
-        ;; test the current command
-        (when (and cmd (minibufferp))
-          (setq func (evil-ex-completed-binding cmd t))
-          (cond
-           ;; update arg-handler
-           (func
-            (when (setq type (evil-get-command-property
-                              func :ex-arg))
-              (setq handler (cdr-safe
-                             (assoc type
-                                    evil-ex-argument-types))))
-            (unless (eq handler evil-ex-argument-handler)
-              (let ((runner (and evil-ex-argument-handler
-                                 (evil-ex-argument-handler-runner
-                                  evil-ex-argument-handler))))
-                (when runner (funcall runner 'stop)))
-              (setq evil-ex-argument-handler handler)
-              (let ((runner (and evil-ex-argument-handler
-                                 (evil-ex-argument-handler-runner
-                                  evil-ex-argument-handler))))
-                (when runner (funcall runner 'start evil-ex-argument))))
+  "Update Ex variables when the minibuffer changes.
+This function is usually called from `after-change-functions'
+hook. If BEG is non-nil (which is the case when called from
+`after-change-functions', then an error description in case if
+incomplete or unknown commands is show."
+  (let* ((prompt (minibuffer-prompt-end))
+         (string (or string (buffer-substring prompt (point-max))))
+         arg bang cmd count expr func handler range tree type)
+    (cond
+     ((commandp (setq cmd (lookup-key evil-ex-map string)))
+      (setq evil-ex-expression `(call-interactively #',cmd))
+      (when (minibufferp)
+        (exit-minibuffer)))
+     (t
+      (setq cmd nil)
+      ;; store the buffer position of each character
+      ;; as the `ex-index' text property
+      (dotimes (i (length string))
+        (add-text-properties
+         i (1+ i) (list 'ex-index (+ i prompt)) string))
+      (with-current-buffer evil-ex-current-buffer
+        (setq tree (evil-ex-parse string t)
+              expr (evil-ex-parse string))
+        (when (eq (car-safe expr) 'evil-ex-call-command)
+          (setq count (eval (nth 1 expr))
+                cmd (eval (nth 2 expr))
+                arg (eval (nth 3 expr))
+                range (cond
+                       ((evil-range-p count)
+                        count)
+                       ((numberp count)
+                        (evil-ex-range count count)))
+                bang (and (string-match ".!$" cmd) t))))
+      (setq evil-ex-tree tree
+            evil-ex-expression expr
+            evil-ex-range range
+            evil-ex-command cmd
+            evil-ex-bang bang
+            evil-ex-argument arg)
+      ;; test the current command
+      (when (and cmd (minibufferp))
+        (setq func (evil-ex-completed-binding cmd t))
+        (cond
+         ;; update argument-handler
+         (func
+          (when (setq type (evil-get-command-property
+                            func :ex-arg))
+            (setq handler (cdr-safe
+                           (assoc type
+                                  evil-ex-argument-types))))
+          (unless (eq handler evil-ex-argument-handler)
             (let ((runner (and evil-ex-argument-handler
                                (evil-ex-argument-handler-runner
                                 evil-ex-argument-handler))))
-              (when runner (funcall runner 'update evil-ex-argument))))
-           ((all-completions cmd evil-ex-commands)
-            (evil-ex-echo "Incomplete command"))
-           (t
-            (evil-ex-echo "Unknown command")))))))))
+              (when runner (funcall runner 'stop)))
+            (setq evil-ex-argument-handler handler)
+            (let ((runner (and evil-ex-argument-handler
+                               (evil-ex-argument-handler-runner
+                                evil-ex-argument-handler))))
+              (when runner (funcall runner 'start evil-ex-argument))))
+          (let ((runner (and evil-ex-argument-handler
+                             (evil-ex-argument-handler-runner
+                              evil-ex-argument-handler))))
+            (when runner (funcall runner 'update evil-ex-argument))))
+         ((all-completions cmd evil-ex-commands)
+          (evil-ex-echo "Incomplete command"))
+         (t
+          (evil-ex-echo "Unknown command"))))))))
 (put 'evil-ex-update 'permanent-local-hook t)
 
 (defun evil-ex-echo (string &rest args)
@@ -480,6 +482,16 @@ This function interprets special file names like # and %."
   (unless (or (null evil-ex-argument)
               (zerop (length evil-ex-argument)))
     (evil-ex-replace-special-filenames evil-ex-argument)))
+
+(defun evil-ex-run-completion-at-point ()
+  "Same as `completion-at-point' but disables `evil-ex-update' during call.
+This function calls `evil-ex-update' explicitly when
+`completion-at-point' finished."
+  (interactive)
+  (let ((after-change-functions
+         (remq 'evil-ex-update after-change-functions)))
+    (completion-at-point)
+    (evil-ex-update t)))
 
 (defun evil-ex-completion-at-point ()
   (let ((string (minibuffer-contents))

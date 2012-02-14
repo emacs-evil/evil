@@ -404,9 +404,9 @@
 ;; completion
 (define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
 (define-key evil-ex-completion-map "\d" #'evil-ex-delete-backward-char)
-(define-key evil-ex-completion-map "\t" #'completion-at-point)
-(define-key evil-ex-completion-map "\C-p" #'completion-at-point)
-(define-key evil-ex-completion-map "\C-n" #'completion-at-point)
+(define-key evil-ex-completion-map "\t" #'evil-ex-run-completion-at-point)
+(define-key evil-ex-completion-map "\C-p" #'evil-ex-run-completion-at-point)
+(define-key evil-ex-completion-map "\C-n" #'evil-ex-run-completion-at-point)
 (define-key evil-ex-completion-map "?" nil)
 
 (provide 'evil-maps)
