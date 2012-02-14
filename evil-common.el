@@ -2460,65 +2460,65 @@ in `evil-temporary-undo' instead."
     (concat (upcase (substring str 0 1))
             (substring str 1))))
 
-(defun evil-compile-subreplacement (to)
-  "Maybe convert a regexp replacement TO to Lisp from START until \e or \E.
-Returns a pair (result . rest).  RESULT is a list suitable for
-`perform-replace' if necessary, the original string if not and
-REST is the unparsed rest of TO."
-  (if (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[^0-9&]" to)
-      (let (pos list char (rest ""))
-        (while
-            (progn
-              (setq pos (match-end 0))
-              (push (substring to 0 (- pos 2)) list)
-              (setq char (aref to (1- pos))
-                    to (substring to pos))
-              (cond ((eq char ?\#)
-                     (push '(number-to-string replace-count) list))
-                    ((eq char ?n) (push "\n" list))
-                    ((eq char ?t) (push "\t" list))
-                    ((eq char ?r) (push "\r" list))
-                    ((eq char ?\\) (push "\\\\" list))
-                    ((memq char '(?e ?E))
-                     (setq rest to to ""))
-                    ((memq char '(?l ?L ?u ?U))
-                     (let ((func (cdr (assoc char '((?l . evil-downcase-first)
-                                                    (?L . downcase)
-                                                    (?u . evil-upcase-first)
-                                                    (?U . upcase))))))
-                       (let ((result (evil-compile-subreplacement to)))
-                         (push `(,func
-                                 (replace-quote
-                                  (evil-match-substitute-replacement
-                                   ,(car result) t)))
-                               list)
-                         (setq to (cdr result)))))
-                    ((eq char ?\,)
-                     (setq pos (read-from-string to))
-                     (push `(replace-quote ,(car pos)) list)
-                     (let ((end
-                            ;; Swallow a space after a symbol
-                            ;; if there is a space.
-                            (if (and (or (symbolp (car pos))
-                                         ;; Swallow a space after 'foo
-                                         ;; but not after (quote foo).
-                                         (and (eq (car-safe (car pos)) 'quote)
-                                              (not (= ?\( (aref to 0)))))
-                                     (eq (string-match " " to (cdr pos))
-                                         (cdr pos)))
-                                (1+ (cdr pos))
-                              (cdr pos))))
-                       (setq to (substring to end))))
-                    (t ; simple escaped character
-                     (push (char-to-string char) list)))
-              (string-match "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[^0-9&]" to)))
+(defun evil-compile-subreplacement (to &optional start)
+  "Convert a regexp replacement TO to Lisp from START until \\e or \\E.
+Returns a pair (RESULT . REST). RESULT is a list suitable for
+`perform-replace' if necessary, the original string if not.
+REST is the unparsed remainder of TO."
+  (let ((regexp "\\(\\`\\|[^\\]\\)\\(\\\\\\\\\\)*\\\\[^0-9&]")
+        (rest "") char list)
+    (save-match-data
+      (if (not (string-match regexp to))
+          (cons to "")
+        (while (progn
+                 (setq start (match-end 0))
+                 (push (substring to 0 (- start 2)) list)
+                 (setq char (aref to (1- start))
+                       to (substring to start))
+                 (cond
+                  ((eq char ?#)
+                   (push '(number-to-string replace-count) list))
+                  ((memq char '(?e ?E))
+                   (setq rest to to ""))
+                  ((memq char '(?l ?L ?u ?U))
+                   (let ((result (evil-compile-subreplacement to))
+                         (func (cdr (assoc char
+                                           '((?l . evil-downcase-first)
+                                             (?L . downcase)
+                                             (?u . evil-upcase-first)
+                                             (?U . upcase))))))
+                     (push `(,func
+                             (replace-quote
+                              (evil-match-substitute-replacement
+                               ,(car result) t))) list)
+                     (setq to (cdr result))))
+                  ((eq char ?,)
+                   (setq start (read-from-string to))
+                   (push `(replace-quote ,(car start)) list)
+                   (let ((end
+                          ;; swallow a space after a symbol
+                          (if (and (or (symbolp (car start))
+                                       ;; swallow a space after 'foo,
+                                       ;; but not after (quote foo)
+                                       (and (eq (car-safe (car start)) 'quote)
+                                            (not (= ?\( (aref to 0)))))
+                                   (eq (string-match " " to (cdr start))
+                                       (cdr start)))
+                              (1+ (cdr start))
+                            (cdr start))))
+                     (setq to (substring to end))))
+                  ((eq char ?\\)
+                   (push "\\\\" list))
+                  (t ; let Emacs unescape the character
+                   (push (car-safe (read-from-string
+                                    (format "\"\\%c\"" char))) list)))
+                 (string-match regexp to)))
         (setq to (nreverse (delete "" (cons to list))))
         (replace-match-string-symbols to)
         (cons (if (cdr to)
                   (cons 'concat to)
                 (car to))
-              rest))
-    (cons to "")))
+              rest)))))
 
 (defun evil-compile-replacement (to)
   "Maybe convert a regexp replacement TO to Lisp.
