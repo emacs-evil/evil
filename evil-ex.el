@@ -18,8 +18,8 @@
 
 (defconst evil-ex-grammar
   '((expression
-     (count command argument #'evil-ex-call-command)
-     ((\? range) command argument #'evil-ex-call-command)
+     (count command (\? argument) #'evil-ex-call-command)
+     ((\? range) command (\? argument) #'evil-ex-call-command)
      (line #'evil-goto-line)
      (sexp #'eval-expression))
     (count
