@@ -110,13 +110,17 @@ of the syntax.")
                                     (car-safe evil-ex-history)))
         evil-ex-argument-handler evil-ex-info-string result)
     (add-hook 'minibuffer-setup-hook #'evil-ex-setup)
-    (setq result
-          (completing-read ":" #'evil-ex-completion nil nil
-                           (or initial-input
-                               (and evil-ex-previous-command
-                                    (format "(default: %s) "
-                                            evil-ex-previous-command)))
-                           'evil-ex-history evil-ex-previous-command t))
+    (setq result (read-from-minibuffer
+                  (if (stringp (this-command-keys)) (this-command-keys) ":")
+                  (or initial-input
+                      (and evil-ex-previous-command
+                           (format "(default: %s) "
+                                   evil-ex-previous-command)))
+                  evil-ex-completion-map
+                  nil
+                  'evil-ex-history
+                  evil-ex-previous-command
+                  t))
     (evil-ex-update nil nil nil result)
     (unless (zerop (length result))
       (if evil-ex-expression
