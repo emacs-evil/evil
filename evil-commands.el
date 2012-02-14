@@ -1559,15 +1559,17 @@ When called interactively, the selection is rotated blockwise."
       (unless (eq corner (evil-visual-block-corner corner beg end))
         (evil-swap beg end))
       (goto-char beg)
-      (evil-move-mark end)
       (when (evil-visual-state-p)
+        (evil-move-mark end)
         (evil-visual-refresh nil nil nil :corner corner)))
      ((memq corner '(upper-right lower-right))
       (goto-char (max beg end))
-      (evil-move-mark (min beg end)))
+      (when (evil-visual-state-p)
+        (evil-move-mark (min beg end))))
      (t
       (goto-char (min beg end))
-      (evil-move-mark (max beg end))))))
+      (when (evil-visual-state-p)
+        (evil-move-mark (max beg end)))))))
 
 ;;; Insertion commands
 

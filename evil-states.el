@@ -239,6 +239,7 @@ otherwise exit Visual state."
      ((or quit-flag
           (eq command #'keyboard-quit)
           ;; Is `mark-active' nil for an unexpanded region?
+          deactivate-mark
           (and (not evil-visual-region-expanded)
                (not (region-active-p))
                (not (eq evil-visual-selection 'block))))
@@ -253,16 +254,18 @@ otherwise exit Visual state."
 
 (defun evil-visual-activate-hook (&optional command)
   "Enable Visual state if the region is activated."
-  (evil-delay nil
-      ;; the activation may only be momentary, so re-check
-      ;; in `post-command-hook' before entering Visual state
-      '(unless (or (evil-visual-state-p)
-                   (evil-insert-state-p)
-                   (evil-emacs-state-p))
-         (when (region-active-p)
-           (evil-visual-state)))
-    'post-command-hook nil t
-    "evil-activate-visual-state"))
+  (unless (evil-visual-state-p)
+    (evil-delay nil
+        ;; the activation may only be momentary, so re-check
+        ;; in `post-command-hook' before entering Visual state
+        '(unless (or (evil-visual-state-p)
+                     (evil-insert-state-p)
+                     (evil-emacs-state-p))
+           (when (and (region-active-p)
+                      (not deactivate-mark))
+             (evil-visual-state)))
+      'post-command-hook nil t
+      "evil-activate-visual-state")))
 (put 'evil-visual-activate-hook 'permanent-local-hook t)
 
 (defun evil-visual-deactivate-hook (&optional command)
@@ -276,9 +279,7 @@ otherwise exit Visual state."
    ((and (evil-visual-state-p) command
          (not (evil-get-command-property command :keep-visual)))
     (setq evil-visual-region-expanded nil)
-    (evil-exit-visual-state)
-    (evil-active-region -1)
-    (evil-restore-mark))
+    (evil-exit-visual-state))
    ((not (evil-visual-state-p))
     (evil-active-region -1)
     (evil-restore-mark))))

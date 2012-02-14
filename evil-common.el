@@ -1418,14 +1418,17 @@ See also `evil-save-transient-mark-mode'."
 (defun evil-save-mark ()
   "Save the current mark, including whether it is transient.
 See also `evil-restore-mark'."
-  (setq evil-visual-previous-mark (mark t))
-  (evil-save-transient-mark-mode))
+  (unless evil-visual-previous-mark
+    (setq evil-visual-previous-mark (mark t))
+    (evil-save-transient-mark-mode)))
 
 (defun evil-restore-mark ()
   "Restore the mark, including whether it was transient.
 See also `evil-save-mark'."
-  (evil-restore-transient-mark-mode)
-  (evil-move-mark evil-visual-previous-mark))
+  (when evil-visual-previous-mark
+    (evil-restore-transient-mark-mode)
+    (evil-move-mark evil-visual-previous-mark)
+    (setq evil-visual-previous-mark nil)))
 
 ;; In theory, an active region implies Transient Mark mode, and
 ;; disabling Transient Mark mode implies deactivating the region.
@@ -1490,6 +1493,19 @@ Then restore Transient Mark mode to its previous setting."
            (evil-transient-mark 1)
            ,@body)
        (evil-restore-transient-mark-mode))))
+
+(defmacro evil-with-active-region (beg end &rest body)
+  "Execute BODY with an active region from BEG to END."
+  (declare (indent 2)
+           (debug t))
+  `(let ((beg ,beg) (end ,end)
+         evil-transient-vals)
+     (evil-with-transient-mark-mode
+       (save-excursion
+         (evil-active-region 1)
+         (evil-move-mark beg)
+         (goto-char end)
+         ,@body))))
 
 (defun evil-exchange-point-and-mark ()
   "Exchange point and mark without activating the region."
