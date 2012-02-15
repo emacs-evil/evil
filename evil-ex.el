@@ -18,8 +18,8 @@
 
 (defconst evil-ex-grammar
   '((expression
-     (count command (\? argument) #'evil-ex-call-command)
-     ((\? range) command (\? argument) #'evil-ex-call-command)
+     (count command argument #'evil-ex-call-command)
+     ((\? range) command argument #'evil-ex-call-command)
      (line #'evil-goto-line)
      (sexp #'eval-expression))
     (count
@@ -175,7 +175,8 @@ incomplete or unknown commands is show."
          (string (or string (buffer-substring prompt (point-max))))
          arg bang cmd count expr func handler range tree type)
     (cond
-     ((commandp (setq cmd (lookup-key evil-ex-map string)))
+     ((and (eq this-command #'self-insert-command)
+           (commandp (setq cmd (lookup-key evil-ex-map string))))
       (setq evil-ex-expression `(call-interactively #',cmd))
       (when (minibufferp)
         (exit-minibuffer)))
@@ -797,7 +798,7 @@ The following symbols have reserved meanings within a grammar:
     (cond
      ;; epsilon
      ((member symbol '("" nil))
-      (setq pair (cons nil string)))
+      (setq pair (cons (if syntax "" nil) string)))
      ;; token
      ((stringp symbol)
       (save-match-data

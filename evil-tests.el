@@ -4548,6 +4548,10 @@ if no previous selection")
                    (operator
                     plus
                     minus)
+                   (sign
+                    ((\? operator) #'$1))
+                   (signed-number
+                    (sign number))
                    (inc
                     (number #'(lambda (n) (1+ n))))
                    (expr
@@ -4620,7 +4624,9 @@ if no previous selection")
                      '((list
                         (string-to-number "1")
                         nil)
-                       . " a 3"))))
+                       . " a 3")))
+      (should (equal (evil-parser "1" 'signed-number grammar t t)
+                     '((signed-number (sign "") (number "1")) . ""))))
     (ert-info ("Lookahead")
       (should (equal (evil-parser "foobar" '("foo" (& "bar")) grammar)
                      '((list "foo") . "bar")))
