@@ -1182,8 +1182,15 @@ but doesn't insert or remove any spaces."
 
 (evil-define-operator evil-indent (beg end)
   "Indent text."
+  :move-point nil
   :type line
-  (indent-region beg end)
+  (if (and (= beg (line-beginning-position))
+           (= end (line-beginning-position 2)))
+      ;; since some Emacs modes can only indent one line at a time,
+      ;; implement "==" as a call to `indent-according-to-mode'
+      (indent-according-to-mode)
+    (goto-char beg)
+    (indent-region beg end))
   (back-to-indentation))
 
 (evil-define-operator evil-shift-left (beg end)
