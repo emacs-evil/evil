@@ -1269,9 +1269,7 @@ The default for width is the value of `fill-column'."
         (if (eq (char-after) ?\n)
             (forward-char)
           (delete-char 1)
-          (if (eq char ?\n)
-              (newline)
-            (insert-char char 1))))
+          (insert-char char 1)))
       (if (eq char ?\n)
           (when evil-auto-indent
             (indent-according-to-mode))
@@ -1389,7 +1387,7 @@ The return value is the yanked text."
           (kill-new text))
         (when (and (eq yank-handler #'evil-yank-line-handler)
                    (not (eq (evil-visual-type) 'line)))
-          (newline))
+          (insert "\n"))
         (evil-normal-state))
       (evil-paste-before count register))))
 
@@ -2039,16 +2037,16 @@ If no FILE is specified, reload the current buffer from disk."
     (when count (goto-char (point-min)))
     (when (or (not (zerop (forward-line (or count 1))))
               (not (bolp)))
-      (newline))
+      (insert "\n"))
     (if (/= (aref file 0) ?!)
         (let ((result (insert-file-contents file)))
           (save-excursion
             (forward-char (cadr result))
-            (unless (bolp) (newline))))
+            (unless (bolp) (insert "\n"))))
       (shell-command (substring file 1) t)
       (save-excursion
         (goto-char (mark))
-        (unless (bolp) (newline))))))
+        (unless (bolp) (insert "\n"))))))
 
 (evil-define-command evil-show-buffers ()
   "Shows the buffer-list."

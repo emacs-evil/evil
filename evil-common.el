@@ -1224,7 +1224,7 @@ Otherwise, execute BODY again, but without the restriction."
 with regard to indentation."
   (evil-narrow-to-field
     (evil-move-beginning-of-line)
-    (newline)
+    (insert "\n")
     (forward-line -1)
     (back-to-indentation)))
 
@@ -1233,7 +1233,7 @@ with regard to indentation."
 with regard to indentation."
   (evil-narrow-to-field
     (evil-move-end-of-line)
-    (newline)
+    (insert "\n")
     (back-to-indentation)))
 
 ;;; Markers
@@ -1599,7 +1599,7 @@ each line. Extra arguments to FUNC may be passed via ARGS."
      ((eq this-command #'evil-paste-after)
       (evil-move-end-of-line)
       (evil-move-mark (point))
-      (newline)
+      (insert "\n")
       (insert text)
       (delete-char -1) ; delete the last newline
       (setq evil-last-paste
@@ -1642,7 +1642,7 @@ each line. Extra arguments to FUNC may be passed via ARGS."
         (while (< (line-number-at-pos (point))
                   current-line)
           (goto-char (point-max))
-          (newline))
+          (insert "\n"))
         (setq current-line (1+ current-line))
         ;; insert text unless we insert an empty line behind eol
         (unless (and (< (evil-column (line-end-position)) col)
