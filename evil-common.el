@@ -2437,6 +2437,7 @@ REST is the unparsed rest of TO."
                     ((eq char ?n) (push "\n" list))
                     ((eq char ?t) (push "\t" list))
                     ((eq char ?r) (push "\r" list))
+                    ((eq char ?\\) (push "\\\\" list))
                     ((memq char '(?e ?E))
                      (setq rest to to ""))
                     ((memq char '(?l ?L ?u ?U))
