@@ -172,6 +172,10 @@ one more than the current position."
                         orig)))
            (isearch-regexp regexp-p)
            (isearch-forward forward)
+           (case-fold-search
+            (unless (and search-upper-case
+                         (not (isearch-no-upper-case-p string nil)))
+              case-fold-search))
            (search-func (evil-search-function
                          forward regexp-p evil-search-wrap)))
       ;; no text properties, thank you very much
