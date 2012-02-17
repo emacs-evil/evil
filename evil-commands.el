@@ -938,33 +938,35 @@ If BIGWORD is non-nil, select inner WORD."
 
 (evil-define-text-object evil-a-single-quote (count)
   "Select a single-quoted expression."
-  :extend-selection nil
-  (evil-paren-range count ?' ?'))
+  :extend-selection t
+  (evil-quote-range count ?' ?'))
 
 (evil-define-text-object evil-inner-single-quote (count)
   "Select inner single-quoted expression."
   :extend-selection nil
-  (evil-paren-range count ?' ?' t))
+  ;; TODO: do not use `current-prefix-arg' (requires better handling
+  ;; in visual-state code of `evil-define-text-object')!
+  (evil-quote-range current-prefix-arg ?' ?' t))
 
 (evil-define-text-object evil-a-double-quote (count)
   "Select a double-quoted expression."
-  :extend-selection nil
-  (evil-paren-range count ?\" ?\"))
+  :extend-selection t
+  (evil-quote-range count ?\" ?\"))
 
 (evil-define-text-object evil-inner-double-quote (count)
   "Select inner double-quoted expression."
   :extend-selection nil
-  (evil-paren-range count ?\" ?\" t))
+  (evil-quote-range current-prefix-arg ?\" ?\" t))
 
 (evil-define-text-object evil-a-back-quote (count)
   "Select a back-quoted expression."
-  :extend-selection nil
-  (evil-paren-range count ?\` ?\`))
+  :extend-selection t
+  (evil-quote-range count ?\` ?\`))
 
 (evil-define-text-object evil-inner-back-quote (count)
   "Select inner back-quoted expression."
   :extend-selection nil
-  (evil-paren-range count ?\` ?\` t))
+  (evil-quote-range current-prefix-arg ?\` ?\` t))
 
 (evil-define-text-object evil-a-tag (count)
   "Select a tag block."

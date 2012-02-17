@@ -3690,8 +3690,18 @@ Below some empty line."))
   (ert-info ("Select text including enclosing quotes")
     (evil-test-buffer
       "This is 'a [t]est' for quote objects."
+      ("v2i'")
+      "This is <'a test[']> for quote objects."))
+  (ert-info ("Select text including enclosing quotes and following space")
+    (evil-test-buffer
+      "This is 'a [t]est' for quote objects."
       ("va'")
-      "This is <'a test[']> for quote objects.")))
+      "This is <'a test'[ ]>for quote objects."))
+  (ert-info ("Select text including enclosing quotes and previous space")
+    (evil-test-buffer
+      "This is 'a [t]est'. For quote objects."
+      ("va'")
+      "This is< 'a test[']>. For quote objects.")))
 
 (ert-deftest evil-test-paren-objects ()
   "Test `evil-inner-paren', etc."

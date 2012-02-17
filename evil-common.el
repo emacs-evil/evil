@@ -2219,10 +2219,27 @@ use `evil-regexp-range'."
                  range (not (eq evil-this-operator #'evil-delete)))))))
           range)))))
 
-;; This simpler, but more general function can be used when
-;; `evil-paren-range' is insufficient. Note that as it doesn't use
-;; the syntax table, it is unaware of escaped characters (unless
-;; such a check is built into the regular expressions).
+(defun evil-quote-range (count open close &optional exclusive)
+  "Return a range (BEG END) of COUNT quotes.
+OPEN is the opening quote, CLOSE is the closing quote (often both
+are equal). If EXCLUSIVE is non-nil, OPEN and CLOSE are excluded
+from the range unless COUNT is 2 in which case they are included;
+otherwise they are included as well as any succeeding (or
+preceding if no whitespace follows) white space."
+  (if exclusive
+      (if (and count (= count 2))
+          (evil-paren-range 1 open close nil)
+        (evil-paren-range count open close t))
+    (let ((range (evil-paren-range count open close nil)))
+      (save-excursion
+        (if (progn
+              (goto-char (evil-range-end range))
+              (looking-at "[[:space:]]+"))
+            (evil-range (evil-range-beginning range) (match-end 0))
+          (goto-char (evil-range-beginning range))
+          (skip-chars-backward "[:space:]")
+          (evil-range (point) (evil-range-end range)))))))
+
 (defun evil-regexp-range (count open close &optional exclusive)
   "Return a range (BEG END) of COUNT delimited text objects.
 OPEN is a regular expression matching the opening sequence,
