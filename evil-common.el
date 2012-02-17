@@ -2167,7 +2167,15 @@ use `evil-regexp-range'."
         (count (or count 1))
         level beg end range)
     (save-excursion
-      (if (or (evil-in-comment-p) (evil-in-string-p))
+      (if (or (evil-in-comment-p)
+              (and (evil-in-string-p)
+                   ;; TODO: this checks whether the current closing
+                   ;; quote is indeed the end of a string. This is
+                   ;; only a quick fix and should be done more
+                   ;; carefully!
+                   (or (/= (char-after) close)
+                       (eobp)
+                       (evil-in-string-p (1+ (point))))))
           ;; if in a comment, first look inside the comment only;
           ;; failing that, look outside it
           (or (evil-regexp-range count open-regexp close-regexp exclusive)

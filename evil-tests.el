@@ -3701,7 +3701,19 @@ Below some empty line."))
     (evil-test-buffer
       "This is 'a [t]est'. For quote objects."
       ("va'")
-      "This is< 'a test[']>. For quote objects.")))
+      "This is< 'a test[']>. For quote objects."))
+  (ert-info ("Select text on opening quote")
+    (evil-test-buffer
+      "This is [\"]a test\". For \"quote\" objects."
+      (emacs-lisp-mode)
+      ("va\"")
+      "This is< \"a test[\"]>. For \"quote\" objects."))
+  (ert-info ("Select text on closing quote")
+    (evil-test-buffer
+      "This is \"a test[\"]. For \"quote\" objects."
+      (emacs-lisp-mode)
+      ("va\"")
+      "This is< \"a test[\"]>. For \"quote\" objects.")))
 
 (ert-deftest evil-test-paren-objects ()
   "Test `evil-inner-paren', etc."
