@@ -85,9 +85,10 @@
      ;; use the standard Dired bindings as a base
      (evil-make-overriding-map dired-mode-map 'normal t)
      (evil-add-hjkl-bindings dired-mode-map 'normal
-       "J" 'dired-goto-file       ; "j"
-       "K" 'dired-do-kill-lines   ; "k"
-       "r" 'dired-do-redisplay))) ; "l"
+       "J" 'dired-goto-file                   ; "j"
+       "K" 'dired-do-kill-lines               ; "k"
+       "r" 'dired-do-redisplay                ; "l"
+       ";" (lookup-key dired-mode-map ":")))) ; ":d", ":v", ":s", ":e"
 
 (eval-after-load 'wdired
   '(progn

@@ -774,6 +774,7 @@ Add additional BINDINGS if specified."
      "j" (lookup-key evil-motion-state-map "j")
      "k" (lookup-key evil-motion-state-map "k")
      "l" (lookup-key evil-motion-state-map "l")
+     ":" (lookup-key evil-motion-state-map ":")
      ,@bindings))
 
 (put 'evil-define-key 'lisp-indent-function 'defun)
