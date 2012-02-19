@@ -992,6 +992,10 @@ If BIGWORD is non-nil, select inner WORD."
   :repeat nil
   (interactive "<R><x><y>")
   (cond
+   ((and (fboundp 'cua--global-mark-active)
+         (fboundp 'cua-copy-region-to-global-mark)
+         (cua--global-mark-active))
+    (cua-copy-region-to-global-mark beg end))
    ((eq type 'block)
     (evil-yank-rectangle beg end register yank-handler))
    ((eq type 'line)
