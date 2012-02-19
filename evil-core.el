@@ -87,7 +87,7 @@
                              emulation-mode-map-alists))
     (evil-initialize-local-keymaps)
     ;; restore the proper value of `major-mode' in Fundamental buffers
-    (when (eq major-mode 'evil-local-mode)
+    (when (eq major-mode 'turn-on-evil-mode)
       (setq major-mode 'fundamental-mode))
     ;; determine and enable the initial state
     (unless evil-state
@@ -110,6 +110,16 @@
     (remove-hook 'input-method-inactivate-hook #'evil-inactivate-input-method t)
     (evil-change-state nil))))
 
+(defun turn-on-evil-mode (&optional arg)
+  "Turn on Evil in the current buffer."
+  (interactive)
+  (evil-local-mode (or arg 1)))
+
+(defun turn-off-evil-mode (&optional arg)
+  "Turn off Evil in the current buffer."
+  (interactive)
+  (evil-local-mode (or arg -1)))
+
 (defun evil-initialize ()
   "Enable Evil in the current buffer, if appropriate.
 To enable Evil globally, do (evil-mode 1)."
@@ -124,7 +134,7 @@ To enable Evil globally, do (evil-mode 1)."
 ;; No hooks are run in Fundamental buffers, so other measures are
 ;; necessary to initialize Evil in these buffers. When Evil is
 ;; enabled globally, the default value of `major-mode' is set to
-;; `evil-local-mode', so that this function is called in Fundamental
+;; `turn-on-evil-mode', so that Evil is enabled in Fundamental
 ;; buffers as well. Then, the buffer-local value of `major-mode' is
 ;; changed back to `fundamental-mode'. (Since the `evil-mode' function
 ;; is created by a macro, we use `defadvice' to augment it.)
@@ -133,7 +143,7 @@ To enable Evil globally, do (evil-mode 1)."
   (if evil-mode
       (progn
         ;; changed back by `evil-local-mode'
-        (setq-default major-mode 'evil-local-mode)
+        (setq-default major-mode 'turn-on-evil-mode)
         (ad-enable-regexp "^evil")
         (ad-activate-regexp "^evil"))
     (setq-default major-mode 'fundamental-mode)
