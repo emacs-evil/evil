@@ -1612,6 +1612,18 @@ each line. Extra arguments to FUNC may be passed via ARGS."
     (remove-list-of-text-properties
      0 (length text) yank-excluded-properties text)
     (cond
+     ((eq this-command #'evil-paste-before)
+      (evil-move-beginning-of-line)
+      (evil-move-mark (point))
+      (insert text)
+      (setq evil-last-paste
+            (list #'evil-paste-before
+                  evil-paste-count
+                  opoint
+                  (mark t)
+                  (point)))
+      (evil-exchange-point-and-mark)
+      (back-to-indentation))
      ((eq this-command #'evil-paste-after)
       (evil-move-end-of-line)
       (evil-move-mark (point))
@@ -1624,19 +1636,11 @@ each line. Extra arguments to FUNC may be passed via ARGS."
                   opoint
                   (mark t)
                   (point)))
-      (evil-move-mark (1+ (mark t))))
+      (evil-move-mark (1+ (mark t)))
+      (evil-exchange-point-and-mark)
+      (back-to-indentation))
      (t
-      (evil-move-beginning-of-line)
-      (evil-move-mark (point))
-      (insert text)
-      (setq evil-last-paste
-            (list #'evil-paste-before
-                  evil-paste-count
-                  opoint
-                  (mark t)
-                  (point)))))
-    (evil-exchange-point-and-mark)
-    (back-to-indentation)))
+      (insert text)))))
 
 (defun evil-yank-block-handler (lines)
   "Inserts the current text as block."
