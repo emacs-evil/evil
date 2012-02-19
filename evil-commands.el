@@ -2476,6 +2476,10 @@ Change to `%s'? "
   :motion mark-whole-buffer
   :move-point nil
   (interactive "<r><g/><!>")
+  (unless pattern
+    (error "No pattern given"))
+  (unless command
+    (error "No command given"))
   (let ((case-fold-search
          (eq (evil-ex-regex-case pattern 'smart) 'insensitive))
         match markers)
