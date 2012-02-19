@@ -2045,7 +2045,7 @@ If no FILE is specified, reload the current buffer from disk."
   (interactive "<f><!>")
   (if file
       (find-file file)
-    (revert-buffer nil (or bang (not (buffer-modified-p))) t)))
+    (revert-buffer bang (or bang (not (buffer-modified-p))) t)))
 
 (evil-define-command evil-read (count file)
   "Inserts the contents of FILE below the current line or line COUNT."
