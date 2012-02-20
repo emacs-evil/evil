@@ -55,7 +55,9 @@ If the region is activated, enter Visual state."
     (unless evil-want-fine-undo
       (evil-end-undo-step t))
     (when evil-move-cursor-back
-      (evil-move-cursor-back)))))
+      (when (or (evil-normal-state-p evil-next-state)
+                (evil-motion-state-p evil-next-state))
+        (evil-move-cursor-back))))))
 
 (defun evil-insert-repeat-hook ()
   "Record insertion keys in `evil-insert-repeat-info'."
