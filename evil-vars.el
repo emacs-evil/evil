@@ -1079,10 +1079,10 @@ See `evil-ex-init-shell-argument-completion'.")
   "The overlay for the current search result.")
 
 (defvar evil-ex-search-pattern nil
-  "The actual search pattern.")
+  "The last search pattern.")
 
 (defvar evil-ex-search-offset nil
-  "The actual search offset.")
+  "The last search offset.")
 
 (defvar evil-ex-search-match-beg nil
   "The beginning position of the last match.")
@@ -1091,9 +1091,15 @@ See `evil-ex-init-shell-argument-completion'.")
   "The end position of the last match.")
 
 (defvar evil-ex-substitute-pattern nil
-  "The actual replacement.")
+  "The last substitute pattern.")
 
 (defvar evil-ex-substitute-replacement nil
+  "The last substitute replacement.")
+
+(defvar evil-ex-substitute-flags nil
+  "The last substitute flags.")
+
+(defvar evil-ex-substitute-current-replacement nil
   "The actual replacement.")
 
 ;; The lazy-highlighting framework.

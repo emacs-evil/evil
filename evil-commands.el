@@ -2363,23 +2363,14 @@ Change to `%s'? "
   (unless replacement
     (error "No replacement given"))
   (let* ((flags (append flags nil))
-         (whole-line (memq ?g flags))
          (confirm (memq ?c flags))
-         (ignore-case (memq ?i flags))
-         (dont-ignore-case (memq ?I flags))
-         (pattern (evil-ex-make-pattern
-                   pattern
-                   (or (and ignore-case 'insensitive)
-                       (and dont-ignore-case 'sensitive)
-                       evil-ex-substitute-case
-                       evil-ex-search-case)
-                   whole-line))
-         (case-replace (eq (evil-ex-pattern-case-fold pattern)
-                           'insensitive))
+         (case-replace (eq (evil-ex-pattern-case-fold pattern) 'insensitive))
          (case-fold-search case-replace)
-         (evil-ex-substitute-replacement replacement)
          (evil-ex-substitute-regex (evil-ex-pattern-regex pattern)))
-    (if whole-line
+    (setq evil-ex-substitute-pattern pattern
+          evil-ex-substitute-replacement replacement
+          evil-ex-substitute-flags flags)
+    (if (evil-ex-pattern-whole-line pattern)
         ;; this one is easy, just use the built-in function
         (perform-replace evil-ex-substitute-regex
                          evil-ex-substitute-replacement

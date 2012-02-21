@@ -963,28 +963,16 @@ This handler highlights the pattern of the current substitution."
 
       (when (and (eq flag 'update) evil-ex-substitute-highlight-all)
         (condition-case lossage
-            (let* ((result (evil-ex-parse-substitute arg))
+            (let* ((result (evil-ex-get-substitute-info arg))
                    (pattern (pop result))
-                   (replacement (or (pop result) ""))
-                   (flags (append (pop result) nil)))
-
-              (setq evil-ex-substitute-pattern
-                    (and pattern
-                         (evil-ex-make-pattern
-                          pattern
-                          (or (and (memq ?i flags) 'insensitive)
-                              (and (memq ?I flags) 'sensitive)
-                              evil-ex-substitute-case
-                              evil-ex-search-case)
-                          (memq ?g flags)))
-                    evil-ex-substitute-replacement replacement)
+                   (replacement (pop result)))
+              (setq evil-ex-substitute-current-replacement replacement)
               (apply #'evil-ex-hl-set-region
                      'evil-ex-substitute
                      (or evil-ex-range
                          (evil-range (line-beginning-position)
                                      (line-end-position))))
-              (evil-ex-hl-change 'evil-ex-substitute
-                                 evil-ex-substitute-pattern))
+              (evil-ex-hl-change 'evil-ex-substitute pattern))
           (end-of-file
            (evil-ex-pattern-update-ex-info nil
                                            "incomplete replacement"))
@@ -999,13 +987,14 @@ This handler highlights the pattern of the current substitution."
 
 (defun evil-ex-pattern-update-replacement (hl overlay)
   "Update the replacement display."
-  (when (fboundp 'match-substitute-replacement)
+  (when (and (fboundp 'match-substitute-replacement)
+             evil-ex-substitute-current-replacement)
     (let ((fixedcase (not (eq (evil-ex-pattern-case-fold
                                (evil-ex-hl-pattern hl))
                               'insensitive)))
           repl)
       (setq repl (evil-match-substitute-replacement
-                  evil-ex-substitute-replacement
+                  evil-ex-substitute-current-replacement
                   fixedcase))
       (put-text-property 0 (length repl)
                          'face 'evil-ex-substitute
@@ -1016,12 +1005,29 @@ This handler highlights the pattern of the current substitution."
   "Parse STRING as a global argument."
   (evil-delimited-arguments string 2))
 
-(defun evil-ex-parse-substitute (string)
-  "Parse STRING as a substitution argument."
-  (let ((args (evil-delimited-arguments string 3)))
-    (list (nth 0 args)
-          (evil-compile-replacement (nth 1 args))
-          (nth 2 args))))
+(defun evil-ex-get-substitute-info (string)
+  "Returns the substitution info of command line STRING.
+This function returns a three-element list \(PATTERN REPLACEMENT
+FLAGS) consisting of the substitution parts of STRING. PATTERN is
+a ex-pattern (see `evil-ex-make-pattern') and REPLACEMENT in a
+compiled replacement expression (see `evil-compile-replacement').
+The information returned is the actual substitution information
+w.r.t. to special situations like empty patterns or repetition of
+previous substitution commands."
+  (let* ((args (evil-delimited-arguments string 3))
+         (pattern (pop args))
+         (replacement (evil-compile-replacement (pop args)))
+         (flags (append (pop args) nil)))
+    (when pattern
+      (setq pattern
+            (evil-ex-make-pattern
+             pattern
+             (or (and (memq ?i flags) 'insensitive)
+                 (and (memq ?I flags) 'sensitive)
+                 evil-ex-substitute-case
+                 evil-ex-search-case)
+             (memq ?g flags))))
+    (list pattern replacement flags)))
 
 (defun evil-ex-nohighlight ()
   "Disable the active search highlightings."

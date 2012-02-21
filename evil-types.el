@@ -299,7 +299,7 @@ the last column is excluded."
   "Ex substitution argument."
   :ex-arg substitution
   (when (evil-ex-p)
-    (evil-ex-parse-substitute evil-ex-argument)))
+    (evil-ex-get-substitute-info evil-ex-argument)))
 
 (provide 'evil-types)
 
