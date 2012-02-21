@@ -961,7 +961,9 @@ This handler highlights the pattern of the current substitution."
          ((eq flag 'stop)
           (evil-ex-delete-hl 'evil-ex-substitute))))
 
-      (when (and (eq flag 'update) evil-ex-substitute-highlight-all)
+      (when (and (eq flag 'update)
+                 evil-ex-substitute-highlight-all
+                 (not (zerop (length arg))))
         (condition-case lossage
             (let* ((result (evil-ex-get-substitute-info arg))
                    (pattern (pop result))
@@ -987,15 +989,16 @@ This handler highlights the pattern of the current substitution."
 
 (defun evil-ex-pattern-update-replacement (hl overlay)
   "Update the replacement display."
-  (when (and (fboundp 'match-substitute-replacement)
-             evil-ex-substitute-current-replacement)
+  (when (fboundp 'match-substitute-replacement)
     (let ((fixedcase (not (eq (evil-ex-pattern-case-fold
                                (evil-ex-hl-pattern hl))
                               'insensitive)))
           repl)
-      (setq repl (evil-match-substitute-replacement
-                  evil-ex-substitute-current-replacement
-                  fixedcase))
+      (setq repl (if evil-ex-substitute-current-replacement
+                     (evil-match-substitute-replacement
+                      evil-ex-substitute-current-replacement
+                      fixedcase)
+                   ""))
       (put-text-property 0 (length repl)
                          'face 'evil-ex-substitute
                          repl)
@@ -1014,10 +1017,39 @@ compiled replacement expression (see `evil-compile-replacement').
 The information returned is the actual substitution information
 w.r.t. to special situations like empty patterns or repetition of
 previous substitution commands."
-  (let* ((args (evil-delimited-arguments string 3))
-         (pattern (pop args))
-         (replacement (evil-compile-replacement (pop args)))
-         (flags (append (pop args) nil)))
+  (let (pattern replacement flags)
+    (cond
+     ((or (null string) (string-match "^[a-zA-Z]" string))
+      ;; starts with letter so there is no pattern because the
+      ;; separate must not be a letter repeat last substitute
+      (setq replacement evil-ex-substitute-replacement)
+      ;; flags are everything that is not a white space
+      (when (and string (string-match "[^[:space:]]+" string))
+        (setq flags (match-string 0 string))))
+     (t
+      (let ((args (evil-delimited-arguments string 3)))
+        (setq pattern (pop args)
+              replacement (pop args)
+              flags (pop args))
+        ;; if replacment equals "~" use previous replacement
+        (if (equal replacement "~")
+            (setq replacement evil-ex-substitute-replacement)
+          (setq replacement (evil-compile-replacement replacement))))))
+    ;; if flags equals "&" add previous flags
+    (if (and (not (zerop (length flags)))
+             (= (aref flags 0) ?&))
+        (setq flags (append (substring flags 1)
+                            evil-ex-substitute-flags))
+      (setq flags (append flags nil)))
+    ;; if no pattern, use previous pattern
+    (when (zerop (length pattern))
+      (if (memq ?r flags)
+          (setq pattern (and evil-ex-search-pattern
+                             (evil-ex-pattern-regex evil-ex-search-pattern))
+                flags (remq ?r flags))
+        (setq pattern (and evil-ex-substitute-pattern
+                           (evil-ex-pattern-regex evil-ex-substitute-pattern)))))
+    ;; generate pattern
     (when pattern
       (setq pattern
             (evil-ex-make-pattern

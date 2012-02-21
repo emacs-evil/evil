@@ -4306,6 +4306,55 @@ if no previous selection")
       (":s/X/\\|\\/\\|/g" [return])
       "[a]bc|/|def|/|ghi|/|jkl\n")))
 
+(ert-deftest evil-test-ex-repeat-substitute-replacement ()
+  "Test `evil-ex-substitute' with repeating of previous substitutions."
+  :tags '(evil ex search)
+  (ert-info ("Repeat previous pattern")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar"
+      (":s/foo/AAA" [return])
+      "[x]xx AAA bar foo bar foo bar"
+      (":s//BBB" [return])
+      "[x]xx AAA bar BBB bar foo bar"))
+  (ert-info ("Repeat previous replacement")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar"
+      (":s/foo/AAA" [return])
+      "[x]xx AAA bar foo bar foo bar"
+      (":s/bar/~" [return])
+      "[x]xx AAA AAA foo bar foo bar"))
+  (ert-info ("Repeat previous flags")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar"
+      (":s/foo/AAA/g" [return])
+      "[x]xx AAA bar AAA bar AAA bar"
+      (":s/bar/BBB/&" [return])
+      "[x]xx AAA BBB AAA BBB AAA BBB"))
+  (ert-info ("Repeat previous substitute without flags")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      (":s/foo/AAA/g" [return])
+      "[x]xx AAA bar AAA bar AAA bar\nxxx foo bar foo bar foo bar"
+      ("j:s" [return])
+      "xxx AAA bar AAA bar AAA bar\n[x]xx AAA bar foo bar foo bar"))
+  (ert-info ("Repeat previous substitute with new flags")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      (":s/foo/AAA" [return])
+      "[x]xx AAA bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      ("j:s g" [return])
+      "xxx AAA bar foo bar foo bar\n[x]xx AAA bar AAA bar AAA bar"))
+  (ert-info ("Repeat with previous search pattern")
+    (evil-select-search-module 'evil-search-module 'evil-search)
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      (":s/foo/AAA" [return])
+      "[x]xx AAA bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      ("/bar" [return])
+      "xxx AAA [b]ar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      (":2s rg" [return])
+      "xxx AAA bar foo bar foo bar\n[x]xx foo AAA foo AAA foo AAA")))
+
 (ert-deftest evil-test-ex-regex-without-case ()
   "Test `evil-ex-regex-without-case'"
   :tags '(evil ex search)
