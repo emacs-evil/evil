@@ -2464,6 +2464,41 @@ Change to `%s'? "
                  (if (/= evil-ex-substitute-nreplaced 1) "s" ""))))
     (evil-first-non-blank)))
 
+(evil-define-operator evil-ex-repeat-substitute
+  (beg end flags)
+  "Repeate last substitute command.
+This is the same as :s//~/"
+  :repeat nil
+  :jump t
+  :move-point nil
+  :motion evil-line
+  (interactive "<r><a>")
+  (apply #'evil-ex-substitute beg end
+         (evil-ex-get-substitute-info (concat "//~/" flags))))
+
+(evil-define-operator evil-ex-repeat-substitute-with-flags
+  (beg end flags)
+  "Repeate last substitute command with last flags.
+This is the same as :s//~/&"
+  :repeat nil
+  :jump t
+  :move-point nil
+  :motion evil-line
+  (interactive "<r><a>")
+  (apply #'evil-ex-substitute beg end
+         (evil-ex-get-substitute-info (concat "//~/&" flags))))
+
+(evil-define-operator evil-ex-repeat-global-substitute ()
+  "Repeate last substitute command on the whole buffer.
+This is the same as :%s//~/&"
+  :repeat nil
+  :jump t
+  :move-point nil
+  :motion evil-line
+  (interactive)
+  (apply #'evil-ex-substitute (point-min) (point-max)
+         (evil-ex-get-substitute-info (concat "//~/&"))))
+
 (evil-define-operator evil-ex-global
   (beg end pattern command &optional invert)
   "The Ex global command.

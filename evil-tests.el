@@ -4336,6 +4336,12 @@ if no previous selection")
       (":s/foo/AAA/g" [return])
       "[x]xx AAA bar AAA bar AAA bar\nxxx foo bar foo bar foo bar"
       ("j:s" [return])
+      "xxx AAA bar AAA bar AAA bar\n[x]xx AAA bar foo bar foo bar")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      (":s/foo/AAA/g" [return])
+      "[x]xx AAA bar AAA bar AAA bar\nxxx foo bar foo bar foo bar"
+      ("j&")
       "xxx AAA bar AAA bar AAA bar\n[x]xx AAA bar foo bar foo bar"))
   (ert-info ("Repeat previous substitute with new flags")
     (evil-test-buffer
@@ -4353,7 +4359,14 @@ if no previous selection")
       ("/bar" [return])
       "xxx AAA [b]ar foo bar foo bar\nxxx foo bar foo bar foo bar"
       (":2s rg" [return])
-      "xxx AAA bar foo bar foo bar\n[x]xx foo AAA foo AAA foo AAA")))
+      "xxx AAA bar foo bar foo bar\n[x]xx foo AAA foo AAA foo AAA"))
+  (ert-info ("Repeat previous substitute globally")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      (":s/foo/AAA/g" [return])
+      "[x]xx AAA bar AAA bar AAA bar\nxxx foo bar foo bar foo bar"
+      ("g&")
+      "xxx AAA bar AAA bar AAA bar\n[x]xx AAA bar AAA bar AAA bar")))
 
 (ert-deftest evil-test-ex-regex-without-case ()
   "Test `evil-ex-regex-without-case'"
