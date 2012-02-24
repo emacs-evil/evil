@@ -32,8 +32,8 @@
     (argument
      ((\? space) (\? "\\(?:.\\|\n\\)+") #'$2))
     (range
-     (address (\? "[,;]" address #'$2) #'evil-ex-range)
-     ("%" #'(evil-ex-full-range)))
+     ("%" #'(evil-ex-full-range))
+     (address (\? "[,;]" address #'$2) #'evil-ex-range))
     (address
      (line (\? offset) #'evil-ex-address)
      ((\? line) offset #'evil-ex-address))
@@ -234,10 +234,10 @@ incomplete or unknown commands is show."
                               evil-ex-argument-handler))))
             (when runner (funcall runner 'update evil-ex-argument))))
          ((all-completions cmd evil-ex-commands)
-          ;; show error message only when called from after-change-functions
+          ;; show error message only when called from `after-change-functions'
           (when beg (evil-ex-echo "Incomplete command")))
          (t
-          ;; show error message only when called from after-change-functions
+          ;; show error message only when called from `after-change-functions'
           (when beg (evil-ex-echo "Unknown command")))))))))
 (put 'evil-ex-update 'permanent-local-hook t)
 
@@ -806,7 +806,7 @@ The following symbols have reserved meanings within a grammar:
       (save-match-data
         (when (or (eq (string-match symbol string) 0)
                   ;; ignore leading whitespace
-                  (and (string-match "^[ \f\t\n\r\v]+" string)
+                  (and (eq (string-match "^[ \f\t\n\r\v]+" string) 0)
                        (eq (match-end 0)
                            (string-match
                             symbol string (match-end 0)))))
@@ -919,7 +919,8 @@ The following symbols have reserved meanings within a grammar:
                 (unless (memq (car-safe rule) '(& !))
                   (if (and syntax
                            (or (null result)
-                               (and (listp rule)
+                               (and (listp result)
+                                    (listp rule)
                                     ;; splice in single-element
                                     ;; (\? ...) expressions
                                     (not (and (eq (car-safe rule) '\?)
