@@ -1562,7 +1562,7 @@ each line. Extra arguments to FUNC may be passed via ARGS."
 
 (defun evil-yank-characters (beg end &optional register yank-handler)
   "Saves the characters defined by the region BEG and END in the kill-ring."
-  (let ((text (buffer-substring beg end)))
+  (let ((text (filter-buffer-substring beg end)))
     (when yank-handler
       (setq text (propertize text 'yank-handler (list yank-handler))))
     (when register
@@ -1571,7 +1571,7 @@ each line. Extra arguments to FUNC may be passed via ARGS."
 
 (defun evil-yank-lines (beg end &optional register yank-handler)
   "Saves the lines in the region BEG and END into the kill-ring."
-  (let* ((text (buffer-substring beg end))
+  (let* ((text (filter-buffer-substring beg end))
          (yank-handler (list (or yank-handler
                                  #'evil-yank-line-handler))))
     ;; Ensure the text ends with a newline. This is required
