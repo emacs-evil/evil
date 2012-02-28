@@ -65,11 +65,11 @@
      ("\\?" "\\(?:[\\].\\|[^?]\\)+" "\\?"
       #'(evil-ex-re-bwd $2)))
     (next
-     "/" #'(evil-ex-prev-search))
+     "\\\\/" #'(evil-ex-prev-search))
     (prev
-     "\\?" #'(evil-ex-prev-search))
+     "\\\\\\?" #'(evil-ex-prev-search))
     (subst
-     "&" #'(evil-ex-prev-search))
+     "\\\\&" #'(evil-ex-prev-search))
     (signed-number
      (sign (\? number) #'evil-ex-signed-number))
     (sign
