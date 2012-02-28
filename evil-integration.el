@@ -227,6 +227,19 @@
         ad-do-it)
     ad-do-it))
 
+;; Show key
+(defadvice quail-show-key (around evil activate)
+  "Temporarily go to Emacs state"
+  (evil-emacs-state)
+  ad-do-it
+  (evil-change-to-previous-state))
+
+(defadvice what-cursor-position (around evil activate)
+  "Temporarily go to Emacs state"
+  (evil-emacs-state)
+  ad-do-it
+  (evil-change-to-previous-state))
+
 (provide 'evil-integration)
 
 ;;; evil-integration.el ends here
