@@ -121,6 +121,8 @@ of the syntax.")
                   'evil-ex-history
                   evil-ex-previous-command
                   t))
+    (when (zerop (length result))
+      (setq result evil-ex-previous-command))
     (evil-ex-update nil nil nil result)
     (unless (zerop (length result))
       (if evil-ex-expression
