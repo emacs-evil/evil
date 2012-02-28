@@ -4323,7 +4323,7 @@ if no previous selection")
       "[x]xx AAA bar foo bar foo bar"
       (":s/bar/~" [return])
       "[x]xx AAA AAA foo bar foo bar"))
-  (ert-info ("Repeat previous flags")
+  (ert-info ("Repeat with previous flags")
     (evil-test-buffer
       "[x]xx foo bar foo bar foo bar"
       (":s/foo/AAA/g" [return])
@@ -4342,13 +4342,38 @@ if no previous selection")
       (":s/foo/AAA/g" [return])
       "[x]xx AAA bar AAA bar AAA bar\nxxx foo bar foo bar foo bar"
       ("j&")
+      "xxx AAA bar AAA bar AAA bar\n[x]xx AAA bar foo bar foo bar")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      (":s/foo/AAA/g" [return])
+      "[x]xx AAA bar AAA bar AAA bar\nxxx foo bar foo bar foo bar"
+      ("j:&" [return])
       "xxx AAA bar AAA bar AAA bar\n[x]xx AAA bar foo bar foo bar"))
+  (ert-info ("Repeat previous substitute with the same flags")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      (":s/foo/AAA/g" [return])
+      "[x]xx AAA bar AAA bar AAA bar\nxxx foo bar foo bar foo bar"
+      ("j:s//~/&" [return])
+      "xxx AAA bar AAA bar AAA bar\n[x]xx AAA bar AAA bar AAA bar")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      (":s/foo/AAA/g" [return])
+      "[x]xx AAA bar AAA bar AAA bar\nxxx foo bar foo bar foo bar"
+      ("j:&&" [return])
+      "xxx AAA bar AAA bar AAA bar\n[x]xx AAA bar AAA bar AAA bar"))
   (ert-info ("Repeat previous substitute with new flags")
     (evil-test-buffer
       "[x]xx foo bar foo bar foo bar\nxxx foo bar foo bar foo bar"
       (":s/foo/AAA" [return])
       "[x]xx AAA bar foo bar foo bar\nxxx foo bar foo bar foo bar"
       ("j:s g" [return])
+      "xxx AAA bar foo bar foo bar\n[x]xx AAA bar AAA bar AAA bar")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      (":s/foo/AAA" [return])
+      "[x]xx AAA bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      ("j:& g" [return])
       "xxx AAA bar foo bar foo bar\n[x]xx AAA bar AAA bar AAA bar"))
   (ert-info ("Repeat with previous search pattern")
     (evil-select-search-module 'evil-search-module 'evil-search)
