@@ -4384,6 +4384,14 @@ if no previous selection")
       ("/bar" [return])
       "xxx AAA [b]ar foo bar foo bar\nxxx foo bar foo bar foo bar"
       (":2s rg" [return])
+      "xxx AAA bar foo bar foo bar\n[x]xx foo AAA foo AAA foo AAA")
+    (evil-test-buffer
+      "[x]xx foo bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      (":s/foo/AAA" [return])
+      "[x]xx AAA bar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      ("/bar" [return])
+      "xxx AAA [b]ar foo bar foo bar\nxxx foo bar foo bar foo bar"
+      (":2~ g" [return])
       "xxx AAA bar foo bar foo bar\n[x]xx foo AAA foo AAA foo AAA"))
   (ert-info ("Repeat previous substitute globally")
     (evil-test-buffer

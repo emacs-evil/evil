@@ -2466,7 +2466,7 @@ Change to `%s'? "
 
 (evil-define-operator evil-ex-repeat-substitute
   (beg end flags)
-  "Repeate last substitute command.
+  "Repeat last substitute command.
 This is the same as :s//~/"
   :repeat nil
   :jump t
@@ -2478,7 +2478,7 @@ This is the same as :s//~/"
 
 (evil-define-operator evil-ex-repeat-substitute-with-flags
   (beg end flags)
-  "Repeate last substitute command with last flags.
+  "Repeat last substitute command with last flags.
 This is the same as :s//~/&"
   :repeat nil
   :jump t
@@ -2488,8 +2488,32 @@ This is the same as :s//~/&"
   (apply #'evil-ex-substitute beg end
          (evil-ex-get-substitute-info (concat "//~/&" flags))))
 
+(evil-define-operator evil-ex-repeat-substitute-with-search
+  (beg end flags)
+  "Repeat last substitute command with last search pattern.
+This is the same as :s//~/r"
+  :repeat nil
+  :jump t
+  :move-point nil
+  :motion evil-line
+  (interactive "<r><a>")
+  (apply #'evil-ex-substitute beg end
+         (evil-ex-get-substitute-info (concat "//~/r" flags))))
+
+(evil-define-operator evil-ex-repeat-substitute-with-search-and-flags
+  (beg end flags)
+  "Repeat last substitute command with last search pattern and last flags.
+This is the same as :s//~/&r"
+  :repeat nil
+  :jump t
+  :move-point nil
+  :motion evil-line
+  (interactive "<r><a>")
+  (apply #'evil-ex-substitute beg end
+         (evil-ex-get-substitute-info (concat "//~/&r" flags))))
+
 (evil-define-operator evil-ex-repeat-global-substitute ()
-  "Repeate last substitute command on the whole buffer.
+  "Repeat last substitute command on the whole buffer.
 This is the same as :%s//~/&"
   :repeat nil
   :jump t

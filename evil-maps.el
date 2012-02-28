@@ -389,6 +389,8 @@
 (evil-ex-define-cmd "s[ubstitute]" 'evil-ex-substitute)
 (evil-ex-define-cmd "&" 'evil-ex-repeat-substitute)
 (evil-ex-define-cmd "&&" 'evil-ex-repeat-substitute-with-flags)
+(evil-ex-define-cmd "~" 'evil-ex-repeat-substitute-with-search)
+(evil-ex-define-cmd "~&" 'evil-ex-repeat-substitute-with-search-and-flags)
 (evil-ex-define-cmd "registers" 'evil-show-registers)
 (evil-ex-define-cmd "marks" 'evil-show-marks)
 (evil-ex-define-cmd "ju[mps]" 'evil-show-jumps)
