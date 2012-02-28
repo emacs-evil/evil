@@ -1622,6 +1622,8 @@ each line. Extra arguments to FUNC may be passed via ARGS."
                   opoint
                   (mark t)
                   (point)))
+      (evil-set-marker ?\[ (mark))
+      (evil-set-marker ?\] (1- (point)))
       (evil-exchange-point-and-mark)
       (back-to-indentation))
      ((eq this-command #'evil-paste-after)
@@ -1629,6 +1631,8 @@ each line. Extra arguments to FUNC may be passed via ARGS."
       (evil-move-mark (point))
       (insert "\n")
       (insert text)
+      (evil-set-marker ?\[ (1+ (mark)))
+      (evil-set-marker ?\] (1- (point)))
       (delete-char -1) ; delete the last newline
       (setq evil-last-paste
             (list #'evil-paste-after
@@ -1649,7 +1653,8 @@ each line. Extra arguments to FUNC may be passed via ARGS."
                  (1+ (current-column))
                (current-column)))
         (current-line (line-number-at-pos (point)))
-        (opoint (point)))
+        (opoint (point))
+        epoint)
     (dolist (line lines)
       ;; concat multiple copies according to count
       (setq line (apply #'concat (make-list count line)))
@@ -1677,7 +1682,8 @@ each line. Extra arguments to FUNC may be passed via ARGS."
           (insert text)
           (unless (eolp)
             ;; text follows, so we have to insert spaces
-            (insert (make-string endextra ? ))))
+            (insert (make-string endextra ? )))
+          (setq epoint (point)))
         (forward-line 1)))
     (setq evil-last-paste
           (list this-command
@@ -1685,6 +1691,8 @@ each line. Extra arguments to FUNC may be passed via ARGS."
                 opoint
                 (length lines)                   ; number of rows
                 (* count (length (car lines))))) ; number of colums
+    (evil-set-marker ?\[ opoint)
+    (evil-set-marker ?\] (1- epoint))
     (goto-char opoint)
     (when (and (eq this-command #'evil-paste-after)
                (not (eolp)))

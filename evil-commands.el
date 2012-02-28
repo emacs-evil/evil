@@ -1323,6 +1323,8 @@ The return value is the yanked text."
                         opoint
                         opoint    ; beg
                         (point))) ; end
+            (evil-set-marker ?\[ opoint)
+            (evil-set-marker ?\] (1- (point)))
             (when (> (length text) 0)
               (backward-char))))
         ;; no paste-pop after pasting from a register
@@ -1370,6 +1372,8 @@ The return value is the yanked text."
                           opoint
                           beg       ; beg
                           (point))) ; end
+              (evil-set-marker ?\[ beg)
+              (evil-set-marker ?\] (1- (point)))
               (when (evil-normal-state-p)
                 (evil-move-cursor-back)))))
         (when register
