@@ -1994,29 +1994,26 @@ See also `evil-open-fold'."
 
 ;;; Ex
 
-(evil-define-operator evil-write (beg end type file-name &optional bang)
-  "Save the current buffer, from BEG to END, to FILE-NAME.
-If the BANG argument is non-nil, the file will be overwritten
-if already existing. Does not change the current buffer's name."
-  :motion mark-whole-buffer
+(evil-define-operator evil-write (beg end type filename &optional bang)
+  "Save the current buffer, from BEG to END, to FILENAME.
+If the file already exists and the BANG argument is non-nil,
+it is overwritten without confirmation."
+  :motion nil
   :move-point nil
   :type line
   :repeat nil
   (interactive "<R><f><!>")
-  (when (null file-name)
-    (setq file-name (buffer-file-name))
-    (unless file-name
-      (error "Please specify a file-name for this buffer!")))
-
-  (cond
-   ((and (= beg (point-min)) (= end (point-max))
-         (string= file-name (buffer-file-name)))
-    (save-buffer))
-   ((and (= beg (point-min)) (= end (point-max))
-         (null (buffer-file-name)))
-    (write-file file-name (not bang)))
-   (t
-    (write-region beg end file-name nil nil nil (not bang)))))
+  (when (zerop (length filename))
+    (setq filename (buffer-file-name)))
+  (when (zerop (length filename))
+    (error "Please specify a file name for the buffer"))
+  (if (and beg end)
+      (write-region beg end filename nil nil nil (not bang))
+    (when bang
+      (set-buffer-modified-p t))
+    (if (string= filename (or (buffer-file-name) ""))
+        (save-buffer)
+      (write-file filename (not bang)))))
 
 (evil-define-command evil-write-all (bang)
   "Saves all buffers."
@@ -2035,7 +2032,7 @@ If no FILE is given, the current file name is used."
   (unless file
     (setq file (buffer-file-name))
     (unless file
-      (error "Please specify a file name for this buffer!")))
+      (error "Please specify a file name for the buffer")))
   (write-file file (not bang)))
 
 (evil-define-command evil-edit (file &optional bang)
