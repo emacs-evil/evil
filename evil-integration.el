@@ -1,6 +1,7 @@
 ;;;; Integrate Evil with other modules
 
 (require 'evil-maps)
+(require 'evil-core)
 
 (mapc #'evil-declare-motion evil-motions)
 (mapc #'evil-declare-not-repeat
@@ -230,15 +231,11 @@
 ;; Show key
 (defadvice quail-show-key (around evil activate)
   "Temporarily go to Emacs state"
-  (evil-emacs-state)
-  ad-do-it
-  (evil-change-to-previous-state))
+  (evil-with-state emacs ad-do-it))
 
-(defadvice what-cursor-position (around evil activate)
+(defadvice describe-char (around evil activate)
   "Temporarily go to Emacs state"
-  (evil-emacs-state)
-  ad-do-it
-  (evil-change-to-previous-state))
+  (evil-with-state emacs ad-do-it))
 
 (provide 'evil-integration)
 
