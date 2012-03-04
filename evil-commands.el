@@ -1197,6 +1197,11 @@ but doesn't insert or remove any spaces."
     (indent-region beg end))
   (back-to-indentation))
 
+(evil-define-operator evil-indent-line (beg end)
+  "Indent the line."
+  :motion evil-line
+  (evil-indent beg end))
+
 (evil-define-operator evil-shift-left (beg end)
   "Shift text from BEG to END to the left.
 The text is shifted to the nearest multiple of `evil-shift-width'
