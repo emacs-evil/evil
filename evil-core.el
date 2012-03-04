@@ -262,6 +262,11 @@ This is the state the buffer came up in."
     (evil-change-state (or evil-previous-state evil-default-state 'normal)
                        message)))
 
+;; When a buffer is created in a low-level way, it is invisible to
+;; Evil (as well as other globalized minor modes) because no hooks are
+;; run. This is appropriate since many buffers are used for throwaway
+;; purposes. Passing the buffer to `display-buffer' indicates
+;; otherwise, though, so advise this function to initialize Evil.
 (defadvice display-buffer (before evil activate)
   "Initialize Evil in the displayed buffer."
   (when evil-mode
@@ -335,11 +340,6 @@ This is the state the buffer came up in."
       (setq evil-input-method nil))))
 (put 'evil-inactivate-input-method 'permanent-local-hook t)
 
-;; When a buffer is created in a low-level way, it is invisible to
-;; Evil (as well as other globalized minor modes) because no hooks are
-;; run. This is appropriate since many buffers are used for throwaway
-;; purposes. Passing the buffer to `display-buffer' indicates
-;; otherwise, though, so advise this function to initialize Evil.
 (defadvice toggle-input-method (around evil activate)
   "Refresh `evil-input-method'."
   (cond
@@ -658,6 +658,7 @@ If AUX is nil, create a new auxiliary keymap."
   (define-key map
     (vconcat (list (intern (format "%s-state" state)))) aux)
   aux)
+(put 'evil-set-auxiliary-keymap 'lisp-indent-function 'defun)
 
 (defun evil-get-auxiliary-keymap (map state &optional create)
   "Get the auxiliary keymap for MAP in STATE.
@@ -734,7 +735,7 @@ A return value of t means all states."
      (t
       state))))
 
-(defun evil-define-key (state keymap key def &rest bindings)
+(defmacro evil-define-key (state keymap key def &rest bindings)
   "Create a STATE binding from KEY to DEF for KEYMAP.
 STATE is one of `normal', `insert', `visual', `replace',
 `operator', `motion' and `emacs'. The remaining arguments
@@ -750,47 +751,39 @@ to specify multiple bindings at once:
       \"a\" 'bar
       \"b\" 'foo)
 
-See also `evil-declare-key'."
-  (let ((aux (if state
-                 (evil-get-auxiliary-keymap keymap state t)
-               keymap)))
-    (while key
-      (define-key aux key def)
-      (setq key (pop bindings)
-            def (pop bindings)))
-    ;; ensure the prompt string comes first
-    (evil-set-keymap-prompt aux (keymap-prompt aux))))
-
-(defmacro evil-declare-key (state keymap key def &rest bindings)
-  "Declare a STATE binding from KEY to DEF in KEYMAP.
-Similar to `evil-define-key', but also works if KEYMAP is unbound;
-the execution is postponed until KEYMAP is bound. For example:
-
-    (evil-declare-key 'normal foo-map \"a\" 'bar)
-
-The arguments are exactly like those of `evil-define-key',
-and should be quoted as such."
+If foo-map has not been initialized yet, this macro adds an entry
+to `after-load-functions', delaying execution as necessary."
   (declare (indent defun))
-  `(evil-delay '(and (boundp ',keymap) (keymapp ,keymap))
-       '(evil-define-key ,state ,keymap ,key ,def ,@bindings)
+  `(evil-delay ',(if (symbolp keymap)
+                     `(and (boundp ',keymap) (keymapp ,keymap))
+                   `(keymapp ,keymap))
+       '(let* ((state ,state) (keymap ,keymap) (key ,key) (def ,def)
+               (bindings (list ,@bindings)) aux)
+          (if state
+              (setq aux (evil-get-auxiliary-keymap keymap state t))
+            (setq aux keymap))
+          (while key
+            (define-key aux key def)
+            (setq key (pop bindings)
+                  def (pop bindings)))
+          ;; ensure the prompt string comes first
+          (evil-set-keymap-prompt aux (keymap-prompt aux)))
      'after-load-functions t nil
      (format "evil-define-key-in-%s"
              ',(if (symbolp keymap) keymap 'keymap))))
+(defalias 'evil-declare-key 'evil-define-key)
 
 (defmacro evil-add-hjkl-bindings (keymap &optional state &rest bindings)
   "Add \"h\", \"j\", \"k\", \"l\" bindings to KEYMAP in STATE.
 Add additional BINDINGS if specified."
   (declare (indent defun))
-  `(evil-declare-key ,state ,keymap
+  `(evil-define-key ,state ,keymap
      "h" (lookup-key evil-motion-state-map "h")
      "j" (lookup-key evil-motion-state-map "j")
      "k" (lookup-key evil-motion-state-map "k")
      "l" (lookup-key evil-motion-state-map "l")
      ":" (lookup-key evil-motion-state-map ":")
      ,@bindings))
-
-(put 'evil-define-key 'lisp-indent-function 'defun)
-(put 'evil-set-auxiliary-keymap 'lisp-indent-function 'defun)
 
 ;; may be useful for programmatic purposes
 (defun evil-global-set-key (state key def)
