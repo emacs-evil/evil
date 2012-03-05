@@ -296,15 +296,18 @@ otherwise exit Visual state."
     (evil-restore-mark))))
 (put 'evil-visual-deactivate-hook 'permanent-local-hook t)
 
-(evil-define-command evil-exit-visual-state (&optional buffer message)
-  "Exit from Visual state to the previous state."
+(evil-define-command evil-exit-visual-state (&optional later buffer)
+  "Exit from Visual state to the previous state.
+If LATER is non-nil, exit after the current command."
   :keep-visual t
   :repeat abort
   (with-current-buffer (or buffer (current-buffer))
     (when (evil-visual-state-p)
-      (when evil-visual-region-expanded
-        (evil-visual-contract-region))
-      (evil-change-to-previous-state))))
+      (if later
+          (setq deactivate-mark t)
+        (when evil-visual-region-expanded
+          (evil-visual-contract-region))
+        (evil-change-to-previous-state)))))
 
 (defun evil-visual-message (&optional selection)
   "Create an echo area message for SELECTION.

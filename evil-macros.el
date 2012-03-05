@@ -489,7 +489,6 @@ if COUNT is positive, and to the left of it if negative.
                (evil-operator-range-type
                 (evil-get-command-property ',operator :type))
                (orig (point))
-               (state evil-state)
                evil-operator-range-beginning
                evil-operator-range-end
                evil-inhibit-operator)
@@ -501,12 +500,10 @@ if COUNT is positive, and to the left of it if negative.
             (if ,visual
                 (when (evil-visual-state-p)
                   (evil-visual-expand-region))
-              (when (evil-visual-state-p)
-                (evil-exit-visual-state))
-              (when (region-active-p)
-                (evil-active-region -1)))
+              (when (or (evil-visual-state-p) (region-active-p))
+                (setq deactivate-mark t)))
             (cond
-             ((evil-visual-state-p state)
+             ((evil-visual-state-p)
               (evil-visual-rotate 'upper-left
                                   evil-operator-range-beginning
                                   evil-operator-range-end
