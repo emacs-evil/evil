@@ -273,10 +273,12 @@ This is the state the buffer came up in."
 (defadvice switch-to-buffer (before evil activate)
   "Initialize Evil in the displayed buffer."
   (when evil-mode
-    (when (get-buffer (ad-get-arg 0))
-      (with-current-buffer (ad-get-arg 0)
-        (unless evil-local-mode
-          (evil-local-mode 1))))))
+    (let* ((arg0 (ad-get-arg 0))
+           (buffer (if arg0 (get-buffer arg0) (other-buffer))))
+      (when buffer
+        (with-current-buffer buffer
+          (unless evil-local-mode
+            (evil-local-mode 1)))))))
 
 (defun evil-refresh-mode-line (&optional state)
   "Refresh mode line tag."
