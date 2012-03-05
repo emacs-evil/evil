@@ -2010,15 +2010,15 @@ it is overwritten without confirmation."
   (interactive "<R><f><!>")
   (when (zerop (length filename))
     (setq filename (buffer-file-name)))
-  (when (zerop (length filename))
+  (cond
+   ((zerop (length filename))
     (error "Please specify a file name for the buffer"))
-  (if (and beg end)
-      (write-region beg end filename nil nil nil (not bang))
-    (when bang
-      (set-buffer-modified-p t))
-    (if (string= filename (or (buffer-file-name) ""))
-        (save-buffer)
-      (write-file filename (not bang)))))
+   ((and beg end)
+    (write-region beg end filename nil nil nil (not bang)))
+   ((and (not bang) (string= filename (or (buffer-file-name) "")))
+    (save-buffer))
+   (t
+    (write-file filename (not bang)))))
 
 (evil-define-command evil-write-all (bang)
   "Saves all buffers."
@@ -2034,11 +2034,7 @@ If no FILE is given, the current file name is used."
   :repeat nil
   :move-point nil
   (interactive "<f><!>")
-  (unless file
-    (setq file (buffer-file-name))
-    (unless file
-      (error "Please specify a file name for the buffer")))
-  (write-file file (not bang)))
+  (evil-write nil nil nil file bang))
 
 (evil-define-command evil-edit (file &optional bang)
   "Open FILE.
@@ -2083,7 +2079,8 @@ If no FILE is specified, reload the current buffer from disk."
   (interactive "<b>")
   (if buffer
       (when (or (get-buffer buffer)
-                (y-or-n-p (format "No buffer with name \"%s\" exists. Create new buffer? " buffer)))
+                (y-or-n-p (format "No buffer with name \"%s\" exists. \
+Create new buffer? " buffer)))
         (switch-to-buffer buffer))
     (switch-to-buffer (other-buffer))))
 
