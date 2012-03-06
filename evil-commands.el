@@ -2191,7 +2191,9 @@ the previous shell command is executed instead."
              (mapconcat #'(lambda (reg)
                             (format "\"%c\t%s"
                                     (car reg)
-                                    (replace-regexp-in-string "\n" "^J" (cdr reg))))
+                                    (if (stringp (cdr reg))
+                                        (replace-regexp-in-string "\n" "^J" (cdr reg))
+                                      (cdr reg))))
                         (evil-register-list) "\n"))))
 
 (eval-when-compile (require 'ffap))
