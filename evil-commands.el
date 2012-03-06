@@ -2964,7 +2964,15 @@ Otherwise send [escape]."
   :repeat ignore
   (interactive "P")
   (if (sit-for evil-esc-delay t)
-      (push 'escape unread-command-events)
+      (progn
+        (push 'escape unread-command-events)
+        (when defining-kbd-macro
+          ;; we need to replace the ESC by 'escape in the currently
+          ;; defined keyboard macro
+          (evil-save-echo-area
+            (end-kbd-macro)
+            (setq last-kbd-macro (vconcat last-kbd-macro [escape]))
+            (start-kbd-macro t t))))
     (push last-command-event unread-command-events)
     ;; preserve prefix argument
     (setq prefix-arg arg))
