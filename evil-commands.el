@@ -39,8 +39,10 @@
     (evil-motion-loop (nil (or count 1))
       (backward-char)
       ;; don't put the cursor on a newline
-      (unless (or (evil-visual-state-p) (evil-operator-state-p))
-        (evil-adjust-cursor)))))
+      (when (and (not (evil-visual-state-p))
+                 (not (evil-operator-state-p))
+                 (eolp) (not (bolp)))
+        (backward-char)))))
 
 (evil-define-motion evil-next-line (count)
   "Move the cursor COUNT lines down."
