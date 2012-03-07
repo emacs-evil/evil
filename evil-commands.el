@@ -25,10 +25,11 @@
     (evil-motion-loop (nil (or count 1))
       (forward-char)
       ;; don't put the cursor on a newline
-      (when (and evil-cross-lines evil-move-cursor-back)
-        (unless (or (evil-visual-state-p) (evil-operator-state-p))
-          (when (and (eolp) (not (eobp)) (not (bolp)))
-            (forward-char)))))))
+      (when (and evil-cross-lines evil-move-cursor-back
+                 (not (evil-visual-state-p))
+                 (not (evil-operator-state-p))
+                 (eolp) (not (eobp)) (not (bolp)))
+        (forward-char)))))
 
 (evil-define-motion evil-backward-char (count)
   "Move cursor to the left by COUNT characters."
