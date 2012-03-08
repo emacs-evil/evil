@@ -76,25 +76,34 @@ Handles the repeat-count of the insertion command."
         (evil-execute-repeat-info
          (cdr evil-insert-repeat-info)))))
   (when evil-insert-vcount
-    (let ((line (nth 0 evil-insert-vcount))
-          (col (nth 1 evil-insert-vcount))
-          (vcount (nth 2 evil-insert-vcount)))
-      (save-excursion
-        (dotimes (v (1- vcount))
-          (goto-char (point-min))
-          (forward-line (+ line v))
-          (when (or (not evil-insert-skip-empty-lines)
-                    (not (integerp col))
-                    (save-excursion
-                      (evil-move-end-of-line)
-                      (>= (current-column) col)))
-            (if (integerp col)
-                (move-to-column col t)
-              (funcall col))
-            (dotimes (i (or evil-insert-count 1))
-              (when (fboundp 'evil-execute-repeat-info)
-                (evil-execute-repeat-info
-                 (cdr evil-insert-repeat-info))))))))))
+    (let ((buffer-invisibility-spec buffer-invisibility-spec))
+      ;; make all lines hidden by hideshow temporarily visible
+      (when (listp buffer-invisibility-spec)
+        (setq buffer-invisibility-spec
+              (evil-filter-list
+               #'(lambda (x)
+                   (or (eq x 'hs)
+                       (eq (car-safe x) 'hs)))
+               buffer-invisibility-spec)))
+      (let ((line (nth 0 evil-insert-vcount))
+            (col (nth 1 evil-insert-vcount))
+            (vcount (nth 2 evil-insert-vcount)))
+        (save-excursion
+          (dotimes (v (1- vcount))
+            (goto-char (point-min))
+            (forward-line (+ line v))
+            (when (or (not evil-insert-skip-empty-lines)
+                      (not (integerp col))
+                      (save-excursion
+                        (evil-move-end-of-line)
+                        (>= (current-column) col)))
+              (if (integerp col)
+                  (move-to-column col t)
+                (funcall col))
+              (dotimes (i (or evil-insert-count 1))
+                (when (fboundp 'evil-execute-repeat-info)
+                  (evil-execute-repeat-info
+                   (cdr evil-insert-repeat-info)))))))))))
 
 ;;; Visual state
 
