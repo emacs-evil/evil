@@ -2739,10 +2739,20 @@ editing a certain FILE."
              (error nil))
            success)))
 
-(evil-define-command evil-window-lru ()
-  "Move the cursor to the previous (last accessed) window."
+(evil-define-command evil-window-mru ()
+  "Move the cursor to the previous (last accessed) buffer in another window.
+More precisely, it selectes the most recently used buffer that is
+shown in some other window, preferably of the current frame, and
+is different from the current one."
   :repeat nil
-  (select-window (get-lru-window)))
+  (catch 'done
+    (dolist (buf (buffer-list (selected-frame)))
+      (let ((win (get-buffer-window buf)))
+        (when (and (not (eq buf (current-buffer)))
+                   win
+                   (not (eq win (selected-window))))
+          (select-window win)
+          (throw 'done nil))))))
 
 (evil-define-command evil-window-next (count)
   "Move the cursor to the next window in the cyclic order.
