@@ -17,29 +17,53 @@
 ;; :keep-visual t and :repeat motion; these are automatically
 ;; handled by the `evil-define-motion' macro.
 
-(evil-define-motion evil-forward-char (count)
-  "Move cursor to the right by COUNT characters."
+(evil-define-motion evil-forward-char (count &optional crosslines noerror)
+  "Move cursor to the right by COUNT characters.
+Movement is restricted to current line unless CROSSLINES is non-nil.
+If NOERROR is non-nil, don't signal an error upon reaching the end
+of the line or the buffer; just return nil."
   :type exclusive
-  ;; restrict movement to the current line
-  (evil-narrow-to-line-if (not evil-cross-lines)
+  (interactive "<c>" (list evil-cross-lines))
+  (cond
+   (noerror
+    (condition-case nil
+        (evil-forward-char count crosslines nil)
+      (error nil)))
+   ((not crosslines)
+    ;; restrict movement to the current line
+    (evil-narrow-to-line
+      (evil-forward-char count t noerror)))
+   (t
     (evil-motion-loop (nil (or count 1))
       (forward-char)
       ;; don't put the cursor on a newline
-      (when (and evil-cross-lines evil-move-cursor-back)
+      (when evil-move-cursor-back
         (unless (or (evil-visual-state-p) (evil-operator-state-p))
           (when (and (eolp) (not (eobp)) (not (bolp)))
-            (forward-char)))))))
+            (forward-char))))))))
 
-(evil-define-motion evil-backward-char (count)
-  "Move cursor to the left by COUNT characters."
+(evil-define-motion evil-backward-char (count &optional crosslines noerror)
+  "Move cursor to the left by COUNT characters.
+Movement is restricted to current line unless CROSSLINES is non-nil.
+If NOERROR is non-nil, don't signal an error upon reaching the beginning
+of the line or the buffer; just return nil."
   :type exclusive
-  ;; restrict movement to the current line
-  (evil-narrow-to-line-if (not evil-cross-lines)
+  (interactive "<c>" (list evil-cross-lines))
+  (cond
+   (noerror
+    (condition-case nil
+        (evil-backward-char count crosslines nil)
+      (error nil)))
+   ((not crosslines)
+    ;; restrict movement to the current line
+    (evil-narrow-to-line
+      (evil-backward-char count t noerror)))
+   (t
     (evil-motion-loop (nil (or count 1))
       (backward-char)
       ;; don't put the cursor on a newline
       (unless (or (evil-visual-state-p) (evil-operator-state-p))
-        (evil-adjust-cursor)))))
+        (evil-adjust-cursor))))))
 
 (evil-define-motion evil-next-line (count)
   "Move the cursor COUNT lines down."

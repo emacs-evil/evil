@@ -182,14 +182,6 @@ upon reaching the beginning or end of the current line.
 (add-to-list 'debug-ignored-errors "^Beginning of line$")
 (add-to-list 'debug-ignored-errors "^End of line$")
 
-(defmacro evil-narrow-to-line-if (cond &rest body)
-  "Narrow BODY to the current line if COND yields non-nil."
-  (declare (indent 1)
-           (debug t))
-  `(if ,cond
-       (evil-narrow-to-line ,@body)
-     ,@body))
-
 (defun evil-eobp (&optional pos)
   "Whether point is at end-of-buffer with regard to end-of-line."
   (save-excursion

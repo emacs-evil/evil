@@ -1031,26 +1031,33 @@ See also `evil-goto-min'."
 ;; further, those motions move point to the beginning resp. the end of
 ;; the line (we never want point to leave its column). The code here
 ;; comes from simple.el, and I hope it will work in future.
-(defun evil-line-move (count)
-  "A wrapper for line motions which conserves the column."
-  (evil-signal-without-movement
-    (setq this-command (if (>= count 0)
-                           #'next-line
-                         #'previous-line))
-    (let ((opoint (point)))
-      (condition-case err
-          (with-no-warnings
-            (funcall this-command (abs count)))
-        ((beginning-of-buffer end-of-buffer)
-         (let ((col (or goal-column
-                        (if (consp temporary-goal-column)
-                            (car temporary-goal-column)
-                          temporary-goal-column))))
-           (if line-move-visual
-               (vertical-motion (cons col 0))
-             (line-move-finish col opoint (< count 0)))
-           ;; Maybe we should just `ding'?
-           (signal (car err) (cdr err))))))))
+(defun evil-line-move (count &optional noerror)
+  "A wrapper for line motions which conserves the column.
+Signals an error at buffer boundaries unless NOERROR is non-nil."
+  (cond
+   (noerror
+    (condition-case nil
+        (evil-line-move count)
+      (error nil)))
+   (t
+    (evil-signal-without-movement
+      (setq this-command (if (>= count 0)
+                             #'next-line
+                           #'previous-line))
+      (let ((opoint (point)))
+        (condition-case err
+            (with-no-warnings
+              (funcall this-command (abs count)))
+          ((beginning-of-buffer end-of-buffer)
+           (let ((col (or goal-column
+                          (if (consp temporary-goal-column)
+                              (car temporary-goal-column)
+                            temporary-goal-column))))
+             (if line-move-visual
+                 (vertical-motion (cons col 0))
+               (line-move-finish col opoint (< count 0)))
+             ;; Maybe we should just `ding'?
+             (signal (car err) (cdr err))))))))))
 
 (defun evil-move-chars (chars count)
   "Move point to the end or beginning of a sequence of CHARS.
