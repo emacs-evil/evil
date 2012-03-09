@@ -830,12 +830,29 @@ See also `evil-save-goal-column'."
        ,@body
        (move-to-column col))))
 
+(defun evil-narrow (beg end)
+  "Restrict the buffer to BEG and END.
+BEG or END may be nil, specifying a one-sided restriction including
+`point-min' or `point-max'. See also `evil-with-restriction.'"
+  (setq beg (or (evil-normalize-position beg) (point-min)))
+  (setq end (or (evil-normalize-position end) (point-max)))
+  (narrow-to-region beg end))
+
+(defmacro evil-with-restriction (beg end &rest body)
+  "Execute BODY with the buffer narrowed to BEG and END.
+BEG or END may be nil as passed to `evil-narrow'; this creates
+a one-sided restriction."
+  (declare (indent 2)
+           (debug t))
+  `(save-restriction
+     (evil-narrow ,beg ,end)
+     ,@body))
+
 (defmacro evil-narrow-to-field (&rest body)
   "Narrow to the current field."
   (declare (indent defun)
            (debug t))
-  `(save-restriction
-     (narrow-to-region (field-beginning) (field-end))
+  `(evil-with-restriction (field-beginning) (field-end)
      ,@body))
 
 (defun evil-move-beginning-of-line (&optional arg)
@@ -2169,16 +2186,15 @@ If one is unspecified, the other is used with a negative argument."
 See `evil-inner-object-range' for more details."
   (let ((range (evil-inner-object-range count forward backward type)))
     (save-excursion
-      (save-restriction
-        (if newlines
-            (evil-add-whitespace-to-range range count)
-          (narrow-to-region
-           (save-excursion
-             (goto-char (evil-range-beginning range))
-             (line-beginning-position))
-           (save-excursion
-             (goto-char (evil-range-end range))
-             (line-end-position)))
+      (if newlines
+          (evil-add-whitespace-to-range range count)
+        (evil-with-restriction
+            (save-excursion
+              (goto-char (evil-range-beginning range))
+              (line-beginning-position))
+            (save-excursion
+              (goto-char (evil-range-end range))
+              (line-end-position))
           (evil-add-whitespace-to-range range count))))))
 
 (defun evil-paren-range (count open close &optional exclusive)
@@ -2573,15 +2589,15 @@ right and center justification or the column at which the lines
 should be left-aligned for left justification."
   (let ((fill-column position)
         adaptive-fill-mode fill-prefix)
-    (save-restriction
-      (narrow-to-region (save-excursion
-                          (goto-char beg)
-                          (line-beginning-position))
-                        (save-excursion
-                          (goto-char end)
-                          (if (bolp)
-                              (line-end-position 0)
-                            (line-end-position))))
+    (evil-with-restriction
+        (save-excursion
+          (goto-char beg)
+          (line-beginning-position))
+        (save-excursion
+          (goto-char end)
+          (if (bolp)
+              (line-end-position 0)
+            (line-end-position)))
       (goto-char (point-min))
       (while (progn
                (if (eq justify 'left)
