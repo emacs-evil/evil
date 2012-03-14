@@ -2072,7 +2072,11 @@ If no FILE is specified, reload the current buffer from disk."
   :repeat nil
   (let (message-truncate-lines message-log-max)
     (display-message-or-buffer
-     (mapconcat #'buffer-name (buffer-list) "\n")
+     (mapconcat 'identity
+                (sort
+                 (mapcar #'buffer-name (buffer-list))
+                 'string<)
+                "\n")
      "*Buffers*")))
 
 (evil-define-command evil-buffer (buffer)
