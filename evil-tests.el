@@ -867,7 +867,19 @@ Below some empty line"
     ";; This buffer is for notes you don't want to save,
 abc
 de[f]
-;; and for Lisp evaluation."))
+;; and for Lisp evaluation.")
+  (ert-info ("Open empty line")
+    (evil-test-buffer
+      "(let (var)\n  [t]est)\n"
+      (emacs-lisp-mode)
+      ("O" [escape])
+      "(let (var)\n[\n]  test)\n"))
+  (ert-info ("Open non-empty line")
+    (evil-test-buffer
+      "(let (var)\n  [t]est)\n"
+      (emacs-lisp-mode)
+      ("Odo-it" [escape])
+      "(let (var)\n  do-i[t]\n  test)\n")))
 
 (ert-deftest evil-test-open-below ()
   "Test `evil-open-below'"
@@ -879,7 +891,19 @@ de[f]
     ";; This buffer is for notes you don't want to save,
 abc
 de[f]
-;; and for Lisp evaluation."))
+;; and for Lisp evaluation.")
+  (ert-info ("Open empty line")
+    (evil-test-buffer
+      "[(]let (var)\n  test)\n"
+      (emacs-lisp-mode)
+      ("o" [escape])
+      "(let (var)\n[\n]  test)\n"))
+  (ert-info ("Open non-empty line")
+    (evil-test-buffer
+      "[(]let (var)\n  test)\n"
+      (emacs-lisp-mode)
+      ("odo-it" [escape])
+      "(let (var)\n  do-i[t]\n  test)\n")))
 
 (ert-deftest evil-test-open-below-folded ()
   "Test `evil-open-below' on folded lines"

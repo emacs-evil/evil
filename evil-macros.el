@@ -157,8 +157,7 @@ not be performed.
                 (not (evil-visual-state-p))
                 (not (evil-operator-state-p)))
        (setq end (max beg (1- end))))
-     (save-restriction
-       (narrow-to-region beg end)
+     (evil-with-restriction beg end
        (evil-signal-without-movement
          (condition-case nil
              (progn ,@body)
@@ -489,7 +488,6 @@ if COUNT is positive, and to the left of it if negative.
                (evil-operator-range-type
                 (evil-get-command-property ',operator :type))
                (orig (point))
-               (state evil-state)
                evil-operator-range-beginning
                evil-operator-range-end
                evil-inhibit-operator)
@@ -501,12 +499,10 @@ if COUNT is positive, and to the left of it if negative.
             (if ,visual
                 (when (evil-visual-state-p)
                   (evil-visual-expand-region))
-              (when (evil-visual-state-p)
-                (evil-exit-visual-state))
-              (when (region-active-p)
-                (evil-active-region -1)))
+              (when (or (evil-visual-state-p) (region-active-p))
+                (setq deactivate-mark t)))
             (cond
-             ((evil-visual-state-p state)
+             ((evil-visual-state-p)
               (evil-visual-rotate 'upper-left
                                   evil-operator-range-beginning
                                   evil-operator-range-end
@@ -768,7 +764,7 @@ via KEY-VALUE pairs. BODY should evaluate to a list of values.
 \\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
       (1 font-lock-keyword-face)
       (2 font-lock-function-name-face nil t))
-     ("(\\(evil-\\(?:delay\\|narrow\\|save\\|with\\(?:out\\)?\\)\
+     ("(\\(evil-\\(?:delay\\|narrow\\|signal\\|save\\|with\\(?:out\\)?\\)\
 \\(?:-[-[:word:]]+\\)?\\)\\>\[ \f\t\n\r\v]+"
       1 font-lock-keyword-face)
      ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>[ \f\t\n\r\v]+"

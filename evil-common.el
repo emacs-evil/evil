@@ -830,12 +830,29 @@ See also `evil-save-goal-column'."
        ,@body
        (move-to-column col))))
 
+(defun evil-narrow (beg end)
+  "Restrict the buffer to BEG and END.
+BEG or END may be nil, specifying a one-sided restriction including
+`point-min' or `point-max'. See also `evil-with-restriction.'"
+  (setq beg (or (evil-normalize-position beg) (point-min)))
+  (setq end (or (evil-normalize-position end) (point-max)))
+  (narrow-to-region beg end))
+
+(defmacro evil-with-restriction (beg end &rest body)
+  "Execute BODY with the buffer narrowed to BEG and END.
+BEG or END may be nil as passed to `evil-narrow'; this creates
+a one-sided restriction."
+  (declare (indent 2)
+           (debug t))
+  `(save-restriction
+     (evil-narrow ,beg ,end)
+     ,@body))
+
 (defmacro evil-narrow-to-field (&rest body)
   "Narrow to the current field."
   (declare (indent defun)
            (debug t))
-  `(save-restriction
-     (narrow-to-region (field-beginning) (field-end))
+  `(evil-with-restriction (field-beginning) (field-end)
      ,@body))
 
 (defun evil-move-beginning-of-line (&optional arg)
@@ -857,15 +874,19 @@ Like `move-end-of-line', but retains the goal column."
 If at the end of the buffer, move point to the previous line.
 This behavior is contingent on the variable `evil-move-cursor-back';
 use the FORCE parameter to override it."
-  (evil-narrow-to-field
-    (cond
-     ((and (eobp) (bolp))
-      (forward-line -1)
-      (back-to-indentation))
-     ((= (point)
-         (save-excursion
-           (evil-move-end-of-line)
-           (point)))
+  (cond
+   ((and (eobp) (bolp))
+    (let (line-move-visual)
+      (evil-with-restriction (field-beginning) nil
+        (forward-line -1)
+        (back-to-indentation)
+        (setq temporary-goal-column (current-column)))))
+   ((and (eolp)
+         (= (point)
+            (save-excursion
+              (evil-move-end-of-line)
+              (point))))
+    (evil-with-restriction (field-beginning) nil
       (evil-move-cursor-back force)))))
 
 (defmacro evil-with-adjust-cursor (&rest body)
@@ -888,7 +909,8 @@ argument. Honors field boundaries, i.e., constrains the movement
 to the current field as recognized by `line-beginning-position'."
   (when (or evil-move-cursor-back force)
     (unless (= (point) (line-beginning-position))
-      (backward-char))))
+      (backward-char)
+      (setq temporary-goal-column (current-column)))))
 
 (defun evil-line-position (line &optional column)
   "Return the position of LINE.
@@ -2182,16 +2204,15 @@ If one is unspecified, the other is used with a negative argument."
 See `evil-inner-object-range' for more details."
   (let ((range (evil-inner-object-range count forward backward type)))
     (save-excursion
-      (save-restriction
-        (if newlines
-            (evil-add-whitespace-to-range range count)
-          (narrow-to-region
-           (save-excursion
-             (goto-char (evil-range-beginning range))
-             (line-beginning-position))
-           (save-excursion
-             (goto-char (evil-range-end range))
-             (line-end-position)))
+      (if newlines
+          (evil-add-whitespace-to-range range count)
+        (evil-with-restriction
+            (save-excursion
+              (goto-char (evil-range-beginning range))
+              (line-beginning-position))
+            (save-excursion
+              (goto-char (evil-range-end range))
+              (line-end-position))
           (evil-add-whitespace-to-range range count))))))
 
 (defun evil-paren-range (count open close &optional exclusive)
@@ -2586,15 +2607,15 @@ right and center justification or the column at which the lines
 should be left-aligned for left justification."
   (let ((fill-column position)
         adaptive-fill-mode fill-prefix)
-    (save-restriction
-      (narrow-to-region (save-excursion
-                          (goto-char beg)
-                          (line-beginning-position))
-                        (save-excursion
-                          (goto-char end)
-                          (if (bolp)
-                              (line-end-position 0)
-                            (line-end-position))))
+    (evil-with-restriction
+        (save-excursion
+          (goto-char beg)
+          (line-beginning-position))
+        (save-excursion
+          (goto-char end)
+          (if (bolp)
+              (line-end-position 0)
+            (line-end-position)))
       (goto-char (point-min))
       (while (progn
                (if (eq justify 'left)
@@ -2606,6 +2627,25 @@ should be left-aligned for left justification."
                (and (zerop (forward-line)) (bolp))))
       (goto-char (point-min))
       (back-to-indentation))))
+
+;;; Whitespace cleanup
+
+(defun evil-maybe-remove-spaces ()
+  "Remove space from newly opened empty line.
+This function should be called from `post-command-hook' after
+`evil-open-above' or `evil-open-below'. If the last command
+finished insert state and if the current line consists of
+whitespaces only, then those spaces have been inserted because of
+the indentation. In this case those spaces are removed leaving a
+completely empty line."
+  (unless (memq this-command '(evil-open-above evil-open-below))
+    (remove-hook 'post-command-hook 'evil-maybe-remove-spaces)
+    (when (and (not (evil-insert-state-p))
+               (save-excursion
+                 (beginning-of-line)
+                 (looking-at "^\\s-*$")))
+      (delete-region (line-beginning-position)
+                     (line-end-position)))))
 
 (provide 'evil-common)
 

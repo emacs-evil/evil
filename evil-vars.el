@@ -11,14 +11,15 @@ KEY must be readable by `read-kbd-macro'."
                     "C-z")))
         (key (read-kbd-macro key)))
     (with-no-warnings
-      (when (and (boundp 'evil-motion-state-map)
-                 (keymapp evil-motion-state-map))
-        (define-key evil-motion-state-map key 'evil-emacs-state)
-        (define-key evil-motion-state-map old-key nil))
-      (when (and (boundp 'evil-emacs-state-map)
-                 (keymapp evil-emacs-state-map))
-        (define-key evil-emacs-state-map key 'evil-exit-emacs-state)
-        (define-key evil-emacs-state-map old-key nil)))))
+      (dolist (pair '((evil-motion-state-map evil-emacs-state)
+                      (evil-insert-state-map evil-emacs-state)
+                      (evil-emacs-state-map evil-exit-emacs-state)))
+        (when (boundp (car pair))
+          (let ((map (symbol-value (car pair)))
+                (fun (cadr pair)))
+            (when (keymapp map)
+              (define-key map key fun)
+              (define-key map old-key nil))))))))
 
 ;;; Customization group
 

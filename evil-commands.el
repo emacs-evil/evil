@@ -1200,6 +1200,11 @@ but doesn't insert or remove any spaces."
     (indent-region beg end))
   (back-to-indentation))
 
+(evil-define-operator evil-indent-line (beg end)
+  "Indent the line."
+  :motion evil-line
+  (evil-indent beg end))
+
 (evil-define-operator evil-shift-left (beg end)
   "Shift text from BEG to END to the left.
 The text is shifted to the nearest multiple of `evil-shift-width'
@@ -1665,7 +1670,8 @@ The insertion will be repeated COUNT times."
         evil-insert-vcount nil)
   (when evil-auto-indent
     (indent-according-to-mode))
-  (evil-insert-state 1))
+  (evil-insert-state 1)
+  (add-hook 'post-command-hook #'evil-maybe-remove-spaces))
 
 (defun evil-open-below (count)
   "Insert a new line below point and switch to Insert state.
@@ -1677,7 +1683,8 @@ The insertion will be repeated COUNT times."
         evil-insert-vcount nil)
   (when evil-auto-indent
     (indent-according-to-mode))
-  (evil-insert-state 1))
+  (evil-insert-state 1)
+  (add-hook 'post-command-hook #'evil-maybe-remove-spaces))
 
 (defun evil-insert-line (count &optional vcount)
   "Switch to Insert state just before the first non-blank character
@@ -2008,15 +2015,15 @@ it is overwritten without confirmation."
   (interactive "<R><f><!>")
   (when (zerop (length filename))
     (setq filename (buffer-file-name)))
-  (when (zerop (length filename))
+  (cond
+   ((zerop (length filename))
     (error "Please specify a file name for the buffer"))
-  (if (and beg end)
-      (write-region beg end filename nil nil nil (not bang))
-    (when bang
-      (set-buffer-modified-p t))
-    (if (string= filename (or (buffer-file-name) ""))
-        (save-buffer)
-      (write-file filename (not bang)))))
+   ((and beg end)
+    (write-region beg end filename nil nil nil (not bang)))
+   ((and (not bang) (string= filename (or (buffer-file-name) "")))
+    (save-buffer))
+   (t
+    (write-file filename (not bang)))))
 
 (evil-define-command evil-write-all (bang)
   "Saves all buffers."
@@ -2032,11 +2039,7 @@ If no FILE is given, the current file name is used."
   :repeat nil
   :move-point nil
   (interactive "<f><!>")
-  (unless file
-    (setq file (buffer-file-name))
-    (unless file
-      (error "Please specify a file name for the buffer")))
-  (write-file file (not bang)))
+  (evil-write nil nil nil file bang))
 
 (evil-define-command evil-edit (file &optional bang)
   "Open FILE.
@@ -2081,7 +2084,8 @@ If no FILE is specified, reload the current buffer from disk."
   (interactive "<b>")
   (if buffer
       (when (or (get-buffer buffer)
-                (y-or-n-p (format "No buffer with name \"%s\" exists. Create new buffer? " buffer)))
+                (y-or-n-p (format "No buffer with name \"%s\" exists. \
+Create new buffer? " buffer)))
         (switch-to-buffer buffer))
     (switch-to-buffer (other-buffer))))
 
@@ -2742,10 +2746,20 @@ editing a certain FILE."
              (error nil))
            success)))
 
-(evil-define-command evil-window-lru ()
-  "Move the cursor to the previous (last accessed) window."
+(evil-define-command evil-window-mru ()
+  "Move the cursor to the previous (last accessed) buffer in another window.
+More precisely, it selectes the most recently used buffer that is
+shown in some other window, preferably of the current frame, and
+is different from the current one."
   :repeat nil
-  (select-window (get-lru-window)))
+  (catch 'done
+    (dolist (buf (buffer-list (selected-frame)))
+      (let ((win (get-buffer-window buf)))
+        (when (and (not (eq buf (current-buffer)))
+                   win
+                   (not (eq win (selected-window))))
+          (select-window win)
+          (throw 'done nil))))))
 
 (evil-define-command evil-window-next (count)
   "Move the cursor to the next window in the cyclic order.
