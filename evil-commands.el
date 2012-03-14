@@ -1667,7 +1667,8 @@ The insertion will be repeated COUNT times."
         evil-insert-vcount nil)
   (when evil-auto-indent
     (indent-according-to-mode))
-  (evil-insert-state 1))
+  (evil-insert-state 1)
+  (add-hook 'post-command-hook #'evil-maybe-remove-spaces))
 
 (defun evil-open-below (count)
   "Insert a new line below point and switch to Insert state.
@@ -1679,7 +1680,8 @@ The insertion will be repeated COUNT times."
         evil-insert-vcount nil)
   (when evil-auto-indent
     (indent-according-to-mode))
-  (evil-insert-state 1))
+  (evil-insert-state 1)
+  (add-hook 'post-command-hook #'evil-maybe-remove-spaces))
 
 (defun evil-insert-line (count &optional vcount)
   "Switch to Insert state just before the first non-blank character
