@@ -882,6 +882,7 @@ use the FORCE parameter to override it."
         (back-to-indentation)
         (setq temporary-goal-column (current-column)))))
    ((and (eolp)
+         (not (bolp))
          (= (point)
             (save-excursion
               (evil-move-end-of-line)
