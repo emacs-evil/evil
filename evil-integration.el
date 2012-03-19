@@ -126,7 +126,7 @@
       (setq pos
             (catch 'end
               (dotimes (var (1+ (* 2 evil-show-paren-range)))
-                (if (evenp var)
+                (if (zerop (mod var 2))
                     (setq pos (+ pos var))
                   (setq pos (- pos var)))
                 (setq syntax (syntax-class (syntax-after pos)))
