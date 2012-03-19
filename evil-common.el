@@ -876,19 +876,18 @@ This behavior is contingent on the variable `evil-move-cursor-back';
 use the FORCE parameter to override it."
   (cond
    ((and (eobp) (bolp))
-    (let (line-move-visual)
-      (evil-with-restriction (field-beginning) nil
-        (forward-line -1)
-        (back-to-indentation)
-        (setq temporary-goal-column (current-column)))))
+    (evil-with-restriction
+        (field-beginning nil nil (line-beginning-position -1)) nil
+      (forward-line -1)
+      (back-to-indentation)
+      (setq temporary-goal-column (current-column))))
    ((and (eolp)
          (not (bolp))
          (= (point)
             (save-excursion
               (evil-move-end-of-line)
               (point))))
-    (evil-with-restriction (field-beginning) nil
-      (evil-move-cursor-back force)))))
+    (evil-move-cursor-back force))))
 
 (defun evil-move-cursor-back (&optional force)
   "Move point one character back within the current line.
@@ -897,8 +896,7 @@ argument. Honors field boundaries, i.e., constrains the movement
 to the current field as recognized by `line-beginning-position'."
   (when (or evil-move-cursor-back force)
     (unless (= (point) (line-beginning-position))
-      (backward-char)
-      (setq temporary-goal-column (current-column)))))
+      (backward-char))))
 
 (defun evil-line-position (line &optional column)
   "Return the position of LINE.
