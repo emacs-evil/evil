@@ -895,7 +895,11 @@ Contingent on the variable `evil-move-cursor-back' or the FORCE
 argument. Honors field boundaries, i.e., constrains the movement
 to the current field as recognized by `line-beginning-position'."
   (when (or evil-move-cursor-back force)
-    (unless (= (point) (line-beginning-position))
+    (unless (or (= (point) (line-beginning-position))
+                (and visual-line-mode
+                     (= (point) (save-excursion
+                                  (beginning-of-visual-line)
+                                  (point)))))
       (backward-char))))
 
 (defun evil-line-position (line &optional column)
