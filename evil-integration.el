@@ -162,6 +162,15 @@
   "o" 'speedbar-toggle-line-expansion
   (kbd "RET") 'speedbar-edit-line)
 
+;; Ibuffer
+(eval-after-load 'ibuffer
+  '(progn
+     (evil-make-overriding-map ibuffer-mode-map 'normal t)
+     (evil-define-key 'normal ibuffer-mode-map
+       "j" 'evil-next-line
+       "k" 'evil-previous-line
+       "RET" 'ibuffer-visit-buffer)))
+
 ;;; Undo tree visualizer
 
 (defadvice undo-tree-visualize (after evil activate)
