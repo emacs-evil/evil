@@ -146,39 +146,42 @@ not be performed.
            (evil-goto-max ,@moves))))))
 
 (defmacro evil-narrow-to-line (&rest body)
-  "Narrow BODY to the current line."
+  "Narrow BODY to the current line.
+BODY will signal the errors \"Beginning of line\" or \"End of line\"
+upon reaching the beginning or end of the current line.
+
+\(fn [[KEY VAL]...] BODY...)"
   (declare (indent defun)
            (debug t))
   `(let* ((range (evil-expand (point) (point) 'line))
           (beg (evil-range-beginning range))
-          (end (evil-range-end range)))
+          (end (evil-range-end range))
+          (min (point-min))
+          (max (point-max)))
      (when (save-excursion (goto-char end) (bolp))
        (setq end (max beg (1- end))))
+     ;; don't include the newline in Normal state
      (when (and evil-move-cursor-back
                 (not (evil-visual-state-p))
                 (not (evil-operator-state-p)))
        (setq end (max beg (1- end))))
      (evil-with-restriction beg end
        (evil-signal-without-movement
-         (condition-case nil
+         (condition-case err
              (progn ,@body)
            (beginning-of-buffer
-            (error "Beginning of line"))
+            (if (= beg min)
+                (signal (car err) (cdr err))
+              (error "Beginning of line")))
            (end-of-buffer
-            (error "End of line")))))))
+            (if (= end max)
+                (signal (car err) (cdr err))
+              (error "End of line"))))))))
 
 ;; we don't want line boundaries to trigger the debugger
 ;; when `debug-on-error' is t
 (add-to-list 'debug-ignored-errors "^Beginning of line$")
 (add-to-list 'debug-ignored-errors "^End of line$")
-
-(defmacro evil-narrow-to-line-if (cond &rest body)
-  "Narrow BODY to the current line if COND yields non-nil."
-  (declare (indent 1)
-           (debug t))
-  `(if ,cond
-       (evil-narrow-to-line ,@body)
-     ,@body))
 
 (defun evil-eobp (&optional pos)
   "Whether point is at end-of-buffer with regard to end-of-line."
