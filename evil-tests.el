@@ -569,6 +569,18 @@ the end of the execution of BODY."
     (evil-test-change-state 'replace)
     (evil-test-change-state 'normal)))
 
+(ert-deftest evil-test-change-to-previous-state ()
+  "Change to some state and back."
+  :tags '(evil state)
+  (with-temp-buffer
+    (evil-test-change-state 'normal)
+    (evil-test-change-state 'visual)
+    (evil-test-change-state 'emacs)
+    (evil-change-to-previous-state)
+    (should (eq evil-state 'visual))
+    (evil-change-to-previous-state)
+    (should (eq evil-state 'normal))))
+
 (ert-deftest evil-test-enter-normal-state-disabled ()
   "Enter Normal state even if `evil-local-mode' is disabled"
   :tags '(evil state)

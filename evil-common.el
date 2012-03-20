@@ -876,18 +876,18 @@ This behavior is contingent on the variable `evil-move-cursor-back';
 use the FORCE parameter to override it."
   (cond
    ((and (eobp) (bolp))
-    (let (line-move-visual)
-      (evil-with-restriction (field-beginning) nil
-        (forward-line -1)
-        (back-to-indentation)
-        (setq temporary-goal-column (current-column)))))
+    (evil-with-restriction
+        (field-beginning nil nil (line-beginning-position -1)) nil
+      (forward-line -1)
+      (back-to-indentation)
+      (setq temporary-goal-column (current-column))))
    ((and (eolp)
+         (not (bolp))
          (= (point)
             (save-excursion
               (evil-move-end-of-line)
               (point))))
-    (evil-with-restriction (field-beginning) nil
-      (evil-move-cursor-back force)))))
+    (evil-move-cursor-back force))))
 
 (defmacro evil-with-adjust-cursor (&rest body)
   "Executes the (motion) BODY while excluding a final buffer newline.
@@ -909,8 +909,7 @@ argument. Honors field boundaries, i.e., constrains the movement
 to the current field as recognized by `line-beginning-position'."
   (when (or evil-move-cursor-back force)
     (unless (= (point) (line-beginning-position))
-      (backward-char)
-      (setq temporary-goal-column (current-column)))))
+      (backward-char))))
 
 (defun evil-line-position (line &optional column)
   "Return the position of LINE.
@@ -2627,25 +2626,6 @@ should be left-aligned for left justification."
                (and (zerop (forward-line)) (bolp))))
       (goto-char (point-min))
       (back-to-indentation))))
-
-;;; Whitespace cleanup
-
-(defun evil-maybe-remove-spaces ()
-  "Remove space from newly opened empty line.
-This function should be called from `post-command-hook' after
-`evil-open-above' or `evil-open-below'. If the last command
-finished insert state and if the current line consists of
-whitespaces only, then those spaces have been inserted because of
-the indentation. In this case those spaces are removed leaving a
-completely empty line."
-  (unless (memq this-command '(evil-open-above evil-open-below))
-    (remove-hook 'post-command-hook 'evil-maybe-remove-spaces)
-    (when (and (not (evil-insert-state-p))
-               (save-excursion
-                 (beginning-of-line)
-                 (looking-at "^\\s-*$")))
-      (delete-region (line-beginning-position)
-                     (line-end-position)))))
 
 (provide 'evil-common)
 

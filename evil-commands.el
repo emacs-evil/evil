@@ -1660,6 +1660,23 @@ the lines."
     (goto-char (evil-get-marker ?^)))
   (evil-insert count))
 
+(defun evil-maybe-remove-spaces ()
+  "Remove space from newly opened empty line.
+This function should be called from `post-command-hook' after
+`evil-open-above' or `evil-open-below'. If the last command
+finished insert state and if the current line consists of
+whitespaces only, then those spaces have been inserted because of
+the indentation. In this case those spaces are removed leaving a
+completely empty line."
+  (unless (memq this-command '(evil-open-above evil-open-below))
+    (remove-hook 'post-command-hook 'evil-maybe-remove-spaces)
+    (when (and (not (evil-insert-state-p))
+               (save-excursion
+                 (beginning-of-line)
+                 (looking-at "^\\s-*$")))
+      (delete-region (line-beginning-position)
+                     (line-end-position)))))
+
 (defun evil-open-above (count)
   "Insert a new line above point and switch to Insert state.
 The insertion will be repeated COUNT times."
@@ -2075,7 +2092,11 @@ If no FILE is specified, reload the current buffer from disk."
   :repeat nil
   (let (message-truncate-lines message-log-max)
     (display-message-or-buffer
-     (mapconcat #'buffer-name (buffer-list) "\n")
+     (mapconcat 'identity
+                (sort
+                 (mapcar #'buffer-name (buffer-list))
+                 'string<)
+                "\n")
      "*Buffers*")))
 
 (evil-define-command evil-buffer (buffer)
