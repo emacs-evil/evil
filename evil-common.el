@@ -892,13 +892,17 @@ use the FORCE parameter to override it."
 (defmacro evil-with-adjust-cursor (&rest body)
   "Executes the (motion) BODY while excluding a final buffer newline.
 If the buffer ends in a newline, the buffer is narrowed to (1-
-point-max) during the execution of body."
+point-max) during the execution of body. If (point) is currently
+at eob, then no narrowing takes place because this would
+invalidate the current position."
   (declare (indent defun)
            (debug t))
   `(save-restriction
-     (when (save-excursion
-             (goto-char (point-max))
-             (bolp))
+     (when (and (not (evil-operator-state-p))
+                (not (eobp))
+                (save-excursion
+                  (goto-char (point-max))
+                  (bolp)))
        (narrow-to-region (point-min) (1- (point-max))))
      ,@body))
 
