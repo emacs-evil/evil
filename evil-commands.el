@@ -30,9 +30,15 @@ of the line or the buffer; just return nil."
         (evil-forward-char count crosslines nil)
       (error nil)))
    ((not crosslines)
-    ;; restrict movement to the current line
-    (evil-narrow-to-line
-      (evil-forward-char count t noerror)))
+    ;; for efficiency, narrow the buffer to the projected
+    ;; movement before determining the current line
+    (evil-with-restriction
+        (point)
+        (save-excursion
+          (evil-forward-char (1+ (or count 1)) t t)
+          (point))
+      (evil-narrow-to-line
+        (evil-forward-char count t noerror))))
    (t
     (evil-motion-loop (nil (or count 1))
       (forward-char)
@@ -56,8 +62,13 @@ of the line or the buffer; just return nil."
       (error nil)))
    ((not crosslines)
     ;; restrict movement to the current line
-    (evil-narrow-to-line
-      (evil-backward-char count t noerror)))
+    (evil-with-restriction
+        (save-excursion
+          (evil-backward-char (1+ (or count 1)) t t)
+          (point))
+        (1+ (point))
+      (evil-narrow-to-line
+        (evil-backward-char count t noerror))))
    (t
     (evil-motion-loop (nil (or count 1))
       (backward-char)
