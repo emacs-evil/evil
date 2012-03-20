@@ -170,6 +170,7 @@ If STATE is nil, disable all states."
            (debug t))
   `(let* ((evil-state evil-state)
           (evil-previous-state evil-previous-state)
+          (evil-previous-state-alist (copy-tree evil-previous-state-alist))
           (evil-next-state evil-next-state)
           (old-state evil-state)
           (inhibit-quit t))
@@ -259,8 +260,14 @@ This is the state the buffer came up in."
   :repeat abort
   :suppress-operator t
   (with-current-buffer (or buffer (current-buffer))
-    (evil-change-state (or evil-previous-state evil-default-state 'normal)
-                       message)))
+    (let ((prev-state evil-previous-state)
+          (prev-prev-state (cdr-safe (assoc evil-previous-state
+                                            evil-previous-state-alist))))
+      (evil-change-state nil)
+      (when prev-prev-state
+        (setq evil-previous-state prev-prev-state))
+      (evil-change-state (or prev-state evil-default-state 'normal)
+                         message))))
 
 ;; When a buffer is created in a low-level way, it is invisible to
 ;; Evil (as well as other globalized minor modes) because no hooks are
@@ -970,6 +977,8 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                  input-method-inactivate-hook)
              (evil-change-state nil)
              (setq evil-state ',state)
+             (evil-add-to-alist 'evil-previous-state-alist
+                                ',state evil-previous-state)
              (let ((evil-state ',state))
                (evil-normalize-keymaps)
                (if ,intercept-esc

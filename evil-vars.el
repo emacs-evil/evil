@@ -657,6 +657,9 @@ or call the state function (e.g., `evil-normal-state').")
 (evil-define-local-var evil-next-state nil
   "The Evil state being switched to.")
 
+(evil-define-local-var evil-previous-state-alist nil
+  "For Each evil state the Evil state being switched from.")
+
 (evil-define-local-var evil-previous-state nil
   "The Evil state being switched from.")
 
