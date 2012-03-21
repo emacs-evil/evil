@@ -2055,8 +2055,10 @@ See also `evil-open-fold'."
 
 (evil-define-operator evil-write (beg end type filename &optional bang)
   "Save the current buffer, from BEG to END, to FILENAME.
-If the file already exists and the BANG argument is non-nil,
-it is overwritten without confirmation."
+The current buffer's filename is not changed unless it has no
+associated file and no region is specified.  If the file already
+exists and the BANG argument is non-nil, it is overwritten
+without confirmation."
   :motion nil
   :move-point nil
   :type line
@@ -2067,12 +2069,17 @@ it is overwritten without confirmation."
   (cond
    ((zerop (length filename))
     (error "Please specify a file name for the buffer"))
+   ;; with region always save to file without reseting modified flag
    ((and beg end)
     (write-region beg end filename nil nil nil (not bang)))
-   ((and (not bang) (string= filename (or (buffer-file-name) "")))
-    (save-buffer))
+   ;; save current buffer to its file
+   ((string= filename (or (buffer-file-name) ""))
+    (if (not bang) (save-buffer) (write-file filename)))
+   ;; save to other file
    (t
-    (write-file filename (not bang)))))
+    (write-region nil nil filename
+                  nil (not (buffer-file-name)) nil
+                  (not bang)))))
 
 (evil-define-command evil-write-all (bang)
   "Saves all buffers."
@@ -2081,14 +2088,16 @@ it is overwritten without confirmation."
   (interactive "<!>")
   (save-some-buffers bang))
 
-(evil-define-command evil-save (file &optional bang)
-  "Save the current buffer to FILE.
-Changes the file name of the current buffer to this name.
-If no FILE is given, the current file name is used."
+(evil-define-command evil-save (filename &optional bang)
+  "Save the current buffer to FILENAME.
+Changes the file name of the current buffer to FILENAME.  If no
+FILENAME is given, the current file name is used."
   :repeat nil
   :move-point nil
   (interactive "<f><!>")
-  (evil-write nil nil nil file bang))
+  (when (zerop (length filename))
+    (setq filename (buffer-file-name)))
+  (write-file filename (not bang)))
 
 (evil-define-command evil-edit (file &optional bang)
   "Open FILE.
