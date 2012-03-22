@@ -10,16 +10,16 @@
 
 ;; Movement commands, or motions, are defined with the macro
 ;; `evil-define-motion'. A motion is a command with an optional
-;; argument COUNT (accessed with the special interactive code "<c>").
+;; argument COUNT (interactively accessed by the code "<c>").
 ;; It may specify the :type command property (e.g., :type line),
 ;; which determines how it is handled by an operator command.
 ;; Furthermore, the command must have the command properties
 ;; :keep-visual t and :repeat motion; these are automatically
-;; handled by the `evil-define-motion' macro.
+;; set by the `evil-define-motion' macro.
 
 (evil-define-motion evil-forward-char (count &optional crosslines noerror)
   "Move cursor to the right by COUNT characters.
-Movement is restricted to current line unless CROSSLINES is non-nil.
+Movement is restricted to the current line unless CROSSLINES is non-nil.
 If NOERROR is non-nil, don't signal an error upon reaching the end
 of the line or the buffer; just return nil."
   :type exclusive
@@ -50,7 +50,7 @@ of the line or the buffer; just return nil."
 
 (evil-define-motion evil-backward-char (count &optional crosslines noerror)
   "Move cursor to the left by COUNT characters.
-Movement is restricted to current line unless CROSSLINES is non-nil.
+Movement is restricted to the current line unless CROSSLINES is non-nil.
 If NOERROR is non-nil, don't signal an error upon reaching the beginning
 of the line or the buffer; just return nil."
   :type exclusive
