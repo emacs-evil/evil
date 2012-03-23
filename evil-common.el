@@ -903,7 +903,7 @@ invalidate the current position."
                 (save-excursion
                   (goto-char (point-max))
                   (bolp)))
-       (narrow-to-region (point-min) (1- (point-max))))
+       (evil-narrow nil (1- (point-max))))
      ,@body))
 
 (defun evil-move-cursor-back (&optional force)
