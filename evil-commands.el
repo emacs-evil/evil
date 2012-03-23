@@ -1046,7 +1046,8 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
       (delete-rectangle beg end)
     (delete-region beg end))
   ;; place cursor on beginning of line
-  (when (eq type 'line)
+  (when (and (evil-called-interactively-p)
+             (eq type 'line))
     (evil-first-non-blank)))
 
 (evil-define-operator evil-delete-line (beg end type register yank-handler)
