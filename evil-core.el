@@ -81,6 +81,7 @@
   "Minor mode for setting up Evil in a single buffer."
   :init-value nil
   (cond
+   (load-in-progress) ; don't enable Evil in loading buffers
    (evil-local-mode
     (setq emulation-mode-map-alists
           (evil-concat-lists '(evil-mode-map-alist)
