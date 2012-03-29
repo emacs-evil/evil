@@ -109,6 +109,10 @@
   '(defadvice elp-results (after evil activate)
      (evil-motion-state)))
 
+;;; ERT
+
+(evil-add-hjkl-bindings ert-results-mode-map 'motion)
+
 ;;; Info
 
 (evil-add-hjkl-bindings Info-mode-map 'motion

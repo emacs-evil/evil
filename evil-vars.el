@@ -287,7 +287,6 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     emms-mark-mode
     emms-metaplaylist-mode
     emms-playlist-mode
-    ert-results-mode
     etags-select-mode
     fj-mode
     gc-issues-mode
@@ -414,6 +413,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     command-history-mode
     compilation-mode
     dictionary-mode
+    ert-results-mode
     help-mode
     Info-mode
     speedbar-mode
@@ -429,6 +429,7 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
     (comint-mode-map . nil)
     (compilation-mode-map . nil)
     (dictionary-mode-map . nil)
+    (ert-results-mode-map . motion)
     (Info-mode-map . motion)
     (speedbar-key-map . nil)
     (speedbar-file-key-map . nil)
