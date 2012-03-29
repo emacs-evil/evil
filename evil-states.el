@@ -254,7 +254,8 @@ otherwise exit Visual state."
           (and (not evil-visual-region-expanded)
                (not (region-active-p))
                (not (eq evil-visual-selection 'block))))
-      (evil-exit-visual-state))
+      (evil-exit-visual-state)
+      (evil-adjust-cursor))
      (evil-visual-region-expanded
       (evil-visual-contract-region)
       (evil-visual-highlight))
