@@ -2170,7 +2170,10 @@ Create new buffer? " buffer)))
   (interactive "<b><!>")
   (with-current-buffer (or buffer (current-buffer))
     (when bang
-      (set-buffer-modified-p nil))
+      (set-buffer-modified-p nil)
+      (dolist (process (process-list))
+        (when (eq (process-buffer process) (current-buffer))
+          (set-process-query-on-exit-flag process nil))))
     ;; if the buffer which was initiated by emacsclient,
     ;; call `server-edit' from server.el to avoid
     ;; "Buffer still has clients" message
