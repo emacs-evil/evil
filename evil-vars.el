@@ -256,6 +256,16 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
   :type  'symbol
   :group 'evil)
 
+(defcustom evil-buffer-regexps
+  '(("^ \\*load\\*" . nil))
+  "Regular expression determining the initial state for a buffer.
+Entries have the form (REGEXP . STATE), where REGEXP is a regular
+expression matching the buffer's name and STATE is one of `normal',
+`insert', `visual', `replace', `operator', `motion', `emacs' and nil.
+If STATE is nil, Evil is disabled in the buffer."
+  :type '(alist :key-type string :value-type symbol)
+  :group 'evil)
+
 (defcustom evil-emacs-state-modes
   '(archive-mode
     bbdb-mode

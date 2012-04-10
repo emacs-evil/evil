@@ -81,7 +81,7 @@
   "Minor mode for setting up Evil in a single buffer."
   :init-value nil
   (cond
-   (load-in-progress) ; don't enable Evil in loading buffers
+   ((evil-disabled-buffer-p))
    (evil-local-mode
     (setq emulation-mode-map-alists
           (evil-concat-lists '(evil-mode-map-alist)
@@ -205,13 +205,32 @@ See also `evil-set-initial-state'."
       (evil-change-to-initial-state buffer))))
 (put 'evil-initialize-state 'permanent-local-hook t)
 
+(defun evil-initial-state-for-buffer-name (&optional name default)
+  "Return the initial Evil state to use for a buffer with name NAME.
+Matches the name against the regular expressions in
+`evil-buffer-regexps'. If none matches, returns DEFAULT."
+  (let ((name (if (stringp name) name (buffer-name name)))
+        regexp state)
+    (when (stringp name)
+      (catch 'done
+        (dolist (entry evil-buffer-regexps default)
+          (setq regexp (car entry)
+                state (cdr entry))
+          (when (string-match regexp name)
+            (throw 'done state)))))))
+
+(defun evil-disabled-buffer-p (&optional buffer)
+  "Whether Evil should be disabled in BUFFER."
+  (null (evil-initial-state-for-buffer-name buffer 'undefined)))
+
 (defun evil-initial-state-for-buffer (&optional buffer default)
   "Return the initial Evil state to use for BUFFER.
 BUFFER defaults to the current buffer. Returns DEFAULT
 if no initial state is associated with BUFFER.
 See also `evil-initial-state'."
   (with-current-buffer (or buffer (current-buffer))
-    (or (catch 'done
+    (or (evil-initial-state-for-buffer-name (buffer-name))
+        (catch 'done
           (dolist (mode minor-mode-map-alist)
             (setq mode (car-safe mode))
             (when (and (boundp mode) (symbol-value mode))
@@ -226,13 +245,12 @@ Returns DEFAULT if no initial state is associated with MODE.
 The initial state for a mode can be set with
 `evil-set-initial-state'."
   (let (state modes)
-    (or (catch 'done
-          (dolist (entry (evil-state-property t :modes))
-            (setq state (car entry)
-                  modes (symbol-value (cdr entry)))
-            (when (memq mode modes)
-              (throw 'done state))))
-        default)))
+    (catch 'done
+      (dolist (entry (evil-state-property t :modes) default)
+        (setq state (car entry)
+              modes (symbol-value (cdr entry)))
+        (when (memq mode modes)
+          (throw 'done state))))))
 
 (defun evil-set-initial-state (mode state)
   "Set the initial state for MODE to STATE.
