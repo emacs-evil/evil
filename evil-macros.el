@@ -506,10 +506,7 @@ if COUNT is positive, and to the left of it if negative.
                 (setq deactivate-mark t)))
             (cond
              ((evil-visual-state-p)
-              (evil-visual-rotate 'upper-left
-                                  evil-operator-range-beginning
-                                  evil-operator-range-end
-                                  evil-operator-range-type))
+              (evil-visual-rotate 'upper-left))
              ((evil-get-command-property ',operator :move-point)
               (goto-char (or evil-operator-range-beginning orig)))
              (t
