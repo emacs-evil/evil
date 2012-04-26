@@ -2184,34 +2184,39 @@ Create new buffer? " buffer)))
       (kill-buffer nil))))
 
 (evil-define-command evil-quit (&optional bang)
-  "Closes the current window, exits Emacs if this is the last window."
+  "Closes the current window, current frame, Emacs.
+If the current frame belongs to some client the client connection
+is closed."
   :repeat nil
   (interactive "<!>")
   (condition-case nil
       (delete-window)
     (error
      (condition-case nil
-         (delete-frame)
+         (let ((proc (frame-parameter (selected-frame) 'client)))
+           (if proc
+               (evil-quit-all bang)
+             (delete-frame)))
        (error
-        (if (null bang)
-            (save-buffers-kill-emacs)
-          (dolist (process (process-list))
-            (set-process-query-on-exit-flag process nil))
-          (kill-emacs)))))))
+        (evil-quit-all bang))))))
 
 (evil-define-command evil-quit-all (&optional bang)
   "Exits Emacs, asking for saving."
   :repeat nil
   (interactive "<!>")
   (if (null bang)
-      (save-buffers-kill-emacs)
-    (dolist (process (process-list))
-      (set-process-query-on-exit-flag process nil))
-    (kill-emacs)))
+      (save-buffers-kill-terminal)
+    (let ((proc (frame-parameter (selected-frame) 'client)))
+      (if proc
+          (with-no-warnings
+            (server-delete-client proc))
+        (dolist (process (process-list))
+          (set-process-query-on-exit-flag process nil))
+        (kill-emacs)))))
 
 (evil-define-command evil-save-and-quit ()
   "Exits Emacs, without saving."
-  (save-buffers-kill-emacs 1))
+  (save-buffers-kill-terminal t))
 
 (evil-define-command evil-save-and-close (file &optional bang)
   "Saves the current buffer and closes the window."
