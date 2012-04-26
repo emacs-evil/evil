@@ -43,10 +43,11 @@ of the line or the buffer; just return nil."
     (evil-motion-loop (nil (or count 1))
       (forward-char)
       ;; don't put the cursor on a newline
-      (when evil-move-cursor-back
-        (unless (or (evil-visual-state-p) (evil-operator-state-p))
-          (when (and (eolp) (not (eobp)) (not (bolp)))
-            (forward-char))))))))
+      (when (and evil-move-cursor-back
+                 (not (evil-visual-state-p))
+                 (not (evil-operator-state-p))
+                 (eolp) (not (eobp)) (not (bolp)))
+        (forward-char))))))
 
 (evil-define-motion evil-backward-char (count &optional crosslines noerror)
   "Move cursor to the left by COUNT characters.
@@ -80,38 +81,32 @@ of the line or the buffer; just return nil."
   "Move the cursor COUNT lines down."
   :type line
   (let (line-move-visual)
-    (evil-line-move (or count 1))
-    (evil-adjust-cursor)))
+    (evil-line-move (or count 1))))
 
 (evil-define-motion evil-previous-line (count)
   "Move the cursor COUNT lines up."
   :type line
   (let (line-move-visual)
-    (evil-line-move (- (or count 1)))
-    (evil-adjust-cursor)))
+    (evil-line-move (- (or count 1)))))
 
 (evil-define-motion evil-next-visual-line (count)
   "Move the cursor COUNT screen lines down."
   :type exclusive
   (let ((line-move-visual t))
-    (evil-line-move (or count 1))
-    (evil-adjust-cursor)))
+    (evil-line-move (or count 1))))
 
 (evil-define-motion evil-previous-visual-line (count)
   "Move the cursor COUNT screen lines up."
   :type exclusive
   (let ((line-move-visual t))
-    (evil-line-move (- (or count 1)))
-    (evil-adjust-cursor)))
+    (evil-line-move (- (or count 1)))))
 
 ;; used for repeated commands like "dd"
 (evil-define-motion evil-line (count)
   "Move COUNT - 1 lines down."
   :type line
   (let (line-move-visual)
-    (evil-line-move (1- (or count 1)))
-    ;; select the previous line at the end of the buffer
-    (evil-adjust-cursor)))
+    (evil-line-move (1- (or count 1)))))
 
 (evil-define-motion evil-beginning-of-line ()
   "Move the cursor to the beginning of the current line."
@@ -142,9 +137,7 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
   :type inclusive
   (if (fboundp 'end-of-visual-line)
       (end-of-visual-line count)
-    (end-of-line count))
-  (unless (evil-visual-state-p)
-    (evil-adjust-cursor)))
+    (end-of-line count)))
 
 (evil-define-motion evil-beginning-of-line-or-digit-argument ()
   "Move the cursor to the beginning of the current line.
@@ -210,7 +203,6 @@ By default the last line."
       (goto-char (point-max))
     (goto-char (point-min))
     (forward-line (1- count)))
-  (evil-adjust-cursor)
   (evil-first-non-blank))
 
 (evil-define-motion evil-goto-first-line (count)
@@ -1054,7 +1046,8 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
       (delete-rectangle beg end)
     (delete-region beg end))
   ;; place cursor on beginning of line
-  (when (eq type 'line)
+  (when (and (evil-called-interactively-p)
+             (eq type 'line))
     (evil-first-non-blank)))
 
 (evil-define-operator evil-delete-line (beg end type register yank-handler)

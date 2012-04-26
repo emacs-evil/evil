@@ -889,6 +889,23 @@ use the FORCE parameter to override it."
               (point))))
     (evil-move-cursor-back force))))
 
+(defmacro evil-with-adjust-cursor (&rest body)
+  "Executes the (motion) BODY while excluding a final buffer newline.
+If the buffer ends in a newline, the buffer is narrowed to (1-
+point-max) during the execution of body. If (point) is currently
+at eob, then no narrowing takes place because this would
+invalidate the current position."
+  (declare (indent defun)
+           (debug t))
+  `(save-restriction
+     (when (and (not (evil-operator-state-p))
+                (not (eobp))
+                (save-excursion
+                  (goto-char (point-max))
+                  (bolp)))
+       (evil-narrow nil (1- (point-max))))
+     ,@body))
+
 (defun evil-move-cursor-back (&optional force)
   "Move point one character back within the current line.
 Contingent on the variable `evil-move-cursor-back' or the FORCE
