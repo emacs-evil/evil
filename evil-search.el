@@ -286,7 +286,7 @@ all occurrences of the pattern on a line will be highlighted,
 otherwise only the first one."
   (let ((re (evil-ex-regex-without-case regexp)))
     (when evil-ex-search-vim-style-regexp
-      (setq re (evil-transform-regexp re)))
+      (setq re (evil-transform-vim-style-regexp re)))
     (list re
           (evil-ex-regex-case regexp casefold)
           whole-line)))

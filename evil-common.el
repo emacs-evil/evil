@@ -2505,42 +2505,40 @@ in `evil-temporary-undo' instead."
         (setq buffer-undo-list undo-list)))))
 
 ;;; Search
-(defun evil-transform-regexp (regexp)
-  "Transforms vim-style backslash codes to Emacs regexp.
-This includes the backslash codes \\d, \\D, \\s, \\S, \\x, \\X,
-\\o, \\O, \\a, \\A, \\l, \\L, \\u, \\U and \\w, \\W. The new
-codes \\y and \\Y can be used instead of the Emacs code \\s and
-\\S which have a different meaning in Vim-style."
+(defun evil-transform-regexp (regexp replacements-alist)
   (let ((pos 0) result)
     (while (string-match "\\\\+[^\\]" regexp pos)
       (let* ((chpos (1- (match-end 0)))
-             (ch (aref regexp chpos)))
+             (ch (aref regexp chpos))
+             (repl (assoc ch replacements-alist)))
         (push (substring regexp pos (1- chpos)) result)
         (cond
          ((and (< 0 (match-beginning 0))
-               (oddp (- (match-end 0) (match-beginning 0))))
+               (= 1 (mod (- (match-end 0) (match-beginning 0)) 2)))
           (push (substring regexp (1- chpos) (1+ chpos)) result))
-         ((eq ch ?s) (push "[[:space:]]" result))
-         ((eq ch ?S) (push "[^[:space:]]" result))
-         ((eq ch ?d) (push "[[:digit:]]" result))
-         ((eq ch ?D) (push "[^[:digit:]]" result))
-         ((eq ch ?x) (push "[[:xdigit:]]" result))
-         ((eq ch ?X) (push "[^[:xdigit:]]" result))
-         ((eq ch ?o) (push "[0-7]" result))
-         ((eq ch ?O) (push "[^0-7]" result))
-         ((eq ch ?a) (push "[[:alpha:]]" result))
-         ((eq ch ?A) (push "[^[:alpha:]]" result))
-         ((eq ch ?l) (push "[a-z]" result))
-         ((eq ch ?L) (push "[^a-z]" result))
-         ((eq ch ?u) (push "[A-Z]" result))
-         ((eq ch ?U) (push "[^A-Z]" result))
-         ((eq ch ?y) (push "\\s" result))
-         ((eq ch ?Y) (push "\\S" result))
+         (repl (push (cdr repl) result))
          (t (push (substring regexp (1- chpos) (1+ chpos)) result)))
         (setq pos (1+ chpos))))
     (push (substring regexp pos) result)
     (setq result (nreverse result))
     (mapconcat #'identity result "")))
+
+(defun evil-transform-vim-style-regexp (regexp)
+  "Transforms vim-style backslash codes to Emacs regexp.
+This includes the backslash codes \\d, \\D, \\s, \\S, \\x, \\X,
+\\o, \\O, \\a, \\A, \\l, \\L, \\u, \\U and \\w, \\W. The new
+codes \\y and \\Y can be used instead of the Emacs code \\s and
+\\S which have a different meaning in Vim-style."
+  (evil-transform-regexp
+   regexp
+   '((?s . "[[:space:]]") (?S . "[^[:space:]]")
+     (?d . "[[:digit:]]")  (?D . "[^[:digit:]]")
+     (?x . "[[:xdigit:]]") (?X . "[^[:xdigit:]]")
+     (?o . "[0-7]")        (?O . "[^0-7]")
+     (?a . "[[:alpha:]]")  (?A . "[^[:alpha:]]")
+     (?l . "[a-z]")        (?L . "[^a-z]")
+     (?u . "[A-Z]")        (?U . "[^A-Z]")
+     (?y . "\\s")          (?Y . "\\S"))))
 
 ;;; Substitute
 

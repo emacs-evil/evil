@@ -5026,8 +5026,8 @@ if no previous selection")
       (should-error (evil-extract-count "°"))
       (should-error (evil-extract-count "12°")))))
 
-(ert-deftest evil-test-transform-regexp ()
-  "Test `evil-test-transform-regexp'"
+(ert-deftest evil-transform-vim-style-regexp ()
+  "Test `evil-transform-vim-style-regexp'"
   (dolist (repl '((?s . "[[:space:]]")
                   (?S . "[^[:space:]]")
                   (?d . "[[:digit:]]")
@@ -5048,7 +5048,7 @@ if no previous selection")
                   (?W . "\\W")))
     (ert-info ((format "Test transform from '\\%c' to '%s'"
                        (car repl) (cdr repl)))
-      (should (equal (evil-transform-regexp
+      (should (equal (evil-transform-vim-style-regexp
                       (concat "xxx\\"
                               (char-to-string (car repl))
                               "\\"

@@ -590,8 +590,8 @@ that line."
 ;; Searching
 (defcustom evil-ex-search-vim-style-regexp nil
   "If non-nil Vim-style backslash codes are supported in search patterns.
-See `evil-transform-regexp' for the supported backslash codes.
-Note that this only affects the search command if
+See `evil-transform-vim-style-regexp' for the supported backslash
+codes.  Note that this only affects the search command if
 `evil-search-module' is set to 'evil. The isearch module always
 uses plain Emacs regular expressions."
   :type 'boolean
