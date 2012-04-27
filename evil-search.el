@@ -287,6 +287,10 @@ otherwise only the first one."
   (let ((re (evil-ex-regex-without-case regexp)))
     (when evil-ex-search-vim-style-regexp
       (setq re (evil-transform-vim-style-regexp re)))
+    (setq re (evil-transform-regexp re
+                                    '((?t . "\t")
+                                      (?n . "\n")
+                                      (?r . "\r"))))
     (list re
           (evil-ex-regex-case regexp casefold)
           whole-line)))
