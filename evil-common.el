@@ -2507,21 +2507,18 @@ in `evil-temporary-undo' instead."
 ;;; Search
 (defun evil-transform-regexp (regexp replacements-alist)
   (let ((pos 0) result)
-    (while (string-match "\\\\+[^\\]" regexp pos)
-      (let* ((chpos (1- (match-end 0)))
-             (ch (aref regexp chpos))
-             (repl (assoc ch replacements-alist)))
-        (push (substring regexp pos (1- chpos)) result)
-        (cond
-         ((and (< 0 (match-beginning 0))
-               (= 1 (mod (- (match-end 0) (match-beginning 0)) 2)))
-          (push (substring regexp (1- chpos) (1+ chpos)) result))
-         (repl (push (cdr repl) result))
-         (t (push (substring regexp (1- chpos) (1+ chpos)) result)))
-        (setq pos (1+ chpos))))
-    (push (substring regexp pos) result)
-    (setq result (nreverse result))
-    (mapconcat #'identity result "")))
+    (replace-regexp-in-string
+     "\\\\+[^\\\\]"
+     #'(lambda (txt)
+         (let* ((b (match-beginning 0))
+                (e (match-end 0))
+                (ch (aref txt (1- e)))
+                (repl (assoc ch replacements-alist)))
+           (if (and repl (zerop (mod (length txt) 2)))
+               (concat (substring txt b (- e 2))
+                       (cdr repl))
+             txt)))
+     regexp nil t)))
 
 (defun evil-transform-vim-style-regexp (regexp)
   "Transforms vim-style backslash codes to Emacs regexp.
