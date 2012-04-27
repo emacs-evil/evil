@@ -284,9 +284,12 @@ Here `smart' means the pattern is case sensitive if and only if
 it contains a capital character. If WHOLE-LINE is non-nil,
 all occurrences of the pattern on a line will be highlighted,
 otherwise only the first one."
-  (list (evil-ex-regex-without-case regexp)
-        (evil-ex-regex-case regexp casefold)
-        whole-line))
+  (let ((re (evil-ex-regex-without-case regexp)))
+    (when evil-ex-search-vim-style-regexp
+      (setq re (evil-transform-regexp re)))
+    (list re
+          (evil-ex-regex-case regexp casefold)
+          whole-line)))
 
 (defun evil-ex-pattern-regex (pattern)
   "Return the regular expression of a search PATTERN."
