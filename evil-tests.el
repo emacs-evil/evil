@@ -5026,6 +5026,47 @@ if no previous selection")
       (should-error (evil-extract-count "°"))
       (should-error (evil-extract-count "12°")))))
 
+(ert-deftest evil-test-transform-regexp ()
+  "Test `evil-test-transform-regexp'"
+  (dolist (repl '((?s . "[[:space:]]")
+                  (?S . "[^[:space:]]")
+                  (?d . "[[:digit:]]")
+                  (?D . "[^[:digit:]]")
+                  (?x . "[[:xdigit:]]")
+                  (?X . "[^[:xdigit:]]")
+                  (?o . "[0-7]")
+                  (?O . "[^0-7]")
+                  (?a . "[[:alpha:]]")
+                  (?A . "[^[:alpha:]]")
+                  (?l . "[a-z]")
+                  (?L . "[^a-z]")
+                  (?u . "[A-Z]")
+                  (?U . "[^A-Z]")
+                  (?y . "\\s")
+                  (?Y . "\\S")
+                  (?w . "\\w")
+                  (?W . "\\W")))
+    (ert-info ((format "Test transform from '\\%c' to '%s'"
+                       (car repl) (cdr repl)))
+      (should (equal (evil-transform-regexp
+                      (concat "xxx\\"
+                              (char-to-string (car repl))
+                              "\\"
+                              (char-to-string (car repl))
+                              "\\\\"
+                              (char-to-string (car repl))
+                              "\\\\\\"
+                              (char-to-string (car repl))
+                              "yyy"))
+                     (concat "xxx"
+                             (cdr repl)
+                             (cdr repl)
+                             "\\\\"
+                             (char-to-string (car repl))
+                             "\\\\"
+                             (cdr repl)
+                             "yyy"))))))
+
 ;;; Advice
 
 (ert-deftest evil-test-eval-last-sexp ()
