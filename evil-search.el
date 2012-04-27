@@ -305,8 +305,7 @@ otherwise only the first one."
 
 (defun evil-ex-regex-without-case (re)
   "Return the regular expression without all occurrences of \\c and \\C."
-  (replace-regexp-in-string
-   "\\(\\(?:^\\|[^\\\\]\\)\\(?:\\\\\\\\\\)*\\)\\\\[cC]" "\\1" re))
+  (evil-transform-regexp re '((?c . "") (?C . ""))))
 
 (defun evil-ex-regex-case (re default-case)
   "Return the case as implied by \\c or \\C in regular expression RE.
