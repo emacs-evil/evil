@@ -41,13 +41,14 @@ search module is used."
   (let ((evil-search-prompt (evil-search-prompt forward))
         (isearch-search-fun-function 'evil-isearch-function)
         (point (point))
-        search-nonincremental-instead)
+        isearch-success search-nonincremental-instead)
     (setq isearch-forward forward)
     (evil-save-echo-area
       (if forward
           (isearch-forward regexp-p)
         (isearch-backward regexp-p))
-      (when isearch-success
+      (if (not isearch-success)
+          (goto-char point)
         ;; always position point at the beginning of the match
         (when (and forward isearch-other-end)
           (goto-char isearch-other-end))
@@ -262,10 +263,13 @@ Returns nil if nothing is found."
 
 (defadvice isearch-delete-char (around evil activate)
   "Exit search if no search string."
-  (if (and evil-search-prompt
-           (string= isearch-string ""))
-      (isearch-exit)
-    ad-do-it))
+  (cond
+   ((and evil-search-prompt (string= isearch-string ""))
+    (let (search-nonincremental-instead)
+      (setq isearch-success nil)
+      (isearch-exit)))
+   (t
+    ad-do-it)))
 
 (defadvice isearch-lazy-highlight-search (around evil activate)
   "Never wrap the search in this context."
