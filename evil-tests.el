@@ -4558,7 +4558,18 @@ if no previous selection")
         ("/ ba/+1" [return])
         "foo foo\nbar bar\n[b]az baz\nAnother line\nAnd yet another line"
         ("n")
-        "foo foo\nbar bar\nbaz baz\n[A]nother line\nAnd yet another line"))))
+        "foo foo\nbar bar\nbaz baz\n[A]nother line\nAnd yet another line"))
+    (ert-info ("Test search next after /$")
+      (evil-test-buffer
+        "[l]ine 1\nline 2\n\n\line 4\n"
+        ("/$" [return])
+        "line [1]\nline 2\n\n\line 4\n"
+        ("n")
+        "line 1\nline [2]\n\n\line 4\n"
+        ("n")
+        "line 1\nline 2\n[\n]\line 4\n"
+        ("n")
+        "line 1\nline 2\n\n\line [4]\n"))))
 
 (ert-deftest evil-test-ex-search-pattern-offset ()
   "Test pattern offsets."

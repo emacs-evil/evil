@@ -2344,7 +2344,11 @@ Change to `%s'? "
     (dotimes (i (or count 1))
       (if (eq evil-ex-search-direction 'backward)
           (backward-char)
-        (forward-char))
+        (forward-char)
+        ;; maybe skip end-of-line
+        (when (and evil-move-cursor-back
+                   (eolp) (not (eobp)))
+          (forward-char)))
       (let ((res (evil-ex-find-next)))
         (cond
          ((not res)
