@@ -2441,8 +2441,8 @@ Change to `%s'? "
     (error "No replacement given"))
   (let* ((flags (append flags nil))
          (confirm (memq ?c flags))
-         (case-replace (eq (evil-ex-pattern-case-fold pattern) 'insensitive))
-         (case-fold-search case-replace)
+         (case-fold-search (eq (evil-ex-pattern-case-fold pattern)
+                               'insensitive))
          (evil-ex-substitute-regex (evil-ex-pattern-regex pattern)))
     (setq evil-ex-substitute-pattern pattern
           evil-ex-substitute-replacement replacement

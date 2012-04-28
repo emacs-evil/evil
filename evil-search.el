@@ -1000,9 +1000,7 @@ This handler highlights the pattern of the current substitution."
 (defun evil-ex-pattern-update-replacement (hl overlay)
   "Update the replacement display."
   (when (fboundp 'match-substitute-replacement)
-    (let ((fixedcase (not (eq (evil-ex-pattern-case-fold
-                               (evil-ex-hl-pattern hl))
-                              'insensitive)))
+    (let ((fixedcase (not case-replace))
           repl)
       (setq repl (if evil-ex-substitute-current-replacement
                      (evil-match-substitute-replacement
