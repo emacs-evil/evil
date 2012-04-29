@@ -2215,7 +2215,7 @@ is closed."
   "Saves the current buffer and closes the window."
   :repeat nil
   (interactive "<f><!>")
-  (evil-write (point-min) (point-max) 'line file bang)
+  (evil-write nil nil nil file bang)
   (evil-quit))
 
 (evil-define-command evil-save-modified-and-close (file &optional bang)
