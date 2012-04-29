@@ -2515,6 +2515,22 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
     ";; This buffer is for notes you don't want to save.
 \[;]; This buffer is for notes you don't want to save."))
 
+(ert-deftest evil-test-register ()
+  "Test yanking and pasting to and from register."
+  :tags '(evil yank paste)
+  (evil-test-buffer
+    "[f]oo\n"
+    ("\"aywP")
+    "fo[o]foo\n"
+    ("\"ayyP")
+    "[f]oofoo\nfoofoo\n")
+  (evil-test-buffer
+    "[f]oo\n"
+    ("\"ayw\"Ayw\"aP")
+    "foofo[o]foo\n"
+    ("\"ayy\"Ayy\"aP")
+    "[f]oofoofoo\nfoofoofoo\nfoofoofoo\n"))
+
 (ert-deftest evil-test-align ()
   "Test `evil-align-left', `evil-align-right' and `evil-align-center'."
   :tags '(evil operator)

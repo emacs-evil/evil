@@ -1391,12 +1391,15 @@ Signal an error if empty, unless NOERROR is non-nil."
           (let ((x-select-enable-clipboard t))
             (current-kill 0)))
          (t
+          (setq register (downcase register))
           (get-register register)))
         (unless noerror
           (error "Register `%c' is empty" register)))))
 
 (defun evil-set-register (register text)
-  "Set the contents of register REGISTER to TEXT."
+  "Set the contents of register REGISTER to TEXT.
+If REGISTER is an upcase character then text is appended to that
+register instead of replacing its content."
   (cond
    ((eq register ?\")
     (kill-new text))
@@ -1414,6 +1417,11 @@ Signal an error if empty, unless NOERROR is non-nil."
    ((eq register ?+)
     (let ((x-select-enable-clipboard t))
       (kill-new text)))
+   ((and (<= ?A register) (<= register ?Z))
+    (setq register (downcase register))
+    (set-register register
+                  (concat (get-register register)
+                          text)))
    (t
     (set-register register text))))
 
