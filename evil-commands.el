@@ -2074,7 +2074,7 @@ without confirmation."
   (cond
    ((zerop (length filename))
     (error "Please specify a file name for the buffer"))
-   ;; with region always save to file without reseting modified flag
+   ;; with region, always save to file without resetting modified flag
    ((and beg end)
     (write-region beg end filename nil nil nil (not bang)))
    ;; save current buffer to its file
@@ -2235,7 +2235,7 @@ is closed."
   :repeat nil
   (interactive "<f><!>")
   (when (buffer-modified-p)
-    (evil-write (point-min) (point-max) 'line file bang))
+    (evil-write nil nil nil file bang))
   (evil-quit))
 
 (evil-define-operator evil-shell-command
