@@ -1618,6 +1618,43 @@ each line. Extra arguments to FUNC may be passed via ARGS."
       (set-marker beg-marker nil)
       (set-marker end-marker nil))))
 
+(defun evil-apply-on-rectangle (function start end &rest args)
+  "Like `apply-on-rectangle' but maybe extends to eol.
+If `temporary-goal-column' is set to a big number, then the
+region of each line is extended to the end of each line. The end
+column is set to the maximal column in all covered lines."
+  (let ((eol-col (and (memq last-command '(next-line previous-line))
+                      (numberp temporary-goal-column)
+                      temporary-goal-column))
+        startcol startpt endcol endpt)
+    (save-excursion
+      (goto-char start)
+      (setq startcol (current-column))
+      (beginning-of-line)
+      (setq startpt (point))
+      (goto-char end)
+      (setq endcol (current-column))
+      (forward-line 1)
+      (setq endpt (point-marker))
+      ;; ensure the start column is the left one.
+      (if (< endcol startcol)
+          (let ((col startcol))
+            (setq startcol endcol endcol col)))
+      ;; maybe find maximal column
+      (when eol-col
+        (setq eol-col 0)
+        (goto-char startpt)
+        (while (< (point) endpt)
+          (setq eol-col (max eol-col
+                             (evil-column (line-end-position))))
+          (forward-line 1))
+        (setq endcol (min eol-col temporary-goal-column)))
+      ;; start looping over lines
+      (goto-char startpt)
+      (while (< (point) endpt)
+        (apply function startcol endcol args)
+        (forward-line 1)))))
+
 ;;; Paste
 
 (defun evil-yank-characters (beg end &optional register yank-handler)
