@@ -1684,7 +1684,7 @@ column is set to the maximal column in all covered lines."
 (defun evil-yank-rectangle (beg end &optional register yank-handler)
   "Stores the rectangle defined by region BEG and END into the kill-ring."
   (let ((lines (list nil)))
-    (apply-on-rectangle #'extract-rectangle-line beg end lines)
+    (evil-apply-on-rectangle #'extract-rectangle-line beg end lines)
     ;; We remove spaces from the beginning and the end of the next.
     ;; Spaces are inserted explicitly in the yank-handler in order to
     ;; NOT insert lines full of spaces.
