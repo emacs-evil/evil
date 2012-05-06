@@ -118,6 +118,9 @@ of the line or the buffer; just return nil."
 If COUNT is given, move COUNT - 1 lines downward first."
   :type inclusive
   (move-end-of-line count)
+  (when evil-track-eol
+    (setq temporary-goal-column most-positive-fixnum
+          this-command 'next-line))
   (unless (evil-visual-state-p)
     (evil-adjust-cursor)
     (when (eolp)

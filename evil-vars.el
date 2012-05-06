@@ -74,6 +74,13 @@ moves the cursor."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-track-eol t
+  "If non-nil line moves after a call to `evil-end-of-line' stay at eol.
+This is analogous to `track-eol' but deals with the end-of-line
+interpretation of evil."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-mode-line-format 'before
   "The position of the mode line tag.
 `before' means before the mode list, `after' means after it,
