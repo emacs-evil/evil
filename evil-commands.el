@@ -1046,7 +1046,7 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (interactive "<R><x><y>")
   (evil-yank beg end type register yank-handler)
   (if (eq type 'block)
-      (delete-rectangle beg end)
+      (evil-apply-on-block #'delete-region beg end)
     (delete-region beg end))
   ;; place cursor on beginning of line
   (when (and (evil-called-interactively-p)
