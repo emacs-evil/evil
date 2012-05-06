@@ -513,6 +513,10 @@ Reuse overlays where possible to prevent flicker."
          (mark (or (mark t) point))
          (overlays (or overlays 'evil-visual-block-overlays))
          (old (symbol-value overlays))
+         (eol-col (and (memq this-command '(next-line previous-line))
+                       (numberp temporary-goal-column)
+                       (1+ (min temporary-goal-column
+                                (1- most-positive-fixnum)))))
          beg-col end-col new nlines overlay window-beg window-end)
     ;; calculate the rectangular region represented by BEG and END,
     ;; but put BEG in the upper-left corner and END in the lower-right
@@ -556,8 +560,9 @@ Reuse overlays where possible to prevent flicker."
                        'default))))
           (setq row-beg (point))
           ;; end of row
-          (evil-move-to-column end-col)
-          (when (< (current-column) end-col)
+          (evil-move-to-column (or eol-col end-col))
+          (when (and (not eol-col)
+                     (< (current-column) end-col))
             ;; append overlay with virtual spaces if unable to
             ;; move directly to the last column
             (setq after
