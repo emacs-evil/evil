@@ -1576,7 +1576,10 @@ Then restore Transient Mark mode to its previous setting."
 The selection may be specified explicitly with BEG and END.
 FUNC must take at least two arguments, the beginning and end of
 each line. Extra arguments to FUNC may be passed via ARGS."
-  (let (beg-marker end-marker left right eob)
+  (let ((eol-col (and (memq last-command '(next-line previous-line))
+                      (numberp temporary-goal-column)
+                      temporary-goal-column))
+        beg-marker end-marker left right eob)
     (save-excursion
       (evil-sort beg end)
       ;; calculate columns
@@ -1605,7 +1608,7 @@ each line. Extra arguments to FUNC may be passed via ARGS."
                         (move-to-column left t)
                         (point))
                       (save-excursion
-                        (move-to-column right t)
+                        (move-to-column (or eol-col right))
                         (point))
                       args)
                (forward-line 1)
