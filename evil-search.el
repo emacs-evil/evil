@@ -780,6 +780,8 @@ any error conditions."
                                             t))
           (setq pat evil-ex-search-pattern
                 offset (or offset evil-ex-search-offset)))
+        (when (zerop (length pat))
+          (throw 'done (list 'empty-pattern pat offset)))
         (let (search-result)
           (while (> count 0)
             (let ((result (evil-ex-find-next pat direction)))
@@ -827,7 +829,7 @@ any error conditions."
                 (evil-ex-search-update pattern offset
                                        (match-beginning 0) (match-end 0)
                                        "Wrapped"))
-               ((eq success 'empty-string)
+               ((eq success 'empty-pattern)
                 (evil-ex-search-update nil nil nil nil nil))
                (success
                 (evil-ex-search-update pattern offset
