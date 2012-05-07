@@ -1019,7 +1019,7 @@ This handler highlights the pattern of the current substitution."
                       fixedcase)
                    ""))
       (put-text-property 0 (length repl)
-                         'face 'evil-ex-substitute
+                         'face 'evil-ex-substitute-replacement
                          repl)
       (overlay-put overlay 'after-string repl))))
 

@@ -656,9 +656,9 @@ the replacement is shown interactively."
   "Face for highlighting all matches in interactive search."
   :group 'evil)
 
-(defface evil-ex-substitute '((((supports :underline))
-                               :underline t
-                               :foreground "red"))
+(defface evil-ex-substitute-replacement '((((supports :underline))
+                                           :underline t
+                                           :foreground "red"))
   "Face for interactive replacement text."
   :group 'evil)
 
