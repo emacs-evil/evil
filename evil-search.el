@@ -922,16 +922,17 @@ current search result."
                (success (pop result))
                (pattern (pop result))
                (offset (pop result)))
+          (setq evil-ex-search-pattern pattern
+                evil-ex-search-offset offset)
           (cond
            ((memq success '(t wrap))
-            (setq evil-ex-search-pattern pattern
-                  evil-ex-search-offset offset)
             (goto-char (match-beginning 0))
             (setq evil-ex-search-match-beg (match-beginning 0)
                   evil-ex-search-match-end (match-end 0))
             (evil-ex-search-goto-offset offset))
            (t
             (goto-char evil-ex-search-start-point)
+            (evil-ex-delete-hl 'evil-ex-search)
             (signal 'search-failed (list search-string)))))))))
 
 (defun evil-ex-start-symbol-search (unbounded direction count)
