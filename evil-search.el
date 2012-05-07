@@ -974,6 +974,7 @@ This handler highlights the pattern of the current substitution."
          ((eq flag 'start)
           (evil-ex-make-hl
            'evil-ex-substitute
+           :face 'evil-ex-substitute-matches
            :update-hook #'evil-ex-pattern-update-ex-info
            :match-hook (and evil-ex-substitute-interactive-replace
                             #'evil-ex-pattern-update-replacement))

@@ -656,6 +656,10 @@ the replacement is shown interactively."
   "Face for highlighting all matches in interactive search."
   :group 'evil)
 
+(defface evil-ex-substitute-matches '((t :inherit lazy-highlight))
+  "Face for interactive substitute matches."
+  :group 'evil)
+
 (defface evil-ex-substitute-replacement '((((supports :underline))
                                            :underline t
                                            :foreground "red"))
