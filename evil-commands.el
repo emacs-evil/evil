@@ -1070,8 +1070,13 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
       (evil-exit-visual-state))
     (cond
      ((eq type 'block)
-      (evil-apply-on-block #'evil-delete-line
-                           beg end nil register yank-handler))
+      ;; equivalent to $d, i.e., we use the block-to-eol selection and
+      ;; call `evil-delete'. In this case we fake the call to
+      ;; `evil-end-of-line' by setting `temporary-goal-column' and
+      ;; `last-command' appropriately as `evil-end-of-line' would do.
+      (let ((temporary-goal-column most-positive-fixnum)
+            (last-command 'next-line))
+        (evil-delete beg end 'block register yank-handler)))
      ((eq type 'line)
       (evil-delete beg end type register yank-handler))
      (t

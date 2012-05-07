@@ -1952,7 +1952,17 @@ and for Lisp evaluation."
 ;; and for Lisp evaluatio[n]>."
       ("D")
       ";; This buffer is for[ ]
-;; and for Lisp evalua")))
+;; and for Lisp evalua"))
+  (ert-info ("Yank full block with block selection")
+    (evil-test-buffer
+      :visual block
+      "line1 l<ine1 line1 line1\nline2 line2\nline3 lin>e3 line3\n"
+      ("D")
+      "line1 [l]\nline2 l\nline3 l\n"
+      ("0P")
+      "ine1 line1 line1line1 l
+ine2            line2 l
+ine3 line3      line3 l\n")))
 
 (ert-deftest evil-test-delete-folded ()
   "Test `evil-delete' on folded lines."
