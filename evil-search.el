@@ -525,7 +525,8 @@ The following properties are supported:
                       (goto-char beg)
                       ;; set the overlays for the current highlight,
                       ;; reusing old overlays (if possible)
-                      (while (and (evil-ex-search-find-next-pattern pattern)
+                      (while (and (not (eobp))
+                                  (evil-ex-search-find-next-pattern pattern)
                                   (<= (match-end 0) end))
                         (when (< (match-beginning 0) (match-end 0))
                           (let ((ov (or (pop old-ovs) (make-overlay 0 0))))
