@@ -1578,6 +1578,7 @@ FUNC must take at least two arguments, the beginning and end of
 each line. Extra arguments to FUNC may be passed via ARGS."
   (let ((eol-col (and (memq last-command '(next-line previous-line))
                       (numberp temporary-goal-column)
+                      (= temporary-goal-column most-positive-fixnum)
                       temporary-goal-column))
         beg-marker end-marker left right eob)
     (save-excursion
