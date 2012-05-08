@@ -4649,6 +4649,33 @@ if no previous selection")
         ("/bar/e" [return] "//b+1" [return])
         "foo foo\nbar b[a]r\nbaz baz\nAnother line\nAnd yet another line"))))
 
+(ert-deftest evil-test-ex-search-symbol ()
+  "Test search for symbol under point."
+  :tags '(evil ex search)
+  (evil-without-display
+    (evil-select-search-module 'evil-search-modue 'evil-search)
+    (setq evil-ex-search-history nil)
+    (evil-test-buffer
+      "so[m]e text with a strange word
+and here some other stuff
+maybe we need one line more with some text\n"
+      ("*")
+      "some text with a strange word
+and here [s]ome other stuff
+maybe we need one line more with some text\n"
+      ("n")
+      "some text with a strange word
+and here some other stuff
+maybe we need one line more with [s]ome text\n"
+      (ert-info ("Search history")
+        (should (equal evil-ex-search-history '("\\_<some\\_>"))))
+      ("*")
+      "[s]ome text with a strange word
+and here some other stuff
+maybe we need one line more with some text\n"
+      (ert-info ("Search history with double pattern")
+        (should (equal evil-ex-search-history '("\\_<some\\_>")))))))
+
 (ert-deftest evil-test-read ()
   "Test of `evil-read'"
   :tags '(evil ex)

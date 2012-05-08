@@ -945,19 +945,24 @@ The DIRECTION argument should be either `forward' or
   (let ((string (evil-find-symbol (eq direction 'forward))))
     (if (null string)
         (error "No symbol under point")
-      (setq evil-ex-search-count count
-            evil-ex-search-direction direction
-            evil-ex-search-pattern
-            (evil-ex-make-pattern
-             (if unbounded
-                 (regexp-quote (match-string 0))
-               (format "\\_<%s\\_>" (regexp-quote (match-string 0))))
-             (cond
-              ((memq evil-ex-search-case '(sensitive smart))
-               'sensitive)
-              ((eq evil-ex-search-case 'insensitive)
-               'insensitive)) t)
-            evil-ex-search-offset nil)
+      (let ((regex (if unbounded
+                       (regexp-quote (match-string 0))
+                     (format "\\_<%s\\_>" (regexp-quote (match-string 0))))))
+        (setq evil-ex-search-count count
+              evil-ex-search-direction direction
+              evil-ex-search-pattern
+              (evil-ex-make-pattern
+               regex
+               (cond
+                ((memq evil-ex-search-case '(sensitive smart))
+                 'sensitive)
+                ((eq evil-ex-search-case 'insensitive)
+                 'insensitive)) t)
+              evil-ex-search-offset nil)
+        ;; update search history unless this pattern equals the
+        ;; previous pattern
+        (unless (equal (car-safe evil-ex-search-history) regex)
+          (push regex evil-ex-search-history)))
       (evil-ex-delete-hl 'evil-ex-search)
       (when (fboundp 'evil-ex-search-next)
         (evil-ex-search-next count)))))
