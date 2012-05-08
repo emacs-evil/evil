@@ -951,13 +951,7 @@ The DIRECTION argument should be either `forward' or
         (setq evil-ex-search-count count
               evil-ex-search-direction direction
               evil-ex-search-pattern
-              (evil-ex-make-pattern
-               regex
-               (cond
-                ((memq evil-ex-search-case '(sensitive smart))
-                 'sensitive)
-                ((eq evil-ex-search-case 'insensitive)
-                 'insensitive)) t)
+              (evil-ex-make-pattern regex evil-ex-search-case t)
               evil-ex-search-offset nil)
         ;; update search history unless this pattern equals the
         ;; previous pattern
