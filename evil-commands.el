@@ -2174,7 +2174,9 @@ Create new buffer? " buffer)))
     (previous-buffer)))
 
 (evil-define-command evil-delete-buffer (buffer &optional bang)
-  "Deletes a buffer."
+  "Deletes a buffer.
+All windows currently showing this buffer will be closed except
+for the last window in each frame."
   (interactive "<b><!>")
   (with-current-buffer (or buffer (current-buffer))
     (when bang
@@ -2182,14 +2184,22 @@ Create new buffer? " buffer)))
       (dolist (process (process-list))
         (when (eq (process-buffer process) (current-buffer))
           (set-process-query-on-exit-flag process nil))))
-    ;; if the buffer which was initiated by emacsclient,
-    ;; call `server-edit' from server.el to avoid
-    ;; "Buffer still has clients" message
-    (if (and (fboundp 'server-edit)
-             (boundp 'server-buffer-clients)
-             server-buffer-clients)
-        (server-edit)
-      (kill-buffer nil))))
+    ;; get all windows that show this buffer
+    (let ((wins (get-buffer-window-list (current-buffer) nil t)))
+      ;; if the buffer which was initiated by emacsclient,
+      ;; call `server-edit' from server.el to avoid
+      ;; "Buffer still has clients" message
+      (if (and (fboundp 'server-edit)
+               (boundp 'server-buffer-clients)
+               server-buffer-clients)
+          (server-edit)
+        (kill-buffer nil))
+      ;; close all windows that showed this buffer
+      (mapc #'(lambda (w)
+                (condition-case nil
+                    (delete-window w)
+                  (error nil)))
+            wins))))
 
 (evil-define-command evil-quit (&optional bang)
   "Closes the current window, current frame, Emacs.
