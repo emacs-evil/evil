@@ -2077,8 +2077,11 @@ without confirmation."
    ;; with region, always save to file without resetting modified flag
    ((and beg end)
     (write-region beg end filename nil nil nil (not bang)))
+   ;; no current file
+   ((null (buffer-file-name))
+    (write-file filename (not bang)))
    ;; save current buffer to its file
-   ((string= filename (or (buffer-file-name) ""))
+   ((string= filename (buffer-file-name))
     (if (not bang) (save-buffer) (write-file filename)))
    ;; save to other file
    (t
