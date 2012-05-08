@@ -612,18 +612,25 @@ uses plain Emacs regular expressions."
   :group 'evil)
 
 (defcustom evil-ex-search-case 'smart
-  "The case behaviour of the search command."
-  :type '(radio (const :tag "Case sensitive." 'sensitive)
-                (const :tag "Case insensitive." 'insensitive)
-                (const :tag "Smart case." 'smart))
+  "The case behaviour of the search command.
+Smart case means that the pattern is case sensitive if and only
+if it contains an upper case letter, otherwise it is case
+insensitive."
+  :type '(radio (const :tag "Case sensitive." sensitive)
+                (const :tag "Case insensitive." insensitive)
+                (const :tag "Smart case." smart))
   :group 'evil)
 
 (defcustom evil-ex-substitute-case nil
-  "The case behaviour of the search command."
+  "The case behaviour of the search command.
+Smart case means that the pattern is case sensitive if and only
+if it contains an upper case letter, otherwise it is case
+insensitive. If nil then the setting of `evil-ex-search-case' is
+used."
   :type '(radio (const :tag "Same as interactive search." nil)
-                (const :tag "Case sensitive." 'sensitive)
-                (const :tag "Case insensitive." 'insensitive)
-                (const :tag "Smart case." 'smart))
+                (const :tag "Case sensitive." sensitive)
+                (const :tag "Case insensitive." insensitive)
+                (const :tag "Smart case." smart))
   :group 'evil)
 
 (defcustom evil-ex-search-interactive t
