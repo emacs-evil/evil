@@ -530,8 +530,8 @@ Both COUNT and CMD may be nil."
 Translates it according to the input method."
   (let ((old-global-map (current-global-map))
         (new-global-map (make-sparse-keymap))
-        (overriding-terminal-local-map (make-sparse-keymap))
-        overriding-local-map char)
+        (overriding-terminal-local-map evil-read-key-map)
+        overriding-local-map seq char cmd)
     (unwind-protect
         (progn
           (define-key new-global-map [menu-bar]
@@ -542,13 +542,27 @@ Translates it according to the input method."
                        (make-char-table 'display-table
                                         'self-insert-command) t)
           (use-global-map new-global-map)
-          (setq char (aref (read-key-sequence prompt nil t) 0))
-          (if (memq char '(?\C-q ?\C-v))
-              (read-quoted-char)
-            (unless (eq char ?\e)
-              (or (cdr (assq char '((?\r . ?\n))))
-                  char))))
+          (setq seq (read-key-sequence prompt nil t)
+                char (aref seq 0)
+                cmd (key-binding seq))
+          (while (arrayp cmd)
+            (setq char (aref cmd 0)
+                  cmd (key-binding cmd)))
+          (cond
+           ((eq cmd 'self-insert-command)
+            char)
+           (cmd
+            (call-interactively cmd))
+           (t
+            (error "No replacement character typed"))))
       (use-global-map old-global-map))))
+
+(defun evil-read-quoted-char ()
+  "Command that calls `read-quoted-char'.
+This command can be used wherever `read-quoted-char' is required
+as a command. Its main use is in the `evil-read-key-map'."
+  (interactive)
+  (read-quoted-char))
 
 (defun evil-read-motion (&optional motion count type modifier)
   "Read a MOTION, motion COUNT and motion TYPE from the keyboard.

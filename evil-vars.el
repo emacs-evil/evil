@@ -822,6 +822,12 @@ only in the current buffer.")
   "Full keymap disabling default bindings to `self-insert-command'.")
 (suppress-keymap evil-suppress-map t)
 
+(defvar evil-read-key-map (make-sparse-keymap)
+  "Keymap active during `evil-read-key'.
+This keymap can be used to bind some commands during the
+execution of `evil-read-key' which is usually used to read a
+character argument for some commands, e.g. `evil-replace'.")
+
 ;; TODO: customize size of ring
 (defvar evil-repeat-ring (make-ring 10)
   "A ring of repeat-informations to repeat the last command.")
