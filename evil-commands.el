@@ -2090,11 +2090,20 @@ without confirmation."
                   (not bang)))))
 
 (evil-define-command evil-write-all (bang)
-  "Saves all buffers."
+  "Saves all buffers visiting a file.
+If BANG is non nil then read-only buffers are saved, too,
+otherwise they are skipped. "
   :repeat nil
   :move-point nil
   (interactive "<!>")
-  (save-some-buffers bang))
+  (if bang
+      (save-some-buffers t)
+    ;; save only buffer that are not read-only and
+    ;; that are visiting a file
+    (save-some-buffers t
+                       #'(lambda ()
+                           (and (not buffer-read-only)
+                                (buffer-file-name))))))
 
 (evil-define-command evil-save (filename &optional bang)
   "Save the current buffer to FILENAME.
