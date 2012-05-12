@@ -3097,6 +3097,1462 @@ Below some empty line"))
       (should-error (execute-kbd-macro "ge"))
       (should-error (execute-kbd-macro "10ge")))))
 
+(ert-deftest evil-test-forward-word-begin-cjk ()
+  "Test `evil-forward-word-begin' on CJK words"
+  :tags '(evil motion cjk)
+  (ert-info ("Latin / numeric")
+    (evil-test-buffer
+      "[a]bcd1234"
+      ("w")
+      "abcd123[4]"))
+  (ert-info ("Latin / Kanji")
+    (evil-test-buffer
+      "[a]bcd漢字"
+      ("w")
+      "abcd[漢]字"))
+  (ert-info ("Latin / Hiragana")
+    (evil-test-buffer
+      "[a]bcdひらがな"
+      ("w")
+      "abcd[ひ]らがな"))
+  (ert-info ("Latin / Katakana")
+    (evil-test-buffer
+      "[a]bcdカタカナ"
+      ("w")
+      "abcd[カ]タカナ"))
+  (ert-info ("Latin / half-width Katakana")
+    (evil-test-buffer
+      "[a]bcdｶﾀｶﾅ"
+      ("w")
+      "abcdｶﾀｶ[ﾅ]"))
+  (ert-info ("Latin / full-width alphabet")
+    (evil-test-buffer
+      "[a]bcdＡＢＣ"
+      ("w")
+      "abcdＡＢ[Ｃ]"))
+  (ert-info ("Latin / full-width numeric")
+    (evil-test-buffer
+      "[a]bcd１２３"
+      ("w")
+      "abcd１２[３]"))
+  (ert-info ("Latin / Hangul")
+    (evil-test-buffer
+      "[a]bcd한글"
+      ("w")
+      "abcd[한]글"))
+  (ert-info ("numeric / Latin")
+    (evil-test-buffer
+      "[1]234abcd"
+      ("w")
+      "1234abc[d]"))
+  (ert-info ("numeric / Kanji")
+    (evil-test-buffer
+      "[1]234漢字"
+      ("w")
+      "1234[漢]字"))
+  (ert-info ("numeric / Hiragana")
+    (evil-test-buffer
+      "[1]234ひらがな"
+      ("w")
+      "1234[ひ]らがな"))
+  (ert-info ("numeric / Katakana")
+    (evil-test-buffer
+      "[1]234カタカナ"
+      ("w")
+      "1234[カ]タカナ"))
+  (ert-info ("numeric / half-width Katakana")
+    (evil-test-buffer
+      "[1]234ｶﾀｶﾅ"
+      ("w")
+      "1234ｶﾀｶ[ﾅ]"))
+  (ert-info ("numeric / full-width alphabet")
+    (evil-test-buffer
+      "[1]234ＡＢＣ"
+      ("w")
+      "1234ＡＢ[Ｃ]"))
+  (ert-info ("numeric / full-width numeric")
+    (evil-test-buffer
+      "[1]234１２３"
+      ("w")
+      "1234１２[３]"))
+  (ert-info ("numeric / Hangul")
+    (evil-test-buffer
+      "[1]234한글"
+      ("w")
+      "1234[한]글"))
+  (ert-info ("Kanji / Latin")
+    (evil-test-buffer
+      "[漢]字abcd"
+      ("w")
+      "漢字[a]bcd"))
+  (ert-info ("Kanji / numeric")
+    (evil-test-buffer
+      "[漢]字1234"
+      ("w")
+      "漢字[1]234"))
+  (ert-info ("Kanji / Hiragana")
+    (evil-test-buffer
+      "[漢]字ひらがな"
+      ("w")
+      "漢字[ひ]らがな"))
+  (ert-info ("Kanji / Katakana")
+    (evil-test-buffer
+      "[漢]字カタカナ"
+      ("w")
+      "漢字[カ]タカナ"))
+  (ert-info ("Kanji / half-width Katakana")
+    (evil-test-buffer
+      "[漢]字ｶﾀｶﾅ"
+      ("w")
+      "漢字[ｶ]ﾀｶﾅ"))
+  (ert-info ("Kanji / full-width alphabet")
+    (evil-test-buffer
+      "[漢]字ＡＢＣ"
+      ("w")
+      "漢字[Ａ]ＢＣ"))
+  (ert-info ("Kanji / full-width numeric")
+    (evil-test-buffer
+      "[漢]字１２３"
+      ("w")
+      "漢字[１]２３"))
+  (ert-info ("Kanji / Hangul")
+    (evil-test-buffer
+      "[漢]字한글"
+      ("w")
+      "漢字[한]글"))
+  (ert-info ("Hiragana / Latin")
+    (evil-test-buffer
+      "[ひ]らがなabcd"
+      ("w")
+      "ひらがな[a]bcd"))
+  (ert-info ("Hiragana / numeric")
+    (evil-test-buffer
+      "[ひ]らがな1234"
+      ("w")
+      "ひらがな[1]234"))
+  (ert-info ("Hiragana / Kanji")
+    (evil-test-buffer
+      "[ひ]らがな漢字"
+      ("w")
+      "ひらがな[漢]字"))
+  (ert-info ("Hiragana / Katakana")
+    (evil-test-buffer
+      "[ひ]らがなカタカナ"
+      ("w")
+      "ひらがな[カ]タカナ"))
+  (ert-info ("Hiragana / half-width Katakana")
+    (evil-test-buffer
+      "[ひ]らがなｶﾀｶﾅ"
+      ("w")
+      "ひらがな[ｶ]ﾀｶﾅ"))
+  (ert-info ("Hiragana / full-width alphabet")
+    (evil-test-buffer
+      "[ひ]らがなＡＢＣ"
+      ("w")
+      "ひらがな[Ａ]ＢＣ"))
+  (ert-info ("Hiragana / full-width numeric")
+    (evil-test-buffer
+      "[ひ]らがな１２３"
+      ("w")
+      "ひらがな[１]２３"))
+  (ert-info ("Hiragana / Hangul")
+    (evil-test-buffer
+      "[ひ]らがな한글"
+      ("w")
+      "ひらがな[한]글"))
+  (ert-info ("Katakana / Latin")
+    (evil-test-buffer
+      "[カ]タカナabcd"
+      ("w")
+      "カタカナ[a]bcd"))
+  (ert-info ("Katakana / numeric")
+    (evil-test-buffer
+      "[カ]タカナ1234"
+      ("w")
+      "カタカナ[1]234"))
+  (ert-info ("Katakana / Kanji")
+    (evil-test-buffer
+      "[カ]タカナ漢字"
+      ("w")
+      "カタカナ[漢]字"))
+  (ert-info ("Katakana / Hiragana")
+    (evil-test-buffer
+      "[カ]タカナひらがな"
+      ("w")
+      "カタカナ[ひ]らがな"))
+  (ert-info ("Katakana / half-width Katakana")
+    (evil-test-buffer
+      "[カ]タカナｶﾀｶﾅ"
+      ("w")
+      "カタカナ[ｶ]ﾀｶﾅ"))
+  (ert-info ("Katakana / full-width alphabet")
+    (evil-test-buffer
+      "[カ]タカナＡＢＣ"
+      ("w")
+      "カタカナ[Ａ]ＢＣ"))
+  (ert-info ("Katakana / full-width numeric")
+    (evil-test-buffer
+      "[カ]タカナ１２３"
+      ("w")
+      "カタカナ[１]２３"))
+  (ert-info ("Katakana / Hangul")
+    (evil-test-buffer
+      "[カ]タカナ한글"
+      ("w")
+      "カタカナ[한]글"))
+  (ert-info ("half-width Katakana / Latin")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅabcd"
+      ("w")
+      "ｶﾀｶﾅabc[d]"))
+  (ert-info ("half-width Katakana / numeric")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ1234"
+      ("w")
+      "ｶﾀｶﾅ123[4]"))
+  (ert-info ("half-width Katakana / Kanji")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ漢字"
+      ("w")
+      "ｶﾀｶﾅ[漢]字"))
+  (ert-info ("half-width Katakana / Hiragana")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅひらがな"
+      ("w")
+      "ｶﾀｶﾅ[ひ]らがな"))
+  (ert-info ("half-width Katakana / Katakana")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅカタカナ"
+      ("w")
+      "ｶﾀｶﾅ[カ]タカナ"))
+  (ert-info ("half-width Katakana / full-width alphabet")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅＡＢＣ"
+      ("w")
+      "ｶﾀｶﾅＡＢ[Ｃ]"))
+  (ert-info ("half-width Katakana / full-width numeric")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ１２３"
+      ("w")
+      "ｶﾀｶﾅ１２[３]"))
+  (ert-info ("half-width Katakana / Hangul")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ한글"
+      ("w")
+      "ｶﾀｶﾅ[한]글"))
+  (ert-info ("full-width alphabet / Latin")
+    (evil-test-buffer
+      "[Ａ]ＢＣabcd"
+      ("w")
+      "ＡＢＣabc[d]"))
+  (ert-info ("full-width alphabet / numeric")
+    (evil-test-buffer
+      "[Ａ]ＢＣ1234"
+      ("w")
+      "ＡＢＣ123[4]"))
+  (ert-info ("full-width alphabet / Kanji")
+    (evil-test-buffer
+      "[Ａ]ＢＣ漢字"
+      ("w")
+      "ＡＢＣ[漢]字"))
+  (ert-info ("full-width alphabet / Hiragana")
+    (evil-test-buffer
+      "[Ａ]ＢＣひらがな"
+      ("w")
+      "ＡＢＣ[ひ]らがな"))
+  (ert-info ("full-width alphabet / Katakana")
+    (evil-test-buffer
+      "[Ａ]ＢＣカタカナ"
+      ("w")
+      "ＡＢＣ[カ]タカナ"))
+  (ert-info ("full-width alphabet / half-width Katakana")
+    (evil-test-buffer
+      "[Ａ]ＢＣｶﾀｶﾅ"
+      ("w")
+      "ＡＢＣｶﾀｶ[ﾅ]"))
+  (ert-info ("full-width alphabet / full-width numeric")
+    (evil-test-buffer
+      "[Ａ]ＢＣ１２３"
+      ("w")
+      "ＡＢＣ１２[３]"))
+  (ert-info ("full-width alphabet / Hangul")
+    (evil-test-buffer
+      "[Ａ]ＢＣ한글"
+      ("w")
+      "ＡＢＣ[한]글"))
+  (ert-info ("full-width numeric / Latin")
+    (evil-test-buffer
+      "[１]２３abcd"
+      ("w")
+      "１２３abc[d]"))
+  (ert-info ("full-width numeric / numeric")
+    (evil-test-buffer
+      "[１]２３1234"
+      ("w")
+      "１２３123[4]"))
+  (ert-info ("full-width numeric / Kanji")
+    (evil-test-buffer
+      "[１]２３漢字"
+      ("w")
+      "１２３[漢]字"))
+  (ert-info ("full-width numeric / Hiragana")
+    (evil-test-buffer
+      "[１]２３ひらがな"
+      ("w")
+      "１２３[ひ]らがな"))
+  (ert-info ("full-width numeric / Katakana")
+    (evil-test-buffer
+      "[１]２３カタカナ"
+      ("w")
+      "１２３[カ]タカナ"))
+  (ert-info ("full-width numeric / half-width Katakana")
+    (evil-test-buffer
+      "[１]２３ｶﾀｶﾅ"
+      ("w")
+      "１２３ｶﾀｶ[ﾅ]"))
+  (ert-info ("full-width numeric / full-width alphabet")
+    (evil-test-buffer
+      "[１]２３ＡＢＣ"
+      ("w")
+      "１２３ＡＢ[Ｃ]"))
+  (ert-info ("full-width numeric / Hangul")
+    (evil-test-buffer
+      "[１]２３한글"
+      ("w")
+      "１２３[한]글"))
+  (ert-info ("Hangul / Latin")
+    (evil-test-buffer
+      "[한]글abcd"
+      ("w")
+      "한글[a]bcd"))
+  (ert-info ("Hangul / numeric")
+    (evil-test-buffer
+      "[한]글1234"
+      ("w")
+      "한글[1]234"))
+  (ert-info ("Hangul / Kanji")
+    (evil-test-buffer
+      "[한]글漢字"
+      ("w")
+      "한글[漢]字"))
+  (ert-info ("Hangul / Hiragana")
+    (evil-test-buffer
+      "[한]글ひらがな"
+      ("w")
+      "한글[ひ]らがな"))
+  (ert-info ("Hangul / Katakana")
+    (evil-test-buffer
+      "[한]글カタカナ"
+      ("w")
+      "한글[カ]タカナ"))
+  (ert-info ("Hangul / half-width Katakana")
+    (evil-test-buffer
+      "[한]글ｶﾀｶﾅ"
+      ("w")
+      "한글[ｶ]ﾀｶﾅ"))
+  (ert-info ("Hangul / full-width alphabet")
+    (evil-test-buffer
+      "[한]글ＡＢＣ"
+      ("w")
+      "한글[Ａ]ＢＣ"))
+  (ert-info ("Hangul / full-width numeric")
+    (evil-test-buffer
+      "[한]글１２３"
+      ("w")
+      "한글[１]２３")))
+
+(ert-deftest evil-test-forward-word-end-cjk ()
+  "Test `evil-forward-word-end' on CJK words"
+  :tags '(evil motion cjk)
+  (ert-info ("Latin / numeric")
+    (evil-test-buffer
+      "[a]bcd1234"
+      ("e")
+      "abcd123[4]"))
+  (ert-info ("Latin / Kanji")
+    (evil-test-buffer
+      "[a]bcd漢字"
+      ("e")
+      "abc[d]漢字"))
+  (ert-info ("Latin / Hiragana")
+    (evil-test-buffer
+      "[a]bcdひらがな"
+      ("e")
+      "abc[d]ひらがな"))
+  (ert-info ("Latin / Katakana")
+    (evil-test-buffer
+      "[a]bcdカタカナ"
+      ("e")
+      "abc[d]カタカナ"))
+  (ert-info ("Latin / half-width Katakana")
+    (evil-test-buffer
+      "[a]bcdｶﾀｶﾅ"
+      ("e")
+      "abcdｶﾀｶ[ﾅ]"))
+  (ert-info ("Latin / full-width alphabet")
+    (evil-test-buffer
+      "[a]bcdＡＢＣ"
+      ("e")
+      "abcdＡＢ[Ｃ]"))
+  (ert-info ("Latin / full-width numeric")
+    (evil-test-buffer
+      "[a]bcd１２３"
+      ("e")
+      "abcd１２[３]"))
+  (ert-info ("Latin / Hangul")
+    (evil-test-buffer
+      "[a]bcd한글"
+      ("e")
+      "abc[d]한글"))
+  (ert-info ("numeric / Latin")
+    (evil-test-buffer
+      "[1]234abcd"
+      ("e")
+      "1234abc[d]"))
+  (ert-info ("numeric / Kanji")
+    (evil-test-buffer
+      "[1]234漢字"
+      ("e")
+      "123[4]漢字"))
+  (ert-info ("numeric / Hiragana")
+    (evil-test-buffer
+      "[1]234ひらがな"
+      ("e")
+      "123[4]ひらがな"))
+  (ert-info ("numeric / Katakana")
+    (evil-test-buffer
+      "[1]234カタカナ"
+      ("e")
+      "123[4]カタカナ"))
+  (ert-info ("numeric / half-width Katakana")
+    (evil-test-buffer
+      "[1]234ｶﾀｶﾅ"
+      ("e")
+      "1234ｶﾀｶ[ﾅ]"))
+  (ert-info ("numeric / full-width alphabet")
+    (evil-test-buffer
+      "[1]234ＡＢＣ"
+      ("e")
+      "1234ＡＢ[Ｃ]"))
+  (ert-info ("numeric / full-width numeric")
+    (evil-test-buffer
+      "[1]234１２３"
+      ("e")
+      "1234１２[３]"))
+  (ert-info ("numeric / Hangul")
+    (evil-test-buffer
+      "[1]234한글"
+      ("e")
+      "123[4]한글"))
+  (ert-info ("Kanji / Latin")
+    (evil-test-buffer
+      "[漢]字abcd"
+      ("e")
+      "漢[字]abcd"))
+  (ert-info ("Kanji / numeric")
+    (evil-test-buffer
+      "[漢]字1234"
+      ("e")
+      "漢[字]1234"))
+  (ert-info ("Kanji / Hiragana")
+    (evil-test-buffer
+      "[漢]字ひらがな"
+      ("e")
+      "漢[字]ひらがな"))
+  (ert-info ("Kanji / Katakana")
+    (evil-test-buffer
+      "[漢]字カタカナ"
+      ("e")
+      "漢[字]カタカナ"))
+  (ert-info ("Kanji / half-width Katakana")
+    (evil-test-buffer
+      "[漢]字ｶﾀｶﾅ"
+      ("e")
+      "漢[字]ｶﾀｶﾅ"))
+  (ert-info ("Kanji / full-width alphabet")
+    (evil-test-buffer
+      "[漢]字ＡＢＣ"
+      ("e")
+      "漢[字]ＡＢＣ"))
+  (ert-info ("Kanji / full-width numeric")
+    (evil-test-buffer
+      "[漢]字１２３"
+      ("e")
+      "漢[字]１２３"))
+  (ert-info ("Kanji / Hangul")
+    (evil-test-buffer
+      "[漢]字한글"
+      ("e")
+      "漢[字]한글"))
+  (ert-info ("Hiragana / Latin")
+    (evil-test-buffer
+      "[ひ]らがなabcd"
+      ("e")
+      "ひらが[な]abcd"))
+  (ert-info ("Hiragana / numeric")
+    (evil-test-buffer
+      "[ひ]らがな1234"
+      ("e")
+      "ひらが[な]1234"))
+  (ert-info ("Hiragana / Kanji")
+    (evil-test-buffer
+      "[ひ]らがな漢字"
+      ("e")
+      "ひらが[な]漢字"))
+  (ert-info ("Hiragana / Katakana")
+    (evil-test-buffer
+      "[ひ]らがなカタカナ"
+      ("e")
+      "ひらが[な]カタカナ"))
+  (ert-info ("Hiragana / half-width Katakana")
+    (evil-test-buffer
+      "[ひ]らがなｶﾀｶﾅ"
+      ("e")
+      "ひらが[な]ｶﾀｶﾅ"))
+  (ert-info ("Hiragana / full-width alphabet")
+    (evil-test-buffer
+      "[ひ]らがなＡＢＣ"
+      ("e")
+      "ひらが[な]ＡＢＣ"))
+  (ert-info ("Hiragana / full-width numeric")
+    (evil-test-buffer
+      "[ひ]らがな１２３"
+      ("e")
+      "ひらが[な]１２３"))
+  (ert-info ("Hiragana / Hangul")
+    (evil-test-buffer
+      "[ひ]らがな한글"
+      ("e")
+      "ひらが[な]한글"))
+  (ert-info ("Katakana / Latin")
+    (evil-test-buffer
+      "[カ]タカナabcd"
+      ("e")
+      "カタカ[ナ]abcd"))
+  (ert-info ("Katakana / numeric")
+    (evil-test-buffer
+      "[カ]タカナ1234"
+      ("e")
+      "カタカ[ナ]1234"))
+  (ert-info ("Katakana / Kanji")
+    (evil-test-buffer
+      "[カ]タカナ漢字"
+      ("e")
+      "カタカ[ナ]漢字"))
+  (ert-info ("Katakana / Hiragana")
+    (evil-test-buffer
+      "[カ]タカナひらがな"
+      ("e")
+      "カタカ[ナ]ひらがな"))
+  (ert-info ("Katakana / half-width Katakana")
+    (evil-test-buffer
+      "[カ]タカナｶﾀｶﾅ"
+      ("e")
+      "カタカ[ナ]ｶﾀｶﾅ"))
+  (ert-info ("Katakana / full-width alphabet")
+    (evil-test-buffer
+      "[カ]タカナＡＢＣ"
+      ("e")
+      "カタカ[ナ]ＡＢＣ"))
+  (ert-info ("Katakana / full-width numeric")
+    (evil-test-buffer
+      "[カ]タカナ１２３"
+      ("e")
+      "カタカ[ナ]１２３"))
+  (ert-info ("Katakana / Hangul")
+    (evil-test-buffer
+      "[カ]タカナ한글"
+      ("e")
+      "カタカ[ナ]한글"))
+  (ert-info ("half-width Katakana / Latin")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅabcd"
+      ("e")
+      "ｶﾀｶﾅabc[d]"))
+  (ert-info ("half-width Katakana / numeric")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ1234"
+      ("e")
+      "ｶﾀｶﾅ123[4]"))
+  (ert-info ("half-width Katakana / Kanji")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ漢字"
+      ("e")
+      "ｶﾀｶ[ﾅ]漢字"))
+  (ert-info ("half-width Katakana / Hiragana")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅひらがな"
+      ("e")
+      "ｶﾀｶ[ﾅ]ひらがな"))
+  (ert-info ("half-width Katakana / Katakana")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅカタカナ"
+      ("e")
+      "ｶﾀｶ[ﾅ]カタカナ"))
+  (ert-info ("half-width Katakana / full-width alphabet")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅＡＢＣ"
+      ("e")
+      "ｶﾀｶﾅＡＢ[Ｃ]"))
+  (ert-info ("half-width Katakana / full-width numeric")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ１２３"
+      ("e")
+      "ｶﾀｶﾅ１２[３]"))
+  (ert-info ("half-width Katakana / Hangul")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ한글"
+      ("e")
+      "ｶﾀｶ[ﾅ]한글"))
+  (ert-info ("full-width alphabet / Latin")
+    (evil-test-buffer
+      "[Ａ]ＢＣabcd"
+      ("e")
+      "ＡＢＣabc[d]"))
+  (ert-info ("full-width alphabet / numeric")
+    (evil-test-buffer
+      "[Ａ]ＢＣ1234"
+      ("e")
+      "ＡＢＣ123[4]"))
+  (ert-info ("full-width alphabet / Kanji")
+    (evil-test-buffer
+      "[Ａ]ＢＣ漢字"
+      ("e")
+      "ＡＢ[Ｃ]漢字"))
+  (ert-info ("full-width alphabet / Hiragana")
+    (evil-test-buffer
+      "[Ａ]ＢＣひらがな"
+      ("e")
+      "ＡＢ[Ｃ]ひらがな"))
+  (ert-info ("full-width alphabet / Katakana")
+    (evil-test-buffer
+      "[Ａ]ＢＣカタカナ"
+      ("e")
+      "ＡＢ[Ｃ]カタカナ"))
+  (ert-info ("full-width alphabet / half-width Katakana")
+    (evil-test-buffer
+      "[Ａ]ＢＣｶﾀｶﾅ"
+      ("e")
+      "ＡＢＣｶﾀｶ[ﾅ]"))
+  (ert-info ("full-width alphabet / full-width numeric")
+    (evil-test-buffer
+      "[Ａ]ＢＣ１２３"
+      ("e")
+      "ＡＢＣ１２[３]"))
+  (ert-info ("full-width alphabet / Hangul")
+    (evil-test-buffer
+      "[Ａ]ＢＣ한글"
+      ("e")
+      "ＡＢ[Ｃ]한글"))
+  (ert-info ("full-width numeric / Latin")
+    (evil-test-buffer
+      "[１]２３abcd"
+      ("e")
+      "１２３abc[d]"))
+  (ert-info ("full-width numeric / numeric")
+    (evil-test-buffer
+      "[１]２３1234"
+      ("e")
+      "１２３123[4]"))
+  (ert-info ("full-width numeric / Kanji")
+    (evil-test-buffer
+      "[１]２３漢字"
+      ("e")
+      "１２[３]漢字"))
+  (ert-info ("full-width numeric / Hiragana")
+    (evil-test-buffer
+      "[１]２３ひらがな"
+      ("e")
+      "１２[３]ひらがな"))
+  (ert-info ("full-width numeric / Katakana")
+    (evil-test-buffer
+      "[１]２３カタカナ"
+      ("e")
+      "１２[３]カタカナ"))
+  (ert-info ("full-width numeric / half-width Katakana")
+    (evil-test-buffer
+      "[１]２３ｶﾀｶﾅ"
+      ("e")
+      "１２３ｶﾀｶ[ﾅ]"))
+  (ert-info ("full-width numeric / full-width alphabet")
+    (evil-test-buffer
+      "[１]２３ＡＢＣ"
+      ("e")
+      "１２３ＡＢ[Ｃ]"))
+  (ert-info ("full-width numeric / Hangul")
+    (evil-test-buffer
+      "[１]２３한글"
+      ("e")
+      "１２[３]한글"))
+  (ert-info ("Hangul / Latin")
+    (evil-test-buffer
+      "[한]글abcd"
+      ("e")
+      "한[글]abcd"))
+  (ert-info ("Hangul / numeric")
+    (evil-test-buffer
+      "[한]글1234"
+      ("e")
+      "한[글]1234"))
+  (ert-info ("Hangul / Kanji")
+    (evil-test-buffer
+      "[한]글漢字"
+      ("e")
+      "한[글]漢字"))
+  (ert-info ("Hangul / Hiragana")
+    (evil-test-buffer
+      "[한]글ひらがな"
+      ("e")
+      "한[글]ひらがな"))
+  (ert-info ("Hangul / Katakana")
+    (evil-test-buffer
+      "[한]글カタカナ"
+      ("e")
+      "한[글]カタカナ"))
+  (ert-info ("Hangul / half-width Katakana")
+    (evil-test-buffer
+      "[한]글ｶﾀｶﾅ"
+      ("e")
+      "한[글]ｶﾀｶﾅ"))
+  (ert-info ("Hangul / full-width alphabet")
+    (evil-test-buffer
+      "[한]글ＡＢＣ"
+      ("e")
+      "한[글]ＡＢＣ"))
+  (ert-info ("Hangul / full-width numeric")
+    (evil-test-buffer
+      "[한]글１２３"
+      ("e")
+      "한[글]１２３")))
+
+(ert-deftest evil-test-backword-word-begin-cjk ()
+  "Test `evil-backward-word-begin' on CJK words"
+  :tags '(evil motion cjk)
+  (ert-info ("Latin / numeric")
+    (evil-test-buffer
+      "abcd123[4]"
+      ("b")
+      "[a]bcd1234"))
+  (ert-info ("Latin / Kanji")
+    (evil-test-buffer
+      "abcd漢[字]"
+      ("b")
+      "abcd[漢]字"))
+  (ert-info ("Latin / Hiragana")
+    (evil-test-buffer
+      "abcdひらが[な]"
+      ("b")
+      "abcd[ひ]らがな"))
+  (ert-info ("Latin / Katakana")
+    (evil-test-buffer
+      "abcdカタカ[ナ]"
+      ("b")
+      "abcd[カ]タカナ"))
+  (ert-info ("Latin / half-width Katakana")
+    (evil-test-buffer
+      "abcdｶﾀｶ[ﾅ]"
+      ("b")
+      "[a]bcdｶﾀｶﾅ"))
+  (ert-info ("Latin / full-width alphabet")
+    (evil-test-buffer
+      "abcdＡＢ[Ｃ]"
+      ("b")
+      "[a]bcdＡＢＣ"))
+  (ert-info ("Latin / full-width numeric")
+    (evil-test-buffer
+      "abcd１２[３]"
+      ("b")
+      "[a]bcd１２３"))
+  (ert-info ("Latin / Hangul")
+    (evil-test-buffer
+      "abcd한[글]"
+      ("b")
+      "abcd[한]글"))
+  (ert-info ("numeric / Latin")
+    (evil-test-buffer
+      "1234abc[d]"
+      ("b")
+      "[1]234abcd"))
+  (ert-info ("numeric / Kanji")
+    (evil-test-buffer
+      "1234漢[字]"
+      ("b")
+      "1234[漢]字"))
+  (ert-info ("numeric / Hiragana")
+    (evil-test-buffer
+      "1234ひらが[な]"
+      ("b")
+      "1234[ひ]らがな"))
+  (ert-info ("numeric / Katakana")
+    (evil-test-buffer
+      "1234カタカ[ナ]"
+      ("b")
+      "1234[カ]タカナ"))
+  (ert-info ("numeric / half-width Katakana")
+    (evil-test-buffer
+      "1234ｶﾀｶ[ﾅ]"
+      ("b")
+      "[1]234ｶﾀｶﾅ"))
+  (ert-info ("numeric / full-width alphabet")
+    (evil-test-buffer
+      "1234ＡＢ[Ｃ]"
+      ("b")
+      "[1]234ＡＢＣ"))
+  (ert-info ("numeric / full-width numeric")
+    (evil-test-buffer
+      "1234１２[３]"
+      ("b")
+      "[1]234１２３"))
+  (ert-info ("numeric / Hangul")
+    (evil-test-buffer
+      "1234한[글]"
+      ("b")
+      "1234[한]글"))
+  (ert-info ("Kanji / Latin")
+    (evil-test-buffer
+      "漢字abc[d]"
+      ("b")
+      "漢字[a]bcd"))
+  (ert-info ("Kanji / numeric")
+    (evil-test-buffer
+      "漢字123[4]"
+      ("b")
+      "漢字[1]234"))
+  (ert-info ("Kanji / Hiragana")
+    (evil-test-buffer
+      "漢字ひらが[な]"
+      ("b")
+      "漢字[ひ]らがな"))
+  (ert-info ("Kanji / Katakana")
+    (evil-test-buffer
+      "漢字カタカ[ナ]"
+      ("b")
+      "漢字[カ]タカナ"))
+  (ert-info ("Kanji / half-width Katakana")
+    (evil-test-buffer
+      "漢字ｶﾀｶ[ﾅ]"
+      ("b")
+      "漢字[ｶ]ﾀｶﾅ"))
+  (ert-info ("Kanji / full-width alphabet")
+    (evil-test-buffer
+      "漢字ＡＢ[Ｃ]"
+      ("b")
+      "漢字[Ａ]ＢＣ"))
+  (ert-info ("Kanji / full-width numeric")
+    (evil-test-buffer
+      "漢字１２[３]"
+      ("b")
+      "漢字[１]２３"))
+  (ert-info ("Kanji / Hangul")
+    (evil-test-buffer
+      "漢字한[글]"
+      ("b")
+      "漢字[한]글"))
+  (ert-info ("Hiragana / Latin")
+    (evil-test-buffer
+      "ひらがなabc[d]"
+      ("b")
+      "ひらがな[a]bcd"))
+  (ert-info ("Hiragana / numeric")
+    (evil-test-buffer
+      "ひらがな123[4]"
+      ("b")
+      "ひらがな[1]234"))
+  (ert-info ("Hiragana / Kanji")
+    (evil-test-buffer
+      "ひらがな漢[字]"
+      ("b")
+      "ひらがな[漢]字"))
+  (ert-info ("Hiragana / Katakana")
+    (evil-test-buffer
+      "ひらがなカタカ[ナ]"
+      ("b")
+      "ひらがな[カ]タカナ"))
+  (ert-info ("Hiragana / half-width Katakana")
+    (evil-test-buffer
+      "ひらがなｶﾀｶ[ﾅ]"
+      ("b")
+      "ひらがな[ｶ]ﾀｶﾅ"))
+  (ert-info ("Hiragana / full-width alphabet")
+    (evil-test-buffer
+      "ひらがなＡＢ[Ｃ]"
+      ("b")
+      "ひらがな[Ａ]ＢＣ"))
+  (ert-info ("Hiragana / full-width numeric")
+    (evil-test-buffer
+      "ひらがな１２[３]"
+      ("b")
+      "ひらがな[１]２３"))
+  (ert-info ("Hiragana / Hangul")
+    (evil-test-buffer
+      "ひらがな한[글]"
+      ("b")
+      "ひらがな[한]글"))
+  (ert-info ("Katakana / Latin")
+    (evil-test-buffer
+      "カタカナabc[d]"
+      ("b")
+      "カタカナ[a]bcd"))
+  (ert-info ("Katakana / numeric")
+    (evil-test-buffer
+      "カタカナ123[4]"
+      ("b")
+      "カタカナ[1]234"))
+  (ert-info ("Katakana / Kanji")
+    (evil-test-buffer
+      "カタカナ漢[字]"
+      ("b")
+      "カタカナ[漢]字"))
+  (ert-info ("Katakana / Hiragana")
+    (evil-test-buffer
+      "カタカナひらが[な]"
+      ("b")
+      "カタカナ[ひ]らがな"))
+  (ert-info ("Katakana / half-width Katakana")
+    (evil-test-buffer
+      "カタカナｶﾀｶ[ﾅ]"
+      ("b")
+      "カタカナ[ｶ]ﾀｶﾅ"))
+  (ert-info ("Katakana / full-width alphabet")
+    (evil-test-buffer
+      "カタカナＡＢ[Ｃ]"
+      ("b")
+      "カタカナ[Ａ]ＢＣ"))
+  (ert-info ("Katakana / full-width numeric")
+    (evil-test-buffer
+      "カタカナ１２[３]"
+      ("b")
+      "カタカナ[１]２３"))
+  (ert-info ("Katakana / Hangul")
+    (evil-test-buffer
+      "カタカナ한[글]"
+      ("b")
+      "カタカナ[한]글"))
+  (ert-info ("half-width Katakana / Latin")
+    (evil-test-buffer
+      "ｶﾀｶﾅabc[d]"
+      ("b")
+      "[ｶ]ﾀｶﾅabcd"))
+  (ert-info ("half-width Katakana / numeric")
+    (evil-test-buffer
+      "ｶﾀｶﾅ123[4]"
+      ("b")
+      "[ｶ]ﾀｶﾅ1234"))
+  (ert-info ("half-width Katakana / Kanji")
+    (evil-test-buffer
+      "ｶﾀｶﾅ漢[字]"
+      ("b")
+      "ｶﾀｶﾅ[漢]字"))
+  (ert-info ("half-width Katakana / Hiragana")
+    (evil-test-buffer
+      "ｶﾀｶﾅひらが[な]"
+      ("b")
+      "ｶﾀｶﾅ[ひ]らがな"))
+  (ert-info ("half-width Katakana / Katakana")
+    (evil-test-buffer
+      "ｶﾀｶﾅカタカ[ナ]"
+      ("b")
+      "ｶﾀｶﾅ[カ]タカナ"))
+  (ert-info ("half-width Katakana / full-width alphabet")
+    (evil-test-buffer
+      "ｶﾀｶﾅＡＢ[Ｃ]"
+      ("b")
+      "[ｶ]ﾀｶﾅＡＢＣ"))
+  (ert-info ("half-width Katakana / full-width numeric")
+    (evil-test-buffer
+      "ｶﾀｶﾅ１２[３]"
+      ("b")
+      "[ｶ]ﾀｶﾅ１２３"))
+  (ert-info ("half-width Katakana / Hangul")
+    (evil-test-buffer
+      "ｶﾀｶﾅ한[글]"
+      ("b")
+      "ｶﾀｶﾅ[한]글"))
+  (ert-info ("full-width alphabet / Latin")
+    (evil-test-buffer
+      "ＡＢＣabc[d]"
+      ("b")
+      "[Ａ]ＢＣabcd"))
+  (ert-info ("full-width alphabet / numeric")
+    (evil-test-buffer
+      "ＡＢＣ123[4]"
+      ("b")
+      "[Ａ]ＢＣ1234"))
+  (ert-info ("full-width alphabet / Kanji")
+    (evil-test-buffer
+      "ＡＢＣ漢[字]"
+      ("b")
+      "ＡＢＣ[漢]字"))
+  (ert-info ("full-width alphabet / Hiragana")
+    (evil-test-buffer
+      "ＡＢＣひらが[な]"
+      ("b")
+      "ＡＢＣ[ひ]らがな"))
+  (ert-info ("full-width alphabet / Katakana")
+    (evil-test-buffer
+      "ＡＢＣカタカ[ナ]"
+      ("b")
+      "ＡＢＣ[カ]タカナ"))
+  (ert-info ("full-width alphabet / half-width Katakana")
+    (evil-test-buffer
+      "ＡＢＣｶﾀｶ[ﾅ]"
+      ("b")
+      "[Ａ]ＢＣｶﾀｶﾅ"))
+  (ert-info ("full-width alphabet / full-width numeric")
+    (evil-test-buffer
+      "ＡＢＣ１２[３]"
+      ("b")
+      "[Ａ]ＢＣ１２３"))
+  (ert-info ("full-width alphabet / Hangul")
+    (evil-test-buffer
+      "ＡＢＣ한[글]"
+      ("b")
+      "ＡＢＣ[한]글"))
+  (ert-info ("full-width numeric / Latin")
+    (evil-test-buffer
+      "１２３abc[d]"
+      ("b")
+      "[１]２３abcd"))
+  (ert-info ("full-width numeric / numeric")
+    (evil-test-buffer
+      "１２３123[4]"
+      ("b")
+      "[１]２３1234"))
+  (ert-info ("full-width numeric / Kanji")
+    (evil-test-buffer
+      "１２３漢[字]"
+      ("b")
+      "１２３[漢]字"))
+  (ert-info ("full-width numeric / Hiragana")
+    (evil-test-buffer
+      "１２３ひらが[な]"
+      ("b")
+      "１２３[ひ]らがな"))
+  (ert-info ("full-width numeric / Katakana")
+    (evil-test-buffer
+      "１２３カタカ[ナ]"
+      ("b")
+      "１２３[カ]タカナ"))
+  (ert-info ("full-width numeric / half-width Katakana")
+    (evil-test-buffer
+      "１２３ｶﾀｶ[ﾅ]"
+      ("b")
+      "[１]２３ｶﾀｶﾅ"))
+  (ert-info ("full-width numeric / full-width alphabet")
+    (evil-test-buffer
+      "１２３ＡＢ[Ｃ]"
+      ("b")
+      "[１]２３ＡＢＣ"))
+  (ert-info ("full-width numeric / Hangul")
+    (evil-test-buffer
+      "１２３한[글]"
+      ("b")
+      "１２３[한]글"))
+  (ert-info ("Hangul / Latin")
+    (evil-test-buffer
+      "한글abc[d]"
+      ("b")
+      "한글[a]bcd"))
+  (ert-info ("Hangul / numeric")
+    (evil-test-buffer
+      "한글123[4]"
+      ("b")
+      "한글[1]234"))
+  (ert-info ("Hangul / Kanji")
+    (evil-test-buffer
+      "한글漢[字]"
+      ("b")
+      "한글[漢]字"))
+  (ert-info ("Hangul / Hiragana")
+    (evil-test-buffer
+      "한글ひらが[な]"
+      ("b")
+      "한글[ひ]らがな"))
+  (ert-info ("Hangul / Katakana")
+    (evil-test-buffer
+      "한글カタカ[ナ]"
+      ("b")
+      "한글[カ]タカナ"))
+  (ert-info ("Hangul / half-width Katakana")
+    (evil-test-buffer
+      "한글ｶﾀｶ[ﾅ]"
+      ("b")
+      "한글[ｶ]ﾀｶﾅ"))
+  (ert-info ("Hangul / full-width alphabet")
+    (evil-test-buffer
+      "한글ＡＢ[Ｃ]"
+      ("b")
+      "한글[Ａ]ＢＣ"))
+  (ert-info ("Hangul / full-width numeric")
+    (evil-test-buffer
+      "한글１２[３]"
+      ("b")
+      "한글[１]２３")))
+
+(ert-deftest evil-test-backword-word-end-cjk ()
+  "Test `evil-backward-word-end' on CJK words"
+  :tags '(evil motion cjk)
+  (ert-info ("Latin / numeric")
+    (evil-test-buffer
+      "abcd123[4]"
+      ("ge")
+      "[a]bcd1234"))
+  (ert-info ("Latin / Kanji")
+    (evil-test-buffer
+      "abcd漢[字]"
+      ("ge")
+      "abc[d]漢字"))
+  (ert-info ("Latin / Hiragana")
+    (evil-test-buffer
+      "abcdひらが[な]"
+      ("ge")
+      "abc[d]ひらがな"))
+  (ert-info ("Latin / Katakana")
+    (evil-test-buffer
+      "abcdカタカ[ナ]"
+      ("ge")
+      "abc[d]カタカナ"))
+  (ert-info ("Latin / half-width Katakana")
+    (evil-test-buffer
+      "abcdｶﾀｶ[ﾅ]"
+      ("ge")
+      "[a]bcdｶﾀｶﾅ"))
+  (ert-info ("Latin / full-width alphabet")
+    (evil-test-buffer
+      "abcdＡＢ[Ｃ]"
+      ("ge")
+      "[a]bcdＡＢＣ"))
+  (ert-info ("Latin / full-width numeric")
+    (evil-test-buffer
+      "abcd１２[３]"
+      ("ge")
+      "[a]bcd１２３"))
+  (ert-info ("Latin / Hangul")
+    (evil-test-buffer
+      "abcd한[글]"
+      ("ge")
+      "abc[d]한글"))
+  (ert-info ("numeric / Latin")
+    (evil-test-buffer
+      "1234abc[d]"
+      ("ge")
+      "[1]234abcd"))
+  (ert-info ("numeric / Kanji")
+    (evil-test-buffer
+      "1234漢[字]"
+      ("ge")
+      "123[4]漢字"))
+  (ert-info ("numeric / Hiragana")
+    (evil-test-buffer
+      "1234ひらが[な]"
+      ("ge")
+      "123[4]ひらがな"))
+  (ert-info ("numeric / Katakana")
+    (evil-test-buffer
+      "1234カタカ[ナ]"
+      ("ge")
+      "123[4]カタカナ"))
+  (ert-info ("numeric / half-width Katakana")
+    (evil-test-buffer
+      "1234ｶﾀｶ[ﾅ]"
+      ("ge")
+      "[1]234ｶﾀｶﾅ"))
+  (ert-info ("numeric / full-width alphabet")
+    (evil-test-buffer
+      "1234ＡＢ[Ｃ]"
+      ("ge")
+      "[1]234ＡＢＣ"))
+  (ert-info ("numeric / full-width numeric")
+    (evil-test-buffer
+      "1234１２[３]"
+      ("ge")
+      "[1]234１２３"))
+  (ert-info ("numeric / Hangul")
+    (evil-test-buffer
+      "1234한[글]"
+      ("ge")
+      "123[4]한글"))
+  (ert-info ("Kanji / Latin")
+    (evil-test-buffer
+      "漢字abc[d]"
+      ("ge")
+      "漢[字]abcd"))
+  (ert-info ("Kanji / numeric")
+    (evil-test-buffer
+      "漢字123[4]"
+      ("ge")
+      "漢[字]1234"))
+  (ert-info ("Kanji / Hiragana")
+    (evil-test-buffer
+      "漢字ひらが[な]"
+      ("ge")
+      "漢[字]ひらがな"))
+  (ert-info ("Kanji / Katakana")
+    (evil-test-buffer
+      "漢字カタカ[ナ]"
+      ("ge")
+      "漢[字]カタカナ"))
+  (ert-info ("Kanji / half-width Katakana")
+    (evil-test-buffer
+      "漢字ｶﾀｶ[ﾅ]"
+      ("ge")
+      "漢[字]ｶﾀｶﾅ"))
+  (ert-info ("Kanji / full-width alphabet")
+    (evil-test-buffer
+      "漢字ＡＢ[Ｃ]"
+      ("ge")
+      "漢[字]ＡＢＣ"))
+  (ert-info ("Kanji / full-width numeric")
+    (evil-test-buffer
+      "漢字１２[３]"
+      ("ge")
+      "漢[字]１２３"))
+  (ert-info ("Kanji / Hangul")
+    (evil-test-buffer
+      "漢字한[글]"
+      ("ge")
+      "漢[字]한글"))
+  (ert-info ("Hiragana / Latin")
+    (evil-test-buffer
+      "ひらがなabc[d]"
+      ("ge")
+      "ひらが[な]abcd"))
+  (ert-info ("Hiragana / numeric")
+    (evil-test-buffer
+      "ひらがな123[4]"
+      ("ge")
+      "ひらが[な]1234"))
+  (ert-info ("Hiragana / Kanji")
+    (evil-test-buffer
+      "ひらがな漢[字]"
+      ("ge")
+      "ひらが[な]漢字"))
+  (ert-info ("Hiragana / Katakana")
+    (evil-test-buffer
+      "ひらがなカタカ[ナ]"
+      ("ge")
+      "ひらが[な]カタカナ"))
+  (ert-info ("Hiragana / half-width Katakana")
+    (evil-test-buffer
+      "ひらがなｶﾀｶ[ﾅ]"
+      ("ge")
+      "ひらが[な]ｶﾀｶﾅ"))
+  (ert-info ("Hiragana / full-width alphabet")
+    (evil-test-buffer
+      "ひらがなＡＢ[Ｃ]"
+      ("ge")
+      "ひらが[な]ＡＢＣ"))
+  (ert-info ("Hiragana / full-width numeric")
+    (evil-test-buffer
+      "ひらがな１２[３]"
+      ("ge")
+      "ひらが[な]１２３"))
+  (ert-info ("Hiragana / Hangul")
+    (evil-test-buffer
+      "ひらがな한[글]"
+      ("ge")
+      "ひらが[な]한글"))
+  (ert-info ("Katakana / Latin")
+    (evil-test-buffer
+      "カタカナabc[d]"
+      ("ge")
+      "カタカ[ナ]abcd"))
+  (ert-info ("Katakana / numeric")
+    (evil-test-buffer
+      "カタカナ123[4]"
+      ("ge")
+      "カタカ[ナ]1234"))
+  (ert-info ("Katakana / Kanji")
+    (evil-test-buffer
+      "カタカナ漢[字]"
+      ("ge")
+      "カタカ[ナ]漢字"))
+  (ert-info ("Katakana / Hiragana")
+    (evil-test-buffer
+      "カタカナひらが[な]"
+      ("ge")
+      "カタカ[ナ]ひらがな"))
+  (ert-info ("Katakana / half-width Katakana")
+    (evil-test-buffer
+      "カタカナｶﾀｶ[ﾅ]"
+      ("ge")
+      "カタカ[ナ]ｶﾀｶﾅ"))
+  (ert-info ("Katakana / full-width alphabet")
+    (evil-test-buffer
+      "カタカナＡＢ[Ｃ]"
+      ("ge")
+      "カタカ[ナ]ＡＢＣ"))
+  (ert-info ("Katakana / full-width numeric")
+    (evil-test-buffer
+      "カタカナ１２[３]"
+      ("ge")
+      "カタカ[ナ]１２３"))
+  (ert-info ("Katakana / Hangul")
+    (evil-test-buffer
+      "カタカナ한[글]"
+      ("ge")
+      "カタカ[ナ]한글"))
+  (ert-info ("half-width Katakana / Latin")
+    (evil-test-buffer
+      "ｶﾀｶﾅabc[d]"
+      ("ge")
+      "[ｶ]ﾀｶﾅabcd"))
+  (ert-info ("half-width Katakana / numeric")
+    (evil-test-buffer
+      "ｶﾀｶﾅ123[4]"
+      ("ge")
+      "[ｶ]ﾀｶﾅ1234"))
+  (ert-info ("half-width Katakana / Kanji")
+    (evil-test-buffer
+      "ｶﾀｶﾅ漢[字]"
+      ("ge")
+      "ｶﾀｶ[ﾅ]漢字"))
+  (ert-info ("half-width Katakana / Hiragana")
+    (evil-test-buffer
+      "ｶﾀｶﾅひらが[な]"
+      ("ge")
+      "ｶﾀｶ[ﾅ]ひらがな"))
+  (ert-info ("half-width Katakana / Katakana")
+    (evil-test-buffer
+      "ｶﾀｶﾅカタカ[ナ]"
+      ("ge")
+      "ｶﾀｶ[ﾅ]カタカナ"))
+  (ert-info ("half-width Katakana / full-width alphabet")
+    (evil-test-buffer
+      "ｶﾀｶﾅＡＢ[Ｃ]"
+      ("ge")
+      "[ｶ]ﾀｶﾅＡＢＣ"))
+  (ert-info ("half-width Katakana / full-width numeric")
+    (evil-test-buffer
+      "ｶﾀｶﾅ１２[３]"
+      ("ge")
+      "[ｶ]ﾀｶﾅ１２３"))
+  (ert-info ("half-width Katakana / Hangul")
+    (evil-test-buffer
+      "ｶﾀｶﾅ한[글]"
+      ("ge")
+      "ｶﾀｶ[ﾅ]한글"))
+  (ert-info ("full-width alphabet / Latin")
+    (evil-test-buffer
+      "ＡＢＣabc[d]"
+      ("ge")
+      "[Ａ]ＢＣabcd"))
+  (ert-info ("full-width alphabet / numeric")
+    (evil-test-buffer
+      "ＡＢＣ123[4]"
+      ("ge")
+      "[Ａ]ＢＣ1234"))
+  (ert-info ("full-width alphabet / Kanji")
+    (evil-test-buffer
+      "ＡＢＣ漢[字]"
+      ("ge")
+      "ＡＢ[Ｃ]漢字"))
+  (ert-info ("full-width alphabet / Hiragana")
+    (evil-test-buffer
+      "ＡＢＣひらが[な]"
+      ("ge")
+      "ＡＢ[Ｃ]ひらがな"))
+  (ert-info ("full-width alphabet / Katakana")
+    (evil-test-buffer
+      "ＡＢＣカタカ[ナ]"
+      ("ge")
+      "ＡＢ[Ｃ]カタカナ"))
+  (ert-info ("full-width alphabet / half-width Katakana")
+    (evil-test-buffer
+      "ＡＢＣｶﾀｶ[ﾅ]"
+      ("ge")
+      "[Ａ]ＢＣｶﾀｶﾅ"))
+  (ert-info ("full-width alphabet / full-width numeric")
+    (evil-test-buffer
+      "ＡＢＣ１２[３]"
+      ("ge")
+      "[Ａ]ＢＣ１２３"))
+  (ert-info ("full-width alphabet / Hangul")
+    (evil-test-buffer
+      "ＡＢＣ한[글]"
+      ("ge")
+      "ＡＢ[Ｃ]한글"))
+  (ert-info ("full-width numeric / Latin")
+    (evil-test-buffer
+      "１２３abc[d]"
+      ("ge")
+      "[１]２３abcd"))
+  (ert-info ("full-width numeric / numeric")
+    (evil-test-buffer
+      "１２３123[4]"
+      ("ge")
+      "[１]２３1234"))
+  (ert-info ("full-width numeric / Kanji")
+    (evil-test-buffer
+      "１２３漢[字]"
+      ("ge")
+      "１２[３]漢字"))
+  (ert-info ("full-width numeric / Hiragana")
+    (evil-test-buffer
+      "１２３ひらが[な]"
+      ("ge")
+      "１２[３]ひらがな"))
+  (ert-info ("full-width numeric / Katakana")
+    (evil-test-buffer
+      "１２３カタカ[ナ]"
+      ("ge")
+      "１２[３]カタカナ"))
+  (ert-info ("full-width numeric / half-width Katakana")
+    (evil-test-buffer
+      "１２３ｶﾀｶ[ﾅ]"
+      ("ge")
+      "[１]２３ｶﾀｶﾅ"))
+  (ert-info ("full-width numeric / full-width alphabet")
+    (evil-test-buffer
+      "１２３ＡＢ[Ｃ]"
+      ("ge")
+      "[１]２３ＡＢＣ"))
+  (ert-info ("full-width numeric / Hangul")
+    (evil-test-buffer
+      "１２３한[글]"
+      ("ge")
+      "１２[３]한글"))
+  (ert-info ("Hangul / Latin")
+    (evil-test-buffer
+      "한글abc[d]"
+      ("ge")
+      "한[글]abcd"))
+  (ert-info ("Hangul / numeric")
+    (evil-test-buffer
+      "한글123[4]"
+      ("ge")
+      "한[글]1234"))
+  (ert-info ("Hangul / Kanji")
+    (evil-test-buffer
+      "한글漢[字]"
+      ("ge")
+      "한[글]漢字"))
+  (ert-info ("Hangul / Hiragana")
+    (evil-test-buffer
+      "한글ひらが[な]"
+      ("ge")
+      "한[글]ひらがな"))
+  (ert-info ("Hangul / Katakana")
+    (evil-test-buffer
+      "한글カタカ[ナ]"
+      ("ge")
+      "한[글]カタカナ"))
+  (ert-info ("Hangul / half-width Katakana")
+    (evil-test-buffer
+      "한글ｶﾀｶ[ﾅ]"
+      ("ge")
+      "한[글]ｶﾀｶﾅ"))
+  (ert-info ("Hangul / full-width alphabet")
+    (evil-test-buffer
+      "한글ＡＢ[Ｃ]"
+      ("ge")
+      "한[글]ＡＢＣ"))
+  (ert-info ("Hangul / full-width numeric")
+    (evil-test-buffer
+      "한글１２[３]"
+      ("ge")
+      "한[글]１２３")))
+
 (ert-deftest evil-test-move-paragraph ()
   "Test `evil-move-paragraph'"
   :tags '(evil motion)
@@ -3657,6 +5113,587 @@ Below some empty line."))
         ";; This<[ ]buffer> is for notes."
         ("aw")
         ";;<[ ]This buffer> is for notes."))))
+
+(ert-deftest evil-test-word-objects-cjk ()
+  "Test `evil-inner-word' and `evil-a-word' on CJK words"
+  :tags '(evil text-object cjk)
+  (ert-info ("Select a word")
+    (evil-test-buffer
+      "[a]bcd1234"
+      ("viw")
+      "<abcd123[4]>")
+    (evil-test-buffer
+      "[a]bcd1234"
+      ("vaw")
+      "<abcd123[4]>")
+    (evil-test-buffer
+      "[a]bcd漢字"
+      ("viw")
+      "<abc[d]>漢字")
+    (evil-test-buffer
+      "[a]bcd漢字"
+      ("vaw")
+      "<abc[d]>漢字")
+    (evil-test-buffer
+      "[a]bcdひらがな"
+      ("viw")
+      "<abc[d]>ひらがな")
+    (evil-test-buffer
+      "[a]bcdひらがな"
+      ("vaw")
+      "<abc[d]>ひらがな")
+    (evil-test-buffer
+      "[a]bcdカタカナ"
+      ("viw")
+      "<abc[d]>カタカナ")
+    (evil-test-buffer
+      "[a]bcdカタカナ"
+      ("vaw")
+      "<abc[d]>カタカナ")
+    (evil-test-buffer
+      "[a]bcdｶﾀｶﾅ"
+      ("viw")
+      "<abcdｶﾀｶ[ﾅ]>")
+    (evil-test-buffer
+      "[a]bcdｶﾀｶﾅ"
+      ("vaw")
+      "<abcdｶﾀｶ[ﾅ]>")
+    (evil-test-buffer
+      "[a]bcdＡＢＣ"
+      ("viw")
+      "<abcdＡＢ[Ｃ]>")
+    (evil-test-buffer
+      "[a]bcdＡＢＣ"
+      ("vaw")
+      "<abcdＡＢ[Ｃ]>")
+    (evil-test-buffer
+      "[a]bcd１２３"
+      ("viw")
+      "<abcd１２[３]>")
+    (evil-test-buffer
+      "[a]bcd１２３"
+      ("vaw")
+      "<abcd１２[３]>")
+    (evil-test-buffer
+      "[a]bcd한글"
+      ("viw")
+      "<abc[d]>한글")
+    (evil-test-buffer
+      "[a]bcd한글"
+      ("vaw")
+      "<abc[d]>한글")
+    (evil-test-buffer
+      "[1]234abcd"
+      ("viw")
+      "<1234abc[d]>")
+    (evil-test-buffer
+      "[1]234abcd"
+      ("vaw")
+      "<1234abc[d]>")
+    (evil-test-buffer
+      "[1]234漢字"
+      ("viw")
+      "<123[4]>漢字")
+    (evil-test-buffer
+      "[1]234漢字"
+      ("vaw")
+      "<123[4]>漢字")
+    (evil-test-buffer
+      "[1]234ひらがな"
+      ("viw")
+      "<123[4]>ひらがな")
+    (evil-test-buffer
+      "[1]234ひらがな"
+      ("vaw")
+      "<123[4]>ひらがな")
+    (evil-test-buffer
+      "[1]234カタカナ"
+      ("viw")
+      "<123[4]>カタカナ")
+    (evil-test-buffer
+      "[1]234カタカナ"
+      ("vaw")
+      "<123[4]>カタカナ")
+    (evil-test-buffer
+      "[1]234ｶﾀｶﾅ"
+      ("viw")
+      "<1234ｶﾀｶ[ﾅ]>")
+    (evil-test-buffer
+      "[1]234ｶﾀｶﾅ"
+      ("vaw")
+      "<1234ｶﾀｶ[ﾅ]>")
+    (evil-test-buffer
+      "[1]234ＡＢＣ"
+      ("viw")
+      "<1234ＡＢ[Ｃ]>")
+    (evil-test-buffer
+      "[1]234ＡＢＣ"
+      ("vaw")
+      "<1234ＡＢ[Ｃ]>")
+    (evil-test-buffer
+      "[1]234１２３"
+      ("viw")
+      "<1234１２[３]>")
+    (evil-test-buffer
+      "[1]234１２３"
+      ("vaw")
+      "<1234１２[３]>")
+    (evil-test-buffer
+      "[1]234한글"
+      ("viw")
+      "<123[4]>한글")
+    (evil-test-buffer
+      "[1]234한글"
+      ("vaw")
+      "<123[4]>한글")
+    (evil-test-buffer
+      "[漢]字abcd"
+      ("viw")
+      "<漢[字]>abcd")
+    (evil-test-buffer
+      "[漢]字abcd"
+      ("vaw")
+      "<漢[字]>abcd")
+    (evil-test-buffer
+      "[漢]字1234"
+      ("viw")
+      "<漢[字]>1234")
+    (evil-test-buffer
+      "[漢]字1234"
+      ("vaw")
+      "<漢[字]>1234")
+    (evil-test-buffer
+      "[漢]字ひらがな"
+      ("viw")
+      "<漢[字]>ひらがな")
+    (evil-test-buffer
+      "[漢]字ひらがな"
+      ("vaw")
+      "<漢[字]>ひらがな")
+    (evil-test-buffer
+      "[漢]字カタカナ"
+      ("viw")
+      "<漢[字]>カタカナ")
+    (evil-test-buffer
+      "[漢]字カタカナ"
+      ("vaw")
+      "<漢[字]>カタカナ")
+    (evil-test-buffer
+      "[漢]字ｶﾀｶﾅ"
+      ("viw")
+      "<漢[字]>ｶﾀｶﾅ")
+    (evil-test-buffer
+      "[漢]字ｶﾀｶﾅ"
+      ("vaw")
+      "<漢[字]>ｶﾀｶﾅ")
+    (evil-test-buffer
+      "[漢]字ＡＢＣ"
+      ("viw")
+      "<漢[字]>ＡＢＣ")
+    (evil-test-buffer
+      "[漢]字ＡＢＣ"
+      ("vaw")
+      "<漢[字]>ＡＢＣ")
+    (evil-test-buffer
+      "[漢]字１２３"
+      ("viw")
+      "<漢[字]>１２３")
+    (evil-test-buffer
+      "[漢]字１２３"
+      ("vaw")
+      "<漢[字]>１２３")
+    (evil-test-buffer
+      "[漢]字한글"
+      ("viw")
+      "<漢[字]>한글")
+    (evil-test-buffer
+      "[漢]字한글"
+      ("vaw")
+      "<漢[字]>한글")
+    (evil-test-buffer
+      "[ひ]らがなabcd"
+      ("viw")
+      "<ひらが[な]>abcd")
+    (evil-test-buffer
+      "[ひ]らがなabcd"
+      ("vaw")
+      "<ひらが[な]>abcd")
+    (evil-test-buffer
+      "[ひ]らがな1234"
+      ("viw")
+      "<ひらが[な]>1234")
+    (evil-test-buffer
+      "[ひ]らがな1234"
+      ("vaw")
+      "<ひらが[な]>1234")
+    (evil-test-buffer
+      "[ひ]らがな漢字"
+      ("viw")
+      "<ひらが[な]>漢字")
+    (evil-test-buffer
+      "[ひ]らがな漢字"
+      ("vaw")
+      "<ひらが[な]>漢字")
+    (evil-test-buffer
+      "[ひ]らがなカタカナ"
+      ("viw")
+      "<ひらが[な]>カタカナ")
+    (evil-test-buffer
+      "[ひ]らがなカタカナ"
+      ("vaw")
+      "<ひらが[な]>カタカナ")
+    (evil-test-buffer
+      "[ひ]らがなｶﾀｶﾅ"
+      ("viw")
+      "<ひらが[な]>ｶﾀｶﾅ")
+    (evil-test-buffer
+      "[ひ]らがなｶﾀｶﾅ"
+      ("vaw")
+      "<ひらが[な]>ｶﾀｶﾅ")
+    (evil-test-buffer
+      "[ひ]らがなＡＢＣ"
+      ("viw")
+      "<ひらが[な]>ＡＢＣ")
+    (evil-test-buffer
+      "[ひ]らがなＡＢＣ"
+      ("vaw")
+      "<ひらが[な]>ＡＢＣ")
+    (evil-test-buffer
+      "[ひ]らがな１２３"
+      ("viw")
+      "<ひらが[な]>１２３")
+    (evil-test-buffer
+      "[ひ]らがな１２３"
+      ("vaw")
+      "<ひらが[な]>１２３")
+    (evil-test-buffer
+      "[ひ]らがな한글"
+      ("viw")
+      "<ひらが[な]>한글")
+    (evil-test-buffer
+      "[ひ]らがな한글"
+      ("vaw")
+      "<ひらが[な]>한글")
+    (evil-test-buffer
+      "[カ]タカナabcd"
+      ("viw")
+      "<カタカ[ナ]>abcd")
+    (evil-test-buffer
+      "[カ]タカナabcd"
+      ("vaw")
+      "<カタカ[ナ]>abcd")
+    (evil-test-buffer
+      "[カ]タカナ1234"
+      ("viw")
+      "<カタカ[ナ]>1234")
+    (evil-test-buffer
+      "[カ]タカナ1234"
+      ("vaw")
+      "<カタカ[ナ]>1234")
+    (evil-test-buffer
+      "[カ]タカナ漢字"
+      ("viw")
+      "<カタカ[ナ]>漢字")
+    (evil-test-buffer
+      "[カ]タカナ漢字"
+      ("vaw")
+      "<カタカ[ナ]>漢字")
+    (evil-test-buffer
+      "[カ]タカナひらがな"
+      ("viw")
+      "<カタカ[ナ]>ひらがな")
+    (evil-test-buffer
+      "[カ]タカナひらがな"
+      ("vaw")
+      "<カタカ[ナ]>ひらがな")
+    (evil-test-buffer
+      "[カ]タカナｶﾀｶﾅ"
+      ("viw")
+      "<カタカ[ナ]>ｶﾀｶﾅ")
+    (evil-test-buffer
+      "[カ]タカナｶﾀｶﾅ"
+      ("vaw")
+      "<カタカ[ナ]>ｶﾀｶﾅ")
+    (evil-test-buffer
+      "[カ]タカナＡＢＣ"
+      ("viw")
+      "<カタカ[ナ]>ＡＢＣ")
+    (evil-test-buffer
+      "[カ]タカナＡＢＣ"
+      ("vaw")
+      "<カタカ[ナ]>ＡＢＣ")
+    (evil-test-buffer
+      "[カ]タカナ１２３"
+      ("viw")
+      "<カタカ[ナ]>１２３")
+    (evil-test-buffer
+      "[カ]タカナ１２３"
+      ("vaw")
+      "<カタカ[ナ]>１２３")
+    (evil-test-buffer
+      "[カ]タカナ한글"
+      ("viw")
+      "<カタカ[ナ]>한글")
+    (evil-test-buffer
+      "[カ]タカナ한글"
+      ("vaw")
+      "<カタカ[ナ]>한글")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅabcd"
+      ("viw")
+      "<ｶﾀｶﾅabc[d]>")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅabcd"
+      ("vaw")
+      "<ｶﾀｶﾅabc[d]>")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ1234"
+      ("viw")
+      "<ｶﾀｶﾅ123[4]>")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ1234"
+      ("vaw")
+      "<ｶﾀｶﾅ123[4]>")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ漢字"
+      ("viw")
+      "<ｶﾀｶ[ﾅ]>漢字")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ漢字"
+      ("vaw")
+      "<ｶﾀｶ[ﾅ]>漢字")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅひらがな"
+      ("viw")
+      "<ｶﾀｶ[ﾅ]>ひらがな")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅひらがな"
+      ("vaw")
+      "<ｶﾀｶ[ﾅ]>ひらがな")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅカタカナ"
+      ("viw")
+      "<ｶﾀｶ[ﾅ]>カタカナ")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅカタカナ"
+      ("vaw")
+      "<ｶﾀｶ[ﾅ]>カタカナ")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅＡＢＣ"
+      ("viw")
+      "<ｶﾀｶﾅＡＢ[Ｃ]>")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅＡＢＣ"
+      ("vaw")
+      "<ｶﾀｶﾅＡＢ[Ｃ]>")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ１２３"
+      ("viw")
+      "<ｶﾀｶﾅ１２[３]>")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ１２３"
+      ("vaw")
+      "<ｶﾀｶﾅ１２[３]>")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ한글"
+      ("viw")
+      "<ｶﾀｶ[ﾅ]>한글")
+    (evil-test-buffer
+      "[ｶ]ﾀｶﾅ한글"
+      ("vaw")
+      "<ｶﾀｶ[ﾅ]>한글")
+    (evil-test-buffer
+      "[Ａ]ＢＣabcd"
+      ("viw")
+      "<ＡＢＣabc[d]>")
+    (evil-test-buffer
+      "[Ａ]ＢＣabcd"
+      ("vaw")
+      "<ＡＢＣabc[d]>")
+    (evil-test-buffer
+      "[Ａ]ＢＣ1234"
+      ("viw")
+      "<ＡＢＣ123[4]>")
+    (evil-test-buffer
+      "[Ａ]ＢＣ1234"
+      ("vaw")
+      "<ＡＢＣ123[4]>")
+    (evil-test-buffer
+      "[Ａ]ＢＣ漢字"
+      ("viw")
+      "<ＡＢ[Ｃ]>漢字")
+    (evil-test-buffer
+      "[Ａ]ＢＣ漢字"
+      ("vaw")
+      "<ＡＢ[Ｃ]>漢字")
+    (evil-test-buffer
+      "[Ａ]ＢＣひらがな"
+      ("viw")
+      "<ＡＢ[Ｃ]>ひらがな")
+    (evil-test-buffer
+      "[Ａ]ＢＣひらがな"
+      ("vaw")
+      "<ＡＢ[Ｃ]>ひらがな")
+    (evil-test-buffer
+      "[Ａ]ＢＣカタカナ"
+      ("viw")
+      "<ＡＢ[Ｃ]>カタカナ")
+    (evil-test-buffer
+      "[Ａ]ＢＣカタカナ"
+      ("vaw")
+      "<ＡＢ[Ｃ]>カタカナ")
+    (evil-test-buffer
+      "[Ａ]ＢＣｶﾀｶﾅ"
+      ("viw")
+      "<ＡＢＣｶﾀｶ[ﾅ]>")
+    (evil-test-buffer
+      "[Ａ]ＢＣｶﾀｶﾅ"
+      ("vaw")
+      "<ＡＢＣｶﾀｶ[ﾅ]>")
+    (evil-test-buffer
+      "[Ａ]ＢＣ１２３"
+      ("viw")
+      "<ＡＢＣ１２[３]>")
+    (evil-test-buffer
+      "[Ａ]ＢＣ１２３"
+      ("vaw")
+      "<ＡＢＣ１２[３]>")
+    (evil-test-buffer
+      "[Ａ]ＢＣ한글"
+      ("viw")
+      "<ＡＢ[Ｃ]>한글")
+    (evil-test-buffer
+      "[Ａ]ＢＣ한글"
+      ("vaw")
+      "<ＡＢ[Ｃ]>한글")
+    (evil-test-buffer
+      "[１]２３abcd"
+      ("viw")
+      "<１２３abc[d]>")
+    (evil-test-buffer
+      "[１]２３abcd"
+      ("vaw")
+      "<１２３abc[d]>")
+    (evil-test-buffer
+      "[１]２３1234"
+      ("viw")
+      "<１２３123[4]>")
+    (evil-test-buffer
+      "[１]２３1234"
+      ("vaw")
+      "<１２３123[4]>")
+    (evil-test-buffer
+      "[１]２３漢字"
+      ("viw")
+      "<１２[３]>漢字")
+    (evil-test-buffer
+      "[１]２３漢字"
+      ("vaw")
+      "<１２[３]>漢字")
+    (evil-test-buffer
+      "[１]２３ひらがな"
+      ("viw")
+      "<１２[３]>ひらがな")
+    (evil-test-buffer
+      "[１]２３ひらがな"
+      ("vaw")
+      "<１２[３]>ひらがな")
+    (evil-test-buffer
+      "[１]２３カタカナ"
+      ("viw")
+      "<１２[３]>カタカナ")
+    (evil-test-buffer
+      "[１]２３カタカナ"
+      ("vaw")
+      "<１２[３]>カタカナ")
+    (evil-test-buffer
+      "[１]２３ｶﾀｶﾅ"
+      ("viw")
+      "<１２３ｶﾀｶ[ﾅ]>")
+    (evil-test-buffer
+      "[１]２３ｶﾀｶﾅ"
+      ("vaw")
+      "<１２３ｶﾀｶ[ﾅ]>")
+    (evil-test-buffer
+      "[１]２３ＡＢＣ"
+      ("viw")
+      "<１２３ＡＢ[Ｃ]>")
+    (evil-test-buffer
+      "[１]２３ＡＢＣ"
+      ("vaw")
+      "<１２３ＡＢ[Ｃ]>")
+    (evil-test-buffer
+      "[１]２３한글"
+      ("viw")
+      "<１２[３]>한글")
+    (evil-test-buffer
+      "[１]２３한글"
+      ("vaw")
+      "<１２[３]>한글")
+    (evil-test-buffer
+      "[한]글abcd"
+      ("viw")
+      "<한[글]>abcd")
+    (evil-test-buffer
+      "[한]글abcd"
+      ("vaw")
+      "<한[글]>abcd")
+    (evil-test-buffer
+      "[한]글1234"
+      ("viw")
+      "<한[글]>1234")
+    (evil-test-buffer
+      "[한]글1234"
+      ("vaw")
+      "<한[글]>1234")
+    (evil-test-buffer
+      "[한]글漢字"
+      ("viw")
+      "<한[글]>漢字")
+    (evil-test-buffer
+      "[한]글漢字"
+      ("vaw")
+      "<한[글]>漢字")
+    (evil-test-buffer
+      "[한]글ひらがな"
+      ("viw")
+      "<한[글]>ひらがな")
+    (evil-test-buffer
+      "[한]글ひらがな"
+      ("vaw")
+      "<한[글]>ひらがな")
+    (evil-test-buffer
+      "[한]글カタカナ"
+      ("viw")
+      "<한[글]>カタカナ")
+    (evil-test-buffer
+      "[한]글カタカナ"
+      ("vaw")
+      "<한[글]>カタカナ")
+    (evil-test-buffer
+      "[한]글ｶﾀｶﾅ"
+      ("viw")
+      "<한[글]>ｶﾀｶﾅ")
+    (evil-test-buffer
+      "[한]글ｶﾀｶﾅ"
+      ("vaw")
+      "<한[글]>ｶﾀｶﾅ")
+    (evil-test-buffer
+      "[한]글ＡＢＣ"
+      ("viw")
+      "<한[글]>ＡＢＣ")
+    (evil-test-buffer
+      "[한]글ＡＢＣ"
+      ("vaw")
+      "<한[글]>ＡＢＣ")
+    (evil-test-buffer
+      "[한]글１２３"
+      ("viw")
+      "<한[글]>１２３")
+    (evil-test-buffer
+      "[한]글１２３"
+      ("vaw")
+      "<한[글]>１２３")))
 
 (ert-deftest evil-test-paragraph-objects ()
   "Test `evil-inner-paragraph' and `evil-a-paragraph'"

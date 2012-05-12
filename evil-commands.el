@@ -5,6 +5,7 @@
 (require 'evil-search)
 (require 'evil-ex)
 (require 'evil-types)
+(require 'evil-cjk)
 
 ;;; Motions
 
@@ -236,7 +237,7 @@ By default the first line."
 
 (evil-define-union-move evil-move-word (count)
   "Move by words."
-  (evil-move-chars evil-word count)
+  (evil-move-word-cjk count)
   (evil-move-chars (evil-concat-charsets "^ \t\r\n" evil-word) count)
   (evil-move-empty-lines count))
 

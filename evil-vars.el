@@ -588,6 +588,56 @@ that line."
   :type 'boolean
   :group 'evil)
 
+(defgroup evil-cjk nil
+  "CJK support"
+  :prefix "evil-cjk-"
+  :group 'evil)
+
+(defcustom evil-cjk-emacs-word-boundary nil
+  "Determine word boundary exactly the same way as Emacs does."
+  :type 'boolean
+  :group 'evil-cjk)
+
+(defcustom evil-cjk-word-separating-categories
+  '(;; Kanji
+    (?C . ?H) (?C . ?K) (?C . ?k) (?C . ?A) (?C . ?G)
+    ;; Hiragana
+    (?H . ?C) (?H . ?K) (?H . ?k) (?H . ?A) (?H . ?G)
+    ;; Katakana
+    (?K . ?C) (?K . ?H) (?K . ?k) (?K . ?A) (?K . ?G)
+    ;; half-width Katakana
+    (?k . ?C) (?k . ?H) (?k . ?K) ; (?k . ?A) (?k . ?G)
+    ;; full-width alphanumeric
+    (?A . ?C) (?A . ?H) (?A . ?K) ; (?A . ?k) (?A . ?G)
+    ;; full-width Greek
+    (?G . ?C) (?G . ?H) (?G . ?K) ; (?G . ?k) (?G . ?A)
+    )
+  "List of pair (cons) of categories to determine word boundary
+used in `evil-cjk-word-boundary-p'. See the documentation of
+`word-separating-categories'. Use `describe-categories' to see
+the list of categories."
+  :type '((character . character))
+  :group 'evil-cjk)
+
+(defcustom evil-cjk-word-combining-categories
+  '(;; default value in word-combining-categories
+    (nil . ?^) (?^ . nil)
+    ;; Roman
+    (?r . ?k) (?r . ?A) (?r . ?G)
+    ;; half-width Katakana
+    (?k . ?r) (?k . ?A) (?k . ?G)
+    ;; full-width alphanumeric
+    (?A . ?r) (?A . ?k) (?A . ?G)
+    ;; full-width Greek
+    (?G . ?r) (?G . ?k) (?G . ?A)
+    )
+  "List of pair (cons) of categories to determine word boundary
+used in `evil-cjk-word-boundary-p'. See the documentation of
+`word-combining-categories'. Use `describe-categories' to see the
+list of categories."
+  :type '((character . character))
+  :group 'evil-cjk)
+
 (defface evil-ex-info '(( ((supports :slant))
                           :slant italic
                           :foreground "red"))
