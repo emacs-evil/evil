@@ -253,6 +253,7 @@ If BIGWORD is non-nil, move by WORDS."
   (let ((move (if bigword #'evil-move-WORD #'evil-move-word))
         (orig (point)))
     (prog1 (if (and evil-want-change-word-to-end
+                    (not (looking-at "[[:space:]]"))
                     (eq evil-this-operator #'evil-change))
                (evil-move-end count move)
              (evil-move-beginning count move))

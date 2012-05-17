@@ -2044,7 +2044,12 @@ ABCthen enter the text in that file's own buffer.")))
     (evil-test-buffer
       "[;] This buffer is for notes."
       ("cwABC" [escape])
-      "AB[C] This buffer is for notes.")))
+      "AB[C] This buffer is for notes."))
+  (ert-info ("Whitespace")
+    (evil-test-buffer
+      "This[ ]is a test\n"
+      ("cwABC" [escape])
+      "ThisAB[C]is a test\n")))
 
 (ert-deftest evil-test-join ()
   "Test `evil-join'"
