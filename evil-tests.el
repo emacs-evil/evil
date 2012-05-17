@@ -2977,7 +2977,20 @@ Below some empty line"
       ("100w")
       ";; This buffer is for notes[.]"
       (should-error (execute-kbd-macro "w"))
-      (should-error (execute-kbd-macro "10w")))))
+      (should-error (execute-kbd-macro "10w"))))
+  (ert-info ("Before last character in buffer")
+    (evil-test-buffer
+      "fo[o]."
+      ("w")
+      "foo[.]")
+    (evil-test-buffer
+      "fo[o] "
+      ("w")
+      "foo[ ]")
+    (evil-test-buffer
+      "[ ]e"
+      ("w")
+      " [e]")))
 
 (ert-deftest evil-test-forward-word-end ()
   "Test `evil-forward-word-end'"

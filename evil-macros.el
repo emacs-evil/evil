@@ -199,9 +199,11 @@ upon reaching the beginning or end of the current line.
      ;; at the last character of the last line
      (t
       (forward-char)
-      (if (eobp) t
+      (cond
+       ((eobp))
+       ((eolp)
         (forward-char)
-        (eobp))))))
+        (eobp)))))))
 
 (defun evil-move-beginning (count forward &optional backward)
   "Move to the beginning of the COUNT next object.
