@@ -321,7 +321,7 @@ if COUNT is positive, and to the left of it if negative.
   (let* ((args (delq '&optional args))
          (count (or (pop args) 'count))
          (args (when args `(&optional ,@args)))
-         arg doc key keys)
+         arg doc interactive key keys)
     ;; collect docstring
     (when (stringp (car-safe body))
       (setq doc (pop body)))
@@ -331,10 +331,14 @@ if COUNT is positive, and to the left of it if negative.
       (setq key (pop body)
             arg (pop body)
             keys (plist-put keys key arg)))
+    ;; interactive
+    (when (eq (car-safe (car-safe body)) 'interactive)
+      (setq interacive (list (pop body))))
     ;; macro expansion
     `(evil-define-motion ,object (,count ,@args)
        ,@(when doc `(,doc))
        ,@keys
+       ,@interactive
        (setq ,count (or ,count 1))
        (when (/= ,count 0)
          (let ((type (evil-type ',object evil-visual-char))
