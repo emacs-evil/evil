@@ -1009,10 +1009,10 @@ If BIGWORD is non-nil, select inner WORD."
   "Select inner tag block."
   :extend-selection nil
   (cond
-   ((and (evil-called-interactively-p)
-         (eq last-command this-command))
-    (setq this-command #'evil-a-tag)
-    (evil-a-tag count))
+                                        ;   ((and (evil-called-interactively-p)
+                                        ;         (eq last-command this-command))
+                                        ;    (setq this-command #'evil-a-tag)
+                                        ;    (evil-a-tag count))
    (t
     (evil-xml-range count t))))
 
