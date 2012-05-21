@@ -889,40 +889,38 @@ or line COUNT to the top of the window."
 ;; required.)
 
 (evil-define-text-object evil-a-word (count &optional beg end type)
-  "Select a word.
-If BIGWORD is non-nil, select a WORD."
-  (evil-an-object-range count #'evil-move-word))
+  "Select a word."
+  (evil-an-object-range count beg end type #'evil-move-word))
 
 (evil-define-text-object evil-inner-word (count &optional beg end type)
-  "Select inner word.
-If BIGWORD is non-nil, select inner WORD."
-  (evil-inner-object-range count #'evil-move-word))
+  "Select inner word."
+  (evil-inner-object-range count beg end type #'evil-move-word))
 
 (evil-define-text-object evil-a-WORD (count &optional beg end type)
   "Select a WORD."
-  (evil-an-object-range count #'evil-move-WORD))
+  (evil-an-object-range count beg end type #'evil-move-WORD))
 
 (evil-define-text-object evil-inner-WORD (count &optional beg end type)
   "Select inner WORD."
-  (evil-inner-object-range count #'evil-move-WORD))
+  (evil-inner-object-range count beg end type #'evil-move-WORD))
 
 (evil-define-text-object evil-a-sentence (count &optional beg end type)
   "Select a sentence."
-  (evil-an-object-range count #'evil-move-sentence nil nil t))
+  (evil-an-object-range count beg end type #'evil-move-sentence nil nil t))
 
 (evil-define-text-object evil-inner-sentence (count &optional beg end type)
   "Select inner sentence."
-  (evil-inner-object-range count #'evil-move-sentence))
+  (evil-inner-object-range count beg end type #'evil-move-sentence))
 
 (evil-define-text-object evil-a-paragraph (count &optional beg end type)
   "Select a paragraph."
   :type line
-  (evil-an-object-range count #'evil-move-paragraph nil nil t))
+  (evil-an-object-range count beg end type #'evil-move-paragraph nil nil t))
 
 (evil-define-text-object evil-inner-paragraph (count &optional beg end type)
   "Select inner paragraph."
   :type line
-  (evil-inner-object-range count #'evil-move-paragraph))
+  (evil-inner-object-range count beg end type #'evil-move-paragraph))
 
 (evil-define-text-object evil-a-paren (count &optional beg end type)
   "Select a parenthesis."

@@ -5084,10 +5084,15 @@ Below some empty line."))
 (ert-deftest evil-test-text-object ()
   "Test `evil-define-text-object'"
   :tags '(evil text-object)
-  (let ((object (evil-define-text-object nil (count)
-                  (if (< count 0)
-                      (list (- (point) 3) (point))
-                    (list (point) (+ (point) 3))))))
+  (let ((object (evil-define-text-object nil (count &optional beg end type)
+                  (let ((sel (and beg end (evil-range beg end))))
+                    (when (and sel (> count 0)) (forward-char 1))
+                    (let ((range (if (< count 0)
+                                     (list (- (point) 3) (point))
+                                   (list (point) (+ (point) 3)))))
+                      (if sel
+                          (evil-range-union range sel)
+                        range))))))
     (ert-info ("Select three characters after point")
       (evil-test-buffer
         :state operator

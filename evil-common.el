@@ -2252,7 +2252,7 @@ Returns t if RANGE was successfully adjusted and nil otherwise."
         (evil-set-range range nil (line-end-position 0)))
       (not (evil-subrange-p orig range)))))
 
-(defun evil-inner-object-range (count forward &optional backward type)
+(defun evil-inner-object-range (count beg end type forward &optional backward range-type)
   "Return an inner text object range (BEG END) of COUNT objects.
 If COUNT is positive, return objects following point;
 if COUNT is negative, return objects preceding point.
@@ -2268,34 +2268,113 @@ If one is unspecified, the other is used with a negative argument."
          (backward (or backward
                        #'(lambda (count)
                            (funcall forward-func (- count)))))
-         beg end)
-    (when (< count 0)
+         (current
+          #'(lambda ()
+              (save-excursion
+                (let ((pnt (point))
+                      beg-obj end-obj)
+                  (funcall forward 1)
+                  (setq end-obj (point))
+                  (funcall backward 1)
+                  (setq beg-obj (point))
+                  (cond
+                   ((<= beg-obj pnt)
+                    (cons beg-obj end-obj))
+                   ((zerop (funcall backward 1))
+                    (funcall forward 1)
+                    (cons (if (and (eolp) (not (bolp)))
+                              (1+ (point))
+                            (point))
+                          beg-obj))
+                   (t
+                    (cons (point-min) beg-obj))))))))
+
+    (save-excursion
+      (cond
+       ((> count 0)
+        (let ((obj (funcall current)))
+          (if (or (not beg) (not end)
+                  (> beg (car obj))
+                  (< end (cdr obj)))
+              ;; current object not yet selected
+              (progn
+                (when (or (not beg) (< (car obj) beg))
+                  (setq beg (car obj)))
+                (when (or (not end) (> (cdr obj) end))
+                  (setq end (cdr obj)))
+                (setq count (1- count))
+                (goto-char end))
+            (goto-char (cdr obj))))
+        (dotimes(i count)
+          (let ((obj (funcall current)))
+            (goto-char (cdr obj))))
+        (evil-range beg (point) range-type))
+       (t
+        (setq count (- count))
+        (let ((obj (funcall current)))
+          (if (or (not beg) (not end)
+                  (> beg (car obj))
+                  (< end (cdr obj)))
+              ;; current object not yet selected
+              (progn
+                (when (or (not beg) (< (car obj) beg))
+                  (setq beg (car obj)))
+                (when (or (not end) (> (cdr obj) end))
+                  (setq end (cdr obj)))
+                (setq count (1- count))
+                (goto-char beg))
+            (goto-char (car obj))))
+        (dotimes(i count)
+          (backward-char 1)
+          (let ((obj (funcall current)))
+            (goto-char (car obj))))
+        (evil-range (point) end range-type))))))
+
+(defun evil-an-object-range (count beg end type forward &optional backward range-type newlines)
+  "Return a text object range of COUNT objects with whitespace.
+BEG, END and TYPE specify the range of the current selection that
+should be extended.  The function returns a list (B E) specifying
+the new (extended) text object range.  See
+`evil-inner-object-range' for more details."
+  (let* ((count (or count 1))
+         (forward-func forward)
+         (backward-func backward)
+         (forward  (or forward
+                       #'(lambda (count)
+                           (funcall backward-func (- count)))))
+         (backward (or backward
+                       #'(lambda (count)
+                           (funcall forward-func (- count))))))
+    (if (> count 0)
+        ;; ensure we select the next object
+        (when (and beg end) (forward-char 1))
+      ;; going backward
       (evil-swap forward backward)
       (setq count (abs count)))
-    (setq beg (save-excursion
-                (funcall forward 1)
-                (funcall backward 1)
-                (point))
-          end (save-excursion
-                (funcall forward count)
-                (point)))
-    (evil-range beg end type)))
-
-(defun evil-an-object-range (count forward &optional backward type newlines)
-  "Return a text object range (BEG END) of COUNT objects with whitespace.
-See `evil-inner-object-range' for more details."
-  (let ((range (evil-inner-object-range count forward backward type)))
-    (save-excursion
-      (if newlines
-          (evil-add-whitespace-to-range range count)
-        (evil-with-restriction
+    (let ((range
+           (evil-range (save-excursion
+                         (funcall forward 1)
+                         (funcall backward 1)
+                         (point))
+                       (save-excursion
+                         (funcall forward count)
+                         (point))
+                       range-type)))
+      (setq range
             (save-excursion
-              (goto-char (evil-range-beginning range))
-              (line-beginning-position))
-            (save-excursion
-              (goto-char (evil-range-end range))
-              (line-end-position))
-          (evil-add-whitespace-to-range range count))))))
+              (if newlines
+                  (evil-add-whitespace-to-range range count)
+                (evil-with-restriction
+                    (save-excursion
+                      (goto-char (evil-range-beginning range))
+                      (line-beginning-position))
+                    (save-excursion
+                      (goto-char (evil-range-end range))
+                      (line-end-position))
+                  (evil-add-whitespace-to-range range count)))))
+      (if (and beg end)
+          (evil-range-union range (evil-range beg end))
+        range))))
 
 (defun evil-paren-range (count open close &optional exclusive)
   "Return a range (BEG END) of COUNT delimited text objects.
