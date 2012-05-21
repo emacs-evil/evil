@@ -888,124 +888,120 @@ or line COUNT to the top of the window."
 ;; in the buffer, and thus exact movement to object boundaries is
 ;; required.)
 
-(evil-define-text-object evil-a-word (count &optional bigword)
+(evil-define-text-object evil-a-word (count &optional beg end type)
   "Select a word.
 If BIGWORD is non-nil, select a WORD."
-  (evil-an-object-range count (if bigword
-                                  #'evil-move-WORD
-                                #'evil-move-word)))
+  (evil-an-object-range count #'evil-move-word))
 
-(evil-define-text-object evil-inner-word (count &optional bigword)
+(evil-define-text-object evil-inner-word (count &optional beg end type)
   "Select inner word.
 If BIGWORD is non-nil, select inner WORD."
-  (evil-inner-object-range count (if bigword
-                                     #'evil-move-WORD
-                                   #'evil-move-word)))
+  (evil-inner-object-range count #'evil-move-word))
 
-(evil-define-text-object evil-a-WORD (count)
+(evil-define-text-object evil-a-WORD (count &optional beg end type)
   "Select a WORD."
-  (evil-a-word count t))
+  (evil-an-object-range count #'evil-move-WORD))
 
-(evil-define-text-object evil-inner-WORD (count)
+(evil-define-text-object evil-inner-WORD (count &optional beg end type)
   "Select inner WORD."
-  (evil-inner-word count t))
+  (evil-inner-object-range count #'evil-move-WORD))
 
-(evil-define-text-object evil-a-sentence (count)
+(evil-define-text-object evil-a-sentence (count &optional beg end type)
   "Select a sentence."
   (evil-an-object-range count #'evil-move-sentence nil nil t))
 
-(evil-define-text-object evil-inner-sentence (count)
+(evil-define-text-object evil-inner-sentence (count &optional beg end type)
   "Select inner sentence."
   (evil-inner-object-range count #'evil-move-sentence))
 
-(evil-define-text-object evil-a-paragraph (count)
+(evil-define-text-object evil-a-paragraph (count &optional beg end type)
   "Select a paragraph."
   :type line
   (evil-an-object-range count #'evil-move-paragraph nil nil t))
 
-(evil-define-text-object evil-inner-paragraph (count)
+(evil-define-text-object evil-inner-paragraph (count &optional beg end type)
   "Select inner paragraph."
   :type line
   (evil-inner-object-range count #'evil-move-paragraph))
 
-(evil-define-text-object evil-a-paren (count)
+(evil-define-text-object evil-a-paren (count &optional beg end type)
   "Select a parenthesis."
   :extend-selection nil
   (evil-paren-range count ?\( ?\)))
 
-(evil-define-text-object evil-inner-paren (count)
+(evil-define-text-object evil-inner-paren (count &optional beg end type)
   "Select inner parenthesis."
   :extend-selection nil
   (evil-paren-range count ?\( ?\) t))
 
-(evil-define-text-object evil-a-bracket (count)
+(evil-define-text-object evil-a-bracket (count &optional beg end type)
   "Select a square bracket."
   :extend-selection nil
   (evil-paren-range count ?\[ ?\]))
 
-(evil-define-text-object evil-inner-bracket (count)
+(evil-define-text-object evil-inner-bracket (count &optional beg end type)
   "Select inner square bracket."
   :extend-selection nil
   (evil-paren-range count ?\[ ?\] t))
 
-(evil-define-text-object evil-a-curly (count)
+(evil-define-text-object evil-a-curly (count &optional beg end type)
   "Select a curly bracket (\"brace\")."
   :extend-selection nil
   (evil-paren-range count ?{ ?}))
 
-(evil-define-text-object evil-inner-curly (count)
+(evil-define-text-object evil-inner-curly (count &optional beg end type)
   "Select inner curly bracket (\"brace\")."
   :extend-selection nil
   (evil-paren-range count ?{ ?} t))
 
-(evil-define-text-object evil-an-angle (count)
+(evil-define-text-object evil-an-angle (count &optional beg end type)
   "Select an angle bracket."
   :extend-selection nil
   (evil-paren-range count ?< ?>))
 
-(evil-define-text-object evil-inner-angle (count)
+(evil-define-text-object evil-inner-angle (count &optional beg end type)
   "Select inner angle bracket."
   :extend-selection nil
   (evil-paren-range count ?< ?> t))
 
-(evil-define-text-object evil-a-single-quote (count)
+(evil-define-text-object evil-a-single-quote (count &optional beg end type)
   "Select a single-quoted expression."
   :extend-selection t
   (evil-quote-range count ?' ?'))
 
-(evil-define-text-object evil-inner-single-quote (count)
+(evil-define-text-object evil-inner-single-quote (count &optional beg end type)
   "Select inner single-quoted expression."
   :extend-selection nil
   ;; TODO: do not use `current-prefix-arg' (requires better handling
   ;; in visual-state code of `evil-define-text-object')!
   (evil-quote-range current-prefix-arg ?' ?' t))
 
-(evil-define-text-object evil-a-double-quote (count)
+(evil-define-text-object evil-a-double-quote (count &optional beg end type)
   "Select a double-quoted expression."
   :extend-selection t
   (evil-quote-range count ?\" ?\"))
 
-(evil-define-text-object evil-inner-double-quote (count)
+(evil-define-text-object evil-inner-double-quote (count &optional beg end type)
   "Select inner double-quoted expression."
   :extend-selection nil
   (evil-quote-range current-prefix-arg ?\" ?\" t))
 
-(evil-define-text-object evil-a-back-quote (count)
+(evil-define-text-object evil-a-back-quote (count &optional beg end type)
   "Select a back-quoted expression."
   :extend-selection t
   (evil-quote-range count ?\` ?\`))
 
-(evil-define-text-object evil-inner-back-quote (count)
+(evil-define-text-object evil-inner-back-quote (count &optional beg end type)
   "Select inner back-quoted expression."
   :extend-selection nil
   (evil-quote-range current-prefix-arg ?\` ?\` t))
 
-(evil-define-text-object evil-a-tag (count)
+(evil-define-text-object evil-a-tag (count &optional beg end type)
   "Select a tag block."
   :extend-selection nil
   (evil-xml-range count))
 
-(evil-define-text-object evil-inner-tag (count)
+(evil-define-text-object evil-inner-tag (count &optional beg end type)
   "Select inner tag block."
   :extend-selection nil
   (cond

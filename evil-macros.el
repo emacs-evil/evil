@@ -321,7 +321,8 @@ if COUNT is positive, and to the left of it if negative.
   (let* ((args (delq '&optional args))
          (count (or (pop args) 'count))
          (args (when args `(&optional ,@args)))
-         arg doc interactive key keys)
+         (interactive '((interactive "<c><v>")))
+         arg doc key keys)
     ;; collect docstring
     (when (stringp (car-safe body))
       (setq doc (pop body)))
@@ -333,7 +334,7 @@ if COUNT is positive, and to the left of it if negative.
             keys (plist-put keys key arg)))
     ;; interactive
     (when (eq (car-safe (car-safe body)) 'interactive)
-      (setq interacive (list (pop body))))
+      (setq interactive (list (pop body))))
     ;; macro expansion
     `(evil-define-motion ,object (,count ,@args)
        ,@(when doc `(,doc))
@@ -346,7 +347,7 @@ if COUNT is positive, and to the left of it if negative.
                         ',object :extend-selection
                         ',(plist-get keys :extend-selection)))
                (dir evil-visual-direction)
-               mark point range selection temp)
+               mark point range selection)
            (cond
             ;; Visual state: extend the current selection
             ((and (evil-visual-state-p)
@@ -356,28 +357,9 @@ if COUNT is positive, and to the left of it if negative.
              ;; go to the right (positive COUNT)
              (setq dir evil-visual-direction
                    ,count (* ,count dir))
-             ;; fetch current visual selection
-             (setq selection (evil-visual-range))
-             (evil-set-range-properties selection :expanded t)
-             ;; select current object
-             (save-excursion
-               (let ((,count dir))
-                 (setq temp (evil-expand-range (progn ,@body)))))
-             ;; if the current object is contained within the
-             ;; selection then we have to increase COUNT in order to
-             ;; select further objects
-             (when (evil-subrange-p temp selection)
-               (setq count
-                     (if (> ,count 0)
-                         (1+ ,count)
-                       (1- ,count))))
-             ;; select further objects
-             (setq temp (progn ,@body))
-             (when (evil-range-p temp)
-               (setq temp (evil-expand-range temp))
-               (if extend
-                   (setq range (evil-range-union temp selection))
-                 (setq range temp))
+             (setq range (progn ,@body))
+             (when (evil-range-p range)
+               (setq range (evil-expand-range range))
                (evil-set-type range (evil-type range type))
                (setq range (evil-contract-range range))
                ;; the beginning is mark and the end is point
