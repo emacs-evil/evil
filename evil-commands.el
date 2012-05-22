@@ -2379,8 +2379,8 @@ Change to `%s'? "
         wrapped)
     (dotimes (i (or count 1))
       (if (eq evil-ex-search-direction 'backward)
-          (backward-char)
-        (forward-char)
+          (unless (bobp) (backward-char))
+        (unless (eobp) (forward-char))
         ;; maybe skip end-of-line
         (when (and evil-move-cursor-back
                    (eolp) (not (eobp)))
