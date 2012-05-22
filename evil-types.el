@@ -233,6 +233,10 @@ the last column is excluded."
           (prefix-numeric-value
            current-prefix-arg))))
 
+(evil-define-interactive-code "<C>"
+  "Character read through `evil-read-key'."
+  (list (evil-read-key)))
+
 (evil-define-interactive-code "<r>"
   "Untyped motion range (BEG END)."
   (evil-operator-range))

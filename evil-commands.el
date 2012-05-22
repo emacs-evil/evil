@@ -479,7 +479,7 @@ and jump to the corresponding one."
   "Move to the next COUNT'th occurrence of CHAR."
   :jump t
   :type inclusive
-  (interactive "<c>c")
+  (interactive "<c><C>")
   (setq count (or count 1))
   (let ((fwd (> count 0)))
     (setq evil-last-find (list #'evil-find-char char fwd))
@@ -499,14 +499,14 @@ and jump to the corresponding one."
   "Move to the previous COUNT'th occurrence of CHAR."
   :jump t
   :type exclusive
-  (interactive "<c>c")
+  (interactive "<c><C>")
   (evil-find-char (- (or count 1)) char))
 
 (evil-define-motion evil-find-char-to (count char)
   "Move before the next COUNT'th occurrence of CHAR."
   :jump t
   :type inclusive
-  (interactive "<c>c")
+  (interactive "<c><C>")
   (unwind-protect
       (progn
         (evil-find-char count char)
@@ -519,7 +519,7 @@ and jump to the corresponding one."
   "Move before the previous COUNT'th occurrence of CHAR."
   :jump t
   :type exclusive
-  (interactive "<c>c")
+  (interactive "<c><C>")
   (evil-find-char-to (- (or count 1)) char))
 
 (evil-define-motion evil-repeat-find-char (count)
@@ -1472,7 +1472,7 @@ The return value is the yanked text."
 (evil-define-command evil-use-register (register)
   "Use REGISTER for the next command."
   :keep-visual t
-  (interactive "c")
+  (interactive "<C>")
   (setq evil-this-register register))
 
 (evil-define-command evil-record-macro (register)
