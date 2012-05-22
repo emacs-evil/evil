@@ -69,6 +69,11 @@
   (let (evil-esc-mode)
     ad-do-it))
 
+;; Calling `keyboard-quit' should cancel repeat
+(defadvice keyboard-quit (before evil activate)
+  (when (fboundp 'evil-repeat-abort)
+    (evil-repeat-abort)))
+
 ;; etags-select
 ;; FIXME: probably etags-select should be recomended in docs
 (eval-after-load 'etags-select
