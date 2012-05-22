@@ -621,7 +621,9 @@ TYPE is the selection's type, and PROPERTIES is a property list
 of miscellaneous selection attributes."
   (apply #'evil-range
          evil-visual-beginning evil-visual-end
-         (evil-visual-type) evil-visual-properties))
+         (evil-visual-type)
+         :expanded t
+         evil-visual-properties))
 
 (defun evil-visual-direction ()
   "Return direction of Visual selection.

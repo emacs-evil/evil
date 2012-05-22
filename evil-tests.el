@@ -2088,6 +2088,21 @@ Below some empty line"
 AB[C]
 Below some empty line")))
 
+(ert-deftest evil-test-shift ()
+  "Test `evil-shift-right'."
+  :tags '(evil operator)
+  (let ((evil-shift-width 4))
+    (ert-info ("Shift linewise")
+      (evil-test-buffer
+        "[l]ine 1\nline 2\nline 3\n"
+        ("Vj>")
+        "[ ]   line 1\n    line 2\nline 3\n"))
+    (ert-info ("Shift char selection on whole line")
+      (evil-test-buffer
+        "[l]ine 1\nline 2\nline 3\n"
+        ("v$>")
+        "[ ]   line 1\nline 2\nline 3\n"))))
+
 ;;; Paste
 
 (ert-deftest evil-test-paste-before ()
