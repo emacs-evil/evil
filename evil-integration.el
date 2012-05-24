@@ -35,9 +35,6 @@
 (dolist (cmd '(keyboard-quit keyboard-escape-quit))
   (evil-set-command-property cmd :suppress-operator t))
 
-(dolist (cmd evil-visual-newline-commands)
-  (evil-set-command-property cmd :exclude-newline t))
-
 ;;; key-binding
 
 ;; disable evil-esc-mode during a call to key-binding

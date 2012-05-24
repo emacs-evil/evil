@@ -86,6 +86,18 @@ hook."
             (push map newlist))))
       (set-default pending newlist))))
 
+(defun evil-set-visual-newline-commands (var value)
+  "Set the value of `evil-visual-newline-commands'.
+Setting this variable changes the properties of the appropriate
+commands."
+  (with-no-warnings
+    (when (default-boundp var)
+      (dolist (cmd (default-value var))
+        (evil-set-command-property cmd :exclude-newline nil)))
+    (set-default var value)
+    (dolist (cmd (default-value var))
+      (evil-set-command-property cmd :exclude-newline t))))
+
 ;;; Customization group
 
 (defgroup evil nil
@@ -661,7 +673,9 @@ intercepted."
   "Commands excluding the trailing newline of a Visual Line selection.
 These commands work better without this newline."
   :type  '(repeat symbol)
-  :group 'evil)
+  :group 'evil
+  :set 'evil-set-visual-newline-commands
+  :initialize 'evil-custom-initialize-pending-reset)
 
 (defcustom evil-want-visual-char-semi-exclusive nil
   "Visual character selection to beginning/end of line is exclusive.
