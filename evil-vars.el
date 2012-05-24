@@ -50,6 +50,42 @@ KEY must be readable by `read-kbd-macro'."
               (define-key map key fun)
               (define-key map old-key nil))))))))
 
+(defun evil-set-custom-state-maps (var pending-var key make newlist)
+  "Changes the list of special keymaps.
+VAR         is the variable containing the list of keymaps.
+PENDING-VAR is the variable containing the list of the currently pending
+            keymaps.
+KEY         the special symbol to be stored in the keymaps.
+MAKE        the creation function of the special keymaps.
+NEWLIST     the list of new special keymaps."
+  (set-default pending-var newlist)
+  (when (default-boundp var)
+    (dolist (map (default-value var))
+      (when (and (boundp (car map))
+                 (keymapp (default-value (car map))))
+        (define-key (default-value (car map)) (vector key) nil))))
+  (set-default var newlist)
+  (evil-update-pending-maps))
+
+(defun evil-update-pending-maps (&optional file)
+  "Tries to set pending special keymaps.
+This function should be called from an `after-load-functions'
+hook."
+  (dolist (map '((evil-make-overriding-map . evil-pending-overriding-maps)
+                 (evil-make-intercept-map . evil-pending-intercept-maps)))
+    (let ((make (car map))
+          (pending (cdr map))
+          newlist)
+      (dolist (map (symbol-value pending))
+        (let ((kmap (and (boundp (car map))
+                         (keymapp (symbol-value (car map)))
+                         (symbol-value (car map))))
+              (state (cdr map)))
+          (if kmap
+              (funcall make kmap state)
+            (push map newlist))))
+      (set-default pending newlist))))
+
 ;;; Customization group
 
 (defgroup evil nil
@@ -469,6 +505,12 @@ If STATE is nil, Evil is disabled in the buffer."
   :type  '(repeat symbol)
   :group 'evil)
 
+(defvar evil-pending-overriding-maps nil
+  "An alist of pending overriding maps.")
+
+(defvar evil-pending-intercept-maps nil
+  "An alist of pending intercept maps.")
+
 (defcustom evil-overriding-maps
   '((Buffer-menu-mode-map . nil)
     (color-theme-mode-map . nil)
@@ -486,7 +528,16 @@ a keymap variable and STATE is the state whose bindings
 should be overridden. If STATE is nil, all states are
 overridden."
   :type '(alist :key-type symbol :value-type symbol)
-  :group 'evil)
+  :group 'evil
+  :set #'(lambda (var values)
+           (evil-set-custom-state-maps 'evil-overriding-maps
+                                       'evil-pending-overriding-maps
+                                       'override-state
+                                       'evil-make-overriding-map
+                                       values))
+  :initialize 'evil-custom-initialize-pending-reset)
+
+(add-hook 'after-load-functions #'evil-update-pending-maps)
 
 (defcustom evil-intercept-maps
   '((edebug-mode-map . nil))
@@ -496,7 +547,14 @@ a keymap variable and STATE is the state whose bindings
 should be intercepted. If STATE is nil, all states are
 intercepted."
   :type '(alist :key-type symbol :value-type symbol)
-  :group 'evil)
+  :group 'evil
+  :set #'(lambda (var values)
+           (evil-set-custom-state-maps 'evil-intercept-maps
+                                       'evil-pending-intercept-maps
+                                       'intercept-state
+                                       'evil-make-intercept-map
+                                       values))
+  :initialize 'evil-custom-initialize-pending-reset)
 
 (defcustom evil-motions
   '(back-to-indentation
