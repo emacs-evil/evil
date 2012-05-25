@@ -1,5 +1,12 @@
 ;;;; Settings and variables
 
+;;; Hooks
+
+(defvar evil-after-load-hook nil
+  "Functions to be run when loading of evil is finished.
+This hook can be used the execute some initialization routines
+when evil is completely loaded.")
+
 ;;; Setters
 
 (defun evil-set-toggle-key (key)

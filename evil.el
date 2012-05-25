@@ -90,6 +90,8 @@
 (require 'evil-maps)
 (require 'evil-integration)
 
+(run-hooks 'evil-after-load-hook)
+
 (provide 'evil)
 
 ;;; evil.el ends here
