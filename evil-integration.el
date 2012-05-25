@@ -3,14 +3,16 @@
 (require 'evil-maps)
 (require 'evil-core)
 
-(mapc #'evil-declare-motion evil-motions)
-(mapc #'evil-declare-not-repeat
+(mapc #'(lambda (cmd)
+          (evil-set-command-property cmd :keep-visual t)
+          (evil-declare-not-repeat cmd))
       '(digit-argument
         negative-argument
         universal-argument
         universal-argument-minus
-        universal-argument-other-key
-        what-cursor-position))
+        universal-argument-other-key))
+(mapc #'evil-declare-not-repeat
+      '(what-cursor-position))
 (mapc #'evil-declare-change-repeat
       '(dabbrev-expand
         hippie-expand))

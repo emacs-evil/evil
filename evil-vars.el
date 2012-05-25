@@ -98,6 +98,15 @@ commands."
     (dolist (cmd (default-value var))
       (evil-set-command-property cmd :exclude-newline t))))
 
+(defun evil-set-custom-motions (var values)
+  "Sets the list of motion commands."
+  (with-no-warnings
+    (when (default-boundp var)
+      (dolist (motion (default-value var))
+        (evil-add-command-properties motion :keep-visual nil :repeat nil)))
+    (set-default var values)
+    (mapc #'evil-declare-motion (default-value var))))
+
 ;;; Customization group
 
 (defgroup evil nil
@@ -583,7 +592,6 @@ intercepted."
     beginning-of-visual-line
     c-beginning-of-defun
     c-end-of-defun
-    digit-argument
     down-list
     end-of-buffer
     end-of-defun
@@ -658,14 +666,12 @@ intercepted."
     undo
     undo-tree-redo
     undo-tree-undo
-    universal-argument
-    universal-argument-minus
-    universal-argument-more
-    universal-argument-other-key
     up-list)
   "Non-Evil commands to initialize to motions."
   :type  '(repeat symbol)
-  :group 'evil)
+  :group 'evil
+  :set 'evil-set-custom-motions
+  :initialize 'evil-custom-initialize-pending-reset)
 
 (defcustom evil-visual-newline-commands
   '(LaTeX-section
