@@ -7,6 +7,28 @@
 This hook can be used the execute some initialization routines
 when evil is completely loaded.")
 
+;;; Initialization
+
+(defvar evil-pending-custom-initialize nil
+  "A list of pending initializations for custom variables.
+Each element is a triple (FUNC VAR VALUE). When evil is
+completely loaded then the functions (funcall FUNC VAR VALUE) is
+called for each element. FUNC should be a function suitable for
+the :initialize property of `defcustom'.")
+
+(defun evil-custom-initialize-pending-reset (var value)
+  "Add a pending customization with `custom-initialize-reset'."
+  (push (list 'custom-initialize-reset var value)
+        evil-pending-custom-initialize))
+
+(defun evil-run-pending-custom-initialize ()
+  "Executes the pending initializations.
+See `evil-pending-custom-initialize'."
+  (dolist (init evil-pending-custom-initialize)
+    (apply (car init) (cdr init)))
+  (remove-hook 'evil-after-load-hook 'evil-run-pending-custom-initialize))
+(add-hook 'evil-after-load-hook 'evil-run-pending-custom-initialize)
+
 ;;; Setters
 
 (defun evil-set-toggle-key (key)
