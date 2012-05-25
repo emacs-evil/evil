@@ -34,7 +34,8 @@ search module is used."
   :type '(radio (const :tag "Emacs built-in isearch." :value isearch)
                 (const :tag "Evil interactive search." :value evil-search))
   :group 'evil
-  :set 'evil-select-search-module)
+  :set 'evil-select-search-module
+  :initialize 'evil-custom-initialize-pending-reset)
 
 (defun evil-search-incrementally (forward regexp-p)
   "Search incrementally for user-entered text."
