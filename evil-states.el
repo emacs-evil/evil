@@ -515,7 +515,7 @@ Reuse overlays where possible to prevent flicker."
          (old (symbol-value overlays))
          (eol-col (and (memq this-command '(next-line previous-line))
                        (numberp temporary-goal-column)
-                       (1+ (min temporary-goal-column
+                       (1+ (min (round temporary-goal-column)
                                 (1- most-positive-fixnum)))))
          beg-col end-col new nlines overlay window-beg window-end)
     ;; calculate the rectangular region represented by BEG and END,
