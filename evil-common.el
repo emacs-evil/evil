@@ -1463,10 +1463,13 @@ If POS is nil, delete the mark."
   (set-marker (mark-marker) pos))
 
 (defun evil-save-transient-mark-mode ()
-  "Save Transient Mark mode and make the new setup buffer-local.
-The variables to save are listed in `evil-transient-vars'.
-Their values are stored in `evil-transient-vals'.
-See also `evil-restore-transient-mark-mode'."
+  "Save Transient Mark mode and make it buffer-local.
+Any changes to Transient Mark mode are now local to the current
+buffer, until `evil-restore-transient-mark-mode' is called.
+
+Variables pertaining to Transient Mark mode are listed in
+`evil-transient-vars', and their values are stored in
+`evil-transient-vals'."
   (dolist (var evil-transient-vars)
     (when (and (boundp var)
                (not (assq var evil-transient-vals)))
@@ -1477,8 +1480,15 @@ See also `evil-restore-transient-mark-mode'."
       (put var 'permanent-local t))))
 
 (defun evil-restore-transient-mark-mode ()
-  "Restore Transient Mark mode from `evil-transient-vals'.
-See also `evil-save-transient-mark-mode'."
+  "Restore Transient Mark mode.
+This presupposes that `evil-save-transient-mark-mode' has been
+called earlier. If Transient Mark mode was disabled before but
+enabled in the meantime, this function disables it; if it was
+enabled before but disabled in the meantime, this function
+enables it.
+
+The earlier settings of Transient Mark mode are stored in
+`evil-transient-vals'."
   (let (entry local var val)
     (while (setq entry (pop evil-transient-vals))
       (setq var (pop entry)

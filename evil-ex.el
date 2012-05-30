@@ -171,8 +171,8 @@ Otherwise behaves like `delete-backward-char'."
   "Update Ex variables when the minibuffer changes.
 This function is usually called from `after-change-functions'
 hook. If BEG is non-nil (which is the case when called from
-`after-change-functions', then an error description in case if
-incomplete or unknown commands is show."
+`after-change-functions'), then an error description is shown
+in case of incomplete or unknown commands."
   (let* ((prompt (minibuffer-prompt-end))
          (string (or string (buffer-substring prompt (point-max))))
          arg bang cmd count expr func handler range tree type)

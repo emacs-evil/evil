@@ -472,10 +472,8 @@ if COUNT is positive, and to the left of it if negative.
 ;; this is used in the `interactive' specification of an operator command
 (defun evil-operator-range (&optional return-type)
   "Read a motion from the keyboard and return its buffer positions.
-The return value is a list (BEG END) or (BEG END TYPE),
-depending on RETURN-TYPE. Instead of reading from the keyboard,
-a predefined motion may be specified with MOTION. Likewise,
-a predefined type may be specified with TYPE."
+The return value is a list (BEG END), or (BEG END TYPE) if
+RETURN-TYPE is non-nil."
   (let ((motion (or evil-operator-range-motion
                     (when (and (fboundp 'evil-ex-p) (evil-ex-p))
                       #'evil-line)))
@@ -577,7 +575,7 @@ It is followed by a list of keywords and functions:
                  and returns a human-readable string, for example,
                  \"2 lines\".
 
-Further keywords and functions may be specified. These are assumed to
+If further keywords and functions are specified, they are assumed to
 be transformations on buffer positions, like :expand and :contract.
 
 \(fn TYPE DOC [[KEY FUNC]...])"
