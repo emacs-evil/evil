@@ -6212,22 +6212,22 @@ if no previous selection")
   (should (equal (evil-ex-parse "5,2cmd arg")
                  '(evil-ex-call-command
                    (evil-ex-range
-                    (evil-ex-address (string-to-number "5") nil)
-                    (evil-ex-address (string-to-number "2") nil))
+                    (evil-ex-line (string-to-number "5") nil)
+                    (evil-ex-line (string-to-number "2") nil))
                    "cmd"
                    "arg")))
   (should (equal (evil-ex-parse "5,2cmd !arg")
                  '(evil-ex-call-command
                    (evil-ex-range
-                    (evil-ex-address (string-to-number "5") nil)
-                    (evil-ex-address (string-to-number "2") nil))
+                    (evil-ex-line (string-to-number "5") nil)
+                    (evil-ex-line (string-to-number "2") nil))
                    "cmd"
                    "!arg")))
   (should (equal (evil-ex-parse "5,2 arg")
                  '(evil-ex-call-command
                    (evil-ex-range
-                    (evil-ex-address (string-to-number "5") nil)
-                    (evil-ex-address (string-to-number "2") nil))
+                    (evil-ex-line (string-to-number "5") nil)
+                    (evil-ex-line (string-to-number "2") nil))
                    "arg"
                    nil))))
 
@@ -6238,30 +6238,30 @@ if no previous selection")
                  '(evil-ex-full-range)))
   (should (equal (evil-ex-parse "5,27" nil 'range)
                  '(evil-ex-range
-                   (evil-ex-address (string-to-number "5") nil)
-                   (evil-ex-address (string-to-number "27") nil))))
+                   (evil-ex-line (string-to-number "5") nil)
+                   (evil-ex-line (string-to-number "27") nil))))
   (should (equal (evil-ex-parse "5;$" nil 'range)
                  '(evil-ex-range
-                   (evil-ex-address (string-to-number "5") nil)
-                   (evil-ex-address (evil-ex-last-line) nil))))
+                   (evil-ex-line (string-to-number "5") nil)
+                   (evil-ex-line (evil-ex-last-line) nil))))
   (should (equal (evil-ex-parse "5,'x" nil 'range)
                  '(evil-ex-range
-                   (evil-ex-address (string-to-number "5") nil)
-                   (evil-ex-address (evil-ex-marker "x") nil))))
+                   (evil-ex-line (string-to-number "5") nil)
+                   (evil-ex-line (evil-ex-marker "x") nil))))
   (should (equal (evil-ex-parse "5,+" nil 'range)
                  '(evil-ex-range
-                   (evil-ex-address (string-to-number "5") nil)
-                   (evil-ex-address
+                   (evil-ex-line (string-to-number "5") nil)
+                   (evil-ex-line
                     nil (+ (evil-ex-signed-number (intern "+") nil))))))
   (should (equal (evil-ex-parse "5,-" nil 'range)
                  '(evil-ex-range
-                   (evil-ex-address (string-to-number "5") nil)
-                   (evil-ex-address
+                   (evil-ex-line (string-to-number "5") nil)
+                   (evil-ex-line
                     nil (+ (evil-ex-signed-number (intern "-") nil))))))
   (should (equal (evil-ex-parse "5;4+2-7-3+10-" nil 'range)
                  '(evil-ex-range
-                   (evil-ex-address (string-to-number "5") nil)
-                   (evil-ex-address
+                   (evil-ex-line (string-to-number "5") nil)
+                   (evil-ex-line
                     (string-to-number "4")
                     (+ (evil-ex-signed-number
                         (intern "+") (string-to-number "2"))
@@ -6274,11 +6274,11 @@ if no previous selection")
                        (evil-ex-signed-number (intern "-") nil))))))
   (should (equal (evil-ex-parse ".-2;4+2-7-3+10-" nil 'range)
                  '(evil-ex-range
-                   (evil-ex-address
+                   (evil-ex-line
                     (evil-ex-current-line)
                     (+ (evil-ex-signed-number
                         (intern "-") (string-to-number "2"))))
-                   (evil-ex-address
+                   (evil-ex-line
                     (string-to-number "4")
                     (+ (evil-ex-signed-number
                         (intern "+") (string-to-number "2"))
@@ -6292,17 +6292,17 @@ if no previous selection")
                         (intern "-") nil))))))
   (should (equal (evil-ex-parse "'a-2,$-10" nil 'range)
                  '(evil-ex-range
-                   (evil-ex-address
+                   (evil-ex-line
                     (evil-ex-marker "a")
                     (+ (evil-ex-signed-number
                         (intern "-") (string-to-number "2"))))
-                   (evil-ex-address
+                   (evil-ex-line
                     (evil-ex-last-line)
                     (+ (evil-ex-signed-number
                         (intern "-") (string-to-number "10")))))))
   (should (equal (evil-ex-parse ".+42" nil 'range)
                  '(evil-ex-range
-                   (evil-ex-address
+                   (evil-ex-line
                     (evil-ex-current-line)
                     (+ (evil-ex-signed-number
                         (intern "+") (string-to-number "42"))))

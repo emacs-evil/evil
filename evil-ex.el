@@ -33,11 +33,11 @@
      ((\? space) (\? "\\(?:.\\|\n\\)+") #'$2))
     (range
      ("%" #'(evil-ex-full-range))
-     (address (\? "[,;]" address #'$2) #'evil-ex-range))
-    (address
-     (line (\? offset) #'evil-ex-address)
-     ((\? line) offset #'evil-ex-address))
+     (line (\? "[,;]" line #'$2) #'evil-ex-range))
     (line
+     (base (\? offset) #'evil-ex-line)
+     ((\? base) offset #'evil-ex-line))
+    (base
      number
      marker
      search
@@ -600,7 +600,7 @@ This function calls `evil-ex-update' explicitly when
       (when visual
         (evil-exit-visual-state)))))
 
-(defun evil-ex-address (base &optional offset)
+(defun evil-ex-line (base &optional offset)
   "Return the line number of BASE plus OFFSET."
   (+ (or base (line-number-at-pos))
      (or offset 0)))
