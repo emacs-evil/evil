@@ -599,6 +599,7 @@ a predefined type may be specified with TYPE."
                 evil-this-type type))))
       (when (evil-range-p range)
         (unless (or (null type) (eq (evil-type range) type))
+          (evil-contract-range range)
           (evil-set-type range type)
           (evil-expand-range range))
         (evil-set-range-properties range nil)
