@@ -2376,8 +2376,9 @@ the new (extended) text object range.  See
           (evil-range-union range (evil-range beg end))
         range))))
 
-(defun evil-paren-range (count open close &optional exclusive)
+(defun evil-paren-range (count beg end type open close &optional exclusive)
   "Return a range (BEG END) of COUNT delimited text objects.
+BEG, END and TYPE are the currently selected (visual) range.
 OPEN is an opening character and CLOSE is a closing character.
 If EXCLUSIVE is non-nil, OPEN and CLOSE are excluded from
 the range; otherwise they are included.
@@ -2388,7 +2389,7 @@ use `evil-regexp-range'."
   (let ((open-regexp (regexp-quote (string open)))
         (close-regexp (regexp-quote (string close)))
         (count (or count 1))
-        level beg end range)
+        level range)
     (save-excursion
       (if (or (evil-in-comment-p)
               (and (evil-in-string-p)
@@ -2405,7 +2406,7 @@ use `evil-regexp-range'."
               (progn
                 (evil-goto-min (evil-string-beginning)
                                (evil-comment-beginning))
-                (evil-paren-range count open close exclusive)))
+                (evil-paren-range count beg end type open close exclusive)))
         (with-syntax-table (copy-syntax-table (syntax-table))
           (cond
            ((= count 0))
@@ -2426,13 +2427,39 @@ use `evil-regexp-range'."
             ;; otherwise handle as open and close parentheses
             (modify-syntax-entry open (format "(%c" close))
             (modify-syntax-entry close (format ")%c" open))
-            ;; Is point next to a parenthesis?
             (if (< count 0)
                 (when (looking-back close-regexp)
                   (backward-char))
               (when (looking-at open-regexp)
-                (forward-char)))
-            ;; find OPEN
+                (forward-char)
+                (when (and beg end (= (1+ beg) end))
+                  (setq beg (1+ beg)))))
+            ;; find OPEN, start at beginning of current range (if any)
+            (when (and beg end)
+              (goto-char (min beg (point)))
+              ;; check if current object matches current selection
+              (condition-case nil
+                  (save-excursion
+                    ;; find OPEN of current object
+                    (while (progn
+                             (backward-up-list 1)
+                             (not (looking-at open-regexp))))
+                    (let ((beg1 (point)))
+                      ;; find CLOSE of current object
+                      (forward-list)
+                      ;; modify current object of inclusive range
+                      (when exclusive
+                        (setq beg1 (1+ beg1))
+                        (backward-char))
+                      (when (and (= beg1 beg)
+                                 (= (point) end))
+                        ;; current object *is* current selection,
+                        ;; select one more
+                        (if (> count 0)
+                            (setq count (1+ count))
+                          (setq count (1- count))))))
+                (error nil)))
+            ;; find OPEN again with correct count
             (evil-motion-loop (nil count level)
               (condition-case nil
                   (while (progn
@@ -2442,7 +2469,7 @@ use `evil-regexp-range'."
             (when (/= level count)
               (setq beg (if exclusive (1+ (point)) (point)))
               ;; find CLOSE
-              (forward-sexp)
+              (forward-list)
               (setq end (if exclusive (1- (point)) (point)))
               (setq range (evil-range beg end))
               (when exclusive
@@ -2450,8 +2477,9 @@ use `evil-regexp-range'."
                  range (not (eq evil-this-operator #'evil-delete)))))))
           range)))))
 
-(defun evil-quote-range (count open close &optional exclusive)
+(defun evil-quote-range (count beg end type open close &optional exclusive)
   "Return a range (BEG END) of COUNT quotes.
+BEG, END and TYPE are the currently selected (visual) range.
 OPEN is the opening quote, CLOSE is the closing quote (often both
 are equal). If EXCLUSIVE is non-nil, OPEN and CLOSE are excluded
 from the range unless COUNT is 2 in which case they are included;
@@ -2459,9 +2487,9 @@ otherwise they are included as well as any succeeding (or
 preceding if no whitespace follows) white space."
   (if exclusive
       (if (and count (= count 2))
-          (evil-paren-range 1 open close nil)
-        (evil-paren-range count open close t))
-    (let ((range (evil-paren-range count open close nil)))
+          (evil-paren-range 1 nil nil nil open close nil)
+        (evil-paren-range count nil nil nil open close t))
+    (let ((range (evil-paren-range count nil nil nil open close nil)))
       (save-excursion
         (if (progn
               (goto-char (evil-range-end range))
