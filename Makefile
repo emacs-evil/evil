@@ -110,5 +110,5 @@ elpa:
 
 # Change the version using make VERSION=x.y.z
 version:
-	cat evil-pkg.el | sed "3s/\".*\"/\"${VERSION}\"/" > evil-pkg.el
+	cat evil-pkg.el | sed "3s/\".*\"/\"${VERSION}\"/" > evil-pkg.el.new && mv evil-pkg.el.new evil-pkg.el
 
