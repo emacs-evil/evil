@@ -2480,7 +2480,9 @@ Change to `%s'? "
          (evil-ex-substitute-regex (evil-ex-pattern-regex pattern)))
     (setq evil-ex-substitute-pattern pattern
           evil-ex-substitute-replacement replacement
-          evil-ex-substitute-flags flags)
+          evil-ex-substitute-flags flags
+          isearch-string evil-ex-substitute-regex)
+    (isearch-update-ring evil-ex-substitute-regex t)
     (if (evil-ex-pattern-whole-line pattern)
         ;; this one is easy, just use the built-in function
         (perform-replace evil-ex-substitute-regex
@@ -2649,6 +2651,8 @@ This is the same as :%s//~/&"
          (eq (evil-ex-regex-case pattern 'smart) 'insensitive))
         match markers)
     (when (and pattern command)
+      (setq isearch-string pattern)
+      (isearch-update-ring pattern t)
       (goto-char beg)
       (evil-move-beginning-of-line)
       (while (< (point) end)
