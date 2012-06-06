@@ -20,6 +20,7 @@
       '(balance-windows
         eval-expression
         execute-extended-command
+        exit-minibuffer
         compile
         delete-window
         delete-other-windows
