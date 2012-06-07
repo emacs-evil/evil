@@ -233,6 +233,18 @@ the last column is excluded."
           (prefix-numeric-value
            current-prefix-arg))))
 
+(evil-define-interactive-code "<vc>"
+  "Count, but only in visual state.
+This should be used by an operator taking a count. In normal
+state the count should not be handled by the operator but by the
+motion that defines the operator's range. In visual state the
+range is specified by the visual region and the count is not used
+at all. Thus in the case the operator may use the count
+directly."
+  (list (when (and (evil-visual-state-p) current-prefix-arg)
+          (prefix-numeric-value
+           current-prefix-arg))))
+
 (evil-define-interactive-code "<C>"
   "Character read through `evil-read-key'."
   (list (evil-read-key)))
