@@ -1226,44 +1226,56 @@ but doesn't insert or remove any spaces."
   :motion evil-line
   (evil-indent beg end))
 
-(evil-define-operator evil-shift-left (beg end)
+(evil-define-operator evil-shift-left (beg end &optional count)
   "Shift text from BEG to END to the left.
 The text is shifted to the nearest multiple of `evil-shift-width'
 \(the rounding can be disabled by setting `evil-shift-round').
 See also `evil-shift-right'."
   :type line
-  (if (not evil-shift-round)
-      (indent-rigidly beg end (- evil-shift-width))
-    (let* ((indent
-            (save-excursion
-              (goto-char beg)
-              (evil-move-beginning-of-line)
-              ;; ignore blank lines
-              (while (and (< (point) end) (looking-at "[ \t]*$"))
-                (forward-line))
-              (if (> (point) end) 0
-                (current-indentation))))
-           (offset (1+ (mod (1- indent) evil-shift-width))))
-      (indent-rigidly beg end (- offset)))))
+  (interactive "<r><vc>")
+  (let ((beg (set-marker (make-marker) beg))
+        (end (set-marker (make-marker) end)))
+    (dotimes (i (or count 1))
+      (if (not evil-shift-round)
+          (indent-rigidly beg end (- evil-shift-width))
+        (let* ((indent
+                (save-excursion
+                  (goto-char beg)
+                  (evil-move-beginning-of-line)
+                  ;; ignore blank lines
+                  (while (and (< (point) end) (looking-at "[ \t]*$"))
+                    (forward-line))
+                  (if (> (point) end) 0
+                    (current-indentation))))
+               (offset (1+ (mod (1- indent) evil-shift-width))))
+          (indent-rigidly beg end (- offset)))))
+    (set-marker beg nil)
+    (set-marker end nil)))
 
-(evil-define-operator evil-shift-right (beg end)
+(evil-define-operator evil-shift-right (beg end &optional count)
   "Shift text from BEG to END to the right.
 The text is shifted to the nearest multiple of `evil-shift-width'
 \(the rounding can be disabled by setting `evil-shift-round').
 See also `evil-shift-left'."
   :type line
-  (if (not evil-shift-round)
-      (indent-rigidly beg end evil-shift-width)
-    (let* ((indent
-            (save-excursion
-              (goto-char beg)
-              (evil-move-beginning-of-line nil)
-              (while (and (< (point) end) (looking-at "[ \t]*$"))
-                (forward-line))
-              (if (> (point) end) 0
-                (current-indentation))))
-           (offset (- evil-shift-width (mod indent evil-shift-width))))
-      (indent-rigidly beg end offset))))
+  (interactive "<r><vc>")
+  (let ((beg (set-marker (make-marker) beg))
+        (end (set-marker (make-marker) end)))
+    (dotimes (i (or count 1))
+      (if (not evil-shift-round)
+          (indent-rigidly beg end evil-shift-width)
+        (let* ((indent
+                (save-excursion
+                  (goto-char beg)
+                  (evil-move-beginning-of-line nil)
+                  (while (and (< (point) end) (looking-at "[ \t]*$"))
+                    (forward-line))
+                  (if (> (point) end) 0
+                    (current-indentation))))
+               (offset (- evil-shift-width (mod indent evil-shift-width))))
+          (indent-rigidly beg end offset))))
+    (set-marker beg nil)
+    (set-marker end nil)))
 
 (evil-define-operator evil-align-left (beg end type &optional width)
   "Right-align lines in the region at WIDTH columns.

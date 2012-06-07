@@ -2091,7 +2091,8 @@ Below some empty line")))
 (ert-deftest evil-test-shift ()
   "Test `evil-shift-right'."
   :tags '(evil operator)
-  (let ((evil-shift-width 4))
+  (let ((evil-shift-width 4)
+        indent-tabs-mode)
     (ert-info ("Shift linewise")
       (evil-test-buffer
         "[l]ine 1\nline 2\nline 3\n"
@@ -2101,7 +2102,14 @@ Below some empty line")))
       (evil-test-buffer
         "[l]ine 1\nline 2\nline 3\n"
         ("v$>")
-        "[ ]   line 1\nline 2\nline 3\n"))))
+        "[ ]   line 1\nline 2\nline 3\n"))
+    (ert-info ("Shift visual with count")
+      (evil-test-buffer
+        "[l]ine 1\nline 2\nline 3\n"
+        ("Vj3>")
+        "[ ]           line 1\n            line 2\nline 3\n"
+        ("Vj2<")
+        "[ ]   line 1\n    line 2\nline 3\n"))))
 
 ;;; Paste
 
