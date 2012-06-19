@@ -932,7 +932,8 @@ argument. Honors field boundaries, i.e., constrains the movement
 to the current field as recognized by `line-beginning-position'."
   (when (or evil-move-cursor-back force)
     (unless (or (= (point) (line-beginning-position))
-                (and visual-line-mode
+                (and (boundp 'visual-line-mode)
+                     visual-line-mode
                      (= (point) (save-excursion
                                   (beginning-of-visual-line)
                                   (point)))))
