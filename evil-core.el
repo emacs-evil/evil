@@ -516,9 +516,10 @@ may be specified before the body code:
 
 (defun evil-state-keymaps (state &rest excluded)
   "Return a keymap alist of keymaps activated by STATE.
-Recursively includes the keymaps of other states referenced by STATE.
-The EXCLUDED argument is an internal safeguard against infinite
-recursion, keeping track of earlier states."
+If STATE references other states in its :enable property,
+these states are recursively processed and added to the list.
+\(The EXCLUDED argument is an internal safeguard against
+infinite recursion, keeping track of processed states.)"
   (let* ((state (or state evil-state))
          (enable (evil-state-property state :enable))
          (map (cons
@@ -548,7 +549,8 @@ recursion, keeping track of earlier states."
                        ,overriding-maps
                        (,map)))
         (push state excluded))
-       ;; the keymaps for another state
+       ;; the keymaps for another state: call `evil-state-keymaps'
+       ;; recursively, but keep track of processed states
        ((evil-state-p entry)
         (setq result `(,@result
                        ,(apply #'evil-state-keymaps entry excluded))))
@@ -578,8 +580,8 @@ This is a keymap alist, determined by the current state
     (dolist (entry evil-mode-map-alist)
       (setq mode (car-safe entry)
             map (cdr-safe entry))
-      ;; overriding keymaps are not toggled here,
-      ;; but by the mode they are associated with
+      ;; don't deactivate overriding keymaps;
+      ;; they are toggled by their associated mode
       (if (or (memq mode excluded)
               (evil-intercept-keymap-p map)
               (evil-overriding-keymap-p map)

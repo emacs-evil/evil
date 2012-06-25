@@ -111,7 +111,8 @@ Handles the repeat-count of the insertion command."
 ;; compatible with the Emacs region. This is achieved by "translating"
 ;; the region to the selected text right before a command is executed.
 ;; If the command is a motion, the translation is postponed until a
-;; non-motion command is invoked.
+;; non-motion command is invoked (distinguished by the :keep-visual
+;; command property).
 ;;
 ;; Visual state activates the region, enabling Transient Mark mode if
 ;; not already enabled. This is only temporay: if Transient Mark mode

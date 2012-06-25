@@ -2083,7 +2083,7 @@ without confirmation."
    ;; save current buffer to its file
    ((string= filename (buffer-file-name))
     (if (not bang) (save-buffer) (write-file filename)))
-   ;; save to other file
+   ;; save to another file
    (t
     (write-region nil nil filename
                   nil (not (buffer-file-name)) nil

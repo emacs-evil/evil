@@ -108,8 +108,7 @@ with `M-x evil-tests-run'"))
 The following optional keywords specify the buffer's properties:
 
 :state STATE            The initial state, defaults to `normal'.
-:visual TYPE            The Visual type, defaults to
-                        `evil-visual-char'.
+:visual SELECTION       The Visual selection, defaults to `char'.
 :point-start STRING     String for matching beginning of point,
                         defaults to \"[\".
 :point-end STRING       String for matching end of point,
