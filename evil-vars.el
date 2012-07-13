@@ -71,20 +71,24 @@ NEWLIST     the list of new special keymaps."
   "Tries to set pending special keymaps.
 This function should be called from an `after-load-functions'
 hook."
-  (dolist (map '((evil-make-overriding-map . evil-pending-overriding-maps)
-                 (evil-make-intercept-map . evil-pending-intercept-maps)))
-    (let ((make (car map))
-          (pending (cdr map))
-          newlist)
-      (dolist (map (symbol-value pending))
-        (let ((kmap (and (boundp (car map))
-                         (keymapp (symbol-value (car map)))
-                         (symbol-value (car map))))
-              (state (cdr map)))
-          (if kmap
-              (funcall make kmap state)
-            (push map newlist))))
-      (set-default pending newlist))))
+  (let ((maps '((evil-make-overriding-map . evil-pending-overriding-maps)
+                (evil-make-intercept-map . evil-pending-intercept-maps))))
+    (while maps
+      (let* ((map (pop maps))
+             (make (car map))
+             (pending-var (cdr map))
+             (pending (symbol-value pending-var))
+             newlist)
+        (while pending
+          (let* ((map (pop pending))
+                 (kmap (and (boundp (car map))
+                            (keymapp (symbol-value (car map)))
+                            (symbol-value (car map))))
+                 (state (cdr map)))
+            (if kmap
+                (funcall make kmap state)
+              (push map newlist))))
+        (set-default pending-var newlist)))))
 
 (defun evil-set-visual-newline-commands (var value)
   "Set the value of `evil-visual-newline-commands'.
