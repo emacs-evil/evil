@@ -597,7 +597,7 @@ Note that this function ignores the whole-line property of PATTERN."
     (when evil-ex-hl-update-timer
       (cancel-timer evil-ex-hl-update-timer))
     (setq evil-ex-hl-update-timer
-          (run-at-time 0.1 nil
+          (run-at-time evil-ex-hl-update-delay nil
                        #'evil-ex-hl-do-update-highlight
                        (current-buffer)))))
 
