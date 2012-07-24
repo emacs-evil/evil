@@ -243,7 +243,7 @@ By default the first line."
 
 (evil-define-union-move evil-move-WORD (count)
   "Move by WORDs."
-  (evil-move-chars "^ \t\r\n" count)
+  (evil-move-chars evil-bigword count)
   (evil-move-empty-lines count))
 
 (evil-define-motion evil-forward-word-begin (count &optional bigword)

@@ -185,6 +185,13 @@ This should be a regexp set without the enclosing []."
   :group 'evil)
 (make-variable-buffer-local 'evil-word)
 
+(defcustom evil-bigword "^ \t\r\n"
+  "The characters to be considered as a big word.
+This should be a regexp set without the enclosing []."
+  :type 'string
+  :group 'evil)
+(make-variable-buffer-local 'evil-bigword)
+
 (defcustom evil-want-fine-undo nil
   "Whether actions like \"cw\" are undone in several steps."
   :type 'boolean
