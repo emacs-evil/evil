@@ -3073,11 +3073,14 @@ if the previous state was Emacs state."
   (cond
    (arg
     (add-hook 'post-command-hook #'evil-execute-in-emacs-state t)
+    (setq evil-execute-in-emacs-state-buffer (current-buffer))
     (evil-emacs-state)
     (evil-echo "Switched to Emacs state for the next command ..."))
    ((not (eq this-command #'evil-execute-in-emacs-state))
     (remove-hook 'post-command-hook 'evil-execute-in-emacs-state)
-    (evil-change-to-previous-state))))
+    (with-current-buffer evil-execute-in-emacs-state-buffer
+      (evil-change-to-previous-state))
+    (setq evil-execute-in-emacs-state-buffer))))
 
 ;; TODO: this will probably not work well with the repeat-system.
 (evil-define-command evil-esc (arg)

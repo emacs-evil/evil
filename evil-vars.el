@@ -869,6 +869,12 @@ or call the state function (e.g., `evil-normal-state').")
 (evil-define-local-var evil-previous-state nil
   "The Evil state being switched from.")
 
+(defvar evil-execute-in-emacs-state-buffer nil
+  "The buffer of the latest `evil-execute-in-emacs-state'.
+When this command is being executed the current buffer is stored
+in this variable. This is necessary in case the Emacs-command to
+be called changes the current buffer.")
+
 (evil-define-local-var evil-mode-line-tag nil
   "Mode-Line indicator for the current state.")
 (put 'evil-mode-line-tag 'risky-local-variable t)
