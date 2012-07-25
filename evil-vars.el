@@ -342,7 +342,7 @@ before point."
   :type 'function
   :group 'evil)
 
-(defcustom evil-lookup-func 'woman
+(defcustom evil-lookup-func #'woman
   "Lookup function used by \
 \"\\<evil-motion-state-map>\\[evil-lookup]\"."
   :type 'function

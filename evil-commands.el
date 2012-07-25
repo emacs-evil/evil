@@ -2150,10 +2150,10 @@ If no FILE is specified, reload the current buffer from disk."
   :repeat nil
   (let (message-truncate-lines message-log-max)
     (display-message-or-buffer
-     (mapconcat 'identity
+     (mapconcat #'identity
                 (sort
                  (mapcar #'buffer-name (buffer-list))
-                 'string<)
+                 #'string<)
                 "\n")
      "*Buffers*")))
 
