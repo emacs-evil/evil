@@ -236,7 +236,6 @@
 (define-key evil-motion-state-map [down] 'evil-next-line)
 (define-key evil-motion-state-map
   (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
-(define-key evil-motion-state-map [down-mouse-1] 'evil-mouse-drag-region)
 
 ;; text objects
 (define-key evil-outer-text-objects-map "w" 'evil-a-word)
@@ -342,6 +341,11 @@
 (define-key minibuffer-local-map "\C-n" 'evil-complete-previous)
 (define-key minibuffer-local-map "\C-x\C-p" 'evil-complete-next-line)
 (define-key minibuffer-local-map "\C-x\C-n" 'evil-complete-previous-line)
+
+;;; Mouse
+(define-key evil-motion-state-map [down-mouse-1] 'evil-mouse-drag-region)
+(define-key evil-normal-state-map [mouse-2] 'mouse-yank-primary)
+(define-key evil-visual-state-map [mouse-2] 'evil-exit-visual-and-repeat)
 
 ;; Ex
 (define-key evil-motion-state-map ":" 'evil-ex)
