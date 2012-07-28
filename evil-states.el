@@ -199,6 +199,7 @@ the selection is enabled.
   (cond
    ((evil-visual-state-p)
     (evil-save-transient-mark-mode)
+    (setq select-active-regions nil)
     (cond
      ((region-active-p)
       (if (< (evil-visual-direction) 0)
@@ -239,6 +240,7 @@ Expand the region to the selection unless COMMAND is a motion."
        ;; unless the command has real need of it
        (and (eq (evil-visual-type) 'line)
             (evil-get-command-property command :exclude-newline))))))
+
 (put 'evil-visual-pre-command 'permanent-local-hook t)
 
 (defun evil-visual-post-command (&optional command)
@@ -259,9 +261,17 @@ otherwise exit Visual state."
       (evil-adjust-cursor))
      (evil-visual-region-expanded
       (evil-visual-contract-region)
+      (unless (eq evil-visual-selection 'block)
+        (x-select-text (buffer-substring-no-properties
+                        evil-visual-beginning
+                        evil-visual-end)))
       (evil-visual-highlight))
      (t
       (evil-visual-refresh)
+      (unless (eq evil-visual-selection 'block)
+        (x-select-text (buffer-substring-no-properties
+                        evil-visual-beginning
+                        evil-visual-end)))
       (evil-visual-highlight)))))
 (put 'evil-visual-post-command 'permanent-local-hook t)
 

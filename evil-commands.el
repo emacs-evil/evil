@@ -3185,16 +3185,8 @@ DO-MOUSE-DRAG-REGION-POST-PROCESS should only be used by
                                   (functionp fun)
                                   (not (memq fun '(mouse-set-point
                                                    mouse-set-region))))))
-        (if (and (/= (mark) (point))
-                 (not do-multi-click))
-
-            ;; If point has moved, finish the drag.
-            (let* (last-command this-command)
-              (and mouse-drag-copy-region
-                   do-mouse-drag-region-post-process
-                   (let (deactivate-mark)
-                     (copy-region-as-kill (mark) (point)))))
-
+        (when (or (= (mark) (point))
+                  do-multi-click)
           ;; If point hasn't moved, run the binding of the
           ;; terminating up-event.
           (if do-multi-click
