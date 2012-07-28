@@ -209,7 +209,8 @@ If COMMAND doesn't have this property, return DEFAULT."
       (eq repeat-type 'abort)                    ; ... explicitely forced
       (eq evil-recording-repeat 'abort)          ; ... already aborted
       (evil-emacs-state-p)                       ; ... in Emacs state
-      (evil-mouse-events-p (this-command-keys))  ; ... mouse events
+      (and (evil-mouse-events-p (this-command-keys))  ; ... mouse events
+           (eq repeat-type nil))
       (minibufferp)))                            ; ... minibuffer activated
 
 (defun evil-repeat-record (info)
