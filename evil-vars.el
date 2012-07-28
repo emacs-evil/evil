@@ -1017,6 +1017,7 @@ character argument for some commands, e.g. `evil-replace'.")
   '((t . evil-repeat-keystrokes)
     (change . evil-repeat-changes)
     (motion . evil-repeat-motion)
+    (insert-at-point . evil-repeat-insert-at-point)
     (ignore . nil))
   "An alist of defined repeat-types.")
 

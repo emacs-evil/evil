@@ -346,6 +346,27 @@ If CHANGE is specified, it is added to `evil-repeat-changes'."
                           ,(- (point) evil-repeat-pos)))
     (setq evil-repeat-changes nil)))
 
+(defun evil-repeat-insert-at-point (flag)
+  "Repeation recording function for commands that insert text in region.
+This records text insertion when a command inserts some text in a
+buffer between (point) and (mark)."
+  (cond
+   ((eq flag 'pre)
+    (add-hook 'after-change-functions #'evil-repeat-insert-at-point-hook nil t))
+   ((eq flag 'post)
+    (remove-hook 'after-change-functions #'evil-repeat-insert-at-point-hook t))))
+
+(defun evil-repeat-insert-at-point-hook (beg end length)
+  (let ((repeat-type (evil-repeat-type this-command t)))
+    (when (and (evil-repeat-recording-p)
+               (eq repeat-type 'evil-repeat-insert-at-point)
+               (not (evil-emacs-state-p))
+               (not (evil-repeat-different-buffer-p t))
+               evil-state)
+      (setq evil-repeat-pos beg)
+      (evil-repeat-record (list 'insert (buffer-substring beg end))))))
+(put 'evil-repeat-insert-at-point-hook 'permanent-local-hook t)
+
 (defun evil-normalize-repeat-info (repeat-info)
   "Concatenate consecutive arrays in REPEAT-INFO.
 Returns a single array."

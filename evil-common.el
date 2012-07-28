@@ -405,6 +405,10 @@ This ensures that it behaves correctly in Visual state."
   "Declare COMMAND to be repeatable by buffer changes."
   (evil-add-command-properties command :repeat 'change))
 
+(defun evil-declare-insert-at-point-repeat (command)
+  "Declare COMMAND to be repeatable by buffer changes."
+  (evil-add-command-properties command :repeat 'insert-at-point))
+
 (defun evil-declare-abort-repeat (command)
   "Declare COMMAND to be nonrepeatable."
   (evil-add-command-properties command :repeat 'abort))
