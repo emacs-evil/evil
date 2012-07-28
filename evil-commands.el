@@ -3329,6 +3329,13 @@ Otherwise send [escape]."
   (setq this-command last-command)
   (add-hook 'pre-command-hook #'evil-turn-on-esc-mode nil t))
 
+(defun evil-exit-visual-and-repeat (event)
+  (interactive "e")
+  (when (evil-visual-state-p)
+    (evil-exit-visual-state)
+    (push event unread-command-events)))
+(evil-declare-ignore-repeat 'evil-exit-visual-and-repeat)
+
 (provide 'evil-commands)
 
 ;;; evil-commands.el ends here
