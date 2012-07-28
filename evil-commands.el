@@ -3040,6 +3040,237 @@ and redisplays the current buffer there."
           (select-window newwin))))
     (balance-windows)))
 
+;;; Mouse handling
+
+;; Large parts of this code are taken from mouse.el which is
+;; distributed with GNU Emacs
+(defun evil-mouse-drag-region (start-event)
+  "Set the region to the text that the mouse is dragged over.
+Highlight the drag area as you move the mouse.
+This must be bound to a button-down mouse event.
+In Transient Mark mode, the highlighting remains as long as the mark
+remains active.  Otherwise, it remains until the next input event.
+
+If the click is in the echo area, display the `*Messages*' buffer."
+  (interactive "e")
+  ;; Give temporary modes such as isearch a chance to turn off.
+  (run-hooks 'mouse-leave-buffer-hook)
+  (evil-mouse-drag-track start-event t))
+(evil-set-command-property 'evil-mouse-drag-region :keep-visual t)
+
+(defun evil-mouse-drag-track (start-event &optional
+                                          do-mouse-drag-region-post-process)
+  "Track mouse drags by highlighting area between point and cursor.
+The region will be defined with mark and point.
+DO-MOUSE-DRAG-REGION-POST-PROCESS should only be used by
+`mouse-drag-region'."
+  (mouse-minibuffer-check start-event)
+  (setq mouse-selection-click-count-buffer (current-buffer))
+  (deactivate-mark)
+  (let* ((scroll-margin 0) ; Avoid margin scrolling (Bug#9541).
+         (original-window (selected-window))
+         ;; We've recorded what we needed from the current buffer and
+         ;; window, now let's jump to the place of the event, where things
+         ;; are happening.
+         (_ (mouse-set-point start-event))
+         (echo-keystrokes 0)
+         (start-posn (event-start start-event))
+         (start-point (posn-point start-posn))
+         (start-window (posn-window start-posn))
+         (start-window-start (window-start start-window))
+         (start-hscroll (window-hscroll start-window))
+         (bounds (window-edges start-window))
+         (make-cursor-line-fully-visible nil)
+         (top (nth 1 bounds))
+         (bottom (if (window-minibuffer-p start-window)
+                     (nth 3 bounds)
+                   ;; Don't count the mode line.
+                   (1- (nth 3 bounds))))
+         (on-link (and mouse-1-click-follows-link
+                       (or mouse-1-click-in-non-selected-windows
+                           (eq start-window original-window))
+                       ;; Use start-point before the intangibility
+                       ;; treatment, in case we click on a link inside an
+                       ;; intangible text.
+                       (mouse-on-link-p start-posn)))
+         (click-count (1- (event-click-count start-event)))
+         (remap-double-click (and on-link
+                                  (eq mouse-1-click-follows-link 'double)
+                                  (= click-count 1)))
+         ;; Suppress automatic hscrolling, because that is a nuisance
+         ;; when setting point near the right fringe (but see below).
+         (automatic-hscrolling-saved automatic-hscrolling)
+         (automatic-hscrolling nil)
+         event end end-point)
+
+    (setq mouse-selection-click-count click-count)
+    ;; In case the down click is in the middle of some intangible text,
+    ;; use the end of that text, and put it in START-POINT.
+    (if (< (point) start-point)
+        (goto-char start-point))
+    (setq start-point (point))
+    (if remap-double-click
+        (setq click-count 0))
+
+    (setq click-count (mod click-count 4))
+
+    ;; activate correct visual state
+    (let ((range (evil-mouse-start-end start-point start-point click-count)))
+      (set-mark (nth 0 range))
+      (goto-char (nth 1 range)))
+
+    (cond
+     ((= click-count 0)
+      (when (evil-visual-state-p) (evil-exit-visual-state)))
+     ((= click-count 1)
+      (evil-visual-char)
+      (evil-visual-post-command))
+     ((= click-count 2)
+      (evil-visual-line)
+      (evil-visual-post-command))
+     ((= click-count 3)
+      (evil-visual-block)
+      (evil-visual-post-command)))
+
+    ;; Track the mouse until we get a non-movement event.
+    (track-mouse
+      (while (progn
+               (setq event (read-event))
+               (or (mouse-movement-p event)
+                   (memq (car-safe event) '(switch-frame select-window))))
+        (unless (evil-visual-state-p)
+          (cond
+           ((= click-count 0) (evil-visual-char))
+           ((= click-count 1) (evil-visual-char))
+           ((= click-count 2) (evil-visual-line))
+           ((= click-count 3) (evil-visual-block))))
+
+        (evil-visual-pre-command)
+        (unless (memq (car-safe event) '(switch-frame select-window))
+          ;; Automatic hscrolling did not occur during the call to
+          ;; `read-event'; but if the user subsequently drags the
+          ;; mouse, go ahead and hscroll.
+          (let ((automatic-hscrolling automatic-hscrolling-saved))
+            (redisplay))
+          (setq end (event-end event)
+                end-point (posn-point end))
+          (if (and (eq (posn-window end) start-window)
+                   (integer-or-marker-p end-point))
+              (evil-mouse--drag-set-mark-and-point start-point
+                                                   end-point click-count)
+            (let ((mouse-row (cdr (cdr (mouse-position)))))
+              (cond
+               ((null mouse-row))
+               ((< mouse-row top)
+                (mouse-scroll-subr start-window (- mouse-row top)
+                                   nil start-point))
+               ((>= mouse-row bottom)
+                (mouse-scroll-subr start-window (1+ (- mouse-row bottom))
+                                   nil start-point))))))
+        (evil-visual-post-command)))
+
+    ;; Handle the terminating event if possible.
+    (when (consp event)
+      ;; Ensure that point is on the end of the last event.
+      (when (and (setq end-point (posn-point (event-end event)))
+                 (eq (posn-window end) start-window)
+                 (integer-or-marker-p end-point)
+                 (/= start-point end-point))
+        (evil-mouse--drag-set-mark-and-point start-point
+                                             end-point click-count))
+
+      ;; Find its binding.
+      (let* ((fun (key-binding (vector (car event))))
+             (do-multi-click (and (> (event-click-count event) 0)
+                                  (functionp fun)
+                                  (not (memq fun '(mouse-set-point
+                                                   mouse-set-region))))))
+        (if (and (/= (mark) (point))
+                 (not do-multi-click))
+
+            ;; If point has moved, finish the drag.
+            (let* (last-command this-command)
+              (and mouse-drag-copy-region
+                   do-mouse-drag-region-post-process
+                   (let (deactivate-mark)
+                     (copy-region-as-kill (mark) (point)))))
+
+          ;; If point hasn't moved, run the binding of the
+          ;; terminating up-event.
+          (if do-multi-click
+              (goto-char start-point)
+            (deactivate-mark))
+          (when (and (functionp fun)
+                     (= start-hscroll (window-hscroll start-window))
+                     ;; Don't run the up-event handler if the window
+                     ;; start changed in a redisplay after the
+                     ;; mouse-set-point for the down-mouse event at
+                     ;; the beginning of this function.  When the
+                     ;; window start has changed, the up-mouse event
+                     ;; contains a different position due to the new
+                     ;; window contents, and point is set again.
+                     (or end-point
+                         (= (window-start start-window)
+                            start-window-start)))
+            (when (and on-link
+                       (= start-point (point))
+                       (mouse--remap-link-click-p start-event event))
+              ;; If we rebind to mouse-2, reselect previous selected
+              ;; window, so that the mouse-2 event runs in the same
+              ;; situation as if user had clicked it directly.  Fixes
+              ;; the bug reported by juri@jurta.org on 2005-12-27.
+              (if (or (vectorp on-link) (stringp on-link))
+                  (setq event (aref on-link 0))
+                (select-window original-window)
+                (setcar event 'mouse-2)
+                ;; If this mouse click has never been done by the
+                ;; user, it doesn't have the necessary property to be
+                ;; interpreted correctly.
+                (put 'mouse-2 'event-kind 'mouse-click)))
+            (push event unread-command-events)))))))
+
+(defun evil-mouse--drag-set-mark-and-point (start click click-count)
+  (let* ((range (evil-mouse-start-end start click click-count))
+         (beg (nth 0 range))
+         (end (nth 1 range)))
+    (cond ((eq (mark) beg)
+           (goto-char end))
+          ((eq (mark) end)
+           (goto-char beg))
+          ((< click (mark))
+           (set-mark end)
+           (goto-char beg))
+          (t
+           (set-mark beg)
+           (goto-char end)))))
+
+(defun evil-mouse-start-end (start end mode)
+  "Return a list of region bounds based on START and END according to MODE.
+If MODE is no 1 then set point to (min START END), mark to (max START END).
+If MODE is 1 then set point to start of word at (min START END),
+mark to end of word at (max START END)."
+  (evil-sort start end)
+  (setq mode (mod mode 4))
+  (if (/= mode 1) (list start end)
+    (list
+     (save-excursion
+       (goto-char start)
+       (cond
+        ((looking-at "[ \t\r\n]")
+         (save-excursion
+           (unless (bolp) (skip-chars-backward " \t\r"))
+           (point)))
+        ((looking-back "[ \t\r\n]") start)
+        (t (evil-move-word -1) (point))))
+     (save-excursion
+       (goto-char end)
+       (cond
+        ((looking-at "[ \t\r\n]")
+         (save-excursion
+           (unless (eolp) (skip-chars-forward " \t\r"))
+           (if (bolp) (point) (1- (point)))))
+        (t (evil-move-word +1) (1- (point))))))))
+
 ;;; State switching
 
 (evil-define-command evil-exit-emacs-state (&optional buffer message)
