@@ -261,14 +261,16 @@ otherwise exit Visual state."
       (evil-adjust-cursor))
      (evil-visual-region-expanded
       (evil-visual-contract-region)
-      (unless (eq evil-visual-selection 'block)
+      (when (and (fboundp 'x-select-text)
+                 (not (eq evil-visual-selection 'block)))
         (x-select-text (buffer-substring-no-properties
                         evil-visual-beginning
                         evil-visual-end)))
       (evil-visual-highlight))
      (t
       (evil-visual-refresh)
-      (unless (eq evil-visual-selection 'block)
+      (when (and (fboundp 'x-select-text)
+                 (not (eq evil-visual-selection 'block)))
         (x-select-text (buffer-substring-no-properties
                         evil-visual-beginning
                         evil-visual-end)))
