@@ -344,8 +344,9 @@
 
 ;;; Mouse
 (define-key evil-motion-state-map [down-mouse-1] 'evil-mouse-drag-region)
-(define-key evil-normal-state-map [mouse-2] 'mouse-yank-primary)
 (define-key evil-visual-state-map [mouse-2] 'evil-exit-visual-and-repeat)
+(define-key evil-normal-state-map [mouse-2] 'mouse-yank-primary)
+(define-key evil-insert-state-map [mouse-2] 'mouse-yank-primary)
 
 ;; Ex
 (define-key evil-motion-state-map ":" 'evil-ex)

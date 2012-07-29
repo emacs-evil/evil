@@ -31,13 +31,15 @@
         split-window
         split-window-horizontally
         split-window-vertically))
-(evil-declare-insert-at-point-repeat 'mouse-yank-primary)
 
 (evil-set-type #'previous-line 'line)
 (evil-set-type #'next-line 'line)
 
 (dolist (cmd '(keyboard-quit keyboard-escape-quit))
   (evil-set-command-property cmd :suppress-operator t))
+
+;;; Mouse
+(evil-declare-insert-at-point-repeat 'mouse-yank-primary)
 
 ;;; key-binding
 
