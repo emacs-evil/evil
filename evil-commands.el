@@ -3048,8 +3048,6 @@ and redisplays the current buffer there."
   "Set the region to the text that the mouse is dragged over.
 Highlight the drag area as you move the mouse.
 This must be bound to a button-down mouse event.
-In Transient Mark mode, the highlighting remains as long as the mark
-remains active.  Otherwise, it remains until the next input event.
 
 If the click is in the echo area, display the `*Messages*' buffer."
   (interactive "e")
@@ -3231,6 +3229,8 @@ DO-MOUSE-DRAG-REGION-POST-PROCESS should only be used by
                 (put 'mouse-2 'event-kind 'mouse-click)))
             (push event unread-command-events)))))))
 
+;; This function is a plain copy of `mouse--drag-set-mark-and-point',
+;; which is only available in Emacs 24
 (defun evil-mouse--drag-set-mark-and-point (start click click-count)
   (let* ((range (evil-mouse-start-end start click click-count))
          (beg (nth 0 range))
@@ -3248,9 +3248,9 @@ DO-MOUSE-DRAG-REGION-POST-PROCESS should only be used by
 
 (defun evil-mouse-start-end (start end mode)
   "Return a list of region bounds based on START and END according to MODE.
-If MODE is no 1 then set point to (min START END), mark to (max START END).
-If MODE is 1 then set point to start of word at (min START END),
-mark to end of word at (max START END)."
+If MODE is not 1 then set point to (min START END), mark to (max
+START END). If MODE is 1 then set point to start of word at (min
+START END), mark to end of word at (max START END)."
   (evil-sort start end)
   (setq mode (mod mode 4))
   (if (/= mode 1) (list start end)
@@ -3340,6 +3340,13 @@ Otherwise send [escape]."
   (add-hook 'pre-command-hook #'evil-turn-on-esc-mode nil t))
 
 (defun evil-exit-visual-and-repeat (event)
+  "Exit insert state and repeat event.
+This special command should be used if some command called from
+visual state should actually be called in normal-state. The main
+reason for doing this is that the repeat system should *not*
+record the visual state information for some command. This
+command should be bound to exactly the same event in visual state
+as the original command is bound in normal state."
   (interactive "e")
   (when (evil-visual-state-p)
     (evil-exit-visual-state)
