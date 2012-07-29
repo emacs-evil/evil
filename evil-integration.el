@@ -40,6 +40,7 @@
 
 ;;; Mouse
 (evil-declare-insert-at-point-repeat 'mouse-yank-primary)
+(evil-declare-insert-at-point-repeat 'mouse-yank-secondary)
 
 ;;; key-binding
 
