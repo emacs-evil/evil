@@ -3214,7 +3214,7 @@ DO-MOUSE-DRAG-REGION-POST-PROCESS should only be used by
                             start-window-start)))
             (when (and on-link
                        (= start-point (point))
-                       (mouse--remap-link-click-p start-event event))
+                       (evil-mouse--remap-link-click-p start-event event))
               ;; If we rebind to mouse-2, reselect previous selected
               ;; window, so that the mouse-2 event runs in the same
               ;; situation as if user had clicked it directly.  Fixes
@@ -3245,6 +3245,23 @@ DO-MOUSE-DRAG-REGION-POST-PROCESS should only be used by
           (t
            (set-mark beg)
            (goto-char end)))))
+
+;; This function is a plain copy of `mouse--remap-link-click-p',
+;; which is only available in Emacs 23
+(defun evil-mouse--remap-link-click-p (start-event end-event)
+  (or (and (eq mouse-1-click-follows-link 'double)
+           (= (event-click-count start-event) 2))
+      (and
+       (not (eq mouse-1-click-follows-link 'double))
+       (= (event-click-count start-event) 1)
+       (= (event-click-count end-event) 1)
+       (or (not (integerp mouse-1-click-follows-link))
+           (let ((t0 (posn-timestamp (event-start start-event)))
+                 (t1 (posn-timestamp (event-end   end-event))))
+             (and (integerp t0) (integerp t1)
+                  (if (> mouse-1-click-follows-link 0)
+                      (<= (- t1 t0) mouse-1-click-follows-link)
+                    (< (- t0 t1) mouse-1-click-follows-link))))))))
 
 (defun evil-mouse-start-end (start end mode)
   "Return a list of region bounds based on START and END according to MODE.
