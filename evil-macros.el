@@ -475,7 +475,7 @@ if COUNT is positive, and to the left of it if negative.
 The return value is a list (BEG END), or (BEG END TYPE) if
 RETURN-TYPE is non-nil."
   (let ((motion (or evil-operator-range-motion
-                    (when (and (fboundp 'evil-ex-p) (evil-ex-p))
+                    (when (with-no-warnings (evil-ex-p))
                       #'evil-line)))
         (type evil-operator-range-type)
         (range (evil-range (point) (point)))
@@ -486,12 +486,12 @@ RETURN-TYPE is non-nil."
        ((evil-visual-state-p)
         (setq range (evil-visual-range)))
        ;; Ex mode
-       ((and (fboundp 'evil-ex-p)
-             (evil-ex-p)
+       ((and (with-no-warnings (evil-ex-p))
              evil-ex-range)
         (setq range evil-ex-range))
        ;; active region
-       ((region-active-p)
+       ((and (not (with-no-warnings (evil-ex-p)))
+             (region-active-p))
         (setq range (evil-range (region-beginning)
                                 (region-end)
                                 (or evil-this-type 'exclusive))))

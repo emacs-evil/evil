@@ -671,7 +671,10 @@ NUMBER defaults to 1."
 (defun evil-ex-eval (string &optional start)
   "Evaluate STRING as an Ex command.
 START is the start symbol, which defaults to `expression'."
-  (let ((form (evil-ex-parse string nil start)))
+  ;; disable the mark before executing, otherwise the visual region
+  ;; may be used as operator range instead of the ex-range
+  (let ((form (evil-ex-parse string nil start))
+        transient-mark-mode deactivate-mark)
     (eval form)))
 
 (defun evil-ex-parse (string &optional syntax start)
