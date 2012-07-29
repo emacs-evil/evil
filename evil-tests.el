@@ -6399,7 +6399,12 @@ if no previous selection")
       (evil-test-buffer
         "[A]bcAbcAbc\naBcaBcaBc\nABCABCABC\nabcabcabc"
         (":%s/bc/xy/g" (kbd "RET"))
-        "AxyAxyAxy\naXyaXyaXy\nAXYAXYAXY\n[a]xyaxyaxy"))))
+        "AxyAxyAxy\naXyaXyaXy\nAXYAXYAXY\n[a]xyaxyaxy"))
+    (ert-info ("Substitute zero range on whole line")
+      (evil-test-buffer
+        "no 1\nno 2\nno 3\n[y]es 4\nno 5\nno 6\nno 7\n"
+        (":s/^/# /g")
+        "no 1\nno 2\nno 3\n[#] yes 4\nno 5\nno 6\nno 7\n"))))
 
 (ert-deftest evil-test-ex-substitute-replacement ()
   "Test `evil-ex-substitute' with special replacements."

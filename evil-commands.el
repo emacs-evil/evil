@@ -2487,7 +2487,12 @@ Change to `%s'? "
         ;; this one is easy, just use the built-in function
         (perform-replace evil-ex-substitute-regex
                          evil-ex-substitute-replacement
-                         confirm t nil nil nil beg end)
+                         confirm t nil nil nil
+                         beg
+                         (if (and (> end (point-min))
+                                  (= (char-after (1- end)) ?\n))
+                             (1- end)
+                           end))
       (let ((evil-ex-substitute-nreplaced 0)
             (evil-ex-substitute-next-line (line-number-at-pos beg))
             (evil-ex-substitute-last-line
