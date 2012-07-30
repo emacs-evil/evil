@@ -1,20 +1,46 @@
-;;; Ex-mode
+;;; evil-ex.el --- Ex-mode
+
+;; Author: Frank Fischer <frank fischer at mathematik.tu-chemnitz.de>
+;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
+;;
+;; This file is NOT part of GNU Emacs.
+
+;;; License:
+
+;; This file is part of Evil.
+;;
+;; Evil is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; Evil is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
 
 ;; Ex is implemented as an extensible minilanguage, whose grammar
-;; is stored in `evil-ex-grammar'. Ex commands are defined with
+;; is stored in `evil-ex-grammar'.  Ex commands are defined with
 ;; `evil-ex-define-cmd', which creates a binding from a string
-;; to an interactive function. It is also possible to define key
+;; to an interactive function.  It is also possible to define key
 ;; sequences which execute a command immediately when entered:
 ;; such shortcuts go in `evil-ex-map'.
 ;;
 ;; To provide buffer and filename completion, as well as interactive
 ;; feedback, Ex defines the concept of an argument handler, specified
-;; with `evil-ex-define-argument-type'. In the case of the
+;; with `evil-ex-define-argument-type'.  In the case of the
 ;; substitution command (":s/foo/bar"), the handler incrementally
 ;; highlights matches in the buffer as the substitution is typed.
 
 (require 'evil-common)
 (require 'evil-states)
+
+;;; Code:
 
 (defconst evil-ex-grammar
   '((expression
@@ -82,9 +108,9 @@
      "(.*)" #'(car-safe (read-from-string $1))))
   "Grammar for Ex.
 An association list of syntactic symbols and their definitions.
-The first entry is the start symbol. A symbol's definition may
+The first entry is the start symbol.  A symbol's definition may
 reference other symbols, but the grammar cannot contain
-left recursion. See `evil-parser' for a detailed explanation
+left recursion.  See `evil-parser' for a detailed explanation
 of the syntax.")
 
 (defun evil-ex-p ()

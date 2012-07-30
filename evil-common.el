@@ -1,7 +1,30 @@
-;;;; Common functions and utilities
+;;; evil-common.el --- Common functions and utilities
+;; Author: Vegard Øye <vegard_oye at hotmail.com>
+;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
+;;
+;; This file is NOT part of GNU Emacs.
+
+;;; License:
+
+;; This file is part of Evil.
+;;
+;; Evil is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; Evil is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
 (require 'evil-vars)
 (require 'rect)
+
+;;; Code:
 
 (condition-case nil
     (require 'windmove)
@@ -19,7 +42,7 @@ window commands not available.")
 (defmacro evil-called-interactively-p ()
   "Wrapper for `called-interactively-p'.
 In older versions of Emacs, `called-interactively-p' takes
-no arguments. In Emacs 23.2 and newer, it takes one argument."
+no arguments.  In Emacs 23.2 and newer, it takes one argument."
   (if (version< emacs-version "23.2")
       '(called-interactively-p)
     '(called-interactively-p 'any)))
@@ -83,7 +106,7 @@ otherwise add at the end of the list."
 ;; custom version of `delete-if'
 (defun evil-filter-list (predicate list &optional pointer)
   "Delete by side-effect all items satisfying PREDICATE in LIST.
-Stop when reaching POINTER. If the first item satisfies PREDICATE,
+Stop when reaching POINTER.  If the first item satisfies PREDICATE,
 there is no way to remove it by side-effect; therefore, write
 \(setq foo (evil-delete-if 'predicate foo)) to be sure of
 changing the value of `foo'."

@@ -1,4 +1,30 @@
+;;; evil-cjk.el --- CJK support for word motions
+
+;; Author: tarao.gnn at gmail.com
+;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
+;;
+;; This file is NOT part of GNU Emacs.
+
+;;; License:
+
+;; This file is part of Evil.
+;;
+;; Evil is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; Evil is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
+
 (require 'evil-common)
+
+;;; Code:
 
 (eval-when-compile
   ;; These are taken from word_boundary_p function in category.c
@@ -41,10 +67,11 @@ order, else return nil."
       ))))
 
 (defun evil-cjk-word-boundary-p (ch1 ch2)
-  "Return t if there is a word boundary between two
-word-consistuent characters CH1 and CH2 if they appear in this
-order, else return nil. This function acts exactly the same as
-`word-boundary-p' if `evil-cjk-emacs-word-boundary' is non-nil."
+  "Test if there is a word boundary between two characters.
+Return t if there is a word boundary between two word-consistuent
+characters CH1 and CH2 if they appear in this order, else return
+nil.  This function acts exactly the same as `word-boundary-p' if
+`evil-cjk-emacs-word-boundary' is non-nil."
   (if evil-cjk-emacs-word-boundary
       (word-boundary-p ch1 ch2)
     (let ((word-separating-categories evil-cjk-word-separating-categories)
@@ -52,7 +79,7 @@ order, else return nil. This function acts exactly the same as
       (word-boundary-p ch1 ch2))))
 
 (defun evil-move-word-cjk (count)
-  "Move by words being sensitive to CJK word boundary."
+  "Move by COUNT words being sensitive to CJK word boundary."
   (let ((regexp (format "[%s]" evil-word)))
     (evil-motion-loop (var count)
       (cond

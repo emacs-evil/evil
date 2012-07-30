@@ -1,4 +1,25 @@
-;;;; Commands
+;;; evil-commands.el --- Evil commands and operators
+;; Author: Vegard Øye <vegard_oye at hotmail.com>
+;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
+;;
+;; This file is NOT part of GNU Emacs.
+
+;;; License:
+
+;; This file is part of Evil.
+;;
+;; Evil is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; Evil is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
 (require 'evil-common)
 (require 'evil-digraphs)
@@ -17,6 +38,8 @@
 ;; Furthermore, the command must have the command properties
 ;; :keep-visual t and :repeat motion; these are automatically
 ;; set by the `evil-define-motion' macro.
+
+;;; Code:
 
 (evil-define-motion evil-forward-char (count &optional crosslines noerror)
   "Move cursor to the right by COUNT characters.
@@ -1632,10 +1655,10 @@ When called interactively, the selection is rotated blockwise."
 (defun evil-insert (count &optional vcount skip-empty-lines)
   "Switch to Insert state just before point.
 The insertion will be repeated COUNT times and repeated once for
-the next VCOUNT-1 lines starting at the same column.
+the next VCOUNT - 1 lines starting at the same column.
 If SKIP-EMPTY-LINES is non-nil, the insertion will not be performed
 on lines on which the insertion point would be after the end of the
-lines. This is the default behaviour for Visual-state insertion."
+lines.  This is the default behaviour for Visual-state insertion."
   (interactive
    (list (prefix-numeric-value current-prefix-arg)
          (when (evil-visual-state-p)
@@ -1661,7 +1684,7 @@ lines. This is the default behaviour for Visual-state insertion."
 (defun evil-append (count &optional vcount skip-empty-lines)
   "Switch to Insert state just after point.
 The insertion will be repeated COUNT times and repeated once for
-the next VCOUNT-1 lines starting at the same column. If
+the next VCOUNT - 1 lines starting at the same column.  If
 SKIP-EMPTY-LINES is non-nil, the insertion will not be performed
 on lines on which the insertion point would be after the end of
 the lines."
@@ -1691,7 +1714,8 @@ the lines."
     (evil-insert count vcount skip-empty-lines)))
 
 (defun evil-insert-resume (count)
-  "Switch to Insert state at previous insertion point."
+  "Switch to Insert state at previous insertion point.
+The insertion will be repeated COUNT times."
   (interactive "p")
   (when (evil-get-marker ?^)
     (goto-char (evil-get-marker ?^)))
@@ -1700,10 +1724,10 @@ the lines."
 (defun evil-maybe-remove-spaces ()
   "Remove space from newly opened empty line.
 This function should be called from `post-command-hook' after
-`evil-open-above' or `evil-open-below'. If the last command
+`evil-open-above' or `evil-open-below'.  If the last command
 finished insert state and if the current line consists of
 whitespaces only, then those spaces have been inserted because of
-the indentation. In this case those spaces are removed leaving a
+the indentation.  In this case those spaces are removed leaving a
 completely empty line."
   (unless (memq this-command '(evil-open-above evil-open-below))
     (remove-hook 'post-command-hook 'evil-maybe-remove-spaces)
@@ -1741,8 +1765,11 @@ The insertion will be repeated COUNT times."
   (add-hook 'post-command-hook #'evil-maybe-remove-spaces))
 
 (defun evil-insert-line (count &optional vcount)
-  "Switch to Insert state just before the first non-blank character
-on the current line. The insertion will be repeated COUNT times."
+  "Switch to insert state at beginning of current line.
+Point is placed at the first non-blank character on the current
+line.  The insertion will be repeated COUNT times.  If VCOUNT is
+non nil it should be number > 0. The insertion will be repeated
+in the next VCOUNT - 1 lines below the current one."
   (interactive "p")
   (if evil-auto-indent
       (back-to-indentation)
@@ -1759,7 +1786,9 @@ on the current line. The insertion will be repeated COUNT times."
 
 (defun evil-append-line (count &optional vcount)
   "Switch to Insert state at the end of the current line.
-The insertion will be repeated COUNT times."
+The insertion will be repeated COUNT times.  If VCOUNT is non nil
+it should be number > 0. The insertion will be repeated in the
+next VCOUNT - 1 lines below the current one."
   (interactive "p")
   (evil-move-end-of-line)
   (setq evil-insert-count count
@@ -1773,8 +1802,7 @@ The insertion will be repeated COUNT times."
   (evil-insert-state 1))
 
 (defun evil-insert-digraph (count digraph)
-  "Insert the digraph DIGRAPH.
-The insertion is repeated COUNT times."
+  "Insert COUNT digraphs DIGRAPH."
   (interactive
    (let (count char1 char2 overlay string)
      (unwind-protect
@@ -1901,7 +1929,9 @@ Calls `evil-complete-previous-line-func'."
 ;;; Search
 
 (defun evil-repeat-search (flag)
-  "Called to record a search command."
+  "Called to record a search command.
+FLAG is either 'pre or 'post if the function is called before resp.
+after executing the command."
   (cond
    ((and (evil-operator-state-p) (eq flag 'pre))
     (evil-repeat-record (this-command-keys))
@@ -2408,7 +2438,9 @@ Change to `%s'? "
     (evil-ex-search-next count)))
 
 (defun evil-repeat-ex-search (flag)
-  "Called to record a search command."
+  "Called to record a search command.
+FLAG is either 'pre or 'post if the function is called before
+resp.  after executing the command."
   (cond
    ((and (evil-operator-state-p) (eq flag 'pre))
     (evil-repeat-record (this-command-keys))
@@ -2718,7 +2750,9 @@ Default position is the beginning of the buffer."
 ;;; Window navigation
 
 (defun evil-resize-window (new-size &optional horizontal)
-  "Sets the current window's with or height to `new-size'."
+  "Set the current window's width or height to NEW-SIZE.
+If HORIZONTAL is non-nil the width of the window is changed,
+otherwise its height is changed."
   (let ((wincfg (current-window-configuration))
         (nwins (length (window-list)))
         (count (if horizontal
@@ -2740,13 +2774,14 @@ Default position is the beginning of the buffer."
     (set-window-configuration wincfg)))
 
 (defun evil-get-buffer-tree (wintree)
-  "Extracts the buffer tree from a given window-tree."
+  "Extracts the buffer tree from a given window tree WINTREE."
   (if (consp wintree)
       (cons (car wintree) (mapcar #'evil-get-buffer-tree (cddr wintree)))
     (window-buffer wintree)))
 
 (defun evil-restore-window-tree (win tree)
-  "Restores the given buffer-tree layout as subwindows of win."
+  "Restore the given buffer-tree layout as subwindows of WIN.
+TREE is the tree layout to be restored."
   (cond
    ((and (consp tree) (cddr tree))
     (let ((newwin (split-window win nil (not (car tree)))))
@@ -3054,7 +3089,9 @@ and redisplays the current buffer there."
 Highlight the drag area as you move the mouse.
 This must be bound to a button-down mouse event.
 
-If the click is in the echo area, display the `*Messages*' buffer."
+If the click is in the echo area, display the `*Messages*' buffer.
+
+START-EVENT should be the event that started the drag."
   (interactive "e")
   ;; Give temporary modes such as isearch a chance to turn off.
   (run-hooks 'mouse-leave-buffer-hook)
@@ -3271,7 +3308,7 @@ DO-MOUSE-DRAG-REGION-POST-PROCESS should only be used by
 (defun evil-mouse-start-end (start end mode)
   "Return a list of region bounds based on START and END according to MODE.
 If MODE is not 1 then set point to (min START END), mark to (max
-START END). If MODE is 1 then set point to start of word at (min
+START END).  If MODE is 1 then set point to start of word at (min
 START END), mark to end of word at (max START END)."
   (evil-sort start end)
   (setq mode (mod mode 4))
@@ -3364,11 +3401,12 @@ Otherwise send [escape]."
 (defun evil-exit-visual-and-repeat (event)
   "Exit insert state and repeat event.
 This special command should be used if some command called from
-visual state should actually be called in normal-state. The main
+visual state should actually be called in normal-state.  The main
 reason for doing this is that the repeat system should *not*
-record the visual state information for some command. This
+record the visual state information for some command.  This
 command should be bound to exactly the same event in visual state
-as the original command is bound in normal state."
+as the original command is bound in normal state.  EVENT is the
+event that triggered the execution of this command."
   (interactive "e")
   (when (evil-visual-state-p)
     (evil-exit-visual-state)

@@ -1,8 +1,23 @@
 ;;; evil.el --- extensible vi layer
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
+;;      Antono Vasiljev <antono.vasiljev at gmail.com>
+;;      Barry O'Reilly <gundaetiapo at gmail.com>
+;;      Christoph Lange <langec at web.de>
 ;;      Frank Fischer <frank.fischer at mathematik.tu-chemnitz.de>
+;;      Frank Terbeck <ft at bewatermyfriend.org>
+;;      Jonathan Claggett <jclaggett at lonocloud.com>
+;;      Michael Markert <markert.michael at googlemail.com>
 ;;      Nikolai Weibull <now at bitwi.se>
+;;      Sanel Zukan <sanelz at gmail.com>
+;;      Simon Hafner <hafnersimon at gmail.com>
+;;      Sune Simonsen <sune.simonsen at jayway.com>
+;;      Thomas Hisch <thomas at opentech.at>
+;;      Ulrich Müller <ulm at gentoo.org>
+;;      Wolfgang Jenkner <wjenkner at inode.at>
+;;      York Zhao <yzhao at telecor.com>
+;;      tarao.gnn at gmail.com
+
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 ;;      To get in touch, please use the bug tracker or the
 ;;      mailing list (see below).
@@ -24,6 +39,23 @@
 ;;      within a few days and CC our replies back to you.
 ;;
 ;; This file is NOT part of GNU Emacs.
+
+;;; License:
+
+;; This file is part of Evil.
+;;
+;; Evil is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; Evil is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -56,23 +88,6 @@
 ;;     http://www.emacswiki.org/emacs/GotoChg
 ;;
 ;; Without this package the corresponding motions will raise an error.
-
-;;; License:
-
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 2 of
-;; the License, or any later version.
-;;
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-;; GNU General Public License for more details.
-;;
-;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, write to the Free Software
-;; Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-;; 02111-1307, USA.
 
 ;;; Code:
 
