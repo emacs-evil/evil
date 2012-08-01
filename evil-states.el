@@ -273,32 +273,27 @@ If COMMAND is a motion, refresh the selection;
 otherwise exit Visual state."
   (when (evil-visual-state-p)
     (setq command (or command this-command))
-    (cond
-     ((or quit-flag
-          (eq command #'keyboard-quit)
-          ;; Is `mark-active' nil for an unexpanded region?
-          deactivate-mark
-          (and (not evil-visual-region-expanded)
-               (not (region-active-p))
-               (not (eq evil-visual-selection 'block))))
-      (evil-exit-visual-state)
-      (evil-adjust-cursor))
-     (evil-visual-region-expanded
-      (evil-visual-contract-region)
+    (if (or quit-flag
+            (eq command #'keyboard-quit)
+            ;; Is `mark-active' nil for an unexpanded region?
+            deactivate-mark
+            (and (not evil-visual-region-expanded)
+                 (not (region-active-p))
+                 (not (eq evil-visual-selection 'block))))
+        (progn
+          (evil-exit-visual-state)
+          (evil-adjust-cursor))
+      (if evil-visual-region-expanded
+          (evil-visual-contract-region)
+        (evil-visual-refresh))
       (when (and (fboundp 'x-select-text)
+                 (or (not (boundp 'ns-initialized))
+                     ns-initialized)
                  (not (eq evil-visual-selection 'block)))
         (x-select-text (buffer-substring-no-properties
                         evil-visual-beginning
                         evil-visual-end)))
-      (evil-visual-highlight))
-     (t
-      (evil-visual-refresh)
-      (when (and (fboundp 'x-select-text)
-                 (not (eq evil-visual-selection 'block)))
-        (x-select-text (buffer-substring-no-properties
-                        evil-visual-beginning
-                        evil-visual-end)))
-      (evil-visual-highlight)))))
+      (evil-visual-highlight))))
 (put 'evil-visual-post-command 'permanent-local-hook t)
 
 (defun evil-visual-activate-hook (&optional command)
