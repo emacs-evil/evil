@@ -26,7 +26,6 @@
 (require 'evil-search)
 (require 'evil-ex)
 (require 'evil-types)
-(require 'evil-cjk)
 
 ;;; Motions
 
@@ -260,8 +259,10 @@ By default the first line."
 
 (evil-define-union-move evil-move-word (count)
   "Move by words."
-  (evil-move-word-cjk count)
-  (evil-move-chars (evil-concat-charsets "^ \t\r\n" evil-word) count)
+  (evil-move-chars "^ \t\r\n[:word:]" count)
+  (let ((word-separating-categories evil-cjk-word-separating-categories)
+        (word-combining-categories evil-cjk-word-combining-categories))
+    (evil-forward-word count))
   (evil-move-empty-lines count))
 
 (evil-define-union-move evil-move-WORD (count)

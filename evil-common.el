@@ -1123,6 +1123,20 @@ Signals an error at buffer boundaries unless NOERROR is non-nil."
              ;; Maybe we should just `ding'?
              (signal (car err) (cdr err))))))))))
 
+(defun evil-forward-word (&optional count)
+  "Move by words.
+Moves point COUNT words forward or (- COUNT) words backward if
+COUNT is negative. This function is the same as `forward-word'
+but returns the number of words by which point could *not* be
+moved."
+  (setq count (or count 1))
+  (let* ((dir (if (>= count 0) +1 -1))
+         (count (abs count)))
+    (while (and (> count 0)
+                (forward-word dir))
+      (setq count (1- count)))
+    count))
+
 (defun evil-move-chars (chars count)
   "Move point to the end or beginning of a sequence of CHARS.
 CHARS is a character set as inside [...] in a regular expression."
