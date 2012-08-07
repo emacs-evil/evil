@@ -153,7 +153,7 @@ To enable Evil globally, do (evil-mode 1)."
   (unless (minibufferp)
     (evil-local-mode 1)))
 
-;;;###autoload (autoload 'evil-mode "evil")
+;;;###autoload (autoload 'evil-mode "evil" "Toggle evil in all buffers" t)
 (define-globalized-minor-mode evil-mode
   evil-local-mode evil-initialize)
 
