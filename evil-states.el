@@ -288,7 +288,7 @@ otherwise exit Visual state."
         (evil-visual-refresh))
       (when (and (fboundp 'x-select-text)
                  (or (not (boundp 'ns-initialized))
-                     ns-initialized)
+                     (with-no-warnings ns-initialized))
                  (not (eq evil-visual-selection 'block)))
         (x-select-text (buffer-substring-no-properties
                         evil-visual-beginning
