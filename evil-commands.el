@@ -3447,7 +3447,8 @@ if the previous state was Emacs state."
     (setq evil-execute-in-emacs-state-buffer (current-buffer))
     (evil-emacs-state)
     (evil-echo "Switched to Emacs state for the next command ..."))
-   ((not (eq this-command #'evil-execute-in-emacs-state))
+   ((and (not (eq this-command #'evil-execute-in-emacs-state))
+         (not (minibufferp)))
     (remove-hook 'post-command-hook 'evil-execute-in-emacs-state)
     (when (buffer-live-p evil-execute-in-emacs-state-buffer)
       (with-current-buffer evil-execute-in-emacs-state-buffer
