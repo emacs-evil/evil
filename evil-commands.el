@@ -584,7 +584,7 @@ Columns are counted from zero."
   :type exclusive
   (move-to-column (or count 0)))
 
-(evil-define-command evil-goto-mark (char)
+(evil-define-command evil-goto-mark (char &optional noerror)
   "Go to the marker specified by CHAR."
   :keep-visual t
   :repeat nil
@@ -603,18 +603,18 @@ Columns are counted from zero."
                                        (car marker)))
                      (find-file (car marker))))
         (goto-char (cdr marker))))
-     (t
+     ((not noerror)
       (error "Marker `%c' is not set%s" char
              (if (evil-global-marker-p char) ""
                " in this buffer"))))))
 
-(evil-define-command evil-goto-mark-line (char)
+(evil-define-command evil-goto-mark-line (char &optional noerror)
   "Go to the line of the marker specified by CHAR."
   :keep-visual t
   :repeat nil
   :type line
   (interactive (list (read-char)))
-  (evil-goto-mark char)
+  (evil-goto-mark char noerror)
   (evil-first-non-blank))
 
 (evil-define-motion evil-jump-backward (count)
@@ -1786,8 +1786,7 @@ the lines."
   "Switch to Insert state at previous insertion point.
 The insertion will be repeated COUNT times."
   (interactive "p")
-  (when (evil-get-marker ?^)
-    (goto-char (evil-get-marker ?^)))
+  (evil-goto-mark ?^ t)
   (evil-insert count))
 
 (defun evil-maybe-remove-spaces ()
