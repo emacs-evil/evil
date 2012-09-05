@@ -119,7 +119,7 @@ otherwise add at the end of the list."
   "Delete by side-effect all items satisfying PREDICATE in LIST.
 Stop when reaching POINTER.  If the first item satisfies PREDICATE,
 there is no way to remove it by side-effect; therefore, write
-\(setq foo (evil-delete-if 'predicate foo)) to be sure of
+\(setq foo (evil-filter-list 'predicate foo)) to be sure of
 changing the value of `foo'."
   (let ((tail list) elt head)
     (while (and tail (not (eq tail pointer)))

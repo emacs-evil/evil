@@ -1899,7 +1899,8 @@ next VCOUNT - 1 lines below the current one."
 (defun evil-copy-from-above (arg)
   "Copy characters from preceding non-blank line.
 The copied text is inserted before point.
-ARG is the number of lines to move backward."
+ARG is the number of lines to move backward.
+See also \\<evil-insert-state-map>\\[evil-copy-from-below]."
   (interactive
    (cond
     ;; if a prefix argument was given, repeat it for subsequent calls
@@ -1914,7 +1915,8 @@ ARG is the number of lines to move backward."
 (defun evil-copy-from-below (arg)
   "Copy characters from following non-blank line.
 The copied text is inserted before point.
-ARG is the number of lines to move forward."
+ARG is the number of lines to move forward.
+See also \\<evil-insert-state-map>\\[evil-copy-from-above]."
   (interactive
    (cond
     ((and (null current-prefix-arg)
