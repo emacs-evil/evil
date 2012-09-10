@@ -2099,12 +2099,15 @@ without confirmation."
   :move-point nil
   :type line
   :repeat nil
-  (interactive "<R><f><!>")
+  (interactive "<R><fsh><!>")
   (when (zerop (length filename))
     (setq filename (buffer-file-name)))
   (cond
    ((zerop (length filename))
     (error "Please specify a file name for the buffer"))
+   ;; execute command on region
+   ((eq (aref filename 0) ?!)
+    (shell-command-on-region beg end (substring filename 1)))
    ;; with region, always save to file without resetting modified flag
    ((and beg end)
     (write-region beg end filename nil nil nil (not bang)))
