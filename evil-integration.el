@@ -34,6 +34,7 @@
         negative-argument
         universal-argument
         universal-argument-minus
+        universal-argument-more
         universal-argument-other-key))
 (mapc #'evil-declare-not-repeat
       '(what-cursor-position))
