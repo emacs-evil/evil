@@ -1720,7 +1720,9 @@ column is set to the maximal column in all covered lines."
           (setq eol-col (max eol-col
                              (evil-column (line-end-position))))
           (forward-line 1))
-        (setq endcol (min eol-col temporary-goal-column)))
+        (setq endcol (min eol-col
+                          (1+ (min (1- most-positive-fixnum)
+                                   temporary-goal-column)))))
       ;; start looping over lines
       (goto-char startpt)
       (while (< (point) endpt)
