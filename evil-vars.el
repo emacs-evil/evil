@@ -1205,6 +1205,12 @@ They are reused to minimize flicker.")
   "Association list of Visual selection functions.
 Elements have the form (NAME . FUNCTION).")
 
+(evil-define-local-var evil-visual-x-select-timer nil
+  "Timer for updating the X selection in visual state.")
+
+(defvar evil-visual-x-select-timeout 0.1
+  "Time in seconds for the update of the X selection.")
+
 ;;; Ex
 
 (defvar evil-ex-map (make-sparse-keymap)
