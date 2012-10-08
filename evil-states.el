@@ -65,7 +65,8 @@ If the region is activated, enter Visual state."
   :tag " <I> "
   :cursor (bar . 2)
   :message "-- INSERT --"
-  :exit-hook (evil-cleanup-insert-state)
+  :entry-hook (evil-start-track-last-insertion)
+  :exit-hook (evil-cleanup-insert-state evil-stop-track-last-insertion)
   :input-method t
   (cond
    ((evil-insert-state-p)

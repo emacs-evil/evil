@@ -1448,6 +1448,7 @@ The following special registers are supported.
   #  the alternate file name (read only)
   /  the last search pattern (read only)
   :  the last command line (read only)
+  .  the last inserted text (read only)
   -  the last small (less than a line) delete
   =  the expression register (read only)"
   (when (characterp register)
@@ -1478,6 +1479,8 @@ The following special registers are supported.
          ((eq register ?:)
           (or (car-safe evil-ex-history)
               (unless noerror (error "No previous command line"))))
+         ((eq register ?.)
+          evil-last-insertion)
          ((eq register ?-)
           evil-last-small-deletion)
          ((eq register ?=)
@@ -1536,7 +1539,7 @@ register instead of replacing its content."
   "Returns an alist of all registers"
   (sort (append (mapcar #'(lambda (reg)
                             (cons reg (evil-get-register reg t)))
-                        '(?\" ?* ?+ ?% ?# ?/ ?: ?-
+                        '(?\" ?* ?+ ?% ?# ?/ ?: ?. ?-
                               ?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
                 register-alist)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
@@ -1775,6 +1778,83 @@ column is set to the maximal column in all covered lines."
       (while (< (point) endpt)
         (apply function startcol endcol args)
         (forward-line 1)))))
+
+;;; Insertion
+
+(defun evil-concat-ranges (ranges)
+  "Concatenate RANGES.
+RANGES must be a list of ranges.  They must be ordered so that
+successive ranges share their boundaries.  The return value is a
+single range of disjoint union of the ranges or nil if the
+disjoint union is not a single range."
+  (let ((range (car-safe ranges)) (ranges (cdr ranges)) r)
+    (while (and range (setq r (car-safe ranges)))
+      (setq range
+            (cond ((and (= (cdr r) (car range))) (cons (car r) (cdr range)))
+                  ((and (= (cdr range) (car r))) (cons (car range) (cdr r)))))
+      (setq ranges (cdr ranges)))
+    range))
+
+(defun evil-track-last-insertion ()
+  "Track the last insertion range and its text.
+Store the inserted text and its range to
+`evil-current-insertions' as a pair.  The insertion range is
+represented as a series (a list) of ranges whose disjoint union
+is a single range."
+  (let* ((list buffer-undo-list) e ins insertions)
+    (while (and list (not (setq e (car-safe list)))) (setq list (cdr list)))
+    (when (and (not (memq this-command '(evil-open-above evil-open-below)))
+               (listp list)
+               ;; check if the latest undo entry is the one who was added
+               ;; after the last invocation of this function
+               (or (not (eq e (car evil-last-undo-entry)))
+                   (not (equal e (cdr evil-last-undo-entry)))))
+      ;; save the lastest undo entry
+      (setq evil-last-undo-entry
+            (cons e (or (cond ((consp e) (cons (car e) (cdr e)))
+                              ((listp e) (copy-sequence e))) e)))
+      ;; find the current insertion
+      (while (and (setq e (car-safe list)) (not ins))
+        (when (and (consp e) (integerp (car e)) (integerp (cdr e)))
+          (setq ins e))
+        (setq list (cdr list)))
+      (when ins ;; ins is the last insertion range
+        (when (eq last-command evil-last-insertion-command)
+          ;; there is no other command between the current and the
+          ;; last insertions; they are treated as a series of
+          ;; insertions
+          (setq insertions (cdr evil-current-insertions)))
+        (when (not (eq (car-safe insertions) ins))
+          ;; if `this-command' and `last-command' are
+          ;; `self-insert-command', the current insertion points to
+          ;; the last insertion in `insertions', or otherwise, push
+          ;; the current insertion to `insertions'
+          (push ins insertions))
+        (when (cdr insertions)
+          ;; we only have to save the latest insertion separately to
+          ;; compare it with a future insertion; the rest of
+          ;; insertions can be merged
+          ;; (this means `insertions' have at most two elements)
+          (setcdr insertions (list (evil-concat-ranges (cdr insertions)))))
+        (let ((range (evil-concat-ranges insertions)))
+          (unless range (setq range ins insertions (list ins)))
+          (setq evil-current-insertions
+                (cons (filter-buffer-substring (car range) (cdr range))
+                      insertions)))
+        (setq evil-last-insertion-command this-command)))
+    ins))
+(put 'evil-track-last-insertion 'permanent-local-hook t)
+
+(defun evil-start-track-last-insertion ()
+  "Start tracking the last insertion."
+  (setq evil-current-insertions (cons nil nil))
+  (add-hook 'post-command-hook #'evil-track-last-insertion nil t))
+
+(defun evil-stop-track-last-insertion ()
+  "Stop tracking the last insertion.
+The tracked insertion is set to `evil-last-insertion'."
+  (setq evil-last-insertion (car evil-current-insertions))
+  (remove-hook 'post-command-hook #'evil-track-last-insertion t))
 
 ;;; Paste
 
