@@ -2592,7 +2592,16 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
     ("\"ayw\"Ayw\"aP")
     "foofo[o]foo\n"
     ("\"ayy\"Ayy\"aP")
-    "[f]oofoofoo\nfoofoofoo\nfoofoofoo\n"))
+    "[f]oofoofoo\nfoofoofoo\nfoofoofoo\n")
+  (ert-info ("special register /")
+    (evil-test-buffer
+      "[f]oo bar\n"
+      ("/bar\n0i\C-r/")
+      "bar[f]oo bar\n"))
+  (ert-info ("special register :")
+    (evil-test-buffer
+      "[f]oo bar\n"
+      (":noh\ni\C-r:"))))
 
 (ert-deftest evil-test-align ()
   "Test `evil-align-left', `evil-align-right' and `evil-align-center'."

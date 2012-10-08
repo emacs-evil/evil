@@ -1445,7 +1445,9 @@ The following special registers are supported.
   *  the clipboard contents
   +  the clipboard contents
   %  the current file name (read only)
-  #  the alternate file name (read only)"
+  #  the alternate file name (read only)
+  /  the last search pattern (read only)
+  :  the last command line (read only)"
   (when (characterp register)
     (or (cond
          ((eq register ?\")
@@ -1463,6 +1465,17 @@ The following special registers are supported.
          ((= register ?#)
           (or (with-current-buffer (other-buffer) (buffer-file-name))
               (unless noerror (error "No file name"))))
+         ((eq register ?/)
+          (or (car-safe
+               (or (and (boundp 'evil-search-module)
+                        (eq evil-search-module 'evil-search)
+                        evil-ex-search-history)
+                   (and isearch-regexp regexp-search-ring)
+                   search-ring))
+              (unless noerror (error "No previous regular expression"))))
+         ((eq register ?:)
+          (or (car-safe evil-ex-history)
+              (unless noerror (error "No previous command line"))))
          (t
           (setq register (downcase register))
           (get-register register)))
@@ -1502,7 +1515,7 @@ register instead of replacing its content."
   "Returns an alist of all registers"
   (sort (append (mapcar #'(lambda (reg)
                             (cons reg (evil-get-register reg t)))
-                        '(?\" ?* ?+ ?% ?# ?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+                        '(?\" ?* ?+ ?% ?# ?/ ?: ?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
                 register-alist)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
 
