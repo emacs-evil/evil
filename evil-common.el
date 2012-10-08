@@ -1447,7 +1447,8 @@ The following special registers are supported.
   %  the current file name (read only)
   #  the alternate file name (read only)
   /  the last search pattern (read only)
-  :  the last command line (read only)"
+  :  the last command line (read only)
+  =  the expression register (read only)"
   (when (characterp register)
     (or (cond
          ((eq register ?\")
@@ -1476,6 +1477,17 @@ The following special registers are supported.
          ((eq register ?:)
           (or (car-safe evil-ex-history)
               (unless noerror (error "No previous command line"))))
+         ((eq register ?=)
+          (let* ((enable-recursive-minibuffers t)
+                 (result (eval (car (read-from-string (read-string "="))))))
+            (cond
+             ((or (stringp result)
+                  (numberp result)
+                  (symbolp result))
+              (prin1-to-string result))
+             ((sequencep result)
+              (mapconcat #'prin1-to-string result "\n"))
+             (t (error "Using %s as a string" (type-of result))))))
          ((eq register ?_) ; the black hole register
           "")
          (t
