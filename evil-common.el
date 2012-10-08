@@ -1448,6 +1448,7 @@ The following special registers are supported.
   #  the alternate file name (read only)
   /  the last search pattern (read only)
   :  the last command line (read only)
+  -  the last small (less than a line) delete
   =  the expression register (read only)"
   (when (characterp register)
     (or (cond
@@ -1477,6 +1478,8 @@ The following special registers are supported.
          ((eq register ?:)
           (or (car-safe evil-ex-history)
               (unless noerror (error "No previous command line"))))
+         ((eq register ?-)
+          evil-last-small-deletion)
          ((eq register ?=)
           (let* ((enable-recursive-minibuffers t)
                  (result (eval (car (read-from-string (read-string "="))))))
@@ -1517,6 +1520,8 @@ register instead of replacing its content."
    ((eq register ?+)
     (let ((x-select-enable-clipboard t))
       (kill-new text)))
+   ((eq register ?-)
+    (setq evil-last-small-deletion text))
    ((eq register ?_) ; the black hole register
     nil)
    ((and (<= ?A register) (<= register ?Z))
@@ -1531,7 +1536,8 @@ register instead of replacing its content."
   "Returns an alist of all registers"
   (sort (append (mapcar #'(lambda (reg)
                             (cons reg (evil-get-register reg t)))
-                        '(?\" ?* ?+ ?% ?# ?/ ?: ?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+                        '(?\" ?* ?+ ?% ?# ?/ ?: ?-
+                              ?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
                 register-alist)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
 

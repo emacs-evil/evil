@@ -1124,6 +1124,10 @@ paste-command (either `evil-paste-before' or `evil-paste-after'),
 POINT is the position of point before the paste,
 BEG end END are the region of the inserted text.")
 
+(defvar evil-last-small-deletion nil
+  "The last piece of deleted text.
+The text should be less than a line.")
+
 (defvar evil-paste-count nil
   "The count argument of the current paste command.")
 

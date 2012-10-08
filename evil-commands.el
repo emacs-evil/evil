@@ -1056,6 +1056,11 @@ or line COUNT to the top of the window."
   "Delete text from BEG to END with TYPE.
 Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (interactive "<R><x><y>")
+  (unless register
+    (let ((text (filter-buffer-substring beg end)))
+      (unless (string-match-p "\n" text)
+        ;; set the small delete register
+        (evil-set-register ?- text))))
   (evil-yank beg end type register yank-handler)
   (if (eq type 'block)
       (evil-apply-on-block #'delete-region beg end)
