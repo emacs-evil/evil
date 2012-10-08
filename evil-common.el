@@ -1476,6 +1476,8 @@ The following special registers are supported.
          ((eq register ?:)
           (or (car-safe evil-ex-history)
               (unless noerror (error "No previous command line"))))
+         ((eq register ?_) ; the black hole register
+          "")
          (t
           (setq register (downcase register))
           (get-register register)))
@@ -1503,6 +1505,8 @@ register instead of replacing its content."
    ((eq register ?+)
     (let ((x-select-enable-clipboard t))
       (kill-new text)))
+   ((eq register ?_) ; the black hole register
+    nil)
    ((and (<= ?A register) (<= register ?Z))
     (setq register (downcase register))
     (set-register register
