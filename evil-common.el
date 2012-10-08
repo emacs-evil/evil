@@ -1438,7 +1438,14 @@ POS defaults to point."
 
 (defun evil-get-register (register &optional noerror)
   "Return contents of REGISTER.
-Signal an error if empty, unless NOERROR is non-nil."
+Signal an error if empty, unless NOERROR is non-nil.
+
+The following special registers are supported.
+  \"  the unnamed register
+  *  the clipboard contents
+  +  the clipboard contents
+  %  the current file name (read only)
+  #  the alternate file name (read only)"
   (when (characterp register)
     (or (cond
          ((eq register ?\")
@@ -1451,6 +1458,11 @@ Signal an error if empty, unless NOERROR is non-nil."
          ((eq register ?+)
           (let ((x-select-enable-clipboard t))
             (current-kill 0)))
+         ((eq register ?%)
+          (or (buffer-file-name) (unless noerror (error "No file name"))))
+         ((= register ?#)
+          (or (with-current-buffer (other-buffer) (buffer-file-name))
+              (unless noerror (error "No file name"))))
          (t
           (setq register (downcase register))
           (get-register register)))
@@ -1489,8 +1501,8 @@ register instead of replacing its content."
 (defun evil-register-list ()
   "Returns an alist of all registers"
   (sort (append (mapcar #'(lambda (reg)
-                            (cons reg (evil-get-register reg)))
-                        '(?\" ?* ?+ ?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+                            (cons reg (evil-get-register reg t)))
+                        '(?\" ?* ?+ ?% ?# ?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
                 register-alist)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
 
