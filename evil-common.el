@@ -1802,7 +1802,8 @@ Store the inserted text and its range to
 represented as a series (a list) of ranges whose disjoint union
 is a single range."
   (let* ((list buffer-undo-list) e ins insertions)
-    (while (and list (not (setq e (car-safe list)))) (setq list (cdr list)))
+    (while (and list (not (setq e (car-safe list))))
+      (setq list (cdr-safe list)))
     (when (and (not (memq this-command '(evil-open-above evil-open-below)))
                (listp list)
                ;; check if the latest undo entry is the one who was added
