@@ -122,7 +122,7 @@
       ;; the major mode may not have been initialized yet
       (add-hook 'post-command-hook #'evil-initialize-state t t))
     (add-hook 'input-method-activate-hook #'evil-activate-input-method t t)
-    (add-hook 'input-method-inactivate-hook #'evil-inactivate-input-method t t)
+    (add-hook 'input-method-deactivate-hook #'evil-deactivate-input-method t t)
     (add-hook 'activate-mark-hook #'evil-visual-activate-hook nil t)
     (add-hook 'pre-command-hook #'evil-repeat-pre-hook)
     (add-hook 'pre-command-hook #'evil-jump-hook nil t)
@@ -133,7 +133,7 @@
     (remove-hook 'pre-command-hook #'evil-jump-hook t)
     (remove-hook 'activate-mark-hook #'evil-visual-activate-hook t)
     (remove-hook 'input-method-activate-hook #'evil-activate-input-method t)
-    (remove-hook 'input-method-inactivate-hook #'evil-inactivate-input-method t)
+    (remove-hook 'input-method-deactivate-hook #'evil-deactivate-input-method t)
     (evil-change-state nil))))
 
 (defun turn-on-evil-mode (&optional arg)
@@ -376,20 +376,20 @@ This is the state the buffer came up in."
 (defun evil-activate-input-method ()
   "Disable input method in states with :input-method nil."
   (let (input-method-activate-hook
-        input-method-inactivate-hook)
+        input-method-deactivate-hook)
     (when (and evil-local-mode evil-state)
       (setq evil-input-method current-input-method)
       (unless (evil-state-property evil-state :input-method)
-        (inactivate-input-method)))))
+        (deactivate-input-method)))))
 (put 'evil-activate-input-method 'permanent-local-hook t)
 
-(defun evil-inactivate-input-method ()
+(defun evil-deactivate-input-method ()
   "Disable input method in states with :input-method nil."
   (let (input-method-activate-hook
-        input-method-inactivate-hook)
+        input-method-deactivate-hook)
     (when (and evil-local-mode evil-state)
       (setq evil-input-method nil))))
-(put 'evil-inactivate-input-method 'permanent-local-hook t)
+(put 'evil-deactivate-input-method 'permanent-local-hook t)
 
 (defadvice toggle-input-method (around evil activate)
   "Refresh `evil-input-method'."
@@ -1020,7 +1020,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
              (evil-initialize-state))
            (let ((evil-next-state ',state)
                  input-method-activate-hook
-                 input-method-inactivate-hook)
+                 input-method-deactivate-hook)
              (evil-change-state nil)
              (setq evil-state ',state)
              (evil-add-to-alist 'evil-previous-state-alist
@@ -1032,7 +1032,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                  (evil-esc-mode -1))
                (if ',input-method
                    (activate-input-method evil-input-method)
-                 (inactivate-input-method))
+                 (deactivate-input-method))
                (unless evil-no-display
                  (evil-refresh-cursor ',state)
                  (evil-refresh-mode-line ',state)
