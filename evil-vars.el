@@ -426,6 +426,7 @@ If STATE is nil, Evil is disabled in the buffer."
     dvc-status-mode
     dvc-tips-mode
     ediff-mode
+    ediff-meta-mode
     efs-mode
     Electric-buffer-menu-mode
     emms-browser-mode
