@@ -2595,6 +2595,13 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "foofo[o]foo\n"
       ("\"ayy\"Ayy\"aP")
       "[f]oofoofoo\nfoofoofoo\nfoofoofoo\n"))
+  (ert-info ("upper case register and lines")
+    (evil-test-buffer
+      "[l]ine 1\nline 2\nline 3\nline 4\n"
+      ("\"a2Yjj\"A2Y\"aP")
+      "line 1\nline 2\n[l]ine 1\nline 2\nline 3\nline 4\nline 3\nline 4\n"
+      ("8G\"ap")
+      "line 1\nline 2\nline 1\nline 2\nline 3\nline 4\nline 3\nline 4\n[l]ine 1\nline 2\nline 3\nline 4\n"))
   (ert-info ("yank with count")
     (evil-test-buffer
       "[l]ine 1\nline 2\nline 3\n"

@@ -1529,9 +1529,30 @@ register instead of replacing its content."
     nil)
    ((and (<= ?A register) (<= register ?Z))
     (setq register (downcase register))
-    (set-register register
-                  (concat (get-register register)
-                          text)))
+    (let ((content (get-register register)))
+      (cond
+       ((not content)
+        (set-register register text))
+       ((or (text-property-not-all 0 (length content)
+                                   'yank-handler nil
+                                   content)
+            (text-property-not-all 0 (length text)
+                                   'yank-handler nil
+                                   text))
+        ;; some non-trivial yank-handler -> always switch to line handler
+        ;; ensure complete lines
+        (when (and (> (length content) 0)
+                   (/= (aref content (1- (length content))) ?\n))
+          (setq content (concat content "\n")))
+        (when (and (> (length text) 0)
+                   (/= (aref text (1- (length text))) ?\n))
+          (setq text (concat text "\n")))
+        (setq text (concat content text))
+        (remove-list-of-text-properties 0 (length text) '(yank-handler) text)
+        (setq text (propertize text 'yank-handler '(evil-yank-line-handler)))
+        (set-register register text))
+       (t
+        (set-register register (concat content text))))))
    (t
     (set-register register text))))
 
