@@ -559,6 +559,7 @@ If STATE is nil, Evil is disabled in the buffer."
     command-history-mode
     compilation-mode
     dictionary-mode
+    dired-mode
     ert-results-mode
     help-mode
     Info-mode
