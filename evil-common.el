@@ -2862,8 +2862,9 @@ is stored in `evil-temporary-undo' instead of `buffer-undo-list'."
            (debug t))
   `(unwind-protect
        (let (buffer-undo-list)
-         ,@body
-         (setq evil-temporary-undo (cons nil buffer-undo-list)))
+         (prog1
+             (progn ,@body)
+           (setq evil-temporary-undo (cons nil buffer-undo-list))))
      (unless (eq buffer-undo-list t)
        ;; undo is enabled, so update the global buffer undo list
        (setq buffer-undo-list
