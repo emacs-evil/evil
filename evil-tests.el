@@ -2595,6 +2595,13 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "foofo[o]foo\n"
       ("\"ayy\"Ayy\"aP")
       "[f]oofoofoo\nfoofoofoo\nfoofoofoo\n"))
+  (ert-info ("yank with count")
+    (evil-test-buffer
+      "[l]ine 1\nline 2\nline 3\n"
+      ("\"a2yw\"aP")
+      "line [1]line 1\nline 2\nline 3\n"
+      ("\"a2yy\"aP")
+      "[l]ine 1line 1\nline 2\nline 1line 1\nline 2\nline 3\n"))
   (ert-info ("special register /")
     (evil-test-buffer
       "[f]oo bar\n"

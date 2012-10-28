@@ -53,7 +53,13 @@ If the region is activated, enter Visual state."
             evil-this-motion-count nil
             evil-inhibit-operator nil
             evil-inhibit-operator-value nil)
-      (unless (eq command #'evil-use-register)
+      (unless (memq command '(evil-use-register
+                              digit-argument
+                              negative-argument
+                              universal-argument
+                              universal-argument-minus
+                              universal-argument-more
+                              universal-argument-other-key))
         (setq evil-this-register nil))
       (evil-adjust-cursor))))
 (put 'evil-normal-post-command 'permanent-local-hook t)
