@@ -2581,18 +2581,20 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
 (ert-deftest evil-test-register ()
   "Test yanking and pasting to and from register."
   :tags '(evil yank paste)
-  (evil-test-buffer
-    "[f]oo\n"
-    ("\"aywP")
-    "fo[o]foo\n"
-    ("\"ayyP")
-    "[f]oofoo\nfoofoo\n")
-  (evil-test-buffer
-    "[f]oo\n"
-    ("\"ayw\"Ayw\"aP")
-    "foofo[o]foo\n"
-    ("\"ayy\"Ayy\"aP")
-    "[f]oofoofoo\nfoofoofoo\nfoofoofoo\n")
+  (ert-info ("simple lower case register")
+    (evil-test-buffer
+      "[f]oo\n"
+      ("\"ayw\"aP")
+      "fo[o]foo\n"
+      ("\"ayy\"aP")
+      "[f]oofoo\nfoofoo\n"))
+  (ert-info ("upper case register")
+    (evil-test-buffer
+      "[f]oo\n"
+      ("\"ayw\"Ayw\"aP")
+      "foofo[o]foo\n"
+      ("\"ayy\"Ayy\"aP")
+      "[f]oofoofoo\nfoofoofoo\nfoofoofoo\n"))
   (ert-info ("special register /")
     (evil-test-buffer
       "[f]oo bar\n"
