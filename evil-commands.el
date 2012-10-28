@@ -1491,10 +1491,9 @@ The return value is the yanked text."
            (overlay-put overlay 'after-string string)
            (list (or evil-this-register (read-char))))
        (delete-overlay overlay))))
-  (when (fboundp 'evil-paste-before)
-    (when (evil-paste-before nil register t)
-      ;; go to end of pasted text
-      (forward-char))))
+  (when (evil-paste-before nil register t)
+    ;; go to end of pasted text
+    (forward-char)))
 
 (evil-define-command evil-use-register (register)
   "Use REGISTER for the next command."
