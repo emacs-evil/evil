@@ -1403,7 +1403,7 @@ or a marker object pointing nowhere."
 (defun evil-set-jump (&optional pos)
   "Set jump point at POS.
 POS defaults to point."
-  (unless (region-active-p)
+  (unless (or (region-active-p) (evil-visual-state-p))
     (evil-save-echo-area
       (mapc #'(lambda (marker)
                 (set-marker marker nil))
