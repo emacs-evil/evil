@@ -27,12 +27,6 @@
 
 ;;; Code:
 
-;;; Compatibility for Emacs 23
-(unless (fboundp 'deactivate-input-method)
-  (defalias 'deactivate-input-method 'inactivate-input-method))
-(unless (boundp 'input-method-deactivate-hook)
-  (defalias 'input-method-deactivate-hook 'input-method-inactivate-hook))
-
 ;;; Evilize some commands
 
 (mapc #'(lambda (cmd)
