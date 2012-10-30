@@ -133,8 +133,7 @@ The return value is a list (BEG END TYPE)."
          ,@keys
          :keep-visual t
          (interactive ,@interactive)
-         (evil-with-adjust-cursor
-           ,@body)))))
+         ,@body))))
 
 (defmacro evil-define-union-move (name args &rest moves)
   "Create a movement function named NAME.

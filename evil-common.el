@@ -917,40 +917,15 @@ Like `move-end-of-line', but retains the goal column."
 
 (defun evil-adjust-cursor (&optional force)
   "Move point one character back if at the end of a non-empty line.
-If at the end of the buffer, move point to the previous line.
 This behavior is contingent on the variable `evil-move-cursor-back';
 use the FORCE parameter to override it."
-  (cond
-   ((and (eobp) (bolp))
-    (evil-with-restriction
-        (field-beginning nil nil (line-beginning-position -1)) nil
-      (forward-line -1)
-      (back-to-indentation)
-      (setq temporary-goal-column (current-column))))
-   ((and (eolp)
-         (not (bolp))
-         (= (point)
-            (save-excursion
-              (evil-move-end-of-line)
-              (point))))
-    (evil-move-cursor-back force))))
-
-(defmacro evil-with-adjust-cursor (&rest body)
-  "Executes the (motion) BODY while excluding a final buffer newline.
-If the buffer ends in a newline, the buffer is narrowed to (1-
-point-max) during the execution of body. If (point) is currently
-at eob, then no narrowing takes place because this would
-invalidate the current position."
-  (declare (indent defun)
-           (debug t))
-  `(save-restriction
-     (when (and (not (evil-operator-state-p))
-                (not (eobp))
+  (when (and (eolp)
+             (not (bolp))
+             (= (point)
                 (save-excursion
-                  (goto-char (point-max))
-                  (bolp)))
-       (evil-narrow nil (1- (point-max))))
-     ,@body))
+                  (evil-move-end-of-line)
+                  (point))))
+    (evil-move-cursor-back force)))
 
 (defun evil-move-cursor-back (&optional force)
   "Move point one character back within the current line.

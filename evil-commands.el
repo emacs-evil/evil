@@ -129,7 +129,12 @@ of the line or the buffer; just return nil."
   "Move COUNT - 1 lines down."
   :type line
   (let (line-move-visual)
-    (evil-line-move (1- (or count 1)))))
+    ;; Catch bob and eob errors. These are caused when not moving
+    ;; point starting in the first or last line, respectively. In this
+    ;; case the current line should be selected.
+    (condition-case err
+        (evil-line-move (1- (or count 1)))
+      ((beginning-of-buffer end-of-buffer)))))
 
 (evil-define-motion evil-beginning-of-line ()
   "Move the cursor to the beginning of the current line."
@@ -1062,9 +1067,18 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
         ;; set the small delete register
         (evil-set-register ?- text))))
   (evil-yank beg end type register yank-handler)
-  (if (eq type 'block)
-      (evil-apply-on-block #'delete-region beg end)
-    (delete-region beg end))
+  (cond
+   ((eq type 'block)
+    (evil-apply-on-block #'delete-region beg end))
+   ((and (eq type 'line)
+         (= end (point-max))
+         (or (= beg end)
+             (/= (char-before end) ?\n))
+         (/= beg (point-min))
+         (=  (char-before beg) ?\n))
+    (delete-region (1- beg) end))
+   (t
+    (delete-region beg end)))
   ;; place cursor on beginning of line
   (when (and (evil-called-interactively-p)
              (eq type 'line))
@@ -1135,11 +1149,16 @@ of the block."
   (interactive "<R><x><y>")
   (let ((delete-func (or delete-func #'evil-delete))
         (nlines (1+ (- (line-number-at-pos end)
-                       (line-number-at-pos beg)))))
+                       (line-number-at-pos beg))))
+        (opoint (save-excursion
+                  (goto-char beg)
+                  (line-beginning-position))))
     (funcall delete-func beg end type register yank-handler)
     (cond
      ((eq type 'line)
-      (evil-open-above 1))
+      (if ( = opoint (point))
+          (evil-open-above 1)
+        (evil-open-below 1)))
      ((eq type 'block)
       (evil-insert 1 nlines))
      (t
@@ -1458,7 +1477,8 @@ The return value is the yanked text."
                    (evil-get-register register)
                  (current-kill 0)))
          (yank-handler (car-safe (get-text-property
-                                  0 'yank-handler text))))
+                                  0 'yank-handler text)))
+         paste-eob)
     (evil-with-undo
       (when (evil-visual-state-p)
         ;; add replaced text to the kill-ring
@@ -1468,15 +1488,24 @@ The return value is the yanked text."
           (setq kill-ring (delete text kill-ring)))
         (setq kill-ring-yank-pointer kill-ring)
         (evil-visual-rotate 'upper-left)
+        ;; if we replace the last buffer line that does not end in a
+        ;; newline, we use `evil-paste-after' because `evil-delete'
+        ;; will move point to the line above
+        (when (and (= evil-visual-end (point-max))
+                   (/= (char-before (point-max)) ?\n))
+          (setq paste-eob t))
         (evil-delete evil-visual-beginning evil-visual-end
                      (evil-visual-type))
         (unless register
           (kill-new text))
         (when (and (eq yank-handler #'evil-yank-line-handler)
-                   (not (eq (evil-visual-type) 'line)))
+                   (not (eq (evil-visual-type) 'line))
+                   (not (= evil-visual-end (point-max))))
           (insert "\n"))
         (evil-normal-state))
-      (evil-paste-before count register))))
+      (if paste-eob
+          (evil-paste-after count register)
+        (evil-paste-before count register)))))
 
 (defun evil-paste-from-register (register)
   "Paste from REGISTER."
