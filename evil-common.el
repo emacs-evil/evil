@@ -2575,6 +2575,7 @@ use `evil-regexp-range'."
   (let ((open-regexp (regexp-quote (string open)))
         (close-regexp (regexp-quote (string close)))
         (count (or count 1))
+        forward-sexp-function ; always use the default one
         level range)
     (save-excursion
       (if (or (evil-in-comment-p)
