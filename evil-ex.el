@@ -615,7 +615,8 @@ This function calls `evil-ex-update' explicitly when
       (set-text-properties
        0 (length evil-ex-argument) nil evil-ex-argument))
     ;; set visual selection to match the region
-    (let (beg end)
+    (let ((buf (current-buffer))
+          beg end)
       (if (not evil-ex-range)
           (setq beg (line-beginning-position)
                 end (line-end-position))
@@ -631,7 +632,8 @@ This function calls `evil-ex-update' explicitly when
       (activate-mark)
       (unwind-protect
           (call-interactively evil-ex-command)
-        (deactivate-mark)))))
+        (with-current-buffer buf
+          (deactivate-mark))))))
 
 (defun evil-ex-line (base &optional offset)
   "Return the line number of BASE plus OFFSET."
