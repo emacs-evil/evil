@@ -26,7 +26,7 @@
 
 ;;; Code:
 
-(declare-function evil-visual-state-p "evil-visual-state-p")
+(declare-function evil-visual-state-p "evil-states")
 
 ;;; Compatibility for Emacs 23
 (unless (fboundp 'deactivate-input-method)
