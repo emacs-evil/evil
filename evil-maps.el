@@ -395,7 +395,7 @@
 (evil-ex-define-cmd "c[hange]" 'evil-change)
 (evil-ex-define-cmd "d[elete]" 'evil-delete)
 (evil-ex-define-cmd "go[to]" 'evil-goto-char)
-(evil-ex-define-cmd "join" 'evil-join)
+(evil-ex-define-cmd "j[oin]" 'evil-join)
 (evil-ex-define-cmd "le[ft]" 'evil-align-left)
 (evil-ex-define-cmd "ri[ght]" 'evil-align-right)
 (evil-ex-define-cmd "ce[nter]" 'evil-align-center)
