@@ -602,7 +602,6 @@ This function calls `evil-ex-update' explicitly when
   "Execute the given command COMMAND."
   (let* ((count (when (numberp range) range))
          (range (when (evil-range-p range) range))
-         (visual (and range (not (evil-visual-state-p))))
          (bang (and (string-match ".!$" command) t))
          (evil-ex-range
           (or range (and count (evil-ex-range count count))))
@@ -615,16 +614,24 @@ This function calls `evil-ex-update' explicitly when
     (when (stringp evil-ex-argument)
       (set-text-properties
        0 (length evil-ex-argument) nil evil-ex-argument))
-    (when visual
-      (evil-visual-select (evil-range-beginning evil-ex-range)
-                          (evil-range-end evil-ex-range)
-                          (evil-type evil-ex-range 'line) -1))
-    (when (evil-visual-state-p)
-      (evil-visual-pre-command evil-ex-command))
-    (unwind-protect
-        (call-interactively evil-ex-command)
-      (when visual
-        (evil-exit-visual-state)))))
+    ;; set visual selection to match the region
+    (let (beg end)
+      (if (not evil-ex-range)
+          (setq beg (line-beginning-position)
+                end (line-end-position))
+        (let ((ex-range (evil-range (evil-range-beginning evil-ex-range)
+                                    (evil-range-end evil-ex-range)
+                                    (evil-type evil-ex-range 'line))))
+          (evil-expand-range ex-range)
+          (setq beg (evil-range-beginning ex-range)
+                end (evil-range-end ex-range))))
+      (evil-sort beg end)
+      (set-mark end)
+      (goto-char beg)
+      (activate-mark)
+      (unwind-protect
+          (call-interactively evil-ex-command)
+        (deactivate-mark)))))
 
 (defun evil-ex-line (base &optional offset)
   "Return the line number of BASE plus OFFSET."
