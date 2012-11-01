@@ -532,16 +532,18 @@ If SAVE-POINT is non-nil, do not move point."
     (save-excursion
       (evil-repeat count)))
    (t
-    (let ((confirm-kill-emacs t)
-          (kill-buffer-hook
-           (cons #'(lambda ()
-                     (error "Cannot delete buffer in repeat command"))
-                 kill-buffer-hook))
-          (undo-pointer buffer-undo-list))
-      (evil-with-single-undo
-        (setq evil-last-repeat (list (point) count undo-pointer))
-        (evil-execute-repeat-info-with-count
-         count (ring-ref evil-repeat-ring 0)))))))
+    (unwind-protect
+        (let ((confirm-kill-emacs t)
+              (kill-buffer-hook
+               (cons #'(lambda ()
+                         (error "Cannot delete buffer in repeat command"))
+                     kill-buffer-hook))
+              (undo-pointer buffer-undo-list))
+          (evil-with-single-undo
+            (setq evil-last-repeat (list (point) count undo-pointer))
+            (evil-execute-repeat-info-with-count
+             count (ring-ref evil-repeat-ring 0))))
+      (evil-normal-state)))))
 
 ;; TODO: the same issue concering disabled undos as for `evil-paste-pop'
 (evil-define-command evil-repeat-pop (count &optional save-point)

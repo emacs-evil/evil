@@ -1150,6 +1150,17 @@ If nil, KEYS is used."
       "ABCABCABCABCABCABCABCABCABCABABCABCABCABCABCABCABCABCABCABCAB[C]C;; \
 This buffer is for notes")))
 
+(ert-deftest evil-test-repeat-error ()
+  "Test whether repeat returns to normal state in case of an error."
+  (evil-test-buffer
+    "[l]ine 1\nline 2\nline 3\nline 4"
+    ("ixxx" [down] [down] [home] "yyy" [escape])
+    "xxxline 1\nline 2\nyy[y]line 3\nline 4"
+    (should-error (execute-kbd-macro "j^."))
+    (should (evil-normal-state-p))
+    ("^")
+    "xxxline 1\nline 2\nyyyline 3\n[x]xxline 4"))
+
 (ert-deftest evil-test-insert-vcount ()
   "Test `evil-insert' with vertical repeating"
   :tags '(evil repeat)
