@@ -3123,7 +3123,7 @@ REST is the unparsed remainder of TO."
       (replace-match-string-symbols result)
       (cons (if (cdr result)
                 (cons 'concat result)
-              (car result))
+              (or (car result) ""))
             rest))))
 
 (defun evil-compile-replacement (to)

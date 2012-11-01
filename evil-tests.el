@@ -6471,7 +6471,12 @@ if no previous selection")
       (evil-test-buffer
         "no 1\nno 2\nno 3\n[y]es 4\nno 5\nno 6\nno 7\n"
         (":s/^/# /g")
-        "no 1\nno 2\nno 3\n[#] yes 4\nno 5\nno 6\nno 7\n"))))
+        "no 1\nno 2\nno 3\n[#] yes 4\nno 5\nno 6\nno 7\n"))
+    (ert-info ("Substitute with empty")
+      (evil-test-buffer
+        "[a]bc def abc jkl"
+        (":s/b//g")
+        "[a]c def ac jkl"))))
 
 (ert-deftest evil-test-ex-substitute-replacement ()
   "Test `evil-ex-substitute' with special replacements."
