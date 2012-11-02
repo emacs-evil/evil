@@ -1579,11 +1579,13 @@ when called interactively."
       ;; when defining macro
       (unless evil-this-macro
         (error "No previous macro"))
-    (condition-case nil
+    (condition-case err
         (execute-kbd-macro macro count)
       ;; enter Normal state if the macro fails
-      (error (evil-normal-state)
-             (evil-normalize-keymaps)))))
+      (error
+       (evil-normal-state)
+       (evil-normalize-keymaps)
+       (signal (car err) (cdr err))))))
 
 ;;; Visual commands
 
