@@ -1535,10 +1535,10 @@ The return value is the yanked text."
   :keep-visual t
   :suppress-operator t
   (interactive
-   (list (unless evil-this-macro
+   (list (unless (and evil-this-macro defining-kbd-macro)
            (or evil-this-register (read-char)))))
   (cond
-   (evil-this-macro
+   ((and evil-this-macro defining-kbd-macro)
     (condition-case nil
         (end-kbd-macro)
       (error nil))
