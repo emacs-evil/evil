@@ -1548,6 +1548,7 @@ The return value is the yanked text."
       (evil-set-register evil-this-macro last-kbd-macro))
     (setq evil-this-macro nil))
    (t
+    (when defining-kbd-macro (end-kbd-macro))
     (setq evil-this-macro register)
     (evil-set-register evil-this-macro nil)
     (start-kbd-macro nil))))
