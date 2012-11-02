@@ -1548,6 +1548,15 @@ register instead of replacing its content."
                 register-alist)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
 
+(defsubst evil-kbd-macro-suppress-motion-error ()
+  "Returns non-nil if a motion error should be suppressed.
+Whether the motion error should be suppressed depends on the
+variable `evil-kbd-macro-suppress-motion-error'."
+  (or (and defining-kbd-macro
+           (memq evil-kbd-macro-suppress-motion-error '(t record)))
+      (and executing-kbd-macro
+           (memq evil-kbd-macro-suppress-motion-error '(t replay)))))
+
 ;;; Region
 
 ;; `set-mark' does too much at once

@@ -188,6 +188,20 @@ moves the cursor."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-kbd-macro-suppress-motion-error nil
+  "Whether left/right motions signal errors during keyboard-macro definition.
+If this variable is set to non-nil, then the function
+`evil-forward-char' and `evil-backward-char' do not signal
+`end-of-line' or `beginning-of-line' errors when a keyboard macro
+is being defined and/or it is being executed. This may be desired
+because such an error would cause the macro definition/execution
+being terminated."
+  :type '(radio (const :tag "No" :value nil)
+                (const :tag "Record" :value record)
+                (const :tag "Replay" :value replay)
+                (const :tag "Both" :value t))
+  :group 'evil)
+
 (defcustom evil-track-eol t
   "If non-nil line moves after a call to `evil-end-of-line' stay at eol.
 This is analogous to `track-eol' but deals with the end-of-line

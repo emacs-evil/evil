@@ -46,7 +46,8 @@ Movement is restricted to the current line unless CROSSLINES is non-nil.
 If NOERROR is non-nil, don't signal an error upon reaching the end
 of the line or the buffer; just return nil."
   :type exclusive
-  (interactive "<c>" (list evil-cross-lines))
+  (interactive "<c>" (list evil-cross-lines
+                           (evil-kbd-macro-suppress-motion-error)))
   (cond
    (noerror
     (condition-case nil
@@ -78,7 +79,8 @@ Movement is restricted to the current line unless CROSSLINES is non-nil.
 If NOERROR is non-nil, don't signal an error upon reaching the beginning
 of the line or the buffer; just return nil."
   :type exclusive
-  (interactive "<c>" (list evil-cross-lines))
+  (interactive "<c>" (list evil-cross-lines
+                           (evil-kbd-macro-suppress-motion-error)))
   (cond
    (noerror
     (condition-case nil
