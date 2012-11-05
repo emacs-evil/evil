@@ -287,9 +287,10 @@ This is the state the buffer comes up in."
 (defadvice evil-mode-check-buffers (before start-evil activate)
   "Determine the initial state."
   (dolist (buffer evil-mode-buffers)
-    (with-current-buffer buffer
-      (when evil-local-mode
-        (evil-initialize-state)))))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (when evil-local-mode
+          (evil-initialize-state))))))
 
 (evil-define-command evil-change-to-initial-state
   (&optional buffer message)
