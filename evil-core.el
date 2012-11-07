@@ -286,7 +286,8 @@ This is the state the buffer comes up in."
 (defadvice evil-mode-check-buffers (before start-evil activate)
   "Determine the initial state."
   (dolist (buffer evil-mode-buffers)
-    (when (buffer-live-p buffer)
+    (when (and (buffer-live-p buffer)
+               (not (minibufferp buffer)))
       (with-current-buffer buffer
         (evil-initialize-state)))))
 
