@@ -632,8 +632,9 @@ This function calls `evil-ex-update' explicitly when
       (activate-mark)
       (unwind-protect
           (call-interactively evil-ex-command)
-        (with-current-buffer buf
-          (deactivate-mark))))))
+        (when (buffer-live-p buf)
+          (with-current-buffer buf
+            (deactivate-mark)))))))
 
 (defun evil-ex-line (base &optional offset)
   "Return the line number of BASE plus OFFSET."
