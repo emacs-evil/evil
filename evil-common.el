@@ -3012,7 +3012,9 @@ transformations, usually `regexp-quote' or `replace-quote'."
         (cons repl str)))))
 
 (defconst evil-vim-regexp-replacements
-  '((?s . "[[:space:]]") (?S . "[^[:space:]]")
+  '((?n . "\n")           (?r . "\r")
+    (?t . "\t")           (?b . "\b")
+    (?s . "[[:space:]]")  (?S . "[^[:space:]]")
     (?d . "[[:digit:]]")  (?D . "[^[:digit:]]")
     (?x . "[[:xdigit:]]") (?X . "[^[:xdigit:]]")
     (?o . "[0-7]")        (?O . "[^0-7]")
@@ -3031,7 +3033,7 @@ transformations, usually `regexp-quote' or `replace-quote'."
     (?` . "`")            (?^ . "^")
     (?$ . "$")            (?| . "\\|")))
 
-(defconst evil-regexp-magic "[][(){}<>_dDsSxXoOaAlLuUwWyY.*+?=^$`|]")
+(defconst evil-regexp-magic "[][(){}<>_dDsSxXoOaAlLuUwWyY.*+?=^$`|nrtb]")
 
 (defun evil-transform-vim-style-regexp (regexp)
   "Transforms vim-style backslash codes to Emacs regexp.
@@ -3080,7 +3082,7 @@ considered magic.
    (t "[]}{*+?$^]")))
 
 ;; TODO: support magic characters in patterns
-(defconst evil-replacement-magic "[eElLuU0-9&#,]"
+(defconst evil-replacement-magic "[eElLuU0-9&#,rnbt]"
   "All magic characters in a replacement string")
 
 (defun evil-compile-subreplacement (to &optional start)
@@ -3095,6 +3097,10 @@ REST is the unparsed remainder of TO."
               (cond
                ((eq char ?#)
                 (list '(number-to-string replace-count) rest))
+               ((eq char ?r) (list "\r" rest))
+               ((eq char ?n) (list "\n" rest))
+               ((eq char ?b) (list "\b" rest))
+               ((eq char ?t) (list "\t" rest))
                ((memq char '(?e ?E))
                 `("" ,rest . t))
                ((memq char '(?l ?L ?u ?U))
@@ -3139,7 +3145,7 @@ REST is the unparsed remainder of TO."
   "Maybe convert a regexp replacement TO to Lisp.
 Returns a list suitable for `perform-replace' if necessary, the
 original string if not. Currently the following magic characters
-in replacements are supported: 0-9&#lLuU,
+in replacements are supported: 0-9&#lLuUrnbt,
 The magic character , (comma) start an Emacs-lisp expression."
   (when (stringp to)
     (save-match-data
