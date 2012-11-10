@@ -661,7 +661,8 @@ This function calls `evil-ex-update' explicitly when
   (evil-range
    (evil-line-position beg-line)
    (evil-line-position (or end-line beg-line) -1)
-   'line))
+   'line
+   :expanded t))
 
 (defun evil-ex-full-range ()
   "Return a range encompassing the whole buffer."
