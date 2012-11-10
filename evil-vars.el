@@ -1155,14 +1155,10 @@ BEG end END are the region of the inserted text.")
 This should be a pair (OBJ . CONS) where OBJ is the entry as an
 object, and CONS is a copy of the entry.")
 
-(evil-define-local-var evil-last-insertion-command nil
-  "The last command which inserted text in the buffer.")
-
-(evil-define-local-var evil-current-insertions nil
+(evil-define-local-var evil-current-insertion nil
   "Information about the latest insertion in insert state.
-This should be a pair (TEXT . INSERTIONS) where TEXT is a
-inserted text and INSERTIONS is a list of ranges, of which buffer
-string of the disjoint union is identical to TEXT.")
+This should be a pair (BEG . END) that describes the
+buffer-region of the newly inserted text.")
 
 (defvar evil-last-insertion nil
   "The last piece of inserted text.")
