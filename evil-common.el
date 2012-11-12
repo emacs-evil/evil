@@ -1808,67 +1808,46 @@ disjoint union is not a single range."
       (setq ranges (cdr ranges)))
     range))
 
-(defun evil-track-last-insertion ()
+(defun evil-track-last-insertion (beg end len)
   "Track the last insertion range and its text.
-Store the inserted text and its range to
-`evil-current-insertions' as a pair.  The insertion range is
-represented as a series (a list) of ranges whose disjoint union
-is a single range."
-  (let* ((list buffer-undo-list) e ins insertions)
-    (while (and list (not (setq e (car-safe list))))
-      (setq list (cdr-safe list)))
-    (when (and (not (memq this-command '(evil-open-above evil-open-below)))
-               (listp list)
-               ;; check if the latest undo entry is the one who was added
-               ;; after the last invocation of this function
-               (or (not (eq e (car evil-last-undo-entry)))
-                   (not (equal e (cdr evil-last-undo-entry)))))
-      ;; save the lastest undo entry
-      (setq evil-last-undo-entry
-            (cons e (or (cond ((consp e) (cons (car e) (cdr e)))
-                              ((listp e) (copy-sequence e))) e)))
-      ;; find the current insertion
-      (while (and (setq e (car-safe list)) (not ins))
-        (when (and (consp e) (integerp (car e)) (integerp (cdr e)))
-          (setq ins e))
-        (setq list (cdr list)))
-      (when ins ;; ins is the last insertion range
-        (when (eq last-command evil-last-insertion-command)
-          ;; there is no other command between the current and the
-          ;; last insertions; they are treated as a series of
-          ;; insertions
-          (setq insertions (cdr evil-current-insertions)))
-        (when (not (eq (car-safe insertions) ins))
-          ;; if `this-command' and `last-command' are
-          ;; `self-insert-command', the current insertion points to
-          ;; the last insertion in `insertions', or otherwise, push
-          ;; the current insertion to `insertions'
-          (push ins insertions))
-        (when (cdr insertions)
-          ;; we only have to save the latest insertion separately to
-          ;; compare it with a future insertion; the rest of
-          ;; insertions can be merged
-          ;; (this means `insertions' have at most two elements)
-          (setcdr insertions (list (evil-concat-ranges (cdr insertions)))))
-        (let ((range (evil-concat-ranges insertions)))
-          (unless range (setq range ins insertions (list ins)))
-          (setq evil-current-insertions
-                (cons (filter-buffer-substring (car range) (cdr range))
-                      insertions)))
-        (setq evil-last-insertion-command this-command)))
-    ins))
+The insertion range is stored as a pair of buffer positions in
+`evil-current-insertion'. If a subsequent change is compatible,
+then the current range is modified, otherwise it is replaced by a
+new range. Compatible changes are changes that do not create a
+disjoin range."
+  (cond
+   ((zerop len)
+    ;; insertion
+    (if (and evil-current-insertion
+             (>= beg (car evil-current-insertion))
+             (<= beg (cdr evil-current-insertion)))
+        (setcdr evil-current-insertion
+                (+ (- end beg)
+                   (cdr evil-current-insertion)))
+      (setq evil-current-insertion (cons beg end))))
+   (t
+    ;; deletion of something in range is recorded
+    (if (and evil-current-insertion
+             (>= beg (car evil-current-insertion))
+             (<= (+ beg len) (cdr evil-current-insertion)))
+        (setcdr evil-current-insertion
+                (- (cdr evil-current-insertion) len))
+      (setq evil-current-insertion nil)))))
 (put 'evil-track-last-insertion 'permanent-local-hook t)
 
 (defun evil-start-track-last-insertion ()
   "Start tracking the last insertion."
-  (setq evil-current-insertions (cons nil nil))
-  (add-hook 'post-command-hook #'evil-track-last-insertion nil t))
+  (setq evil-current-insertion nil)
+  (add-hook 'after-change-functions #'evil-track-last-insertion nil t))
 
 (defun evil-stop-track-last-insertion ()
   "Stop tracking the last insertion.
 The tracked insertion is set to `evil-last-insertion'."
-  (setq evil-last-insertion (car evil-current-insertions))
-  (remove-hook 'post-command-hook #'evil-track-last-insertion t))
+  (setq evil-last-insertion
+        (and evil-current-insertion
+             (buffer-substring-no-properties (car evil-current-insertion)
+                                             (cdr evil-current-insertion))))
+  (remove-hook 'after-change-functions #'evil-track-last-insertion t))
 
 ;;; Paste
 
@@ -3012,7 +2991,9 @@ transformations, usually `regexp-quote' or `replace-quote'."
         (cons repl str)))))
 
 (defconst evil-vim-regexp-replacements
-  '((?s . "[[:space:]]") (?S . "[^[:space:]]")
+  '((?n . "\n")           (?r . "\r")
+    (?t . "\t")           (?b . "\b")
+    (?s . "[[:space:]]")  (?S . "[^[:space:]]")
     (?d . "[[:digit:]]")  (?D . "[^[:digit:]]")
     (?x . "[[:xdigit:]]") (?X . "[^[:xdigit:]]")
     (?o . "[0-7]")        (?O . "[^0-7]")
@@ -3031,7 +3012,7 @@ transformations, usually `regexp-quote' or `replace-quote'."
     (?` . "`")            (?^ . "^")
     (?$ . "$")            (?| . "\\|")))
 
-(defconst evil-regexp-magic "[][(){}<>_dDsSxXoOaAlLuUwWyY.*+?=^$`|]")
+(defconst evil-regexp-magic "[][(){}<>_dDsSxXoOaAlLuUwWyY.*+?=^$`|nrtb]")
 
 (defun evil-transform-vim-style-regexp (regexp)
   "Transforms vim-style backslash codes to Emacs regexp.
@@ -3080,7 +3061,7 @@ considered magic.
    (t "[]}{*+?$^]")))
 
 ;; TODO: support magic characters in patterns
-(defconst evil-replacement-magic "[eElLuU0-9&#,]"
+(defconst evil-replacement-magic "[eElLuU0-9&#,rnbt]"
   "All magic characters in a replacement string")
 
 (defun evil-compile-subreplacement (to &optional start)
@@ -3095,6 +3076,10 @@ REST is the unparsed remainder of TO."
               (cond
                ((eq char ?#)
                 (list '(number-to-string replace-count) rest))
+               ((eq char ?r) (list "\r" rest))
+               ((eq char ?n) (list "\n" rest))
+               ((eq char ?b) (list "\b" rest))
+               ((eq char ?t) (list "\t" rest))
                ((memq char '(?e ?E))
                 `("" ,rest . t))
                ((memq char '(?l ?L ?u ?U))
@@ -3139,7 +3124,7 @@ REST is the unparsed remainder of TO."
   "Maybe convert a regexp replacement TO to Lisp.
 Returns a list suitable for `perform-replace' if necessary, the
 original string if not. Currently the following magic characters
-in replacements are supported: 0-9&#lLuU,
+in replacements are supported: 0-9&#lLuUrnbt,
 The magic character , (comma) start an Emacs-lisp expression."
   (when (stringp to)
     (save-match-data

@@ -614,24 +614,22 @@ This function calls `evil-ex-update' explicitly when
     (when (stringp evil-ex-argument)
       (set-text-properties
        0 (length evil-ex-argument) nil evil-ex-argument))
-    ;; set visual selection to match the region
-    (let ((buf (current-buffer))
-          beg end)
-      (if (not evil-ex-range)
-          (setq beg (line-beginning-position)
-                end (line-end-position))
-        (let ((ex-range (evil-range (evil-range-beginning evil-ex-range)
-                                    (evil-range-end evil-ex-range)
-                                    (evil-type evil-ex-range 'line))))
-          (evil-expand-range ex-range)
-          (setq beg (evil-range-beginning ex-range)
-                end (evil-range-end ex-range))))
-      (evil-sort beg end)
-      (set-mark end)
-      (goto-char beg)
-      (activate-mark)
+    (let ((buf (current-buffer)))
       (unwind-protect
-          (call-interactively evil-ex-command)
+          (if (not evil-ex-range)
+              (call-interactively evil-ex-command)
+            ;; set visual selection to match the region if an explicit
+            ;; range has been specified
+            (let ((ex-range (evil-copy-range evil-ex-range))
+                  beg end)
+              (evil-expand-range ex-range)
+              (setq beg (evil-range-beginning ex-range)
+                    end (evil-range-end ex-range))
+              (evil-sort beg end)
+              (set-mark end)
+              (goto-char beg)
+              (activate-mark)
+              (call-interactively evil-ex-command)))
         (when (buffer-live-p buf)
           (with-current-buffer buf
             (deactivate-mark)))))))
@@ -662,7 +660,8 @@ This function calls `evil-ex-update' explicitly when
   (evil-range
    (evil-line-position beg-line)
    (evil-line-position (or end-line beg-line) -1)
-   'line))
+   'line
+   :expanded t))
 
 (defun evil-ex-full-range ()
   "Return a range encompassing the whole buffer."
