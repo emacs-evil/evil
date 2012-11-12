@@ -680,20 +680,28 @@ Signal an error if MARKER is in a different buffer."
 (defun evil-ex-re-fwd (pattern)
   "Search forward for PATTERN.
 Returns the line number of the match."
-  (save-excursion
-    (set-text-properties 0 (length pattern) nil pattern)
-    (evil-move-end-of-line)
-    (and (re-search-forward pattern)
-         (line-number-at-pos (1- (match-end 0))))))
+  (condition-case err
+      (save-excursion
+        (set-text-properties 0 (length pattern) nil pattern)
+        (evil-move-end-of-line)
+        (and (re-search-forward pattern nil t)
+             (line-number-at-pos (1- (match-end 0)))))
+    (invalid-regexp
+     (evil-ex-echo (cadr err))
+     nil)))
 
 (defun evil-ex-re-bwd (pattern)
   "Search backward for PATTERN.
 Returns the line number of the match."
-  (save-excursion
-    (set-text-properties 0 (length pattern) nil pattern)
-    (evil-move-beginning-of-line)
-    (and (re-search-backward pattern)
-         (line-number-at-pos (match-beginning 0)))))
+  (condition-case err
+      (save-excursion
+        (set-text-properties 0 (length pattern) nil pattern)
+        (evil-move-beginning-of-line)
+        (and (re-search-backward pattern nil t)
+             (line-number-at-pos (match-beginning 0))))
+    (invalid-regexp
+     (evil-ex-echo (cadr err))
+     nil)))
 
 (defun evil-ex-prev-search ()
   (error "Previous search not yet implemented"))
