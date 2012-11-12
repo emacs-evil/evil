@@ -1012,13 +1012,17 @@ This handler highlights the pattern of the current substitution."
         (condition-case lossage
             (let* ((result (evil-ex-get-substitute-info arg))
                    (pattern (pop result))
-                   (replacement (pop result)))
+                   (replacement (pop result))
+                   (range (or (evil-copy-range evil-ex-range)
+                              (evil-range (line-beginning-position)
+                                          (line-end-position)
+                                          'line
+                                          :expaned t))))
               (setq evil-ex-substitute-current-replacement replacement)
-              (apply #'evil-ex-hl-set-region
-                     'evil-ex-substitute
-                     (or evil-ex-range
-                         (evil-range (line-beginning-position)
-                                     (line-end-position))))
+              (evil-expand-range range)
+              (evil-ex-hl-set-region 'evil-ex-substitute
+                                     (evil-range-beginning range)
+                                     (evil-range-end range))
               (evil-ex-hl-change 'evil-ex-substitute pattern))
           (end-of-file
            (evil-ex-pattern-update-ex-info nil
