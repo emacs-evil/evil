@@ -3050,15 +3050,15 @@ codes \\y and \\Y can be used instead of the Emacs code \\s and
   "Returns a regexp matching the magic characters according to MAGIC.
 Depending on the value of MAGIC the following characters are
 considered magic.
-  t             []{}*+?.&~$^
-  nil           []{}*+?$^
+  t             [][{}*+?.&~$^
+  nil           [][{}*+?$^
   'very-magic   not 0-9A-Za-z_
   'very-nomagic empty."
   (cond
-   ((eq magic t) "[]}{*+?.&~$^]")
+   ((eq magic t) "[][}{*+?.&~$^]")
    ((eq magic 'very-magic) "[^0-9A-Za-z_]")
    ((eq magic 'very-nomagic) "\\\\")
-   (t "[]}{*+?$^]")))
+   (t "[][}{*+?$^]")))
 
 ;; TODO: support magic characters in patterns
 (defconst evil-replacement-magic "[eElLuU0-9&#,rnbt]"
