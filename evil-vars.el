@@ -216,6 +216,15 @@ and nil means no mode line tag."
   :type 'symbol
   :group 'evil)
 
+(defcustom evil-mouse-word 'evil-move-word
+  "The (movement) function to be used for double click selection.
+The double-click starts visual state in a special word selection
+mode. This function is used to determine the words to be
+selected. Possible values are 'evil-move-word or
+'evil-move-WORD."
+  :type 'symbol
+  :group 'evil)
+
 (defcustom evil-bigword "^ \t\r\n"
   "The characters to be considered as a big word.
 This should be a regexp set without the enclosing []."
