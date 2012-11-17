@@ -312,7 +312,7 @@ If BIGWORD is non-nil, move by WORDS."
     ;; if changing a one-letter word, don't move point to the
     ;; next word (which would change two words)
     (if (and (evil-operator-state-p)
-             (looking-at (format "[%s]" evil-word)))
+             (looking-at "[[:word:]]"))
         (prog1 (evil-move-end count move)
           (unless (bobp) (backward-char)))
       (evil-move-end count move nil t))))

@@ -216,13 +216,6 @@ and nil means no mode line tag."
   :type 'symbol
   :group 'evil)
 
-(defcustom evil-word "[:word:]_"
-  "The characters to be considered as a word.
-This should be a regexp set without the enclosing []."
-  :type 'string
-  :group 'evil)
-(make-variable-buffer-local 'evil-word)
-
 (defcustom evil-bigword "^ \t\r\n"
   "The characters to be considered as a big word.
 This should be a regexp set without the enclosing []."
