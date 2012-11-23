@@ -1258,6 +1258,19 @@ but doesn't insert or remove any spaces."
         (fill-region beg end)
       (error nil))))
 
+(evil-define-operator evil-fill-and-move (beg end)
+  "Fill text and move point to the end of the filled region."
+  :move-point nil
+  :type line
+  (let ((marker (make-marker)))
+    (move-marker marker (1- end))
+    (condition-case nil
+        (progn
+          (fill-region beg end)
+          (goto-char marker)
+          (evil-first-non-blank))
+      (error nil))))
+
 (evil-define-operator evil-indent (beg end)
   "Indent text."
   :move-point nil
