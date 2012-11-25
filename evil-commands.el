@@ -1134,11 +1134,16 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (interactive "<R><x>")
   (evil-delete beg end type register))
 
-(evil-define-operator evil-delete-backward-word (beg end type register)
+(evil-define-command evil-delete-backward-word ()
   "Delete previous word."
-  :motion evil-backward-word-begin
-  (interactive "<R><x>")
-  (evil-delete beg end type register))
+  (if (and (bolp) (not (bobp)))
+      (delete-char -1)
+    (evil-delete (save-excursion
+                   (evil-backward-word-begin)
+                   (point))
+                 (point)
+                 'exclusive
+                 nil)))
 
 (evil-define-operator evil-change
   (beg end type register yank-handler delete-func)
