@@ -341,40 +341,49 @@ This is the state the buffer came up in."
           (unless evil-local-mode
             (evil-local-mode 1)))))))
 
+(defun evil-generate-mode-line-tag (&optional state)
+  "Generate the evil mode-line tag for STATE."
+  (let ((tag (evil-state-property state :tag t)))
+    ;; prepare mode-line: add tooltip
+    (if (stringp tag)
+        (propertize tag
+                    'help-echo (evil-state-property state :name)
+                    'mouse-face 'mode-line-highlight)
+      tag)))
+
 (defun evil-refresh-mode-line (&optional state)
   "Refresh mode line tag."
-  (let (name next string temp)
-    (setq string (evil-state-property state :tag t)
-          name (evil-state-property state :name))
-    ;; add tooltip
-    (when (stringp string)
-      (setq string
-            (propertize string
-                        'help-echo name
-                        'mouse-face 'mode-line-highlight)))
-    (setq evil-mode-line-tag string)
-    ;; refresh mode line data structure
-    (when (or (null evil-local-mode)
-              (null state)
-              (not (eq evil-mode-line-format 'before)))
-      (setq mode-line-position
-            (delq 'evil-mode-line-tag mode-line-position)))
-    (when (or (null evil-local-mode)
-              (null state)
-              (not (eq evil-mode-line-format 'after)))
-      (while global-mode-string
-        (setq next (pop global-mode-string))
-        (if (eq next 'evil-mode-line-tag)
-            (pop temp) ; remove the ""
-          (push next temp)))
-      (setq global-mode-string (nreverse temp)))
-    (when evil-local-mode
-      (when (eq evil-mode-line-format 'before)
-        (add-to-list 'mode-line-position 'evil-mode-line-tag t #'eq))
-      (when (eq evil-mode-line-format 'after)
-        (unless (memq 'evil-mode-line-tag global-mode-string)
-          (setq global-mode-string
-                (nconc global-mode-string '("" evil-mode-line-tag))))))
+  (setq evil-mode-line-tag (evil-generate-mode-line-tag state))
+  ;; refresh mode line data structure
+  ;; first remove evil from mode-line
+  (setq mode-line-format (delq 'evil-mode-line-tag mode-line-format))
+  (let ((mlmodes mode-line-format)
+        pred which where)
+    ;; determine before/after which symbol the tag should be placed
+    (cond
+     ((eq evil-mode-line-format 'before)
+      (setq where 'after which 'mode-line-position))
+     ((eq evil-mode-line-format 'after)
+      (setq where 'after which 'mode-line-modes))
+     ((consp evil-mode-line-format)
+      (setq where (car evil-mode-line-format)
+            which (cdr evil-mode-line-format))))
+    ;; find the cons-cell of the symbol before/after which the tag
+    ;; should be placed
+    (while (and mlmodes
+                (let ((sym (or (car-safe (car mlmodes)) (car mlmodes))))
+                  (not (eq which sym))))
+      (setq pred mlmodes
+            mlmodes (cdr mlmodes)))
+    ;; put evil tag at the right position in the mode line
+    (cond
+     ((eq where 'before)
+      (if pred
+          (setcdr pred (cons 'evil-mode-line-tag mlmodes))
+        (setq mode-line-format
+              (cons 'evil-mode-line-tag mode-line-format))))
+     ((eq where 'after)
+      (setcdr mlmodes (cons 'evil-mode-line-tag (cdr mlmodes)))))
     (force-mode-line-update)))
 
 ;; input methods should be disabled in non-insertion states

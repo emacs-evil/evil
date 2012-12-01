@@ -211,9 +211,22 @@ interpretation of evil."
 
 (defcustom evil-mode-line-format 'before
   "The position of the mode line tag.
-`before' means before the mode list, `after' means after it,
-and nil means no mode line tag."
-  :type 'symbol
+Either a symbol or a cons-cell. If it is a symbol it should be
+one of 'before, 'after or 'nil. 'before mean the the tag is
+placed before the mode-list, 'after means it is placed after the
+mode-list, and 'nil means no mode line tag. If it is a cons cell
+it should have the form (WHERE . WHICH) where WHERE is either
+'before or 'after and WHICH is a symbol in
+`mode-line-format'. The tag is then placed right before or after
+that symbol."
+  :type '(radio :value 'before
+                (const before)
+                (const after)
+                (cons :tag "Next to symbol"
+                      (choice :value after
+                              (const before)
+                              (const after))
+                      symbol))
   :group 'evil)
 
 (defcustom evil-mouse-word 'evil-move-word
