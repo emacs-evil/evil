@@ -357,7 +357,7 @@ This is the state the buffer came up in."
   ;; refresh mode line data structure
   ;; first remove evil from mode-line
   (setq mode-line-format (delq 'evil-mode-line-tag mode-line-format))
-  (let ((mlmodes mode-line-format)
+  (let ((mlpos mode-line-format)
         pred which where)
     ;; determine before/after which symbol the tag should be placed
     (cond
@@ -370,20 +370,21 @@ This is the state the buffer came up in."
             which (cdr evil-mode-line-format))))
     ;; find the cons-cell of the symbol before/after which the tag
     ;; should be placed
-    (while (and mlmodes
-                (let ((sym (or (car-safe (car mlmodes)) (car mlmodes))))
+    (while (and mlpos
+                (let ((sym (or (car-safe (car mlpos)) (car mlpos))))
                   (not (eq which sym))))
-      (setq pred mlmodes
-            mlmodes (cdr mlmodes)))
+      (setq pred mlpos
+            mlpos (cdr mlpos)))
     ;; put evil tag at the right position in the mode line
     (cond
+     ((not mlpos)) ;; position not found, so do not add the tag
      ((eq where 'before)
       (if pred
-          (setcdr pred (cons 'evil-mode-line-tag mlmodes))
+          (setcdr pred (cons 'evil-mode-line-tag mlpos))
         (setq mode-line-format
               (cons 'evil-mode-line-tag mode-line-format))))
      ((eq where 'after)
-      (setcdr mlmodes (cons 'evil-mode-line-tag (cdr mlmodes)))))
+      (setcdr mlpos (cons 'evil-mode-line-tag (cdr mlpos)))))
     (force-mode-line-update)))
 
 ;; input methods should be disabled in non-insertion states
