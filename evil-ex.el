@@ -137,7 +137,7 @@ of the syntax.")
         evil-ex-argument-handler evil-ex-info-string result)
     (add-hook 'minibuffer-setup-hook #'evil-ex-setup)
     (setq result (read-from-minibuffer
-                  (if (stringp (this-command-keys)) (this-command-keys) ":")
+                  ":"
                   (or initial-input
                       (and evil-ex-previous-command
                            (format "(default: %s) "
