@@ -353,39 +353,40 @@ This is the state the buffer came up in."
 
 (defun evil-refresh-mode-line (&optional state)
   "Refresh mode line tag."
-  (setq evil-mode-line-tag (evil-generate-mode-line-tag state))
-  ;; refresh mode line data structure
-  ;; first remove evil from mode-line
-  (setq mode-line-format (delq 'evil-mode-line-tag mode-line-format))
-  (let ((mlpos mode-line-format)
-        pred which where)
-    ;; determine before/after which symbol the tag should be placed
-    (cond
-     ((eq evil-mode-line-format 'before)
-      (setq where 'after which 'mode-line-position))
-     ((eq evil-mode-line-format 'after)
-      (setq where 'after which 'mode-line-modes))
-     ((consp evil-mode-line-format)
-      (setq where (car evil-mode-line-format)
-            which (cdr evil-mode-line-format))))
-    ;; find the cons-cell of the symbol before/after which the tag
-    ;; should be placed
-    (while (and mlpos
-                (let ((sym (or (car-safe (car mlpos)) (car mlpos))))
-                  (not (eq which sym))))
-      (setq pred mlpos
-            mlpos (cdr mlpos)))
-    ;; put evil tag at the right position in the mode line
-    (cond
-     ((not mlpos)) ;; position not found, so do not add the tag
-     ((eq where 'before)
-      (if pred
-          (setcdr pred (cons 'evil-mode-line-tag mlpos))
-        (setq mode-line-format
-              (cons 'evil-mode-line-tag mode-line-format))))
-     ((eq where 'after)
-      (setcdr mlpos (cons 'evil-mode-line-tag (cdr mlpos)))))
-    (force-mode-line-update)))
+  (when (listp mode-line-format)
+    (setq evil-mode-line-tag (evil-generate-mode-line-tag state))
+    ;; refresh mode line data structure
+    ;; first remove evil from mode-line
+    (setq mode-line-format (delq 'evil-mode-line-tag mode-line-format))
+    (let ((mlpos mode-line-format)
+          pred which where)
+      ;; determine before/after which symbol the tag should be placed
+      (cond
+       ((eq evil-mode-line-format 'before)
+        (setq where 'after which 'mode-line-position))
+       ((eq evil-mode-line-format 'after)
+        (setq where 'after which 'mode-line-modes))
+       ((consp evil-mode-line-format)
+        (setq where (car evil-mode-line-format)
+              which (cdr evil-mode-line-format))))
+      ;; find the cons-cell of the symbol before/after which the tag
+      ;; should be placed
+      (while (and mlpos
+                  (let ((sym (or (car-safe (car mlpos)) (car mlpos))))
+                    (not (eq which sym))))
+        (setq pred mlpos
+              mlpos (cdr mlpos)))
+      ;; put evil tag at the right position in the mode line
+      (cond
+       ((not mlpos)) ;; position not found, so do not add the tag
+       ((eq where 'before)
+        (if pred
+            (setcdr pred (cons 'evil-mode-line-tag mlpos))
+          (setq mode-line-format
+                (cons 'evil-mode-line-tag mode-line-format))))
+       ((eq where 'after)
+        (setcdr mlpos (cons 'evil-mode-line-tag (cdr mlpos)))))
+      (force-mode-line-update))))
 
 ;; input methods should be disabled in non-insertion states
 (defun evil-activate-input-method ()
