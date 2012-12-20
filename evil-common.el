@@ -32,7 +32,7 @@
 (unless (fboundp 'deactivate-input-method)
   (defalias 'deactivate-input-method 'inactivate-input-method))
 (unless (boundp 'input-method-deactivate-hook)
-  (defalias 'input-method-deactivate-hook 'input-method-inactivate-hook))
+  (defvaralias 'input-method-deactivate-hook 'input-method-inactivate-hook))
 
 (condition-case nil
     (require 'windmove)
