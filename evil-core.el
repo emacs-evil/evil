@@ -115,11 +115,11 @@
     ;; restore the proper value of `major-mode' in Fundamental buffers
     (when (eq major-mode 'turn-on-evil-mode)
       (setq major-mode 'fundamental-mode))
-    ;; determine and enable the initial state
-    (unless evil-state
-      ;; note: the initial state may be re-determined in
-      ;; `post-command-hook' by `evil-mode-check-buffers'
-      (evil-initialize-state))
+    ;; The initial state is usually setup by `evil-initialize' when
+    ;; the major-mode in a buffer changes. This preliminary
+    ;; initialization is only for the case when `evil-local-mode' is
+    ;; called directly for the first time in a buffer.
+    (unless evil-state (evil-initialize-state))
     (add-hook 'input-method-activate-hook #'evil-activate-input-method t t)
     (add-hook 'input-method-deactivate-hook #'evil-deactivate-input-method t t)
     (add-hook 'activate-mark-hook #'evil-visual-activate-hook nil t)
@@ -145,12 +145,19 @@
   (interactive)
   (evil-local-mode (or arg -1)))
 
+;; The function `evil-initialize' should only be used to initialize
+;; `evil-local-mode' from the globalized minor-mode `evil-mode'. It is
+;; called whenever evil is enabled in a buffer for the first time or
+;; when evil is active and the major-mode of the buffer changes. In
+;; addition to enabling `evil-local-mode' it also sets the initial
+;; evil-state according to the major-mode.
 (defun evil-initialize ()
   "Enable Evil in the current buffer, if appropriate.
 To enable Evil globally, do (evil-mode 1)."
   ;; TODO: option for enabling vi keys in the minibuffer
   (unless (minibufferp)
-    (evil-local-mode 1)))
+    (evil-local-mode 1)
+    (evil-initialize-state)))
 
 ;;;###autoload (autoload 'evil-mode "evil" "Toggle evil in all buffers" t)
 (define-globalized-minor-mode evil-mode
@@ -282,14 +289,6 @@ This is the state the buffer comes up in."
     (set modes (delq mode (symbol-value modes))))
   (when state
     (add-to-list (evil-state-property state :modes) mode)))
-
-(defadvice evil-mode-check-buffers (before start-evil activate)
-  "Determine the initial state."
-  (dolist (buffer evil-mode-buffers)
-    (when (and (buffer-live-p buffer)
-               (not (minibufferp buffer)))
-      (with-current-buffer buffer
-        (evil-initialize-state)))))
 
 (evil-define-command evil-change-to-initial-state
   (&optional buffer message)
@@ -1032,8 +1031,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
              ,@body))
           (t
            (unless evil-local-mode
-             (evil-local-mode 1)
-             (evil-initialize-state))
+             (evil-local-mode 1))
            (let ((evil-next-state ',state)
                  input-method-activate-hook
                  input-method-deactivate-hook)
