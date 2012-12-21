@@ -558,6 +558,14 @@ Both COUNT and CMD may be nil."
           (setq count nil)
         (setq count (string-to-number count))))
     ;; return command description
+    (when (arrayp cmd)
+      (let ((result (evil-keypress-parser cmd)))
+        (setq cmd (car result)
+              count (cond
+                     ((and count (cadr result))
+                      (* count (cadr result)))
+                     (count count)
+                     (t (cadr result))))))
     (list cmd count)))
 
 (defun evil-read-key (&optional prompt)

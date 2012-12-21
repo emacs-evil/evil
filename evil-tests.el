@@ -1712,7 +1712,12 @@ New Tex[t]
     (ert-info ("Treat 0 as a motion")
       (should (equal
                (evil-keypress-parser '(?0))
-               '(evil-digit-argument-or-evil-beginning-of-line nil))))))
+               '(evil-digit-argument-or-evil-beginning-of-line nil))))
+    (ert-info ("Handle keyboard macros")
+      (evil-test-buffer
+        (define-key evil-motion-state-local-map (kbd "W") (kbd "w"))
+        (should (equal (evil-keypress-parser '(?W))
+                       '(evil-forward-word-begin nil)))))))
 
 (ert-deftest evil-test-invert-char ()
   "Test `evil-invert-char'"
