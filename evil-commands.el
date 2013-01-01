@@ -3286,7 +3286,9 @@ DO-MOUSE-DRAG-REGION-POST-PROCESS should only be used by
                                   (functionp fun)
                                   (not (memq fun '(mouse-set-point
                                                    mouse-set-region))))))
-        (if (and (/= (mark) (point))
+        (if (and (or (/= (mark) (point))
+                     (= click-count 1) ; word selection
+                     (and (memq (evil-visual-type) '(line block))))
                  (not do-multi-click))
 
             ;; If point has moved, finish the drag.
