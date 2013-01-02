@@ -1385,7 +1385,16 @@ The default for width is the value of `fill-column'."
   (when char
     (if (eq type 'block)
         (save-excursion
-          (evil-apply-on-block #'evil-replace beg end nil char))
+          (evil-apply-on-rectangle
+           #'(lambda (begcol endcol char)
+               (let ((maxcol (evil-column (line-end-position))))
+                 (when (< begcol maxcol)
+                   (setq endcol (min endcol maxcol))
+                   (let ((beg (evil-move-to-column begcol nil t))
+                         (end (evil-move-to-column endcol nil t)))
+                     (delete-region beg end)
+                     (insert (make-string (- endcol begcol) char))))))
+           beg end char))
       (goto-char beg)
       (while (< (point) end)
         (if (eq (char-after) ?\n)
