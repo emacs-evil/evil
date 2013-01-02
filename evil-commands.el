@@ -1071,7 +1071,7 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (evil-yank beg end type register yank-handler)
   (cond
    ((eq type 'block)
-    (evil-apply-on-block #'delete-region beg end))
+    (evil-apply-on-block #'delete-region beg end nil))
    ((and (eq type 'line)
          (= end (point-max))
          (or (= beg end)
@@ -1193,20 +1193,20 @@ of the block."
 (evil-define-operator evil-upcase (beg end type)
   "Convert text to upper case."
   (if (eq type 'block)
-      (evil-apply-on-block #'evil-upcase beg end)
+      (evil-apply-on-block #'evil-upcase beg end nil)
     (upcase-region beg end)))
 
 (evil-define-operator evil-downcase (beg end type)
   "Convert text to lower case."
   (if (eq type 'block)
-      (evil-apply-on-block #'evil-downcase beg end)
+      (evil-apply-on-block #'evil-downcase beg end nil)
     (downcase-region beg end)))
 
 (evil-define-operator evil-invert-case (beg end type)
   "Invert case of text."
   (let (char)
     (if (eq type 'block)
-        (evil-apply-on-block #'evil-invert-case beg end)
+        (evil-apply-on-block #'evil-invert-case beg end nil)
       (save-excursion
         (goto-char beg)
         (while (< beg end)
@@ -1221,7 +1221,7 @@ of the block."
   "Invert case of character."
   :motion evil-forward-char
   (if (eq type 'block)
-      (evil-apply-on-block #'evil-invert-case beg end)
+      (evil-apply-on-block #'evil-invert-case beg end nil)
     (evil-invert-case beg end)
     (when evil-this-motion
       (goto-char end))))
@@ -1229,7 +1229,7 @@ of the block."
 (evil-define-operator evil-rot13 (beg end type)
   "ROT13 encrypt text."
   (if (eq type 'block)
-      (evil-apply-on-block #'evil-rot13 beg end)
+      (evil-apply-on-block #'evil-rot13 beg end nil)
     (rot13-region beg end)))
 
 (evil-define-operator evil-join (beg end)

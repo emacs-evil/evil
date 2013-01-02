@@ -1713,65 +1713,19 @@ Then restore Transient Mark mode to its previous setting."
     (set-marker (mark-marker) point)
     (goto-char mark)))
 
-(defun evil-apply-on-block (func beg end &rest args)
-  "Call FUNC for each line of Visual Block selection.
-The selection may be specified explicitly with BEG and END.
-FUNC must take at least two arguments, the beginning and end of
-each line. Extra arguments to FUNC may be passed via ARGS."
-  (let ((eol-col (and (memq last-command '(next-line previous-line))
-                      (numberp temporary-goal-column)
-                      (= temporary-goal-column most-positive-fixnum)
-                      temporary-goal-column))
-        beg-marker end-marker left right eob)
-    (save-excursion
-      (evil-sort beg end)
-      ;; calculate columns
-      (setq left  (evil-column beg)
-            right (evil-column end))
-      ;; ensure LEFT < RIGHT
-      (when (> left right)
-        (evil-sort left right)
-        (setq beg (save-excursion
-                    (goto-char beg)
-                    (move-to-column left)
-                    (point))
-              end (save-excursion
-                    (goto-char end)
-                    (move-to-column right)
-                    (point))))
-      (goto-char beg)
-      (setq beg-marker (move-marker (make-marker) beg)
-            end-marker (move-marker (make-marker) end))
-      (set-marker-insertion-type beg-marker nil)
-      (set-marker-insertion-type end-marker t)
-      ;; apply FUNC on each line
-      (while (progn
-               (apply func
-                      (save-excursion
-                        (move-to-column left t)
-                        (point))
-                      (save-excursion
-                        (move-to-column (or eol-col right))
-                        (point))
-                      args)
-               (forward-line 1)
-               (and (prog1 (not eob)
-                      (setq eob (eobp)))
-                    (<= (point) end-marker))))
-      (set-marker beg-marker nil)
-      (set-marker end-marker nil))))
-
-(defun evil-apply-on-rectangle (function start end &rest args)
-  "Like `apply-on-rectangle' but maybe extends to eol.
-If `temporary-goal-column' is set to a big number, then the
-region of each line is extended to the end of each line. The end
-column is set to the maximal column in all covered lines."
+(defun evil-apply-on-block (func beg end pass-columns &rest args)
+  "Call FUNC for each line of a block selection.
+The selection is specified by the region BEG and END.  FUNC must
+take at least two arguments, the beginning and end of each
+line. If PASS-COLUMNS is non-nil, these values are the columns,
+otherwise tey are buffer positions. Extra arguments to FUNC may
+be passed via ARGS."
   (let ((eol-col (and (memq last-command '(next-line previous-line))
                       (numberp temporary-goal-column)
                       temporary-goal-column))
         startcol startpt endcol endpt)
     (save-excursion
-      (goto-char start)
+      (goto-char beg)
       (setq startcol (current-column))
       (beginning-of-line)
       (setq startpt (point))
@@ -1780,9 +1734,7 @@ column is set to the maximal column in all covered lines."
       (forward-line 1)
       (setq endpt (point-marker))
       ;; ensure the start column is the left one.
-      (if (< endcol startcol)
-          (let ((col startcol))
-            (setq startcol endcol endcol col)))
+      (evil-sort startcol endcol)
       ;; maybe find maximal column
       (when eol-col
         (setq eol-col 0)
@@ -1791,14 +1743,27 @@ column is set to the maximal column in all covered lines."
           (setq eol-col (max eol-col
                              (evil-column (line-end-position))))
           (forward-line 1))
-        (setq endcol (min eol-col
-                          (1+ (min (1- most-positive-fixnum)
-                                   temporary-goal-column)))))
+        (setq endcol (max endcol
+                          (min eol-col
+                               (1+ (min (1- most-positive-fixnum)
+                                        temporary-goal-column))))))
       ;; start looping over lines
       (goto-char startpt)
       (while (< (point) endpt)
-        (apply function startcol endcol args)
+        (if pass-columns
+            (apply func startcol endcol args)
+          (apply func
+                 (save-excursion (evil-move-to-column startcol))
+                 (save-excursion (evil-move-to-column endcol t))
+                 args))
         (forward-line 1)))))
+
+(defun evil-apply-on-rectangle (function start end &rest args)
+  "Like `apply-on-rectangle' but maybe extends to eol.
+If `temporary-goal-column' is set to a big number, then the
+region of each line is extended to the end of each line. The end
+column is set to the maximal column in all covered lines."
+  (apply #'evil-apply-on-block function start end t args))
 
 ;;; Insertion
 
