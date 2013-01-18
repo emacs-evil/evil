@@ -1,6 +1,9 @@
 ;;; evil-core.el --- Core functionality
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
+
+;; Version: 0.0.0
+
 ;;
 ;; This file is NOT part of GNU Emacs.
 
