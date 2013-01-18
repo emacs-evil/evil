@@ -1,7 +1,7 @@
 SHELL = /bin/sh
 EMACS = emacs
 FILES = $(filter-out evil-tests.el,$(filter-out evil-pkg.el,$(wildcard evil*.el)))
-VERSION := $(shell sed -n '3s/.*"\(.*\)".*/\1/p' evil-pkg.el)
+VERSION := $(shell sed -ne '1,/define-package/d' -ne '/^\s*"[[:digit:]]\+\(\.[[:digit:]]\+\)*"\s*$$/ s/^.*"\(.*\)".*$$/\1/p' evil-pkg.el)
 ELPAPKG = evil-$(VERSION)
 PROFILER =
 DOC = doc
@@ -110,5 +110,6 @@ elpa:
 
 # Change the version using make VERSION=x.y.z
 version:
-	cat evil-pkg.el | sed "3s/\".*\"/\"${VERSION}\"/" > evil-pkg.el.new && mv evil-pkg.el.new evil-pkg.el
+	sed -e '/^\s*"[[:digit:]]\+\(\.[[:digit:]]\+\)*"\s*$$/ s/".*"/"${VERSION}"/' evil-pkg.el > evil-pkg.el.new && mv evil-pkg.el.new evil-pkg.el
+	sed -e '/^;;\s\+Version:\s*[[:digit:]]\+\(\.[[:digit:]]\+\)*\s*$$/ s/:.*$$/: ${VERSION}/' -i evil*.el
 
