@@ -432,6 +432,13 @@ If BIGWORD is non-nil, move by WORDS."
   (evil-move-beginning (- (or count 1))
                        #'forward-paragraph #'backward-paragraph))
 
+(defconst evil-cpp-prefix "\\(^\\|\r\\)[ \t]*#[ \t]*")
+(defconst evil-cpp-endif (concat evil-cpp-prefix "endif"))
+(defconst evil-cpp-if-else
+  (concat evil-cpp-prefix "\\(if\\|elif\\|else\\)"))
+(defconst evil-cpp-conditional
+  (concat evil-cpp-prefix "\\(if\\|elif\\|else\\|endif\\)"))
+
 ;; TODO: this is a very basic implementation considering only
 ;; (), [], {}, and not blocks like #if ... #endif
 (evil-define-motion evil-jump-item (count)
@@ -440,6 +447,37 @@ and jump to the corresponding one."
   :jump t
   :type inclusive
   (cond
+   ((and (or (string= major-mode "c-mode")
+             (string= major-mode "c++-mode"))
+         (or (and (char-equal (preceding-char) ?/)
+                  (char-equal (following-char) ?*))
+             (and (char-equal (following-char) ?/)
+                  (char-equal (char-after (+ 1 (point))) ?*))))
+    (search-forward "*/"))
+   ((and (or (string= major-mode "c-mode")
+             (string= major-mode "c++-mode"))
+         (or (and (char-equal (preceding-char) ?*)
+                  (char-equal (following-char) ?/))
+             (and (char-equal (following-char) ?*)
+                  (char-equal (char-after (+ 1 (point))) ?/))))
+    (search-backward "/*"))
+   ((and (or (string= major-mode "c-mode")
+             (string= major-mode "c++-mode"))
+         (string-match evil-cpp-if-else (thing-at-point 'line)))
+    (progn
+      (when (fboundp 'hide-ifdef-mode)
+        (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
+      (hif-find-next-relevant)
+      (while (hif-looking-at-ifX)
+        (hif-ifdef-to-endif)
+        (hif-find-next-relevant))))
+   ((and (or (string= major-mode "c-mode")
+             (string= major-mode "c++-mode"))
+         (string-match evil-cpp-endif (thing-at-point 'line)))
+    (progn
+      (when (fboundp 'hide-ifdef-mode)
+        (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
+      (hif-endif-to-ifdef)))
    ;; COUNT% jumps to a line COUNT percentage down the file
    (count
     (goto-char
