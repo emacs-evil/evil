@@ -2165,7 +2165,13 @@ See also `evil-close-folds'."
   (when (fboundp 'hs-minor-mode)
     (hs-minor-mode 1))
   (when (fboundp 'hs-show-all)
-    (hs-show-all)))
+    (hs-show-all))
+  (when (or (string= major-mode "c-mode")
+            (string= major-mode "c++-mode"))
+    (when (fboundp 'hide-ifdef-mode)
+      (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
+    (when (fboundp 'show-ifdefs)
+      (show-ifdefs))))
 
 (evil-define-command evil-close-folds ()
   "Close all folds.
@@ -2173,23 +2179,47 @@ See also `evil-open-folds'."
   (when (fboundp 'hs-minor-mode)
     (hs-minor-mode 1))
   (when (fboundp 'hs-hide-all)
-    (hs-hide-all)))
+    (hs-hide-all))
+  (when (or (string= major-mode "c-mode")
+            (string= major-mode "c++-mode"))
+    (when (fboundp 'hide-ifdef-mode)
+      (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
+    (when (fboundp 'hide-ifdefs)
+      (hide-ifdefs))))
 
 (evil-define-command evil-open-fold ()
   "Open fold.
 See also `evil-close-fold'."
-  (when (fboundp 'hs-minor-mode)
-    (hs-minor-mode 1))
-  (when (fboundp 'hs-show-block)
-    (hs-show-block)))
+  (if (and (or (string= major-mode "c-mode")
+               (string= major-mode "c++-mode"))
+           (string-match evil-cpp-conditional (thing-at-point 'line)))
+      (progn
+        (when (fboundp 'hide-ifdef-mode)
+          (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
+        (when (fboundp 'show-ifdef-block)
+          (show-ifdef-block)))
+    (progn
+      (when (fboundp 'hs-minor-mode)
+        (hs-minor-mode 1))
+      (when (fboundp 'hs-show-block)
+        (hs-show-block)))))
 
 (evil-define-command evil-close-fold ()
   "Close fold.
 See also `evil-open-fold'."
-  (when (fboundp 'hs-minor-mode)
-    (hs-minor-mode 1))
-  (when (fboundp 'hs-hide-block)
-    (hs-hide-block)))
+  (if (and (or (string= major-mode "c-mode")
+               (string= major-mode "c++-mode"))
+           (string-match evil-cpp-conditional (thing-at-point 'line)))
+      (progn
+        (when (fboundp 'hide-ifdef-mode)
+          (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
+        (when (fboundp 'hide-ifdef-block)
+          (hide-ifdef-block)))
+    (progn
+      (when (fboundp 'hs-minor-mode)
+        (hs-minor-mode 1))
+      (when (fboundp 'hs-hide-block)
+        (hs-hide-block)))))
 
 ;;; Ex
 
