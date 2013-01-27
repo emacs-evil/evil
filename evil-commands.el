@@ -457,12 +457,6 @@ and jump to the corresponding one."
     (backward-char))
    ((and (not (eolp)) (evil-looking-at-end-comment t))
     (forward-comment -1))
-   ((and (memq major-mode '(c-mode c++-mode))
-         (or (and (char-equal (preceding-char) ?*)
-                  (char-equal (following-char) ?/))
-             (and (char-equal (following-char) ?*)
-                  (char-equal (char-after (+ 1 (point))) ?/))))
-    (search-backward "/*"))
    ((and
      (memq major-mode '(c-mode c++-mode))
      (require 'hideif nil t)
