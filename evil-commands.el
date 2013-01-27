@@ -432,15 +432,6 @@ If BIGWORD is non-nil, move by WORDS."
   (evil-move-beginning (- (or count 1))
                        #'forward-paragraph #'backward-paragraph))
 
-(defconst evil-cpp-prefix "\\(^\\|\r\\)[ \t]*#[ \t]*")
-(defconst evil-cpp-endif (concat evil-cpp-prefix "endif"))
-(defconst evil-cpp-if-else
-  (concat evil-cpp-prefix "\\(if\\|elif\\|else\\)"))
-(defconst evil-cpp-conditional
-  (concat evil-cpp-prefix "\\(if\\|elif\\|else\\|endif\\)"))
-
-;; TODO: this is a very basic implementation considering only
-;; (), [], {}, and not blocks like #if ... #endif
 (evil-define-motion evil-jump-item (count)
   "Find the next item in this line after or under the cursor
 and jump to the corresponding one."
@@ -458,37 +449,32 @@ and jump to the corresponding one."
              (/ (* count size) 100))))))
     (back-to-indentation)
     (setq evil-this-type 'line))
-   ((and (or (string= major-mode "c-mode")
-             (string= major-mode "c++-mode"))
+   ((and (memq major-mode '(c-mode c++-mode))
          (or (and (char-equal (preceding-char) ?/)
                   (char-equal (following-char) ?*))
              (and (char-equal (following-char) ?/)
                   (char-equal (char-after (+ 1 (point))) ?*))))
-    (search-forward "*/"))
-   ((and (or (string= major-mode "c-mode")
-             (string= major-mode "c++-mode"))
+    (and (search-forward "*/") (backward-char)))
+   ((and (memq major-mode '(c-mode c++-mode))
          (or (and (char-equal (preceding-char) ?*)
                   (char-equal (following-char) ?/))
              (and (char-equal (following-char) ?*)
                   (char-equal (char-after (+ 1 (point))) ?/))))
     (search-backward "/*"))
-   ((and (or (string= major-mode "c-mode")
-             (string= major-mode "c++-mode"))
-         (string-match evil-cpp-if-else (thing-at-point 'line)))
-    (progn
-      (when (fboundp 'hide-ifdef-mode)
-        (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
-      (hif-find-next-relevant)
-      (while (hif-looking-at-ifX)
-        (hif-ifdef-to-endif)
-        (hif-find-next-relevant))))
-   ((and (or (string= major-mode "c-mode")
-             (string= major-mode "c++-mode"))
-         (string-match evil-cpp-endif (thing-at-point 'line)))
-    (progn
-      (when (fboundp 'hide-ifdef-mode)
-        (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
-      (hif-endif-to-ifdef)))
+   ((and
+     (memq major-mode '(c-mode c++-mode))
+     (require 'hideif nil t)
+     (with-no-warnings
+       (cond
+        ((or (hif-looking-at-ifX) (hif-looking-at-else))
+         (hif-find-next-relevant)
+         (while (hif-looking-at-ifX)
+           (hif-ifdef-to-endif)
+           (hif-find-next-relevant))
+         t)
+        ((hif-looking-at-endif)
+         (hif-endif-to-ifdef)
+         t)))))
    (t
     (let* ((next-open
             (condition-case err
