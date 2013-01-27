@@ -447,6 +447,17 @@ and jump to the corresponding one."
   :jump t
   :type inclusive
   (cond
+   ;; COUNT% jumps to a line COUNT percentage down the file
+   (count
+    (goto-char
+     (evil-normalize-position
+      (let ((size (- (point-max) (point-min))))
+        (+ (point-min)
+           (if (> size 80000)
+               (* count (/ size 100))
+             (/ (* count size) 100))))))
+    (back-to-indentation)
+    (setq evil-this-type 'line))
    ((and (or (string= major-mode "c-mode")
              (string= major-mode "c++-mode"))
          (or (and (char-equal (preceding-char) ?/)
@@ -478,17 +489,6 @@ and jump to the corresponding one."
       (when (fboundp 'hide-ifdef-mode)
         (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
       (hif-endif-to-ifdef)))
-   ;; COUNT% jumps to a line COUNT percentage down the file
-   (count
-    (goto-char
-     (evil-normalize-position
-      (let ((size (- (point-max) (point-min))))
-        (+ (point-min)
-           (if (> size 80000)
-               (* count (/ size 100))
-             (/ (* count size) 100))))))
-    (back-to-indentation)
-    (setq evil-this-type 'line))
    (t
     (let* ((next-open
             (condition-case err
