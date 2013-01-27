@@ -119,7 +119,7 @@ otherwise add at the end of the list."
   "Delete by side-effect all items satisfying PREDICATE in LIST.
 Stop when reaching POINTER.  If the first item satisfies PREDICATE,
 there is no way to remove it by side-effect; therefore, write
-\(setq foo (evil-delete-if 'predicate foo)) to be sure of
+\(setq foo (evil-filter-list 'predicate foo)) to be sure of
 changing the value of `foo'."
   (let ((tail list) elt head)
     (while (and tail (not (eq tail pointer)))
@@ -1215,28 +1215,27 @@ POS defaults to the current position of point."
              (< pos (match-end 0)))))))
 
 (defun evil-in-comment-p (&optional pos)
-  "Whether POS is inside a comment.
-POS defaults to the current position of point."
-  (let ((parse #'(lambda (p)
-                   (let ((c (char-after p)))
-                     (or (and c (eq (char-syntax c) ?<))
-                         (memq (get-text-property p 'face)
-                               '(font-lock-comment-face
-                                 font-lock-comment-delimiter-face))
-                         (nth 4 (parse-partial-sexp
-                                 (save-excursion
-                                   (beginning-of-defun)
-                                   (point)) p)))))))
-    (save-excursion
-      (goto-char (or pos (point)))
-      (and (or (funcall parse (point))
-               ;; `parse-partial-sexp's notion of comments
-               ;; doesn't span lines
-               (progn
-                 (back-to-indentation)
-                 (unless (eolp)
-                   (forward-char)
-                   (funcall parse (point))))) t))))
+  "Checks if POS is within a comment according to current syntax.
+If POS is nil, (point) is used. The return value is the beginning
+position of the comment."
+  (setq pos (or pos (point)))
+  (let ((chkpos
+         (cond
+          ((eobp) pos)
+          ((= (char-syntax (char-after)) ?<) (1+ pos))
+          ((and (not (zerop (logand (car (syntax-after (point)))
+                                    (lsh 1 16))))
+                (not (zerop (logand (or (car (syntax-after (1+ (point)))) 0)
+                                    (lsh 1 17)))))
+           (+ pos 2))
+          ((and (not (zerop (logand (car (syntax-after (point)))
+                                    (lsh 1 17))))
+                (not (zerop (logand (or (car (syntax-after (1- (point)))) 0)
+                                    (lsh 1 16)))))
+           (1+ pos))
+          (t pos))))
+    (let ((syn (save-excursion (syntax-ppss chkpos))))
+      (and (nth 4 syn) (nth 8 syn)))))
 
 (defun evil-in-string-p (&optional pos)
   "Whether POS is inside a string.
@@ -1274,16 +1273,17 @@ Stops at LIMIT, which defaults to the end of the buffer."
 (defun evil-comment-beginning (&optional pos)
   "Return beginning of comment containing POS.
 POS defaults to the current position of point."
-  (let ((pos (or pos (point))))
-    (when (evil-in-comment-p pos)
-      (evil-find-beginning #'evil-in-comment-p pos))))
+  (evil-in-comment-p pos))
 
 (defun evil-comment-end (&optional pos)
   "Return end of comment containing POS.
 POS defaults to the current position of point."
-  (let ((pos (or pos (point))))
-    (when (evil-in-comment-p pos)
-      (evil-find-end #'evil-in-comment-p pos))))
+  (let ((beg (evil-in-comment-p pos)))
+    (and beg
+         (save-excursion
+           (goto-char beg)
+           (forward-comment 1)
+           (1- (point))))))
 
 (defun evil-string-beginning (&optional pos)
   "Return beginning of string containing POS.

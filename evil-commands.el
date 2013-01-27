@@ -611,7 +611,7 @@ Columns are counted from zero."
   :type exclusive
   (move-to-column (or count 0)))
 
-(evil-define-command evil-goto-mark (char)
+(evil-define-command evil-goto-mark (char &optional noerror)
   "Go to the marker specified by CHAR."
   :keep-visual t
   :repeat nil
@@ -630,18 +630,18 @@ Columns are counted from zero."
                                        (car marker)))
                      (find-file (car marker))))
         (goto-char (cdr marker))))
-     (t
+     ((not noerror)
       (error "Marker `%c' is not set%s" char
              (if (evil-global-marker-p char) ""
                " in this buffer"))))))
 
-(evil-define-command evil-goto-mark-line (char)
+(evil-define-command evil-goto-mark-line (char &optional noerror)
   "Go to the line of the marker specified by CHAR."
   :keep-visual t
   :repeat nil
   :type line
   (interactive (list (read-char)))
-  (evil-goto-mark char)
+  (evil-goto-mark char noerror)
   (evil-first-non-blank))
 
 (evil-define-motion evil-jump-backward (count)
@@ -1813,8 +1813,7 @@ the lines."
   "Switch to Insert state at previous insertion point.
 The insertion will be repeated COUNT times."
   (interactive "p")
-  (when (evil-get-marker ?^)
-    (goto-char (evil-get-marker ?^)))
+  (evil-goto-mark ?^ t)
   (evil-insert count))
 
 (defun evil-maybe-remove-spaces ()
@@ -1842,10 +1841,10 @@ The insertion will be repeated COUNT times."
   (setq evil-insert-count count
         evil-insert-lines t
         evil-insert-vcount nil)
-  (when evil-auto-indent
-    (indent-according-to-mode))
   (evil-insert-state 1)
-  (add-hook 'post-command-hook #'evil-maybe-remove-spaces))
+  (add-hook 'post-command-hook #'evil-maybe-remove-spaces)
+  (when evil-auto-indent
+    (indent-according-to-mode)))
 
 (defun evil-open-below (count)
   "Insert a new line below point and switch to Insert state.
@@ -1855,10 +1854,10 @@ The insertion will be repeated COUNT times."
   (setq evil-insert-count count
         evil-insert-lines t
         evil-insert-vcount nil)
-  (when evil-auto-indent
-    (indent-according-to-mode))
   (evil-insert-state 1)
-  (add-hook 'post-command-hook #'evil-maybe-remove-spaces))
+  (add-hook 'post-command-hook #'evil-maybe-remove-spaces)
+  (when evil-auto-indent
+    (indent-according-to-mode)))
 
 (defun evil-insert-line (count &optional vcount)
   "Switch to insert state at beginning of current line.
@@ -1926,7 +1925,8 @@ next VCOUNT - 1 lines below the current one."
 (defun evil-copy-from-above (arg)
   "Copy characters from preceding non-blank line.
 The copied text is inserted before point.
-ARG is the number of lines to move backward."
+ARG is the number of lines to move backward.
+See also \\<evil-insert-state-map>\\[evil-copy-from-below]."
   (interactive
    (cond
     ;; if a prefix argument was given, repeat it for subsequent calls
@@ -1941,7 +1941,8 @@ ARG is the number of lines to move backward."
 (defun evil-copy-from-below (arg)
   "Copy characters from following non-blank line.
 The copied text is inserted before point.
-ARG is the number of lines to move forward."
+ARG is the number of lines to move forward.
+See also \\<evil-insert-state-map>\\[evil-copy-from-above]."
   (interactive
    (cond
     ((and (null current-prefix-arg)
@@ -3474,7 +3475,8 @@ if the previous state was Emacs state."
     (setq evil-execute-in-emacs-state-buffer (current-buffer))
     (evil-emacs-state)
     (evil-echo "Switched to Emacs state for the next command ..."))
-   ((not (eq this-command #'evil-execute-in-emacs-state))
+   ((and (not (eq this-command #'evil-execute-in-emacs-state))
+         (not (minibufferp)))
     (remove-hook 'post-command-hook 'evil-execute-in-emacs-state)
     (when (buffer-live-p evil-execute-in-emacs-state-buffer)
       (with-current-buffer evil-execute-in-emacs-state-buffer
