@@ -471,13 +471,13 @@ and jump to the corresponding one."
               (hif-ifx-else-endif-regexp
                (concat hif-ifx-regexp "\\|" hif-else-regexp "\\|" hif-endif-regexp)))
          (cond
-          ((or (hif-looking-at-ifX) (hif-looking-at-else))
+          ((save-excursion (beginning-of-line) (hif-looking-at-ifX))
            (hif-find-next-relevant)
            (while (hif-looking-at-ifX)
              (hif-ifdef-to-endif)
              (hif-find-next-relevant))
            t)
-          ((hif-looking-at-endif)
+          ((save-excursion (beginning-of-line) (hif-looking-at-endif))
            (hif-endif-to-ifdef)
            t))))))
    (t
