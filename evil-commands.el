@@ -432,8 +432,6 @@ If BIGWORD is non-nil, move by WORDS."
   (evil-move-beginning (- (or count 1))
                        #'forward-paragraph #'backward-paragraph))
 
-;; TODO: this is a very basic implementation considering only
-;; (), [], {}, and not blocks like #if ... #endif
 (evil-define-motion evil-jump-item (count)
   "Find the next item in this line after or under the cursor
 and jump to the corresponding one."
@@ -451,6 +449,37 @@ and jump to the corresponding one."
              (/ (* count size) 100))))))
     (back-to-indentation)
     (setq evil-this-type 'line))
+   ((and (evil-looking-at-start-comment t)
+         (let ((pnt (point)))
+           (forward-comment 1)
+           (or (not (bolp))
+               (prog1 nil (goto-char pnt)))))
+    (backward-char))
+   ((and (not (eolp)) (evil-looking-at-end-comment t))
+    (forward-comment -1))
+   ((and (memq major-mode '(c-mode c++-mode))
+         (or (and (char-equal (preceding-char) ?*)
+                  (char-equal (following-char) ?/))
+             (and (char-equal (following-char) ?*)
+                  (char-equal (char-after (+ 1 (point))) ?/))))
+    (search-backward "/*"))
+   ((and
+     (memq major-mode '(c-mode c++-mode))
+     (require 'hideif nil t)
+     (with-no-warnings
+       (let* ((hif-else-regexp (concat hif-cpp-prefix "\\(?:else\\|elif[ \t]+\\)"))
+              (hif-ifx-else-endif-regexp
+               (concat hif-ifx-regexp "\\|" hif-else-regexp "\\|" hif-endif-regexp)))
+         (cond
+          ((or (hif-looking-at-ifX) (hif-looking-at-else))
+           (hif-find-next-relevant)
+           (while (hif-looking-at-ifX)
+             (hif-ifdef-to-endif)
+             (hif-find-next-relevant))
+           t)
+          ((hif-looking-at-endif)
+           (hif-endif-to-ifdef)
+           t))))))
    (t
     (let* ((next-open
             (condition-case err

@@ -1237,6 +1237,63 @@ position of the comment."
     (let ((syn (save-excursion (syntax-ppss chkpos))))
       (and (nth 4 syn) (nth 8 syn)))))
 
+(defun evil-looking-at-start-comment (&optional move)
+  "Returns t if point is at the start of a comment.
+point must be on one of the opening characters of a block comment
+according to the current syntax table. Futhermore these
+characters must been parsed as opening characters, i.e. they
+won't be considered as comment starters inside a string or
+possibly another comment. Point is moved to the first character
+of the comment opener if MOVE is non-nil."
+  (cond
+   ;; one character opener
+   ((= (char-syntax (char-after)) ?<)
+    (equal (point) (evil-in-comment-p (1+ (point)))))
+   ;; two character opener on first char
+   ((and (not (zerop (logand (car (syntax-after (point)))
+                             (lsh 1 16))))
+         (not (zerop (logand (or (car (syntax-after (1+ (point)))) 0)
+                             (lsh 1 17)))))
+    (equal (point) (evil-in-comment-p (+ 2 (point)))))
+   ;; two character opener on second char
+   ((and (not (zerop (logand (car (syntax-after (point)))
+                             (lsh 1 17))))
+         (not (zerop (logand (or (car (syntax-after (1- (point)))) 0)
+                             (lsh 1 16)))))
+    (and (equal (1- (point)) (evil-in-comment-p (1+ (point))))
+         (prog1 t (when move (backward-char)))))))
+
+(defun evil-looking-at-end-comment (&optional move)
+  "Returns t if point is at the end of a comment.
+point must be on one of the opening characters of a block comment
+according to the current syntax table. Futhermore these
+characters must been parsed as opening characters, i.e. they
+won't be considered as comment starters inside a string or
+possibly another comment. Point is moved right after the comment
+closer if MOVE is non-nil."
+  (cond
+   ;; one char closer
+   ((= (char-syntax (char-after)) ?>)
+    (and (evil-in-comment-p) ; in comment
+         (not (evil-in-comment-p (1+ (point))))
+         (prog1 t (when move (forward-char)))))
+   ;; two char closer on first char
+   ((and (not (zerop (logand (car (syntax-after (point)))
+                             (lsh 1 18))))
+         (not (zerop (logand (or (car (syntax-after (1+ (point)))) 0)
+                             (lsh 1 19)))))
+    (and (evil-in-comment-p)
+         (not (evil-in-comment-p (+ (point) 2)))
+         (prog1 t (when move (forward-char 2)))))
+   ;; two char closer on second char
+   ((and (not (zerop (logand (car (syntax-after (point)))
+                             (lsh 1 19))))
+         (not (zerop (logand (or (car (syntax-after (1- (point)))) 0)
+                             (lsh 1 18)))))
+    (and (evil-in-comment-p)
+         (not (evil-in-comment-p (1+ (point))))
+         (prog1 t (when move (forward-char)))))))
+
 (defun evil-in-string-p (&optional pos)
   "Whether POS is inside a string.
 POS defaults to the current position of point."
