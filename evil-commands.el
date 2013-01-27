@@ -465,16 +465,19 @@ and jump to the corresponding one."
      (memq major-mode '(c-mode c++-mode))
      (require 'hideif nil t)
      (with-no-warnings
-       (cond
-        ((or (hif-looking-at-ifX) (hif-looking-at-else))
-         (hif-find-next-relevant)
-         (while (hif-looking-at-ifX)
-           (hif-ifdef-to-endif)
-           (hif-find-next-relevant))
-         t)
-        ((hif-looking-at-endif)
-         (hif-endif-to-ifdef)
-         t)))))
+       (let* ((hif-else-regexp (concat hif-cpp-prefix "\\(?:else\\|elif[ \t]+\\)"))
+              (hif-ifx-else-endif-regexp
+               (concat hif-ifx-regexp "\\|" hif-else-regexp "\\|" hif-endif-regexp)))
+         (cond
+          ((or (hif-looking-at-ifX) (hif-looking-at-else))
+           (hif-find-next-relevant)
+           (while (hif-looking-at-ifX)
+             (hif-ifdef-to-endif)
+             (hif-find-next-relevant))
+           t)
+          ((hif-looking-at-endif)
+           (hif-endif-to-ifdef)
+           t))))))
    (t
     (let* ((next-open
             (condition-case err
