@@ -2209,28 +2209,29 @@ without confirmation."
   :type line
   :repeat nil
   (interactive "<R><fsh><!>")
-  (when (zerop (length filename))
-    (setq filename (buffer-file-name)))
-  (cond
-   ((zerop (length filename))
-    (error "Please specify a file name for the buffer"))
-   ;; execute command on region
-   ((eq (aref filename 0) ?!)
-    (shell-command-on-region beg end (substring filename 1)))
-   ;; with region, always save to file without resetting modified flag
-   ((and beg end)
-    (write-region beg end filename nil nil nil (not bang)))
-   ;; no current file
-   ((null (buffer-file-name))
-    (write-file filename (not bang)))
-   ;; save current buffer to its file
-   ((string= filename (buffer-file-name))
-    (if (not bang) (save-buffer) (write-file filename)))
-   ;; save to another file
-   (t
-    (write-region nil nil filename
-                  nil (not (buffer-file-name)) nil
-                  (not bang)))))
+  (let ((bufname (buffer-file-name (buffer-base-buffer))))
+    (when (zerop (length filename))
+      (setq filename bufname))
+    (cond
+     ((zerop (length filename))
+      (error "Please specify a file name for the buffer"))
+     ;; execute command on region
+     ((eq (aref filename 0) ?!)
+      (shell-command-on-region beg end (substring filename 1)))
+     ;; with region, always save to file without resetting modified flag
+     ((and beg end)
+      (write-region beg end filename nil nil nil (not bang)))
+     ;; no current file
+     ((null bufname)
+      (write-file filename (not bang)))
+     ;; save current buffer to its file
+     ((string= filename bufname)
+      (if (not bang) (save-buffer) (write-file filename)))
+     ;; save to another file
+     (t
+      (write-region nil nil filename
+                    nil (not bufname) nil
+                    (not bang))))))
 
 (evil-define-command evil-write-all (bang)
   "Saves all buffers visiting a file.
@@ -2256,7 +2257,7 @@ FILENAME is given, the current file name is used."
   :move-point nil
   (interactive "<f><!>")
   (when (zerop (length filename))
-    (setq filename (buffer-file-name)))
+    (setq filename (buffer-file-name (buffer-base-buffer))))
   (write-file filename (not bang)))
 
 (evil-define-command evil-edit (file &optional bang)
@@ -2854,7 +2855,7 @@ Default position is the beginning of the buffer."
   (let* ((nlines   (count-lines (point-min) (point-max)))
          (curr     (line-number-at-pos (point)))
          (perc     (* (/ (float curr) (float nlines)) 100.0))
-         (file     (buffer-file-name))
+         (file     (buffer-file-name (buffer-base-buffer)))
          (writable (and file (file-writable-p file)))
          (readonly (if (and file (not writable)) "[readonly] " "")))
     (if file
