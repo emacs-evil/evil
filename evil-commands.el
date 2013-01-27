@@ -2155,71 +2155,60 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
 (evil-define-command evil-toggle-fold ()
   "Open or close a fold."
   (when (fboundp 'hs-minor-mode)
-    (hs-minor-mode 1))
-  (when (fboundp 'hs-toggle-hiding)
-    (hs-toggle-hiding)))
+    (hs-minor-mode 1)
+    (with-no-warnings (hs-toggle-hiding))))
 
 (evil-define-command evil-open-folds ()
   "Open all folds.
 See also `evil-close-folds'."
   (when (fboundp 'hs-minor-mode)
-    (hs-minor-mode 1))
-  (when (fboundp 'hs-show-all)
-    (hs-show-all))
-  (when (or (string= major-mode "c-mode")
-            (string= major-mode "c++-mode"))
+    (hs-minor-mode 1)
+    (with-no-warnings (hs-show-all)))
+  (when (memq major-mode '(c-mode c++-mode))
     (when (fboundp 'hide-ifdef-mode)
-      (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
-    (when (fboundp 'show-ifdefs)
-      (show-ifdefs))))
+      (hide-ifdef-mode 1)
+      (with-no-warnings (show-ifdefs)))))
 
 (evil-define-command evil-close-folds ()
   "Close all folds.
 See also `evil-open-folds'."
   (when (fboundp 'hs-minor-mode)
-    (hs-minor-mode 1))
-  (when (fboundp 'hs-hide-all)
-    (hs-hide-all))
-  (when (or (string= major-mode "c-mode")
-            (string= major-mode "c++-mode"))
+    (hs-minor-mode 1)
+    (with-no-warnings (hs-hide-all)))
+  (when (memq major-mode '(c-mode c++-mode))
     (when (fboundp 'hide-ifdef-mode)
-      (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
-    (when (fboundp 'hide-ifdefs)
-      (hide-ifdefs))))
+      (hide-ifdef-mode 1)
+      (with-no-warnings (hide-ifdefs)))))
 
 (evil-define-command evil-open-fold ()
   "Open fold.
 See also `evil-close-fold'."
-  (if (and (or (string= major-mode "c-mode")
-               (string= major-mode "c++-mode"))
-           (string-match evil-cpp-conditional (thing-at-point 'line)))
-      (progn
-        (when (fboundp 'hide-ifdef-mode)
-          (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
-        (when (fboundp 'show-ifdef-block)
-          (show-ifdef-block)))
-    (progn
+  (with-no-warnings
+    (cond
+     ((and (memq major-mode '(c-mode c++-mode))
+           (string-match hif-ifx-else-endif-regexp (thing-at-point 'line)))
+      (when (fboundp 'hide-ifdef-mode)
+        (hide-ifdef-mode 1)
+        (show-ifdef-block)))
+     (t
       (when (fboundp 'hs-minor-mode)
-        (hs-minor-mode 1))
-      (when (fboundp 'hs-show-block)
-        (hs-show-block)))))
+        (hs-minor-mode 1)
+        (hs-show-block))))))
 
 (evil-define-command evil-close-fold ()
   "Close fold.
 See also `evil-open-fold'."
-  (if (and (or (string= major-mode "c-mode")
-               (string= major-mode "c++-mode"))
-           (string-match evil-cpp-conditional (thing-at-point 'line)))
-      (progn
-        (when (fboundp 'hide-ifdef-mode)
-          (unless (boundp 'hide-ifdef-mode) (hide-ifdef-mode 1)))
-        (when (fboundp 'hide-ifdef-block)
-          (hide-ifdef-block)))
-    (progn
+  (with-no-warnings
+    (cond
+     ((and (memq major-mode '(c-mode c++-mode))
+           (string-match hif-ifx-else-endif-regexp (thing-at-point 'line)))
+      (when (fboundp 'hide-ifdef-mode)
+        (hide-ifdef-mode 1)
+        (hide-ifdef-block)))
+     (t
       (when (fboundp 'hs-minor-mode)
-        (hs-minor-mode 1))
-      (when (fboundp 'hs-hide-block)
-        (hs-hide-block)))))
+        (hs-minor-mode 1)
+        (hs-hide-block))))))
 
 ;;; Ex
 
