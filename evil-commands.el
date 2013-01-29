@@ -2172,9 +2172,9 @@ See also `evil-close-fold'."
   (with-no-warnings
     (cond
      ((and (memq major-mode '(c-mode c++-mode))
+           (hide-ifdef-mode 1)
            (string-match hif-ifx-else-endif-regexp (thing-at-point 'line)))
       (when (fboundp 'hide-ifdef-mode)
-        (hide-ifdef-mode 1)
         (show-ifdef-block)))
      (t
       (when (fboundp 'hs-minor-mode)
@@ -2187,9 +2187,9 @@ See also `evil-open-fold'."
   (with-no-warnings
     (cond
      ((and (memq major-mode '(c-mode c++-mode))
+           (hide-ifdef-mode 1)
            (string-match hif-ifx-else-endif-regexp (thing-at-point 'line)))
       (when (fboundp 'hide-ifdef-mode)
-        (hide-ifdef-mode 1)
         (hide-ifdef-block)))
      (t
       (when (fboundp 'hs-minor-mode)
