@@ -465,7 +465,7 @@ and jump to the corresponding one."
               (hif-ifx-else-endif-regexp
                (concat hif-ifx-regexp "\\|" hif-else-regexp "\\|" hif-endif-regexp)))
          (cond
-          ((save-excursion (beginning-of-line) (hif-looking-at-ifX))
+          ((save-excursion (beginning-of-line) (or (hif-looking-at-ifX) (hif-looking-at-else)))
            (hif-find-next-relevant)
            (while (hif-looking-at-ifX)
              (hif-ifdef-to-endif)
