@@ -2172,14 +2172,15 @@ See also `evil-close-fold'."
   (with-no-warnings
     (cond
      ((and (memq major-mode '(c-mode c++-mode))
+           (fboundp 'hide-ifdef-mode)
            (hide-ifdef-mode 1)
-           (string-match hif-ifx-else-endif-regexp (thing-at-point 'line)))
-      (when (fboundp 'hide-ifdef-mode)
-        (show-ifdef-block)))
-     (t
-      (when (fboundp 'hs-minor-mode)
-        (hs-minor-mode 1)
-        (hs-show-block))))))
+           (save-excursion
+             (beginning-of-line)
+             (looking-at hif-ifx-else-endif-regexp)))
+      (show-ifdef-block))
+     ((fboundp 'hs-minor-mode)
+      (hs-minor-mode 1)
+      (hs-show-block)))))
 
 (evil-define-command evil-close-fold ()
   "Close fold.
@@ -2187,14 +2188,15 @@ See also `evil-open-fold'."
   (with-no-warnings
     (cond
      ((and (memq major-mode '(c-mode c++-mode))
+           (fboundp 'hide-ifdef-mode)
            (hide-ifdef-mode 1)
-           (string-match hif-ifx-else-endif-regexp (thing-at-point 'line)))
-      (when (fboundp 'hide-ifdef-mode)
-        (hide-ifdef-block)))
-     (t
-      (when (fboundp 'hs-minor-mode)
-        (hs-minor-mode 1)
-        (hs-hide-block))))))
+           (save-excursion
+             (beginning-of-line)
+             (looking-at hif-ifx-else-endif-regexp)))
+      (hide-ifdef-block))
+     ((fboundp 'hs-minor-mode)
+      (hs-minor-mode 1)
+      (hs-hide-block)))))
 
 ;;; Ex
 
