@@ -1684,6 +1684,33 @@ New Tex[t]
 ;; then enter the text QQQthat file's own buffer.
 ")))
 
+(ert-deftest evil-visual-block-append ()
+  "Test appending in visual block."
+  :tags '(evil visual insert)
+  (ert-info ("Simple append")
+    (evil-test-buffer
+      "l[i]ne 1\nline 2\nline 3\n"
+      ((kbd "C-v") "jjllAXXX" [escape])
+      "lineXX[X] 1\nlineXXX 2\nlineXXX 3\n"))
+  (ert-info ("Append after empty lines")
+    (evil-test-buffer
+      "line 1l[i]ne 1\nline 2\nline 3line 3\n"
+      (setq indent-tabs-mode nil)
+      ((kbd "C-v") "jjllAXXX" [escape])
+      "line 1lineXX[X] 1\nline 2    XXX\nline 3lineXXX 3\n"))
+  (ert-info ("Append after empty first line")
+    (evil-test-buffer
+      "l[i]ne 1line 1\nline 2\nline 3line 3line 3\n"
+      (setq indent-tabs-mode nil)
+      ((kbd "C-v") "jj3feAXXX" [escape])
+      "line 1line 1    XX[X]\nline 2          XXX\nline 3line 3lineXXX 3\n"))
+  (ert-info ("Append after end of lines")
+    (evil-test-buffer
+      "line 1l[i]ne 1line 1\nline 2\nline 3line 3\n"
+      (setq indent-tabs-mode nil)
+      ((kbd "C-v") "jj$AXXX" [escape])
+      "line 1line 1line 1XX[X]\nline 2XXX\nline 3line 3XXX\n")))
+
 ;;; Operators
 
 (ert-deftest evil-test-keypress-parser ()

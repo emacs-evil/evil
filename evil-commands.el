@@ -1753,16 +1753,29 @@ on lines on which the insertion point would be after the end of the
 lines.  This is the default behaviour for Visual-state insertion."
   (interactive
    (list (prefix-numeric-value current-prefix-arg)
-         (when (evil-visual-state-p)
-           (evil-visual-rotate 'upper-left)
-           (when (memq (evil-visual-type) '(line block))
-             (count-lines evil-visual-beginning
-                          evil-visual-end)))
+         (and (evil-visual-state-p)
+              (memq (evil-visual-type) '(line block))
+              (save-excursion
+                ;; go to upper-left corner temporarily so
+                ;; `count-lines' yields accurate results
+                (evil-visual-rotate 'upper-left)
+                (count-lines evil-visual-beginning evil-visual-end)))
          (evil-visual-state-p)))
   (if (and (evil-called-interactively-p)
-           (evil-visual-state-p)
-           (and (eq (evil-visual-type) 'line)))
-      (evil-insert-line count vcount)
+           (evil-visual-state-p))
+      (cond
+       ((eq (evil-visual-type) 'line)
+        (evil-visual-rotate 'upper-left)
+        (evil-insert-line count vcount))
+       ((eq (evil-visual-type) 'block)
+        (let ((column (min (evil-column evil-visual-beginning)
+                           (evil-column evil-visual-end))))
+          (evil-visual-rotate 'upper-left)
+          (move-to-column column t)
+          (evil-insert count vcount skip-empty-lines)))
+       (t
+        (evil-visual-rotate 'upper-left)
+        (evil-insert count vcount skip-empty-lines)))
     (setq evil-insert-count count
           evil-insert-lines nil
           evil-insert-vcount (and vcount
@@ -1782,27 +1795,33 @@ on lines on which the insertion point would be after the end of
 the lines."
   (interactive
    (list (prefix-numeric-value current-prefix-arg)
-         (when (evil-visual-state-p)
-           (evil-visual-rotate (if (eq (evil-visual-type) 'block)
-                                   'upper-right
-                                 'upper-left))
-           (when (memq (evil-visual-type) '(line block))
-             (save-excursion
-               ;; go to upper-left corner temporarily so
-               ;; `count-lines' yields accurate results
-               (evil-visual-rotate 'upper-left)
-               (count-lines evil-visual-beginning
-                            evil-visual-end))))))
+         (and (evil-visual-state-p)
+              (memq (evil-visual-type) '(line block))
+              (save-excursion
+                ;; go to upper-left corner temporarily so
+                ;; `count-lines' yields accurate results
+                (evil-visual-rotate 'upper-left)
+                (count-lines evil-visual-beginning evil-visual-end)))))
   (if (and (evil-called-interactively-p)
-           (evil-visual-state-p)
-           (or (eq (evil-visual-type) 'line)
-               (and (eq (evil-visual-type) 'block)
-                    (memq last-command '(next-line previous-line))
-                    (numberp temporary-goal-column)
-                    (= temporary-goal-column most-positive-fixnum))))
-      (evil-append-line count vcount)
-    (unless (or (eolp) (evil-visual-state-p))
-      (forward-char))
+           (evil-visual-state-p))
+      (cond
+       ((or (eq (evil-visual-type) 'line)
+            (and (eq (evil-visual-type) 'block)
+                 (memq last-command '(next-line previous-line))
+                 (numberp temporary-goal-column)
+                 (= temporary-goal-column most-positive-fixnum)))
+        (evil-visual-rotate 'upper-left)
+        (evil-append-line count vcount))
+       ((eq (evil-visual-type) 'block)
+        (let ((column (max (evil-column evil-visual-beginning)
+                           (evil-column evil-visual-end))))
+          (evil-visual-rotate 'upper-left)
+          (move-to-column column t)
+          (evil-insert count vcount skip-empty-lines)))
+       (t
+        (evil-visual-rotate 'lower-right)
+        (evil-append count)))
+    (unless (eolp) (forward-char))
     (evil-insert count vcount skip-empty-lines)))
 
 (defun evil-insert-resume (count)
