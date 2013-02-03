@@ -2397,7 +2397,9 @@ the default is \"[ \\f\\t\\n\\r\\v]+\"."
       (save-match-data
         (goto-char pos)
         (cond
-         ((if (< dir 0) (looking-back regexp) (not (looking-at regexp)))
+         ((if (< dir 0)
+              (looking-back regexp (1- (line-beginning-position)))
+            (not (looking-at regexp)))
           (or (evil-add-whitespace-after-range range regexp)
               (evil-add-whitespace-before-range range regexp)))
          (t
@@ -2415,7 +2417,7 @@ Returns t if RANGE was successfully increased and nil otherwise."
     (save-excursion
       (save-match-data
         (goto-char (evil-range-beginning range))
-        (when (looking-back regexp nil t)
+        (when (looking-back regexp (1- (line-beginning-position)) t)
           ;; exclude the newline on the preceding line
           (goto-char (match-beginning 0))
           (when (eolp) (forward-char))
@@ -2455,7 +2457,8 @@ Returns t if RANGE was successfully adjusted and nil otherwise."
           (evil-move-beginning-of-line))
         (evil-set-range range (point) nil))
       (goto-char (evil-range-end range))
-      (when (and shrink (looking-back (concat "^" regexp)))
+      (when (and shrink (looking-back (concat "^" regexp)
+                                      (line-beginning-position)))
         (evil-set-range range nil (line-end-position 0)))
       (not (evil-subrange-p orig range)))))
 
@@ -2639,7 +2642,7 @@ use `evil-regexp-range'."
             (modify-syntax-entry open (format "(%c" close))
             (modify-syntax-entry close (format ")%c" open))
             (if (< count 0)
-                (when (looking-back close-regexp)
+                (when (looking-back close-regexp (line-beginning-position))
                   (backward-char))
               (when (looking-at open-regexp)
                 (forward-char)
@@ -2734,7 +2737,7 @@ the range; otherwise they are included. See also `evil-paren-range'."
                            (goto-char (match-beginning 0))))
                        ;; Is point next to a delimiter?
                        (if (< count 0)
-                           (when (looking-back close)
+                           (when (looking-back close (line-beginning-position))
                              (goto-char (match-beginning 0)))
                          (when (looking-at open)
                            (goto-char (match-end 0))))
@@ -2754,7 +2757,7 @@ the range; otherwise they are included. See also `evil-paren-range'."
                                beg-exc (match-end 0))
                          (while (and (> level 0)
                                      (re-search-forward either nil t))
-                           (if (looking-back close)
+                           (if (looking-back close (line-beginning-position))
                                (setq level (1- level))
                              ;; found an OPEN, so need to find another
                              ;; CLOSE first

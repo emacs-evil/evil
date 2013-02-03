@@ -296,12 +296,12 @@ If BIGWORD is non-nil, move by WORDS."
       ;; line
       (when (and (evil-operator-state-p)
                  (> (line-beginning-position) orig)
-                 (looking-back "^[[:space:]]*"))
+                 (looking-back "^[[:space:]]*" (line-beginning-position)))
         ;; move cursor back as long as the line contains only
         ;; whitespaces and is non-empty
         (evil-move-end-of-line 0)
         ;; skip non-empty lines containing only spaces
-        (while (and (looking-back "^[[:space:]]+$")
+        (while (and (looking-back "^[[:space:]]+$" (line-beginning-position))
                     (not (<= (line-beginning-position) orig)))
           (evil-move-end-of-line 0))
         ;; but if the previous line is empty, delete this line
