@@ -1059,6 +1059,16 @@ or line COUNT to the top of the window."
   :extend-selection nil
   (evil-xml-range count beg end type t))
 
+(evil-define-text-object evil-a-symbol (count &optional beg end type)
+  "Select a symbol."
+  (require 'thingatpt)
+  (evil-an-object-range count beg end type #'forward-symbol))
+
+(evil-define-text-object evil-inner-symbol (count &optional beg end type)
+  "Select inner symbol."
+  (require 'thingatpt)
+  (evil-inner-object-range count beg end type #'forward-symbol))
+
 ;;; Operator commands
 
 (evil-define-operator evil-yank (beg end type register yank-handler)

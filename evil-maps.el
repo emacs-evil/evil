@@ -284,6 +284,7 @@
 (define-key evil-outer-text-objects-map "\"" 'evil-a-double-quote)
 (define-key evil-outer-text-objects-map "`" 'evil-a-back-quote)
 (define-key evil-outer-text-objects-map "t" 'evil-a-tag)
+(define-key evil-outer-text-objects-map "o" 'evil-a-symbol)
 (define-key evil-inner-text-objects-map "w" 'evil-inner-word)
 (define-key evil-inner-text-objects-map "W" 'evil-inner-WORD)
 (define-key evil-inner-text-objects-map "s" 'evil-inner-sentence)
@@ -302,6 +303,7 @@
 (define-key evil-inner-text-objects-map "\"" 'evil-inner-double-quote)
 (define-key evil-inner-text-objects-map "`" 'evil-inner-back-quote)
 (define-key evil-inner-text-objects-map "t" 'evil-inner-tag)
+(define-key evil-inner-text-objects-map "o" 'evil-inner-symbol)
 
 (when evil-want-C-i-jump
   (define-key evil-motion-state-map (kbd "C-i") 'evil-jump-forward))
