@@ -104,7 +104,7 @@ elpa:
 	@echo "Creating ELPA package $(ELPAPKG).tar"
 	@rm -rf ${ELPAPKG}
 	@mkdir ${ELPAPKG}
-	@cp $(FILES) evil-pkg.el ${ELPAPKG}
+	@cp $(FILES) COPYING evil-pkg.el ${ELPAPKG}
 	@tar cf ${ELPAPKG}.tar ${ELPAPKG}
 	@rm -rf ${ELPAPKG}
 
