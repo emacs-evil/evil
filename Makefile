@@ -1,7 +1,7 @@
 SHELL = /bin/sh
 EMACS = emacs
 FILES = $(filter-out evil-tests.el,$(filter-out evil-pkg.el,$(wildcard evil*.el)))
-VERSION := $(shell sed -ne '1,/define-package/d' -ne '/^\s*"[[:digit:]]\+\(\.[[:digit:]]\+\)*"\s*$$/ s/^.*"\(.*\)".*$$/\1/p' evil-pkg.el)
+VERSION := $(shell sed -ne '/define-package/,$$p' evil-pkg.el | sed -ne '/^\s*"[[:digit:]]\+\(\.[[:digit:]]\+\)*"\s*$$/ s/^.*"\(.*\)".*$$/\1/p')
 ELPAPKG = evil-$(VERSION)
 PROFILER =
 DOC = doc
