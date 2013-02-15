@@ -2493,33 +2493,45 @@ the previous shell command is executed instead."
             (forward-line (1- line))))
       (error "File does not exist."))))
 
-(evil-ex-define-argument-type state (flag &rest args)
+(evil-ex-define-argument-type state
   "Defines an argument type which can take state names."
-  (when (eq flag 'complete)
-    (let ((arg (pop args))
-          (predicate (pop args))
-          (flag (pop args))
-          (completions
-           (append '("nil")
-                   (mapcar #'(lambda (state)
-                               (format "%s" (car state)))
-                           evil-state-properties))))
-      (when arg
-        (cond
-         ((eq flag nil)
-          (try-completion arg completions predicate))
-         ((eq flag t)
-          (all-completions arg completions predicate))
-         ((eq flag 'lambda)
-          (test-completion arg completions predicate)))))))
+  :completer
+  (lambda ()
+    (list
+     (point-min) (point-max)
+     (lambda (arg predicate flag)
+       (let ((completions
+              (append '("nil")
+                      (mapcar #'(lambda (state)
+                                  (format "%s" (car state)))
+                              evil-state-properties))))
+         (when arg
+           (cond
+            ((eq flag nil)
+             (try-completion arg completions predicate))
+            ((eq flag t)
+             (all-completions arg completions predicate))
+            ((eq flag 'lambda)
+             (test-completion arg completions predicate))
+            ((eq (car-safe flag) 'boundaries)
+             (cons 'boundaries
+                   (completion-boundaries arg
+                                          completions
+                                          predicate
+                                          (cdr flag)))))))))))
+
+(evil-define-interactive-code "<state>"
+  "A valid evil state."
+  :ex-arg state
+  (list (when (and (evil-ex-p) evil-ex-argument)
+          (intern evil-ex-argument))))
 
 ;; TODO: should we merge this command with `evil-set-initial-state'?
 (evil-define-command evil-ex-set-initial-state (state)
   "Set the initial state for the current major mode to STATE.
 This is the state the buffer comes up in. See `evil-set-initial-state'."
-  :ex-arg state
   :repeat nil
-  (interactive "<sym>")
+  (interactive "<state>")
   (if (not (or (assq state evil-state-properties)
                (null state)))
       (error "State %s cannot be set as initial Evil state" state)
