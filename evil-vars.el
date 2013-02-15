@@ -820,6 +820,19 @@ list of categories."
   :type '((character . character))
   :group 'evil-cjk)
 
+(defcustom evil-ex-complete-emacs-commands 'in-turn
+  "TAB-completion for Emacs commands in ex command line."
+  :group 'evil
+  :type '(radio (const :tag "Only if no ex-comment." :value in-turn)
+                (const :tag "Never" :value nil)
+                (const :tag "Always" :value t)))
+
+(defface evil-ex-commands '(( nil
+                              :underline t
+                              :slant italic))
+  "Face for the evil command in completion in ex mode."
+  :group 'evil)
+
 (defface evil-ex-info '(( ((supports :slant))
                           :slant italic
                           :foreground "red"))

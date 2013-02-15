@@ -275,7 +275,7 @@ in case of incomplete or unknown commands."
                              (evil-ex-argument-handler-runner
                               evil-ex-argument-handler))))
             (when runner (funcall runner 'update evil-ex-argument))))
-         ((all-completions cmd evil-ex-commands)
+         ((all-completions cmd (evil-ex-completion-table))
           ;; show error message only when called from `after-change-functions'
           (when beg (evil-ex-echo "Incomplete command")))
          (t
@@ -299,7 +299,8 @@ in case of incomplete or unknown commands."
   (interactive)
   (let (after-change-functions)
     (evil-ex-update)
-    (completion-at-point)))
+    (completion-at-point)
+    (remove-text-properties (minibuffer-prompt-end) (point-max) '(face nil evil))))
 
 (defun evil-ex-command-completion-at-point ()
   (let ((context (evil-ex-syntactic-context (1- (point)))))
@@ -311,7 +312,60 @@ in case of incomplete or unknown commands."
                                             evil-ex-command)
                          (1- (point))))))
         (when evil-ex-bang) (setq end (1+ end))
-        (list beg end #'evil-ex-command-collection)))))
+        (list beg end (evil-ex-completion-table))))))
+
+(defun evil-ex-completion-table ()
+  (cond
+   ((eq evil-ex-complete-emacs-commands nil)
+    #'evil-ex-command-collection)
+   ((eq evil-ex-complete-emacs-commands 'in-turn)
+    (completion-table-in-turn
+     #'evil-ex-command-collection
+     #'(lambda (str pred flag)
+         (completion-table-with-predicate
+          obarray #'commandp t str pred flag))))
+   (t
+    #'(lambda (str pred flag)
+        (evil-completion-table-concat
+         #'evil-ex-command-collection
+         #'(lambda (str pred flag)
+             (completion-table-with-predicate
+              obarray #'commandp t str pred flag))
+         str pred flag)))))
+
+(defun evil-completion-table-concat (table1 table2 string pred flag)
+  (cond
+   ((eq flag nil)
+    (let ((result1 (try-completion string table1 pred))
+          (result2 (try-completion string table2 pred)))
+      (cond
+       ((null result1) result2)
+       ((null result2) result1)
+       ((and (eq result1 t) (eq result2 t)) t)
+       (t (assert (equal result1 result2))
+          result1))))
+   ((eq flag t)
+    (delete-dups
+     (append (all-completions string table1 pred)
+             (all-completions string table2 pred))))
+   ((eq flag 'lambda)
+    (and (or (eq t (test-completion string table1 pred))
+             (eq t (test-completion string table2 pred)))
+         t))
+   ((eq (car-safe flag) 'boundaries)
+    (or (completion-boundaries string table1 pred (cdr flag))
+        (completion-boundaries string table2 pred (cdr flag))))
+   ((eq flag 'metadata)
+    '(metadata (display-sort-function . evil-ex-sort-completions)))))
+
+(defun evil-ex-sort-completions (completions)
+  (sort completions
+        #'(lambda (str1 str2)
+            (let ((p1 (eq 'evil-ex-commands (get-text-property 0 'face str1)))
+                  (p2 (eq 'evil-ex-commands (get-text-property 0 'face str2))))
+              (if (equal p1 p2)
+                  (string< str1 str2)
+                p1)))))
 
 (defun evil-ex-command-collection (cmd predicate flag)
   "Called to complete a command."
@@ -321,12 +375,16 @@ in case of incomplete or unknown commands."
       (push cmd commands)
       (if (evil-ex-command-force-p cmd)
           (push (concat cmd "!") commands)))
+    (when (eq evil-ex-complete-emacs-commands t)
+      (setq commands
+            (mapcar #'(lambda (str) (propertize str 'face 'evil-ex-commands))
+                    commands)))
     (cond
      ((eq flag nil) (try-completion cmd commands predicate))
      ((eq flag t) (all-completions cmd commands predicate))
      ((eq flag 'lambda) (test-completion cmd commands))
      ((eq (car-safe flag) 'boundaries)
-      (list* 'boundaries 0 (length (cdr flag)))))))
+      `(boundaries 0 . ,(length (cdr flag)))))))
 
 (defun evil-ex-argument-completion-at-point ()
   (let ((context (evil-ex-syntactic-context (1- (point)))))
