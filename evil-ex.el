@@ -133,26 +133,31 @@ of the syntax.")
              ((> arg 0) (setq arg (1- arg))))
        (if (= arg 0) '(".")
          `(,(format ".,.%+d" arg)))))))
-  (let ((minibuffer-local-completion-map evil-ex-completion-map)
-        (evil-ex-current-buffer (current-buffer))
+  (let ((evil-ex-current-buffer (current-buffer))
         (evil-ex-previous-command (unless initial-input
                                     (car-safe evil-ex-history)))
-        evil-ex-argument-handler evil-ex-info-string result)
-    (add-hook 'minibuffer-setup-hook #'evil-ex-setup)
-    (setq result (read-from-minibuffer
-                  ":"
-                  (or initial-input
-                      (and evil-ex-previous-command
-                           (format "(default: %s) "
-                                   evil-ex-previous-command)))
-                  evil-ex-completion-map
-                  nil
-                  'evil-ex-history
-                  evil-ex-previous-command
-                  t))
+        evil-ex-argument-handler
+        evil-ex-info-string
+        result)
+    (minibuffer-with-setup-hook
+        #'evil-ex-setup
+      (setq result
+            (read-from-minibuffer
+             ":"
+             (or initial-input
+                 (and evil-ex-previous-command
+                      (format "(default: %s) " evil-ex-previous-command)))
+             evil-ex-completion-map
+             nil
+             'evil-ex-history
+             evil-ex-previous-command
+             t)))
+    ;; empty input means repeating the previous command
     (when (zerop (length result))
       (setq result evil-ex-previous-command))
+    ;; parse data
     (evil-ex-update nil nil nil result)
+    ;; execute command
     (unless (zerop (length result))
       (if evil-ex-expression
           (eval evil-ex-expression)
@@ -168,7 +173,9 @@ Otherwise behaves like `delete-backward-char'."
      #'delete-backward-char)))
 
 (defun evil-ex-setup ()
-  "Initialize Ex minibuffer."
+  "Initialize Ex minibuffer.
+This function registers several hooks that are used for the
+interactive actions during ex state."
   (add-hook 'after-change-functions #'evil-ex-update nil t)
   (add-hook 'minibuffer-exit-hook #'evil-ex-teardown)
   (when evil-ex-previous-command
@@ -177,11 +184,13 @@ Otherwise behaves like `delete-backward-char'."
   (with-no-warnings
     (make-variable-buffer-local 'completion-at-point-functions))
   (setq completion-at-point-functions
-        '(evil-ex-completion-at-point)))
+        '(evil-ex-command-completion-at-point
+          evil-ex-argument-completion-at-point)))
 (put 'evil-ex-setup 'permanent-local-hook t)
 
 (defun evil-ex-teardown ()
-  "Deinitialize Ex minibuffer."
+  "Deinitialize Ex minibuffer.
+Clean up everything set up by `evil-ex-setup'."
   (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown)
   (remove-hook 'after-change-functions #'evil-ex-update t)
   (when evil-ex-argument-handler
@@ -192,6 +201,10 @@ Otherwise behaves like `delete-backward-char'."
 (put 'evil-ex-teardown 'permanent-local-hook t)
 
 (defun evil-ex-remove-default ()
+  "Remove the default text shown in the ex minibuffer.
+When ex starts, the previous command is shown enclosed in
+parenthesis. This function removes this text when the first key
+is pressed."
   (delete-minibuffer-contents)
   (remove-hook 'pre-command-hook #'evil-ex-remove-default))
 (put 'evil-ex-remove-default 'permanent-local-hook t)
@@ -281,6 +294,64 @@ in case of incomplete or unknown commands."
           (put-text-property 0 (length string) 'face 'evil-ex-info string)
           (minibuffer-message string))))))
 
+(defun evil-ex-completion ()
+  "Completes the current ex command or argument."
+  (interactive)
+  (let (after-change-functions)
+    (evil-ex-update)
+    (completion-at-point)))
+
+(defun evil-ex-command-completion-at-point ()
+  (let ((context (evil-ex-syntactic-context (1- (point)))))
+    (when (memq 'command context)
+      (let ((beg (or (get-text-property 0 'ex-index evil-ex-command)
+                     (point)))
+            (end (1+ (or (get-text-property (1- (length evil-ex-command))
+                                            'ex-index
+                                            evil-ex-command)
+                         (1- (point))))))
+        (when evil-ex-bang) (setq end (1+ end))
+        (list beg end #'evil-ex-command-collection)))))
+
+(defun evil-ex-command-collection (cmd predicate flag)
+  "Called to complete a command."
+  (let (commands)
+    ;; append ! to all commands that may take a bang argument
+    (dolist (cmd (mapcar #'car evil-ex-commands))
+      (push cmd commands)
+      (if (evil-ex-command-force-p cmd)
+          (push (concat cmd "!") commands)))
+    (cond
+     ((eq flag nil) (try-completion cmd commands predicate))
+     ((eq flag t) (all-completions cmd commands predicate))
+     ((eq flag 'lambda) (test-completion cmd commands))
+     ((eq (car-safe flag) 'boundaries)
+      (list* 'boundaries 0 (length (cdr flag)))))))
+
+(defun evil-ex-argument-completion-at-point ()
+  (let ((context (evil-ex-syntactic-context (1- (point)))))
+    (when (memq 'argument context)
+      (let* ((beg (or (and evil-ex-argument
+                           (get-text-property 0 'ex-index evil-ex-argument))
+                      (point)))
+             (end (1+ (or (and evil-ex-argument
+                               (get-text-property (1- (length evil-ex-argument))
+                                                  'ex-index
+                                                  evil-ex-argument))
+                          (1- (point)))))
+             (binding (evil-ex-completed-binding evil-ex-command))
+             (arg-type (evil-get-command-property binding :ex-arg))
+             (arg-handler (assoc arg-type evil-ex-argument-types))
+             (completer (and arg-handler
+                             (evil-ex-argument-handler-completer
+                              (cdr arg-handler)))))
+        (when completer
+          (if (eq (car completer) 'collection)
+              (list beg end (cdr completer))
+            (save-restriction
+              (narrow-to-region beg (point-max))
+              (funcall (cdr completer)))))))))
+
 (defun evil-ex-define-cmd (cmd function)
   "Binds the function FUNCTION to the command CMD."
   (if (string-match "^[^][]*\\(\\[\\(.*\\)\\]\\)[^][]*$" cmd)
@@ -304,28 +375,31 @@ in case of incomplete or unknown commands."
 DOC is the documentation string. It is followed by a list of
 keywords and function:
 
-:completer FUNC     Function to be called to initialize a
-                    potential completion. FUNC must match the
-                    requirements as described for the variable
-                    `completion-at-point-functions'. When FUNC is
-                    called the minibuffer content is narrowed to
-                    exactly match the argument.
+:collection COLLECTION
 
-:runner FUNC        Function to be called when the type of the
-                    current argument changes or when the content
-                    of this argument changes. This function
-                    should take one obligatory argument FLAG
-                    followed by an optional argument ARG. FLAG is
-                    one of three symbol 'start, 'stop or
-                    'update. When the argument type is recognized
-                    for the first time and this handler is
-                    started the FLAG is 'start. If the argument
-                    type changes to something else or ex state
-                    finished the handler FLAG is 'stop. If the
-                    content of the argument has changed FLAG is
-                    'update. If FLAG is either 'start or 'update
-                    then ARG is the current value of this
-                    argument. If FLAG is 'stop then arg is nil."
+  A collection for completion as required by `all-completions'.
+
+:completion-at-point FUNC
+
+  Function to be called to initialize a potential
+  completion. FUNC must match the requirements as described for
+  the variable `completion-at-point-functions'. When FUNC is
+  called the minibuffer content is narrowed to exactly match the
+  argument.
+
+:runner FUNC
+
+  Function to be called when the type of the current argument
+  changes or when the content of this argument changes. This
+  function should take one obligatory argument FLAG followed by
+  an optional argument ARG. FLAG is one of three symbol 'start,
+  'stop or 'update. When the argument type is recognized for the
+  first time and this handler is started the FLAG is 'start. If
+  the argument type changes to something else or ex state
+  finished the handler FLAG is 'stop. If the content of the
+  argument has changed FLAG is 'update. If FLAG is either 'start
+  or 'update then ARG is the current value of this argument. If
+  FLAG is 'stop then arg is nil."
   (declare (indent defun)
            (debug (&define name
                            [&optional stringp]
@@ -338,61 +412,23 @@ keywords and function:
         (cond
          ((eq key :runner)
           (setq runner func))
-         ((eq key :completer)
-          (setq completer func)))))
+         ((eq key :collection)
+          (setq completer (cons 'collection func)))
+         ((eq key :completion-at-point)
+          (setq completer (cons 'completion-at-point func))))))
     `(eval-and-compile
        (evil-add-to-alist
         'evil-ex-argument-types
         ',arg-type
         '(,runner ,completer)))))
 
-(defun evil-ex-filename-completion-at-point ()
-  "Completion at point function for file arguments."
-  (list
-   (point-min) (point-max)
-   (lambda (arg predicate flag)
-     (if (null arg)
-         default-directory
-       (let ((dir (or (file-name-directory arg)
-                      (with-current-buffer evil-ex-current-buffer
-                        default-directory)))
-             (fname (file-name-nondirectory arg)))
-         (cond
-          ((null dir) (ding))
-          ((null flag)
-           (let ((result (file-name-completion fname dir)))
-             (cond
-              ((null result) nil)
-              ((eq result t) t)
-              (t (concat dir result)))))
-
-          ((eq t flag)
-           (file-name-all-completions fname dir))
-
-          ((eq 'lambda flag)
-           (eq (file-name-completion fname dir) t))))))))
-
 (evil-ex-define-argument-type file
   "Handles a file argument."
-  :completer evil-ex-filename-completion-at-point)
+  :collection read-file-name-internal)
 
 (evil-ex-define-argument-type buffer
   "Called to complete a buffer name argument."
-  :completer (lambda ()
-               (list
-                (point-min) (point-max)
-                (lambda (arg predicate flag)
-                  (when arg
-                    (let ((buffers (mapcar #'(lambda (buffer)
-                                               (cons (buffer-name buffer) nil))
-                                           (buffer-list t))))
-                      (cond
-                       ((null flag)
-                        (try-completion arg buffers predicate))
-                       ((eq t flag)
-                        (all-completions arg buffers predicate))
-                       ((eq 'lambda flag)
-                        (test-completion arg buffers predicate)))))))))
+  :collection internal-complete-buffer)
 
 (declare-function shell-completion-vars "shell" ())
 
@@ -413,14 +449,15 @@ argument handler that requires shell completion."
       (set (make-local-variable 'minibuffer-default-add-function)
            'minibuffer-default-add-shell-commands)))
     (setq completion-at-point-functions
-          '(evil-ex-completion-at-point))))
+          '(evil-ex-command-completion-at-point
+            evil-ex-argument-completion-at-point))))
 
 ;; because this variable is used only for Emacs 23 shell completion,
 ;; we put it here instead of "evil-vars.el"
 (defvar evil-ex-shell-argument-range nil
   "Internal helper variable for Emacs 23 shell completion.")
 
-(defun evil-ex-complete-shell-command-at-point ()
+(defun evil-ex-shell-command-completion-at-point ()
   "Completion at point function for shell commands."
   (cond
    ;; Emacs 24
@@ -451,21 +488,23 @@ argument handler that requires shell completion."
 
 (evil-ex-define-argument-type shell
   "Shell argument type, supports completion."
-  :completer evil-ex-complete-shell-command-at-point
+  :completion-at-point evil-ex-shell-command-completion-at-point
   :runner evil-ex-init-shell-argument-completion)
+
+(defun evil-ex-file-or-shell-command-completion-at-point ()
+  (if (and (< (point-min) (point-max))
+           (= (char-after (point-min)) ?!))
+      (save-restriction
+        (narrow-to-region (1+ (point-min)) (point-max))
+        (evil-ex-shell-command-completion-at-point))
+    (list (point-min) (point-max) #'read-file-name-internal)))
 
 (evil-ex-define-argument-type file-or-shell
   "File or shell argument type.
 If the current argument starts with a ! the rest of the argument
 is considered a shell command, otherwise a file-name. Completion
 works accordingly."
-  :completer (lambda ()
-               (if (and (< (point-min) (point-max))
-                        (= (char-after (point-min)) ?!))
-                   (save-restriction
-                     (narrow-to-region (1+ (point-min)) (point-max))
-                     (evil-ex-complete-shell-command-at-point))
-                 (evil-ex-filename-completion-at-point)))
+  :completion-at-point evil-ex-file-or-shell-command-completion-at-point
   :runner evil-ex-init-shell-argument-completion)
 
 (defun evil-ex-binding (command &optional noerror)
@@ -520,67 +559,6 @@ This function interprets special file names like # and %."
   (unless (or (null evil-ex-argument)
               (zerop (length evil-ex-argument)))
     (evil-ex-replace-special-filenames evil-ex-argument)))
-
-(defun evil-ex-run-completion-at-point ()
-  "Same as `completion-at-point' but disables `evil-ex-update' during call.
-This function calls `evil-ex-update' explicitly when
-`completion-at-point' finished."
-  (interactive)
-  (let ((after-change-functions
-         (remq 'evil-ex-update after-change-functions)))
-    (completion-at-point)
-    (evil-ex-update t)))
-
-(defun evil-ex-completion-at-point ()
-  (let ((string (minibuffer-contents))
-        (prompt (minibuffer-prompt-end))
-        context start prefix)
-    (when (= (point) (+ (length string) prompt))
-      (evil-ex-update)
-      (setq context (evil-ex-syntactic-context (1- (point))))
-      (cond
-       ((memq 'command context)
-        (setq start (or (get-text-property
-                         0 'ex-index evil-ex-command)
-                        (point))
-              prefix (buffer-substring prompt start))
-        (list start (point-max) #'evil-ex-complete-command))
-       ((memq 'argument context)
-        (let ((arg (or evil-ex-argument "")))
-          (setq start (or (get-text-property
-                           0 'ex-index arg)
-                          (point))
-                prefix (buffer-substring prompt start))
-          (let* ((binding (evil-ex-completed-binding evil-ex-command))
-                 (arg-type (evil-get-command-property binding :ex-arg))
-                 (arg-handler (assoc arg-type evil-ex-argument-types))
-                 (completer (and arg-handler
-                                 (evil-ex-argument-handler-completer
-                                  (cdr arg-handler)))))
-            (when completer
-              (save-restriction
-                (narrow-to-region start (point-max))
-                (funcall completer))))))))))
-
-(defun evil-ex-complete-command (cmd predicate flag)
-  "Called to complete a command."
-  (cond
-   ((eq flag nil)
-    (let ((result (try-completion cmd evil-ex-commands predicate)))
-      (if (and (eq result t) (evil-ex-command-force-p cmd))
-          cmd
-        result)))
-   ((eq flag t)
-    (let ((result (all-completions cmd evil-ex-commands predicate))
-          new-result)
-      (mapc #'(lambda (x)
-                (push x new-result)
-                (when (evil-ex-command-force-p cmd)
-                  (push (concat x "!") new-result)))
-            result)
-      new-result))
-   ((eq flag 'lambda)
-    (test-completion cmd evil-ex-commands predicate))))
 
 (defun evil-ex-repeat (count)
   "Repeats the last ex command."

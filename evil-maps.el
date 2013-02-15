@@ -446,10 +446,10 @@
 ;; completion
 (define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
 (define-key evil-ex-completion-map "\d" #'evil-ex-delete-backward-char)
-(define-key evil-ex-completion-map "\t" #'evil-ex-run-completion-at-point)
-(define-key evil-ex-completion-map [tab] #'evil-ex-run-completion-at-point)
-(define-key evil-ex-completion-map "\C-p" #'evil-ex-run-completion-at-point)
-(define-key evil-ex-completion-map "\C-n" #'evil-ex-run-completion-at-point)
+(define-key evil-ex-completion-map "\t" #'evil-ex-completion)
+(define-key evil-ex-completion-map [tab] #'evil-ex-completion)
+(define-key evil-ex-completion-map "\C-p" #'evil-ex-completion)
+(define-key evil-ex-completion-map "\C-n" #'evil-ex-completion)
 (define-key evil-ex-completion-map "?" nil)
 
 ;; evil-read-key
