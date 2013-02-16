@@ -275,12 +275,12 @@ in case of incomplete or unknown commands."
                              (evil-ex-argument-handler-runner
                               evil-ex-argument-handler))))
             (when runner (funcall runner 'update evil-ex-argument))))
-         ((all-completions cmd (evil-ex-completion-table))
+         (beg
           ;; show error message only when called from `after-change-functions'
-          (when beg (evil-ex-echo "Incomplete command")))
-         (t
-          ;; show error message only when called from `after-change-functions'
-          (when beg (evil-ex-echo "Unknown command")))))))))
+          (let ((n (length (all-completions cmd (evil-ex-completion-table)))))
+            (cond
+             ((> n 1) (evil-ex-echo "Incomplete command"))
+             ((= n 0) (evil-ex-echo "Unknown command")))))))))))
 (put 'evil-ex-update 'permanent-local-hook t)
 
 (defun evil-ex-echo (string &rest args)
