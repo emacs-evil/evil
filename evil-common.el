@@ -1214,6 +1214,33 @@ POS defaults to the current position of point."
         (and (> pos (match-beginning 0))
              (< pos (match-end 0)))))))
 
+(defun evil-in-string-p (&optional pos)
+  "Whether POS is inside a string.
+POS defaults to the current position of point."
+  (save-excursion
+    (let ((state (syntax-ppss pos)))
+      (and (nth 3 state) (nth 8 state)))))
+
+(defun evil-string-beginning (&optional pos)
+  "Return beginning of string containing POS.
+POS defaults to the current position of point."
+  (evil-normalize-position (evil-in-string-p)))
+
+(defun evil-string-end (&optional pos limit)
+  "Return end of string containing POS.
+POS defaults to the current position of point. Stops at LIMIT,
+which defaults to the end of the buffer."
+  (save-excursion
+    (let ((state (syntax-ppss pos)))
+      (when (nth 3 state)
+        (parse-partial-sexp (or pos (point))
+                            (or limit (point-max))
+                            nil
+                            nil
+                            state
+                            'syntax-table)
+        (evil-normalize-position (point))))))
+
 (defun evil-in-comment-p (&optional pos)
   "Checks if POS is within a comment according to current syntax.
 If POS is nil, (point) is used. The return value is the beginning
@@ -1294,39 +1321,6 @@ closer if MOVE is non-nil."
          (not (evil-in-comment-p (1+ (point))))
          (prog1 t (when move (forward-char)))))))
 
-(defun evil-in-string-p (&optional pos)
-  "Whether POS is inside a string.
-POS defaults to the current position of point."
-  (save-excursion
-    (goto-char (or pos (point)))
-    (and (nth 3 (parse-partial-sexp
-                 (save-excursion (beginning-of-defun) (point))
-                 (point))) t)))
-
-(defun evil-find-beginning (predicate &optional pos limit)
-  "Find the beginning of a series of characters satisfying PREDICATE.
-POS is the starting point and defaults to the current position.
-Stops at LIMIT, which defaults to the beginning of the buffer."
-  (setq pos (or pos (point))
-        limit (or limit (buffer-end -1)))
-  (while (let ((prev (1- pos)))
-           (when (and (>= prev limit)
-                      (funcall predicate prev))
-             (setq pos prev))))
-  pos)
-
-(defun evil-find-end (predicate &optional pos limit)
-  "Find the end of a series of characters satisfying PREDICATE.
-POS is the starting point and defaults to the current position.
-Stops at LIMIT, which defaults to the end of the buffer."
-  (setq pos (or pos (point))
-        limit (or limit (buffer-end 1)))
-  (while (let ((next (1+ pos)))
-           (when (and (<= next limit)
-                      (funcall predicate next))
-             (setq pos next))))
-  pos)
-
 (defun evil-comment-beginning (&optional pos)
   "Return beginning of comment containing POS.
 POS defaults to the current position of point."
@@ -1341,22 +1335,6 @@ POS defaults to the current position of point."
            (goto-char beg)
            (forward-comment 1)
            (1- (point))))))
-
-(defun evil-string-beginning (&optional pos)
-  "Return beginning of string containing POS.
-POS defaults to the current position of point."
-  (let ((pos (or pos (point))))
-    (when (evil-in-string-p pos)
-      (evil-normalize-position
-       (1- (evil-find-beginning #'evil-in-string-p pos))))))
-
-(defun evil-string-end (&optional pos)
-  "Return end of string containing POS.
-POS defaults to the current position of point."
-  (let ((pos (or pos (point))))
-    (when (evil-in-string-p pos)
-      (evil-normalize-position
-       (1+ (evil-find-end #'evil-in-string-p pos))))))
 
 (defmacro evil-narrow-to-comment (&rest body)
   "Narrow to the current comment or docstring, if any."
@@ -2627,16 +2605,27 @@ use `evil-regexp-range'."
            ;; if OPEN is equal to CLOSE, handle as string delimiters
            ((eq open close)
             (modify-syntax-entry open "\"")
-            (while (not (or (eobp) (evil-in-string-p)))
-              (forward-char))
-            (when (evil-in-string-p)
-              (setq range (evil-range
-                           (if exclusive
-                               (1+ (evil-string-beginning))
-                             (evil-string-beginning))
-                           (if exclusive
-                               (1- (evil-string-end))
-                             (evil-string-end))))))
+            ;; syntax table is out-of-date, encourage reparsing
+            (let ((pnt (point)))
+              (beginning-of-defun)
+              (let ((state (parse-partial-sexp (point) pnt)))
+                (when (not (nth 3 state))
+                  (setq state (parse-partial-sexp (point)
+                                                  (point-max)
+                                                  0
+                                                  nil
+                                                  state
+                                                  'syntax-table)))
+                (when (nth 3 state)
+                  (let ((beg (nth 8 state)))
+                    (parse-partial-sexp (point) (point-max)
+                                        0
+                                        nil
+                                        state
+                                        'syntax-table)
+                    (setq range (evil-range
+                                 (if exclusive (1+ beg) beg)
+                                 (if exclusive (1- (point)) (point)))))))))
            (t
             ;; otherwise handle as open and close parentheses
             (modify-syntax-entry open (format "(%c" close))
