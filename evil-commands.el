@@ -481,13 +481,31 @@ and jump to the corresponding one."
               (error
                (point-max))))
            (next-close
-            (condition-case nil
-                (1- (scan-lists (point) 1 1))
-              (error (point-max))))
+            (let (parse-sexp-ignore-comments)
+              (condition-case err
+                  (1- (scan-lists (point) 1 1))
+                (error (point-max)))))
            (pos (min next-open next-close)))
       (cond
        ((>= pos (line-end-position))
-        (error "No matching item found on the current line"))
+        ;; nothing found, check if we are inside a string
+        (let ((pnt (point))
+              (state (syntax-ppss (point))))
+          (if (not (evil-in-string-p))
+              ;; no, then we really failed
+              (error "No matching item found on the current line")
+            ;; yes, go to the end of the string and try again
+            (let ((endstr (evil-string-end (point) (line-end-position))))
+              (when (or (evil-in-string-p endstr) ; not at end of string
+                        (condition-case nil
+                            (progn
+                              (goto-char endstr)
+                              (evil-jump-item)
+                              nil)
+                          (error t)))
+                ;; failed again, go back to original point
+                (goto-char pnt)
+                (error "No matching item found on the current line"))))))
        ((= pos next-open)
         (goto-char pos)
         (forward-list)
