@@ -475,19 +475,26 @@ and jump to the corresponding one."
            (hif-endif-to-ifdef)
            t))))))
    (t
-    (let* ((next-open
-            (condition-case err
-                (1- (scan-lists (point) 1 -1))
-              (error
-               (point-max))))
-           (next-close
-            (let (parse-sexp-ignore-comments)
-              (condition-case err
-                  (1- (scan-lists (point) 1 1))
-                (error (point-max)))))
-           (pos (min next-open next-close)))
+    (let* ((open (point-max))
+           (close (point-max))
+           (open-pair (condition-case nil
+                          (save-excursion
+                            (setq open (1- (scan-lists (point) 1 -1)))
+                            (when (< open (line-end-position))
+                              (goto-char open)
+                              (forward-list)
+                              (1- (point))))
+                        (error nil)))
+           (close-pair (condition-case nil
+                           (save-excursion
+                             (setq close (1- (scan-lists (point) 1 1)))
+                             (when (< close (line-end-position))
+                               (goto-char (1+ close))
+                               (backward-list)
+                               (point)))
+                         (error nil))))
       (cond
-       ((>= pos (line-end-position))
+       ((not (or open-pair close-pair))
         ;; nothing found, check if we are inside a string
         (let ((pnt (point))
               (state (syntax-ppss (point))))
@@ -506,13 +513,8 @@ and jump to the corresponding one."
                 ;; failed again, go back to original point
                 (goto-char pnt)
                 (error "No matching item found on the current line"))))))
-       ((= pos next-open)
-        (goto-char pos)
-        (forward-list)
-        (backward-char))
-       (t
-        (goto-char (1+ pos))
-        (backward-list)))))))
+       ((< open close) (goto-char open-pair))
+       (t (goto-char close-pair)))))))
 
 (evil-define-motion evil-previous-open-paren (count)
   "Go to [count] previous unmatched '('."

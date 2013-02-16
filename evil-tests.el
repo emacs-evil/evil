@@ -5160,7 +5160,17 @@ Below some empty line."))
   (ert-info ("On line without parenthesis")
     (evil-test-buffer
       "[#]include <stdio.h>"
-      (should-error (execute-kbd-macro "%")))))
+      (should-error (execute-kbd-macro "%"))))
+  (ert-info ("Before unmatched opening parenthesies")
+    (evil-test-buffer
+      "x[x]xx ( yyyyy () zzzz"
+      (should-error (execute-kbd-macro "%"))
+      "x[x]xx ( yyyyy () zzzz"))
+  (ert-info ("Before unmatched closing parenthesies")
+    (evil-test-buffer
+      "x[x]xx ) yyyyy () zzzz"
+      (should-error (execute-kbd-macro "%"))
+      "x[x]xx ) yyyyy () zzzz")))
 
 (ert-deftest evil-test-unmatched-paren ()
   "Test `evil-previous-open-paren' and `evil-next-close-paren'"
