@@ -443,14 +443,34 @@
   (evil-ex-define-cmd "undol[ist]" 'undo-tree-visualize)
   (evil-ex-define-cmd "ul" 'undo-tree-visualize))
 
-;; completion
+;; search command line
 (define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
+
+;; ex command line
 (define-key evil-ex-completion-map "\d" #'evil-ex-delete-backward-char)
 (define-key evil-ex-completion-map "\t" #'evil-ex-run-completion-at-point)
 (define-key evil-ex-completion-map [tab] #'evil-ex-run-completion-at-point)
-(define-key evil-ex-completion-map "\C-p" #'evil-ex-run-completion-at-point)
-(define-key evil-ex-completion-map "\C-n" #'evil-ex-run-completion-at-point)
-(define-key evil-ex-completion-map "?" nil)
+(define-key evil-ex-completion-map "\C-a" 'evil-ex-run-completion-at-point)
+(define-key evil-ex-completion-map "\C-b" 'move-beginning-of-line)
+(define-key evil-ex-completion-map "\C-c" 'abort-recursive-edit)
+(define-key evil-ex-completion-map "\C-d" 'evil-ex-run-completion-at-point)
+(define-key evil-ex-completion-map "\C-g" 'abort-recursive-edit)
+(define-key evil-ex-completion-map "\C-k" 'evil-insert-digraph)
+(define-key evil-ex-completion-map "\C-l" 'evil-ex-run-completion-at-point)
+(define-key evil-ex-completion-map "\C-p" #'next-complete-history-element)
+(define-key evil-ex-completion-map "\C-r" 'evil-paste-from-register)
+(define-key evil-ex-completion-map "\C-n" #'next-complete-history-element)
+(define-key evil-ex-completion-map "\C-u" 'evil-delete-whole-line)
+(define-key evil-ex-completion-map "\C-w" 'backward-kill-word)
+(define-key evil-ex-completion-map [escape] 'abort-recursive-edit)
+(define-key evil-ex-completion-map [S-left] 'backward-word)
+(define-key evil-ex-completion-map [S-right] 'forward-word)
+(define-key evil-ex-completion-map [up] 'previous-complete-history-element)
+(define-key evil-ex-completion-map [down] 'next-complete-history-element)
+(define-key evil-ex-completion-map [prior] 'previous-history-element)
+(define-key evil-ex-completion-map [next] 'next-history-element)
+(define-key evil-ex-completion-map [return] 'exit-minibuffer)
+(define-key evil-ex-completion-map (kbd "RET") 'exit-minibuffer)
 
 ;; evil-read-key
 (define-key evil-read-key-map (kbd "ESC") #'keyboard-quit)

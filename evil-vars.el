@@ -1280,8 +1280,6 @@ Key sequences bound in this map are immediately executed.")
 
 (defvar evil-ex-completion-map (make-sparse-keymap)
   "Completion keymap for Ex.")
-(set-keymap-parent evil-ex-completion-map minibuffer-local-completion-map)
-(define-key evil-ex-completion-map (kbd "SPC") #'self-insert-command)
 
 (defvar evil-ex-shell-argument-initialized nil
   "This variable is set to t if shell command completion has been initialized.
