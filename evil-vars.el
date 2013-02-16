@@ -1377,7 +1377,7 @@ See `evil-ex-init-shell-argument-completion'.")
   "Keymap used in ex-search-mode.")
 (set-keymap-parent evil-ex-search-keymap minibuffer-local-map)
 
-(defconst evil-version "0.1"
+(defconst evil-version "1.0-dev"
   "The current version of Evil")
 
 (defun evil-version ()
