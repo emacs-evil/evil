@@ -461,6 +461,7 @@
 (define-key evil-ex-completion-map "\C-r" 'evil-paste-from-register)
 (define-key evil-ex-completion-map "\C-n" #'next-complete-history-element)
 (define-key evil-ex-completion-map "\C-u" 'evil-delete-whole-line)
+(define-key evil-ex-completion-map "\C-v" #'quoted-insert)
 (define-key evil-ex-completion-map "\C-w" 'backward-kill-word)
 (define-key evil-ex-completion-map [escape] 'abort-recursive-edit)
 (define-key evil-ex-completion-map [S-left] 'backward-word)
