@@ -2900,6 +2900,37 @@ This is the same as :%s//~/&"
   (interactive "<r><g/><!>")
   (evil-ex-global beg end pattern command (not invert)))
 
+(evil-define-operator evil-ex-normal (beg end commands)
+  "The Ex normal command.
+Execute the argument as normal command on each line in the
+range. The given argument is passed straight to
+`execute-kbd-macro'.  The default is the current line."
+  :motion evil-line
+  (interactive "<r><a>")
+  (let (markers evil-ex-current-buffer prefix-arg current-prefix-arg)
+    (goto-char beg)
+    (while
+        (and (< (point) end)
+             (progn
+               (push (move-marker (make-marker) (line-beginning-position))
+                     markers)
+               (and (= (forward-line) 0) (bolp)))))
+    (setq markers (nreverse markers))
+    (deactivate-mark)
+    (evil-force-normal-state)
+    ;; replace ^[ by escape
+    (setq commands
+          (vconcat
+           (mapcar #'(lambda (ch) (if (equal ch ?) 'escape ch))
+                   (append commands nil))))
+    (dolist (marker markers)
+      (goto-char marker)
+      (condition-case nil
+          (execute-kbd-macro commands)
+        (error nil))
+      (evil-force-normal-state)
+      (set-marker marker nil))))
+
 (evil-define-command evil-goto-char (position)
   "Go to POSITION in the buffer.
 Default position is the beginning of the buffer."
