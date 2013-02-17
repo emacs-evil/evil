@@ -1364,6 +1364,10 @@ See `evil-ex-init-shell-argument-completion'.")
 (defvar evil-ex-substitute-current-replacement nil
   "The actual replacement.")
 
+(defvar evil-ex-last-was-search nil
+  "Non-nil if the previous was a search.
+Otherwise the previous command is assumed as substitute.")
+
 ;; The lazy-highlighting framework.
 (evil-define-local-var evil-ex-active-highlights-alist nil
   "An alist of currently active highlights.")

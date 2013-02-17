@@ -2580,7 +2580,8 @@ Change to `%s'? "
   "Goes to the next occurrence."
   :jump t
   :type exclusive
-  (setq evil-ex-search-start-point (point))
+  (setq evil-ex-search-start-point (point)
+        evil-ex-last-was-search t)
   (let ((orig (point))
         wrapped)
     (dotimes (i (or count 1))
@@ -2683,6 +2684,7 @@ resp.  after executing the command."
     (error "No pattern given"))
   (unless replacement
     (error "No replacement given"))
+  (setq evil-ex-last-was-search nil)
   (let* ((flags (append flags nil))
          (confirm (memq ?c flags))
          (case-fold-search (eq (evil-ex-pattern-case-fold pattern)

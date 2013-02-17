@@ -354,7 +354,7 @@ If visual state is inactive then those values are nil."
   "Ex substitution argument."
   :ex-arg substitution
   (when (evil-ex-p)
-    (evil-ex-get-substitute-info evil-ex-argument)))
+    (evil-ex-get-substitute-info evil-ex-argument t)))
 
 (provide 'evil-types)
 
