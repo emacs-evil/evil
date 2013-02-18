@@ -1952,9 +1952,9 @@ next VCOUNT - 1 lines below the current one."
 (defun evil-ex-show-digraphs ()
   "Shows a list of all available digraphs."
   (interactive)
-  (let ((buf (get-buffer-create "*evil-digraphs*")))
+  (let ((buf (get-buffer-create "*evil-digraphs*"))
+        (inhibit-read-only t))
     (with-current-buffer buf
-      (toggle-read-only -1)
       (erase-buffer)
       (let ((i 0)
             (digraphs
