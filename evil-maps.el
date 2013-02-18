@@ -438,6 +438,7 @@
 (evil-ex-define-cmd "!" 'evil-shell-command)
 (evil-ex-define-cmd "@:" 'evil-ex-repeat)
 (evil-ex-define-cmd "set-initial-state" 'evil-ex-set-initial-state)
+(evil-ex-define-cmd "show-digraphs" 'evil-ex-show-digraphs)
 
 (when (fboundp 'undo-tree-visualize)
   (evil-ex-define-cmd "undol[ist]" 'undo-tree-visualize)
