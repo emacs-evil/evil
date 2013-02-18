@@ -422,6 +422,7 @@
 (evil-ex-define-cmd "bd[elete]" 'evil-delete-buffer)
 (evil-ex-define-cmd "g[lobal]" 'evil-ex-global)
 (evil-ex-define-cmd "v[global]" 'evil-ex-global-inverted)
+(evil-ex-define-cmd "norm[al]" 'evil-ex-normal)
 (evil-ex-define-cmd "s[ubstitute]" 'evil-ex-substitute)
 (evil-ex-define-cmd "&" 'evil-ex-repeat-substitute)
 (evil-ex-define-cmd "&&" 'evil-ex-repeat-substitute-with-flags)
