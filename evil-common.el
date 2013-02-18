@@ -2879,9 +2879,10 @@ is stored in `evil-temporary-undo' instead of `buffer-undo-list'."
      (evil-with-undo
        (unwind-protect
            (progn
-             (evil-start-undo-step)
-             ,@body)
-         (evil-end-undo-step)))))
+             (unless evil-in-single-undo (evil-start-undo-step))
+             (let ((evil-in-single-undo t))
+               ,@body))
+         (unless evil-in-single-undo (evil-end-undo-step))))))
 
 (defun evil-undo-pop ()
   "Undo the last buffer change.
