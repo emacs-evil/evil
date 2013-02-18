@@ -2854,7 +2854,8 @@ If no description is available, return the empty string."
 All following buffer modifications are grouped together as a
 single action. If CONTINUE is non-nil, preceding modifications
 are included. The step is terminated with `evil-end-undo-step'."
-  (when (listp buffer-undo-list)
+  (when (and (listp buffer-undo-list)
+             (not evil-in-single-undo))
     (if evil-undo-list-pointer
         (evil-refresh-undo-step)
       (unless (or continue (null (car-safe buffer-undo-list)))
@@ -2864,7 +2865,8 @@ are included. The step is terminated with `evil-end-undo-step'."
 (defun evil-end-undo-step (&optional continue)
   "End a undo step started with `evil-start-undo-step'.
 Adds an undo boundary unless CONTINUE is specified."
-  (when evil-undo-list-pointer
+  (when (and evil-undo-list-pointer
+             (not evil-in-single-undo))
     (evil-refresh-undo-step)
     (unless continue
       (undo-boundary))
@@ -2910,10 +2912,10 @@ is stored in `evil-temporary-undo' instead of `buffer-undo-list'."
      (evil-with-undo
        (unwind-protect
            (progn
-             (unless evil-in-single-undo (evil-start-undo-step))
+             (evil-start-undo-step)
              (let ((evil-in-single-undo t))
                ,@body))
-         (unless evil-in-single-undo (evil-end-undo-step))))))
+         (evil-end-undo-step)))))
 
 (defun evil-undo-pop ()
   "Undo the last buffer change.
