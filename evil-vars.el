@@ -1196,6 +1196,9 @@ instead of `buffer-undo-list'.")
 (evil-define-local-var evil-undo-list-pointer nil
   "Everything up to this mark is united in the undo-list.")
 
+(defvar evil-in-single-undo nil
+  "Set to non-nil if the current undo steps are connected.")
+
 (defvar evil-flash-timer nil
   "Timer for flashing search results.")
 
