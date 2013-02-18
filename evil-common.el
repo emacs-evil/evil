@@ -25,6 +25,7 @@
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
 (require 'evil-vars)
+(require 'evil-digraphs)
 (require 'rect)
 
 ;;; Code:
@@ -614,6 +615,36 @@ This command can be used wherever `read-quoted-char' is required
 as a command. Its main use is in the `evil-read-key-map'."
   (interactive)
   (read-quoted-char))
+
+(defun evil-read-digraph-char (&optional hide-chars)
+  "Read two keys from keyboard forming a digraph.
+This function creates an overlay at (point), hiding the next
+HIDE-CHARS characters. HIDE-CHARS defaults to 1."
+  (interactive)
+  (let (char1 char2 string overlay)
+    (unwind-protect
+        (progn
+          (setq overlay (make-overlay (point)
+                                      (min (point-max)
+                                           (+ (or hide-chars 1)
+                                              (point)))))
+          (overlay-put overlay 'invisible t)
+          ;; create overlay prompt
+          (setq string "?")
+          (put-text-property 0 1 'face 'minibuffer-prompt string)
+          ;; put cursor at (i.e., right before) the prompt
+          (put-text-property 0 1 'cursor t string)
+          (overlay-put overlay 'after-string string)
+          (setq char1 (read-key))
+          (setq string (string char1))
+          (put-text-property 0 1 'face 'minibuffer-prompt string)
+          (put-text-property 0 1 'cursor t string)
+          (overlay-put overlay 'after-string string)
+          (setq char2 (read-key)))
+      (delete-overlay overlay))
+    (or (evil-digraph (list char1 char2))
+        ;; use the last character if undefined
+        (cadr char2))))
 
 (defun evil-read-motion (&optional motion count type modifier)
   "Read a MOTION, motion COUNT and motion TYPE from the keyboard.

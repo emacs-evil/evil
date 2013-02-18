@@ -1943,33 +1943,11 @@ next VCOUNT - 1 lines below the current one."
                    vcount)))
   (evil-insert-state 1))
 
-(defun evil-insert-digraph (count digraph)
-  "Insert COUNT digraphs DIGRAPH."
-  (interactive
-   (let (count char1 char2 overlay string)
-     (unwind-protect
-         (progn
-           (setq count (prefix-numeric-value current-prefix-arg)
-                 overlay (make-overlay (point) (point)))
-           ;; create overlay prompt
-           (setq string "?")
-           (put-text-property 0 1 'face 'minibuffer-prompt string)
-           ;; put cursor at (i.e., right before) the prompt
-           (put-text-property 0 1 'cursor t string)
-           (overlay-put overlay 'after-string string)
-           (setq char1 (evil-read-key))
-           (setq string (string char1))
-           (put-text-property 0 1 'face 'minibuffer-prompt string)
-           (put-text-property 0 1 'cursor t string)
-           (overlay-put overlay 'after-string string)
-           (setq char2 (evil-read-key)))
-       (delete-overlay overlay))
-     (list count (list char1 char2))))
-  (let ((digraph (or (evil-digraph digraph)
-                     ;; use the last character if undefined
-                     (cadr digraph))))
-    (dotimes (var count)
-      (insert digraph))))
+(evil-define-command evil-insert-digraph (count)
+  "Insert COUNT digraphs."
+  (interactive "p")
+  (let ((digraph (evil-read-digraph-char 0)))
+    (insert-char digraph count)))
 
 (defun evil-copy-from-above (arg)
   "Copy characters from preceding non-blank line.

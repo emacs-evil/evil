@@ -478,6 +478,7 @@
 (define-key evil-read-key-map (kbd "C-]") #'keyboard-quit)
 (define-key evil-read-key-map (kbd "C-q") #'evil-read-quoted-char)
 (define-key evil-read-key-map (kbd "C-v") #'evil-read-quoted-char)
+(define-key evil-read-key-map (kbd "C-k") #'evil-read-digraph-char)
 (define-key evil-read-key-map "\r" "\n")
 
 (provide 'evil-maps)
