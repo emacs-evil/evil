@@ -1110,7 +1110,14 @@ If nil, KEYS is used."
     ("r5")
     "[5]; This buffer is for notes you don't want to save"
     ("3rX")
-    "XX[X]This buffer is for notes you don't want to save"))
+    "XX[X]This buffer is for notes you don't want to save")
+  (ert-info ("Replacing \\n should insert only one newline")
+    (evil-test-buffer
+      "(setq var xxx [y]yy zzz)\n"
+      (emacs-lisp-mode)
+      (setq indent-tabs-mode nil)
+      ("2r\n")
+      "(setq var xxx \n      [y] zzz)\n")))
 
 (ert-deftest evil-test-insert-with-count ()
   "Test `evil-insert' with repeat count"
