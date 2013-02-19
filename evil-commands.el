@@ -749,7 +749,7 @@ In Insert state, insert a newline."
         (newline count)
         (indent-according-to-mode)))
      (t
-      (evil-next-line count)))))
+      (evil-next-line-first-non-blank count)))))
 
 (evil-define-motion evil-window-top (count)
   "Move the cursor to line COUNT from the top of the window
