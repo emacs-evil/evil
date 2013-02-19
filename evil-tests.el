@@ -2674,11 +2674,13 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "line [1]line 1\nline 2\nline 3\n"
       ("\"a2yy\"aP")
       "[l]ine 1line 1\nline 2\nline 1line 1\nline 2\nline 3\n"))
-  (ert-info ("special register /")
-    (evil-test-buffer
-      "[f]oo bar\n"
-      ("/bar\n0i\C-r/")
-      "bar[f]oo bar\n"))
+  (dolist (module '(evil-search isearch))
+    (evil-select-search-module 'evil-search-module module)
+    (ert-info ((format "special register / (module: %s)" module))
+      (evil-test-buffer
+        "[f]oo bar\n"
+        ("/bar" [return] "0i\C-r/")
+        "bar[f]oo bar\n")))
   (ert-info ("special register :")
     (evil-test-buffer
       "[f]oo bar\n"
