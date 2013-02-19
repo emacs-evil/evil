@@ -2153,6 +2153,24 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
   (dotimes (var (or count 1))
     (evil-search-symbol t)))
 
+(evil-define-motion evil-search-unbounded-symbol-backward (count)
+  "Search backward for symbol under point.
+The search is unbounded, i.e., the pattern is not wrapped in
+\\<...\\>."
+  :jump t
+  :type exclusive
+  (dotimes (var (or count 1))
+    (evil-search-symbol nil t)))
+
+(evil-define-motion evil-search-unbounded-symbol-forward (count)
+  "Search forward for symbol under point.
+The search is unbounded, i.e., the pattern is not wrapped in
+\\<...\\>."
+  :jump t
+  :type exclusive
+  (dotimes (var (or count 1))
+    (evil-search-symbol t t)))
+
 (evil-define-motion evil-goto-definition ()
   "Go to definition or first occurrence of symbol under point."
   :jump t

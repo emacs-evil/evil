@@ -235,7 +235,7 @@ one more than the current position."
         (setq string (evil-search-message string forward))))
       (evil-flash-search-pattern string t))))
 
-(defun evil-search-symbol (forward)
+(defun evil-search-symbol (forward &optional unbounded)
   "Search for symbol near point.
 If FORWARD is nil, search backward, otherwise forward."
   (let ((string (car-safe regexp-search-ring))
@@ -251,9 +251,13 @@ If FORWARD is nil, search backward, otherwise forward."
       (evil-search string forward t))
      (t
       (setq string (evil-find-symbol forward))
-      (if (null string)
-          (error "No symbol under point")
-        (setq string (format "\\_<%s\\_>" (regexp-quote string))))
+      (cond
+       ((null string)
+        (error "No symbol under point"))
+       (unbounded
+        (setq string (regexp-quote string)))
+       (t
+        (setq string (format "\\_<%s\\_>" (regexp-quote string)))))
       (evil-search string forward t)))))
 
 (defun evil-find-symbol (forward)
