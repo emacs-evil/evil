@@ -6881,7 +6881,7 @@ if no previous selection")
   "Test search for symbol under point."
   :tags '(evil ex search)
   (evil-without-display
-    (evil-select-search-module 'evil-search-modue 'evil-search)
+    (evil-select-search-module 'evil-search-module 'evil-search)
     (setq evil-ex-search-history nil)
     (evil-test-buffer
       "so[m]e text with a strange word
@@ -6902,7 +6902,51 @@ maybe we need one line more with [s]ome text\n"
 and here some other stuff
 maybe we need one line more with some text\n"
       (ert-info ("Search history with double pattern")
-        (should (equal evil-ex-search-history '("\\_<some\\_>")))))))
+        (should (equal evil-ex-search-history '("\\_<some\\_>")))))
+    (ert-info ("Test unbounded search")
+      (evil-select-search-module 'evil-search-module 'evil-search)
+      (setq evil-ex-search-history nil)
+      (evil-test-buffer
+        "[s]ymbol\n(defun my-symbol-func ())\n(defvar my-symbol-var)\nanother symbol\n"
+        ("*")
+        "symbol\n(defun my-symbol-func ())\n(defvar my-symbol-var)\nanother [s]ymbol\n"
+        ("ggg*")
+        "symbol\n(defun my-[s]ymbol-func ())\n(defvar my-symbol-var)\nanother symbol\n"
+        (should (equal evil-ex-search-history '("symbol" "\\_<symbol\\_>")))
+        ("n")
+        "symbol\n(defun my-symbol-func ())\n(defvar my-[s]ymbol-var)\nanother symbol\n"))))
+
+(ert-deftest evil-test-isearch-symbol ()
+  "Test isearch for symbol under point."
+  :tags '(evil isearch)
+  (evil-without-display
+    (evil-select-search-module 'evil-search-module 'isearch)
+    (evil-test-buffer
+      "so[m]e text with a strange word
+and here some other stuff
+maybe we need one line more with some text\n"
+      ("*")
+      "some text with a strange word
+and here [s]ome other stuff
+maybe we need one line more with some text\n"
+      ("n")
+      "some text with a strange word
+and here some other stuff
+maybe we need one line more with [s]ome text\n"
+      ("*")
+      "[s]ome text with a strange word
+and here some other stuff
+maybe we need one line more with some text\n")
+    (ert-info ("Test unbounded search")
+      (evil-select-search-module 'evil-search-module 'isearch)
+      (evil-test-buffer
+        "[s]ymbol\n(defun my-symbol-func ())\n(defvar my-symbol-var)\nanother symbol\n"
+        ("*")
+        "symbol\n(defun my-symbol-func ())\n(defvar my-symbol-var)\nanother [s]ymbol\n"
+        ("ggg*")
+        "symbol\n(defun my-[s]ymbol-func ())\n(defvar my-symbol-var)\nanother symbol\n"
+        ("n")
+        "symbol\n(defun my-symbol-func ())\n(defvar my-[s]ymbol-var)\nanother symbol\n"))))
 
 (ert-deftest evil-test-read ()
   "Test of `evil-read'"
