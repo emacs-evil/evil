@@ -2904,32 +2904,33 @@ This is the same as :%s//~/&"
     (error "No pattern given"))
   (unless command
     (error "No command given"))
-  (let ((case-fold-search
-         (eq (evil-ex-regex-case pattern 'smart) 'insensitive))
-        match markers)
-    (when (and pattern command)
-      (setq isearch-string pattern)
-      (isearch-update-ring pattern t)
-      (goto-char beg)
-      (evil-move-beginning-of-line)
-      (while (< (point) end)
-        (setq match (re-search-forward pattern (line-end-position) t))
-        (when (or (and match (not invert))
-                  (and invert (not match)))
-          (push (move-marker (make-marker)
-                             (or (and match (match-beginning 0))
-                                 (line-beginning-position)))
-                markers))
-        (forward-line))
-      (setq markers (nreverse markers))
-      (unwind-protect
+  (evil-with-single-undo
+    (let ((case-fold-search
+           (eq (evil-ex-regex-case pattern 'smart) 'insensitive))
+          match markers)
+      (when (and pattern command)
+        (setq isearch-string pattern)
+        (isearch-update-ring pattern t)
+        (goto-char beg)
+        (evil-move-beginning-of-line)
+        (while (< (point) end)
+          (setq match (re-search-forward pattern (line-end-position) t))
+          (when (or (and match (not invert))
+                    (and invert (not match)))
+            (push (move-marker (make-marker)
+                               (or (and match (match-beginning 0))
+                                   (line-beginning-position)))
+                  markers))
+          (forward-line))
+        (setq markers (nreverse markers))
+        (unwind-protect
+            (dolist (marker markers)
+              (goto-char marker)
+              (evil-ex-eval command))
+          ;; ensure that all markers are deleted afterwards,
+          ;; even in the event of failure
           (dolist (marker markers)
-            (goto-char marker)
-            (evil-ex-eval command))
-        ;; ensure that all markers are deleted afterwards,
-        ;; even in the event of failure
-        (dolist (marker markers)
-          (set-marker marker nil))))))
+            (set-marker marker nil)))))))
 
 (evil-define-operator evil-ex-global-inverted
   (beg end pattern command &optional invert)

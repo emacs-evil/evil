@@ -7025,7 +7025,9 @@ maybe we need one line more with some text\n")
     (evil-test-buffer
       "[n]o 1\nno 2\nno 3\nyes 4\nno 5\nno 6\nno 7\n"
       (":g/no/s/[3-6]/x" [return])
-      "no 1\nno 2\nno x\nyes 4\nno x\nno x\n[n]o 7\n")))
+      "no 1\nno 2\nno x\nyes 4\nno x\nno x\n[n]o 7\n"
+      ("u")
+      "no 1\nno 2\nno [3]\nyes 4\nno 5\nno 6\nno 7\n")))
 
 (ert-deftest evil-test-normal ()
   "Test `evil-ex-normal'."
