@@ -18,7 +18,7 @@
 ;;      Winfred Lu <winfred.lu@gmail.com>
 ;;      Wolfgang Jenkner <wjenkner at inode.at>
 ;;      York Zhao <yzhao at telecor.com>
-;;      tarao.gnn at gmail.com
+;;      Lintaro Ina <tarao.gnn at gmail.com>
 
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 ;;      To get in touch, please use the bug tracker or the
