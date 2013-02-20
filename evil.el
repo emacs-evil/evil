@@ -7,6 +7,7 @@
 ;;      Frank Fischer <frank.fischer at mathematik.tu-chemnitz.de>
 ;;      Frank Terbeck <ft at bewatermyfriend.org>
 ;;      Jonathan Claggett <jclaggett at lonocloud.com>
+;;      Marian Schubert <maio@netsafe.cz>
 ;;      Michael Markert <markert.michael at googlemail.com>
 ;;      Nikolai Weibull <now at bitwi.se>
 ;;      Sanel Zukan <sanelz at gmail.com>
@@ -14,6 +15,7 @@
 ;;      Sune Simonsen <sune.simonsen at jayway.com>
 ;;      Thomas Hisch <thomas at opentech.at>
 ;;      Ulrich Müller <ulm at gentoo.org>
+;;      Winfred Lu <winfred.lu@gmail.com>
 ;;      Wolfgang Jenkner <wjenkner at inode.at>
 ;;      York Zhao <yzhao at telecor.com>
 ;;      tarao.gnn at gmail.com
