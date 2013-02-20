@@ -2179,7 +2179,7 @@ AB[C]
 Below some empty line")))
 
 (ert-deftest evil-test-shift ()
-  "Test `evil-shift-right'."
+  "Test `evil-shift-right' and `evil-shift-left'."
   :tags '(evil operator)
   (let ((evil-shift-width 4)
         indent-tabs-mode)
@@ -2199,7 +2199,14 @@ Below some empty line")))
         ("Vj3>")
         "[ ]           line 1\n            line 2\nline 3\n"
         ("Vj2<")
-        "[ ]   line 1\n    line 2\nline 3\n"))))
+        "[ ]   line 1\n    line 2\nline 3\n"))
+    (ert-info ("Shift in insert state")
+      (evil-test-buffer
+        "line 1\nl[i]ne 2\nline 3\n"
+        ("i\C-t\C-t")
+        "line 1\n        l[i]ne 2\nline 3\n"
+        ("\C-d")
+        "line 1\n    l[i]ne 2\nline 3\n"))))
 
 ;;; Paste
 

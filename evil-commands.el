@@ -1401,6 +1401,22 @@ See also `evil-shift-left'."
     (set-marker beg nil)
     (set-marker end nil)))
 
+(evil-define-command evil-shift-right-line (count)
+  "Shift the current line COUNT times to the right.
+The text is shifted to the nearest multiple of
+`evil-shift-width'. Like `evil-shift-right' but always works on
+the current line."
+  (interactive "<c>")
+  (evil-shift-right (line-beginning-position) (line-end-position) count))
+
+(evil-define-command evil-shift-left-line (count)
+  "Shift the current line COUNT times to the leeft.
+The text is shifted to the nearest multiple of
+`evil-shift-width'. Like `evil-shift-leeft' but always works on
+the current line."
+  (interactive "<c>")
+  (evil-shift-left (line-beginning-position) (line-end-position) count))
+
 (evil-define-operator evil-align-left (beg end type &optional width)
   "Right-align lines in the region at WIDTH columns.
 The default for width is the value of `fill-column'."
