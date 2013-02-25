@@ -1125,7 +1125,10 @@ a :substitute command with arguments."
                  (and (memq ?I flags) 'sensitive)
                  evil-ex-substitute-case
                  evil-ex-search-case)
-             (memq ?g flags))))
+             (or (and (not evil-ex-substitute-global)
+                      (memq ?g flags))
+                 (and evil-ex-substitute-global
+                      (not (memq ?g flags)))))))
     (list pattern replacement flags)))
 
 (defun evil-ex-nohighlight ()

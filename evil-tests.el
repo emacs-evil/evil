@@ -6484,67 +6484,80 @@ if no previous selection")
 (ert-deftest evil-test-ex-substitute ()
   "Test `evil-ex-substitute'"
   :tags '(evil ex search)
-  (evil-without-display
-    (ert-info ("Substitute on current line")
-      (evil-test-buffer
-        "ABCABCABC\nABCA[B]CABC\nABCABCABC"
-        (":s/BC/XYZ/" (kbd "RET"))
-        "ABCABCABC\n[A]XYZABCABC\nABCABCABC"))
-    (ert-info ("Substitute on whole current line")
-      (evil-test-buffer
-        "ABCABCABC\nABC[A]BCABC\nABCABCABC"
-        (":s/BC/XYZ/g" (kbd "RET"))
-        "ABCABCABC\n[A]XYZAXYZAXYZ\nABCABCABC"))
-    (ert-info ("Substitute on last line")
-      (evil-test-buffer
-        "ABCABCABC\nABCABCABC\nABCABC[A]BC"
-        (":s/BC/XYZ/" (kbd "RET"))
-        "ABCABCABC\nABCABCABC\n[A]XYZABCABC"))
-    (ert-info ("Substitute on whole last line")
-      (evil-test-buffer
-        "ABCABCABC\nABCABCABC\nABCABC[A]BC"
-        (":s/BC/XYZ/g" (kbd "RET"))
-        "ABCABCABC\nABCABCABC\n[A]XYZAXYZAXYZ"))
-    (ert-info ("Substitute on range")
-      (evil-test-buffer
-        "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
-        (":1,3s/BC/XYZ/" (kbd "RET"))
-        "AXYZABCABC\nQRT\n[A]XYZABCABC\nABCABCABC"))
-    (ert-info ("Substitute whole lines on range")
-      (evil-test-buffer
-        "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
-        (":1,3s/BC/XYZ/g" (kbd "RET"))
-        "AXYZAXYZAXYZ\nQRT\n[A]XYZAXYZAXYZ\nABCABCABC"))
-    (ert-info ("Substitute on whole current line confirm")
-      (evil-test-buffer
-        "ABCABCABC\nABC[A]BCABC\nABCABCABC"
-        (":s/BC/XYZ/gc" (kbd "RET") "yny")
-        "ABCABCABC\n[A]XYZABCAXYZ\nABCABCABC"))
-    (ert-info ("Substitute on range confirm")
-      (evil-test-buffer
-        "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
-        (":1,3s/BC/XYZ/c" (kbd "RET") "yn")
-        "[A]XYZABCABC\nQRT\nABCABCABC\nABCABCABC"))
-    (ert-info ("Substitute whole lines on range with other delim")
-      (evil-test-buffer
-        "A/CA/CA/C\nQRT\nA/C[A]/CA/C\nA/CA/CA/C"
-        (":1,3s,/C,XYZ,g" (kbd "RET"))
-        "AXYZAXYZAXYZ\nQRT\n[A]XYZAXYZAXYZ\nA/CA/CA/C"))
-    (ert-info ("Substitute on whole buffer, smart case")
-      (evil-test-buffer
-        "[A]bcAbcAbc\naBcaBcaBc\nABCABCABC\nabcabcabc"
-        (":%s/bc/xy/g" (kbd "RET"))
-        "AxyAxyAxy\naXyaXyaXy\nAXYAXYAXY\n[a]xyaxyaxy"))
-    (ert-info ("Substitute zero range on whole line")
-      (evil-test-buffer
-        "no 1\nno 2\nno 3\n[y]es 4\nno 5\nno 6\nno 7\n"
-        (":s/^/# /g")
-        "no 1\nno 2\nno 3\n[#] yes 4\nno 5\nno 6\nno 7\n"))
-    (ert-info ("Substitute with empty")
-      (evil-test-buffer
-        "[a]bc def abc jkl"
-        (":s/b//g")
-        "[a]c def ac jkl"))))
+  (let (evil-ex-substitute-global)
+    (evil-without-display
+      (ert-info ("Substitute on current line")
+        (evil-test-buffer
+          "ABCABCABC\nABCA[B]CABC\nABCABCABC"
+          (":s/BC/XYZ/" (kbd "RET"))
+          "ABCABCABC\n[A]XYZABCABC\nABCABCABC"))
+      (ert-info ("Substitute on whole current line")
+        (evil-test-buffer
+          "ABCABCABC\nABC[A]BCABC\nABCABCABC"
+          (":s/BC/XYZ/g" (kbd "RET"))
+          "ABCABCABC\n[A]XYZAXYZAXYZ\nABCABCABC"))
+      (ert-info ("Substitute on last line")
+        (evil-test-buffer
+          "ABCABCABC\nABCABCABC\nABCABC[A]BC"
+          (":s/BC/XYZ/" (kbd "RET"))
+          "ABCABCABC\nABCABCABC\n[A]XYZABCABC"))
+      (ert-info ("Substitute on whole last line")
+        (evil-test-buffer
+          "ABCABCABC\nABCABCABC\nABCABC[A]BC"
+          (":s/BC/XYZ/g" (kbd "RET"))
+          "ABCABCABC\nABCABCABC\n[A]XYZAXYZAXYZ"))
+      (ert-info ("Substitute on range")
+        (evil-test-buffer
+          "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
+          (":1,3s/BC/XYZ/" (kbd "RET"))
+          "AXYZABCABC\nQRT\n[A]XYZABCABC\nABCABCABC"))
+      (ert-info ("Substitute whole lines on range")
+        (evil-test-buffer
+          "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
+          (":1,3s/BC/XYZ/g" (kbd "RET"))
+          "AXYZAXYZAXYZ\nQRT\n[A]XYZAXYZAXYZ\nABCABCABC"))
+      (ert-info ("Substitute on whole current line confirm")
+        (evil-test-buffer
+          "ABCABCABC\nABC[A]BCABC\nABCABCABC"
+          (":s/BC/XYZ/gc" (kbd "RET") "yny")
+          "ABCABCABC\n[A]XYZABCAXYZ\nABCABCABC"))
+      (ert-info ("Substitute on range confirm")
+        (evil-test-buffer
+          "ABCABCABC\nQRT\nABC[A]BCABC\nABCABCABC"
+          (":1,3s/BC/XYZ/c" (kbd "RET") "yn")
+          "[A]XYZABCABC\nQRT\nABCABCABC\nABCABCABC"))
+      (ert-info ("Substitute whole lines on range with other delim")
+        (evil-test-buffer
+          "A/CA/CA/C\nQRT\nA/C[A]/CA/C\nA/CA/CA/C"
+          (":1,3s,/C,XYZ,g" (kbd "RET"))
+          "AXYZAXYZAXYZ\nQRT\n[A]XYZAXYZAXYZ\nA/CA/CA/C"))
+      (ert-info ("Substitute on whole buffer, smart case")
+        (evil-test-buffer
+          "[A]bcAbcAbc\naBcaBcaBc\nABCABCABC\nabcabcabc"
+          (":%s/bc/xy/g" (kbd "RET"))
+          "AxyAxyAxy\naXyaXyaXy\nAXYAXYAXY\n[a]xyaxyaxy"))
+      (ert-info ("Substitute zero range on whole line")
+        (evil-test-buffer
+          "no 1\nno 2\nno 3\n[y]es 4\nno 5\nno 6\nno 7\n"
+          (":s/^/# /g")
+          "no 1\nno 2\nno 3\n[#] yes 4\nno 5\nno 6\nno 7\n"))
+      (ert-info ("Substitute with empty")
+        (evil-test-buffer
+          "[a]bc def abc jkl"
+          (":s/b//g")
+          "[a]c def ac jkl"))))
+  (let ((evil-ex-substitute-global t))
+    (evil-without-display
+      (ert-info ("Substitute on current line with gdefault")
+        (evil-test-buffer
+          "ABCABCABC\nABCA[B]CABC\nABCABCABC"
+          (":s/BC/XYZ/g" (kbd "RET"))
+          "ABCABCABC\n[A]XYZABCABC\nABCABCABC"))
+      (ert-info ("Substitute on whole current line with gdefault")
+        (evil-test-buffer
+          "ABCABCABC\nABC[A]BCABC\nABCABCABC"
+          (":s/BC/XYZ/" (kbd "RET"))
+          "ABCABCABC\n[A]XYZAXYZAXYZ\nABCABCABC")))))
 
 (ert-deftest evil-test-ex-substitute-replacement ()
   "Test `evil-ex-substitute' with special replacements."

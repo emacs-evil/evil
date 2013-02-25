@@ -898,6 +898,17 @@ the replacement is shown interactively."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-ex-substitute-global nil
+  "If non-nil substitute patterns a global by default.
+Usually (if this variable is nil) a substitution works only on
+the first match of a pattern in a line unless the 'g' flag is
+given, in which case the substitution happens on all matches in a
+line. If this option is non-nil, this behaviour is reversed: the
+substitution works on all matches unless the 'g' pattern is
+specified, then is works only on the first match."
+  :type  'boolean
+  :group 'evil)
+
 (defface evil-ex-search '((t :inherit isearch))
   "Face for interactive search."
   :group 'evil)
