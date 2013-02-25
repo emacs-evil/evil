@@ -1510,6 +1510,7 @@ The following special registers are supported.
   :  the last command line (read only)
   .  the last inserted text (read only)
   -  the last small (less than a line) delete
+  _  the black hole register
   =  the expression register (read only)"
   (when (characterp register)
     (or (cond
@@ -1900,7 +1901,8 @@ The tracked insertion is set to `evil-last-insertion'."
       (setq text (propertize text 'yank-handler (list yank-handler))))
     (when register
       (evil-set-register register text))
-    (kill-new text)))
+    (unless (eq register ?_)
+      (kill-new text))))
 
 (defun evil-yank-lines (beg end &optional register yank-handler)
   "Saves the lines in the region BEG and END into the kill-ring."
@@ -1915,7 +1917,8 @@ The tracked insertion is set to `evil-last-insertion'."
     (setq text (propertize text 'yank-handler yank-handler))
     (when register
       (evil-set-register register text))
-    (kill-new text)))
+    (unless (eq register ?_)
+      (kill-new text))))
 
 (defun evil-yank-rectangle (beg end &optional register yank-handler)
   "Stores the rectangle defined by region BEG and END into the kill-ring."
@@ -1936,7 +1939,8 @@ The tracked insertion is set to `evil-last-insertion'."
                              'yank-handler yank-handler)))
       (when register
         (evil-set-register register text))
-      (kill-new text))))
+      (unless (eq register ?_)
+        (kill-new text)))))
 
 (defun evil-yank-line-handler (text)
   "Inserts the current text linewise."

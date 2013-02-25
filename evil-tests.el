@@ -7492,6 +7492,24 @@ maybe we need one line more with some text\n")
 (when (or evil-tests-profiler evil-tests-run)
   (evil-tests-initialize))
 
+(ert-deftest evil-test-black-hole-register ()
+  :tags '(evil)
+  (ert-info ("Test \"_ on delete word")
+    (evil-test-buffer
+      "[E]vil evil is awesome."
+      ("dw\"_dwP")
+      "Evil[ ]is awesome."))
+  (ert-info ("Test \"_ on delete line")
+    (evil-test-buffer
+      "[T]his line is a keeper!\nThis line is not."
+      ("dd\"_ddP")
+      "[T]his line is a keeper!"))
+  (ert-info ("Test \"_ on delete region")
+    (evil-test-buffer
+      "<This region is a keeper>!\nThis line is not."
+      ("d\gg\"_dGP")
+      "This region is a keepe[r]")))
+
 (provide 'evil-tests)
 
 ;;; evil-tests.el ends here
