@@ -3637,30 +3637,6 @@ if the previous state was Emacs state."
         (evil-change-to-previous-state)))
     (setq evil-execute-in-emacs-state-buffer))))
 
-;; TODO: this will probably not work well with the repeat-system.
-(evil-define-command evil-esc (arg)
-  "Wait for further keys within `evil-esc-delay'.
-Otherwise send [escape]."
-  :repeat ignore
-  (interactive "P")
-  (if (sit-for evil-esc-delay t)
-      (progn
-        (push 'escape unread-command-events)
-        (when defining-kbd-macro
-          ;; we need to replace the ESC by 'escape in the currently
-          ;; defined keyboard macro
-          (evil-save-echo-area
-            (end-kbd-macro)
-            (setq last-kbd-macro (vconcat last-kbd-macro [escape]))
-            (start-kbd-macro t t))))
-    (push last-command-event unread-command-events)
-    ;; preserve prefix argument
-    (setq prefix-arg arg))
-  ;; disable interception for the next key sequence
-  (evil-esc-mode -1)
-  (setq this-command last-command)
-  (add-hook 'pre-command-hook #'evil-turn-on-esc-mode nil t))
-
 (defun evil-exit-visual-and-repeat (event)
   "Exit insert state and repeat event.
 This special command should be used if some command called from

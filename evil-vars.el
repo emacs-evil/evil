@@ -278,6 +278,16 @@ This should be a regexp set without the enclosing []."
   :type 'number
   :group 'evil)
 
+(defvar evil-esc-mode nil
+  "Non-nil if `evil-esc-mode' is enabled.")
+
+(defvar evil-esc-map nil
+  "Original ESC prefix map in `input-decode-map'.
+Used by `evil-esc-mode'.")
+
+(defvar evil-inhibit-esc nil
+  "If non-nil, the \\e event will never be translated to 'escape.")
+
 (defcustom evil-show-paren-range 0
   "The minimal distance between point and a parenthesis
 which causes the parenthesis to be highlighted."
