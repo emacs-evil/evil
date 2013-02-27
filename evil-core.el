@@ -564,18 +564,22 @@ the ESC prefix map (i.e. the map originally bound to \\e in
       (setq evil-esc-mode nil)))))
 
 (defun evil-init-esc (frame)
+  "Update `input-decode-map' in terminal."
   (with-selected-frame frame
     (let ((term (frame-terminal frame)))
-      (unless (terminal-parameter term 'evil-esc-map)
+      (when (and (eq (terminal-live-p term) 't) ; only patch tty
+                 (not (terminal-parameter term 'evil-esc-map)))
         (let ((evil-esc-map (lookup-key input-decode-map [?\e])))
           (set-terminal-parameter term 'evil-esc-map evil-esc-map)
           (define-key input-decode-map [?\e]
             `(menu-item "" ,evil-esc-map :filter ,#'evil-esc)))))))
 
 (defun evil-deinit-esc (term)
-  (let ((evil-esc-map (terminal-parameter term 'evil-esc-map)))
-    (define-key input-decode-map [?\e] evil-esc-map)
-    (set-terminal-parameter term 'evil-esc-map nil)))
+  "Restore `input-decode-map' in terminal."
+  (when (eq (terminal-live-p term) 't)
+    (let ((evil-esc-map (terminal-parameter term 'evil-esc-map)))
+      (define-key input-decode-map [?\e] evil-esc-map)
+      (set-terminal-parameter term 'evil-esc-map nil))))
 
 (defun evil-esc (map)
   "Translate \\e to 'escape if no further event arrives.
