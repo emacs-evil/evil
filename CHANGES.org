@@ -1,6 +1,6 @@
 * Changes and New Features in Evil
 
-** News since 1.0.0
+** News in 1.0.1
 
 *** Improvements
 
