@@ -3006,25 +3006,26 @@ Default position is the beginning of the buffer."
   "Set the current window's width or height to NEW-SIZE.
 If HORIZONTAL is non-nil the width of the window is changed,
 otherwise its height is changed."
-  (let ((wincfg (current-window-configuration))
-        (nwins (length (window-list)))
-        (count (if horizontal
-                   (- new-size (window-width))
-                 (- new-size (window-height)))))
-    (catch 'done
-      (save-window-excursion
-        (while (not (zerop count))
-          (if (> count 0)
-              (progn
-                (enlarge-window 1 horizontal)
-                (setq count (1- count)))
-            (progn
-              (shrink-window 1 horizontal)
-              (setq count (1+ count))))
-          (if (= nwins (length (window-list)))
-              (setq wincfg (current-window-configuration))
-            (throw 'done t)))))
-    (set-window-configuration wincfg)))
+  (let ((count (- new-size (if horizontal (window-width) (window-height)))))
+    (if (>= emacs-major-version 24)
+        (enlarge-window count horizontal)
+      (let ((wincfg (current-window-configuration))
+            (nwins (length (window-list)))
+            (inhibit-redisplay t))
+        (catch 'done
+          (save-window-excursion
+            (while (not (zerop count))
+              (if (> count 0)
+                  (progn
+                    (enlarge-window 1 horizontal)
+                    (setq count (1- count)))
+                (progn
+                  (shrink-window 1 horizontal)
+                  (setq count (1+ count))))
+              (if (= nwins (length (window-list)))
+                  (setq wincfg (current-window-configuration))
+                (throw 'done t)))))
+        (set-window-configuration wincfg)))))
 
 (defun evil-get-buffer-tree (wintree)
   "Extracts the buffer tree from a given window tree WINTREE."
