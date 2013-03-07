@@ -567,8 +567,11 @@ the ESC prefix map (i.e. the map originally bound to \\e in
   "Update `input-decode-map' in terminal."
   (with-selected-frame frame
     (let ((term (frame-terminal frame)))
-      (when (and (eq (terminal-live-p term) 't) ; only patch tty
-                 (not (terminal-parameter term 'evil-esc-map)))
+      (when (and
+             (or (eq evil-intercept-esc 'always)
+                 (and evil-intercept-esc
+                      (eq (terminal-live-p term) t))) ; only patch tty
+             (not (terminal-parameter term 'evil-esc-map)))
         (let ((evil-esc-map (lookup-key input-decode-map [?\e])))
           (set-terminal-parameter term 'evil-esc-map evil-esc-map)
           (define-key input-decode-map [?\e]
