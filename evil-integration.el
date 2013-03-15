@@ -74,23 +74,6 @@
 
 ;;; key-binding
 
-;; disable evil-esc-mode during a call to key-binding
-(defadvice key-binding (around evil activate)
-  (let (evil-esc-mode)
-    ad-do-it))
-
-;; disable evil-esc-mode during the read of a key-sequence
-;; TODO: should we handle the special ESC-delay, too?
-(defadvice read-key-sequence (around evil activate)
-  (let (evil-esc-mode)
-    ad-do-it))
-
-;; disable evil-esc-mode during the read of a key-sequence
-;; TODO: should we handle the special ESC-delay, too?
-(defadvice read-key-sequence-vector (around evil activate)
-  (let (evil-esc-mode)
-    ad-do-it))
-
 ;; Calling `keyboard-quit' should cancel repeat
 (defadvice keyboard-quit (before evil activate)
   (when (fboundp 'evil-repeat-abort)

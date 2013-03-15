@@ -542,8 +542,7 @@ the end of the execution of BODY."
 (defun evil-test-state-keymaps (state)
   "Verify that STATE's keymaps are pushed to the top"
   (let ((actual (evil-state-keymaps state))
-        (expected `((evil-esc-mode . ,evil-esc-map)
-                    (,(evil-state-property state :local)
+        (expected `((,(evil-state-property state :local)
                      . , (evil-state-property state :local-keymap t))
                     (,(evil-state-property state :mode)
                      . ,(evil-state-property state :keymap t)))))
@@ -551,8 +550,7 @@ the end of the execution of BODY."
     (cond
      ((eq state 'operator)
       (setq expected
-            `((evil-esc-mode . ,evil-esc-map)
-              (evil-operator-shortcut-mode
+            `((evil-operator-shortcut-mode
                . ,evil-operator-shortcut-map)
               (evil-operator-state-local-minor-mode
                . ,evil-operator-state-local-map)
@@ -571,10 +569,7 @@ the end of the execution of BODY."
       (should (equal actual expected))
       (dolist (map actual)
         (setq map (cdr-safe map))
-        (should (keymapp map))
-        ;; Emacs state disables `evil-esc-map'
-        (unless (and (eq state 'emacs) (eq map evil-esc-map))
-          (should (memq map (current-active-maps))))))))
+        (should (keymapp map))))))
 
 (ert-deftest evil-test-exit-normal-state ()
   "Enter Normal state and then disable all states"

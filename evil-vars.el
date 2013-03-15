@@ -278,6 +278,30 @@ This should be a regexp set without the enclosing []."
   :type 'number
   :group 'evil)
 
+(defvar evil-esc-mode nil
+  "Non-nil if `evil-esc-mode' is enabled.")
+
+(defvar evil-esc-map nil
+  "Original ESC prefix map in `input-decode-map'.
+Used by `evil-esc-mode'.")
+
+(defvar evil-inhibit-esc nil
+  "If non-nil, the \\e event will never be translated to 'escape.")
+
+(defcustom evil-intercept-esc t
+  "Whether evil should intercept the ESC key.
+In terminal, a plain ESC key and a meta-key-sequence both
+generate the same event. In order to distinguish both evil
+modifies `input-decode-map'. This is necessary in terminal but
+not in X mode. However, the terminal ESC is equivalent to C-[, so
+if you want to use C-[ instead of ESC in X, then Evil must
+intercept the ESC event in X, too. This variable determines when
+Evil should intercept the event."
+  :type '(radio (const :tag "Never" :value nil)
+                (const :tag "In terminal only" :value t)
+                (const :tag "Always" :value 'always))
+  :group 'evil)
+
 (defcustom evil-show-paren-range 0
   "The minimal distance between point and a parenthesis
 which causes the parenthesis to be highlighted."
