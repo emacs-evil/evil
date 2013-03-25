@@ -288,7 +288,7 @@ Used by `evil-esc-mode'.")
 (defvar evil-inhibit-esc nil
   "If non-nil, the \\e event will never be translated to 'escape.")
 
-(defcustom evil-intercept-esc t
+(defcustom evil-intercept-esc 'always
   "Whether evil should intercept the ESC key.
 In terminal, a plain ESC key and a meta-key-sequence both
 generate the same event. In order to distinguish both evil
