@@ -601,7 +601,7 @@ happen when the keymap is accessed from `read-key-sequence'. In
 particular, if it is access from `define-key' the returned
 mapping will always be the ESC prefix map."
   (if (and (not evil-inhibit-esc)
-           evil-local-mode
+           (or evil-local-mode (evil-ex-p))
            (not (evil-emacs-state-p))
            (equal (this-single-command-keys) [?\e])
            (sit-for evil-esc-delay))
