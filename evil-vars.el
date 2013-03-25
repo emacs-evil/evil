@@ -515,6 +515,7 @@ If STATE is nil, Evil is disabled in the buffer."
     magit-mode
     magit-reflog-mode
     magit-show-branches-mode
+    magit-branch-manager-mode ;; New name for magit-show-branches-mode
     magit-stash-mode
     magit-status-mode
     magit-wazzup-mode
