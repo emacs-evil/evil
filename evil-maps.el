@@ -404,6 +404,7 @@
 
 (evil-ex-define-cmd "c[hange]" 'evil-change)
 (evil-ex-define-cmd "d[elete]" 'evil-delete)
+(evil-ex-define-cmd "y[ank]" 'evil-yank)
 (evil-ex-define-cmd "go[to]" 'evil-goto-char)
 (evil-ex-define-cmd "j[oin]" 'evil-join)
 (evil-ex-define-cmd "le[ft]" 'evil-align-left)
