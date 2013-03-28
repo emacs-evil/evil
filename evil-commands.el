@@ -713,11 +713,7 @@ for specifying the tag."
 Calls `evil-lookup-func'."
   (funcall evil-lookup-func))
 
-(evil-define-motion evil-ret (count)
-  "Move the cursor COUNT lines down.
-If point is on a widget or a button, click on it.
-In Insert state, insert a newline."
-  :type line
+(defun evil-ret-gen (count indent?)
   (let* ((field  (get-char-property (point) 'field))
          (button (get-char-property (point) 'button))
          (doc    (get-char-property (point) 'widget-doc))
@@ -743,13 +739,27 @@ In Insert state, insert a newline."
      ((or (evil-emacs-state-p)
           (and (evil-insert-state-p)
                (not buffer-read-only)))
-      (if (not evil-auto-indent)
+      (if (not indent?)
           (newline count)
         (delete-horizontal-space t)
         (newline count)
         (indent-according-to-mode)))
      (t
       (evil-next-line-first-non-blank count)))))
+
+(evil-define-motion evil-ret (count)
+  "Move the cursor COUNT lines down.
+If point is on a widget or a button, click on it.
+In Insert state, insert a newline."
+  :type line
+  (evil-ret-gen count nil))
+
+(evil-define-motion evil-ret-and-indent (count)
+  "Move the cursor COUNT lines down.
+If point is on a widget or a button, click on it.
+In Insert state, insert a newline."
+  :type line
+  (evil-ret-gen count t))
 
 (evil-define-motion evil-window-top (count)
   "Move the cursor to line COUNT from the top of the window

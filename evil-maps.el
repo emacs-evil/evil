@@ -347,7 +347,7 @@
 (define-key evil-insert-state-map "\C-t" 'evil-shift-right-line)
 (define-key evil-insert-state-map "\C-d" 'evil-shift-left-line)
 (define-key evil-insert-state-map [remap newline] 'evil-ret)
-(define-key evil-insert-state-map [remap newline-and-indent] 'evil-ret)
+(define-key evil-insert-state-map [remap newline-and-indent] 'evil-ret-and-indent)
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
 (define-key evil-insert-state-map
   (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
