@@ -30,6 +30,10 @@
 (require 'evil-ex)
 (require 'evil-types)
 
+;;; Compatibility for Emacs 23
+(unless (fboundp 'window-body-width)
+  (defalias 'window-body-width 'window-width))
+
 ;;; Motions
 
 ;; Movement commands, or motions, are defined with the macro
@@ -174,6 +178,17 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
   (if (fboundp 'end-of-visual-line)
       (end-of-visual-line count)
     (end-of-line count)))
+
+(evil-define-motion evil-middle-of-visual-line ()
+  "Move the cursor to the middle of the current visual line."
+  :type exclusive
+  (beginning-of-visual-line)
+  (evil-with-restriction
+      nil
+      (save-excursion (end-of-visual-line) (point))
+    (move-to-column (+ (current-column)
+                       -1
+                       (/ (with-no-warnings (window-body-width)) 2)))))
 
 (evil-define-motion evil-beginning-of-line-or-digit-argument ()
   "Move the cursor to the beginning of the current line.

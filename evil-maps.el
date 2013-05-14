@@ -202,6 +202,7 @@
 (define-key evil-motion-state-map "g0" 'evil-beginning-of-visual-line)
 (define-key evil-motion-state-map "g_" 'evil-last-non-blank)
 (define-key evil-motion-state-map "g^" 'evil-first-non-blank-of-visual-line)
+(define-key evil-motion-state-map "gm" 'evil-middle-of-visual-line)
 (define-key evil-motion-state-map "g$" 'evil-end-of-visual-line)
 (define-key evil-motion-state-map "g\C-]" 'find-tag)
 (define-key evil-motion-state-map "{" 'evil-backward-paragraph)
