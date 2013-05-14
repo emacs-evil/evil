@@ -849,36 +849,37 @@ any error conditions."
 
 (defun evil-ex-search-update-pattern (beg end range)
   "Update the current search pattern."
-  (let ((pattern-string (minibuffer-contents)))
-    (with-current-buffer evil-ex-current-buffer
-      (with-selected-window (minibuffer-selected-window)
-        (goto-char (1+ evil-ex-search-start-point))
-        (condition-case err
-            (let* ((result (evil-ex-search-full-pattern pattern-string
-                                                        (or evil-ex-search-count 1)
-                                                        evil-ex-search-direction))
-                   (success (pop result))
-                   (pattern (pop result))
-                   (offset (pop result)))
-              (cond
-               ((eq success 'wrap)
-                (evil-ex-search-update pattern offset
-                                       (match-beginning 0) (match-end 0)
-                                       "Wrapped"))
-               ((eq success 'empty-pattern)
-                (evil-ex-search-update nil nil nil nil nil))
-               (success
-                (evil-ex-search-update pattern offset
-                                       (match-beginning 0) (match-end 0)
-                                       nil))
-               (t
-                (evil-ex-search-update nil nil
-                                       nil nil
-                                       "search failed"))))
-          (invalid-regexp
-           (evil-ex-search-update nil nil nil nil (cadr err)))
-          (error
-           (evil-ex-search-update nil nil nil nil (format "%s" err))))))))
+  (save-match-data
+    (let ((pattern-string (minibuffer-contents)))
+      (with-current-buffer evil-ex-current-buffer
+        (with-selected-window (minibuffer-selected-window)
+          (goto-char (1+ evil-ex-search-start-point))
+          (condition-case err
+              (let* ((result (evil-ex-search-full-pattern pattern-string
+                                                          (or evil-ex-search-count 1)
+                                                          evil-ex-search-direction))
+                     (success (pop result))
+                     (pattern (pop result))
+                     (offset (pop result)))
+                (cond
+                 ((eq success 'wrap)
+                  (evil-ex-search-update pattern offset
+                                         (match-beginning 0) (match-end 0)
+                                         "Wrapped"))
+                 ((eq success 'empty-pattern)
+                  (evil-ex-search-update nil nil nil nil nil))
+                 (success
+                  (evil-ex-search-update pattern offset
+                                         (match-beginning 0) (match-end 0)
+                                         nil))
+                 (t
+                  (evil-ex-search-update nil nil
+                                         nil nil
+                                         "search failed"))))
+            (invalid-regexp
+             (evil-ex-search-update nil nil nil nil (cadr err)))
+            (error
+             (evil-ex-search-update nil nil nil nil (format "%s" err)))))))))
 (put 'evil-ex-search-update-pattern 'permanent-local-hook t)
 
 (defun evil-ex-search-exit ()
