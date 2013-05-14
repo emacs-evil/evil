@@ -1961,6 +1961,7 @@ next VCOUNT - 1 lines below the current one."
 
 (evil-define-command evil-insert-digraph (count)
   "Insert COUNT digraphs."
+  :repeat change
   (interactive "p")
   (let ((digraph (evil-read-digraph-char 0)))
     (insert-char digraph count)))

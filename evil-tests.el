@@ -1720,6 +1720,16 @@ New Tex[t]
       ((kbd "C-v") "jj$AXXX" [escape])
       "line 1line 1line 1XX[X]\nline 2XXX\nline 3line 3XXX\n")))
 
+(ert-deftest evil-test-repeat-digraph ()
+  "Test repeat of insertion of a digraph."
+  :tags '(evil digraph repeat)
+  (evil-test-buffer
+    "Line with ['] several apostrophes ', yeah."
+    ("s" (kbd "C-k") "'9" [escape])
+    "Line with [’] several apostrophes ', yeah."
+    ("f'.")
+    "Line with ’ several apostrophes [’], yeah."))
+
 ;;; Operators
 
 (ert-deftest evil-test-keypress-parser ()
