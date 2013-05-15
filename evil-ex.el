@@ -606,6 +606,7 @@ This function calls `evil-ex-update' explicitly when
   (let* ((count (when (numberp range) range))
          (range (when (evil-range-p range) range))
          (bang (and (string-match ".!$" command) t))
+         (evil-ex-point (point))
          (evil-ex-range
           (or range (and count (evil-ex-range count count))))
          (evil-ex-command (evil-ex-completed-binding command))
