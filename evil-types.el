@@ -335,6 +335,14 @@ If visual state is inactive then those values are nil."
   (list (when (and (evil-ex-p) evil-ex-argument)
           (intern evil-ex-argument))))
 
+(evil-define-interactive-code "<addr>"
+  "Ex line number."
+  (list
+   (and (evil-ex-p)
+        (let ((expr (evil-ex-parse  evil-ex-argument)))
+          (when (eq (car expr) 'evil-goto-line)
+            (eval (cadr expr)))))))
+
 (evil-define-interactive-code "<!>"
   "Ex bang argument."
   :ex-bang t

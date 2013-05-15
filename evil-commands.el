@@ -1255,6 +1255,40 @@ of the block."
   (interactive "<R><x>")
   (evil-change beg end type register yank-handler #'evil-delete-whole-line))
 
+(evil-define-command evil-copy (beg end address)
+  "Copy lines in BEG END below line given by ADDRESS."
+  :motion evil-line
+  (interactive "<r><addr>")
+  (goto-char (point-min))
+  (forward-line address)
+  (let* ((txt (buffer-substring-no-properties beg end))
+         (len (length txt)))
+    ;; ensure text consists of complete lines
+    (when (or (zerop len) (/= (aref txt (1- len)) ?\n))
+      (setq txt (concat txt "\n")))
+    (when (and (eobp) (not (bolp))) (newline)) ; incomplete last line
+    (insert txt)
+    (forward-line -1)))
+
+(evil-define-command evil-move (beg end address)
+  "Move lines in BEG END below line given by ADDRESS."
+  :motion evil-line
+  (interactive "<r><addr>")
+  (goto-char (point-min))
+  (forward-line address)
+  (let* ((m (set-marker (make-marker) (point)))
+         (txt (buffer-substring-no-properties beg end))
+         (len (length txt)))
+    (delete-region beg end)
+    (goto-char m)
+    (set-marker m nil)
+    ;; ensure text consists of complete lines
+    (when (or (zerop len) (/= (aref txt (1- len)) ?\n))
+      (setq txt (concat txt "\n")))
+    (when (and (eobp) (not (bolp))) (newline)) ; incomplete last line
+    (insert txt)
+    (forward-line -1)))
+
 (evil-define-operator evil-substitute (beg end type register)
   "Change a character."
   :motion evil-forward-char

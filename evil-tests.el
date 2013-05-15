@@ -7060,6 +7060,69 @@ maybe we need one line more with some text\n")
     ("u")
     "ABClne 1XYZ\nline 2\nl[i]ne 3\nline 4\nline 5\n"))
 
+(ert-deftest evil-test-copy ()
+  :tags '(evil ex)
+  "Test `evil-copy'."
+  (ert-info ("Copy to last line")
+    (evil-test-buffer
+      "[l]ine1\nline2\nline3\nline4\nline5\n"
+      (":2,3copy$")
+      "line1\nline2\nline3\nline4\nline5\nline2\n[l]ine3\n"))
+  (ert-info ("Copy to last incomplete line")
+    (evil-test-buffer
+      "[l]ine1\nline2\nline3\nline4\nline5"
+      (":2,3copy$")
+      "line1\nline2\nline3\nline4\nline5\nline2\n[l]ine3\n"))
+  (ert-info ("Copy incomplete line to last incomplete line")
+    (evil-test-buffer
+      "[l]ine1\nline2\nline3\nline4\nline5"
+      (":4,5copy$")
+      "line1\nline2\nline3\nline4\nline5\nline4\n[l]ine5\n"))
+  (ert-info ("Copy to first line")
+    (evil-test-buffer
+      "[l]ine1\nline2\nline3\nline4\nline5\n"
+      (":2,3copy0")
+      "line2\n[l]ine3\nline1\nline2\nline3\nline4\nline5\n"))
+  (ert-info ("Copy to intermediate line")
+    (evil-test-buffer
+      "[l]ine1\nline2\nline3\nline4\nline5\n"
+      (":2,4copy2")
+      "line1\nline2\nline2\nline3\n[l]ine4\nline3\nline4\nline5\n")))
+
+(ert-deftest evil-test-move ()
+  :tags '(evil ex)
+  "Test `evil-move'."
+  (ert-info ("Move to last line")
+    (evil-test-buffer
+      "[l]ine1\nline2\nline3\nline4\nline5\n"
+      (":2,3move$")
+      "line1\nline4\nline5\nline2\n[l]ine3\n"))
+  (ert-info ("Move to last incomplete line")
+    (evil-test-buffer
+      "[l]ine1\nline2\nline3\nline4\nline5"
+      (":2,3move$")
+      "line1\nline4\nline5\nline2\n[l]ine3\n"))
+  (ert-info ("Move incomplete line to last incomplete line")
+    (evil-test-buffer
+      "[l]ine1\nline2\nline3\nline4\nline5"
+      (":4,5move$")
+      "line1\nline2\nline3\nline4\n[l]ine5\n"))
+  (ert-info ("Move to first line")
+    (evil-test-buffer
+      "[l]ine1\nline2\nline3\nline4\nline5\n"
+      (":2,3move0")
+      "line2\n[l]ine3\nline1\nline4\nline5\n"))
+  (ert-info ("Move to intermediate line")
+    (evil-test-buffer
+      "[l]ine1\nline2\nline3\nline4\nline5\n"
+      (":2,4move2")
+      "line1\nline2\nline3\n[l]ine4\nline5\n"))
+  (ert-info ("Move to other line")
+    (evil-test-buffer
+      "[l]ine1\nline2\nline3\nline4\nline5\n"
+      (":2,3move4")
+      "line1\nline4\nline2\n[l]ine3\nline5\n")))
+
 ;;; Utilities
 
 (ert-deftest evil-test-parser ()
