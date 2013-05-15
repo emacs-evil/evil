@@ -7034,6 +7034,7 @@ maybe we need one line more with some text\n")
 
 (ert-deftest evil-test-global ()
   "Test `evil-ex-global'."
+  :tags '(evil ex)
   (ert-info ("global delete")
     (evil-test-buffer
       "[n]o 1\nno 2\nno 3\nyes 4\nno 5\nno 6\nno 7\n"
@@ -7049,6 +7050,7 @@ maybe we need one line more with some text\n")
 
 (ert-deftest evil-test-normal ()
   "Test `evil-ex-normal'."
+  :tags '(evil ex)
   (evil-test-buffer
     "[l]ine 1\nline 2\nline 3\nline 4\nline 5\n"
     (":normal lxIABC" [escape] "AXYZ" [return])
