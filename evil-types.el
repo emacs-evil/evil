@@ -340,8 +340,11 @@ If visual state is inactive then those values are nil."
   (list
    (and (evil-ex-p)
         (let ((expr (evil-ex-parse  evil-ex-argument)))
-          (when (eq (car expr) 'evil-goto-line)
-            (eval (cadr expr)))))))
+          (if (eq (car expr) 'evil-goto-line)
+              (save-excursion
+                (goto-char evil-ex-point)
+                (eval (cadr expr)))
+            (error "Invalid address"))))))
 
 (evil-define-interactive-code "<!>"
   "Ex bang argument."

@@ -7087,7 +7087,12 @@ maybe we need one line more with some text\n")
     (evil-test-buffer
       "[l]ine1\nline2\nline3\nline4\nline5\n"
       (":2,4copy2")
-      "line1\nline2\nline2\nline3\n[l]ine4\nline3\nline4\nline5\n")))
+      "line1\nline2\nline2\nline3\n[l]ine4\nline3\nline4\nline5\n"))
+  (ert-info ("Copy to current line")
+    (evil-test-buffer
+      "line1\nline2\nline3\nli[n]e4\nline5\n"
+      (":2,4copy.")
+      "line1\nline2\nline3\nline4\nline2\nline3\n[l]ine4\nline5\n")))
 
 (ert-deftest evil-test-move ()
   :tags '(evil ex)
@@ -7121,7 +7126,12 @@ maybe we need one line more with some text\n")
     (evil-test-buffer
       "[l]ine1\nline2\nline3\nline4\nline5\n"
       (":2,3move4")
-      "line1\nline4\nline2\n[l]ine3\nline5\n")))
+      "line1\nline4\nline2\n[l]ine3\nline5\n"))
+  (ert-info ("Move to current line")
+    (evil-test-buffer
+      "line1\nline2\nline3\nli[n]e4\nline5\n"
+      (":2,4move.")
+      "line1\nline2\nline3\n[l]ine4\nline5\n")))
 
 ;;; Utilities
 
