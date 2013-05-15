@@ -406,6 +406,7 @@
 
 (evil-ex-define-cmd "c[hange]" 'evil-change)
 (evil-ex-define-cmd "co[py]" 'evil-copy)
+(evil-ex-define-cmd "t" "copy")
 (evil-ex-define-cmd "m[ove]" 'evil-move)
 (evil-ex-define-cmd "d[elete]" 'evil-delete)
 (evil-ex-define-cmd "y[ank]" 'evil-yank)
