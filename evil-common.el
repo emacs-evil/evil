@@ -31,6 +31,7 @@
 ;;; Code:
 
 (declare-function evil-visual-state-p "evil-states")
+(declare-function evil-visual-restore "evil-states")
 
 ;;; Compatibility for Emacs 23
 (unless (fboundp 'deactivate-input-method)
@@ -2070,15 +2071,30 @@ is negative this is a more recent kill."
   (interactive "p")
   (unless (memq last-command
                 '(evil-paste-after
-                  evil-paste-before))
+                  evil-paste-before
+                  evil-visual-paste))
     (error "Previous command was not an evil-paste: %s" last-command))
   (unless evil-last-paste
     (error "Previous paste command used a register"))
   (evil-undo-pop)
   (goto-char (nth 2 evil-last-paste))
-  (current-kill count)
   (setq this-command (nth 0 evil-last-paste))
-  (funcall (nth 0 evil-last-paste) (nth 1 evil-last-paste)))
+  ;; use temporary kill-ring, so the paste cannot modify it
+  (let ((kill-ring (list (current-kill
+                          (if (and (> count 0) (nth 5 evil-last-paste))
+                              ;; if was visual paste then skip the
+                              ;; text that has been replaced
+                              (1+ count)
+                            count))))
+        (kill-ring-yank-pointer kill-ring))
+    (when (eq last-command 'evil-visual-paste)
+      (let ((evil-no-display t))
+        (evil-visual-restore)))
+    (funcall (nth 0 evil-last-paste) (nth 1 evil-last-paste))
+    ;; if this was a visual paste, then mark the last paste as NOT
+    ;; being the first visual paste
+    (when (eq last-command 'evil-visual-paste)
+      (setcdr (nthcdr 4 evil-last-paste) nil))))
 
 (defun evil-paste-pop-next (count)
   "Same as `evil-paste-pop' but with negative argument."

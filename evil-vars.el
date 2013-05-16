@@ -1199,10 +1199,13 @@ is not restored.")
 
 (defvar evil-last-paste nil
   "Information about the latest paste.
-This should be a list (CMD POINT BEG END) where CMD is the last
-paste-command (either `evil-paste-before' or `evil-paste-after'),
-POINT is the position of point before the paste,
-BEG end END are the region of the inserted text.")
+This should be a list (CMD COUNT POINT BEG END FIRSTVISUAL) where
+CMD is the last paste-command (`evil-paste-before',
+`evil-paste-after' or `evil-visual-paste'), COUNT is the repeat
+count of the paste, POINT is the position of point before the
+paste, BEG end END are the region of the inserted
+text. FIRSTVISUAL is t if and only if the previous command was
+the first visual paste (i.e. before any paste-pop).")
 
 (evil-define-local-var evil-last-undo-entry nil
   "Information about the latest undo entry in the buffer.
