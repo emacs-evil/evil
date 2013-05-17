@@ -2025,29 +2025,23 @@ next VCOUNT - 1 lines below the current one."
   (let ((digraph (evil-read-digraph-char 0)))
     (insert-char digraph count)))
 
-(defun evil-ex-show-digraphs ()
+(evil-define-command evil-ex-show-digraphs ()
   "Shows a list of all available digraphs."
-  (interactive)
-  (let ((buf (get-buffer-create "*evil-digraphs*"))
-        (inhibit-read-only t))
-    (with-current-buffer buf
-      (erase-buffer)
-      (let ((i 0)
-            (digraphs
-             (mapcar #'(lambda (digraph)
-                         (cons (cdr digraph)
-                               (car digraph)))
-                     (append evil-digraphs-table
-                             evil-digraphs-table-user))))
-        (dolist (digraph digraphs)
-          (insert (nth 0 digraph) "\t"
-                  (nth 1 digraph) " "
-                  (nth 2 digraph)
-                  (if (= i 2) "\n" "\t\t"))
-          (setq i (mod (1+ i) 3))))
-      (goto-char (point-min))
-      (view-buffer buf #'kill-buffer)
-      (evil-emacs-state))))
+  :repeat nil
+  (evil-with-view-list "evil-digraphs"
+    (let ((i 0)
+          (digraphs
+           (mapcar #'(lambda (digraph)
+                       (cons (cdr digraph)
+                             (car digraph)))
+                   (append evil-digraphs-table
+                           evil-digraphs-table-user))))
+      (dolist (digraph digraphs)
+        (insert (nth 0 digraph) "\t"
+                (nth 1 digraph) " "
+                (nth 2 digraph)
+                (if (= i 2) "\n" "\t\t"))
+        (setq i (mod (1+ i) 3))))))
 
 (defun evil-copy-from-above (arg)
   "Copy characters from preceding non-blank line.
