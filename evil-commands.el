@@ -2588,15 +2588,15 @@ the previous shell command is executed instead."
 (evil-define-command evil-show-registers ()
   "Shows the contents of all registers."
   :repeat nil
-  (let (message-truncate-lines message-log-max)
-    (message "%s"
-             (mapconcat #'(lambda (reg)
-                            (format "\"%c\t%s"
-                                    (car reg)
-                                    (if (stringp (cdr reg))
-                                        (replace-regexp-in-string "\n" "^J" (cdr reg))
-                                      (cdr reg))))
-                        (evil-register-list) "\n"))))
+  (evil-with-view-list "evil-registers"
+    (setq truncate-lines t)
+    (dolist (reg (evil-register-list))
+      (insert (format "\"%c\t%s"
+                      (car reg)
+                      (if (stringp (cdr reg))
+                          (replace-regexp-in-string "\n" "^J" (cdr reg))
+                        (cdr reg))))
+      (newline))))
 
 (eval-when-compile (require 'ffap))
 (evil-define-command evil-find-file-at-point-with-line ()
