@@ -606,7 +606,12 @@ mapping will always be the ESC prefix map."
            (not (evil-emacs-state-p))
            (equal (this-single-command-keys) [?\e])
            (sit-for evil-esc-delay))
-      [escape] map))
+      (prog1 [escape]
+        (when defining-kbd-macro
+          (end-kbd-macro)
+          (setq last-kbd-macro (vconcat last-kbd-macro [escape]))
+          (start-kbd-macro t t)))
+    map))
 
 (defun evil-state-p (sym)
   "Whether SYM is the name of a state."
