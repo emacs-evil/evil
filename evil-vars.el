@@ -299,7 +299,7 @@ intercept the ESC event in X, too. This variable determines when
 Evil should intercept the event."
   :type '(radio (const :tag "Never" :value nil)
                 (const :tag "In terminal only" :value t)
-                (const :tag "Always" :value 'always))
+                (const :tag "Always" :value always))
   :group 'evil)
 
 (defcustom evil-show-paren-range 0
