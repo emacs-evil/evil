@@ -3263,6 +3263,29 @@ should be left-aligned for left justification."
       (goto-char (point-min))
       (back-to-indentation))))
 
+;;; View helper
+(defun evil-view-list (name body)
+  "Open new view buffer.
+The view buffer is named *NAME*. After the buffer is created, the
+function BODY is called with the view buffer being the current
+buffer. The new buffer is opened in view-mode with evil come up
+in motion state."
+  (let ((buf (get-buffer-create (concat "*" name "*")))
+        (inhibit-read-only t))
+    (with-current-buffer buf
+      (evil-motion-state)
+      (erase-buffer)
+      (funcall body)
+      (goto-char (point-min))
+      (view-buffer-other-window buf nil #'kill-buffer))))
+
+(defmacro evil-with-view-list (name &rest body)
+  "Execute BODY in new view-mode buffer *NAME*.
+This macro is a small convenience wrapper around
+`evil-view-list'."
+  (declare (indent 1) (debug t))
+  `(evil-view-list ,name #'(lambda () ,@body)))
+
 (provide 'evil-common)
 
 ;;; evil-common.el ends here
