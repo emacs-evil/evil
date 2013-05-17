@@ -2585,12 +2585,13 @@ the previous shell command is executed instead."
   (evil-with-view-list "evil-registers"
     (setq truncate-lines t)
     (dolist (reg (evil-register-list))
-      (insert (format "\"%c\t%s"
-                      (car reg)
-                      (if (stringp (cdr reg))
-                          (replace-regexp-in-string "\n" "^J" (cdr reg))
-                        (cdr reg))))
-      (newline))))
+      (when (cdr reg)
+        (insert (format "\"%c\t%s"
+                        (car reg)
+                        (if (stringp (cdr reg))
+                            (replace-regexp-in-string "\n" "^J" (cdr reg))
+                          (cdr reg))))
+        (newline)))))
 
 (eval-when-compile (require 'ffap))
 (evil-define-command evil-find-file-at-point-with-line ()
