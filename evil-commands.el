@@ -2441,16 +2441,19 @@ If no FILE is specified, reload the current buffer from disk."
         (unless (bolp) (insert "\n"))))))
 
 (evil-define-command evil-show-buffers ()
-  "Shows the buffer-list."
+  "Shows the buffer-list.
+The same as `list-buffers' but selects the buffer window afterwards."
   :repeat nil
-  (let (message-truncate-lines message-log-max)
-    (display-message-or-buffer
-     (mapconcat #'identity
-                (sort
-                 (mapcar #'buffer-name (buffer-list))
-                 #'string<)
-                "\n")
-     "*Buffers*")))
+  (list-buffers)
+  (select-window (get-buffer-window "*Buffer List*")))
+
+(evil-define-command evil-show-files ()
+  "Shows the file-list.
+The same as `list-buffers', but shows only buffers visiting files
+and selects the list window afterwards."
+  :repeat nil
+  (list-buffers 1)
+  (select-window (get-buffer-window "*Buffer List*")))
 
 (evil-define-command evil-buffer (buffer)
   "Switches to another buffer."
