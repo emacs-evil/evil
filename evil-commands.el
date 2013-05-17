@@ -771,7 +771,10 @@ In Insert state, insert a newline."
 on the first non-blank character."
   :jump t
   :type line
-  (move-to-window-line (or count 0))
+  (move-to-window-line (max (or count 0)
+                            (if (= (point-min) (window-start))
+                                0
+                              scroll-margin)))
   (back-to-indentation))
 
 (evil-define-motion evil-window-middle ()
@@ -788,7 +791,7 @@ on the first non-blank character."
 on the first non-blank character."
   :jump t
   :type line
-  (move-to-window-line (- (or count 1)))
+  (move-to-window-line (- (max (or count 1) (1+ scroll-margin))))
   (back-to-indentation))
 
 ;; scrolling
