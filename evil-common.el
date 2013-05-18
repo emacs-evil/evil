@@ -1892,6 +1892,15 @@ disjoin range."
 The tracked insertion is set to `evil-last-insertion'."
   (setq evil-last-insertion
         (and evil-current-insertion
+             ;; Check whether the insertion range is a valid buffer
+             ;; range.  If a buffer modification is done from within
+             ;; another change hook or modification-hook (yasnippet
+             ;; does this using overlay modification-hooks), then the
+             ;; insertion information may be invalid. There is no way
+             ;; to detect this situation, but at least we should
+             ;; ensure that no error occurs (see bug #272).
+             (>= (point-min) (car evil-current-insertion))
+             (< (point-max) (cdr evil-current-insertion))
              (buffer-substring-no-properties (car evil-current-insertion)
                                              (cdr evil-current-insertion))))
   (remove-hook 'after-change-functions #'evil-track-last-insertion t))
