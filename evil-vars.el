@@ -821,9 +821,12 @@ list of categories."
   :group 'evil-cjk)
 
 (defcustom evil-ex-complete-emacs-commands 'in-turn
-  "TAB-completion for Emacs commands in ex command line."
+  "TAB-completion for Emacs commands in ex command line.
+This variable determines when Emacs commands are considered for
+completion, always, never, or only if no Evil ex command is
+available for completion."
   :group 'evil
-  :type '(radio (const :tag "Only if no ex-comment." :value in-turn)
+  :type '(radio (const :tag "Only if no ex-command." :value in-turn)
                 (const :tag "Never" :value nil)
                 (const :tag "Always" :value t)))
 
