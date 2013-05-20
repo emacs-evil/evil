@@ -268,7 +268,10 @@ the selection is enabled.
 Expand the region to the selection unless COMMAND is a motion."
   (when (evil-visual-state-p)
     (setq command (or command this-command))
+    (when evil-visual-x-select-timer
+      (cancel-timer evil-visual-x-select-timer))
     (unless (evil-get-command-property command :keep-visual)
+      (evil-visual-update-x-selection)
       (evil-visual-expand-region
        ;; exclude final newline from linewise selection
        ;; unless the command has real need of it
@@ -283,8 +286,6 @@ If COMMAND is a motion, refresh the selection;
 otherwise exit Visual state."
   (when (evil-visual-state-p)
     (setq command (or command this-command))
-    (when evil-visual-x-select-timer
-      (cancel-timer evil-visual-x-select-timer))
     (if (or quit-flag
             (eq command #'keyboard-quit)
             ;; Is `mark-active' nil for an unexpanded region?
@@ -357,7 +358,6 @@ If LATER is non-nil, exit after the current command."
   :repeat abort
   (with-current-buffer (or buffer (current-buffer))
     (when (evil-visual-state-p)
-      (evil-visual-update-x-selection)
       (if later
           (setq deactivate-mark t)
         (when evil-visual-region-expanded

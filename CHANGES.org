@@ -1,5 +1,9 @@
 * Changes and New Features in Evil
 
+** News in 1.0.2
+
+   * Fix #290.
+
 ** News in 1.0.1
 
 *** Improvements
