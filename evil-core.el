@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.0.1
+;; Version: 1.0.2
 
 ;;
 ;; This file is NOT part of GNU Emacs.
