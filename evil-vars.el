@@ -186,6 +186,11 @@ moves the cursor."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-backspace-join-lines t
+  "Whether backward delete in insert state may join lines."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-move-cursor-back t
   "Whether the cursor is moved backwards when exiting Insert state."
   :type 'boolean

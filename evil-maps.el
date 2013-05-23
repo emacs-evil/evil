@@ -347,6 +347,7 @@
 (define-key evil-insert-state-map "\C-x\C-p" 'evil-complete-previous-line)
 (define-key evil-insert-state-map "\C-t" 'evil-shift-right-line)
 (define-key evil-insert-state-map "\C-d" 'evil-shift-left-line)
+(define-key evil-insert-state-map [remap delete-backward-char] 'evil-delete-backward-char-and-join)
 (define-key evil-insert-state-map [delete] 'delete-char)
 (define-key evil-insert-state-map [remap newline] 'evil-ret)
 (define-key evil-insert-state-map [remap newline-and-indent] 'evil-ret)

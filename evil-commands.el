@@ -1208,10 +1208,22 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (interactive "<R><x>")
   (evil-delete beg end type register))
 
+(evil-define-command evil-delete-backward-char-and-join (count)
+  "Delete previous character and join lines.
+If point is at the beginning of a line then the current line will
+be joined with the previous line if and only if
+`evil-backspace-join-lines'."
+  (interactive "p")
+  (if (or evil-backspace-join-lines (not (bolp)))
+      (call-interactively 'delete-backward-char)
+    (error "Beginning of line")))
+
 (evil-define-command evil-delete-backward-word ()
   "Delete previous word."
   (if (and (bolp) (not (bobp)))
-      (delete-char -1)
+      (progn
+        (unless evil-backspace-join-lines (error "Beginning of line"))
+        (delete-char -1))
     (evil-delete (max
                   (save-excursion
                     (evil-backward-word-begin)

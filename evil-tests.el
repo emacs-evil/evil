@@ -2080,16 +2080,22 @@ ine3 line3      line3 l\n")))
 (ert-deftest evil-test-delete-backward-word ()
   "Test `evil-delete-backward-word' in insert state."
   :tags '(evil)
-  (evil-test-buffer
-    "abc def\n   ghi j[k]l\n"
-    ("i" (kbd "C-w"))
-    "abc def\n   ghi [k]l\n"
-    ((kbd "C-w"))
-    "abc def\n   [k]l\n"
-    ((kbd "C-w"))
-    "abc def\n[k]l\n"
-    ((kbd "C-w"))
-    "abc def[k]l\n"))
+  (let ((evil-backspace-join-lines t))
+    (evil-test-buffer
+      "abc def\n   ghi j[k]l\n"
+      ("i" (kbd "C-w"))
+      "abc def\n   ghi [k]l\n"
+      ((kbd "C-w"))
+      "abc def\n   [k]l\n"
+      ((kbd "C-w"))
+      "abc def\n[k]l\n"
+      ((kbd "C-w"))
+      "abc def[k]l\n"))
+  (let (evil-backspace-join-lines)
+    (evil-test-buffer
+      "abc def\n[k]l\n"
+      (should-error (execute-kbd-macro (concat "i" (kbd "C-w"))))
+      "abc def\n[k]l\n")))
 
 (ert-deftest evil-test-change ()
   "Test `evil-change'"
