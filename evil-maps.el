@@ -350,7 +350,7 @@
 (define-key evil-insert-state-map [remap delete-backward-char] 'evil-delete-backward-char-and-join)
 (define-key evil-insert-state-map [delete] 'delete-char)
 (define-key evil-insert-state-map [remap newline] 'evil-ret)
-(define-key evil-insert-state-map [remap newline-and-indent] 'evil-ret)
+(define-key evil-insert-state-map [remap newline-and-indent] 'evil-ret-and-indent)
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
 (define-key evil-insert-state-map
   (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
