@@ -13,6 +13,7 @@
 ;;      Nikolai Weibull <now at bitwi.se>
 ;;      Sanel Zukan <sanelz at gmail.com>
 ;;      Simon Hafner <hafnersimon at gmail.com>
+;;      Stefan Wehr <mail at stefanwehr.de>
 ;;      Sune Simonsen <sune.simonsen at jayway.com>
 ;;      Thomas Hisch <thomas at opentech.at>
 ;;      Ulrich Müller <ulm at gentoo.org>
