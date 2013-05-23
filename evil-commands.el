@@ -757,7 +757,7 @@ In Insert state, insert a newline."
 (evil-define-motion evil-ret-and-indent (count)
   "Move the cursor COUNT lines down.
 If point is on a widget or a button, click on it.
-In Insert state, insert a newline."
+In Insert state, insert a newline and indent."
   :type line
   (evil-ret-gen count t))
 
