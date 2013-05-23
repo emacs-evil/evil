@@ -1212,9 +1212,11 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   "Delete previous word."
   (if (and (bolp) (not (bobp)))
       (delete-char -1)
-    (evil-delete (save-excursion
-                   (evil-backward-word-begin)
-                   (point))
+    (evil-delete (max
+                  (save-excursion
+                    (evil-backward-word-begin)
+                    (point))
+                  (line-beginning-position))
                  (point)
                  'exclusive
                  nil)))
