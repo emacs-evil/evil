@@ -2640,30 +2640,27 @@ the previous shell command is executed instead."
 
 (evil-ex-define-argument-type state
   "Defines an argument type which can take state names."
-  :completer
-  (lambda ()
-    (list
-     (point-min) (point-max)
-     (lambda (arg predicate flag)
-       (let ((completions
-              (append '("nil")
-                      (mapcar #'(lambda (state)
-                                  (format "%s" (car state)))
-                              evil-state-properties))))
-         (when arg
-           (cond
-            ((eq flag nil)
-             (try-completion arg completions predicate))
-            ((eq flag t)
-             (all-completions arg completions predicate))
-            ((eq flag 'lambda)
-             (test-completion arg completions predicate))
-            ((eq (car-safe flag) 'boundaries)
-             (cons 'boundaries
-                   (completion-boundaries arg
-                                          completions
-                                          predicate
-                                          (cdr flag)))))))))))
+  :collection
+  (lambda (arg predicate flag)
+    (let ((completions
+           (append '("nil")
+                   (mapcar #'(lambda (state)
+                               (format "%s" (car state)))
+                           evil-state-properties))))
+      (when arg
+        (cond
+         ((eq flag nil)
+          (try-completion arg completions predicate))
+         ((eq flag t)
+          (all-completions arg completions predicate))
+         ((eq flag 'lambda)
+          (test-completion arg completions predicate))
+         ((eq (car-safe flag) 'boundaries)
+          (cons 'boundaries
+                (completion-boundaries arg
+                                       completions
+                                       predicate
+                                       (cdr flag)))))))))
 
 (evil-define-interactive-code "<state>"
   "A valid evil state."
