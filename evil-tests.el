@@ -6628,7 +6628,12 @@ if no previous selection")
         (evil-test-buffer
           "ABCABCABC\nABC[A]BCABC\nABCABCABC"
           (":s/BC/XYZ/" (kbd "RET"))
-          "ABCABCABC\n[A]XYZAXYZAXYZ\nABCABCABC")))))
+          "ABCABCABC\n[A]XYZAXYZAXYZ\nABCABCABC"))))
+  (ert-info ("Substitute with empty replacement")
+    (evil-test-buffer
+      "[A]BCABC\n"
+      (":s/B" (kbd "RET"))
+      "[A]CABC\n")))
 
 (ert-deftest evil-test-ex-substitute-replacement ()
   "Test `evil-ex-substitute' with special replacements."

@@ -2804,8 +2804,7 @@ resp.  after executing the command."
   (evil-ex-nohighlight)
   (unless pattern
     (error "No pattern given"))
-  (unless replacement
-    (error "No replacement given"))
+  (setq replacement (or replacement ""))
   (setq evil-ex-last-was-search nil)
   (let* ((flags (append flags nil))
          (confirm (memq ?c flags))
