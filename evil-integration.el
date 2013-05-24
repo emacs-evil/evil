@@ -268,6 +268,9 @@
 
 (eval-after-load 'ace-jump-mode
   '(progn
+     (defvar evil-ace-jump-did-recursive-edit nil
+       "If a recursive edit was triggered by an evil ace-jump.")
+
      (defmacro evil-enclose-ace-jump-for-motion (&rest body)
        "Enclose ace-jump to make it suitable for motions.
 This includes restricting `ace-jump-mode' to the current window,
@@ -279,6 +282,7 @@ deactivating visual updates, saving the mark and entering `recursive-edit'."
           (unwind-protect
               (progn
                 ,@body
+                (setq evil-ace-jump-did-recursive-edit t)
                 (recursive-edit))
             (if (evil-visual-state-p)
                 (progn
@@ -312,7 +316,13 @@ deactivating visual updates, saving the mark and entering `recursive-edit'."
         (ace-jump-mode 5)
         (forward-char -1)))
 
-     (add-hook 'ace-jump-mode-end-hook 'exit-recursive-edit)))
+     (defun evil-ace-jump-maybe-exit-recursive-edit ()
+       "Exit a recursive edit if it was caused by an evil jump."
+       (when evil-ace-jump-did-recursive-edit
+         (setq evil-ace-jump-did-recursive-edit nil)
+         (exit-recursive-edit)))
+
+     (add-hook 'ace-jump-mode-end-hook 'evil-ace-jump-maybe-exit-recursive-edit)))
 
 (provide 'evil-integration)
 
