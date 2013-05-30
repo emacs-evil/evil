@@ -555,13 +555,11 @@ the ESC prefix map (i.e. the map originally bound to \\e in
     (unless evil-esc-mode
       (setq evil-esc-mode t)
       (add-hook 'after-make-frame-functions #'evil-init-esc)
-      (add-hook 'delete-terminal-functions #'evil-deinit-esc)
       (mapc #'evil-init-esc (frame-list))))
    ((< arg 0)
     (when evil-esc-mode
       (remove-hook 'after-make-frame-functions #'evil-init-esc)
-      (remove-hook 'delete-terminal-functions #'evil-deinit-esc)
-      (mapc #'evil-deinit-esc (terminal-list))
+      (mapc #'evil-deinit-esc (frame-list))
       (setq evil-esc-mode nil)))))
 
 (defun evil-init-esc (frame)
@@ -578,12 +576,15 @@ the ESC prefix map (i.e. the map originally bound to \\e in
           (define-key input-decode-map [?\e]
             `(menu-item "" ,evil-esc-map :filter ,#'evil-esc)))))))
 
-(defun evil-deinit-esc (term)
+(defun evil-deinit-esc (frame)
   "Restore `input-decode-map' in terminal."
-  (when (eq (terminal-live-p term) 't)
-    (let ((evil-esc-map (terminal-parameter term 'evil-esc-map)))
-      (define-key input-decode-map [?\e] evil-esc-map)
-      (set-terminal-parameter term 'evil-esc-map nil))))
+  (with-selected-frame frame
+    (let ((term (frame-terminal frame)))
+      (when (terminal-live-p term)
+        (let ((evil-esc-map (terminal-parameter term 'evil-esc-map)))
+          (when evil-esc-map
+            (define-key input-decode-map [?\e] evil-esc-map)
+            (set-terminal-parameter term 'evil-esc-map nil)))))))
 
 (defun evil-esc (map)
   "Translate \\e to 'escape if no further event arrives.
