@@ -270,10 +270,13 @@
   '(progn
      (defmacro evil-enclose-ace-jump-for-motion (&rest body)
        "Enclose ace-jump to make it suitable for motions.
-This includes restricting `ace-jump-mode' to the current window,
-deactivating visual updates, saving the mark and entering `recursive-edit'."
+This includes restricting `ace-jump-mode' to the current window
+in visual and operator state, deactivating visual updates, saving
+the mark and entering `recursive-edit'."
        `(let ((old-mark (mark))
-              (ace-jump-mode-scope 'window))
+              (ace-jump-mode-scope (if (member evil-state '(visual operator))
+                                       'window
+                                     ace-jump-mode-scope)))
           (remove-hook 'pre-command-hook #'evil-visual-pre-command t)
           (remove-hook 'post-command-hook #'evil-visual-post-command t)
           (unwind-protect
