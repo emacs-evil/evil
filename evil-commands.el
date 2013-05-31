@@ -2827,13 +2827,16 @@ resp.  after executing the command."
                              (1- end)
                            end))
       (let ((evil-ex-substitute-nreplaced 0)
-            (evil-ex-substitute-next-line (line-number-at-pos beg))
-            (evil-ex-substitute-last-line
-             (if (save-excursion (goto-char end) (bolp))
-                 (1- (line-number-at-pos end))
-               (line-number-at-pos end)))
             (evil-ex-substitute-last-point (point))
+            markers
             transient-mark-mode)
+        (save-excursion
+          (goto-char beg)
+          (beginning-of-line)
+          (while (< (point) end)
+            (push (move-marker (make-marker) (point)) markers)
+            (forward-line)))
+        (setq markers (nreverse markers))
         (if confirm
             (let ((evil-ex-substitute-overlay
                    (make-overlay (point) (point)))
@@ -2873,42 +2876,33 @@ resp.  after executing the command."
                                                 (evil-ex-hl-get-max
                                                  'evil-ex-substitute)))
                      #'(lambda ()
-                         (goto-char (point-min))
-                         (when (and
-                                (zerop
-                                 (forward-line
-                                  (1- evil-ex-substitute-next-line)))
-                                (bolp)
-                                (re-search-forward
-                                 evil-ex-substitute-regex
-                                 nil t nil)
-                                (<= (line-number-at-pos (match-end 0))
-                                    evil-ex-substitute-last-line))
-                           (goto-char (match-beginning 0))
-                           (setq evil-ex-substitute-next-line
-                                 (1+ (line-number-at-pos (point))))
-                           (match-data)))))
+                         (catch 'found
+                           (while markers
+                             (let ((m (pop markers)))
+                               (goto-char m)
+                               (move-marker m nil))
+                             (when (re-search-forward evil-ex-substitute-regex
+                                                      (line-end-position) t nil)
+                               (goto-char (match-beginning 0))
+                               (throw 'found (match-data))))))))
                 (evil-ex-delete-hl 'evil-ex-substitute)
                 (delete-overlay evil-ex-substitute-overlay)))
 
           ;; just replace the first occurrences per line
           ;; without highlighting and asking
-          (goto-char (point-min))
-          (let ((num (1- evil-ex-substitute-next-line)))
-            (while (and (zerop (forward-line num))
-                        (bolp)
-                        (re-search-forward
-                         evil-ex-substitute-regex nil t nil)
-                        (<= (line-number-at-pos
-                             (match-beginning 0))
-                            evil-ex-substitute-last-line))
+          (while markers
+            (let ((m (pop markers)))
+              (goto-char m)
+              (move-marker m nil))
+            (when (re-search-forward evil-ex-substitute-regex
+                                     (line-end-position) t nil)
               (setq evil-ex-substitute-nreplaced
                     (1+ evil-ex-substitute-nreplaced))
               (evil-replace-match evil-ex-substitute-replacement
                                   (not case-replace))
-              (setq evil-ex-substitute-last-point (point))
-              (setq num 1))))
+              (setq evil-ex-substitute-last-point (point)))))
 
+        (while markers (move-marker (pop markers) nil))
         (goto-char evil-ex-substitute-last-point)
 
         (message "Replaced %d occurrence%s"
