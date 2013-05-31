@@ -313,8 +313,7 @@ the mark and entering `recursive-edit'."
        "Jump visually to the char in front of a char using ace-jump."
        :type exclusive
        (evil-enclose-ace-jump-for-motion
-        (call-interactively #'ace-jump-char-mode)
-        (forward-char -1)))
+        (call-interactively #'ace-jump-char-mode)))
 
      (defun evil-ace-jump-exit-recursive-edit ()
        "Exit a recursive edit caused by an evil jump."
