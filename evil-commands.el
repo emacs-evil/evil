@@ -2832,7 +2832,8 @@ resp.  after executing the command."
              (if (save-excursion (goto-char end) (bolp))
                  (1- (line-number-at-pos end))
                (line-number-at-pos end)))
-            (evil-ex-substitute-last-point (point)))
+            (evil-ex-substitute-last-point (point))
+            transient-mark-mode)
         (if confirm
             (let ((evil-ex-substitute-overlay
                    (make-overlay (point) (point)))
