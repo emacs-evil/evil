@@ -295,25 +295,25 @@ the mark and entering `recursive-edit'."
        "Jump visually directly to a char using ace-jump."
        :type exclusive
        (evil-enclose-ace-jump-for-motion
-        (ace-jump-mode 5)))
+        (call-interactively #'ace-jump-char-mode)))
 
      (evil-define-motion evil-ace-jump-line-mode (count)
        "Jump visually to the beginning of a line using ace-jump."
        :type line
        (evil-enclose-ace-jump-for-motion
-        (ace-jump-mode 9)))
+        (call-interactively #'ace-jump-line-mode)))
 
      (evil-define-motion evil-ace-jump-word-mode (count)
        "Jump visually to the beginning of a word using ace-jump."
        :type exclusive
        (evil-enclose-ace-jump-for-motion
-        (ace-jump-mode 1)))
+        (call-interactively #'ace-jump-word-mode)))
 
      (evil-define-motion evil-ace-jump-char-to-mode (count)
        "Jump visually to the char in front of a char using ace-jump."
        :type exclusive
        (evil-enclose-ace-jump-for-motion
-        (ace-jump-mode 5)
+        (call-interactively #'ace-jump-char-mode)
         (forward-char -1)))
 
      (defun evil-ace-jump-exit-recursive-edit ()
