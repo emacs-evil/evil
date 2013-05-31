@@ -633,8 +633,9 @@ Note that this function ignores the whole-line property of PATTERN."
 
 (defun evil-ex-hl-do-update-highlight (&optional buffer)
   "Timer function for updating the highlights."
-  (with-current-buffer buffer
-    (evil-ex-hl-update-highlights))
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (evil-ex-hl-update-highlights)))
   (setq evil-ex-hl-update-timer nil))
 
 (defun evil-ex-hl-update-highlights-scroll (win beg)
