@@ -293,7 +293,7 @@ the mark and entering `recursive-edit'."
 
      (evil-define-motion evil-ace-jump-char-mode (count)
        "Jump visually directly to a char using ace-jump."
-       :type exclusive
+       :type inclusive
        (evil-enclose-ace-jump-for-motion
         (call-interactively #'ace-jump-char-mode)))
 
