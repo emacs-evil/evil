@@ -318,7 +318,11 @@ the mark and entering `recursive-edit'."
      (defun evil-ace-jump-exit-recursive-edit ()
        "Exit a recursive edit caused by an evil jump."
        (remove-hook 'ace-jump-mode-end-hook #'evil-ace-jump-exit-recursive-edit)
-       (exit-recursive-edit))))
+       (exit-recursive-edit))
+
+     (define-key evil-motion-state-map [remap ace-jump-char-mode] #'evil-ace-jump-char-mode)
+     (define-key evil-motion-state-map [remap ace-jump-line-mode] #'evil-ace-jump-line-mode)
+     (define-key evil-motion-state-map [remap ace-jump-word-mode] #'evil-ace-jump-word-mode)))
 
 (provide 'evil-integration)
 
