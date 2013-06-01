@@ -2764,6 +2764,15 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[f]oo bar\n"
       (":noh\ni\C-r:"))))
 
+(ert-deftest evil-test-last-insert-register ()
+  "Test last insertion register."
+  (evil-test-buffer
+    "[l]ine 1\n"
+    ("GiABC" [escape])
+    "line 1\nAB[C]"
+    ("gg\".P")
+    "AB[C]line 1\nABC"))
+
 (ert-deftest evil-test-align ()
   "Test `evil-align-left', `evil-align-right' and `evil-align-center'."
   :tags '(evil operator)

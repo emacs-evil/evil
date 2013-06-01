@@ -1899,8 +1899,8 @@ The tracked insertion is set to `evil-last-insertion'."
              ;; insertion information may be invalid. There is no way
              ;; to detect this situation, but at least we should
              ;; ensure that no error occurs (see bug #272).
-             (>= (point-min) (car evil-current-insertion))
-             (< (point-max) (cdr evil-current-insertion))
+             (>= (car evil-current-insertion) (point-min))
+             (<= (cdr evil-current-insertion) (point-max))
              (buffer-substring-no-properties (car evil-current-insertion)
                                              (cdr evil-current-insertion))))
   (remove-hook 'after-change-functions #'evil-track-last-insertion t))
