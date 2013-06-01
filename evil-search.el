@@ -220,9 +220,12 @@ one more than the current position."
       (setq isearch-string string)
       (isearch-update-ring string regexp-p)
       ;; handle opening and closing of invisible area
-      (when (boundp 'isearch-filter-predicate)
-        (funcall isearch-filter-predicate
-                 (match-beginning 0) (match-end 0)))
+      (cond
+       ((boundp 'isearch-filter-predicates)
+        (dolist (pred isearch-filter-predicates)
+          (funcall pred (match-beginning 0) (match-end 0))))
+       ((boundp 'isearch-filter-predicate)
+        (funcall isearch-filter-predicate (match-beginning 0) (match-end 0))))
       ;; always position point at the beginning of the match
       (goto-char (match-beginning 0))
       ;; determine message for echo area
