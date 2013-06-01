@@ -1,6 +1,7 @@
 ;;; evil.el --- extensible vi layer
 
-;; Author: Vegard Øye <vegard_oye at hotmail.com>
+;; Authors:
+;;      Alessandro Piras <laynor@gmail.com>
 ;;      Antono Vasiljev <antono.vasiljev at gmail.com>
 ;;      Barry O'Reilly <gundaetiapo at gmail.com>
 ;;      Christoph Lange <langec at web.de>
@@ -15,6 +16,7 @@
 ;;      Sune Simonsen <sune.simonsen at jayway.com>
 ;;      Thomas Hisch <thomas at opentech.at>
 ;;      Ulrich Müller <ulm at gentoo.org>
+;;      Vegard Øye <vegard_oye at hotmail.com>
 ;;      Winfred Lu <winfred.lu@gmail.com>
 ;;      Wolfgang Jenkner <wjenkner at inode.at>
 ;;      York Zhao <yzhao at telecor.com>
