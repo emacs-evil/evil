@@ -198,14 +198,14 @@
   (when evil-local-mode
     (evil-initialize-state)))
 
-(when (boundp 'undo-tree-visualizer-map)
-  (define-key undo-tree-visualizer-map [remap evil-backward-char]
+(when (boundp 'undo-tree-visualizer-mode-map)
+  (define-key undo-tree-visualizer-mode-map [remap evil-backward-char]
     'undo-tree-visualize-switch-branch-left)
-  (define-key undo-tree-visualizer-map [remap evil-forward-char]
+  (define-key undo-tree-visualizer-mode-map [remap evil-forward-char]
     'undo-tree-visualize-switch-branch-right)
-  (define-key undo-tree-visualizer-map [remap evil-next-line]
+  (define-key undo-tree-visualizer-mode-map [remap evil-next-line]
     'undo-tree-visualize-redo)
-  (define-key undo-tree-visualizer-map [remap evil-previous-line]
+  (define-key undo-tree-visualizer-mode-map [remap evil-previous-line]
     'undo-tree-visualize-undo))
 
 ;;; Auto-complete
