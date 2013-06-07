@@ -278,7 +278,7 @@ directly."
   "Character read through `evil-read-key'."
   (list
    (if (evil-operator-state-p)
-       (save-restriction (widen) (evil-read-key))
+       (evil-without-restriction (evil-read-key))
      (evil-read-key))))
 
 (evil-define-interactive-code "<r>"
