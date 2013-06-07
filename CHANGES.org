@@ -1,5 +1,9 @@
 * Changes and New Features in Evil
 
+** News in 1.0.4
+
+   * Undo one restriction when <c> argument is read in operator state.
+
 ** News in 1.0.3
 
    * Fix `evil-delete-backward-word` at first non-blank in a line.

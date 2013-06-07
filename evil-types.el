@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.0-dev
+;; Version: 1.0.4
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -278,7 +278,7 @@ directly."
   "Character read through `evil-read-key'."
   (list
    (if (evil-operator-state-p)
-       (save-restriction (widen) (evil-read-key))
+       (evil-without-restriction (evil-read-key))
      (evil-read-key))))
 
 (evil-define-interactive-code "<r>"
