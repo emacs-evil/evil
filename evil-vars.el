@@ -1043,6 +1043,11 @@ of `evil-inhibit-operator' from one local scope to another.")
 (defvar evil-operator-range-motion nil
   "Motion of `evil-operator-range'.")
 
+(defvar evil-restriction-stack nil
+  "List of previous restrictions.
+Using `evil-with-restriction' stores the previous values of
+`point-min' and `point-max' as a pair in this list.")
+
 (evil-define-local-var evil-markers-alist
   '((?\( . evil-backward-sentence)
     (?\) . evil-forward-sentence)
