@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.0.4
+;; Version: 1.0.5
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -164,10 +164,12 @@
                 (narrow-to-region narrow (point-max)))
               ad-do-it))
         ;; prevent the preceding pair from being highlighted
-        (when (overlayp show-paren-overlay)
-          (delete-overlay show-paren-overlay))
-        (when (overlayp show-paren-overlay-1)
-          (delete-overlay show-paren-overlay-1))))))
+        (dolist (ov '(show-paren--overlay
+                      show-paren--overlay-1
+                      show-paren-overlay
+                      show-paren-overlay-1))
+          (let ((ov (and (boundp ov) (symbol-value ov))))
+            (when (overlayp ov) (delete-overlay ov))))))))
 
 ;;; Speedbar
 

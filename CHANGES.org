@@ -1,5 +1,13 @@
 * Changes and New Features in Evil
 
+** News in 1.0.5
+
+   * Fix bug in `show-paren-mode` due to variable renaming in latest
+     emacs.
+
+   * Fix bug in isearch module due to variable renaming in latest
+     emacs.
+
 ** News in 1.0.4
 
    * Undo one restriction when <c> argument is read in operator state.
