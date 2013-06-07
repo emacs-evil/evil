@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.0.4
+;; Version: 1.0.5
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -1385,7 +1385,7 @@ See `evil-ex-init-shell-argument-completion'.")
   "Keymap used in ex-search-mode.")
 (set-keymap-parent evil-ex-search-keymap minibuffer-local-map)
 
-(defconst evil-version "1.0.4"
+(defconst evil-version "1.0.5"
   "The current version of Evil")
 
 (defun evil-version ()

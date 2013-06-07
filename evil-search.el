@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.0.4
+;; Version: 1.0.5
 
 ;;
 ;; This file is NOT part of GNU Emacs.
