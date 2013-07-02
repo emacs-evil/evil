@@ -302,26 +302,33 @@ the mark and entering `recursive-edit'."
 (evil-define-motion evil-ace-jump-char-mode (count)
   "Jump visually directly to a char using ace-jump."
   :type inclusive
-  (evil-enclose-ace-jump-for-motion
-   (call-interactively #'ace-jump-char-mode)))
+  (evil-without-repeat
+    (evil-enclose-ace-jump-for-motion
+     (call-interactively #'ace-jump-char-mode))))
 
 (evil-define-motion evil-ace-jump-line-mode (count)
   "Jump visually to the beginning of a line using ace-jump."
   :type line
-  (evil-enclose-ace-jump-for-motion
-   (call-interactively #'ace-jump-line-mode)))
+  :repeat abort
+  (evil-without-repeat
+    (evil-enclose-ace-jump-for-motion
+     (call-interactively #'ace-jump-line-mode))))
 
 (evil-define-motion evil-ace-jump-word-mode (count)
   "Jump visually to the beginning of a word using ace-jump."
   :type exclusive
-  (evil-enclose-ace-jump-for-motion
-   (call-interactively #'ace-jump-word-mode)))
+  :repeat abort
+  (evil-without-repeat
+    (evil-enclose-ace-jump-for-motion
+     (call-interactively #'ace-jump-word-mode))))
 
 (evil-define-motion evil-ace-jump-char-to-mode (count)
   "Jump visually to the char in front of a char using ace-jump."
   :type exclusive
-  (evil-enclose-ace-jump-for-motion
-   (call-interactively #'ace-jump-char-mode)))
+  :repeat abort
+  (evil-without-repeat
+    (evil-enclose-ace-jump-for-motion
+     (call-interactively #'ace-jump-char-mode))))
 
 (defun evil-ace-jump-exit-recursive-edit ()
   "Exit a recursive edit caused by an evil jump."
