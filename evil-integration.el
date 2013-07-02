@@ -275,6 +275,8 @@
 (declare-function 'ace-jump-word-mode "ace-jump-mode")
 (declare-function 'ace-jump-line-mode "ace-jump-mode")
 
+(defvar evil-ace-jump-active nil)
+
 (defmacro evil-enclose-ace-jump-for-motion (&rest body)
   "Enclose ace-jump to make it suitable for motions.
 This includes restricting `ace-jump-mode' to the current window
@@ -290,14 +292,25 @@ the mark and entering `recursive-edit'."
      (unwind-protect
          (progn
            ,@body
-           (add-hook 'ace-jump-mode-end-hook #'evil-ace-jump-exit-recursive-edit)
-           (recursive-edit))
+           (let ((evil-ace-jump-active t))
+             (recursive-edit)))
+       (remove-hook 'post-command-hook #'evil-ace-jump-exit-recursive-edit)
        (if (evil-visual-state-p)
            (progn
              (add-hook 'pre-command-hook #'evil-visual-pre-command nil t)
              (add-hook 'post-command-hook #'evil-visual-post-command nil t)
              (set-mark old-mark))
          (push-mark old-mark)))))
+
+(eval-after-load 'ace-jump-mode
+  `(defadvice ace-jump-done (after evil activate)
+     (when evil-ace-jump-active
+       (add-hook 'post-command-hook #'evil-ace-jump-exit-recursive-edit))))
+
+(defun evil-ace-jump-exit-recursive-edit ()
+  "Exit a recursive edit caused by an evil jump."
+  (remove-hook 'post-command-hook #'evil-ace-jump-exit-recursive-edit)
+  (exit-recursive-edit))
 
 (evil-define-motion evil-ace-jump-char-mode (count)
   "Jump visually directly to a char using ace-jump."
@@ -329,11 +342,6 @@ the mark and entering `recursive-edit'."
   (evil-without-repeat
     (evil-enclose-ace-jump-for-motion
      (call-interactively #'ace-jump-char-mode))))
-
-(defun evil-ace-jump-exit-recursive-edit ()
-  "Exit a recursive edit caused by an evil jump."
-  (remove-hook 'ace-jump-mode-end-hook #'evil-ace-jump-exit-recursive-edit)
-  (exit-recursive-edit))
 
 (define-key evil-motion-state-map [remap ace-jump-char-mode] #'evil-ace-jump-char-mode)
 (define-key evil-motion-state-map [remap ace-jump-line-mode] #'evil-ace-jump-line-mode)
