@@ -135,6 +135,14 @@
 (declare-function evil-visual-line "evil-visual")
 (declare-function evil-visual-block "evil-visual")
 
+(defmacro evil-without-repeat (&rest body)
+  (declare (indent defun)
+           (debug t))
+  `(let ((pre-command-hook (remq 'evil-repeat-pre-hook pre-command-hook))
+         (post-command-hook (remq 'evil-repeat-post-hook post-command-hook)))
+     ,@body
+     (evil-repeat-abort)))
+
 (defsubst evil-repeat-recording-p ()
   "Returns non-nil iff a recording is in progress."
   (eq evil-recording-repeat t))
