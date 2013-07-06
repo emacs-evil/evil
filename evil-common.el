@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.0.5
+;; Version: 1.0.6
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -579,8 +579,9 @@ Both COUNT and CMD may be nil."
 Translates it according to the input method."
   (let ((old-global-map (current-global-map))
         (new-global-map (make-sparse-keymap))
-        (overriding-terminal-local-map evil-read-key-map)
-        overriding-local-map seq char cmd)
+        (overriding-terminal-local-map nil)
+        (overriding-local-map evil-read-key-map)
+        seq char cmd)
     (unwind-protect
         (condition-case nil
             (progn

@@ -1,5 +1,10 @@
 * Changes and New Features in Evil
 
+** News in 1.0.6
+
+   * Fix bug induced in emacs trunk due to changed behaviour of
+     `overriding-terminal-local-map` (fixes #309).
+
 ** News in 1.0.5
 
    * Fix bug in `show-paren-mode` due to variable renaming in latest

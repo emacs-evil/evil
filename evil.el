@@ -8,6 +8,7 @@
 ;;      Frank Fischer <frank.fischer at mathematik.tu-chemnitz.de>
 ;;      Frank Terbeck <ft at bewatermyfriend.org>
 ;;      Jonathan Claggett <jclaggett at lonocloud.com>
+;;      José A. Romero L. <escherdragon@gmail.com>
 ;;      Lars Andersen <mrgrandmother at gmail.com>
 ;;      Lintaro Ina <tarao.gnn at gmail.com>
 ;;      Marian Schubert <maio@netsafe.cz>
@@ -29,7 +30,7 @@
 ;;      To get in touch, please use the bug tracker or the
 ;;      mailing list (see below).
 ;; Created: 2011-03-01
-;; Version: 1.0.5
+;; Version: 1.0.6
 ;; Keywords: emulation, vim
 ;; URL: http://gitorious.org/evil
 ;;      Repository: git://gitorious.org/evil/evil.git
