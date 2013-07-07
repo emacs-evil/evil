@@ -29,6 +29,7 @@
 (require 'evil-core)
 (require 'evil-macros)
 (require 'evil-types)
+(require 'evil-repeat)
 
 ;;; Code:
 
