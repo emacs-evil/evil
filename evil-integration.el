@@ -291,9 +291,13 @@ the mark and entering `recursive-edit'."
      (remove-hook 'pre-command-hook #'evil-visual-pre-command t)
      (remove-hook 'post-command-hook #'evil-visual-post-command t)
      (unwind-protect
-         (progn
+         (let ((evil-ace-jump-active 'prepare)
+               (ace-jump-mode-end-hook
+                (cons #'evil-ace-jump-exit-recursive-edit
+                      ace-jump-mode-end-hook)))
            ,@body
-           (let ((evil-ace-jump-active t))
+           (when evil-ace-jump-active
+             (setq evil-ace-jump-active t)
              (recursive-edit)))
        (remove-hook 'post-command-hook #'evil-ace-jump-exit-recursive-edit)
        (if (evil-visual-state-p)
@@ -310,8 +314,12 @@ the mark and entering `recursive-edit'."
 
 (defun evil-ace-jump-exit-recursive-edit ()
   "Exit a recursive edit caused by an evil jump."
-  (remove-hook 'post-command-hook #'evil-ace-jump-exit-recursive-edit)
-  (exit-recursive-edit))
+  (cond
+   ((eq evil-ace-jump-active 'prepare)
+    (setq evil-ace-jump-active nil))
+   (evil-ace-jump-active
+    (remove-hook 'post-command-hook #'evil-ace-jump-exit-recursive-edit)
+    (exit-recursive-edit))))
 
 (evil-define-motion evil-ace-jump-char-mode (count)
   "Jump visually directly to a char using ace-jump."
