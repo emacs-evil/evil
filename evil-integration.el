@@ -284,22 +284,25 @@ This includes restricting `ace-jump-mode' to the current window
 in visual and operator state, deactivating visual updates, saving
 the mark and entering `recursive-edit'."
   `(let ((old-mark (mark))
-         (ace-jump-mode-scope (if (and (not (memq evil-state '(visual operator)))
-                                       (boundp 'ace-jump-mode-scope))
-                                  ace-jump-mode-scope
-                                'window)))
+         (ace-jump-mode-scope
+          (if (and (not (memq evil-state '(visual operator)))
+                   (boundp 'ace-jump-mode-scope))
+              ace-jump-mode-scope
+            'window)))
      (remove-hook 'pre-command-hook #'evil-visual-pre-command t)
      (remove-hook 'post-command-hook #'evil-visual-post-command t)
      (unwind-protect
-         (let ((evil-ace-jump-active 'prepare)
-               (ace-jump-mode-end-hook
-                (cons #'evil-ace-jump-exit-recursive-edit
-                      ace-jump-mode-end-hook)))
+         (let ((evil-ace-jump-active 'prepare))
+           (add-hook 'ace-jump-mode-end-hook
+                     #'evil-ace-jump-exit-recursive-edit)
            ,@body
            (when evil-ace-jump-active
              (setq evil-ace-jump-active t)
              (recursive-edit)))
-       (remove-hook 'post-command-hook #'evil-ace-jump-exit-recursive-edit)
+       (remove-hook 'post-command-hook
+                    #'evil-ace-jump-exit-recursive-edit)
+       (remove-hook 'ace-jump-mode-end-hook
+                    #'evil-ace-jump-exit-recursive-edit)
        (if (evil-visual-state-p)
            (progn
              (add-hook 'pre-command-hook #'evil-visual-pre-command nil t)
