@@ -624,6 +624,17 @@ and jump to the corresponding one."
             (char (nth 1 evil-last-find))
             (fwd (nth 2 evil-last-find))
             evil-last-find)
+        ;; ensure count is non-negative
+        (when (< count 0)
+          (setq count (- count)
+                fwd (not fwd)))
+        ;; skip next character when repeating t or T
+        (and (eq cmd #'evil-find-char-to)
+             evil-repeat-find-to-skip-next
+             (= count 1)
+             (or (and fwd (= (char-after (1+ (point))) char))
+                 (and (not fwd) (= (char-before) char)))
+             (setq count (1+ count)))
         (funcall cmd (if fwd count (- count)) char)
         (unless (nth 2 evil-last-find)
           (setq evil-this-type 'exclusive)))

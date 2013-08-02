@@ -196,6 +196,11 @@ moves the cursor."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-repeat-find-to-skip-next t
+  "Whether a repeat of t or T should skip an adjacent character."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-kbd-macro-suppress-motion-error nil
   "Whether left/right motions signal errors during keyboard-macro definition.
 If this variable is set to non-nil, then the function
