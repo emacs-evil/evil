@@ -1,5 +1,9 @@
 * Changes and New Features in Evil
 
+** News in 1.0.7
+
+   * Fix #319.
+
 ** News in 1.0.6
 
    * Fix bug induced in emacs trunk due to changed behaviour of
