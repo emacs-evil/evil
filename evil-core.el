@@ -208,10 +208,13 @@ If STATE is nil, disable all states."
           (evil-previous-state-alist (copy-tree evil-previous-state-alist))
           (evil-next-state evil-next-state)
           (old-state evil-state)
-          (inhibit-quit t))
+          (inhibit-quit t)
+          (buf (current-buffer)))
      (unwind-protect
          (progn ,@body)
-       (evil-change-state old-state))))
+       (when (buffer-live-p buf)
+         (with-current-buffer buf
+           (evil-change-state old-state))))))
 
 (defmacro evil-with-state (state &rest body)
   "Change to STATE and execute BODY without refreshing the display.
