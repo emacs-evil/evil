@@ -1152,6 +1152,13 @@ or line COUNT to the top of the window."
   :motion evil-line
   :move-point nil
   (interactive "<R><x>")
+  (when (evil-visual-state-p)
+    (unless (memq type '(line block))
+      (let ((range (evil-expand beg end 'line)))
+        (setq beg (evil-range-beginning range)
+              end (evil-range-end range)
+              type (evil-type range))))
+    (evil-exit-visual-state))
   (evil-yank beg end type register))
 
 (evil-define-operator evil-delete (beg end type register yank-handler)
