@@ -11,6 +11,7 @@
 ;;      José A. Romero L. <escherdragon@gmail.com>
 ;;      Lars Andersen <mrgrandmother at gmail.com>
 ;;      Lintaro Ina <tarao.gnn at gmail.com>
+;;      Lukasz Wrzosek <wrzoski@gmail.com>
 ;;      Marian Schubert <maio@netsafe.cz>
 ;;      Michael Markert <markert.michael at googlemail.com>
 ;;      Nikolai Weibull <now at bitwi.se>
