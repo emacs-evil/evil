@@ -3715,22 +3715,34 @@ if the previous state was Emacs state."
   (evil-normal-state)
   (evil-echo "Switched to Normal state for the next command ..."))
 
-(defun evil-execute-in-emacs-state (&optional arg)
-  "Execute the next command in Emacs state."
-  (interactive "p")
-  (cond
-   (arg
-    (add-hook 'post-command-hook #'evil-execute-in-emacs-state t)
-    (setq evil-execute-in-emacs-state-buffer (current-buffer))
-    (evil-emacs-state)
-    (evil-echo "Switched to Emacs state for the next command ..."))
-   ((and (not (eq this-command #'evil-execute-in-emacs-state))
-         (not (minibufferp)))
-    (remove-hook 'post-command-hook 'evil-execute-in-emacs-state)
+(defun evil-stop-execute-in-emacs-state ()
+  (when (and (not (eq this-command #'evil-execute-in-emacs-state))
+             (not (minibufferp)))
+    (remove-hook 'post-command-hook 'evil-stop-execute-in-emacs-state)
     (when (buffer-live-p evil-execute-in-emacs-state-buffer)
       (with-current-buffer evil-execute-in-emacs-state-buffer
-        (evil-change-to-previous-state)))
-    (setq evil-execute-in-emacs-state-buffer))))
+        (if (and (eq evil-previous-state 'visual)
+                 (not (use-region-p)))
+            (progn
+              (evil-change-to-previous-state)
+              (evil-exit-visual-state))
+          (evil-change-to-previous-state))))
+    (setq evil-execute-in-emacs-state-buffer nil)))
+
+(evil-define-command evil-execute-in-emacs-state ()
+  "Execute the next command in Emacs state."
+  (add-hook 'post-command-hook #'evil-stop-execute-in-emacs-state t)
+  (setq evil-execute-in-emacs-state-buffer (current-buffer))
+  (cond
+   ((evil-visual-state-p)
+    (let ((mrk (mark))
+          (pnt (point)))
+      (evil-emacs-state)
+      (set-mark mrk)
+      (goto-char pnt)))
+   (t
+    (evil-emacs-state)))
+  (evil-echo "Switched to Emacs state for the next command ..."))
 
 (defun evil-exit-visual-and-repeat (event)
   "Exit insert state and repeat event.
