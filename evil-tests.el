@@ -6727,7 +6727,12 @@ if no previous selection")
     (evil-test-buffer
       "[a]bcXdefXghiXjkl\n"
       (":s/X/\\|\\/\\|/g" [return])
-      "[a]bc|/|def|/|ghi|/|jkl\n")))
+      "[a]bc|/|def|/|ghi|/|jkl\n"))
+  (ert-info ("Substitute with register")
+    (evil-test-buffer
+      "[a]bc\niiiXiiiXiiiXiii\n"
+      ("\"ayiwj:s/X/\\=@a/g" [return])
+      "abc\n[i]iiabciiiabciiiabciii\n")))
 
 (ert-deftest evil-test-ex-repeat-substitute-replacement ()
   "Test `evil-ex-substitute' with repeating of previous substitutions."
