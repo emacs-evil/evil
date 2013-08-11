@@ -313,39 +313,6 @@ Returns nil if nothing is found."
 
 ;;; Ex search
 
-;; a pattern
-(defun evil-ex-make-pattern (regexp casefold whole-line)
-  "Create a new search pattern.
-REGEXP is the regular expression to be searched for.
-CASEFOLD is the case-fold property of the search,
-which can be either `sensitive', `insensitive' or `smart'.
-Here `smart' means the pattern is case sensitive if and only if
-it contains a capital character. If WHOLE-LINE is non-nil,
-all occurrences of the pattern on a line will be highlighted,
-otherwise only the first one."
-  (let ((re (evil-ex-regex-without-case regexp)))
-    (when evil-ex-search-vim-style-regexp
-      (setq re (evil-transform-vim-style-regexp re)))
-    (setq re (evil-transform-regexp re
-                                    '((?t . "\t")
-                                      (?n . "\n")
-                                      (?r . "\r"))))
-    (list re
-          (evil-ex-regex-case regexp casefold)
-          whole-line)))
-
-(defun evil-ex-pattern-regex (pattern)
-  "Return the regular expression of a search PATTERN."
-  (car pattern))
-
-(defun evil-ex-pattern-case-fold (pattern)
-  "Return the case-fold property of a search PATTERN."
-  (cadr pattern))
-
-(defun evil-ex-pattern-whole-line (pattern)
-  "Return the whole-line property of a search PATTERN."
-  (nth 2 pattern))
-
 (defun evil-ex-regex-without-case (re)
   "Return the regular expression without all occurrences of \\c and \\C."
   (evil-transform-regexp re '((?c . "") (?C . ""))))
@@ -369,6 +336,69 @@ letter, otherwise it will be case-insensitive."
       'sensitive))
    (t default-case)))
 
+;; a pattern
+(defun evil-ex-make-substitute-pattern (regexp flags)
+  "Creates a PATTERN for substitution with FLAGS.
+This function respects the values of `evil-ex-substitute-case'
+and `evil-ex-substitute-global'."
+  (evil-ex-make-pattern regexp
+                        (cond
+                         ((memq ?i flags) 'insensitive)
+                         ((memq ?I flags) 'sensitive)
+                         ((not evil-ex-substitute-case)
+                          evil-ex-search-case)
+                         (t evil-ex-substitute-case))
+                        (or (and evil-ex-substitute-global
+                                 (not (memq ?g flags)))
+                            (and (not evil-ex-substitute-global)
+                                 (memq ?g flags)))))
+
+(defun evil-ex-make-search-pattern (regexp)
+  "Creates a PATTERN for search.
+This function respects the values of `evil-ex-search-case'."
+  (evil-ex-make-pattern regexp evil-ex-search-case t))
+
+(defun evil-ex-make-pattern (regexp case whole-line)
+  "Create a new search pattern.
+REGEXP is the regular expression to be searched for. CASE should
+be either 'sensitive, 'insensitive for case-sensitive and
+case-insensitive search, respectively, or anything else.  In the
+latter case the pattern is smart-case, i.e. it is automatically
+sensitive of the pattern contains one upper case letter,
+otherwise it is insensitive.  The input REGEXP is considered a
+Vim-style regular expression if `evil-ex-search-vim-style-regexp'
+is non-nil, in which case it is transformed to an Emacs style
+regular expression (i.e. certain backslash-codes are
+transformed. Otherwise REGEXP must be an Emacs style regular
+expression and is not transformed."
+  (let ((re (evil-ex-regex-without-case regexp))
+        (ignore-case (eq (evil-ex-regex-case regexp case) 'insensitive)))
+    ;; possibly transform regular expression from vim-style to
+    ;; Emacs-style.
+    (if evil-ex-search-vim-style-regexp
+        (setq re (evil-transform-vim-style-regexp re))
+      ;; Even for Emacs regular expressions we translate certain
+      ;; whitespace sequences
+      (setq re (evil-transform-regexp re
+                                      '((?t . "\t")
+                                        (?n . "\n")
+                                        (?r . "\r")))))
+    (list re ignore-case whole-line)))
+
+(defun evil-ex-pattern-regex (pattern)
+  "Return the regular expression of a search PATTERN."
+  (nth 0 pattern))
+
+(defun evil-ex-pattern-ignore-case (pattern)
+  "Return t if and only if PATTERN should ignore case."
+  (nth 1 pattern))
+
+(defun evil-ex-pattern-whole-line (pattern)
+  "Return t if and only if PATTERN should match all occurences of a line.
+Otherwise PATTERN matches only the first occurence."
+  (nth 2 pattern))
+
+;; Highlight
 (defun evil-ex-make-hl (name &rest args)
   "Create a new highlight object with name NAME and properties ARGS.
 The following properties are supported:
@@ -516,12 +546,14 @@ The following properties are supported:
 (defun evil-ex-hl-update-highlights ()
   "Update the overlays of all active highlights."
   (dolist (hl (mapcar #'cdr evil-ex-active-highlights-alist))
-    (let ((old-ovs (evil-ex-hl-overlays hl))
-          new-ovs
-          (pattern (evil-ex-hl-pattern hl))
-          (face (evil-ex-hl-face hl))
-          (match-hook (evil-ex-hl-match-hook hl))
-          result)
+    (let* ((old-ovs (evil-ex-hl-overlays hl))
+           new-ovs
+           (pattern (evil-ex-hl-pattern hl))
+           (case-fold-search (evil-ex-pattern-ignore-case pattern))
+           (case-replace case-fold-search)
+           (face (evil-ex-hl-face hl))
+           (match-hook (evil-ex-hl-match-hook hl))
+           result)
       (if pattern
           ;; collect all visible ranges
           (let (ranges sranges)
@@ -613,8 +645,7 @@ The following properties are supported:
   "Look for the next occurrence of PATTERN in a certain DIRECTION.
 Note that this function ignores the whole-line property of PATTERN."
   (setq direction (or direction 'forward))
-  (let ((case-fold-search (eq (evil-ex-pattern-case-fold pattern)
-                              'insensitive)))
+  (let ((case-fold-search (evil-ex-pattern-ignore-case pattern)))
     (cond
      ((eq direction 'forward)
       (re-search-forward (evil-ex-pattern-regex pattern) nil t))
@@ -677,7 +708,7 @@ only searches invisible text if `search-invisible' is t. If
 PATTERN is not specified the current global pattern
 `evil-ex-search-pattern' and if DIRECTION is not specified the
 current global direction `evil-ex-search-direction' is used.
-This function return t if the search was successful, nil if it
+This function returns t if the search was successful, nil if it
 was unsuccessful and 'wrapped if the search was successful but
 has been wrapped at the buffer boundaries."
   (setq pattern (or pattern evil-ex-search-pattern)
@@ -815,9 +846,7 @@ any error conditions."
              (next-pat (pop res)))
         ;; use last pattern of no new pattern has been specified
         (if (not (zerop (length pat)))
-            (setq pat (evil-ex-make-pattern pat
-                                            evil-ex-search-case
-                                            t))
+            (setq pat (evil-ex-make-search-pattern pat))
           (setq pat evil-ex-search-pattern
                 offset (or offset evil-ex-search-offset)))
         (when (zerop (length pat))
@@ -990,7 +1019,7 @@ The DIRECTION argument should be either `forward' or
         (setq evil-ex-search-count count
               evil-ex-search-direction direction
               evil-ex-search-pattern
-              (evil-ex-make-pattern regex evil-ex-search-case t)
+              (evil-ex-make-search-pattern regex)
               evil-ex-search-offset nil
               evil-ex-last-was-search t)
         ;; update search history unless this pattern equals the
@@ -1123,17 +1152,7 @@ a :substitute command with arguments."
             flags (remq ?r flags)))
     ;; generate pattern
     (when pattern
-      (setq pattern
-            (evil-ex-make-pattern
-             pattern
-             (or (and (memq ?i flags) 'insensitive)
-                 (and (memq ?I flags) 'sensitive)
-                 evil-ex-substitute-case
-                 evil-ex-search-case)
-             (or (and (not evil-ex-substitute-global)
-                      (memq ?g flags))
-                 (and evil-ex-substitute-global
-                      (not (memq ?g flags)))))))
+      (setq pattern (evil-ex-make-substitute-pattern pattern flags)))
     (list pattern replacement flags)))
 
 (defun evil-ex-nohighlight ()

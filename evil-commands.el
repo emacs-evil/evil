@@ -2826,8 +2826,8 @@ resp.  after executing the command."
   (setq evil-ex-last-was-search nil)
   (let* ((flags (append flags nil))
          (confirm (memq ?c flags))
-         (case-fold-search (eq (evil-ex-pattern-case-fold pattern)
-                               'insensitive))
+         (case-fold-search (evil-ex-pattern-ignore-case pattern))
+         (case-replace case-fold-search)
          (evil-ex-substitute-regex (evil-ex-pattern-regex pattern)))
     (setq evil-ex-substitute-pattern pattern
           evil-ex-substitute-replacement replacement

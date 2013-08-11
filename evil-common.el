@@ -3199,7 +3199,8 @@ REST is the unparsed remainder of TO."
                   (list `(,func
                           (replace-quote
                            (evil-match-substitute-replacement
-                            ,(car result) t)))
+                            ,(car result)
+                            (not case-replace))))
                         (cdr result))))
                ((eq char ?,)
                 (let* ((obj (read-from-string rest))
