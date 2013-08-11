@@ -770,14 +770,10 @@ intercepted."
     pop-to-mark-command
     previous-error
     previous-line
-    redo
     right-char
     right-word
     scroll-down
     scroll-up
-    undo
-    undo-tree-redo
-    undo-tree-undo
     up-list)
   "Non-Evil commands to initialize to motions."
   :type  '(repeat symbol)

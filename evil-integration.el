@@ -60,10 +60,14 @@
         find-file-at-point
         ffap-other-window
         recompile
+        redo
         save-buffer
         split-window
         split-window-horizontally
-        split-window-vertically))
+        split-window-vertically
+        undo
+        undo-tree-redo
+        undo-tree-undo))
 
 (evil-set-type #'previous-line 'line)
 (evil-set-type #'next-line 'line)
