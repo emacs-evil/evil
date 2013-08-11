@@ -3287,7 +3287,7 @@ and opens a new buffer or edits a certain FILE."
     (let ((buffer (generate-new-buffer "*new*")))
       (set-window-buffer (selected-window) buffer)
       (with-current-buffer buffer
-        (evil-normal-state)))))
+        (funcall (default-value 'major-mode))))))
 
 (evil-define-command evil-window-vnew (count file)
   "Splits the current window vertically
@@ -3300,7 +3300,7 @@ and opens a new buffer name or edits a certain FILE."
     (let ((buffer (generate-new-buffer "*new*")))
       (set-window-buffer (selected-window) buffer)
       (with-current-buffer buffer
-        (evil-normal-state)))))
+        (funcall (default-value 'major-mode))))))
 
 (evil-define-command evil-window-increase-height (count)
   "Increase current window height by COUNT."
