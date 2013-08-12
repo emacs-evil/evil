@@ -283,6 +283,8 @@
 This includes restricting `ace-jump-mode' to the current window
 in visual and operator state, deactivating visual updates, saving
 the mark and entering `recursive-edit'."
+  (declare (indent defun)
+           (debug t))
   `(let ((old-mark (mark))
          (ace-jump-mode-scope
           (if (and (not (memq evil-state '(visual operator)))
@@ -328,8 +330,30 @@ the mark and entering `recursive-edit'."
   "Jump visually directly to a char using ace-jump."
   :type inclusive
   (evil-without-repeat
-    (evil-enclose-ace-jump-for-motion
-     (call-interactively #'ace-jump-char-mode))))
+    (let ((pnt (point))
+          (buf (current-buffer)))
+      (evil-enclose-ace-jump-for-motion
+        (call-interactively #'ace-jump-char-mode))
+      ;; if we jump backwards, motion type is exclusive, analogously
+      ;; to `evil-find-char-backward'
+      (when (and (equal buf (current-buffer))
+                 (< (point) pnt))
+        (setq evil-this-type 'exclusive)))))
+
+(evil-define-motion evil-ace-jump-char-to-mode (count)
+  "Jump visually to the char in front of a char using ace-jump."
+  :type inclusive
+  (evil-without-repeat
+    (let ((pnt (point))
+          (buf (current-buffer)))
+      (evil-enclose-ace-jump-for-motion
+        (call-interactively #'ace-jump-char-mode))
+      (if (and (equal buf (current-buffer))
+               (< (point) pnt))
+          (progn
+            (or (eobp) (forward-char))
+            (setq evil-this-type 'exclusive))
+        (backward-char)))))
 
 (evil-define-motion evil-ace-jump-line-mode (count)
   "Jump visually to the beginning of a line using ace-jump."
@@ -337,7 +361,7 @@ the mark and entering `recursive-edit'."
   :repeat abort
   (evil-without-repeat
     (evil-enclose-ace-jump-for-motion
-     (call-interactively #'ace-jump-line-mode))))
+      (call-interactively #'ace-jump-line-mode))))
 
 (evil-define-motion evil-ace-jump-word-mode (count)
   "Jump visually to the beginning of a word using ace-jump."
@@ -345,15 +369,7 @@ the mark and entering `recursive-edit'."
   :repeat abort
   (evil-without-repeat
     (evil-enclose-ace-jump-for-motion
-     (call-interactively #'ace-jump-word-mode))))
-
-(evil-define-motion evil-ace-jump-char-to-mode (count)
-  "Jump visually to the char in front of a char using ace-jump."
-  :type exclusive
-  :repeat abort
-  (evil-without-repeat
-    (evil-enclose-ace-jump-for-motion
-     (call-interactively #'ace-jump-char-mode))))
+      (call-interactively #'ace-jump-word-mode))))
 
 (define-key evil-motion-state-map [remap ace-jump-char-mode] #'evil-ace-jump-char-mode)
 (define-key evil-motion-state-map [remap ace-jump-line-mode] #'evil-ace-jump-line-mode)
