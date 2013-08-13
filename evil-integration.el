@@ -263,6 +263,26 @@
          ;; Finish repeation
          (evil-repeat-finish-record-changes))))))
 
+;;; Company
+(eval-after-load 'company
+  '(progn
+     (mapc #'evil-declare-change-repeat
+           '(company-complete-mouse
+             company-complete-selection
+             company-complete-common))
+
+     (mapc #'evil-declare-ignore-repeat
+           '(company-abort
+             company-select-next
+             company-select-previous
+             company-select-next-or-abort
+             company-select-previous-or-abort
+             company-select-mouse
+             company-show-doc-buffer
+             company-show-location
+             company-search-candidates
+             company-filter-candidates))))
+
 ;; Eval last sexp
 (defadvice preceding-sexp (around evil activate)
   "In normal-state, last sexp ends at point."
