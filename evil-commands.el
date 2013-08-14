@@ -1789,7 +1789,8 @@ when called interactively."
       (unless evil-this-macro
         (error "No previous macro"))
     (condition-case err
-        (execute-kbd-macro macro count)
+        (evil-with-single-undo
+          (execute-kbd-macro macro count))
       ;; enter Normal state if the macro fails
       (error
        (evil-normal-state)
