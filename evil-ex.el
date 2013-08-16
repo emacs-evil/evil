@@ -62,7 +62,9 @@
      ((\? space) (\? "\\(?:.\\|\n\\)+") #'$2))
     (range
      ("%" #'(evil-ex-full-range))
-     (line (\? "[,;]" line #'$2) #'evil-ex-range))
+     (line (\? "[,;]" line #'$2) #'evil-ex-range)
+     ("`" "[-a-zA-Z_<>']" ",`" "[-a-zA-Z_<>']"
+      #'(evil-ex-char-marker-range $2 $4)))
     (line
      (base (\? offset) #'evil-ex-line)
      ((\? base) offset #'evil-ex-line))
@@ -125,6 +127,10 @@ of the syntax.")
   :keep-visual t
   (interactive
    (cond
+    ((and (evil-visual-state-p)
+          evil-ex-visual-char-range
+          (memq (evil-visual-type) '(inclusive exclusive)))
+     '("`<,`>"))
     ((evil-visual-state-p)
      '("'<,'>"))
     (current-prefix-arg
@@ -715,6 +721,19 @@ Signal an error if MARKER is in a different buffer."
   (setq marker (evil-get-marker marker))
   (if (numberp marker)
       (line-number-at-pos marker)
+    (error "Ex does not support markers in other files")))
+
+(defun evil-ex-char-marker-range (beg end)
+  (when (stringp beg) (setq beg (aref beg 0)))
+  (when (stringp end) (setq end (aref end 0)))
+  (setq beg (evil-get-marker beg)
+        end (evil-get-marker end))
+  (if (and (numberp beg) (numberp end))
+      (evil-expand-range
+       (evil-range beg end
+                   (if (evil-visual-state-p)
+                       (evil-visual-type)
+                     'inclusive)))
     (error "Ex does not support markers in other files")))
 
 (defun evil-ex-re-fwd (pattern)

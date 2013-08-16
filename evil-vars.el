@@ -875,6 +875,16 @@ available for completion."
   "Face for the info message in ex mode."
   :group 'evil)
 
+(defcustom evil-ex-visual-char-range nil
+  "Type of default ex range in visual char state.
+If non-nil the default range when starting an ex command from
+character visual state is `<,`> otherwise it is '<,'>. In the
+first case the ex command will be passed a region covering only
+the visual selection. In the second case the passed region will
+be extended to contain full lines."
+  :group 'evil
+  :type 'boolean)
+
 ;; Searching
 (defcustom evil-magic t
   "Meaning which characters in a pattern are magic.
