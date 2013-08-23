@@ -704,6 +704,10 @@ intercepted."
     beginning-of-visual-line
     c-beginning-of-defun
     c-end-of-defun
+    diff-file-next
+    diff-file-prev
+    diff-hunk-next
+    diff-hunk-prev
     down-list
     end-of-buffer
     end-of-defun
