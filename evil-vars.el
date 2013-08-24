@@ -778,6 +778,8 @@ intercepted."
     right-word
     scroll-down
     scroll-up
+    sgml-skip-tag-backward
+    sgml-skip-tag-forward
     up-list)
   "Non-Evil commands to initialize to motions."
   :type  '(repeat symbol)
