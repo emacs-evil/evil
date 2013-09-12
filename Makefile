@@ -34,7 +34,9 @@ compile-batch: clean
 	$(EMACS) --batch -Q -L . $(LIBS) -f batch-byte-compile ${FILES}
 
 # Documentation.
-info: clean pdf
+doc: info pdf
+
+info: clean
 	cd $(DOC) && makeinfo evil.texi
 
 pdf: clean
