@@ -542,6 +542,7 @@ If STATE is nil, Evil is disabled in the buffer."
     rebase-mode
     recentf-dialog-mode
     reftex-select-bib-mode
+    reftex-select-label-mode
     reftex-toc-mode
     sldb-mode
     slime-inspector-mode
