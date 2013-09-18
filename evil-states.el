@@ -816,10 +816,14 @@ CORNER defaults to `upper-left'."
   (cond
    ((evil-replace-state-p)
     (overwrite-mode 1)
-    (add-hook 'pre-command-hook #'evil-replace-pre-command nil t))
+    (add-hook 'pre-command-hook #'evil-replace-pre-command nil t)
+    (unless evil-want-fine-undo
+      (evil-start-undo-step t)))
    (t
     (overwrite-mode -1)
     (remove-hook 'pre-command-hook #'evil-replace-pre-command t)
+    (unless evil-want-fine-undo
+      (evil-end-undo-step t))
     (when evil-move-cursor-back
       (evil-move-cursor-back))))
   (setq evil-replace-alist nil))
