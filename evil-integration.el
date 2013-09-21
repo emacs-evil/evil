@@ -35,6 +35,9 @@
 
 ;;; Evilize some commands
 
+;; unbound keys should be ignored
+(evil-declare-ignore-repeat 'undefined)
+
 (mapc #'(lambda (cmd)
           (evil-set-command-property cmd :keep-visual t)
           (evil-declare-not-repeat cmd))
