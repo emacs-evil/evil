@@ -1878,24 +1878,22 @@ The insertion range is stored as a pair of buffer positions in
 then the current range is modified, otherwise it is replaced by a
 new range. Compatible changes are changes that do not create a
 disjoin range."
-  (cond
-   ((zerop len)
-    ;; insertion
-    (if (and evil-current-insertion
-             (>= beg (car evil-current-insertion))
-             (<= beg (cdr evil-current-insertion)))
-        (setcdr evil-current-insertion
-                (+ (- end beg)
-                   (cdr evil-current-insertion)))
-      (setq evil-current-insertion (cons beg end))))
-   (t
-    ;; deletion of something in range is recorded
+  ;; deletion
+  (when (> len 0)
     (if (and evil-current-insertion
              (>= beg (car evil-current-insertion))
              (<= (+ beg len) (cdr evil-current-insertion)))
         (setcdr evil-current-insertion
                 (- (cdr evil-current-insertion) len))
-      (setq evil-current-insertion nil)))))
+      (setq evil-current-insertion nil)))
+  ;; insertion
+  (if (and evil-current-insertion
+           (>= beg (car evil-current-insertion))
+           (<= beg (cdr evil-current-insertion)))
+      (setcdr evil-current-insertion
+              (+ (- end beg)
+                 (cdr evil-current-insertion)))
+    (setq evil-current-insertion (cons beg end))))
 (put 'evil-track-last-insertion 'permanent-local-hook t)
 
 (defun evil-start-track-last-insertion ()
