@@ -110,12 +110,14 @@
 (eval-after-load 'dired
   '(progn
      ;; use the standard Dired bindings as a base
+     (defvar dired-mode-map)
      (evil-make-overriding-map dired-mode-map 'normal t)
      (evil-add-hjkl-bindings dired-mode-map 'normal
        "J" 'dired-goto-file                   ; "j"
        "K" 'dired-do-kill-lines               ; "k"
        "r" 'dired-do-redisplay                ; "l"
-       ";" (lookup-key dired-mode-map ":")))) ; ":d", ":v", ":s", ":e"
+       ;; ":d", ":v", ":s", ":e"
+       ";" (lookup-key dired-mode-map ":"))))
 
 (eval-after-load 'wdired
   '(progn
@@ -197,6 +199,7 @@
 ;; Ibuffer
 (eval-after-load 'ibuffer
   '(progn
+     (defvar ibuffer-mode-map)
      (evil-make-overriding-map ibuffer-mode-map 'normal t)
      (evil-define-key 'normal ibuffer-mode-map
        "j" 'evil-next-line
@@ -245,6 +248,7 @@
      (defvar evil-ac-prefix-len nil
        "The length of the prefix of the current item to be completed.")
 
+     (defvar ac-prefix)
      (defun evil-ac-repeat (flag)
        "Record the changes for auto-completion."
        (cond
@@ -374,7 +378,7 @@ the mark and entering `recursive-edit'."
     (let ((pnt (point))
           (buf (current-buffer)))
       (evil-enclose-ace-jump-for-motion
-        (call-interactively #'ace-jump-char-mode))
+        (call-interactively 'ace-jump-char-mode))
       ;; if we jump backwards, motion type is exclusive, analogously
       ;; to `evil-find-char-backward'
       (when (and (equal buf (current-buffer))
@@ -388,7 +392,7 @@ the mark and entering `recursive-edit'."
     (let ((pnt (point))
           (buf (current-buffer)))
       (evil-enclose-ace-jump-for-motion
-        (call-interactively #'ace-jump-char-mode))
+        (call-interactively 'ace-jump-char-mode))
       (if (and (equal buf (current-buffer))
                (< (point) pnt))
           (progn
@@ -402,7 +406,7 @@ the mark and entering `recursive-edit'."
   :repeat abort
   (evil-without-repeat
     (evil-enclose-ace-jump-for-motion
-      (call-interactively #'ace-jump-line-mode))))
+      (call-interactively 'ace-jump-line-mode))))
 
 (evil-define-motion evil-ace-jump-word-mode (count)
   "Jump visually to the beginning of a word using ace-jump."
@@ -410,7 +414,7 @@ the mark and entering `recursive-edit'."
   :repeat abort
   (evil-without-repeat
     (evil-enclose-ace-jump-for-motion
-      (call-interactively #'ace-jump-word-mode))))
+      (call-interactively 'ace-jump-word-mode))))
 
 (define-key evil-motion-state-map [remap ace-jump-char-mode] #'evil-ace-jump-char-mode)
 (define-key evil-motion-state-map [remap ace-jump-line-mode] #'evil-ace-jump-line-mode)

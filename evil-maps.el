@@ -27,6 +27,7 @@
 
 (require 'evil-states)
 (require 'evil-ex)
+(require 'evil-commands)
 
 ;;; Code:
 
