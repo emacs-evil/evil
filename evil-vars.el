@@ -531,6 +531,9 @@ If STATE is nil, Evil is disabled in the buffer."
     magit-wazzup-mode
     mh-folder-mode
     monky-mode
+    mu4e-main-mode
+    mu4e-headers-mode
+    mu4e-view-mode
     notmuch-hello-mode
     notmuch-search-mode
     notmuch-show-mode
