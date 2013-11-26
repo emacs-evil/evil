@@ -2480,20 +2480,12 @@ If no FILE is specified, reload the current buffer from disk."
         (goto-char (mark))
         (unless (bolp) (insert "\n"))))))
 
-(evil-define-command evil-show-buffers ()
-  "Shows the buffer-list.
-The same as `list-buffers' but selects the buffer window afterwards."
-  :repeat nil
-  (list-buffers)
-  (select-window (get-buffer-window "*Buffer List*")))
-
 (evil-define-command evil-show-files ()
   "Shows the file-list.
-The same as `list-buffers', but shows only buffers visiting files
-and selects the list window afterwards."
+The same as `buffer-menu', but shows only buffers visiting
+files."
   :repeat nil
-  (list-buffers 1)
-  (select-window (get-buffer-window "*Buffer List*")))
+  (buffer-menu 1))
 
 (evil-define-command evil-buffer (buffer)
   "Switches to another buffer."

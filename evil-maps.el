@@ -399,7 +399,7 @@
 (evil-ex-define-cmd "sbn[ext]" 'evil-split-next-buffer)
 (evil-ex-define-cmd "sbp[revious]" 'evil-split-prev-buffer)
 (evil-ex-define-cmd "sbN[ext]" "sbprevious")
-(evil-ex-define-cmd "buffers" 'evil-show-buffers)
+(evil-ex-define-cmd "buffers" 'buffer-menu)
 (evil-ex-define-cmd "files" 'evil-show-files)
 (evil-ex-define-cmd "ls" "buffers")
 
