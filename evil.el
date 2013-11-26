@@ -5,7 +5,7 @@
 ;;      Antono Vasiljev <antono.vasiljev at gmail.com>
 ;;      Barry O'Reilly <gundaetiapo at gmail.com>
 ;;      Christoph Lange <langec at web.de>
-;;      Frank Fischer <frank.fischer at mathematik.tu-chemnitz.de>
+;;      Frank Fischer <frank-fischer at shadow-soft.de>
 ;;      Frank Terbeck <ft at bewatermyfriend.org>
 ;;      Jonathan Claggett <jclaggett at lonocloud.com>
 ;;      José A. Romero L. <escherdragon@gmail.com>
@@ -31,7 +31,7 @@
 ;;      To get in touch, please use the bug tracker or the
 ;;      mailing list (see below).
 ;; Created: 2011-03-01
-;; Version: 1.0-dev
+;; Version: 1.0.8
 ;; Keywords: emulation, vim
 ;; URL: http://gitorious.org/evil
 ;;      Repository: git://gitorious.org/evil/evil.git
