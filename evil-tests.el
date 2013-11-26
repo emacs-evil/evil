@@ -7663,6 +7663,22 @@ maybe we need one line more with some text\n")
       ("d\gg\"_dGP")
       "This region is a keepe[r]")))
 
+(ert-deftest evil-test-pasteable-macros ()
+  "Test if we can yank and paste macros containing
+                  <escape>"
+  :tags '(evil)
+  (ert-info ("Execute yanked macro")
+    (evil-test-buffer
+      "[i]foo\e"
+      ("\"qd$@q\"qp"
+       "fooifoo\e")))
+  (ert-info ("Paste recorded marco")
+    (evil-test-buffer
+      ""
+      (evil-set-register ?q (vconcat "ifoo" [escape]))
+      ("@q\"qp")
+      "fooifoo\e")))
+
 (provide 'evil-tests)
 
 ;;; evil-tests.el ends here
