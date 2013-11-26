@@ -2255,37 +2255,37 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
                    (car-safe search-ring))
                  (not isearch-forward) evil-regexp-search)))
 
-(evil-define-motion evil-search-symbol-backward (count)
+(evil-define-motion evil-search-word-backward (count)
   "Search backward for symbol under point."
   :jump t
   :type exclusive
   (dotimes (var (or count 1))
-    (evil-search-symbol nil)))
+    (evil-search-word nil)))
 
-(evil-define-motion evil-search-symbol-forward (count)
+(evil-define-motion evil-search-word-forward (count)
   "Search forward for symbol under point."
   :jump t
   :type exclusive
   (dotimes (var (or count 1))
-    (evil-search-symbol t)))
+    (evil-search-word t)))
 
-(evil-define-motion evil-search-unbounded-symbol-backward (count)
+(evil-define-motion evil-search-unbounded-word-backward (count)
   "Search backward for symbol under point.
 The search is unbounded, i.e., the pattern is not wrapped in
 \\<...\\>."
   :jump t
   :type exclusive
   (dotimes (var (or count 1))
-    (evil-search-symbol nil t)))
+    (evil-search-word nil t)))
 
-(evil-define-motion evil-search-unbounded-symbol-forward (count)
+(evil-define-motion evil-search-unbounded-word-forward (count)
   "Search forward for symbol under point.
 The search is unbounded, i.e., the pattern is not wrapped in
 \\<...\\>."
   :jump t
   :type exclusive
   (dotimes (var (or count 1))
-    (evil-search-symbol t t)))
+    (evil-search-word t t)))
 
 (evil-define-motion evil-goto-definition ()
   "Go to definition or first occurrence of symbol under point."
@@ -2779,29 +2779,29 @@ resp.  after executing the command."
   :repeat evil-repeat-ex-search
   (evil-ex-start-search 'backward count))
 
-(evil-define-motion evil-ex-search-symbol-forward (count)
+(evil-define-motion evil-ex-search-word-forward (count)
   "Search for the next occurrence of word under the cursor."
   :jump t
   :type exclusive
-  (evil-ex-start-symbol-search nil 'forward count))
+  (evil-ex-start-word-search nil 'forward count))
 
-(evil-define-motion evil-ex-search-symbol-backward (count)
+(evil-define-motion evil-ex-search-word-backward (count)
   "Search for the next occurrence of word under the cursor."
   :jump t
   :type exclusive
-  (evil-ex-start-symbol-search nil 'backward count))
+  (evil-ex-start-word-search nil 'backward count))
 
-(evil-define-motion evil-ex-search-unbounded-symbol-forward (count)
+(evil-define-motion evil-ex-search-unbounded-word-forward (count)
   "Search for the next occurrence of word under the cursor."
   :jump t
   :type exclusive
-  (evil-ex-start-symbol-search t 'forward count))
+  (evil-ex-start-word-search t 'forward count))
 
-(evil-define-motion evil-ex-search-unbounded-symbol-backward (count)
+(evil-define-motion evil-ex-search-unbounded-word-backward (count)
   "Search for the next occurrence of word under the cursor."
   :jump t
   :type exclusive
-  (evil-ex-start-symbol-search t 'backward count))
+  (evil-ex-start-word-search t 'backward count))
 
 (evil-define-operator evil-ex-substitute
   (beg end pattern replacement flags)
