@@ -296,6 +296,15 @@ sorting in between."
                                   (list var `(pop ,sorted)))
                               vars))))))
 
+(defun evil-vector-to-string (vector)
+  "Turns vector into a string, changing <escape> to '\\e'"
+  (mapconcat (lambda (c)
+               (if (equal c 'escape)
+                   "\e"
+                 (make-string 1 c)))
+             vector
+             ""))
+
 ;;; Command properties
 
 (defmacro evil-define-command (command &rest body)

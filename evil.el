@@ -9,7 +9,7 @@
 ;;      Frank Terbeck <ft at bewatermyfriend.org>
 ;;      Jonathan Claggett <jclaggett at lonocloud.com>
 ;;      José A. Romero L. <escherdragon@gmail.com>
-;;      Lars Andersen <mrgrandmother at gmail.com>
+;;      Lars Andersen <expez at expez.com>
 ;;      Lintaro Ina <tarao.gnn at gmail.com>
 ;;      Lukasz Wrzosek <wrzoski@gmail.com>
 ;;      Marian Schubert <maio@netsafe.cz>

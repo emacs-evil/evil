@@ -1601,6 +1601,8 @@ The return value is the yanked text."
                 (push-mark opoint t)
                 (insert-for-yank text))
             ;; no yank-handler, default
+            (when (vectorp text)
+              (setq text (evil-vector-to-string text)))
             (set-text-properties 0 (length text) nil text)
             (push-mark opoint t)
             (dotimes (i (or count 1))
@@ -1644,6 +1646,8 @@ The return value is the yanked text."
                     (this-command #'evil-paste-after))
                 (insert-for-yank text))
             ;; no yank-handler, default
+            (when (vectorp text)
+              (setq text (evil-vector-to-string text)))
             (set-text-properties 0 (length text) nil text)
             (unless (eolp) (forward-char))
             (push-mark (point) t)
