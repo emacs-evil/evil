@@ -6978,7 +6978,7 @@ if no previous selection")
         "foo foo\nbar b[a]r\nbaz baz\nAnother line\nAnd yet another line"))))
 
 (ert-deftest evil-test-ex-search-word ()
-  "Test search for symbol under point."
+  "Test search for word under point."
   :tags '(evil ex search)
   (evil-without-display
     (evil-select-search-module 'evil-search-module 'evil-search)
