@@ -896,6 +896,12 @@ be extended to contain full lines."
   :type 'boolean)
 
 ;; Searching
+(defcustom evil-symbol-word-search nil
+  "If nil then * and # search for words otherwise for symbols."
+  :group 'evil
+  :type 'boolean)
+(make-variable-buffer-local 'evil-symbol-word-search)
+
 (defcustom evil-magic t
   "Meaning which characters in a pattern are magic.
 The meaning of those values is the same as in Vim. Note that it

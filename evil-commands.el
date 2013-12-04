@@ -2259,37 +2259,45 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
                    (car-safe search-ring))
                  (not isearch-forward) evil-regexp-search)))
 
-(evil-define-motion evil-search-word-backward (count)
+(evil-define-motion evil-search-word-backward (count &optional symbol)
   "Search backward for symbol under point."
   :jump t
   :type exclusive
+  (interactive (list (prefix-numeric-value current-prefix-arg)
+                     evil-symbol-word-search))
   (dotimes (var (or count 1))
-    (evil-search-word nil)))
+    (evil-search-word nil nil symbol)))
 
-(evil-define-motion evil-search-word-forward (count)
+(evil-define-motion evil-search-word-forward (count &optional symbol)
   "Search forward for symbol under point."
   :jump t
   :type exclusive
+  (interactive (list (prefix-numeric-value current-prefix-arg)
+                     evil-symbol-word-search))
   (dotimes (var (or count 1))
-    (evil-search-word t)))
+    (evil-search-word t nil symbol)))
 
-(evil-define-motion evil-search-unbounded-word-backward (count)
+(evil-define-motion evil-search-unbounded-word-backward (count &optiona symbol)
   "Search backward for symbol under point.
 The search is unbounded, i.e., the pattern is not wrapped in
 \\<...\\>."
   :jump t
   :type exclusive
+  (interactive (list (prefix-numeric-value current-prefix-arg)
+                     evil-symbol-word-search))
   (dotimes (var (or count 1))
-    (evil-search-word nil t)))
+    (evil-search-word nil t symbol)))
 
-(evil-define-motion evil-search-unbounded-word-forward (count)
+(evil-define-motion evil-search-unbounded-word-forward (count &optiona symbol)
   "Search forward for symbol under point.
 The search is unbounded, i.e., the pattern is not wrapped in
 \\<...\\>."
   :jump t
   :type exclusive
+  (interactive (list (prefix-numeric-value current-prefix-arg)
+                     evil-symbol-word-search))
   (dotimes (var (or count 1))
-    (evil-search-word t t)))
+    (evil-search-word t t symbol)))
 
 (evil-define-motion evil-goto-definition ()
   "Go to definition or first occurrence of symbol under point."
@@ -2783,29 +2791,37 @@ resp.  after executing the command."
   :repeat evil-repeat-ex-search
   (evil-ex-start-search 'backward count))
 
-(evil-define-motion evil-ex-search-word-forward (count)
+(evil-define-motion evil-ex-search-word-forward (count &optional symbol)
   "Search for the next occurrence of word under the cursor."
   :jump t
   :type exclusive
-  (evil-ex-start-word-search nil 'forward count))
+  (interactive (list (prefix-numeric-value current-prefix-arg)
+                     evil-symbol-word-search))
+  (evil-ex-start-word-search nil 'forward count symbol))
 
-(evil-define-motion evil-ex-search-word-backward (count)
+(evil-define-motion evil-ex-search-word-backward (count &optional symbol)
   "Search for the next occurrence of word under the cursor."
   :jump t
   :type exclusive
-  (evil-ex-start-word-search nil 'backward count))
+  (interactive (list (prefix-numeric-value current-prefix-arg)
+                     evil-symbol-word-search))
+  (evil-ex-start-word-search nil 'backward count symbol))
 
-(evil-define-motion evil-ex-search-unbounded-word-forward (count)
+(evil-define-motion evil-ex-search-unbounded-word-forward (count &optional symbol)
   "Search for the next occurrence of word under the cursor."
   :jump t
   :type exclusive
-  (evil-ex-start-word-search t 'forward count))
+  (interactive (list (prefix-numeric-value current-prefix-arg)
+                     evil-symbol-word-search))
+  (evil-ex-start-word-search t 'forward count symbol))
 
-(evil-define-motion evil-ex-search-unbounded-word-backward (count)
+(evil-define-motion evil-ex-search-unbounded-word-backward (count &optional symbol)
   "Search for the next occurrence of word under the cursor."
   :jump t
   :type exclusive
-  (evil-ex-start-word-search t 'backward count))
+  (interactive (list (prefix-numeric-value current-prefix-arg)
+                     evil-symbol-word-search))
+  (evil-ex-start-word-search t 'backward count symbol))
 
 (evil-define-operator evil-ex-substitute
   (beg end pattern replacement flags)
