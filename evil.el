@@ -16,6 +16,7 @@
 ;;      Michael Markert <markert.michael at googlemail.com>
 ;;      Nikolai Weibull <now at bitwi.se>
 ;;      Sanel Zukan <sanelz at gmail.com>
+;;      Sarah Brofeldt <sarah at thinkmonster.(none)>
 ;;      Simon Hafner <hafnersimon at gmail.com>
 ;;      Stefan Wehr <mail at stefanwehr.de>
 ;;      Sune Simonsen <sune.simonsen at jayway.com>
@@ -25,6 +26,7 @@
 ;;      Vegard Øye <vegard_oye at hotmail.com>
 ;;      Winfred Lu <winfred.lu@gmail.com>
 ;;      Wolfgang Jenkner <wjenkner at inode.at>
+;;      Xiao Hanyu <xiaohanyu1988 at gmail.com>
 ;;      York Zhao <yzhao at telecor.com>
 
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
