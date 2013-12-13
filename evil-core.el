@@ -306,13 +306,15 @@ This is the state the buffer comes up in."
 (evil-define-command evil-change-to-initial-state
   (&optional buffer message)
   "Change the state of BUFFER to its initial state.
-This is the state the buffer came up in."
+This is the state the buffer came up in. If Evil is not activated
+then this function does nothing."
   :keep-visual t
   :suppress-operator t
   (with-current-buffer (or buffer (current-buffer))
-    (evil-change-state (evil-initial-state-for-buffer
-                        buffer (or evil-default-state 'normal))
-                       message)))
+    (when evil-local-mode
+      (evil-change-state (evil-initial-state-for-buffer
+                          buffer (or evil-default-state 'normal))
+                         message))))
 
 (evil-define-command evil-change-to-previous-state
   (&optional buffer message)
