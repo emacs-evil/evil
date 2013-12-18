@@ -340,17 +340,51 @@ before point."
 (defcustom evil-want-C-i-jump t
   "Whether \"C-i\" jumps forward like in Vim."
   :type 'boolean
-  :group 'evil)
+  :group 'evil
+  :set #'(lambda (sym value)
+           (set-default sym value)
+           (when (boundp 'evil-motion-state-map)
+             (cond
+              ((and (not value)
+                    (eq (lookup-key evil-motion-state-map (kbd "C-i"))
+                        'evil-jump-forward))
+               (define-key evil-motion-state-map (kbd "C-i") nil))
+              ((and value
+                    (not (lookup-key evil-motion-state-map (kbd "C-i"))))
+               (define-key evil-motion-state-map (kbd "C-i") 'evil-jump-forward))))))
 
 (defcustom evil-want-C-u-scroll nil
   "Whether \"C-u\" scrolls like in Vim."
   :type 'boolean
-  :group 'evil)
+  :group 'evil
+  :set #'(lambda (sym value)
+           (set-default sym value)
+           (when (boundp 'evil-motion-state-map)
+             (cond
+              ((and (not value)
+                    (eq (lookup-key evil-motion-state-map (kbd "C-u"))
+                        'evil-scroll-up))
+               (define-key evil-motion-state-map (kbd "C-u") nil))
+              ((and value
+                    (not (lookup-key evil-motion-state-map (kbd "C-u"))))
+               (define-key evil-motion-state-map (kbd "C-u") 'evil-scroll-up))))))
 
 (defcustom evil-want-C-w-delete t
   "Whether \"C-w\" deletes a word in Insert state."
   :type 'boolean
-  :group 'evil)
+  :group 'evil
+  :set #'(lambda (sym value)
+           (set-default sym value)
+           (when (boundp 'evil-motion-state-map)
+             (cond
+              ((and (not value)
+                    (eq (lookup-key evil-motion-state-map (kbd "C-w"))
+                        'evil-delete-backward-word))
+               (define-key evil-motion-state-map (kbd "C-w") 'evil-window-map))
+              ((and value
+                    (eq (lookup-key evil-motion-state-map (kbd "C-u"))
+                        'evil-window-map))
+               (define-key evil-motion-state-map (kbd "C-u") 'evil-delete-backward-word))))))
 
 (defcustom evil-want-C-w-in-emacs-state nil
   "Whether \"C-w\" prefixes windows commands in Emacs state."
