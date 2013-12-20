@@ -283,6 +283,11 @@ This should be a regexp set without the enclosing []."
   :type  'integer
   :group 'evil)
 
+(defcustom evil-auto-balance-windows t
+  "If non-nil creating/deleting a window causes a rebalance."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-esc-delay 0.01
   "Time in seconds to wait for another key after ESC."
   :type 'number

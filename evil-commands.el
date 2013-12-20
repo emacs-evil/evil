@@ -3177,23 +3177,40 @@ TREE is the tree layout to be restored."
    (t
     (set-window-buffer win tree))))
 
+(evil-define-command evil-window-delete ()
+  "Deletes the current window.
+If `evil-auto-balance-windows' is non-nil then all children of
+the deleted window's parent window are rebalanced."
+  (let ((p (window-parent)))
+    (delete-window)
+    (when evil-auto-balance-windows
+      (balance-windows p))))
+
 (evil-define-command evil-window-split (&optional count file)
   "Splits the current window horizontally, COUNT lines height,
-editing a certain FILE."
+editing a certain FILE. If COUNT and `evil-auto-balance-windows'
+are both non-nil then all children of the parent of the splitted
+window are rebalanced."
   :repeat nil
   (interactive "P<f>")
-  (let ((new-win (split-window (selected-window) count)))
-    (when file
-      (evil-edit file))))
+  (split-window (selected-window) count)
+  (when (and (not count) evil-auto-balance-windows)
+    (balance-windows (window-parent)))
+  (when file
+    (evil-edit file)))
 
 (evil-define-command evil-window-vsplit (&optional count file)
   "Splits the current window vertically, COUNT columns width,
-editing a certain FILE."
+editing a certain FILE. If COUNT and `evil-auto-balance-windows'
+are both non-nil then all children of the parent of the splitted
+window are rebalanced."
   :repeat nil
   (interactive "P<f>")
-  (let ((new-win (split-window (selected-window) count t)))
-    (when file
-      (evil-edit file))))
+  (split-window (selected-window) count t)
+  (when (and (not count) evil-auto-balance-windows)
+    (balance-windows (window-parent)))
+  (when file
+    (evil-edit file)))
 
 (evil-define-command evil-split-buffer (buffer)
   "Splits window and switches to another buffer."
@@ -3319,6 +3336,8 @@ and opens a new buffer or edits a certain FILE."
   :repeat nil
   (interactive "P<f>")
   (split-window (selected-window) count)
+  (when (and (not count) evil-auto-balance-windows)
+    (balance-windows (window-parent)))
   (if file
       (evil-edit file)
     (let ((buffer (generate-new-buffer "*new*")))
@@ -3332,6 +3351,8 @@ and opens a new buffer name or edits a certain FILE."
   :repeat nil
   (interactive "P<f>")
   (split-window (selected-window) count t)
+  (when (and (not count) evil-auto-balance-windows)
+    (balance-windows (window-parent)))
   (if file
       (evil-edit file)
     (let ((buffer (generate-new-buffer "*new*")))
