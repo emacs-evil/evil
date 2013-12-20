@@ -942,6 +942,30 @@ or line COUNT to the top of the window."
   (recenter -1)
   (evil-first-non-blank))
 
+(defun evil-scroll-left ()
+  "Scrolls the window half a screenwidth to the left."
+  (interactive)
+  (evil-with-hproject-point-on-window
+    (scroll-right (/ (window-width) 2))))
+
+(defun evil-scroll-right ()
+  "Scrolls the window half a screenwidth to the right."
+  (interactive)
+  (evil-with-hproject-point-on-window
+    (scroll-left (/ (window-width) 2))))
+
+(defun evil-scroll-column-left ()
+  "Scrolls the window one column to the left."
+  (interactive)
+  (evil-with-hproject-point-on-window
+    (scroll-right 1)))
+
+(defun evil-scroll-column-right ()
+  "Scrolls the window one column to the right."
+  (interactive)
+  (evil-with-hproject-point-on-window
+    (scroll-left 1)))
+
 ;;; Text objects
 
 ;; Text objects are defined with `evil-define-text-object'. In Visual

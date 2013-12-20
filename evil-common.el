@@ -1119,6 +1119,25 @@ the loop immediately quits. See also `evil-loop'.
         (when (= p (point))
           (signal (car err) (cdr err)))))))
 
+(defmacro evil-with-hproject-point-on-window (&rest body)
+  "Project point after BODY to current window.
+If point is on a position left or right of the current window
+then it is moved to the left and right boundary of the window,
+respectively. If `auto-hscroll-mode' is non-nil then the left and
+right positions are increased or decreased, respectively, by
+`horizontal-margin' so that no automatic scrolling occurs."
+  (declare (indent defun)
+           (debug t))
+  (let ((diff (make-symbol "diff"))
+        (left (make-symbol "left"))
+        (right (make-symbol "right")))
+    `(let ((,diff (if auto-hscroll-mode (1+ hscroll-margin) 0))
+           auto-hscroll-mode)
+       ,@body
+       (let* ((,left (+ (window-hscroll) ,diff))
+              (,right (+ (window-hscroll) (window-width) (- ,diff) -1)))
+         (move-to-column (min (max (current-column) ,left) ,right))))))
+
 (defun evil-goto-min (&rest positions)
   "Go to the smallest position in POSITIONS.
 Non-numerical elements are ignored.
