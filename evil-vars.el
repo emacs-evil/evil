@@ -1417,6 +1417,11 @@ Key sequences bound in this map are immediately executed.")
 (defvar evil-ex-completion-map (make-sparse-keymap)
   "Completion keymap for Ex.")
 
+(defvar evil-ex-initial-input nil
+  "Additional initial content of the ex command line.
+This content of this variable is appended to the ex command line
+if ex is started interactively.")
+
 (defvar evil-ex-shell-argument-initialized nil
   "This variable is set to t if shell command completion has been initialized.
 See `evil-ex-init-shell-argument-completion'.")
