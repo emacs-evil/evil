@@ -2627,29 +2627,48 @@ is closed."
   (evil-quit))
 
 (evil-define-operator evil-shell-command
-  (beg end command &optional previous)
+  (beg end type command &optional previous)
   "Execute a shell command.
-If BEG and END is specified, COMMAND is executed on the region,
+If BEG, END and TYPE is specified, COMMAND is executed on the region,
 which is replaced with the command's output. Otherwise, the
 output is displayed in its own buffer. If PREVIOUS is non-nil,
 the previous shell command is executed instead."
-  :motion nil
-  (interactive "<r><sh><!>")
-  (when command
-    (setq command (evil-ex-replace-special-filenames command)))
-  (if (zerop (length command))
-      (when previous (setq command evil-previous-shell-command))
-    (setq evil-previous-shell-command command))
-  (cond
-   ((zerop (length command))
-    (if previous (error "No previous shell command")
-      (error "No shell command")))
-   ((and beg end)
-    (shell-command-on-region beg end command t)
-    (goto-char beg)
-    (evil-first-non-blank))
-   (t
-    (shell-command command))))
+  (interactive "<R><sh><!>")
+  (if (not (evil-ex-p))
+      (let ((evil-ex-initial-input
+             (if (and beg
+                      (not (evil-visual-state-p))
+                      (not current-prefix-arg))
+                 (let ((range (evil-range beg end type)))
+                   (evil-contract-range range)
+                   ;; TODO: this is not exactly the same as Vim, which
+                   ;; uses .,+count as range. However, this is easier
+                   ;; to achieve with the current implementation and
+                   ;; the very inconvenient range interface.
+                   ;;
+                   ;; TODO: the range interface really needs some
+                   ;; rework!
+                   (format
+                    "%d,%d!"
+                    (line-number-at-pos (evil-range-beginning range))
+                    (line-number-at-pos (evil-range-end range))))
+               "!")))
+        (call-interactively 'evil-ex))
+    (when command
+      (setq command (evil-ex-replace-special-filenames command)))
+    (if (zerop (length command))
+        (when previous (setq command evil-previous-shell-command))
+      (setq evil-previous-shell-command command))
+    (cond
+     ((zerop (length command))
+      (if previous (error "No previous shell command")
+        (error "No shell command")))
+     ((and beg end)
+      (shell-command-on-region beg end command t)
+      (goto-char beg)
+      (evil-first-non-blank))
+     (t
+      (shell-command command)))))
 
 ;; TODO: escape special characters (currently only \n) ... perhaps
 ;; there is some Emacs function doing this?

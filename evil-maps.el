@@ -393,6 +393,7 @@
 
 ;; Ex
 (define-key evil-motion-state-map ":" 'evil-ex)
+(define-key evil-motion-state-map "!" 'evil-shell-command)
 
 (evil-ex-define-cmd "e[dit]" 'evil-edit)
 (evil-ex-define-cmd "w[rite]" 'evil-write)

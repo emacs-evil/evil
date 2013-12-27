@@ -7127,6 +7127,34 @@ maybe we need one line more with some text\n")
           (":read!echo -n cmd line 1" [return])
           "line 1\n[c]md line 1\nline 2")))))
 
+(ert-deftest evil-test-shell-command ()
+  "Test `evil-shell-command'."
+  (ert-info ("ex shell command")
+    (evil-test-buffer
+      "[l]ine 5\nline 4\nline 3\nline 2\nline 1\n"
+      (":2,3!sort" [return])
+      "line 5\n[l]ine 3\nline 4\nline 2\nline 1\n"))
+  (ert-info ("shell command operator with count")
+    (evil-test-buffer
+      "line 5\n[l]ine 4\nline 3\nline 2\nline 1\n"
+      ("2!!sort" [return])
+      "line 5\n[l]ine 3\nline 4\nline 2\nline 1\n"))
+  (ert-info ("shell command operator with motion")
+    (evil-test-buffer
+      "line 5\n[l]ine 4\nline 3\nline 2\nline 1\n"
+      ("!jsort" [return])
+      "line 5\n[l]ine 3\nline 4\nline 2\nline 1\n"))
+  (ert-info ("shell command operator with backward motion")
+    (evil-test-buffer
+      "line 5\nline 4\n[l]ine 3\nline 2\nline 1\n"
+      ("!ksort" [return])
+      "line 5\n[l]ine 3\nline 4\nline 2\nline 1\n"))
+  (ert-info ("shell command operator with visual selection")
+    (evil-test-buffer
+      "line 5\n[l]ine 4\nline 3\nline 2\nline 1\n"
+      ("vj!sort" [return])
+      "line 5\n[l]ine 3\nline 4\nline 2\nline 1\n")))
+
 (ert-deftest evil-test-global ()
   "Test `evil-ex-global'."
   :tags '(evil ex)
