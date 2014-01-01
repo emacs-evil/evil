@@ -297,57 +297,85 @@ By default the first line."
 
 (evil-define-motion evil-forward-word-begin (count &optional bigword)
   "Move the cursor to the beginning of the COUNT-th next word.
-If BIGWORD is non-nil, move by WORDS."
+If BIGWORD is non-nil, move by WORDS.
+
+If this command is called in operator-pending state it behaves
+differently. If point reaches the beginning of a word on a new
+line point is moved back to the end of the previous line.
+
+If called after a change operator, i.e. cw or cW,
+`evil-want-change-word-to-end' is non-nil and point is on a word,
+then both behave like ce or cE.
+
+If point is at the end of the buffer and cannot be moved signal
+'end-of-buffer is raised.
+"
   :type exclusive
-  (let ((move (if bigword #'evil-move-WORD #'evil-move-word))
-        (orig (point)))
-    (prog1 (if (and evil-want-change-word-to-end
-                    (not (looking-at "[[:space:]]"))
-                    (eq evil-this-operator #'evil-change))
-               (evil-move-end count move)
-             (evil-move-beginning count move))
-      ;; if we reached the beginning of a word on a new line in
-      ;; Operator-Pending state, go back to the end of the previous
-      ;; line
-      (when (and (evil-operator-state-p)
-                 (> (line-beginning-position) orig)
-                 (looking-back "^[[:space:]]*" (line-beginning-position)))
-        ;; move cursor back as long as the line contains only
-        ;; whitespaces and is non-empty
-        (evil-move-end-of-line 0)
-        ;; skip non-empty lines containing only spaces
-        (while (and (looking-back "^[[:space:]]+$" (line-beginning-position))
-                    (not (<= (line-beginning-position) orig)))
-          (evil-move-end-of-line 0))
-        ;; but if the previous line is empty, delete this line
-        (when (bolp) (forward-char))))))
+  (let ((thing (if bigword 'evil-WORD 'evil-word))
+        (orig (point))
+        (count (or count 1)))
+    (evil-signal-at-eob)
+    (cond
+     ;; default motion, beginning of next word
+     ((not (evil-operator-state-p))
+      (evil-forward-beginning thing count))
+     ;; the evil-change operator, maybe behave like ce or cE
+     ((and evil-want-change-word-to-end
+           (eq evil-this-operator #'evil-change)
+           (< orig (or (cdr-safe (bounds-of-thing-at-point thing)) orig)))
+      ;; forward-thing moves point to the correct position because
+      ;; this is an exclusive motion
+      (forward-thing thing count))
+     ;; operator state
+     (t
+      (prog1 (evil-forward-beginning thing count)
+        ;; if we reached the beginning of a word on a new line in
+        ;; Operator-Pending state, go back to the end of the previous
+        ;; line
+        (when (and (> (line-beginning-position) orig)
+                   (looking-back "^[[:space:]]*" (line-beginning-position)))
+          ;; move cursor back as long as the line contains only
+          ;; whitespaces and is non-empty
+          (evil-move-end-of-line 0)
+          ;; skip non-empty lines containing only spaces
+          (while (and (looking-back "^[[:space:]]+$" (line-beginning-position))
+                      (not (<= (line-beginning-position) orig)))
+            (evil-move-end-of-line 0))
+          ;; but if the previous line is empty, delete this line
+          (when (bolp) (forward-char))))))))
 
 (evil-define-motion evil-forward-word-end (count &optional bigword)
   "Move the cursor to the end of the COUNT-th next word.
 If BIGWORD is non-nil, move by WORDS."
   :type inclusive
-  (let ((move (if bigword #'evil-move-WORD #'evil-move-word)))
-    ;; if changing a one-letter word, don't move point to the
-    ;; next word (which would change two words)
-    (if (and (evil-operator-state-p)
-             (looking-at "[[:word:]]"))
-        (prog1 (evil-move-end count move)
-          (unless (bobp) (backward-char)))
-      (evil-move-end count move nil t))))
+  (let ((thing (if bigword 'evil-WORD 'evil-word)))
+    (evil-signal-at-eob)
+    ;; Evil special behaviour: e or E on a one-character word in
+    ;; operator state does not move point
+    (unless (and (evil-operator-state-p)
+                 (= 1 (or count 1))
+                 (let ((bnd (bounds-of-thing-at-point thing)))
+                   (and bnd
+                        (= (car bnd) (point))
+                        (= (cdr bnd) (1+ (point)))))
+                 (looking-at "[[:word:]]"))
+      (evil-forward-end thing count))))
 
 (evil-define-motion evil-backward-word-begin (count &optional bigword)
   "Move the cursor to the beginning of the COUNT-th previous word.
 If BIGWORD is non-nil, move by WORDS."
   :type exclusive
-  (let ((move (if bigword #'evil-move-WORD #'evil-move-word)))
-    (evil-move-beginning (- (or count 1)) move)))
+  (let ((thing (if bigword #'evil-WORD #'evil-word)))
+    (evil-signal-at-bob)
+    (evil-forward-beginning thing (- (or count 1)))))
 
 (evil-define-motion evil-backward-word-end (count &optional bigword)
   "Move the cursor to the end of the COUNT-th previous word.
 If BIGWORD is non-nil, move by WORDS."
   :type inclusive
-  (let ((move (if bigword #'evil-move-WORD #'evil-move-word)))
-    (evil-move-end (- (or count 1)) move nil t)))
+  (let ((thing (if bigword #'evil-WORD #'evil-word)))
+    (evil-signal-at-bob)
+    (evil-forward-end thing (- (or count 1)))))
 
 (evil-define-motion evil-forward-WORD-begin (count)
   "Move the cursor to the beginning of the COUNT-th next WORD."
