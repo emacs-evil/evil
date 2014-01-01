@@ -402,25 +402,32 @@ If BIGWORD is non-nil, move by WORDS."
   "Move the cursor to the beginning of the COUNT-th next section."
   :jump t
   :type exclusive
-  (beginning-of-defun (- (or count 1))))
+  (evil-signal-at-eob)
+  (evil-forward-beginning 'evil-defun count))
 
 (evil-define-motion evil-forward-section-end (count)
   "Move the cursor to the end of the COUNT-th next section."
   :jump t
   :type inclusive
-  (end-of-defun (or count 1)))
+  (evil-signal-at-eob)
+  (evil-forward-end 'evil-defun count)
+  (unless (eobp) (forward-line)))
 
 (evil-define-motion evil-backward-section-begin (count)
   "Move the cursor to the beginning of the COUNT-th previous section."
   :jump t
   :type exclusive
-  (beginning-of-defun (or count 1)))
+  (evil-signal-at-bob)
+  (evil-forward-beginning 'evil-defun (- (or count 1))))
 
 (evil-define-motion evil-backward-section-end (count)
   "Move the cursor to the end of the COUNT-th previous section."
   :jump t
   :type inclusive
-  (end-of-defun (- (or count 1))))
+  (evil-signal-at-bob)
+  (end-of-line -1)
+  (evil-forward-end 'evil-defun (- (or count 1)))
+  (unless (eobp) (forward-line)))
 
 (evil-define-motion evil-forward-sentence (count)
   "Move to the next COUNT-th beginning of a sentence or end of a paragraph."

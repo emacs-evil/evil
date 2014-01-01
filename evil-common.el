@@ -1309,6 +1309,14 @@ WORD is a sequence of non-whitespace characters
                             (evil-forward-chars "^\n\r\t\f " cnt))
                         #'forward-evil-empty-line))
 
+(defun forward-evil-defun (&optional count)
+  "Move forward COUNT defuns.
+Moves point COUNT defuns forward or (- COUNT) defuns backward
+if COUNT is negative.  A defun is defined by
+`beginning-of-defun' and `end-of-defun' functions."
+  (evil-motion-loop (dir (or count 1))
+    (if (> dir 0) (end-of-defun) (beginning-of-defun))))
+
 (defun forward-evil-paragraph (&optional count)
   "Move forward COUNT paragraphs.
 Moves point COUNT words forward or (- COUNT) paragraphs backward
