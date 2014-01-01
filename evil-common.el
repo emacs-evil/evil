@@ -1349,6 +1349,12 @@ The motion is repeated COUNT times."
         (error))
       rest)))
 
+(defun evil-backward-beginning (thing &optional count)
+  "Move backward to beginning of THING.
+The motion is repeated COUNT times. This is the same as calling
+`evil-backward-beginning' with -COUNT."
+  (evil-forward-beginning thing (- (or count 1))))
+
 (defun evil-forward-end (thing &optional count)
   "Move forward to end of THING.
 The motion is repeated COUNT times."
@@ -1369,6 +1375,12 @@ The motion is repeated COUNT times."
             (forward-char -1))
         (error))
       rest))))
+
+(defun evil-backward-end (thing &optional count)
+  "Move backward to end of THING.
+The motion is repeated COUNT times. This is the same as calling
+`evil-backward-end' with -COUNT."
+  (evil-forward-end thing (- (or count 1))))
 
 (defun evil-forward-word (&optional count)
   "Move by words.

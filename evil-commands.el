@@ -367,7 +367,7 @@ If BIGWORD is non-nil, move by WORDS."
   :type exclusive
   (let ((thing (if bigword #'evil-WORD #'evil-word)))
     (evil-signal-at-bob)
-    (evil-forward-beginning thing (- (or count 1)))))
+    (evil-backward-beginning thing count)))
 
 (evil-define-motion evil-backward-word-end (count &optional bigword)
   "Move the cursor to the end of the COUNT-th previous word.
@@ -375,7 +375,7 @@ If BIGWORD is non-nil, move by WORDS."
   :type inclusive
   (let ((thing (if bigword #'evil-WORD #'evil-word)))
     (evil-signal-at-bob)
-    (evil-forward-end thing (- (or count 1)))))
+    (evil-backward-end thing count)))
 
 (evil-define-motion evil-forward-WORD-begin (count)
   "Move the cursor to the beginning of the COUNT-th next WORD."
@@ -418,7 +418,7 @@ If BIGWORD is non-nil, move by WORDS."
   :jump t
   :type exclusive
   (evil-signal-at-bob)
-  (evil-forward-beginning 'evil-defun (- (or count 1))))
+  (evil-backward-beginning 'evil-defun count))
 
 (evil-define-motion evil-backward-section-end (count)
   "Move the cursor to the end of the COUNT-th previous section."
@@ -426,7 +426,7 @@ If BIGWORD is non-nil, move by WORDS."
   :type inclusive
   (evil-signal-at-bob)
   (end-of-line -1)
-  (evil-forward-end 'evil-defun (- (or count 1)))
+  (evil-backward-end 'evil-defun count)
   (unless (eobp) (forward-line)))
 
 (evil-define-motion evil-forward-sentence (count)
