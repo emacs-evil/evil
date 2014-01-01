@@ -1122,6 +1122,29 @@ the loop immediately quits. See also `evil-loop'.
         (when (= p (point))
           (signal (car err) (cdr err)))))))
 
+(defun evil-signal-at-bob ()
+  "Signals 'beginning-of-buffer if `point' is at bob.
+This macro should be used in backward motions. If `point' is at
+to bob so that no further backward motion is possible the error
+'end-of-buffer is raised."
+  (when (bobp) (signal 'beginning-of-buffer nil)))
+
+(defun evil-signal-at-eob ()
+  "Signals 'end-of-buffer if `point' is at eob.
+This macro should be used in forward motions. If `point' is close
+to eob so that no further forward motion is possible the error
+'end-of-buffer is raised. This is the case if `point' is at
+`point-max' or if is one position before `point-max',
+`evil-move-cursor-back' is non-nil and `point' is not at the end
+of a line. The latter is necessary because `point' cannot be
+moved to `point-max' if `evil-move-cursor-back' is non-nil and
+the last line in the buffer is not empty."
+  (when (or (eobp)
+            (and (not (eolp))
+                 evil-move-cursor-back
+                 (save-excursion (forward-char) (eobp))))
+    (signal 'end-of-buffer nil)))
+
 (defmacro evil-with-hproject-point-on-window (&rest body)
   "Project point after BODY to current window.
 If point is on a position left or right of the current window
