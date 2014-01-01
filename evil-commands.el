@@ -454,14 +454,18 @@ If BIGWORD is non-nil, move by WORDS."
   "Move to the end of the COUNT-th next paragraph."
   :jump t
   :type exclusive
-  (evil-move-end count #'forward-paragraph #'backward-paragraph))
+  (evil-signal-at-eob)
+  (evil-forward-end 'evil-paragraph count)
+  (unless (eobp) (forward-line)))
 
 (evil-define-motion evil-backward-paragraph (count)
   "Move to the beginning of the COUNT-th previous paragraph."
   :jump t
   :type exclusive
-  (evil-move-beginning (- (or count 1))
-                       #'forward-paragraph #'backward-paragraph))
+  (evil-signal-at-bob)
+  (unless (eobp) (forward-line))
+  (evil-backward-beginning 'evil-paragraph count)
+  (unless (bobp) (forward-line -1)))
 
 (evil-define-motion evil-jump-item (count)
   "Find the next item in this line after or under the cursor
