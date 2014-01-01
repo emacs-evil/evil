@@ -1200,10 +1200,18 @@ point is moved backward -COUNT times."
         (goto-char pnt)
         (condition-case nil
             (evil-with-restriction
-                (and (< dir 0) nxt)
-                (and (> dir 0) nxt)
+                (and (< dir 0)
+                     (save-excursion
+                       (goto-char nxt)
+                       (line-beginning-position 0)))
+                (and (> dir 0)
+                     (save-excursion
+                       (goto-char nxt)
+                       (line-end-position 2)))
               (if (and (zerop (funcall fwd dir))
-                       (/= (point) pnt))
+                       (/= (point) pnt)
+                       (or (and (> dir 0) (< (point) nxt))
+                           (and (< dir 0) (> (point) nxt))))
                   (setq nxt (point))))
           (error)))
       (goto-char nxt))))
