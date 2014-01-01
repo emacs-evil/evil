@@ -5014,6 +5014,8 @@ Below some empty line[.]"))
       "[B]elow some empty line.\n\n"
       (")")
       "Below some empty line.\n[\n]"
+      (")")
+      "Below some empty line.\n\n[]"
       (should-error (execute-kbd-macro ")"))
       (should-error (execute-kbd-macro "42)")))))
 

@@ -1325,6 +1325,17 @@ if COUNT is negative.  A defun is defined by
   (evil-motion-loop (dir (or count 1))
     (if (> dir 0) (end-of-defun) (beginning-of-defun))))
 
+(defun forward-evil-sentence (&optional count)
+  "Move forward COUNT sentences.
+Moves point COUNT sentences forward or (- COUNT) sentences
+backward if COUNT is negative.  This function is the same as
+`forward-sentence' but returns the number of sentences that could
+NOT be moved over."
+  (evil-motion-loop (dir (or count 1))
+    (condition-case nil
+        (forward-sentence dir)
+      (error))))
+
 (defun forward-evil-paragraph (&optional count)
   "Move forward COUNT paragraphs.
 Moves point COUNT words forward or (- COUNT) paragraphs backward

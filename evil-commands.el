@@ -429,45 +429,26 @@ If BIGWORD is non-nil, move by WORDS."
   (evil-backward-end 'evil-defun count)
   (unless (eobp) (forward-line)))
 
-(evil-define-motion evil-forward-sentence (count)
+(evil-define-motion evil-forward-sentence-begin (count)
   "Move to the next COUNT-th beginning of a sentence or end of a paragraph."
   :jump t
   :type exclusive
-  (let ((count (or count 1))
-        beg-sentence end-paragraph)
-    (when (evil-eobp)
-      (signal 'end-of-buffer nil))
-    (evil-motion-loop (nil count)
-      (unless (eobp)
-        (setq beg-sentence
-              (save-excursion
-                (and (zerop (evil-move-beginning 1 #'evil-move-sentence))
-                     (point)))
-              end-paragraph
-              (save-excursion
-                (forward-paragraph)
-                (point)))
-        (evil-goto-min beg-sentence end-paragraph)))))
+  (evil-signal-at-eob)
+  (evil-forward-nearest count
+                        #'(lambda (cnt)
+                            (evil-forward-beginning 'evil-sentence))
+                        #'evil-forward-paragraph))
 
-(evil-define-motion evil-backward-sentence (count)
+(evil-define-motion evil-backward-sentence-begin (count)
   "Move to the previous COUNT-th beginning of a sentence or paragraph."
   :jump t
   :type exclusive
-  (let ((count (or count 1))
-        beg-sentence beg-paragraph)
-    (when (bobp)
-      (signal 'beginning-of-buffer nil))
-    (evil-motion-loop (nil count)
-      (unless (bobp)
-        (setq beg-sentence
-              (save-excursion
-                (and (zerop (evil-move-beginning -1 #'evil-move-sentence))
-                     (point)))
-              beg-paragraph
-              (save-excursion
-                (backward-paragraph)
-                (point)))
-        (evil-goto-max beg-sentence beg-paragraph)))))
+  (evil-signal-at-bob)
+  (evil-forward-nearest (- (or count 1))
+                        #'(lambda (cnt)
+                            (evil-backward-beginning 'evil-sentence))
+                        #'(lambda (cnt)
+                            (evil-backward-paragraph))))
 
 (evil-define-motion evil-forward-paragraph (count)
   "Move to the end of the COUNT-th next paragraph."
