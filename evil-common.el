@@ -1184,6 +1184,29 @@ See also `evil-goto-min'."
                          positions))
     (goto-char (apply #'max positions))))
 
+(defun evil-forward-not-thing (thing &optional count)
+  "Move point to the end or beginning of the complement of THING."
+  (evil-motion-loop (dir (or count 1))
+    (let (bnd)
+      (cond
+       ((> dir 0)
+        (while (progn
+                 (setq bnd (bounds-of-thing-at-point thing))
+                 (and bnd (< (point) (cdr bnd))))
+          (goto-char (cdr bnd)))
+        (forward-thing thing)
+        (backward-char)
+        (goto-char (or (car-safe (bounds-of-thing-at-point thing))
+                       (point-max))))
+       (t
+        (while (progn
+                 (setq bnd (bounds-of-thing-at-point thing))
+                 (and bnd (> (point) (car bnd))))
+          (goto-char (car bnd)))
+        (forward-thing thing -1)
+        (goto-char (or (cdr-safe (bounds-of-thing-at-point thing))
+                       (point-max))))))))
+
 (defun evil-forward-nearest (count &rest forwards)
   "Moves point forward to the first of several motions.
 FORWARDS is a list of forward motion functions (i.e. each moves
