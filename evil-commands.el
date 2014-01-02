@@ -1050,7 +1050,7 @@ or line COUNT to the top of the window."
 
 (evil-define-text-object evil-a-word (count &optional beg end type)
   "Select a word."
-  (evil-an-object-range count beg end type #'evil-move-word))
+  (evil-select-an-object 'evil-word beg end type count))
 
 (evil-define-text-object evil-inner-word (count &optional beg end type)
   "Select inner word."
@@ -1058,15 +1058,23 @@ or line COUNT to the top of the window."
 
 (evil-define-text-object evil-a-WORD (count &optional beg end type)
   "Select a WORD."
-  (evil-an-object-range count beg end type #'evil-move-WORD))
+  (evil-select-an-object 'evil-WORD beg end type count))
 
 (evil-define-text-object evil-inner-WORD (count &optional beg end type)
   "Select inner WORD."
   (evil-select-inner-object 'evil-WORD beg end type count))
 
+(evil-define-text-object evil-a-symbol (count &optional beg end type)
+  "Select a symbol."
+  (evil-select-an-object 'evil-symbol beg end type count))
+
+(evil-define-text-object evil-inner-symbol (count &optional beg end type)
+  "Select inner symbol."
+  (evil-select-inner-object 'evil-symbol beg end type count))
+
 (evil-define-text-object evil-a-sentence (count &optional beg end type)
   "Select a sentence."
-  (evil-an-object-range count beg end type #'evil-move-sentence nil nil t))
+  (evil-select-an-object 'evil-sentence beg end type count))
 
 (evil-define-text-object evil-inner-sentence (count &optional beg end type)
   "Select inner sentence."
@@ -1075,7 +1083,7 @@ or line COUNT to the top of the window."
 (evil-define-text-object evil-a-paragraph (count &optional beg end type)
   "Select a paragraph."
   :type line
-  (evil-an-object-range count beg end type #'evil-move-paragraph nil nil t))
+  (evil-select-an-object 'evil-paragraph beg end type count))
 
 (evil-define-text-object evil-inner-paragraph (count &optional beg end type)
   "Select inner paragraph."
@@ -1161,16 +1169,6 @@ or line COUNT to the top of the window."
   "Select inner tag block."
   :extend-selection nil
   (evil-xml-range count beg end type t))
-
-(evil-define-text-object evil-a-symbol (count &optional beg end type)
-  "Select a symbol."
-  (require 'thingatpt)
-  (evil-an-object-range count beg end type #'forward-symbol))
-
-(evil-define-text-object evil-inner-symbol (count &optional beg end type)
-  "Select inner symbol."
-  (require 'thingatpt)
-  (evil-select-inner-object 'evil-symbol beg end type count))
 
 ;;; Operator commands
 

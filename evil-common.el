@@ -2914,6 +2914,66 @@ If one is unspecified, the other is used with a negative argument."
             (goto-char (car obj))))
         (evil-range (point) end range-type))))))
 
+(defun evil-select-an-object (thing beg end type count &optional line)
+  "Return an outer text object range of COUNT objects.
+If COUNT is positive, return objects following point; if COUNT is
+negative, return objects preceding point.  FORWARD is a function
+which moves to the end of an object, and BACKWARD is a function
+which moves to the beginning.  If one is unspecified, the other
+is used with a negative argument.  THING is a symbol understood
+by thing-at-point. BEG, END and TYPE specify the current
+selection. If LINE is non-nil, the text object should be
+linewise, otherwise it is character wise."
+  (let* ((dir (if (> (or count 1) 0) +1 -1))
+         (count (abs (or count 1)))
+         (objbnd (let ((b (bounds-of-thing-at-point thing)))
+                   (and b (< (point) (cdr b)) b)))
+         (bnd (or objbnd (evil-bounds-of-not-thing-at-point thing)))
+         addcurrent other)
+    ;; check if current object is not selected
+    (when (or (not beg) (not end) (> beg (car bnd)) (< end (cdr bnd)))
+      ;; if not, enlarge selection
+      (when (or (not beg) (< (car bnd) beg)) (setq beg (car bnd)))
+      (when (or (not end) (> (cdr bnd) end)) (setq end (cdr bnd)))
+      (if objbnd (setq addcurrent t)))
+    ;; make other and (point) reflect the selection
+    (cond
+     ((> dir 0) (goto-char end) (setq other beg))
+     (t (goto-char beg) (setq other end)))
+    ;; if current is only selected object ...
+    (when (and (= beg (car bnd)) (= end (cdr bnd)))
+      (if objbnd
+          ;; current match is thing, add whitespace
+          (let ((wsend (evil-bounds-of-not-thing-at-point thing dir)))
+            (if (not wsend) ;; no whitespace at end, try beginning
+                (save-excursion
+                  (goto-char other)
+                  (setq wsend (evil-bounds-of-not-thing-at-point thing (- dir)))
+                  (when wsend (setq other wsend addcurrent t)))
+              ;; add whitespace at end
+              (goto-char wsend)
+              (setq addcurrent t)))
+        ;; current match is whitespace, add thing
+        (forward-thing thing dir)
+        (setq addcurrent t)))
+    ;; possibly count current object as selection
+    (if addcurrent (setq count (1- count)))
+    ;; move
+    (dotimes (var count)
+      (let ((wsend (evil-bounds-of-not-thing-at-point thing dir)))
+        (if (and wsend (/= wsend (point)))
+            ;; start with whitespace
+            (forward-thing thing dir)
+          ;; start with thing
+          (forward-thing thing dir)
+          (setq wsend (evil-bounds-of-not-thing-at-point thing dir))
+          (when wsend (goto-char wsend)))))
+    ;; return range
+    (evil-range (if (> dir 0) other (point))
+                (if (< dir 0) other (point))
+                (if line 'line type)
+                :expanded t)))
+
 (defun evil-an-object-range (count beg end type forward &optional backward range-type newlines)
   "Return a text object range of COUNT objects with whitespace.
 BEG, END and TYPE specify the range of the current selection that
