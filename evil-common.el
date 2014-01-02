@@ -1207,6 +1207,27 @@ See also `evil-goto-min'."
         (goto-char (or (cdr-safe (bounds-of-thing-at-point thing))
                        (point-max))))))))
 
+(defun evil-bounds-of-not-thing-at-point (thing &optional which)
+  "Returns the bounds of a complement of THING at point.
+If there is a THING at point nil is returned.  Otherwise if WHICH
+is nil or 0 a cons cell (BEG . END) is returned. If WHICH is
+negative the beginning is returned. If WHICH is positive the END
+is returned."
+  (let ((pnt (point)))
+    (let ((beg (save-excursion
+                 (and (zerop (forward-thing thing -1))
+                      (forward-thing thing))
+                 (if (> (point) pnt) (point-min) (point))))
+          (end (save-excursion
+                 (and (zerop (forward-thing thing))
+                      (forward-thing thing -1))
+                 (if (< (point) pnt) (point-max) (point)))))
+      (when (and (<= beg (point)) (<= (point) end) (< beg end))
+        (cond
+         ((or (not which) (zerop which)) (cons beg end))
+         ((< which 0) beg)
+         ((> which 0) end))))))
+
 (defun evil-forward-nearest (count &rest forwards)
   "Moves point forward to the first of several motions.
 FORWARDS is a list of forward motion functions (i.e. each moves
@@ -2796,18 +2817,9 @@ by thing-at-point. BEG, END and TYPE specify the current
 selection. If LINE is non-nil, the text object should be
 linewise, otherwise it is character wise."
   (let* ((count (or count 1))
-         (bnd (bounds-of-thing-at-point thing)))
-    ;; if there is no current thing select space in between
-    (when (or (not bnd) (= (cdr bnd) (point)))
-      (setq bnd
-            (cons (save-excursion
-                    (forward-thing thing -1)
-                    (or (cdr-safe (bounds-of-thing-at-point thing))
-                        (point-min)))
-                  (save-excursion
-                    (forward-thing thing)
-                    (or (car-safe (bounds-of-thing-at-point thing))
-                        (point-max))))))
+         (bnd (or (let ((b (bounds-of-thing-at-point thing)))
+                    (and b (< (point) (cdr b)) b))
+                  (evil-bounds-of-not-thing-at-point thing))))
     ;; check if current object is selected
     (when (or (not beg) (not end)
               (> beg (car bnd))
