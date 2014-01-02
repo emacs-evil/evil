@@ -1170,7 +1170,7 @@ or line COUNT to the top of the window."
 (evil-define-text-object evil-inner-symbol (count &optional beg end type)
   "Select inner symbol."
   (require 'thingatpt)
-  (evil-inner-object-range count beg end type #'forward-symbol))
+  (evil-select-inner-object 'evil-symbol beg end type count))
 
 ;;; Operator commands
 

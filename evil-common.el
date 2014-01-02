@@ -1340,6 +1340,16 @@ WORD is a sequence of non-whitespace characters
                             (evil-forward-chars "^\n\r\t\f " cnt))
                         #'forward-evil-empty-line))
 
+(defun forward-evil-symbol (&optional count)
+  "Move forward COUNT symbols.
+Moves point COUNT symbols forward or (- COUNT) symbols backward
+if COUNT is negative. Point is placed after the end of the
+symbol (if forward) or at the first character of the symbol (if
+backward). The boundaries of a symbol are determined by
+`forward-symbol'."
+  (evil-motion-loop (dir (or count 1))
+    (forward-symbol dir)))
+
 (defun forward-evil-defun (&optional count)
   "Move forward COUNT defuns.
 Moves point COUNT defuns forward or (- COUNT) defuns backward
