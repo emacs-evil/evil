@@ -27,6 +27,7 @@
 (require 'evil-vars)
 (require 'evil-digraphs)
 (require 'rect)
+(require 'thingatpt)
 
 ;;; Code:
 
@@ -1079,6 +1080,8 @@ RESULT specifies a variable for storing this value.
          (setq ,result ,var))
        ,var)))
 
+;;; Motions
+
 (defmacro evil-motion-loop (spec &rest body)
   "Loop a certain number of times.
 Evaluate BODY repeatedly COUNT times with VAR bound to 1 or -1,
@@ -1158,6 +1161,30 @@ See also `evil-goto-min'."
                          positions))
     (goto-char (apply #'max positions))))
 
+(defun evil-forward-nearest (count &rest forwards)
+  "Moves point forward to the first of several motions.
+FORWARDS is a list of forward motion functions (i.e. each moves
+point forward to the next end of a text object (if passed a +1)
+or backward to the preceeding beginning of a text object (if
+passed a -1)). This function calls each of these functions once
+and moves point to the nearest of the resulting positions. If
+COUNT is positive point is moved forward COUNT times, if negative
+point is moved backward -COUNT times."
+  (evil-motion-loop (dir (or count 1))
+    (let ((pnt (point))
+          (nxt (if (> dir 0) (point-max) (point-min))))
+      (dolist (fwd forwards)
+        (goto-char pnt)
+        (condition-case nil
+            (evil-with-restriction
+                (and (< dir 0) nxt)
+                (and (> dir 0) nxt)
+              (if (and (zerop (funcall fwd dir))
+                       (/= (point) pnt))
+                  (setq nxt (point))))
+          (error)))
+      (goto-char nxt))))
+
 ;; The purpose of this function is the provide line motions which
 ;; preserve the column. This is how `previous-line' and `next-line'
 ;; work, but unfortunately the behaviour is hard-coded: if and only if
@@ -1193,6 +1220,124 @@ Signals an error at buffer boundaries unless NOERROR is non-nil."
                (line-move-finish col opoint (< count 0)))
              ;; Maybe we should just `ding'?
              (signal (car err) (cdr err))))))))))
+
+(defun evil-forward-chars (chars &optional count)
+  "Move point to the end or beginning of a sequence of CHARS.
+CHARS is a character set as inside [...] in a regular expression."
+  (let ((notchars (if (= (aref chars 0) ?^)
+                      (substring chars 1)
+                    (concat "^" chars))))
+    (evil-motion-loop (dir (or count 1))
+      (cond
+       ((< dir 0)
+        (skip-chars-backward notchars)
+        (skip-chars-backward chars))
+       (t
+        (skip-chars-forward notchars)
+        (skip-chars-forward chars))))))
+
+;;; Thing-at-point motion functions for Evil text objects and motions
+(defun forward-evil-empty-line (&optional count)
+  "Move forward COUNT empty lines."
+  (setq count (or count 1))
+  (cond
+   ((> count 0)
+    (while (and (> count 0) (not (eobp)))
+      (when (and (bolp) (eolp))
+        (setq count (1- count)))
+      (forward-line 1)))
+   (t
+    (while (and (< count 0) (not (bobp))
+                (zerop (forward-line -1)))
+      (when (and (bolp) (eolp))
+        (setq count (1+ count))))))
+  count)
+
+(defun forward-evil-word (&optional count)
+  "Move forward COUNT words.
+Moves point COUNT words forward or (- COUNT) words backward if
+COUNT is negative. Point is placed after the end of the word (if
+forward) or at the first character of the word (if backward). A
+word is a sequence of word characters matching
+\[[:word:]] (recognized by `forward-word'), a sequence of
+non-whitespace non-word characters '[^[:word:]\\n\\r\\t\\f ]', or
+an empty line matching ^$."
+  (evil-forward-nearest
+   count
+   #'(lambda (&optional cnt)
+       (let ((word-separating-categories evil-cjk-word-separating-categories)
+             (word-combining-categories evil-cjk-word-combining-categories)
+             (pnt (point)))
+         (forward-word cnt)
+         (if (= pnt (point)) cnt 0)))
+   #'(lambda (&optional cnt)
+       (evil-forward-chars "^[:word:]\n\r\t\f " cnt))
+   #'forward-evil-empty-line))
+
+(defun forward-evil-WORD (&optional count)
+  "Move forward COUNT \"WORDS\".
+Moves point COUNT WORDS forward or (- COUNT) WORDS backward if
+COUNT is negative. Point is placed after the end of the WORD (if
+forward) or at the first character of the WORD (if backward). A
+WORD is a sequence of non-whitespace characters
+'[^\\n\\r\\t\\f ]', or an empty line matching ^$."
+  (evil-forward-nearest count
+                        #'(lambda (&optional cnt)
+                            (evil-forward-chars "^\n\r\t\f " cnt))
+                        #'forward-evil-empty-line))
+
+(defun forward-evil-paragraph (&optional count)
+  "Move forward COUNT paragraphs.
+Moves point COUNT words forward or (- COUNT) paragraphs backward
+if COUNT is negative.  A paragraph is defined by
+`start-of-paragraph-text' and `forward-paragraph' functions."
+  (evil-motion-loop (dir (or count 1))
+    (cond
+     ((> dir 0) (forward-paragraph))
+     ((not (bobp)) (start-of-paragraph-text) (beginning-of-line)))))
+
+;;; Motion functions
+(defun evil-forward-beginning (thing &optional count)
+  "Move forward to beginning of THING.
+The motion is repeated COUNT times."
+  (setq count (or count 1))
+  (if (< count 0)
+      (forward-thing thing count)
+    (let ((bnd (bounds-of-thing-at-point thing))
+          rest)
+      (when (and bnd (< (point) (cdr bnd)))
+        (goto-char (cdr bnd)))
+      (condition-case nil
+          (when (zerop (setq rest (forward-thing thing count)))
+            (when (and (bounds-of-thing-at-point thing)
+                       (not (bobp))
+                       ;; handle final empty line
+                       (not (and (bolp) (eobp))))
+              (forward-char -1))
+            (beginning-of-thing thing))
+        (error))
+      rest)))
+
+(defun evil-forward-end (thing &optional count)
+  "Move forward to end of THING.
+The motion is repeated COUNT times."
+  (setq count (or count 1))
+  (cond
+   ((> count 0)
+    (unless (eobp) (forward-char))
+    (prog1 (forward-thing thing count)
+      (unless (bobp) (forward-char -1))))
+   (t
+    (let ((bnd (bounds-of-thing-at-point thing))
+          rest)
+      (when (and bnd (< (point) (cdr bnd) ))
+        (goto-char (car bnd)))
+      (condition-case nil
+          (when (zerop (setq rest (forward-thing thing count)))
+            (end-of-thing thing)
+            (forward-char -1))
+        (error))
+      rest))))
 
 (defun evil-forward-word (&optional count)
   "Move by words.
