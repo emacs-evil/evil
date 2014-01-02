@@ -2775,6 +2775,45 @@ Returns t if RANGE was successfully adjusted and nil otherwise."
         (evil-set-range range nil (line-end-position 0)))
       (not (evil-subrange-p orig range)))))
 
+(defun evil-select-inner-object (thing beg end type &optional count line)
+  "Return an inner text object range of COUNT objects.
+If COUNT is positive, return objects following point; if COUNT is
+negative, return objects preceding point.  FORWARD is a function
+which moves to the end of an object, and BACKWARD is a function
+which moves to the beginning.  If one is unspecified, the other
+is used with a negative argument.  THING is a symbol understood
+by thing-at-point. BEG, END and TYPE specify the current
+selection. If LINE is non-nil, the text object should be
+linewise, otherwise it is character wise."
+  (let* ((count (or count 1))
+         (bnd (bounds-of-thing-at-point thing)))
+    ;; if there is no current thing select space in between
+    (when (or (not bnd) (= (cdr bnd) (point)))
+      (setq bnd
+            (cons (save-excursion
+                    (forward-thing thing -1)
+                    (or (cdr-safe (bounds-of-thing-at-point thing))
+                        (point-min)))
+                  (save-excursion
+                    (forward-thing thing)
+                    (or (car-safe (bounds-of-thing-at-point thing))
+                        (point-max))))))
+    ;; check if current object is selected
+    (when (or (not beg) (not end)
+              (> beg (car bnd))
+              (< end (cdr bnd)))
+      (when (or (not beg) (< (car bnd) beg)) (setq beg (car bnd)))
+      (when (or (not end) (> (cdr bnd) end)) (setq end (cdr bnd)))
+      (setq count (if (> count 0) (1- count) (1+ count))))
+    (goto-char (if (< count 0) beg end))
+    (evil-forward-nearest count
+                          #'(lambda (cnt) (forward-thing thing cnt))
+                          #'(lambda (cnt) (evil-forward-not-thing thing cnt)))
+    (evil-range (if (>= count 0) beg (point))
+                (if (< count 0) end (point))
+                (if line 'line type)
+                :expanded t)))
+
 (defun evil-inner-object-range (count beg end type forward &optional backward range-type)
   "Return an inner text object range (BEG END) of COUNT objects.
 If COUNT is positive, return objects following point;

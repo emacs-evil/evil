@@ -6043,7 +6043,7 @@ Below some empty line."))
 ;; and for Lisp evaluation."
       ("vip")
       "<;; This buffer is for notes,
-;; and for Lisp evaluation[.]
+;; and for Lisp evaluation.[]
 >
 ;; This buffer is for notes,
 ;; and for Lisp evaluation.")
@@ -6055,11 +6055,10 @@ Below some empty line."))
 ;; and for Lisp evaluation."
       ("vip")
       "<;; This buffer is for notes,
-;; and for Lisp evaluation[.]
+;; and for Lisp evaluation.[]
 >
 ;; This buffer is for notes,
 ;; and for Lisp evaluation.")
-
     (evil-test-buffer
       ";; This buffer is for notes,
 ;; and for Lisp evaluation.
