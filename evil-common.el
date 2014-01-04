@@ -1190,22 +1190,29 @@ See also `evil-goto-min'."
     (let (bnd)
       (cond
        ((> dir 0)
-        (while (progn
-                 (setq bnd (bounds-of-thing-at-point thing))
-                 (and bnd (< (point) (cdr bnd))))
+        (while (and (setq bnd (bounds-of-thing-at-point thing))
+                    (< (point) (cdr bnd)))
           (goto-char (cdr bnd)))
-        (forward-thing thing)
-        (backward-char)
-        (goto-char (or (car-safe (bounds-of-thing-at-point thing))
-                       (point-max))))
+        ;; no thing at (point)
+        (goto-char
+         (if (and (zerop (forward-thing thing))
+                  (setq bnd (bounds-of-thing-at-point thing))
+                  (< (point) (cdr bnd)))
+             (car bnd)
+           (point-max))))
        (t
-        (while (progn
-                 (setq bnd (bounds-of-thing-at-point thing))
-                 (and bnd (> (point) (car bnd))))
+        (while (and (not (bobp))
+                    (or (backward-char) t)
+                    (setq bnd (bounds-of-thing-at-point thing))
+                    (< (point) (cdr bnd)))
           (goto-char (car bnd)))
-        (forward-thing thing -1)
-        (goto-char (or (cdr-safe (bounds-of-thing-at-point thing))
-                       (point-max))))))))
+        ;; either bob or no thing at point
+        (goto-char
+         (if (and (not (bobp))
+                  (zerop (forward-thing thing -1))
+                  (setq bnd (bounds-of-thing-at-point thing)))
+             (cdr bnd)
+           (point-min))))))))
 
 (defun evil-bounds-of-not-thing-at-point (thing &optional which)
   "Returns the bounds of a complement of THING at point.
