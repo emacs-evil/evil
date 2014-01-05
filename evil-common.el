@@ -44,10 +44,6 @@
 window commands not available.")
    nil))
 
-(when (and (require 'undo-tree nil t)
-           (fboundp 'global-undo-tree-mode))
-  (global-undo-tree-mode 1))
-
 ;;; Compatibility with different Emacs versions
 
 (defmacro evil-called-interactively-p ()
