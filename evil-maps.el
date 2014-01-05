@@ -459,10 +459,6 @@
 (evil-ex-define-cmd "set-initial-state" 'evil-ex-set-initial-state)
 (evil-ex-define-cmd "show-digraphs" 'evil-ex-show-digraphs)
 
-(when (fboundp 'undo-tree-visualize)
-  (evil-ex-define-cmd "undol[ist]" 'undo-tree-visualize)
-  (evil-ex-define-cmd "ul" 'undo-tree-visualize))
-
 ;; search command line
 (define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
 
