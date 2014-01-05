@@ -1318,6 +1318,38 @@ CHARS is a character set as inside [...] in a regular expression."
         (skip-chars-forward notchars)
         (skip-chars-forward chars))))))
 
+(defun evil-forward-delim (beg end &optional count)
+  "Move point to the end or beginning of text enclosed by BEG and END.
+BEG and END should be regular expressions matching the opening
+and closing delimiters, respectively. If COUNT is greater than
+zero point is moved forward otherwise it is moved
+backwards. Whenever an opening delimiter is found the COUNT is
+increased by one, if a closing delimiter is found the COUNT is
+decreased by one. The motion stops when COUNT reaches zero. The
+match-data reflects the last successful match (that caused COUNT
+to reach zero)."
+  (let* ((count (or count 1))
+         (dir (if (> count 0) +1 -1)))
+    (catch 'done
+      (while (not (zerop count))
+        (let* ((cl (save-excursion
+                     (and (re-search-forward end nil t dir)
+                          (point))))
+               (match (match-data t))
+               (op (save-excursion
+                     (and (re-search-forward beg cl t dir)
+                          (point)))))
+          (cond
+           ((and (not op) (not cl))
+            (goto-char (if (> dir 0) (point-max) (point-min)))
+            (set-match-data nil)
+            (throw 'done count))
+           (op (setq count (1+ count)) (goto-char op))
+           (cl (setq count (1- count))
+               (if (zerop count) (set-match-data match))
+               (goto-char cl)))))
+      0)))
+
 ;;; Thing-at-point motion functions for Evil text objects and motions
 (defun forward-evil-empty-line (&optional count)
   "Move forward COUNT empty lines."
@@ -3111,6 +3143,72 @@ the range; otherwise they are included. See also `evil-paren-range'."
               (setq count (+ count (if (> count 0) 1 -1))))))))
       (let ((ranges (funcall select count)))
         (if exclusive (cdr ranges) (car ranges))))))
+
+(defun evil-select-delim (thing beg end type count &optional inclusive)
+  "Return a range (BEG END) of COUNT delimited text objects.
+BEG END TYPE are the currently selected (visual) range.  The
+delimited object must be given by THING forward function (see
+`evil-forward-delim'). If INCLUSIVE is non-nil, OPEN and CLOSE
+are included in the range; otherwise they are excluded."
+  (save-excursion
+    (save-match-data
+      (let ((beg (or beg (point)))
+            (end (or end (point)))
+            (count (abs (or count 1)))
+            op cl op-end cl-end)
+        ;; start scanning at beginning
+        (goto-char beg)
+        (when (and (zerop (funcall thing +1)) (match-beginning 0))
+          (setq cl (cons (match-beginning 0) (match-end 0)))
+          (goto-char (car cl))
+          (when (and (zerop (funcall thing -1)) (match-beginning 0))
+            (setq op (cons (match-beginning 0) (match-end 0)))))
+        ;; start scanning from end
+        (goto-char end)
+        (when (and (zerop (funcall thing -1)) (match-beginning 0))
+          (setq op-end (cons (match-beginning 0) (match-end 0)))
+          (goto-char (cdr op-end))
+          (when (and (zerop (funcall thing +1)) (match-beginning 0))
+            (setq cl-end (cons (match-beginning 0) (match-end 0)))))
+        ;; use the tighter one of both
+        (cond
+         ((and (not op) (not cl-end))
+          (error "No surrounding delimiters found"))
+         ((or (not op)    ; first not found
+              (and cl-end ; second better
+                   (>= (car op-end) (car op))
+                   (<= (cdr cl-end) (cdr cl))))
+          (setq op op-end cl cl-end)))
+        (setq op-end op cl-end cl) ; store copy
+        ;; if the surrounding delimiters match the current selection
+        ;; they do not count as new selection
+        (let ((cnt (if (or (and inclusive
+                                (= beg (car op)) (= end (cdr cl)))
+                           (and (not inclusive)
+                                (= beg (cdr op)) (= end (car cl))))
+                       count
+                     (1- count))))
+          ;; starting from the innermost surrounding delimiters
+          ;; increase selection
+          (when (> cnt 0)
+            (setq op (progn
+                       (goto-char (car op-end))
+                       (funcall thing (- cnt))
+                       (if (match-beginning 0)
+                           (cons (match-beginning 0) (match-end 0))
+                         op))
+                  cl (progn
+                       (goto-char (cdr cl-end))
+                       (funcall thing cnt)
+                       (if (match-beginning 0)
+                           (cons (match-beginning 0) (match-end 0))
+                         cl)))))
+        (if inclusive
+            (setq op (car op) cl (cdr cl))
+          (setq op (cdr op) cl (car cl)))
+        (if (and (= op beg) (= cl end))
+            (error "No surrounding delimiters found")
+          (evil-range op cl type :expanded t))))))
 
 (defun evil-xml-range (&optional count beg end type exclusive)
   "Return a range (BEG END) of COUNT matching XML tags.
