@@ -360,8 +360,7 @@ in case of incomplete or unknown commands."
        ((null result1) result2)
        ((null result2) result1)
        ((and (eq result1 t) (eq result2 t)) t)
-       (t (assert (equal result1 result2))
-          result1))))
+       (t result1))))
    ((eq flag t)
     (delete-dups
      (append (all-completions string table1 pred)
