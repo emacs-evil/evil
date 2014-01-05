@@ -439,10 +439,6 @@
 (evil-ex-define-cmd "@:" 'evil-ex-repeat)
 (evil-ex-define-cmd "set-initial-state" 'evil-ex-set-initial-state)
 
-(when (fboundp 'undo-tree-visualize)
-  (evil-ex-define-cmd "undol[ist]" 'undo-tree-visualize)
-  (evil-ex-define-cmd "ul" 'undo-tree-visualize))
-
 ;; completion
 (define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
 (define-key evil-ex-completion-map "\d" #'evil-ex-delete-backward-char)
