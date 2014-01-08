@@ -28,6 +28,7 @@
 (require 'evil-digraphs)
 (require 'rect)
 (require 'thingatpt)
+(eval-when-compile (require 'cl))
 
 ;;; Code:
 
@@ -3394,6 +3395,45 @@ are included in the range; otherwise they are excluded."
         (if (and (= op beg) (= cl end))
             (error "No surrounding delimiters found")
           (evil-range op cl type :expanded t))))))
+
+(defun evil-select-paren (open close beg end type count &optional inclusive)
+  "Return a range (BEG END) of COUNT delimited text objects.
+OPEN and CLOSE specify the opening and closing delimiter,
+respectively. BEG END TYPE are the currently selected (visual)
+range.  If INCLUSIVE is non-nil, OPEN and CLOSE are included in
+the range; otherwise they are excluded.
+
+The types of OPEN and CLOSE specify which kind of THING is used
+for parsing with `evil-select-delim'. If OPEN and CLOSE are
+characters `evil-forward-paren' is used. Otherwise OPEN and CLOSE
+must be regular expressions and `evil-forward-delim' is used."
+  (lexical-let
+      ((open open) (close close) op-re cl-re)
+    (cond
+     ((and (characterp open) (characterp close))
+      (let ((thing #'(lambda (&optional cnt)
+                       (evil-forward-paren open close cnt)))
+            (bnd (or (bounds-of-thing-at-point 'evil-string)
+                     (bounds-of-thing-at-point 'evil-comment))))
+        (if (not bnd)
+            (evil-select-delim thing beg end type count inclusive)
+          (or (evil-with-restriction (car bnd) (cdr bnd)
+                (condition-case nil
+                    (evil-select-delim thing beg end type count inclusive)
+                  (error nil)))
+              (save-excursion
+                (goto-char (car bnd))
+                (evil-select-delim thing
+                                   (min beg (car bnd))
+                                   (max end (cdr bnd))
+                                   type
+                                   count
+                                   inclusive))))))
+     (t
+      (evil-select-delim
+       #'(lambda (&optional cnt)
+           (evil-forward-delim open close cnt))
+       beg end type count inclusive)))))
 
 (defun evil-xml-range (&optional count beg end type exclusive)
   "Return a range (BEG END) of COUNT matching XML tags.
