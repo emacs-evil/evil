@@ -1507,6 +1507,10 @@ backwards."
         (setq count (1+ count))))))
   count)
 
+(defun forward-evil-space (&optional count)
+  "Move forward COUNT whitespace sequences [[:space:]]+."
+  (evil-forward-chars "[:space:]" count))
+
 (defun forward-evil-word (&optional count)
   "Move forward COUNT words.
 Moves point COUNT words forward or (- COUNT) words backward if
