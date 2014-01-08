@@ -3435,6 +3435,112 @@ must be regular expressions and `evil-forward-delim' is used."
            (evil-forward-delim open close cnt))
        beg end type count inclusive)))))
 
+(defun evil-select-quote-thing (thing beg end type count &optional inclusive)
+  "Selection THING as if it described a quoted object.
+THING is typically either 'evil-quote or 'evil-chars. This
+function is called from `evil-select-quote'."
+  (save-excursion
+    (let* ((dir (if (> count 0) 1 -1))
+           (count (or count 1))
+           (bnd (let ((b (bounds-of-thing-at-point thing)))
+                  (and b (< (point) (cdr b)) b)))
+           contains-string
+           addcurrent
+           wsboth)
+      (if inclusive (setq inclusive t)
+        (when (= (abs count) 2)
+          (setq count dir)
+          (setq inclusive 'quote-only))
+        ;; never extend with exclusive selection
+        (setq beg nil end nil))
+      ;; check if the previously selected range does not contain a
+      ;; string
+      (unless (and beg end
+                   (save-excursion
+                     (goto-char (if (> dir 0) beg end))
+                     (forward-thing thing dir)
+                     (and (<= beg (point)) (< (point) end))))
+        ;; if so forget the range
+        (setq beg nil end nil))
+      ;; check if there is a current object, if not fetch one
+      (when (not bnd)
+        (unless (and (zerop (forward-thing thing dir))
+                     (setq bnd (bounds-of-thing-at-point thing)))
+          (error "No quoted string found"))
+        (if (> dir 0)
+            (setq end (point))
+          (setq beg (point)))
+        (setq addcurrent t))
+      ;; check if current object is not selected
+      (when (or (not beg) (not end) (> beg (car bnd)) (< end (cdr bnd)))
+        ;; if not, enlarge selection
+        (when (or (not beg) (< (car bnd) beg)) (setq beg (car bnd)))
+        (when (or (not end) (> (cdr bnd) end)) (setq end (cdr bnd)))
+        (setq addcurrent t wsboth t))
+      ;; maybe count current element
+      (when addcurrent
+        (setq count (if (> dir 0) (1- count) (1+ count))))
+      ;; enlarge selection
+      (goto-char (if (> dir 0) end beg))
+      (when (and (not addcurrent)
+                 (= count (forward-thing thing count)))
+        (error "No quoted string found"))
+      (if (> dir 0) (setq end (point)) (setq beg (point)))
+      ;; add whitespace
+      (cond
+       ((not inclusive) (setq beg (1+ beg) end (1- end)))
+       ((not (eq inclusive 'quote-only))
+        ;; try to add whitespace in forward direction
+        (goto-char (if (> dir 0) end beg))
+        (if (setq bnd (bounds-of-thing-at-point 'evil-space))
+            (if (> dir 0) (setq end (cdr bnd)) (setq beg (car bnd)))
+          ;; if not found try backward direction
+          (goto-char (if (> dir 0) beg end))
+          (if (and wsboth (setq bnd (bounds-of-thing-at-point 'evil-space)))
+              (if (> dir 0) (setq beg (car bnd)) (setq end (cdr bnd)))))))
+      (evil-range beg end 'inclusive :expanded t))))
+
+(defun evil-select-quote (quote beg end type count &optional inclusive)
+  "Return a range (BEG END) of COUNT quoted text objects.
+QUOTE specifies the quotation delimiter. BEG END TYPE are the
+currently selected (visual) range.
+
+If INCLUSIVE is nil the previous selection is ignore. If there is
+quoted string at point this object will be selected, otherwise
+the following (if (> COUNT 0)) or preceeding object (if (< COUNT
+0)) is selected. If (/= (abs COUNT) 2) the delimiting quotes are not
+contained in the range, otherwise they are contained in the range.
+
+If INCLUSIVE is non-nil the selection depends on the previous
+selection. If the currently selection contains at least one
+character that is contained in a quoted string then the selection
+is extended, otherwise it is thrown away. If there is a
+non-selected object at point then this object is added to the
+selection. Otherwise the selection is extended to the
+following (if (> COUNT 0)) or preceeding object (if (< COUNT
+0)). Any whitespace following (or preceeding if (< COUNT 0)) the
+new selection is added to the selection. If no such whitespace
+exists and the selection contains only one quoted string then the
+preceeding (or following) whitespace is added to the range. "
+  (let ((evil-forward-quote-char quote))
+    (or (let ((bnd (or (bounds-of-thing-at-point 'evil-comment)
+                       (bounds-of-thing-at-point 'evil-string))))
+          (when (and bnd (< (point) (cdr bnd))
+                     (/= (char-after (car bnd)) quote)
+                     (/= (char-before (cdr bnd)) quote))
+            (evil-with-restriction (car bnd) (cdr bnd)
+              (condition-case nil
+                  (evil-select-quote-thing 'evil-quote-simple
+                                           beg end type
+                                           count
+                                           inclusive)
+                (error nil)))))
+        (let ((evil-forward-quote-char quote))
+          (evil-select-quote-thing 'evil-quote
+                                   beg end type
+                                   count
+                                   inclusive)))))
+
 (defun evil-xml-range (&optional count beg end type exclusive)
   "Return a range (BEG END) of COUNT matching XML tags.
 If EXCLUSIVE is non-nil, the tags themselves are excluded
