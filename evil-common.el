@@ -1375,10 +1375,22 @@ to reach zero)."
             (goto-char (if (> dir 0) (point-max) (point-min)))
             (set-match-data nil)
             (throw 'done count))
-           (op (setq count (1+ count)) (goto-char op))
-           (cl (setq count (1- count))
-               (if (zerop count) (set-match-data match))
-               (goto-char cl)))))
+           ((> dir 0)
+            (if cl
+                (progn
+                  (setq count (1- count))
+                  (if (zerop count) (set-match-data match))
+                  (goto-char cl))
+              (setq count (1+ count))
+              (goto-char op)))
+           ((< dir 0)
+            (if op
+                (progn
+                  (setq count (1+ count))
+                  (goto-char op))
+              (setq count (1- count))
+              (if (zerop count) (set-match-data match))
+              (goto-char cl))))))
       0)))
 
 (defun evil-forward-paren (open close &optional count)
