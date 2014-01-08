@@ -1350,7 +1350,7 @@ CHARS is a character set as inside [...] in a regular expression."
         (skip-chars-forward notchars)
         (skip-chars-forward chars))))))
 
-(defun evil-forward-delim (beg end &optional count)
+(defun evil-up-block (beg end &optional count)
   "Move point to the end or beginning of text enclosed by BEG and END.
 BEG and END should be regular expressions matching the opening
 and closing delimiters, respectively. If COUNT is greater than
@@ -1359,7 +1359,8 @@ backwards. Whenever an opening delimiter is found the COUNT is
 increased by one, if a closing delimiter is found the COUNT is
 decreased by one. The motion stops when COUNT reaches zero. The
 match-data reflects the last successful match (that caused COUNT
-to reach zero)."
+to reach zero). The behaviour of this functions is similar to
+`up-list'."
   (let* ((count (or count 1))
          (dir (if (> count 0) +1 -1)))
     (catch 'done
@@ -1394,7 +1395,7 @@ to reach zero)."
               (goto-char cl))))))
       0)))
 
-(defun evil-forward-paren (open close &optional count)
+(defun evil-up-paren (open close &optional count)
   "Move point to the end or beginning of balanced parentheses.
 OPEN and CLOSE should be characters identifying the opening and
 closing parenthesis, respectively. If COUNT is greater than zero
@@ -3330,11 +3331,11 @@ the range; otherwise they are included. See also `evil-paren-range'."
       (let ((ranges (funcall select count)))
         (if exclusive (cdr ranges) (car ranges))))))
 
-(defun evil-select-delim (thing beg end type count &optional inclusive)
+(defun evil-select-block (thing beg end type count &optional inclusive)
   "Return a range (BEG END) of COUNT delimited text objects.
 BEG END TYPE are the currently selected (visual) range.  The
-delimited object must be given by THING forward function (see
-`evil-forward-delim'). If INCLUSIVE is non-nil, OPEN and CLOSE
+delimited object must be given by THING-up function (see
+`evil-up-block'). If INCLUSIVE is non-nil, OPEN and CLOSE
 are included in the range; otherwise they are excluded."
   (save-excursion
     (save-match-data
@@ -3404,36 +3405,35 @@ range.  If INCLUSIVE is non-nil, OPEN and CLOSE are included in
 the range; otherwise they are excluded.
 
 The types of OPEN and CLOSE specify which kind of THING is used
-for parsing with `evil-select-delim'. If OPEN and CLOSE are
-characters `evil-forward-paren' is used. Otherwise OPEN and CLOSE
-must be regular expressions and `evil-forward-delim' is used."
+for parsing with `evil-select-block'. If OPEN and CLOSE are
+characters `evil-up-paren' is used. Otherwise OPEN and CLOSE
+must be regular expressions and `evil-up-block' is used."
   (lexical-let
       ((open open) (close close) op-re cl-re)
     (cond
      ((and (characterp open) (characterp close))
       (let ((thing #'(lambda (&optional cnt)
-                       (evil-forward-paren open close cnt)))
+                       (evil-up-paren open close cnt)))
             (bnd (or (bounds-of-thing-at-point 'evil-string)
                      (bounds-of-thing-at-point 'evil-comment))))
         (if (not bnd)
-            (evil-select-delim thing beg end type count inclusive)
+            (evil-select-block thing beg end type count inclusive)
           (or (evil-with-restriction (car bnd) (cdr bnd)
                 (condition-case nil
-                    (evil-select-delim thing beg end type count inclusive)
+                    (evil-select-block thing beg end type count inclusive)
                   (error nil)))
               (save-excursion
                 (goto-char (car bnd))
-                (evil-select-delim thing
+                (evil-select-block thing
                                    (min beg (car bnd))
                                    (max end (cdr bnd))
                                    type
                                    count
                                    inclusive))))))
      (t
-      (evil-select-delim
-       #'(lambda (&optional cnt)
-           (evil-forward-delim open close cnt))
-       beg end type count inclusive)))))
+      (evil-select-block #'(lambda (&optional cnt)
+			     (evil-up-block open close cnt))
+			 beg end type count inclusive)))))
 
 (defun evil-select-quote-thing (thing beg end type count &optional inclusive)
   "Selection THING as if it described a quoted object.
