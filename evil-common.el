@@ -1424,6 +1424,72 @@ last successful match (that caused COUNT to reach zero)."
        (t (set-match-data (list (point) (1+ (point))))))
       rest)))
 
+(defun evil-forward-quote (quote &optional count)
+  "Move point to the end or beginning of a string.
+QUOTE is the character delimiting the string. If COUNT is greater
+than zero point is moved forward otherwise it is moved
+backwards."
+  (let (reset-parser)
+    (with-syntax-table (copy-syntax-table (syntax-table))
+      (unless (= (char-syntax quote) ?\")
+        (modify-syntax-entry quote "\"")
+        (setq reset-parser t))
+      ;; global parser state is out of state, use local one
+      (let* ((pnt (point))
+             (state (progn (beginning-of-defun)
+                           (parse-partial-sexp (point) pnt)))
+             (bnd (bounds-of-evil-string-at-point state)))
+        (when (and bnd (< (point) (cdr bnd)))
+          ;; currently within a string
+          (if (> count 0)
+              (progn
+                (goto-char (cdr bnd))
+                (setq count (1- count)))
+            (goto-char (car bnd))
+            (setq count (1+ count))))
+        ;; forward motions work with local parser state
+        (cond
+         ((> count 0)
+          ;; no need to reset global parser state because we only use
+          ;; the local one
+          (setq reset-parser nil)
+          (while (and (> count 0) (not (eobp)))
+            (setq state (parse-partial-sexp (point) (point-max)
+                                            nil
+                                            nil
+                                            state
+                                            'syntax-table))
+            (cond
+             ((nth 3 state)
+              (setq bnd (bounds-of-thing-at-point 'evil-string))
+              (goto-char (cdr bnd))
+              (setq count (1- count)))
+             ((eobp) (setq count (1- count))))))
+         ((< count 0)
+          ;; need to update global cache because of backward motion
+          (setq reset-parser (and reset-parser (point)))
+          (save-excursion
+            (beginning-of-defun)
+            (syntax-ppss-flush-cache (point)))
+          (while (and (< count 0) (not (bobp)))
+            (while (and (not (bobp))
+                        (or (eobp) (/= (char-after) quote)))
+              (backward-char))
+            (cond
+             ((setq bnd (bounds-of-thing-at-point 'evil-string))
+              (goto-char (car bnd))
+              (setq count (1+ count)))
+             ((bobp) (1+ count))
+             (t (backward-char)))))
+         (t (setq reset-parser nil)))))
+    (when reset-parser
+      ;; reset global cache
+      (save-excursion
+        (goto-char reset-parser)
+        (beginning-of-defun)
+        (syntax-ppss-flush-cache (point))))
+    count))
+
 ;;; Thing-at-point motion functions for Evil text objects and motions
 (defun forward-evil-empty-line (&optional count)
   "Move forward COUNT empty lines."
@@ -1512,6 +1578,47 @@ if COUNT is negative.  A paragraph is defined by
     (cond
      ((> dir 0) (forward-paragraph))
      ((not (bobp)) (start-of-paragraph-text) (beginning-of-line)))))
+
+(defvar evil-forward-quote-char ?\"
+  "The character to be used by `forward-evil-quote'.")
+
+(defun forward-evil-quote (&optional count)
+  "Move forward COUNT strings.
+The quotation character is specified by the global variable
+`evil-forward-quote-char'. This character is passed to
+`evil-forward-quote'."
+  (evil-forward-quote evil-forward-quote-char count))
+
+(defun forward-evil-quote-simple (&optional count)
+  "Move forward COUNT strings.
+The quotation character is specified by the global variable
+`evil-forward-quote-char'. This functions uses Vim's rules
+parsing from the beginning of the current line for quotation
+characters. It should only be used when looking for strings
+within comments and buffer *must* be narrowed to the comment."
+  (let ((dir (if (> (or count 1) 0) 1 -1))
+        (ch evil-forward-quote-char)
+        (pnt (point))
+        (cnt 0))
+    (beginning-of-line)
+    ;; count number of quotes before pnt
+    (while (< (point) pnt)
+      (when (= (char-after) ch)
+        (setq cnt (1+ cnt)))
+      (forward-char))
+    (setq cnt (- (* 2 (abs count)) (mod cnt 2)))
+    (cond
+     ((> dir 0)
+      (while (and (not (eolp)) (not (zerop cnt)))
+        (when (= (char-after) ch) (setq cnt (1- cnt)))
+        (forward-char))
+      (when (not (zerop cnt)) (goto-char (point-max))))
+     (t
+      (while (and (not (bolp)) (not (zerop cnt)))
+        (when (= (char-before) ch) (setq cnt (1- cnt)))
+        (forward-char -1))
+      (when (not (zerop cnt)) (goto-char (point-min)))))
+    (/ cnt 2)))
 
 ;;; Motion functions
 (defun evil-forward-beginning (thing &optional count)
