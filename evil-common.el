@@ -1575,7 +1575,7 @@ NOT be moved over."
 
 (defun forward-evil-paragraph (&optional count)
   "Move forward COUNT paragraphs.
-Moves point COUNT words forward or (- COUNT) paragraphs backward
+Moves point COUNT paragraphs forward or (- COUNT) paragraphs backward
 if COUNT is negative.  A paragraph is defined by
 `start-of-paragraph-text' and `forward-paragraph' functions."
   (evil-motion-loop (dir (or count 1))
