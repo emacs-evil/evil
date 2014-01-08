@@ -1267,6 +1267,37 @@ point is moved backward -COUNT times."
           (error)))
       (goto-char nxt))))
 
+(defun bounds-of-evil-string-at-point (&optional state)
+  "Return the bounds of a string at point.
+If STATE is given it used a parsing state at point."
+  (save-excursion
+    (let ((state (or state (syntax-ppss))))
+      (and (nth 3 state)
+           (cons (nth 8 state)
+                 (and (parse-partial-sexp (point)
+                                          (point-max)
+                                          nil
+                                          nil
+                                          state
+                                          'syntax-table)
+                      (point)))))))
+(put 'evil-string 'bounds-of-thing-at-point #'bounds-of-evil-string-at-point)
+
+(defun bounds-of-evil-comment-at-point ()
+  "Return the bounds of a string at point."
+  (save-excursion
+    (let ((state (syntax-ppss)))
+      (and (nth 4 state)
+           (cons (nth 8 state)
+                 (and (parse-partial-sexp (point)
+                                          (point-max)
+                                          nil
+                                          nil
+                                          state
+                                          'syntax-table)
+                      (point)))))))
+(put 'evil-comment 'bounds-of-thing-at-point #'bounds-of-evil-comment-at-point)
+
 ;; The purpose of this function is the provide line motions which
 ;; preserve the column. This is how `previous-line' and `next-line'
 ;; work, but unfortunately the behaviour is hard-coded: if and only if
