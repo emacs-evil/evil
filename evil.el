@@ -15,6 +15,7 @@
 ;;      Marian Schubert <maio@netsafe.cz>
 ;;      Michael Markert <markert.michael at googlemail.com>
 ;;      Nikolai Weibull <now at bitwi.se>
+;;      phaebz <phaebz at gmail.com>
 ;;      Sanel Zukan <sanelz at gmail.com>
 ;;      Sarah Brofeldt <sarah at thinkmonster.(none)>
 ;;      Simon Hafner <hafnersimon at gmail.com>
