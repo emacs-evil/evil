@@ -568,6 +568,7 @@ If STATE is nil, Evil is disabled in the buffer."
     magit-stash-mode
     magit-status-mode
     magit-wazzup-mode
+    magit-process-mode
     mh-folder-mode
     monky-mode
     mu4e-main-mode
