@@ -3412,7 +3412,7 @@ for parsing with `evil-select-block'. If OPEN and CLOSE are
 characters `evil-up-paren' is used. Otherwise OPEN and CLOSE
 must be regular expressions and `evil-up-block' is used."
   (lexical-let
-      ((open open) (close close) op-re cl-re)
+      ((open open) (close close))
     (cond
      ((and (characterp open) (characterp close))
       (let ((thing #'(lambda (&optional cnt)
@@ -3428,15 +3428,15 @@ must be regular expressions and `evil-up-block' is used."
               (save-excursion
                 (goto-char (car bnd))
                 (evil-select-block thing
-                                   (min beg (car bnd))
-                                   (max end (cdr bnd))
+                                   (min beg (1- (car bnd)))
+                                   (max end (1+ (cdr bnd)))
                                    type
                                    count
                                    inclusive))))))
      (t
       (evil-select-block #'(lambda (&optional cnt)
-			     (evil-up-block open close cnt))
-			 beg end type count inclusive)))))
+                             (evil-up-block open close cnt))
+                         beg end type count inclusive)))))
 
 (defun evil-select-quote-thing (thing beg end type count &optional inclusive)
   "Selection THING as if it described a quoted object.
