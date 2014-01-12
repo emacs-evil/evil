@@ -3331,12 +3331,14 @@ the range; otherwise they are included. See also `evil-paren-range'."
       (let ((ranges (funcall select count)))
         (if exclusive (cdr ranges) (car ranges))))))
 
-(defun evil-select-block (thing beg end type count &optional inclusive)
+(defun evil-select-block (thing beg end type count &optional inclusive countcurrent)
   "Return a range (BEG END) of COUNT delimited text objects.
 BEG END TYPE are the currently selected (visual) range.  The
 delimited object must be given by THING-up function (see
-`evil-up-block'). If INCLUSIVE is non-nil, OPEN and CLOSE
-are included in the range; otherwise they are excluded."
+`evil-up-block'). If INCLUSIVE is non-nil, OPEN and CLOSE are
+included in the range; otherwise they are excluded. If
+COUNTCURRENT is non-nil an objected is counted if the current
+selection matches that object exactly."
   (save-excursion
     (save-match-data
       (let ((beg (or beg (point)))
@@ -3344,14 +3346,14 @@ are included in the range; otherwise they are excluded."
             (count (abs (or count 1)))
             op cl op-end cl-end)
         ;; start scanning at beginning
-        (goto-char beg)
+        (goto-char (if inclusive (1+ beg) end))
         (when (and (zerop (funcall thing +1)) (match-beginning 0))
           (setq cl (cons (match-beginning 0) (match-end 0)))
           (goto-char (car cl))
           (when (and (zerop (funcall thing -1)) (match-beginning 0))
             (setq op (cons (match-beginning 0) (match-end 0)))))
         ;; start scanning from end
-        (goto-char end)
+        (goto-char (if inclusive (1- end) beg))
         (when (and (zerop (funcall thing -1)) (match-beginning 0))
           (setq op-end (cons (match-beginning 0) (match-end 0)))
           (goto-char (cdr op-end))
@@ -3367,12 +3369,11 @@ are included in the range; otherwise they are excluded."
                    (<= (cdr cl-end) (cdr cl))))
           (setq op op-end cl cl-end)))
         (setq op-end op cl-end cl) ; store copy
-        ;; if the surrounding delimiters match the current selection
-        ;; they do not count as new selection
-        (let ((cnt (if (or (and inclusive
-                                (= beg (car op)) (= end (cdr cl)))
-                           (and (not inclusive)
-                                (= beg (cdr op)) (= end (car cl))))
+        ;; if the current selection contains the surrounding
+        ;; delimiters, they do not count as new selection
+        (let ((cnt (if (or (and (<= beg (car op)) (>= end (cdr cl)))
+                           (and (not countcurrent) (not inclusive)
+                                (<= beg (cdr op)) (>= end (car cl))))
                        count
                      (1- count))))
           ;; starting from the innermost surrounding delimiters
@@ -3393,7 +3394,9 @@ are included in the range; otherwise they are excluded."
         (if inclusive
             (setq op (car op) cl (cdr cl))
           (setq op (cdr op) cl (car cl)))
-        (if (and (= op beg) (= cl end))
+        (if (and (= op beg) (= cl end)
+                 (or (not countcurrent)
+                     (and countcurrent (/= count 1))))
             (error "No surrounding delimiters found")
           (evil-range op cl type :expanded t))))))
 
