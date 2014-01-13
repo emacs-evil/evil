@@ -532,13 +532,17 @@ and jump to the corresponding one."
        ((not (or open-pair close-pair))
         ;; nothing found, check if we are inside a string
         (let ((pnt (point))
-              (state (syntax-ppss (point))))
-          (if (not (evil-in-string-p))
+              (state (syntax-ppss (point)))
+              (bnd (bounds-of-thing-at-point 'evil-string)))
+          (if (not (and bnd (< (point) (cdr bnd))))
               ;; no, then we really failed
               (error "No matching item found on the current line")
             ;; yes, go to the end of the string and try again
-            (let ((endstr (evil-string-end (point) (line-end-position))))
-              (when (or (evil-in-string-p endstr) ; not at end of string
+            (let ((endstr (cdr bnd)))
+              (when (or (save-excursion
+                          (goto-char endstr)
+                          (let ((b (bounds-of-thing-at-point 'evil-string)))
+                            (and b (< (point) (cdr b))))) ; not at end of string
                         (condition-case nil
                             (progn
                               (goto-char endstr)
