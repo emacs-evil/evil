@@ -141,39 +141,6 @@ The return value is a list (BEG END TYPE)."
          (interactive ,@interactive)
          ,@body))))
 
-(defmacro evil-define-union-move (name args &rest moves)
-  "Create a movement function named NAME.
-The function moves to the nearest object boundary defined by one
-of the movement function in MOVES, which is a list where each
-element has the form \(FUNC PARAMS... COUNT).
-
-COUNT is a variable which is bound to 1 or -1, depending on the
-direction. In each iteration, the function calls each move in
-isolation and settles for the nearest position. If unable to move
-further, the return value is the number of iterations that could
-not be performed.
-
-\(fn NAME (COUNT) MOVES...)"
-  (declare (indent defun)
-           (debug (&define name lambda-list
-                           [&optional stringp]
-                           def-body)))
-  (let* ((var (or (car-safe args) 'var))
-         (doc (when (stringp (car-safe moves))
-                (pop moves)))
-         (moves (mapcar #'(lambda (move)
-                            `(save-excursion
-                               ;; don't include failing moves
-                               (when (zerop ,move)
-                                 (point))))
-                        moves)))
-    `(evil-define-motion ,name (count)
-       ,@(when doc `(,doc))
-       (evil-motion-loop (,var (or count 1))
-         (if (> ,var 0)
-             (evil-goto-min ,@moves)
-           (evil-goto-max ,@moves))))))
-
 (defmacro evil-narrow-to-line (&rest body)
   "Narrow BODY to the current line.
 BODY will signal the errors \"Beginning of line\" or \"End of line\"

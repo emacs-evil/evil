@@ -263,38 +263,6 @@ By default the first line."
   :type line
   (evil-goto-line (or count 1)))
 
-(evil-define-motion evil-move-empty-lines (count)
-  "Move to the next or previous empty line, repeated COUNT times."
-  :type exclusive
-  (evil-motion-loop (var (or count 1))
-    (cond
-     ((< var 0)
-      (goto-char
-       (or (save-excursion
-             (unless (bobp)
-               (backward-char)
-               (re-search-backward "^$" nil t)))
-           (point))))
-     (t
-      (let ((orig (point)))
-        (when (re-search-forward "^$" nil t)
-          (if (eobp)
-              (goto-char orig)
-            (forward-char))))))))
-
-(evil-define-union-move evil-move-word (count)
-  "Move by words."
-  (evil-move-chars "^ \t\r\n[:word:]" count)
-  (let ((word-separating-categories evil-cjk-word-separating-categories)
-        (word-combining-categories evil-cjk-word-combining-categories))
-    (evil-forward-word count))
-  (evil-move-empty-lines count))
-
-(evil-define-union-move evil-move-WORD (count)
-  "Move by WORDs."
-  (evil-move-chars evil-bigword count)
-  (evil-move-empty-lines count))
-
 (evil-define-motion evil-forward-word-begin (count &optional bigword)
   "Move the cursor to the beginning of the COUNT-th next word.
 If BIGWORD is non-nil, move by WORDS.
