@@ -554,38 +554,26 @@ and jump to the corresponding one."
 (evil-define-motion evil-previous-open-paren (count)
   "Go to [count] previous unmatched '('."
   :type exclusive
-  (let ((range (save-excursion
-                 (backward-char)
-                 (evil-paren-range count nil nil nil ?\( ?\)))))
-    (when range
-      (goto-char (evil-range-beginning range)))))
+  (evil-up-paren ?( ?) (- (or count 1))))
 
 (evil-define-motion evil-next-close-paren (count)
   "Go to [count] next unmatched ')'."
   :type exclusive
-  (let ((range (save-excursion
-                 (forward-char)
-                 (evil-paren-range count nil nil nil ?\( ?\)))))
-    (when range
-      (goto-char (1- (evil-range-end range))))))
+  (forward-char)
+  (evil-up-paren ?( ?) (or count 1))
+  (backward-char))
 
 (evil-define-motion evil-previous-open-brace (count)
   "Go to [count] previous unmatched '{'."
   :type exclusive
-  (let ((range (save-excursion
-                 (backward-char)
-                 (evil-paren-range count nil nil nil ?\{ ?\}))))
-    (when range
-      (goto-char (evil-range-beginning range)))))
+  (evil-up-paren ?{ ?} (- (or count 1))))
 
 (evil-define-motion evil-next-close-brace (count)
   "Go to [count] next unmatched '}'."
   :type exclusive
-  (let ((range (save-excursion
-                 (forward-char)
-                 (evil-paren-range count nil nil nil ?\{ ?\}))))
-    (when range
-      (goto-char (1- (evil-range-end range))))))
+  (forward-char)
+  (evil-up-paren ?{ ?} (or count 1))
+  (backward-char))
 
 (evil-define-motion evil-find-char (count char)
   "Move to the next COUNT'th occurrence of CHAR."
