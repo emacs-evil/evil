@@ -1426,6 +1426,79 @@ last successful match (that caused COUNT to reach zero)."
        (t (set-match-data (list (point) (1+ (point))))))
       rest)))
 
+(defun evil-up-xml-tag (&optional count)
+  "Move point to the end or beginning of balanced xml tags.
+OPEN and CLOSE should be characters identifying the opening and
+closing parenthesis, respectively. If COUNT is greater than zero
+point is moved forward otherwise it is moved backwards. Whenever
+an opening delimiter is found the COUNT is increased by one, if a
+closing delimiter is found the COUNT is decreased by one. The
+motion stops when COUNT reaches zero. The match-data reflects the
+last successful match (that caused COUNT to reach zero)."
+  (let* ((dir (if (> (or count 1) 0) +1 -1))
+         (count (abs (or count 1)))
+         (match (> count 0))
+         (op (if (> dir 0) 1 2))
+         (cl (if (> dir 0) 2 1))
+         (orig (point))
+         pnt tags match)
+    (catch 'done
+      (while (> count 0)
+        ;; find the previous opening tag
+        (while
+            (and (setq match
+                       (re-search-forward
+                        "<\\([^/ >]+\\)[^/>]*?>\\|</\\([^>]+?\\)>"
+                        nil t dir))
+                 (cond
+                  ((match-beginning op)
+                   (push (match-string op) tags))
+                  ((null tags) nil) ; free closing tag
+                  ((and (< dir 0)
+                        (string= (car tags) (match-string cl)))
+                   ;; in backward direction we only accept matching
+                   ;; tags. If the current tag is a free opener
+                   ;; without matching closing tag, the subsequents
+                   ;; test will make us ignore this tag
+                   (pop tags))
+                  ((and (> dir 0))
+                   ;; non matching openers are considered free openers
+                   (while (and tags
+                               (not (string= (car tags)
+                                             (match-string cl))))
+                     (pop tags))
+                   (pop tags)))))
+        (unless (setq match (and match (match-data t)))
+          (setq match nil)
+          (throw 'done count))
+        ;; found closing tag, look for corresponding opening tag
+        (cond
+         ((> dir 0)
+          (setq pnt (match-end 0))
+          (goto-char (match-beginning 0)))
+         (t
+          (setq pnt (match-beginning 0))
+          (goto-char (match-end 0))))
+        (let* ((tag (match-string cl))
+               (refwd (concat "<\\(/\\)?"
+                              (regexp-quote tag)
+                              "\\(?:>\\| [^/>]*?>\\)"))
+               (cnt 1))
+          (while (and (> cnt 0) (re-search-backward refwd nil t dir))
+            (setq cnt (+ cnt (if (match-beginning 1) dir (- dir)))))
+          (if (zerop cnt) (setq count (1- count) tags nil))
+          (goto-char pnt)))
+      (if (> count 0)
+          (set-match-data nil)
+        (set-match-data match)
+        (goto-char (if (> dir 0) (match-end 0) (match-beginning 0)))))
+    ;; if not found, set to point-max/point-min
+    (unless (zerop count)
+      (set-match-data nil)
+      (goto-char (if (> dir 0) (point-max) (point-min)))
+      (if (/= (point) orig) (setq count (1- count))))
+    (* dir count)))
+
 (defun evil-forward-quote (quote &optional count)
   "Move point to the end or beginning of a string.
 QUOTE is the character delimiting the string. If COUNT is greater
@@ -3543,6 +3616,20 @@ preceeding (or following) whitespace is added to the range. "
                                    beg end type
                                    count
                                    inclusive)))))
+
+(defun evil-select-xml-tag (beg end type &optional count inclusive)
+  "Return a range (BEG END) of COUNT matching XML tags.
+If EXCLUSIVE is non-nil, the tags themselves are excluded
+from the range."
+  (cond
+   ((and (not inclusive) (= (abs (or count 1)) 1))
+    (let ((rng (evil-select-block #'evil-up-xml-tag beg end type count nil t)))
+      (if (and beg (= beg (evil-range-beginning rng))
+               end (= end (evil-range-end rng)))
+          (evil-select-block #'evil-up-xml-tag beg end type count t)
+        rng)))
+   (t
+    (evil-select-block #'evil-up-xml-tag beg end type count inclusive))))
 
 (defun evil-xml-range (&optional count beg end type exclusive)
   "Return a range (BEG END) of COUNT matching XML tags.

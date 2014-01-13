@@ -1163,12 +1163,12 @@ or line COUNT to the top of the window."
 (evil-define-text-object evil-a-tag (count &optional beg end type)
   "Select a tag block."
   :extend-selection nil
-  (evil-xml-range count beg end type))
+  (evil-select-xml-tag beg end type count t))
 
 (evil-define-text-object evil-inner-tag (count &optional beg end type)
   "Select inner tag block."
   :extend-selection nil
-  (evil-xml-range count beg end type t))
+  (evil-select-xml-tag beg end type count))
 
 ;;; Operator commands
 
