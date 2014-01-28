@@ -1398,7 +1398,13 @@ of the block."
       (evil-apply-on-block #'evil-invert-case beg end nil)
     (evil-invert-case beg end)
     (when evil-this-motion
-      (goto-char end))))
+      (goto-char end)
+      (when (and evil-cross-lines
+                 evil-move-cursor-back
+                 (not (evil-visual-state-p))
+                 (not (evil-operator-state-p))
+                 (eolp) (not (eobp)) (not (bolp)))
+        (forward-char)))))
 
 (evil-define-operator evil-rot13 (beg end type)
   "ROT13 encrypt text."
