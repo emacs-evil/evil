@@ -3148,13 +3148,15 @@ Default position is the beginning of the buffer."
   "Shows basic file information."
   (let* ((nlines   (count-lines (point-min) (point-max)))
          (curr     (line-number-at-pos (point)))
-         (perc     (* (/ (float curr) (float nlines)) 100.0))
+         (perc     (if (> nlines 0)
+                       (format "%d%%" (* (/ (float curr) (float nlines)) 100.0))
+                     "No lines in buffer"))
          (file     (buffer-file-name (buffer-base-buffer)))
          (writable (and file (file-writable-p file)))
          (readonly (if (and file (not writable)) "[readonly] " "")))
     (if file
-        (message "\"%s\" %d %slines --%d%%--" file nlines readonly perc)
-      (message "%d lines --%d%%--" nlines perc))))
+        (message "\"%s\" %d %slines --%s--" file nlines readonly perc)
+      (message "%d lines --%s--" nlines perc))))
 
 ;;; Window navigation
 
