@@ -2692,6 +2692,49 @@ the previous shell command is executed instead."
                           (cdr reg))))
         (newline)))))
 
+(evil-define-command evil-show-marks (mrks)
+  "Shows all marks.
+If MRKS is non-nil it should be a string and only registers
+corresponding to the characters of this string are shown."
+  :repeat nil
+  (interactive "<a>")
+  ;; To get markers and positions, we can't rely on 'global-mark-ring'
+  ;; provided by Emacs (although it will be much simpler and faster),
+  ;; because 'global-mark-ring' does not store mark characters, but
+  ;; only buffer name and position. Instead, 'evil-markers-alist' is
+  ;; used; this is list maintained by Evil for each buffer.
+  (let ((all-markers
+         ;; get global and local marks
+         (append (evil-filter-list #'(lambda (m)
+                                       (or (evil-global-marker-p (car m))
+                                           (not (markerp (cdr m)))))
+                                   evil-markers-alist)
+                 (evil-filter-list #'(lambda (m)
+                                       (or (not (evil-global-marker-p
+                                                 (car m)))
+                                           (not (markerp (cdr m)))))
+                                   (default-value 'evil-markers-alist)))))
+    (when mrks
+      (setq mrks (string-to-list mrks))
+      (setq all-markers (evil-filter-list #'(lambda (m)
+                                              (not (member (car m) mrks)))
+                                          all-markers)))
+    ;; map marks to list of 4-tuples (char row col file)
+    (setq all-markers
+          (mapcar #'(lambda (m)
+                      (with-current-buffer (marker-buffer (cdr m))
+                        (save-excursion
+                          (goto-char (cdr m))
+                          (list (car m)
+                                (1+ (count-lines 1 (line-beginning-position)))
+                                (current-column)
+                                (buffer-name)))))
+                  all-markers))
+    (evil-with-view-list "evil-marks"
+      (setq truncate-lines t)
+      (dolist (m (sort all-markers #'(lambda (a b) (< (car a) (car b)))))
+        (insert (apply 'format " %c %6d %6d %s\n" m))))))
+
 (eval-when-compile (require 'ffap))
 (evil-define-command evil-find-file-at-point-with-line ()
   "Opens the file at point and goes to line-number."
