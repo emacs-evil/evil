@@ -141,6 +141,11 @@
     (remove-hook 'input-method-deactivate-hook 'evil-deactivate-input-method t)
     (evil-change-state nil))))
 
+;; Make the variable permanent local.  This is particular useful in
+;; conjunction with nXhtml/mumamo because mumamo does not touch these
+;; variables.
+(put 'evil-local-mode 'permanent-local t)
+
 (defun turn-on-evil-mode (&optional arg)
   "Turn on Evil in the current buffer."
   (interactive)
