@@ -2669,8 +2669,8 @@ the previous shell command is executed instead."
      ((zerop (length command))
       (if previous (error "No previous shell command")
         (error "No shell command")))
-     ((and beg end)
-      (shell-command-on-region beg end command t)
+     (evil-ex-range
+      (shell-command-on-region beg end command nil t)
       (goto-char beg)
       (evil-first-non-blank))
      (t
