@@ -166,8 +166,7 @@ of `evil-shift-width'."
   :group 'evil)
 (make-variable-buffer-local 'evil-shift-round)
 
-(defcustom evil-default-cursor
-  (list (or (frame-parameter nil 'cursor-color) "black") t)
+(defcustom evil-default-cursor t
   "The default cursor.
 May be a cursor type as per `cursor-type', a color string as passed
 to `set-cursor-color', a zero-argument function for changing the

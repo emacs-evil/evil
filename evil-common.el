@@ -814,7 +814,8 @@ BUFFER defaults to the current buffer."
            (cursor (evil-state-property state :cursor t))
            (color (or (and (stringp cursor) cursor)
                       (and (listp cursor)
-                           (evil-member-if #'stringp cursor)))))
+                           (evil-member-if #'stringp cursor))
+                      (frame-parameter nil 'cursor-color))))
       (with-current-buffer (or buffer (current-buffer))
         ;; if both STATE and `evil-default-cursor'
         ;; specify a color, don't set it twice
