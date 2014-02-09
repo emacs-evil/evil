@@ -438,6 +438,11 @@ the mark and entering `recursive-edit'."
 (define-key evil-motion-state-map [remap ace-jump-line-mode] #'evil-ace-jump-line-mode)
 (define-key evil-motion-state-map [remap ace-jump-word-mode] #'evil-ace-jump-word-mode)
 
+;;; nXhtml/mumamo
+;; ensure that mumamo does not toggle evil through its globalized mode
+(eval-after-load 'mumamo
+  '(push 'evil-mode-cmhh mumamo-change-major-mode-no-nos))
+
 (provide 'evil-integration)
 
 ;;; evil-integration.el ends here
