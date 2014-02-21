@@ -3254,7 +3254,11 @@ the deleted window's parent window are rebalanced."
   (let ((p (window-parent)))
     (delete-window)
     (when evil-auto-balance-windows
-      (balance-windows p))))
+      ;; balance-windows raises an error if the parent does not have
+      ;; any futher childs (then rebalancing is not necessary anywa)
+      (condition-case nil
+          (balance-windows p)
+        (error)))))
 
 (evil-define-command evil-window-split (&optional count file)
   "Splits the current window horizontally, COUNT lines height,
