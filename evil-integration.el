@@ -310,16 +310,16 @@ activated."
 
 ;; Eval last sexp
 (defadvice preceding-sexp (around evil activate)
-  "In normal-state, last sexp ends at point."
-  (if (evil-normal-state-p)
+  "In normal-state or motion-state, last sexp ends at point."
+  (if (or (evil-normal-state-p) (evil-motion-state-p))
       (save-excursion
         (unless (or (eobp) (eolp)) (forward-char))
         ad-do-it)
     ad-do-it))
 
 (defadvice pp-last-sexp (around evil activate)
-  "In normal-state, last sexp ends at point."
-  (if (evil-normal-state-p)
+  "In normal-state or motion-state, last sexp ends at point."
+  (if (or (evil-normal-state-p) (evil-motion-state-p))
       (save-excursion
         (unless (or (eobp) (eolp)) (forward-char))
         ad-do-it)
