@@ -258,6 +258,7 @@ activated."
 ;;; Auto-complete
 (eval-after-load 'auto-complete
   '(progn
+     (evil-add-command-properties 'auto-complete :repeat 'evil-ac-repeat)
      (evil-add-command-properties 'ac-complete :repeat 'evil-ac-repeat)
      (evil-add-command-properties 'ac-expand :repeat 'evil-ac-repeat)
      (evil-add-command-properties 'ac-next :repeat 'ignore)
