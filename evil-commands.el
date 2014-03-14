@@ -1162,7 +1162,8 @@ or line COUNT to the top of the window."
      ((eq evil-ex-search-direction 'forward)
       (unless (eobp) (forward-char))
       (evil-ex-search-previous 1)
-      (when (> evil-ex-search-match-end pnt)
+      (when (and (<= evil-ex-search-match-beg pnt)
+                 (> evil-ex-search-match-end pnt))
         (setq count (1- count)))
       (if (> count 0) (evil-ex-search-next count)))
      (t
