@@ -1152,6 +1152,35 @@ or line COUNT to the top of the window."
   (require 'thingatpt)
   (evil-inner-object-range count beg end type #'forward-symbol))
 
+(evil-define-text-object evil-next-match (count &optional beg end type)
+  "Select next match."
+  (unless (and (boundp 'evil-search-module)
+               (eq evil-search-module 'evil-search))
+    (error "next-match text objects only work with Evil search module."))
+  (let ((pnt (point)))
+    (cond
+     ((eq evil-ex-search-direction 'forward)
+      (unless (eobp) (forward-char))
+      (evil-ex-search-previous 1)
+      (when (> evil-ex-search-match-end pnt)
+        (setq count (1- count)))
+      (if (> count 0) (evil-ex-search-next count)))
+     (t
+      (unless (eobp) (forward-char))
+      (evil-ex-search-next count))))
+  (list evil-ex-search-match-beg evil-ex-search-match-end))
+
+(evil-define-text-object evil-previous-match (count &optional beg end type)
+  "Select next match."
+  (unless (and (boundp 'evil-search-module)
+               (eq evil-search-module 'evil-search))
+    (error "previous-match text objects only work with Evil search module."))
+  (let ((evil-ex-search-direction
+         (if (eq evil-ex-search-direction 'backward)
+             'forward
+           'backward)))
+    (evil-next-match count beg end type)))
+
 ;;; Operator commands
 
 (evil-define-operator evil-yank (beg end type register yank-handler)

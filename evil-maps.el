@@ -312,6 +312,8 @@
 (define-key evil-inner-text-objects-map "`" 'evil-inner-back-quote)
 (define-key evil-inner-text-objects-map "t" 'evil-inner-tag)
 (define-key evil-inner-text-objects-map "o" 'evil-inner-symbol)
+(define-key evil-motion-state-map "gn" 'evil-next-match)
+(define-key evil-motion-state-map "gN" 'evil-previous-match)
 
 (when evil-want-C-i-jump
   (define-key evil-motion-state-map (kbd "C-i") 'evil-jump-forward))
