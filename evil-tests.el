@@ -613,6 +613,23 @@ the end of the execution of BODY."
     (evil-test-local-mode-disabled)
     (evil-test-change-state 'normal)))
 
+(ert-deftest evil-test-execute-in-normal-state ()
+  "Test `evil-execute-in-normal-state'."
+  :tags '(evil)
+  (ert-info ("Execute normal state command in insert state")
+    (evil-test-buffer
+      "[a]bcdef\n"
+      ("I")
+      (should (evil-insert-state-p))
+      ("\C-ox")
+      (ert-info ("Should return to insert state")
+        (should (evil-insert-state-p)))
+      "[b]cdef\n"
+      ("\C-oA")
+      (ert-info ("Should return to insert state after insert state command")
+        (should (evil-insert-state-p)))
+      ("bcdef[]\n"))))
+
 (defun evil-test-suppress-keymap (state)
   "Verify that `self-insert-command' is suppressed in STATE"
   (evil-test-buffer

@@ -3840,7 +3840,7 @@ if the previous state was Emacs state."
                             universal-argument-more
                             universal-argument-other-key)))
       `(progn
-         (evil-change-to-previous-state)
+         (evil-change-state ',evil-state)
          (setq evil-move-cursor-back ',evil-move-cursor-back))
     'post-command-hook)
   (setq evil-move-cursor-back nil)
