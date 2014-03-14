@@ -667,7 +667,24 @@ Note that this function ignores the whole-line property of PATTERN."
      ((eq direction 'forward)
       (re-search-forward (evil-ex-pattern-regex pattern) nil t))
      ((eq direction 'backward)
-      (re-search-backward (evil-ex-pattern-regex pattern) nil t))
+      (let* ((pnt (point))
+             (ret (re-search-backward (evil-ex-pattern-regex pattern) nil t))
+             (m (and ret (match-data))))
+        (if ret
+            (forward-char)
+          (goto-char (point-min)))
+        (let ((fwdret
+               (re-search-forward (evil-ex-pattern-regex pattern) nil t)))
+          (cond
+           ((and fwdret (< (match-beginning 0) pnt))
+            (setq ret fwdret)
+            (goto-char (match-beginning 0)))
+           (ret
+            (set-match-data m)
+            (goto-char (match-beginning 0)))
+           (t
+            (goto-char pnt)
+            ret)))))
      (t
       (error "Unknown search direction: %s" direction)))))
 

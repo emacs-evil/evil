@@ -2822,12 +2822,10 @@ Change to `%s'? "
   (let ((orig (point))
         wrapped)
     (dotimes (i (or count 1))
-      (if (eq evil-ex-search-direction 'backward)
-          (unless (bobp) (backward-char))
+      (when (eq evil-ex-search-direction 'forward)
         (unless (eobp) (forward-char))
         ;; maybe skip end-of-line
-        (when (and evil-move-cursor-back
-                   (eolp) (not (eobp)))
+        (when (and evil-move-cursor-back (eolp) (not (eobp)))
           (forward-char)))
       (let ((res (evil-ex-find-next)))
         (cond
