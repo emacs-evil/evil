@@ -68,9 +68,14 @@ The return value is a list (BEG END TYPE)."
                         (funcall repeat-type 'post)))
                 (error (prog1 nil
                          (evil-repeat-abort)
-                         (setq evil-this-type 'exclusive
-                               evil-write-echo-area t)
-                         (message (error-message-string err)))))
+                         ;; some operators depend on succeeding
+                         ;; motions, in particular for
+                         ;; `evil-forward-char' (e.g., used by
+                         ;; `evil-substitute'), therefore we let
+                         ;; end-of-line and end-of-buffer pass
+                         (if (not (memq (car err) '(end-of-line end-of-buffer)))
+                             (signal (car err) (cdr err))
+                           (message (error-message-string err))))))
               (cond
                ;; the motion returned a range
                ((evil-range-p range))
