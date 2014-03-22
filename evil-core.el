@@ -342,7 +342,7 @@ then this function does nothing."
 ;; run. This is appropriate since many buffers are used for throwaway
 ;; purposes. Passing the buffer to `display-buffer' indicates
 ;; otherwise, though, so advise this function to initialize Evil.
-(defadvice display-buffer (before evil activate)
+(defadvice display-buffer (before evil)
   "Initialize Evil in the displayed buffer."
   (when evil-mode
     (when (get-buffer (ad-get-arg 0))
@@ -350,7 +350,7 @@ then this function does nothing."
         (unless evil-local-mode
           (evil-local-mode 1))))))
 
-(defadvice switch-to-buffer (before evil activate)
+(defadvice switch-to-buffer (before evil)
   "Initialize Evil in the displayed buffer."
   (when evil-mode
     (let* ((arg0 (ad-get-arg 0))
@@ -426,7 +426,7 @@ then this function does nothing."
       (setq evil-input-method nil))))
 (put 'evil-deactivate-input-method 'permanent-local-hook t)
 
-(defadvice toggle-input-method (around evil activate)
+(defadvice toggle-input-method (around evil)
   "Refresh `evil-input-method'."
   (cond
    ((not evil-local-mode)
