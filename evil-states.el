@@ -813,6 +813,7 @@ CORNER defaults to `upper-left'."
   :tag " <R> "
   :cursor hbar
   :message "-- REPLACE --"
+  :input-method t
   (cond
    ((evil-replace-state-p)
     (overwrite-mode 1)
