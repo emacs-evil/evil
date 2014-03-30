@@ -942,29 +942,29 @@ or line COUNT to the top of the window."
   (recenter -1)
   (evil-first-non-blank))
 
-(defun evil-scroll-left ()
-  "Scrolls the window half a screenwidth to the left."
-  (interactive)
+(defun evil-scroll-left (count)
+  "Scrolls the window COUNT half-screenwidths to the left."
+  (interactive "p")
   (evil-with-hproject-point-on-window
-    (scroll-right (/ (window-width) 2))))
+    (scroll-right (* count (/ (window-width) 2)))))
 
-(defun evil-scroll-right ()
-  "Scrolls the window half a screenwidth to the right."
-  (interactive)
+(defun evil-scroll-right (count)
+  "Scrolls the window COUNT half-screenwidths to the right."
+  (interactive "p")
   (evil-with-hproject-point-on-window
-    (scroll-left (/ (window-width) 2))))
+    (scroll-left (* count (/ (window-width) 2)))))
 
-(defun evil-scroll-column-left ()
-  "Scrolls the window one column to the left."
-  (interactive)
+(defun evil-scroll-column-left (count)
+  "Scrolls the window COUNT columns to the left."
+  (interactive "p")
   (evil-with-hproject-point-on-window
-    (scroll-right 1)))
+    (scroll-right count)))
 
-(defun evil-scroll-column-right ()
-  "Scrolls the window one column to the right."
-  (interactive)
+(defun evil-scroll-column-right (count)
+  "Scrolls the window COUNT columns to the right."
+  (interactive "p")
   (evil-with-hproject-point-on-window
-    (scroll-left 1)))
+    (scroll-left count)))
 
 ;;; Text objects
 
