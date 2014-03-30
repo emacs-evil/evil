@@ -942,26 +942,34 @@ or line COUNT to the top of the window."
   (recenter -1)
   (evil-first-non-blank))
 
-(defun evil-scroll-left (count)
+(evil-define-command evil-scroll-left (count)
   "Scrolls the window COUNT half-screenwidths to the left."
+  :repeat nil
+  :keep-visual t
   (interactive "p")
   (evil-with-hproject-point-on-window
     (scroll-right (* count (/ (window-width) 2)))))
 
-(defun evil-scroll-right (count)
+(evil-define-command evil-scroll-right (count)
   "Scrolls the window COUNT half-screenwidths to the right."
+  :repeat nil
+  :keep-visual t
   (interactive "p")
   (evil-with-hproject-point-on-window
     (scroll-left (* count (/ (window-width) 2)))))
 
-(defun evil-scroll-column-left (count)
+(evil-define-command evil-scroll-column-left (count)
   "Scrolls the window COUNT columns to the left."
+  :repeat nil
+  :keep-visual t
   (interactive "p")
   (evil-with-hproject-point-on-window
     (scroll-right count)))
 
-(defun evil-scroll-column-right (count)
+(evil-define-command evil-scroll-column-right (count)
   "Scrolls the window COUNT columns to the right."
+  :repeat nil
+  :keep-visual t
   (interactive "p")
   (evil-with-hproject-point-on-window
     (scroll-left count)))
