@@ -409,7 +409,7 @@ then this function does nothing."
 
 ;; input methods should be disabled in non-insertion states
 (defun evil-activate-input-method ()
-  "Disable input method in states with :input-method nil."
+  "Enable input method in states with :input-method non-nil."
   (let (input-method-activate-hook
         input-method-deactivate-hook)
     (when (and evil-local-mode evil-state)
@@ -419,7 +419,7 @@ then this function does nothing."
 (put 'evil-activate-input-method 'permanent-local-hook t)
 
 (defun evil-deactivate-input-method ()
-  "Disable input method in states with :input-method nil."
+  "Disable input method in all states."
   (let (input-method-activate-hook
         input-method-deactivate-hook)
     (when (and evil-local-mode evil-state)
