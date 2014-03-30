@@ -2791,6 +2791,17 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
     ("gg\".P")
     "AB[C]line 1\nABC"))
 
+(ert-deftest evil-test-zero-register ()
+  "\"0 contains the last text that was yanked without specificying a register."
+  (evil-test-buffer
+    "[l]ine 1\nline 2\n"
+    ("yy\"0p")
+    "line 1\n[l]ine 1\nline 2\n"
+    ("j\"ayy\"0p")
+    "line 1\nline 1\nline 2\n[l]ine 1\n" ; yanked line 2 to "a, so "0 is still line 1
+    ("kdd\"0p")
+    "line 1\nline 1\nline 1\n[l]ine 1\n"))
+
 (ert-deftest evil-test-align ()
   "Test `evil-align-left', `evil-align-right' and `evil-align-center'."
   :tags '(evil operator)

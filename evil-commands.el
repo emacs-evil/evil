@@ -1197,17 +1197,19 @@ or line COUNT to the top of the window."
   :move-point nil
   :repeat nil
   (interactive "<R><x><y>")
-  (cond
-   ((and (fboundp 'cua--global-mark-active)
-         (fboundp 'cua-copy-region-to-global-mark)
-         (cua--global-mark-active))
-    (cua-copy-region-to-global-mark beg end))
-   ((eq type 'block)
-    (evil-yank-rectangle beg end register yank-handler))
-   ((eq type 'line)
-    (evil-yank-lines beg end register yank-handler))
-   (t
-    (evil-yank-characters beg end register yank-handler))))
+  (let ((evil-was-yanked-without-register
+         (and evil-was-yanked-without-register (not register))))
+    (cond
+     ((and (fboundp 'cua--global-mark-active)
+           (fboundp 'cua-copy-region-to-global-mark)
+           (cua--global-mark-active))
+      (cua-copy-region-to-global-mark beg end))
+     ((eq type 'block)
+      (evil-yank-rectangle beg end register yank-handler))
+     ((eq type 'line)
+      (evil-yank-lines beg end register yank-handler))
+     (t
+      (evil-yank-characters beg end register yank-handler)))))
 
 (evil-define-operator evil-yank-line (beg end type register)
   "Saves whole lines into the kill-ring."
@@ -1232,7 +1234,8 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
       (unless (string-match-p "\n" text)
         ;; set the small delete register
         (evil-set-register ?- text))))
-  (evil-yank beg end type register yank-handler)
+  (let ((evil-was-yanked-without-register nil))
+    (evil-yank beg end type register yank-handler))
   (cond
    ((eq type 'block)
     (evil-apply-on-block #'delete-region beg end nil))

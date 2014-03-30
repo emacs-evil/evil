@@ -1318,6 +1318,10 @@ buffer-region of the newly inserted text.")
   "The last piece of deleted text.
 The text should be less than a line.")
 
+(defvar evil-was-yanked-without-register t
+  "Whether text being saved to the numbered-register ring was
+not deleted and not yanked to a specific register.")
+
 (defvar evil-paste-count nil
   "The count argument of the current paste command.")
 

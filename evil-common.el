@@ -1560,8 +1560,8 @@ The following special registers are supported.
         (or (cond
              ((eq register ?\")
               (current-kill 0))
-             ((and (<= ?0 register) (<= register ?9))
-              (let ((reg (- register ?0)))
+             ((and (<= ?1 register) (<= register ?9))
+              (let ((reg (- register ?1)))
                 (and (< reg (length kill-ring))
                      (current-kill reg t))))
              ((eq register ?*)
@@ -1616,13 +1616,13 @@ register instead of replacing its content."
   (cond
    ((eq register ?\")
     (kill-new text))
-   ((and (<= ?0 register) (<= register ?9))
+   ((and (<= ?1 register) (<= register ?9))
     (if (null kill-ring)
         (kill-new text)
       (let ((kill-ring-yank-pointer kill-ring-yank-pointer)
             interprogram-paste-function
             interprogram-cut-function)
-        (current-kill (- register ?0))
+        (current-kill (- register ?1))
         (setcar kill-ring-yank-pointer text))))
    ((eq register ?*)
     (let ((x-select-enable-primary t))
@@ -1954,6 +1954,8 @@ The tracked insertion is set to `evil-last-insertion'."
       (setq text (propertize text 'yank-handler (list yank-handler))))
     (when register
       (evil-set-register register text))
+    (when evil-was-yanked-without-register
+      (evil-set-register ?0 text)) ; "0 register contains last yanked text
     (unless (eq register ?_)
       (kill-new text))))
 
@@ -1970,11 +1972,13 @@ The tracked insertion is set to `evil-last-insertion'."
     (setq text (propertize text 'yank-handler yank-handler))
     (when register
       (evil-set-register register text))
+    (when evil-was-yanked-without-register
+      (evil-set-register ?0 text)) ; "0 register contains last yanked text
     (unless (eq register ?_)
       (kill-new text))))
 
 (defun evil-yank-rectangle (beg end &optional register yank-handler)
-  "Stores the rectangle defined by region BEG and END into the kill-ring."
+  "Saves the rectangle defined by region BEG and END into the kill-ring."
   (let ((lines (list nil)))
     (evil-apply-on-rectangle #'extract-rectangle-line beg end lines)
     ;; We remove spaces from the beginning and the end of the next.
@@ -1992,6 +1996,8 @@ The tracked insertion is set to `evil-last-insertion'."
                              'yank-handler yank-handler)))
       (when register
         (evil-set-register register text))
+      (when evil-was-yanked-without-register
+        (evil-set-register ?0 text)) ; "0 register contains last yanked text
       (unless (eq register ?_)
         (kill-new text)))))
 
