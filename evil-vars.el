@@ -1523,7 +1523,25 @@ Otherwise the previous command is assumed as substitute.")
   "Keymap used in ex-search-mode.")
 (set-keymap-parent evil-ex-search-keymap minibuffer-local-map)
 
-(defconst evil-version "1.0-dev"
+(defconst evil-version
+  (eval-when-compile
+    (with-temp-buffer
+      (cond
+       ;; git repository
+       ((zerop (call-process "git" nil '(t nil) nil
+                             "rev-parse" "--short" "HEAD"))
+        (goto-char (point-min))
+        (concat "evil-git-"
+                (buffer-substring (point-min)
+                                  (line-end-position))))
+       ;; mercurial repository
+       ((zerop (call-process "hg" nil '(t nil) nil
+                             "parents" "--template" "evil-hg-{node|short}"))
+        (goto-char (point-min))
+        (buffer-substring (point-min)
+                          (line-end-position)))
+       ;; no repo, use plain version
+       (t "1.0-dev"))))
   "The current version of Evil")
 
 (defun evil-version ()
