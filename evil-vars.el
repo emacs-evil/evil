@@ -1528,15 +1528,19 @@ Otherwise the previous command is assumed as substitute.")
     (with-temp-buffer
       (cond
        ;; git repository
-       ((zerop (call-process "git" nil '(t nil) nil
-                             "rev-parse" "--short" "HEAD"))
+       ((condition-case nil
+            (zerop (call-process "git" nil '(t nil) nil
+                                 "rev-parse" "--short" "HEAD"))
+          (error nil))
         (goto-char (point-min))
         (concat "evil-git-"
                 (buffer-substring (point-min)
                                   (line-end-position))))
        ;; mercurial repository
-       ((zerop (call-process "hg" nil '(t nil) nil
-                             "parents" "--template" "evil-hg-{node|short}"))
+       ((condition-case nil
+            (zerop (call-process "hg" nil '(t nil) nil
+                                 "parents" "--template" "evil-hg-{node|short}"))
+          (error nil))
         (goto-char (point-min))
         (buffer-substring (point-min)
                           (line-end-position)))
