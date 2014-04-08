@@ -1668,7 +1668,7 @@ register instead of replacing its content."
   (sort (append (mapcar #'(lambda (reg)
                             (cons reg (evil-get-register reg t)))
                         '(?\" ?* ?+ ?% ?# ?/ ?: ?. ?-
-                              ?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+                              ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
                 register-alist nil)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
 
