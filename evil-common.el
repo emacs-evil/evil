@@ -1669,7 +1669,7 @@ register instead of replacing its content."
                             (cons reg (evil-get-register reg t)))
                         '(?\" ?* ?+ ?% ?# ?/ ?: ?. ?-
                               ?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-                register-alist)
+                register-alist nil)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
 
 (defsubst evil-kbd-macro-suppress-motion-error ()
