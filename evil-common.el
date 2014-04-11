@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.0.8
+;; Version: 1.0.9
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -2968,7 +2968,11 @@ is stored in `evil-temporary-undo' instead of `buffer-undo-list'."
        (let (buffer-undo-list)
          (prog1
              (progn ,@body)
-           (setq evil-temporary-undo (cons nil buffer-undo-list))))
+           (setq evil-temporary-undo buffer-undo-list)
+           ;; ensure evil-temporary-undo starts with exactly one undo
+           ;; boundary marker, i.e. nil
+           (unless (null (car-safe evil-temporary-undo))
+             (push nil evil-temporary-undo))))
      (unless (eq buffer-undo-list t)
        ;; undo is enabled, so update the global buffer undo list
        (setq buffer-undo-list
