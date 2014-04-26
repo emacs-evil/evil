@@ -5418,6 +5418,14 @@ Below some empty line."))
     (evil-test-buffer
       ";; [T]his buffer is for notes."
       ("vaw")
+      ";; <This[ ]>buffer is for notes.")
+    (evil-test-buffer
+      ";; Thi[s] buffer is for notes."
+      ("viw")
+      ";; <Thi[s]> buffer is for notes.")
+    (evil-test-buffer
+      ";; Thi[s] buffer is for notes."
+      ("vaw")
       ";; <This[ ]>buffer is for notes."))
   (ert-info ("Select two words")
     (ert-info ("Include whitespace on this side")

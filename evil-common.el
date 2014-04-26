@@ -2639,8 +2639,11 @@ the new (extended) text object range.  See
                        #'(lambda (count)
                            (funcall forward-func (- count))))))
     (if (> count 0)
-        ;; ensure we select the next object
-        (when (and beg end) (forward-char 1))
+        ;; Ensure we select the next object if there is an existing
+        ;; selection. If the selection contains only one character,
+        ;; we've just entered visual mode, and should select the
+        ;; current object as usual.
+        (when (and beg end (> (- end beg) 1)) (forward-char 1))
       ;; going backward
       (evil-swap forward backward)
       (setq count (abs count)))
