@@ -493,7 +493,12 @@ where point should be placed after all changes."
     (dolist (rep repeat-info)
       (cond
        ((or (arrayp rep) (stringp rep))
-        (execute-kbd-macro rep))
+        (let ((input-method current-input-method)
+              (evil-input-method nil))
+          (deactivate-input-method)
+          (unwind-protect
+              (execute-kbd-macro rep)
+            (activate-input-method input-method))))
        ((consp rep)
         (apply (car rep) (cdr rep)))
        (t
