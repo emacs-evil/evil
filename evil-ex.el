@@ -136,21 +136,22 @@ is appended to the line."
   :keep-visual t
   (interactive
    (list
-    (concat
-     (cond
-      ((and (evil-visual-state-p)
-            evil-ex-visual-char-range
-            (memq (evil-visual-type) '(inclusive exclusive)))
-       "`<,`>")
-      ((evil-visual-state-p)
-       "'<,'>")
-      (current-prefix-arg
-       (let ((arg (prefix-numeric-value current-prefix-arg)))
-         (cond ((< arg 0) (setq arg (1+ arg)))
-               ((> arg 0) (setq arg (1- arg))))
-         (if (= arg 0) '(".")
-           (format ".,.%+d" arg)))))
-     evil-ex-initial-input)))
+    (let ((s (concat
+              (cond
+               ((and (evil-visual-state-p)
+                     evil-ex-visual-char-range
+                     (memq (evil-visual-type) '(inclusive exclusive)))
+                "`<,`>")
+               ((evil-visual-state-p)
+                "'<,'>")
+               (current-prefix-arg
+                (let ((arg (prefix-numeric-value current-prefix-arg)))
+                  (cond ((< arg 0) (setq arg (1+ arg)))
+                        ((> arg 0) (setq arg (1- arg))))
+                  (if (= arg 0) '(".")
+                    (format ".,.%+d" arg)))))
+              evil-ex-initial-input)))
+      (and (> (length s) 0) s))))
   (let ((evil-ex-current-buffer (current-buffer))
         (evil-ex-previous-command (unless initial-input
                                     (car-safe evil-ex-history)))
