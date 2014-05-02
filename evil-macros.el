@@ -35,7 +35,9 @@
 
 ;; set some error codes
 (put 'beginning-of-line 'error-conditions '(beginning-of-line error))
+(put 'beginning-of-line 'error-message "Beginning of line")
 (put 'end-of-line 'error-conditions '(end-of-line error))
+(put 'end-of-line 'error-message "End of line")
 
 (defun evil-motion-range (motion &optional count type)
   "Execute a motion and return the buffer positions.
