@@ -1125,6 +1125,22 @@ If nil, KEYS is used."
     (".")
     "[l]ine 1\nline 1\nline 2\nline 3\nline 4\n"))
 
+(ert-deftest evil-test-repeat-numeric-register ()
+  "Test repeating a command with a numeric register."
+  :tags '(evil repeat)
+  (evil-test-buffer
+    "[l]ine 1\nline 2\nline 3\nline 4\nline 5\n"
+    ("dd...")
+    "[l]ine 5\n"
+    ("\"1P")
+    "[l]ine 4\nline 5\n"
+    (".")
+    "[l]ine 3\nline 4\nline 5\n"
+    (".")
+    "[l]ine 2\nline 3\nline 4\nline 5\n"
+    (".")
+    "[l]ine 1\nline 2\nline 3\nline 4\nline 5\n"))
+
 (ert-deftest evil-test-cmd-replace-char ()
   "Calling `evil-replace-char' should replace characters"
   :tags '(evil repeat)

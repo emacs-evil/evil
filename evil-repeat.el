@@ -503,6 +503,12 @@ where point should be placed after all changes."
               (execute-kbd-macro rep)
             (activate-input-method input-method))))
        ((consp rep)
+        (when (and (= 3 (length rep))
+                   (eq (nth 0 rep) 'set)
+                   (eq (nth 1 rep) 'evil-this-register)
+                   (>= (nth 2 rep) ?0)
+                   (< (nth 2 rep) ?9))
+          (setcar (nthcdr 2 rep) (1+ (nth 2 rep))))
         (apply (car rep) (cdr rep)))
        (t
         (error "Unexpected repeat-info: %S" rep))))))
