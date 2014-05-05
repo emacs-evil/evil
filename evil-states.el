@@ -47,7 +47,8 @@ AKA \"Command\" state."
   "Reset command loop variables in Normal state.
 Also prevent point from reaching the end of the line.
 If the region is activated, enter Visual state."
-  (unless (evil-initializing-p)
+  (unless (or (evil-initializing-p)
+              (null this-command))
     (setq command (or command this-command))
     (when (evil-normal-state-p)
       (setq evil-this-type nil
