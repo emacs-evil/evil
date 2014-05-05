@@ -1115,6 +1115,16 @@ If nil, KEYS is used."
       ("w.")
       ";; (This) (buffer[)] is for notes you don't want to save")))
 
+(ert-deftest evil-test-repeat-register ()
+  "Test repeating a register command."
+  :tags '(evil repeat)
+  (evil-test-buffer
+    "[l]ine 1\nline 2\nline 3\nline 4\n"
+    ("\"addyy\"aP")
+    "[l]ine 1\nline 2\nline 3\nline 4\n"
+    (".")
+    "[l]ine 1\nline 1\nline 2\nline 3\nline 4\n"))
+
 (ert-deftest evil-test-cmd-replace-char ()
   "Calling `evil-replace-char' should replace characters"
   :tags '(evil repeat)

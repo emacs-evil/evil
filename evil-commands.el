@@ -1811,6 +1811,7 @@ The return value is the yanked text."
 (evil-define-command evil-use-register (register)
   "Use REGISTER for the next command."
   :keep-visual t
+  :repeat ignore
   (interactive "<C>")
   (setq evil-this-register register))
 

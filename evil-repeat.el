@@ -325,6 +325,9 @@ invoked the current command"
   "Repeation recording function for commands that are repeated by keystrokes."
   (cond
    ((eq flag 'pre)
+    (when evil-this-register
+      (evil-repeat-record
+       `(set evil-this-register ,evil-this-register)))
     (setq evil-repeat-keys (this-command-keys)))
    ((eq flag 'post)
     (evil-repeat-record (if (zerop (length (this-command-keys)))
