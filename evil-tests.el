@@ -6661,6 +6661,36 @@ if no previous selection")
         ("jj:@:" [return] ":1@:" [return])
         "[a]XcdXf\nabcdef\naXcdef"))))
 
+(ert-deftest evil-test-ex-repeat2 ()
+  "Test @: command."
+  :tags '(evil ex)
+  (evil-without-display
+    (ert-info ("Repeat in current line")
+      (evil-test-buffer
+        "[a]bcdef\nabcdef\nabcdef"
+        (":s/[be]/X" [return])
+        "[a]Xcdef\nabcdef\nabcdef"
+        ("jj@:")
+        "aXcdef\nabcdef\n[a]Xcdef"))
+    (ert-info ("Repeat with count in current line")
+      (evil-test-buffer
+        "[a]bcdef\nabcdef\nabcdef"
+        (":s/[be]/X" [return])
+        "[a]Xcdef\nabcdef\nabcdef"
+        ("jj2@:")
+        "aXcdef\nabcdef\n[a]XcdXf"))
+    (ert-info ("Do not record dot repeat")
+      (evil-test-buffer
+        ""
+        ("OAAAAAA" [escape] "^")
+        "[A]AAAAA\n"
+        (":s/A/X" [return])
+        "[X]AAAAA\n"
+        ("@:")
+        "[X]XAAAA\n"
+        (".")
+        "AAAAAA\nXXAAAA\n"))))
+
 (ert-deftest evil-test-ex-visual-char-range ()
   "Test visual character ranges in ex state."
   :tags '(evil ex visual)

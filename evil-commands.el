@@ -1853,17 +1853,27 @@ when called interactively."
                          current-prefix-arg
                        0) 1)
            register (or evil-this-register (read-char)))
-     (if (eq register ?@)
-         (setq macro last-kbd-macro)
-       (setq macro (evil-get-register register t)))
+     (cond
+      ((eq register ?@)
+       (setq macro last-kbd-macro))
+      ((eq register ?:)
+       (setq macro (lambda () (evil-ex-repeat nil))))
+      (t
+       (setq macro (evil-get-register register t))))
      (list count macro)))
-  (if (or (and (not (stringp macro))
-               (not (vectorp macro)))
-          (member macro '("" [])))
-      ;; allow references to currently empty registers
-      ;; when defining macro
-      (unless evil-this-macro
-        (error "No previous macro"))
+  (cond
+   ((functionp macro)
+    (evil-repeat-abort)
+    (dotimes (i (or count 1))
+      (funcall macro)))
+   ((or (and (not (stringp macro))
+             (not (vectorp macro)))
+        (member macro '("" [])))
+    ;; allow references to currently empty registers
+    ;; when defining macro
+    (unless evil-this-macro
+      (error "No previous macro")))
+   (t
     (condition-case err
         (evil-with-single-undo
           (execute-kbd-macro macro count))
@@ -1871,7 +1881,7 @@ when called interactively."
       (error
        (evil-normal-state)
        (evil-normalize-keymaps)
-       (signal (car err) (cdr err))))))
+       (signal (car err) (cdr err)))))))
 
 ;;; Visual commands
 
