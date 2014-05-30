@@ -72,10 +72,14 @@ search module is used."
         isearch-success search-nonincremental-instead)
     (setq isearch-forward forward)
     (evil-save-echo-area
-      (evil-with-input-method-in-normal-state
+      (evil-without-input-method-hooks
+       ;; set the input method locally rather than globally to ensure that
+       ;; isearch clears the input method when it's finished
+       (setq current-input-method default-input-method)
        (if forward
            (isearch-forward regexp-p)
-         (isearch-backward regexp-p)))
+         (isearch-backward regexp-p))
+       (setq current-input-method nil))
       (if (not isearch-success)
           (goto-char point)
         ;; always position point at the beginning of the match

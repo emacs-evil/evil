@@ -426,30 +426,17 @@ then this function does nothing."
       (setq evil-input-method nil))))
 (put 'evil-deactivate-input-method 'permanent-local-hook t)
 
-(defmacro evil-with-input-method-in-normal-state (&rest body)
-  "Executes body with `evil-input-method' active when not in replace or
-insert-state.
+(defmacro evil-without-input-method-hooks (&rest body)
+  "Execute body with evil's activate/deactivate-input-method hooks deactivated.
 
-Temporarily disables the hook containing `evil-activate-input-method',
-which prevents input methods from being used in states without
-:input-method t. Necessary for things like / that need to use input
-methods in normal state. DO NOT use in insert-state or replace-state because
-the input method can get restored in the wrong place."
+This allows input methods to be used in normal-state."
   `(unwind-protect
        (progn
          (remove-hook 'input-method-activate-hook 'evil-activate-input-method t)
          (remove-hook 'input-method-deactivate-hook
                       'evil-deactivate-input-method t)
-         ;; Setting current-input-method changes the buffer-local input method,
-         ;; while activate/deactivate-input-method clobber global settings.
-         ;; Use default-input-method instead of evil-input-method because
-         ;; default-input-method is not buffer local and thus gives more
-         ;; predictable, consistent behavior.
-         (setq current-input-method default-input-method)
          ,@body)
-     ;; clean up after ourselves
      (progn
-       (setq current-input-method nil)
        (add-hook 'input-method-activate-hook 'evil-activate-input-method nil t)
        (add-hook 'input-method-deactivate-hook
                  'evil-deactivate-input-method nil t))))
