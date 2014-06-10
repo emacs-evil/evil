@@ -6171,7 +6171,13 @@ Below some empty line."))
       "This is \"a test[\"]. For \"quote\" objects."
       (emacs-lisp-mode)
       ("va\"")
-      "This is< \"a test[\"]>. For \"quote\" objects.")))
+      "This is< \"a test[\"]>. For \"quote\" objects."))
+  (ert-info ("Delete text from outside")
+    (evil-test-buffer
+      "Th[i]s is \"a test\". For \"quote\" objects."
+      (emacs-lisp-mode)
+      ("da\"")
+      "This is[.] For \"quote\" objects.")))
 
 (ert-deftest evil-test-paren-objects ()
   "Test `evil-inner-paren', etc."
