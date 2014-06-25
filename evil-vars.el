@@ -692,6 +692,7 @@ If STATE is nil, Evil is disabled in the buffer."
     (color-theme-mode-map . nil)
     (comint-mode-map . nil)
     (compilation-mode-map . nil)
+    (grep-mode-map . nil)
     (dictionary-mode-map . nil)
     (ert-results-mode-map . motion)
     (Info-mode-map . motion)
