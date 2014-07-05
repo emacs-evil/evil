@@ -171,16 +171,20 @@ is appended to the line."
              'evil-ex-history
              evil-ex-previous-command
              t)))
-    ;; empty input means repeating the previous command
-    (when (zerop (length result))
-      (setq result evil-ex-previous-command))
-    ;; parse data
-    (evil-ex-update nil nil nil result)
-    ;; execute command
-    (unless (zerop (length result))
-      (if evil-ex-expression
-          (eval evil-ex-expression)
-        (error "Ex: syntax error")))))
+    (evil-ex-execute result)))
+
+(defun evil-ex-execute (result)
+  "Execute RESULT as an ex command on `evil-ex-current-buffer'."
+  ;; empty input means repeating the previous command
+  (when (zerop (length result))
+    (setq result evil-ex-previous-command))
+  ;; parse data
+  (evil-ex-update nil nil nil result)
+  ;; execute command
+  (unless (zerop (length result))
+    (if evil-ex-expression
+        (eval evil-ex-expression)
+      (error "Ex: syntax error"))))
 
 (defun evil-ex-delete-backward-char ()
   "Close the minibuffer if it is empty.

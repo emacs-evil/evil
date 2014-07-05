@@ -28,6 +28,7 @@
 (require 'evil-states)
 (require 'evil-ex)
 (require 'evil-commands)
+(require 'evil-command-window)
 
 ;;; Code:
 
@@ -498,6 +499,12 @@
 (define-key evil-read-key-map (kbd "C-v") #'evil-read-quoted-char)
 (define-key evil-read-key-map (kbd "C-k") #'evil-read-digraph-char)
 (define-key evil-read-key-map "\r" "\n")
+
+;; command line window
+(evil-define-key 'normal
+  evil-command-window-mode-map (kbd "RET") 'evil-command-window-execute)
+(evil-define-key 'insert
+  evil-command-window-mode-map (kbd "RET") 'evil-command-window-execute)
 
 (provide 'evil-maps)
 

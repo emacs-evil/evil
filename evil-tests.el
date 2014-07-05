@@ -7354,6 +7354,54 @@ maybe we need one line more with some text\n")
       (":2,4move.")
       "line1\nline2\nline3\n[l]ine4\nline5\n")))
 
+;;; Command line window
+
+(ert-deftest evil-test-command-window-ex ()
+  "Test command line window for ex commands"
+  (evil-test-buffer
+    "[f]oo foo foo"
+    (":s/foo/bar" [return])
+    "[b]ar foo foo"
+    (":s/foo/baz" [return])
+    "[b]ar baz foo"
+    ("q:")
+    "s/foo/bar\ns/foo/baz\n[ ]"
+    ("kk:s/bar/quz" [return])
+    "[s]/foo/quz\ns/foo/baz\n "
+    ("fzrx")
+    "s/foo/qu[x]\ns/foo/baz\n "
+    ([return])
+    "[b]ar baz qux"))
+
+(ert-deftest evil-test-command-window-recursive ()
+  "Test that recursive command windows shouldn't be allowed"
+  (let ((evil-command-window-height 0))
+    (evil-test-buffer
+      "[f]oo foo foo"
+      (":s/foo/bar" [return])
+      ("q:")
+      (should-error (execute-kbd-macro "q:")))))
+
+(ert-deftest evil-test-command-window-noop ()
+  "Test that executing a blank command does nothing"
+  (evil-test-buffer
+    "[f]oo foo foo"
+    ("q:")
+    "[ ]"
+    ([return])
+    "[f]oo foo foo"))
+
+(ert-deftest evil-test-command-window-multiple ()
+  "Test that multiple command line windows can't be visible at the same time"
+  (let ((evil-command-window-height 0))
+    (evil-test-buffer
+      "[f]oo foo foo"
+      ("q:")
+      (let ((num-windows (length (window-list))))
+        (select-window (previous-window))
+        (execute-kbd-macro "q:")
+        (should (= (length (window-list)) num-windows))))))
+
 ;;; Utilities
 
 (ert-deftest evil-test-parser ()
