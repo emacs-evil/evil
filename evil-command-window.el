@@ -36,7 +36,9 @@
 (require 'evil-ex)
 
 (define-derived-mode evil-command-window-mode text-mode "Evil-cmd"
-  "Major mode for the Evil command line window.")
+  "Major mode for the Evil command line window."
+  (setq-local after-change-functions (cons 'evil-command-window-draw-prefix
+                                           after-change-functions)))
 
 (defun evil-command-window (hist cmd-key execute-fn)
   "Open a command line window for HIST with CMD-KEY and EXECUTE-FN.
@@ -57,11 +59,12 @@ execute on the result that the user selects."
                   evil-command-window-height)
                 'above)
   (setq evil-command-window-current-buffer (current-buffer))
+  (ignore-errors (kill-buffer "*Command Line*"))
   (switch-to-buffer "*Command Line*")
-  (erase-buffer)
   (evil-command-window-mode)
   (setq-local evil-command-window-execute-fn execute-fn)
-  (evil-command-window-insert-commands hist cmd-key))
+  (setq-local evil-command-window-cmd-key cmd-key)
+  (evil-command-window-insert-commands hist))
 
 (defun evil-command-window-ex (&optional current-command)
   "Open a command line window for editing and executing ex commands."
@@ -95,27 +98,19 @@ function to execute."
     (unless (equal result (car evil-ex-history))
       (setq evil-ex-history (cons result evil-ex-history)))))
 
-(defun evil-command-window-set-margin (cmd-key)
-  "Display CMD-KEY as a prefix to all lines in the margin if possible."
-  ;; TODO: Make compatible with linum-mode
-  (unless (and (boundp 'linum-mode) linum-mode)
-    (set-window-margins (get-buffer-window) (string-width cmd-key))
-    (goto-char (point-min))
-    (while (not (eobp))
-      (let ((overlay (make-overlay (point) (point)))
-            (prefix
-             (propertize cmd-key 'font-lock-face 'minibuffer-prompt)))
-        (overlay-put overlay 'before-string
-                     (propertize " " 'display
-                                 (list '(margin left-margin) prefix))))
-      (forward-line))))
+(defun evil-command-window-draw-prefix (&rest ignored)
+  "Display CMD-KEY as a prefix to the current line."
+  (let ((prefix (propertize evil-command-window-cmd-key
+                            'font-lock-face 'minibuffer-prompt)))
+    (set-text-properties (line-beginning-position) (line-end-position)
+                         (list 'line-prefix prefix))))
 
-(defun evil-command-window-insert-commands (hist cmd-key)
-  "Insert the commands in HIST, with CMD-KEY displayed in the margin."
-  (mapc #'(lambda (cmd) (insert cmd) (newline)) hist)
-  (join-line)
-  (reverse-region (point-min) (point-max))
-  (evil-command-window-set-margin cmd-key)
+(defun evil-command-window-insert-commands (hist)
+  "Insert the commands in HIST."
+  (let ((inhibit-modification-hooks t))
+    (mapc #'(lambda (cmd) (insert cmd) (newline)) hist)
+    (join-line))
+  (reverse-region (point-min) (point-max)) ; draws prefixes as a side-effect
   (goto-char (point-max))
   (evil-adjust-cursor))
 

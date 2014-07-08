@@ -1531,6 +1531,9 @@ Otherwise the previous command is assumed as substitute.")
 (evil-define-local-var evil-command-window-execute-fn nil
   "The command to execute when exiting the command line window.")
 
+(evil-define-local-var evil-command-window-cmd-key nil
+  "The key for the command that opened the command line window (:, /, or ?).")
+
 ;; The lazy-highlighting framework.
 (evil-define-local-var evil-ex-active-highlights-alist nil
   "An alist of currently active highlights.")
