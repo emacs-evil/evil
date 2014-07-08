@@ -67,7 +67,9 @@ execute on the result that the user selects."
   (evil-command-window-insert-commands hist))
 
 (defun evil-command-window-ex (&optional current-command)
-  "Open a command line window for editing and executing ex commands."
+  "Open a command line window for editing and executing ex commands.
+If CURRENT-COMMAND is present, it will be inserted under the
+cursor as the current command to be edited."
   (interactive)
   (evil-command-window (cons (or current-command " ") evil-ex-history)
                        ":"
@@ -99,7 +101,8 @@ function to execute."
       (setq evil-ex-history (cons result evil-ex-history)))))
 
 (defun evil-command-window-draw-prefix (&rest ignored)
-  "Display CMD-KEY as a prefix to the current line."
+  "Display `evil-command-window-cmd-key' as a prefix to the current line.
+Parameters passed in through IGNORED are ignored."
   (let ((prefix (propertize evil-command-window-cmd-key
                             'font-lock-face 'minibuffer-prompt)))
     (set-text-properties (line-beginning-position) (line-end-position)
