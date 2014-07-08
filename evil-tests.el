@@ -7371,7 +7371,9 @@ maybe we need one line more with some text\n")
     ("fzrx")
     "s/foo/qu[x]\ns/foo/baz\n "
     ([return])
-    "[b]ar baz qux"))
+    "[b]ar baz qux"
+    (should (equal (car evil-ex-history)
+                   "s/foo/qux"))))
 
 (ert-deftest evil-test-command-window-recursive ()
   "Test that recursive command windows shouldn't be allowed"

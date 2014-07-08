@@ -91,7 +91,9 @@ function to execute."
   "Execute RESULT as an ex command in the appropriate buffer."
   (unless (string-match-p "^ *$" result)
     (let ((evil-ex-current-buffer evil-command-window-current-buffer))
-      (evil-ex-execute result))))
+      (evil-ex-execute result))
+    (unless (equal result (car evil-ex-history))
+      (setq evil-ex-history (cons result evil-ex-history)))))
 
 (defun evil-command-window-set-margin (cmd-key)
   "Display CMD-KEY as a prefix to all lines in the margin if possible."
