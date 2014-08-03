@@ -75,7 +75,7 @@ search module is used."
       (evil-without-input-method-hooks
        ;; set the input method locally rather than globally to ensure that
        ;; isearch clears the input method when it's finished
-       (setq current-input-method default-input-method)
+       (setq current-input-method evil-input-method)
        (if forward
            (isearch-forward regexp-p)
          (isearch-backward regexp-p))
