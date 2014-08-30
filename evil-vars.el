@@ -1452,6 +1452,9 @@ See `evil-ex-init-shell-argument-completion'.")
 (defvar evil-ex-previous-command nil
   "The previously executed Ex command.")
 
+(defvar evil-ex-cmd nil
+  "The current Ex command string.")
+
 (defvar evil-ex-point nil
   "The position of `point' when the ex command has been called.")
 

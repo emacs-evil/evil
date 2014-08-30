@@ -266,7 +266,7 @@ in case of incomplete or unknown commands."
       (setq evil-ex-tree tree
             evil-ex-expression expr
             evil-ex-range range
-            evil-ex-command cmd
+            evil-ex-cmd cmd
             evil-ex-bang bang
             evil-ex-argument arg)
       ;; test the current command
@@ -324,11 +324,11 @@ in case of incomplete or unknown commands."
 (defun evil-ex-command-completion-at-point ()
   (let ((context (evil-ex-syntactic-context (1- (point)))))
     (when (memq 'command context)
-      (let ((beg (or (get-text-property 0 'ex-index evil-ex-command)
+      (let ((beg (or (get-text-property 0 'ex-index evil-ex-cmd)
                      (point)))
-            (end (1+ (or (get-text-property (1- (length evil-ex-command))
+            (end (1+ (or (get-text-property (1- (length evil-ex-cmd))
                                             'ex-index
-                                            evil-ex-command)
+                                            evil-ex-cmd)
                          (1- (point))))))
         (when evil-ex-bang) (setq end (1+ end))
         (list beg end (evil-ex-completion-table))))))
@@ -415,7 +415,7 @@ in case of incomplete or unknown commands."
                                                   'ex-index
                                                   evil-ex-argument))
                           (1- (point)))))
-             (binding (evil-ex-completed-binding evil-ex-command))
+             (binding (evil-ex-completed-binding evil-ex-cmd))
              (arg-type (evil-get-command-property binding :ex-arg))
              (arg-handler (assoc arg-type evil-ex-argument-types))
              (completer (and arg-handler
@@ -648,7 +648,7 @@ This function interprets special file names like # and %."
       (let ((evil-ex-last-cmd (pop hist)))
         (when evil-ex-last-cmd
           (evil-ex-update nil nil nil evil-ex-last-cmd)
-          (let ((binding (evil-ex-binding evil-ex-command)))
+          (let ((binding (evil-ex-binding evil-ex-cmd)))
             (unless (eq binding #'evil-ex-repeat)
               (setq hist nil)
               (if evil-ex-expression
