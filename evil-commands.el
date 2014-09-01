@@ -29,6 +29,7 @@
 (require 'evil-search)
 (require 'evil-ex)
 (require 'evil-types)
+(require 'evil-command-window)
 
 ;;; Compatibility for Emacs 23
 (unless (fboundp 'window-body-width)
@@ -1816,7 +1817,9 @@ The return value is the yanked text."
   (setq evil-this-register register))
 
 (evil-define-command evil-record-macro (register)
-  "Record a keyboard macro into REGISTER."
+  "Record a keyboard macro into REGISTER.
+If REGISTER is :, /, or ?, the corresponding command line window
+will be opened instead."
   :keep-visual t
   :suppress-operator t
   (interactive
@@ -1832,6 +1835,8 @@ The return value is the yanked text."
         (setq last-kbd-macro nil))
       (evil-set-register evil-this-macro last-kbd-macro))
     (setq evil-this-macro nil))
+   ((eq register ?:)
+    (evil-command-window-ex))
    (t
     (when defining-kbd-macro (end-kbd-macro))
     (setq evil-this-macro register)
