@@ -1210,7 +1210,7 @@ This buffer is for notes")))
   "Test whether repeat returns to normal state in case of an error."
   (evil-test-buffer
     "[l]ine 1\nline 2\nline 3\nline 4"
-    ("ixxx" [down] [down] [home] "yyy" [escape])
+    ("ixxx" [down] [down] [left] [left] [left] "yyy" [escape])
     "xxxline 1\nline 2\nyy[y]line 3\nline 4"
     (should-error (execute-kbd-macro "j^."))
     (should (evil-normal-state-p))
