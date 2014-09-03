@@ -7404,6 +7404,58 @@ maybe we need one line more with some text\n")
         (execute-kbd-macro "q:")
         (should (= (length (window-list)) num-windows))))))
 
+(defmacro evil-with-both-search-modules (&rest body)
+  `(mapc (lambda (search-module)
+           (setq evil-search-forward-history nil
+                 evil-search-backward-history nil)
+           (evil-select-search-module 'evil-search-module search-module)
+           ,@body)
+         '(isearch evil-search)))
+
+(ert-deftest evil-test-command-window-search-history ()
+  "Test command window with forward and backward search history"
+  (evil-with-both-search-modules
+   (evil-test-buffer
+     "[f]oo bar baz qux one two three four"
+     ("/qux" [return])
+     "foo bar baz [q]ux one two three four"
+     ("/three" [return])
+     "foo bar baz qux one two [t]hree four"
+     ("?bar" [return])
+     "foo [b]ar baz qux one two three four"
+     ("/four" [return])
+     "foo bar baz qux one two three [f]our"
+     ("?baz" [return])
+     "foo bar [b]az qux one two three four"
+     ("q/")
+     "qux\nthree\nfour\n[ ]"
+     ("k" [return])
+     "foo bar baz qux one two three [f]our"
+     ("0N")
+     "foo bar baz qux one two three [f]our"
+     ("q?")
+     "bar\nbaz\n[ ]"
+     ("k$rr" [return])
+     "foo [b]ar baz qux one two three four"
+     (should-error
+      (progn (execute-kbd-macro "q/iNOT THERE")
+             (execute-kbd-macro [return])))
+     "foo [b]ar baz qux one two three four")))
+
+(ert-deftest evil-test-command-window-search-word ()
+  "Test command window history when searching for word under cursor"
+  (evil-with-both-search-modules
+   (evil-test-buffer
+     "[f]oo bar foo bar foo"
+     ("**")
+     "foo bar foo bar [f]oo"
+     ("B#")
+     "foo [b]ar foo bar foo"
+     ("q/k" [return])
+     "foo bar [f]oo bar foo"
+     ("q?k" [return])
+     "foo [b]ar foo bar foo")))
+
 ;;; Utilities
 
 (ert-deftest evil-test-parser ()

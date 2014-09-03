@@ -33,6 +33,7 @@
 
 (require 'evil-vars)
 (require 'evil-common)
+(require 'evil-search)
 (require 'evil-ex)
 
 (define-derived-mode evil-command-window-mode text-mode "Evil-cmd"
@@ -100,6 +101,32 @@ function to execute."
     (unless (equal result (car evil-ex-history))
       (setq evil-ex-history (cons result evil-ex-history)))))
 
+(defun evil-command-window-search-forward ()
+  "Open a command line window for forward searches."
+  (interactive)
+  (evil-command-window (cons " " evil-search-forward-history)
+                       "/"
+                       (lambda (result)
+                         (evil-command-window-search-execute result t))))
+
+(defun evil-command-window-search-backward ()
+  "Open a command line window for backward searches."
+  (interactive)
+  (evil-command-window (cons " " evil-search-backward-history)
+                       "?"
+                       (lambda (result)
+                         (evil-command-window-search-execute result nil))))
+
+(defun evil-command-window-search-execute (result forward)
+  "Search for RESULT using FORWARD to determine direction."
+  (unless (equal result " ")
+    (if (and (boundp 'evil-search-module) (eq evil-search-module 'evil-search))
+        (progn
+          (setq evil-ex-search-pattern (evil-ex-make-search-pattern result)
+                evil-ex-search-direction (if forward 'forward 'backward))
+          (evil-ex-search))
+      (evil-search result forward evil-regexp-search))))
+
 (defun evil-command-window-draw-prefix (&rest ignored)
   "Display `evil-command-window-cmd-key' as a prefix to the current line.
 Parameters passed in through IGNORED are ignored."
@@ -112,7 +139,8 @@ Parameters passed in through IGNORED are ignored."
   "Insert the commands in HIST."
   (let ((inhibit-modification-hooks t))
     (mapc #'(lambda (cmd) (insert cmd) (newline)) hist)
-    (join-line))
+    (join-line)
+    (delete-char 1))
   (reverse-region (point-min) (point-max)) ; draws prefixes as a side-effect
   (goto-char (point-max))
   (evil-adjust-cursor))

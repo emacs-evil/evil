@@ -1349,6 +1349,12 @@ instead of `buffer-undo-list'.")
 (defvar evil-search-prompt nil
   "String to use for search prompt.")
 
+(defvar evil-search-forward-history nil
+  "History of forward searches.")
+
+(defvar evil-search-backward-history nil
+  "History of backward searches.")
+
 (defvar evil-inner-text-objects-map (make-sparse-keymap)
   "Keymap for inner text objects.")
 

@@ -1837,6 +1837,10 @@ will be opened instead."
     (setq evil-this-macro nil))
    ((eq register ?:)
     (evil-command-window-ex))
+   ((eq register ?/)
+    (evil-command-window-search-forward))
+   ((eq register ??)
+    (evil-command-window-search-backward))
    (t
     (when defining-kbd-macro (end-kbd-macro))
     (setq evil-this-macro register)
@@ -2874,31 +2878,7 @@ Change to `%s'? "
   "Goes to the next occurrence."
   :jump t
   :type exclusive
-  (setq evil-ex-search-start-point (point)
-        evil-ex-last-was-search t)
-  (let ((orig (point))
-        wrapped)
-    (dotimes (i (or count 1))
-      (when (eq evil-ex-search-direction 'forward)
-        (unless (eobp) (forward-char))
-        ;; maybe skip end-of-line
-        (when (and evil-move-cursor-back (eolp) (not (eobp)))
-          (forward-char)))
-      (let ((res (evil-ex-find-next)))
-        (cond
-         ((not res)
-          (goto-char orig)
-          (signal 'search-failed
-                  (list (evil-ex-pattern-regex evil-ex-search-pattern))))
-         ((eq res 'wrapped) (setq wrapped t)))))
-    (if wrapped
-        (let (message-log-max)
-          (message "Search wrapped")))
-    (goto-char (match-beginning 0))
-    (setq evil-ex-search-match-beg (match-beginning 0)
-          evil-ex-search-match-end (match-end 0))
-    (evil-ex-search-goto-offset evil-ex-search-offset)
-    (evil-ex-search-activate-highlight evil-ex-search-pattern)))
+  (evil-ex-search count))
 
 (evil-define-motion evil-ex-search-previous (count)
   "Goes the the previous occurrence."
@@ -2906,7 +2886,7 @@ Change to `%s'? "
   :type exclusive
   (let ((evil-ex-search-direction
          (if (eq evil-ex-search-direction 'backward) 'forward 'backward)))
-    (evil-ex-search-next count)))
+    (evil-ex-search count)))
 
 (defun evil-repeat-ex-search (flag)
   "Called to record a search command.

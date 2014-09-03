@@ -65,6 +65,15 @@ search module is used."
   :set 'evil-select-search-module
   :initialize 'evil-custom-initialize-pending-reset)
 
+(defun evil-push-search-history (string forward)
+  "Push STRING into the appropriate search history (determined by FORWARD)."
+  (let* ((history-var (if forward
+                          'evil-search-forward-history
+                        'evil-search-backward-history))
+         (history (symbol-value history-var)))
+    (unless (equal (car-safe history) string)
+      (set history-var (cons string history)))))
+
 (defun evil-search-incrementally (forward regexp-p)
   "Search incrementally for user-entered text."
   (let ((evil-search-prompt (evil-search-prompt forward))
@@ -80,6 +89,7 @@ search module is used."
        (if forward
            (isearch-forward regexp-p)
          (isearch-backward regexp-p))
+       (evil-push-search-history isearch-string forward)
        (setq current-input-method nil))
       (if (not isearch-success)
           (goto-char point)
@@ -271,6 +281,7 @@ otherwise for the word at point."
         (setq string
               (format (if symbol "\\_<%s\\_>" "\\<%s\\>")
                       (regexp-quote string)))))
+      (evil-push-search-history string forward)
       (evil-search string forward t)))))
 
 (defun evil-find-thing (forward thing)
@@ -739,6 +750,37 @@ This function does nothing if `evil-ex-search-interactive' or
       (if pattern
           (evil-ex-hl-change 'evil-ex-search pattern)))))
 
+(defun evil-ex-search (&optional count)
+  "Search forward or backward COUNT times for the current ex search pattern.
+The search pattern is determined by `evil-ex-search-pattern' and
+the direcion is determined by `evil-ex-search-direction'."
+  (setq evil-ex-search-start-point (point)
+        evil-ex-last-was-search t
+        count (or count 1))
+  (let ((orig (point))
+        wrapped)
+    (dotimes (i (or count 1))
+      (when (eq evil-ex-search-direction 'forward)
+        (unless (eobp) (forward-char))
+        ;; maybe skip end-of-line
+        (when (and evil-move-cursor-back (eolp) (not (eobp)))
+          (forward-char)))
+      (let ((res (evil-ex-find-next)))
+        (cond
+         ((not res)
+          (goto-char orig)
+          (signal 'search-failed
+                  (list (evil-ex-pattern-regex evil-ex-search-pattern))))
+         ((eq res 'wrapped) (setq wrapped t)))))
+    (if wrapped
+        (let (message-log-max)
+          (message "Search wrapped")))
+    (goto-char (match-beginning 0))
+    (setq evil-ex-search-match-beg (match-beginning 0)
+          evil-ex-search-match-end (match-end 0))
+    (evil-ex-search-goto-offset evil-ex-search-offset)
+    (evil-ex-search-activate-highlight evil-ex-search-pattern)))
+
 (defun evil-ex-find-next (&optional pattern direction nowrap)
   "Search for the next occurrence of the PATTERN in DIRECTION.
 PATTERN must be created using `evil-ex-make-pattern', DIRECTION
@@ -1037,7 +1079,8 @@ current search result."
             (goto-char (match-beginning 0))
             (setq evil-ex-search-match-beg (match-beginning 0)
                   evil-ex-search-match-end (match-end 0))
-            (evil-ex-search-goto-offset offset))
+            (evil-ex-search-goto-offset offset)
+            (evil-push-search-history search-string (eq direction 'forward)))
            (t
             (goto-char evil-ex-search-start-point)
             (evil-ex-delete-hl 'evil-ex-search)
@@ -1069,7 +1112,8 @@ point."
         ;; update search history unless this pattern equals the
         ;; previous pattern
         (unless (equal (car-safe evil-ex-search-history) regex)
-          (push regex evil-ex-search-history)))
+          (push regex evil-ex-search-history))
+        (evil-push-search-history regex (eq direction 'forward)))
       (evil-ex-delete-hl 'evil-ex-search)
       (when (fboundp 'evil-ex-search-next)
         (evil-ex-search-next count)))))
