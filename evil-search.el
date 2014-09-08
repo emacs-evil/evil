@@ -25,6 +25,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
+(require 'evil-core)
 (require 'evil-common)
 (require 'evil-ex)
 
