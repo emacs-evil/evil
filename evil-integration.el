@@ -294,6 +294,7 @@ activated."
   '(progn
      (mapc #'evil-declare-change-repeat
            '(company-complete-mouse
+             company-complete-number
              company-complete-selection
              company-complete-common))
 
