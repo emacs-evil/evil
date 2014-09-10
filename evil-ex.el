@@ -334,7 +334,6 @@ in case of incomplete or unknown commands."
                                             'ex-index
                                             evil-ex-cmd)
                          (1- (point))))))
-        (when evil-ex-bang) (setq end (1+ end))
         (list beg end (evil-ex-completion-table))))))
 
 (defun evil-ex-completion-table ()
