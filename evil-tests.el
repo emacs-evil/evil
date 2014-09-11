@@ -3123,70 +3123,6 @@ Below some empty line")))
     "[T]his buffer is for notes."))
 
 ;; TODO: test Visual motions and window motions
-(ert-deftest evil-test-move-chars ()
-  "Test `evil-move-chars'"
-  :tags '(evil motion)
-  (ert-info ("Simple forward")
-    (evil-test-buffer
-      "[i]nt main(int argc, char** argv)
-{
-  printf(\"Hello world\\n\");
-  return EXIT_SUCCESS;
-}"
-      (evil-move-chars "{" 1)
-      "int main(int argc, char** argv)
-{[]
-  printf(\"Hello world\\n\");
-  return EXIT_SUCCESS;
-}"
-      (evil-move-chars "a-z" 1)
-      "int main(int argc, char** argv)
-{
-  printf[(]\"Hello world\\n\");
-  return EXIT_SUCCESS;
-}"
-      (evil-move-chars "a-z" 1)
-      "int main(int argc, char** argv)
-{
-  printf(\"Hello[ ]world\\n\");
-  return EXIT_SUCCESS;
-}"))
-  (ert-info ("No match")
-    (evil-test-buffer
-      "[i]nt main(int argc, char** argv)
-{
-  printf(\"Hello world\\n\");
-  return EXIT_SUCCESS;
-}"
-      (should (eq (evil-move-chars "Q" 1) 1))))
-  (ert-info ("Simple backward")
-    (evil-test-buffer
-      "int main(int argc, char** argv)
-{
-  printf(\"Hello world\\n\");
-  return EXIT_SUCCESS;
-\[}]")
-    (evil-move-chars "*" -1)
-    "int main(int argc, char[*]* argv)
-{
-  printf(\"Hello world\\n\");
-  return EXIT_SUCCESS;
-}"
-    (evil-move-chars "*" -1)
-    "int main(int argc, char[*]* argv)
-{
-  printf(\"Hello world\\n\");
-  return EXIT_SUCCESS;
-}")
-  (ert-info ("Beginning of buffer")
-    (evil-test-buffer
-      "int[ ]main(int argc, char** argv)
-{
-  printf(\"Hello world\\n\");
-  return EXIT_SUCCESS;
-}"
-      (should (= -1 (evil-move-chars "Q" -1))))))
-
 (ert-deftest evil-test-forward-word-begin ()
   "Test `evil-forward-word-begin'"
   :tags '(evil motion)
@@ -4853,82 +4789,6 @@ Below some empty line"))
       ("ge")
       "한[글]１２３")))
 
-(ert-deftest evil-test-move-paragraph ()
-  "Test `evil-move-paragraph'"
-  :tags '(evil motion)
-  (ert-info ("Simple forward")
-    (evil-test-buffer
-      "[A]bove some line
-
-Below some empty line"
-      (should (= (evil-move-paragraph 1) 0))
-      "Above some line[]
-
-Below some empty line"
-      (should (= (evil-move-paragraph 1) 0))
-      "Above some line
-
-Below some empty line[]"))
-  (ert-info ("Forward with count")
-    (evil-test-buffer
-      "[A]bove some line
-
-Below some empty line"
-      (should (= (evil-move-paragraph 2) 0))
-      "Above some line
-
-Below some empty line[]"))
-  (ert-info ("End of buffer without newline")
-    (evil-test-buffer
-      "[B]elow some empty line"
-      (should (= (evil-move-paragraph 2) 1))
-      "Below some empty line[]"
-      (should (= (evil-move-paragraph 1) 1))
-      "Below some empty line[]"))
-  (ert-info ("End of buffer with newline")
-    (evil-test-buffer
-      "[B]elow some empty line\n\n"
-      (should (= (evil-move-paragraph 2) 1))
-      "Below some empty line[]\n\n"
-      (should (= (evil-move-paragraph 1) 1))
-      "Below some empty line[]\n\n"))
-  (ert-info ("Simple backward")
-    (evil-test-buffer
-      "Above some line
-
-Below some empty line[]"
-      (should (= (evil-move-paragraph -1) 0))
-      "Above some line
-
-\[]Below some empty line"
-      (should (= (evil-move-paragraph -1) 0))
-      "[A]bove some line
-
-Below some empty line"))
-  (ert-info ("Backward with count")
-    (evil-test-buffer
-      "Above some line
-
-Below some empty line[]"
-      (should (= (evil-move-paragraph -2) 0))
-      "[A]bove some line
-
-Below some empty line"))
-  (ert-info ("Beginning of buffer without newline")
-    (evil-test-buffer
-      "Above some line[]"
-      (should (= (evil-move-paragraph -2) -1))
-      "[A]bove some line"
-      (should (= (evil-move-paragraph -1) -1))
-      "[A]bove some line"))
-  (ert-info ("Beginning of buffer with newline")
-    (evil-test-buffer
-      "\n\nAbove some line[]"
-      (should (= (evil-move-paragraph -2) -1))
-      "\n\n[A]bove some line"
-      (should (= (evil-move-paragraph -1) -1))
-      "\n\n[A]bove some line")))
-
 (ert-deftest evil-test-forward-paragraph ()
   "Test `evil-forward-paragraph'"
   :tags '(evil motion)
@@ -5068,6 +4928,8 @@ Below some empty line[.]"))
       "[B]elow some empty line.\n\n"
       (")")
       "Below some empty line.\n[\n]"
+      (")")
+      "Below some empty line.\n\n[]"
       (should-error (execute-kbd-macro ")"))
       (should-error (execute-kbd-macro "42)")))))
 
@@ -6103,7 +5965,7 @@ Below some empty line."))
 ;; and for Lisp evaluation."
       ("vip")
       "<;; This buffer is for notes,
-;; and for Lisp evaluation[.]
+;; and for Lisp evaluation.[]
 >
 ;; This buffer is for notes,
 ;; and for Lisp evaluation.")
@@ -6115,11 +5977,10 @@ Below some empty line."))
 ;; and for Lisp evaluation."
       ("vip")
       "<;; This buffer is for notes,
-;; and for Lisp evaluation[.]
+;; and for Lisp evaluation.[]
 >
 ;; This buffer is for notes,
 ;; and for Lisp evaluation.")
-
     (evil-test-buffer
       ";; This buffer is for notes,
 ;; and for Lisp evaluation.
@@ -6240,120 +6101,6 @@ Below some empty line."))
       "<a[a]a>bbbb</aaa>"
       ("vat")
       "{<aaa>bbbb</aaa[>]}")))
-
-(ert-deftest evil-test-paren-range ()
-  "Test `evil-paren-range'"
-  :tags '(evil text-object)
-  (ert-info ("Select a single block")
-    (ert-info ("Inside the parentheses")
-      (evil-test-buffer
-        "(2[3]4)"
-        (should (equal (evil-paren-range 1 nil nil nil ?\( ?\)) '(1 6)))
-        (should (equal (evil-paren-range 1 nil nil nil ?\( ?\) t) '(2 5)))
-        (should (equal (evil-paren-range -1 nil nil nil ?\( ?\)) '(1 6)))
-        (should (equal (evil-paren-range -1 nil nil nil ?\( ?\) t) '(2 5)))
-        (should-not (evil-paren-range 0 nil nil nil ?\( ?\)))
-        (should-not (evil-paren-range 0 nil nil nil ?\( ?\) t))))
-    (ert-info ("Before opening parenthesis")
-      (evil-test-buffer
-        "[(]234)"
-        (should (equal (evil-paren-range 1 nil nil nil ?\( ?\)) '(1 6)))
-        (should (equal (evil-paren-range 1 nil nil nil ?\( ?\) t) '(2 5)))
-        (should-not (evil-paren-range -1 nil nil nil ?\( ?\)))
-        (should-not (evil-paren-range -1 nil nil nil ?\( ?\) t))
-        (should-not (evil-paren-range 0 nil nil nil ?\( ?\)))
-        (should-not (evil-paren-range 0 nil nil nil ?\( ?\) t))))
-    (ert-info ("After opening parenthesis")
-      (evil-test-buffer
-        "([2]34)"
-        (should (equal (evil-paren-range 1 nil nil nil ?\( ?\)) '(1 6)))
-        (should (equal (evil-paren-range 1 nil nil nil ?\( ?\) t) '(2 5)))
-        (should (equal (evil-paren-range -1 nil nil nil ?\( ?\)) '(1 6)))
-        (should (equal (evil-paren-range -1 nil nil nil ?\( ?\) t) '(2 5)))
-        (should-not (evil-paren-range 0 nil nil nil ?\( ?\)))
-        (should-not (evil-paren-range 0 nil nil nil ?\( ?\) t))))
-    (ert-info ("Before closing parenthesis")
-      (evil-test-buffer
-        "(234[)]"
-        (should (equal (evil-paren-range 1 nil nil nil ?\( ?\)) '(1 6)))
-        (should (equal (evil-paren-range 1 nil nil nil ?\( ?\) t) '(2 5)))
-        (should (equal (evil-paren-range -1 nil nil nil ?\( ?\)) '(1 6)))
-        (should (equal (evil-paren-range -1 nil nil nil ?\( ?\) t) '(2 5)))
-        (should-not (evil-paren-range 0 nil nil nil ?\( ?\)))
-        (should-not (evil-paren-range 0 nil nil nil ?\( ?\) t))))
-    (ert-info ("After closing parenthesis")
-      (evil-test-buffer
-        "(234)[]"
-        (should-not (evil-paren-range 1 nil nil nil ?\( ?\)))
-        (should-not (evil-paren-range 1 nil nil nil ?\( ?\) t))
-        (should (equal (evil-paren-range -1 nil nil nil ?\( ?\)) '(1 6)))
-        (should (equal (evil-paren-range -1 nil nil nil ?\( ?\) t) '(2 5)))
-        (should-not (evil-paren-range 0 nil nil nil ?\( ?\)))
-        (should-not (evil-paren-range 0 nil nil nil ?\( ?\) t)))))
-  (ert-info ("Select two blocks")
-    (evil-test-buffer
-      "((34567)([0]1234))"
-      (should (equal (evil-paren-range 1 nil nil nil ?\( ?\)) '(9 16)))
-      (should (equal (evil-paren-range 2 nil nil nil ?\( ?\)) '(1 17))))))
-
-(ert-deftest evil-test-regexp-range ()
-  "Test `evil-regexp-range'"
-  :tags '(evil text-object)
-  (ert-info ("Select a single block")
-    (ert-info ("Inside the parentheses")
-      (evil-test-buffer
-        "(2[3]4)"
-        (should (equal (evil-regexp-range 1 nil nil nil"(" ")") '(1 6)))
-        (should (equal (evil-regexp-range 1 nil nil nil"(" ")" t) '(2 5)))
-        (should (equal (evil-regexp-range -1 nil nil nil"(" ")") '(1 6)))
-        (should (equal (evil-regexp-range -1 nil nil nil"(" ")" t) '(2 5)))
-        (should-not (evil-regexp-range 0 nil nil nil"(" ")"))
-        (should-not (evil-regexp-range 0 nil nil nil"(" ")" t))))
-    (ert-info ("Before opening parenthesis")
-      (evil-test-buffer
-        "[(]234)"
-        (should (equal (evil-regexp-range 1 nil nil nil"(" ")") '(1 6)))
-        (should (equal (evil-regexp-range 1 nil nil nil"(" ")" t) '(2 5)))
-        (should-not (evil-regexp-range -1 nil nil nil"(" ")"))
-        (should-not (evil-regexp-range -1 nil nil nil"(" ")" t))
-        (should-not (evil-regexp-range 0 nil nil nil"(" ")"))
-        (should-not (evil-regexp-range 0 nil nil nil"(" ")" t))))
-    (ert-info ("After opening parenthesis")
-      (evil-test-buffer
-        "([2]34)"
-        (should (equal (evil-regexp-range 1 nil nil nil"(" ")") '(1 6)))
-        (should (equal (evil-regexp-range 1 nil nil nil"(" ")" t) '(2 5)))
-        (should (equal (evil-regexp-range -1 nil nil nil"(" ")") '(1 6)))
-        (should (equal (evil-regexp-range -1 nil nil nil"(" ")" t) '(2 5)))
-        (should-not (evil-regexp-range 0 nil nil nil"(" ")"))
-        (should-not (evil-regexp-range 0 nil nil nil"(" ")" t))))
-    (ert-info ("Before closing parenthesis")
-      (evil-test-buffer
-        "(234[)]"
-        (should (equal (evil-regexp-range 1 nil nil nil"(" ")") '(1 6)))
-        (should (equal (evil-regexp-range 1 nil nil nil"(" ")" t) '(2 5)))
-        (should (equal (evil-regexp-range -1 nil nil nil"(" ")") '(1 6)))
-        (should (equal (evil-regexp-range -1 nil nil nil"(" ")" t) '(2 5)))
-        (should-not (evil-regexp-range 0 nil nil nil"(" ")"))
-        (should-not (evil-regexp-range 0 nil nil nil"(" ")" t))))
-    (ert-info ("After closing parenthesis")
-      (evil-test-buffer
-        "(234)[]"
-        (should-not (evil-regexp-range 1 nil nil nil"(" ")"))
-        (should-not (evil-regexp-range 1 nil nil nil"(" ")" t))
-        (should (equal (evil-regexp-range -1 nil nil nil"(" ")") '(1 6)))
-        (should (equal (evil-regexp-range -1 nil nil nil"(" ")" t) '(2 5)))
-        (should-not (evil-regexp-range 0 nil nil nil"(" ")"))
-        (should-not (evil-regexp-range 0 nil nil nil"(" ")" t)))))
-  (ert-info ("Select two blocks")
-    (evil-test-buffer
-      "((34567)([0]1234))"
-      (should (equal (evil-regexp-range 1 nil nil nil"(" ")") '(9 16)))
-      (should (equal (evil-regexp-range 2 nil nil nil"(" ")") '(1 17)))))
-  (ert-info ("Select a quoted block")
-    (evil-test-buffer
-      "'q[u]ote'"
-      (should (equal (evil-regexp-range 1 nil nil nil"'" "'") '(1 8))))))
 
 ;;; Visual state
 
