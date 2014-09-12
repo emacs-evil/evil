@@ -1401,27 +1401,31 @@ an opening delimiter is found the COUNT is increased by one, if a
 closing delimiter is found the COUNT is decreased by one. The
 motion stops when COUNT reaches zero. The match-data reflects the
 last successful match (that caused COUNT to reach zero)."
-  (with-syntax-table (copy-syntax-table (syntax-table))
-    (modify-syntax-entry open (format "(%c" close))
-    (modify-syntax-entry close (format ")%c" open))
-    (let ((rest (evil-motion-loop (dir count)
-                  (let ((pnt (point)))
-                    (condition-case nil
-                        (cond
-                         ((> dir 0)
-                          (while (progn
-                                   (up-list dir)
-                                   (/= (char-before) close))))
-                         (t
-                          (while (progn
-                                   (up-list dir)
-                                   (/= (char-after) open)))))
-                      (error (goto-char pnt)))))))
-      (cond
-       ((= rest count) (set-match-data nil))
-       ((> count 0) (set-match-data (list (1- (point)) (point))))
-       (t (set-match-data (list (point) (1+ (point))))))
-      rest)))
+  ;; Always use the default `forward-sexp-function'. This is important
+  ;; for modes that use a custom one like `python-mode'.
+  ;; (addresses #364)
+  (let (forward-sexp-function)
+    (with-syntax-table (copy-syntax-table (syntax-table))
+      (modify-syntax-entry open (format "(%c" close))
+      (modify-syntax-entry close (format ")%c" open))
+      (let ((rest (evil-motion-loop (dir count)
+                    (let ((pnt (point)))
+                      (condition-case nil
+                          (cond
+                           ((> dir 0)
+                            (while (progn
+                                     (up-list dir)
+                                     (/= (char-before) close))))
+                           (t
+                            (while (progn
+                                     (up-list dir)
+                                     (/= (char-after) open)))))
+                        (error (goto-char pnt)))))))
+        (cond
+         ((= rest count) (set-match-data nil))
+         ((> count 0) (set-match-data (list (1- (point)) (point))))
+         (t (set-match-data (list (point) (1+ (point))))))
+        rest))))
 
 (defun evil-up-xml-tag (&optional count)
   "Move point to the end or beginning of balanced xml tags.
