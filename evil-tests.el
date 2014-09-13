@@ -6076,7 +6076,65 @@ Below some empty line."))
       "(aaa \"bb[b]b\" aa)"
       (emacs-lisp-mode)
       ("va(")
-      "<(aaa \"bbbb\" aa[)]>")))
+      "<(aaa \"bbbb\" aa[)]>"))
+  (ert-info ("Select inner parentheses around strings")
+    (evil-test-buffer
+      "((\"t[e]st\"))\n"
+      (emacs-lisp-mode)
+      ("vib")
+      "((<\"test[\"]>))\n"
+      ("ib")
+      "(<(\"test\"[)]>)\n")
+    (evil-test-buffer
+      "( ( \"t[e]st\" ) )\n"
+      (emacs-lisp-mode)
+      ("vib")
+      "( (< \"test\"[ ]>) )\n"
+      ("ib")
+      "(< ( \"test\" )[ ]>)\n")
+    (evil-test-buffer
+      "((\"t[e]st\"))\n"
+      (emacs-lisp-mode)
+      ("vhhib")
+      "((<[\"]test\">))\n"
+      ("ib")
+      "(<[(]\"test\")>)\n")
+    (evil-test-buffer
+      "( ( \"t[e]st\" ) )\n"
+      (emacs-lisp-mode)
+      ("vhhib")
+      "( (<[ ]\"test\" >) )\n"
+      ("ib")
+      "(<[ ]( \"test\" ) >)\n"))
+  (ert-info ("Select outer parentheses around strings")
+    (evil-test-buffer
+      "((\"t[e]st\"))\n"
+      (emacs-lisp-mode)
+      ("vab")
+      "(<(\"test\"[)]>)\n"
+      ("ab")
+      "<((\"test\")[)]>\n")
+    (evil-test-buffer
+      "( ( \"t[e]st\" ) )\n"
+      (emacs-lisp-mode)
+      ("vab")
+      "( <( \"test\" [)]> )\n"
+      ("ab")
+      "<( ( \"test\" ) [)]>\n")
+    (evil-test-buffer
+      "((\"t[e]st\"))\n"
+      (emacs-lisp-mode)
+      ("vhhab")
+      "(<[(]\"test\")>)\n"
+      ("ab")
+      "<[(](\"test\"))>\n")
+    (evil-test-buffer
+      "( ( \"t[e]st\" ) )\n"
+      (emacs-lisp-mode)
+      ("vhhab")
+      "( <[(] \"test\" )> )\n"
+      ("ab")
+      "<[(] ( \"test\" ) )>\n")))
 
 (ert-deftest evil-test-tag-objects ()
   "Test `evil-inner-tag', etc."

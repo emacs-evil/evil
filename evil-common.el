@@ -3009,7 +3009,8 @@ selection matches that object exactly."
         (setq op-end op cl-end cl) ; store copy
         ;; if the current selection contains the surrounding
         ;; delimiters, they do not count as new selection
-        (let ((cnt (if (or (and (<= beg (car op)) (>= end (cdr cl)))
+        (let ((cnt (if (or (and (not countcurrent) inclusive
+                                (<= beg (car op)) (>= end (cdr cl)))
                            (and (not countcurrent) (not inclusive)
                                 (<= beg (cdr op)) (>= end (car cl))))
                        count
@@ -3056,7 +3057,20 @@ must be regular expressions and `evil-up-block' is used."
       (let ((thing #'(lambda (&optional cnt)
                        (evil-up-paren open close cnt)))
             (bnd (or (bounds-of-thing-at-point 'evil-string)
-                     (bounds-of-thing-at-point 'evil-comment))))
+                     (bounds-of-thing-at-point 'evil-comment)
+                     ;; If point is at the opening quote of a string,
+                     ;; this must be handled as if point is within the
+                     ;; string, i.e. the selection must be extended
+                     ;; around the string. Otherwise
+                     ;; `evil-select-block' might do the wrong thing
+                     ;; because it accidentally moves point inside the
+                     ;; string (for inclusive selection) when looking
+                     ;; for the current surrounding block. (re #364)
+                     (and (= (point) beg)
+                          (save-excursion
+                            (goto-char (1+ beg))
+                            (or (bounds-of-thing-at-point 'evil-string)
+                                (bounds-of-thing-at-point 'evil-comment)))))))
         (if (not bnd)
             (evil-select-block thing beg end type count inclusive)
           (or (evil-with-restriction (car bnd) (cdr bnd)
@@ -3065,12 +3079,14 @@ must be regular expressions and `evil-up-block' is used."
                   (error nil)))
               (save-excursion
                 (goto-char (car bnd))
-                (evil-select-block thing
-                                   (min beg (1- (car bnd)))
-                                   (max end (1+ (cdr bnd)))
-                                   type
-                                   count
-                                   inclusive))))))
+                (let ((extbeg (min beg (- (car bnd) (if inclusive 1 0))))
+                      (extend (max end (+ (cdr bnd) (if inclusive 1 0)))))
+                  (evil-select-block thing
+                                     extbeg extend
+                                     type
+                                     count
+                                     inclusive
+                                     (or (< extbeg beg) (> extend end)))))))))
      (t
       (evil-select-block #'(lambda (&optional cnt)
                              (evil-up-block open close cnt))
