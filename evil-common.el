@@ -3066,9 +3066,9 @@ must be regular expressions and `evil-up-block' is used."
                      ;; because it accidentally moves point inside the
                      ;; string (for inclusive selection) when looking
                      ;; for the current surrounding block. (re #364)
-                     (and (= (point) beg)
+                     (and (= (point) (or beg (point)))
                           (save-excursion
-                            (goto-char (1+ beg))
+                            (goto-char (1+ (or beg (point))))
                             (or (bounds-of-thing-at-point 'evil-string)
                                 (bounds-of-thing-at-point 'evil-comment)))))))
         (if (not bnd)
@@ -3078,6 +3078,8 @@ must be regular expressions and `evil-up-block' is used."
                     (evil-select-block thing beg end type count inclusive)
                   (error nil)))
               (save-excursion
+                (setq beg (or beg (point))
+                      end (or end (point)))
                 (goto-char (car bnd))
                 (let ((extbeg (min beg (- (car bnd) (if inclusive 1 0))))
                       (extend (max end (+ (cdr bnd) (if inclusive 1 0)))))

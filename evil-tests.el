@@ -6134,7 +6134,11 @@ Below some empty line."))
       ("vhhab")
       "( <[(] \"test\" )> )\n"
       ("ab")
-      "<[(] ( \"test\" ) )>\n")))
+      "<[(] ( \"test\" ) )>\n")
+    (evil-test-buffer
+      "(([\"]\"))\n"
+      ("dab")
+      "([)]\n")))
 
 (ert-deftest evil-test-tag-objects ()
   "Test `evil-inner-tag', etc."
