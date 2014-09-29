@@ -148,7 +148,7 @@
 
 ;;; Parentheses
 
-(defadvice show-paren-function (around evil)
+(defadvice show-paren-function (around evil disable)
   "Match parentheses in Normal state."
   (if (if (memq 'not evil-highlight-closing-paren-at-point-states)
           (memq evil-state evil-highlight-closing-paren-at-point-states)
