@@ -134,6 +134,7 @@ input is the visual region '<,'> or `<,`>. If the value of the
 global variable `evil-ex-initial-input' is non-nil, its content
 is appended to the line."
   :keep-visual t
+  :repeat abort
   (interactive
    (list
     (let ((s (concat
