@@ -821,7 +821,9 @@ intercepted."
     right-char
     right-word
     scroll-down
+    scroll-down-command
     scroll-up
+    scroll-up-command
     sgml-skip-tag-backward
     sgml-skip-tag-forward
     up-list)
