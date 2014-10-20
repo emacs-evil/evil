@@ -2643,7 +2643,7 @@ for the last window in each frame."
                   (error nil)))
             wins))))
 
-(evil-define-command evil-quit (&optional bang)
+(evil-define-command evil-quit (&optional force)
   "Closes the current window, current frame, Emacs.
 If the current frame belongs to some client the client connection
 is closed."
@@ -2652,13 +2652,19 @@ is closed."
   (condition-case nil
       (delete-window)
     (error
-     (condition-case nil
-         (let ((proc (frame-parameter (selected-frame) 'client)))
-           (if proc
-               (evil-quit-all bang)
-             (delete-frame)))
-       (error
-        (evil-quit-all bang))))))
+     (if (and (boundp 'server-buffer-clients)
+              (fboundp 'server-edit)
+              (fboundp 'server-buffer-done)
+              server-buffer-clients)
+         (if force
+             (server-buffer-done (current-buffer))
+           (server-edit))
+       (condition-case nil
+           (delete-frame)
+         (error
+          (if force
+              (kill-emacs)
+            (save-buffers-kill-emacs))))))))
 
 (evil-define-command evil-quit-all (&optional bang)
   "Exits Emacs, asking for saving."
