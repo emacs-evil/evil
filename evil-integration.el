@@ -212,13 +212,15 @@
   (global-undo-tree-mode 1))
 
 (eval-after-load 'undo-tree
-  '(progn
+  '(with-no-warnings
      (defun evil-turn-on-undo-tree-mode ()
        "Enable `undo-tree-mode' if evil is enabled.
 This function enables `undo-tree-mode' when Evil is activated in
 some buffer, but only if `global-undo-tree-mode' is also
 activated."
-       (when global-undo-tree-mode (undo-tree-mode 1)))
+       (when (and (boundp 'global-undo-tree-mode)
+                  global-undo-tree-mode)
+         (undo-tree-mode 1)))
 
      (add-hook 'evil-local-mode-hook #'evil-turn-on-undo-tree-mode)
 
@@ -443,7 +445,8 @@ the mark and entering `recursive-edit'."
 ;;; nXhtml/mumamo
 ;; ensure that mumamo does not toggle evil through its globalized mode
 (eval-after-load 'mumamo
-  '(push 'evil-mode-cmhh mumamo-change-major-mode-no-nos))
+  '(with-no-warnings
+     (push 'evil-mode-cmhh mumamo-change-major-mode-no-nos)))
 
 (provide 'evil-integration)
 

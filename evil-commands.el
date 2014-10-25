@@ -2748,9 +2748,10 @@ the previous shell command is executed instead."
 If ARG is nil this function calls `recompile', otherwise it calls
 `compile' passing ARG as build command."
   (interactive "<sh>")
-  (if arg
-      (compile arg)
-    (recompile)))
+  (if (and (fboundp 'recompile)
+           (not arg))
+      (recompile)
+    (compile arg)))
 
 ;; TODO: escape special characters (currently only \n) ... perhaps
 ;; there is some Emacs function doing this?
