@@ -2743,6 +2743,15 @@ the previous shell command is executed instead."
      (t
       (shell-command command)))))
 
+(evil-define-command evil-make (arg)
+  "Call a build command in the current directory.
+If ARG is nil this function calls `recompile', otherwise it calls
+`compile' passing ARG as build command."
+  (interactive "<sh>")
+  (if arg
+      (compile arg)
+    (recompile)))
+
 ;; TODO: escape special characters (currently only \n) ... perhaps
 ;; there is some Emacs function doing this?
 (evil-define-command evil-show-registers ()
