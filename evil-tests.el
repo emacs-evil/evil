@@ -239,8 +239,9 @@ then the test fails unless an error of type SYMBOL is raised.
                           '(("(\\(evil-test-buffer\\)\\>"
                              1 font-lock-keyword-face))))
 
-(defun evil-test-buffer-string
-  (string &optional point-start point-end visual-start visual-end)
+(defun evil-test-buffer-string (string &optional
+                                       point-start point-end
+                                       visual-start visual-end)
   "Validate the current buffer according to STRING.
 If STRING contains an occurrence of POINT-START immediately
 followed by POINT-END, that position is compared against point.
@@ -274,9 +275,10 @@ VISUAL-START and VISUAL-END default to < and >."
               (evil-test-selection selection))))
       (kill-buffer marker-buffer))))
 
-(defun evil-test-buffer-from-string
-  (string &optional state point-start point-end
-          visual visual-start visual-end)
+(defun evil-test-buffer-from-string (string &optional
+                                            state
+                                            point-start point-end
+                                            visual visual-start visual-end)
   "Create a new buffer according to STRING.
 If STRING contains an occurrence of POINT-START immediately
 followed by POINT-END, then point is moved to that position.
@@ -313,8 +315,9 @@ VISUAL is the Visual selection: it defaults to `char'."
         (when (markerp evil-test-point)
           (goto-char evil-test-point))))))
 
-(defun evil-test-marker-buffer-from-string
-  (string &optional point-start point-end visual-start visual-end)
+(defun evil-test-marker-buffer-from-string (string &optional
+                                                   point-start point-end
+                                                   visual-start visual-end)
   "Create a new marker buffer according to STRING.
 If STRING contains an occurrence of POINT-START immediately
 followed by POINT-END, that position is stored in the
@@ -375,8 +378,7 @@ VISUAL-START and VISUAL-END default to < and >."
               (setq evil-test-visual-end
                     (move-marker (make-marker) (point))))))))))
 
-(defun evil-test-text
-  (before after &optional before-predicate after-predicate)
+(defun evil-test-text (before after &optional before-predicate after-predicate)
   "Verify the text around point.
 BEFORE is the expected text before point, and AFTER is
 the text after point. BEFORE-PREDICATE is a predicate function
@@ -409,8 +411,8 @@ is executed at the end."
         (forward-char (length after))
         (should (funcall after-predicate))))))
 
-(defmacro evil-test-selection
-  (string &optional end-string before-predicate after-predicate)
+(defmacro evil-test-selection (string &optional end-string
+                                      before-predicate after-predicate)
   "Verify that the Visual selection contains STRING."
   (declare (indent defun))
   `(progn
@@ -421,8 +423,8 @@ is executed at the end."
        (goto-char (or evil-visual-end (region-end)))
        (evil-test-text (or ,end-string ,string) nil nil ,after-predicate))))
 
-(defmacro evil-test-region
-  (string &optional end-string before-predicate after-predicate)
+(defmacro evil-test-region (string &optional end-string
+                                   before-predicate after-predicate)
   "Verify that the region contains STRING."
   (declare (indent defun))
   `(progn
@@ -433,8 +435,8 @@ is executed at the end."
        (goto-char (region-end))
        (evil-test-text (or ,end-string ,string) nil nil ,after-predicate))))
 
-(defmacro evil-test-overlay
-  (overlay string &optional end-string before-predicate after-predicate)
+(defmacro evil-test-overlay (overlay string &optional end-string
+                                     before-predicate after-predicate)
   "Verify that OVERLAY contains STRING."
   (declare (indent defun))
   `(progn

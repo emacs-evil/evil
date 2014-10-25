@@ -2311,8 +2311,7 @@ Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list."
   (apply #'evil-transform :normalize beg end type properties))
 
-(defun evil-transform
-  (transform beg end type &rest properties)
+(defun evil-transform (transform beg end type &rest properties)
   "Apply TRANSFORM on BEG and END with PROPERTIES.
 Returns a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list. If TRANSFORM is undefined,
