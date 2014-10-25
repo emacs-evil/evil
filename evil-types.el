@@ -347,7 +347,7 @@ If visual state is inactive then those values are nil."
               (save-excursion
                 (goto-char evil-ex-point)
                 (eval (cadr expr)))
-            (error "Invalid address"))))))
+            (user-error "Invalid address"))))))
 
 (evil-define-interactive-code "<!>"
   "Ex bang argument."

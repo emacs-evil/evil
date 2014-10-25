@@ -516,7 +516,7 @@ and jump to the corresponding one."
               (state (syntax-ppss (point))))
           (if (not (evil-in-string-p))
               ;; no, then we really failed
-              (error "No matching item found on the current line")
+              (user-error "No matching item found on the current line")
             ;; yes, go to the end of the string and try again
             (let ((endstr (evil-string-end (point) (line-end-position))))
               (when (or (evil-in-string-p endstr) ; not at end of string
@@ -528,7 +528,7 @@ and jump to the corresponding one."
                           (error t)))
                 ;; failed again, go back to original point
                 (goto-char pnt)
-                (error "No matching item found on the current line"))))))
+                (user-error "No matching item found on the current line"))))))
        ((< open close) (goto-char open-pair))
        (t (goto-char close-pair)))))))
 
@@ -586,7 +586,7 @@ and jump to the corresponding one."
                                       (line-beginning-position)))
                                   t count)
                 (when fwd (backward-char)))
-        (error "Can't find %c" char)))))
+        (user-error "Can't find %c" char)))))
 
 (evil-define-motion evil-find-char-backward (count char)
   "Move to the previous COUNT'th occurrence of CHAR."
@@ -639,7 +639,7 @@ and jump to the corresponding one."
         (funcall cmd (if fwd count (- count)) char)
         (unless (nth 2 evil-last-find)
           (setq evil-this-type 'exclusive)))
-    (error "No previous search")))
+    (user-error "No previous search")))
 
 (evil-define-motion evil-repeat-find-char-reverse (count)
   "Repeat the last find COUNT times in the opposite direction."
@@ -674,9 +674,9 @@ Columns are counted from zero."
                      (find-file (car marker))))
         (goto-char (cdr marker))))
      ((not noerror)
-      (error "Marker `%c' is not set%s" char
-             (if (evil-global-marker-p char) ""
-               " in this buffer"))))))
+      (user-error "Marker `%c' is not set%s" char
+                  (if (evil-global-marker-p char) ""
+                    " in this buffer"))))))
 
 (evil-define-command evil-goto-mark-line (char &optional noerror)
   "Go to the line of the marker specified by CHAR."
@@ -1165,7 +1165,7 @@ or line COUNT to the top of the window."
   "Select next match."
   (unless (and (boundp 'evil-search-module)
                (eq evil-search-module 'evil-search))
-    (error "next-match text objects only work with Evil search module."))
+    (user-error "next-match text objects only work with Evil search module."))
   (let ((pnt (point)))
     (cond
      ((eq evil-ex-search-direction 'forward)
@@ -1184,7 +1184,7 @@ or line COUNT to the top of the window."
   "Select next match."
   (unless (and (boundp 'evil-search-module)
                (eq evil-search-module 'evil-search))
-    (error "previous-match text objects only work with Evil search module."))
+    (user-error "previous-match text objects only work with Evil search module."))
   (let ((evil-ex-search-direction
          (if (eq evil-ex-search-direction 'backward)
              'forward
@@ -1310,13 +1310,13 @@ be joined with the previous line if and only if
   (interactive "p")
   (if (or evil-backspace-join-lines (not (bolp)))
       (call-interactively 'delete-backward-char)
-    (error "Beginning of line")))
+    (user-error "Beginning of line")))
 
 (evil-define-command evil-delete-backward-word ()
   "Delete previous word."
   (if (and (bolp) (not (bobp)))
       (progn
-        (unless evil-backspace-join-lines (error "Beginning of line"))
+        (unless evil-backspace-join-lines (user-error "Beginning of line"))
         (delete-char -1))
     (evil-delete (max
                   (save-excursion
@@ -1881,7 +1881,7 @@ when called interactively."
     ;; allow references to currently empty registers
     ;; when defining macro
     (unless evil-this-macro
-      (error "No previous macro")))
+      (user-error "No previous macro")))
    (t
     (condition-case err
         (evil-with-single-undo
@@ -2403,7 +2403,7 @@ The search is unbounded, i.e., the pattern is not wrapped in
           (require 'imenu)
         (error nil)))
     (if (null string)
-        (error "No symbol under cursor")
+        (user-error "No symbol under cursor")
       (setq isearch-forward t)
       ;; if imenu is available, try it
       (cond
@@ -2508,7 +2508,7 @@ without confirmation."
       (setq filename bufname))
     (cond
      ((zerop (length filename))
-      (error "Please specify a file name for the buffer"))
+      (user-error "Please specify a file name for the buffer"))
      ;; execute command on region
      ((eq (aref filename 0) ?!)
       (shell-command-on-region beg end (substring filename 1)))
@@ -2734,8 +2734,8 @@ the previous shell command is executed instead."
       (setq evil-previous-shell-command command))
     (cond
      ((zerop (length command))
-      (if previous (error "No previous shell command")
-        (error "No shell command")))
+      (if previous (user-error "No previous shell command")
+        (user-error "No shell command")))
      (evil-ex-range
       (shell-command-on-region beg end command nil t)
       (goto-char beg)
@@ -2827,7 +2827,7 @@ corresponding to the characters of this string are shown."
           (when line
             (goto-char (point-min))
             (forward-line (1- line))))
-      (error "File does not exist."))))
+      (user-error "File does not exist."))))
 
 (evil-ex-define-argument-type state
   "Defines an argument type which can take state names."
@@ -2867,7 +2867,7 @@ This is the state the buffer comes up in. See `evil-set-initial-state'."
   (interactive "<state>")
   (if (not (or (assq state evil-state-properties)
                (null state)))
-      (error "State %s cannot be set as initial Evil state" state)
+      (user-error "State %s cannot be set as initial Evil state" state)
     (let ((current-initial-state (evil-initial-state major-mode)))
       (unless (eq current-initial-state state)
         ;; only if we selected a new mode
@@ -2976,7 +2976,7 @@ resp.  after executing the command."
   (interactive "<r><s/>")
   (evil-ex-nohighlight)
   (unless pattern
-    (error "No pattern given"))
+    (user-error "No pattern given"))
   (setq replacement (or replacement ""))
   (setq evil-ex-last-was-search nil)
   (let* ((flags (append flags nil))
@@ -3150,9 +3150,9 @@ This is the same as :%s//~/&"
   :move-point nil
   (interactive "<r><g/><!>")
   (unless pattern
-    (error "No pattern given"))
+    (user-error "No pattern given"))
   (unless command
-    (error "No command given"))
+    (user-error "No command given"))
   (evil-with-single-undo
     (let ((case-fold-search
            (eq (evil-ex-regex-case pattern 'smart) 'insensitive))

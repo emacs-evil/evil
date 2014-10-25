@@ -48,7 +48,7 @@ the key whose history is being shown (one of \":\", \"/\", or
 \"?\").  EXECUTE-FN should be a function of one argument to
 execute on the result that the user selects."
   (when (eq major-mode 'evil-command-window-mode)
-    (error "Cannot recursively open command line window"))
+    (user-error "Cannot recursively open command line window"))
   (mapc #'(lambda (win)
             (when (equal (buffer-name (window-buffer win))
                          "*Command Line*")
@@ -87,7 +87,7 @@ function to execute."
         (command-window (get-buffer-window)))
     (select-window (previous-window))
     (unless (equal evil-command-window-current-buffer (current-buffer))
-      (error "Originating buffer is no longer active"))
+      (user-error "Originating buffer is no longer active"))
     (kill-buffer "*Command Line*")
     (delete-window command-window)
     (funcall execute-fn result)

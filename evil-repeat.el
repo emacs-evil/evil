@@ -561,7 +561,7 @@ If SAVE-POINT is non-nil, do not move point."
         (let ((confirm-kill-emacs t)
               (kill-buffer-hook
                (cons #'(lambda ()
-                         (error "Cannot delete buffer in repeat command"))
+                         (user-error "Cannot delete buffer in repeat command"))
                      kill-buffer-hook))
               (undo-pointer buffer-undo-list))
           (evil-with-single-undo
@@ -586,7 +586,7 @@ If COUNT is negative, this is a more recent kill."
   (cond
    ((not (and (eq last-command #'evil-repeat)
               evil-last-repeat))
-    (error "Previous command was not evil-repeat: %s" last-command))
+    (user-error "Previous command was not evil-repeat: %s" last-command))
    (save-point
     (save-excursion
       (evil-repeat-pop count)))
