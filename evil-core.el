@@ -193,12 +193,6 @@ To enable Evil globally, do (evil-mode 1)."
     (ad-update-regexp "^evil")
     (with-no-warnings (evil-esc-mode -1))))
 
-(put 'evil-mode 'function-documentation
-     "Toggle Evil in all buffers.
-Enable with positive ARG and disable with negative ARG.
-See `evil-local-mode' to toggle Evil in the
-current buffer only.")
-
 (defun evil-change-state (state &optional message)
   "Change the state to STATE.
 If STATE is nil, disable all states."
