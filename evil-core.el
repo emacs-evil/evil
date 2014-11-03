@@ -107,6 +107,7 @@
 
 (declare-function evil-emacs-state-p "evil-states")
 (declare-function evil-ex-p "evil-ex")
+(defvar evil-mode-buffers)
 
 (define-minor-mode evil-local-mode
   "Minor mode for setting up Evil in a single buffer."
