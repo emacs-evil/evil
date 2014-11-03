@@ -170,10 +170,6 @@ To enable Evil globally, do (evil-mode 1)."
     (evil-local-mode 1)
     (evil-initialize-state)))
 
-;;;###autoload (autoload 'evil-mode "evil" "Toggle evil in all buffers" t)
-(define-globalized-minor-mode evil-mode
-  evil-local-mode evil-initialize)
-
 ;; No hooks are run in Fundamental buffers, so other measures are
 ;; necessary to initialize Evil in these buffers. When Evil is
 ;; enabled globally, the default value of `major-mode' is set to
