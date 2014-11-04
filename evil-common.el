@@ -770,6 +770,16 @@ has already been started; otherwise TARGET is called."
            (setq this-command #',target)
            (call-interactively #',target)))))))
 
+(defun evil-extract-append (file-or-append)
+  "Return an (APPEND . FILENAME) pair based on FILE-OR-APPEND.
+FILE-OR-APPEND should either be a filename or a \">> FILE\"
+directive.  APPEND will be t if FILE-OR-APPEND is an append
+directive and nil otherwise.  FILENAME will be the extracted
+filename."
+  (if (string-match "\\(>> *\\)" file-or-append)
+      (cons t (substring file-or-append(match-end 1)))
+    (cons nil file-or-append)))
+
 (defun evil-set-keymap-prompt (map prompt)
   "Set the prompt-string of MAP to PROMPT."
   (delq (keymap-prompt map) map)

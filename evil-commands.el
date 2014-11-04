@@ -2492,18 +2492,22 @@ See also `evil-open-fold'."
 
 ;;; Ex
 
-(evil-define-operator evil-write (beg end type filename &optional bang)
-  "Save the current buffer, from BEG to END, to FILENAME.
-The current buffer's filename is not changed unless it has no
-associated file and no region is specified.  If the file already
-exists and the BANG argument is non-nil, it is overwritten
-without confirmation."
+(evil-define-operator evil-write (beg end type file-or-append &optional bang)
+  "Save the current buffer, from BEG to END, to FILE-OR-APPEND.
+If FILE-OR-APPEND is of the form \">> FILE\", append to FILE
+instead of overwriting.  The current buffer's filename is not
+changed unless it has no associated file and no region is
+specified.  If the file already exists and the BANG argument is
+non-nil, it is overwritten without confirmation."
   :motion nil
   :move-point nil
   :type line
   :repeat nil
   (interactive "<R><fsh><!>")
-  (let ((bufname (buffer-file-name (buffer-base-buffer))))
+  (let* ((append-and-filename (evil-extract-append file-or-append))
+         (append (car append-and-filename))
+         (filename (cdr append-and-filename))
+         (bufname (buffer-file-name (buffer-base-buffer))))
     (when (zerop (length filename))
       (setq filename bufname))
     (cond
@@ -2512,9 +2516,10 @@ without confirmation."
      ;; execute command on region
      ((eq (aref filename 0) ?!)
       (shell-command-on-region beg end (substring filename 1)))
-     ;; with region, always save to file without resetting modified flag
-     ((and beg end)
-      (write-region beg end filename nil nil nil (not bang)))
+     ;; with region or append, always save to file without resetting
+     ;; modified flag
+     ((or append (and beg end))
+      (write-region beg end filename append nil nil (not (or append bang))))
      ;; no current file
      ((null bufname)
       (write-file filename (not bang)))
