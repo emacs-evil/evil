@@ -7375,8 +7375,17 @@ maybe we need one line more with some text\n")
 (ert-deftest evil-test-write ()
   :tags '(evil ex)
   "Test `evil-write'."
+  (ert-info ("Write open file")
+    (evil-with-temp-file filename "line1\nline2\nline3\n"
+      (evil-test-buffer
+        ((vconcat ":e " filename [return]))
+        "[l]ine1\nline2\nline3\n"
+        ("Galine4\nline5\n" [escape])
+        "line1\nline2\nline3\nline4\nline5\n"
+        (":w")
+        (file filename "line1\nline2\nline3\nline4\nline5\n"))))
   (let ((filename (evil-temp-filename)))
-    (ert-info ("Write current buffer")
+    (ert-info ("Write current buffer to new file")
       (evil-test-buffer
         "[l]ine1\nline2\nline3\nline4\nline5\n"
         ((vconcat ":w " filename [return]))

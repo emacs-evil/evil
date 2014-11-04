@@ -776,7 +776,8 @@ FILE-OR-APPEND should either be a filename or a \">> FILE\"
 directive.  APPEND will be t if FILE-OR-APPEND is an append
 directive and nil otherwise.  FILENAME will be the extracted
 filename."
-  (if (string-match "\\(>> *\\)" file-or-append)
+  (if (and (stringp file-or-append)
+           (string-match "\\(>> *\\)" file-or-append))
       (cons t (substring file-or-append(match-end 1)))
     (cons nil file-or-append)))
 
