@@ -471,6 +471,7 @@
 (define-key evil-ex-completion-map "\d" #'evil-ex-delete-backward-char)
 (define-key evil-ex-completion-map "\t" #'evil-ex-completion)
 (define-key evil-ex-completion-map [tab] #'evil-ex-completion)
+(define-key evil-ex-completion-map [remap completion-at-point] #'evil-ex-completion)
 (define-key evil-ex-completion-map "\C-a" 'evil-ex-completion)
 (define-key evil-ex-completion-map "\C-b" 'move-beginning-of-line)
 (define-key evil-ex-completion-map "\C-c" 'abort-recursive-edit)
