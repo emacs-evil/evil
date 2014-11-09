@@ -834,7 +834,6 @@ BUFFER defaults to the current buffer."
           (setq default (evil-filter-list #'stringp default)))
         (evil-set-cursor default)
         (evil-set-cursor cursor)))))
-(put 'evil-refresh-cursor 'permanent-local-hook t)
 
 (defmacro evil-save-cursor (&rest body)
   "Save the current cursor; execute BODY; restore the cursor."
