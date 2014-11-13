@@ -7290,14 +7290,15 @@ maybe we need one line more with some text\n")
 (ert-deftest evil-test-normal ()
   "Test `evil-ex-normal'."
   :tags '(evil ex)
-  (evil-test-buffer
-    "[l]ine 1\nline 2\nline 3\nline 4\nline 5\n"
-    (":normal lxIABC" [escape] "AXYZ" [return])
-    "ABClne 1XY[Z]\nline 2\nline 3\nline 4\nline 5\n"
-    (":3,4normal lxIABC" [escape] "AXYZ" [return])
-    "ABClne 1XYZ\nline 2\nABClne 3XYZ\nABClne 4XY[Z]\nline 5\n"
-    ("u")
-    "ABClne 1XYZ\nline 2\nl[i]ne 3\nline 4\nline 5\n"))
+  (let (evil-want-fine-undo)
+    (evil-test-buffer
+      "[l]ine 1\nline 2\nline 3\nline 4\nline 5\n"
+      (":normal lxIABC" [escape] "AXYZ" [return])
+      "ABClne 1XY[Z]\nline 2\nline 3\nline 4\nline 5\n"
+      (":3,4normal lxIABC" [escape] "AXYZ" [return])
+      "ABClne 1XYZ\nline 2\nABClne 3XYZ\nABClne 4XY[Z]\nline 5\n"
+      ("u")
+      "ABClne 1XYZ\nline 2\nl[i]ne 3\nline 4\nline 5\n")))
 
 (ert-deftest evil-test-copy ()
   :tags '(evil ex)

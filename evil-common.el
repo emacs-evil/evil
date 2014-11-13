@@ -2949,26 +2949,37 @@ are included. The step is terminated with `evil-end-undo-step'."
         (undo-boundary))
       (setq evil-undo-list-pointer (or buffer-undo-list t)))))
 
-(defun evil-end-undo-step (&optional continue)
+(defun evil-end-undo-step (&optional continue first-only)
   "End a undo step started with `evil-start-undo-step'.
-Adds an undo boundary unless CONTINUE is specified."
+Adds an undo boundary unless CONTINUE is specified. If FIRST-ONLY
+is non-nil, only the first boundary is removed."
   (when (and evil-undo-list-pointer
              (not evil-in-single-undo))
-    (evil-refresh-undo-step)
+    (evil-refresh-undo-step first-only)
     (unless continue
       (undo-boundary))
     (setq evil-undo-list-pointer nil)))
 
-(defun evil-refresh-undo-step ()
+(defun evil-refresh-undo-step (&optional first-only)
   "Refresh `buffer-undo-list' entries for current undo step.
-Undo boundaries until `evil-undo-list-pointer' are removed
-to make the entries undoable as a single action.
-See `evil-start-undo-step'."
+Undo boundaries until `evil-undo-list-pointer' are removed to
+make the entries undoable as a single action. If FIRST-ONLY is
+non-nil only the first boundary is removed.  See
+`evil-start-undo-step'."
   (when evil-undo-list-pointer
-    (setq buffer-undo-list
-          (evil-filter-list #'null buffer-undo-list
-                            evil-undo-list-pointer)
-          evil-undo-list-pointer (or buffer-undo-list t))))
+    (if first-only
+        (let ((bnd buffer-undo-list)
+              (cur buffer-undo-list))
+          (while (and cur (not (eq cur evil-undo-list-pointer)))
+            (when (null (cadr cur))
+              (setq bnd cur))
+            (pop cur))
+          ;; found the first boundary, remove it
+          (when (and bnd (null (cadr bnd)))
+            (setcdr bnd (cdr (cdr bnd)))))
+      (setq buffer-undo-list
+            (evil-filter-list #'null buffer-undo-list evil-undo-list-pointer)))
+    (setq evil-undo-list-pointer (or buffer-undo-list t))))
 
 (defmacro evil-with-undo (&rest body)
   "Execute BODY with enabled undo.

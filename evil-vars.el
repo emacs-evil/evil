@@ -257,9 +257,18 @@ This should be a regexp set without the enclosing []."
   :group 'evil)
 (make-variable-buffer-local 'evil-bigword)
 
-(defcustom evil-want-fine-undo nil
-  "Whether actions like \"cw\" are undone in several steps."
-  :type 'boolean
+(defcustom evil-want-fine-undo 'fine
+  "Whether actions like \"cw\" are undone in several steps.
+There are three possible choices. \"No\" means all chances made
+during insert state including a possible delete after a change
+operation are collected in a single undo step. If \"Fine\" is
+selected, insertion commands create several undo steps as Emacs
+would do and the delete after a change operation is merged with
+the first undo step of the insertion. \"Very fine\" is the same
+but the delete operation is a separate undo step."
+  :type '(radio (const :tag "No" :value nil)
+                (const :tag "Fine" :value fine)
+                (const :tag "Very fine" :value t))
   :group 'evil)
 
 (defcustom evil-regexp-search t

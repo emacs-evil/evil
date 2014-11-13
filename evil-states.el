@@ -81,14 +81,14 @@ If the region is activated, enter Visual state."
   (cond
    ((evil-insert-state-p)
     (add-hook 'pre-command-hook #'evil-insert-repeat-hook)
-    (unless evil-want-fine-undo
+    (unless (eq evil-want-fine-undo t)
       (evil-start-undo-step t)))
    (t
     (remove-hook 'pre-command-hook #'evil-insert-repeat-hook)
     (setq evil-insert-repeat-info evil-repeat-info)
     (evil-set-marker ?^ nil t)
-    (unless evil-want-fine-undo
-      (evil-end-undo-step t))
+    (unless (eq evil-want-fine-undo t)
+      (evil-end-undo-step t (eq evil-want-fine-undo 'fine)))
     (when evil-move-cursor-back
       (when (or (evil-normal-state-p evil-next-state)
                 (evil-motion-state-p evil-next-state))
@@ -819,12 +819,12 @@ CORNER defaults to `upper-left'."
    ((evil-replace-state-p)
     (overwrite-mode 1)
     (add-hook 'pre-command-hook #'evil-replace-pre-command nil t)
-    (unless evil-want-fine-undo
+    (unless (eq evil-want-fine-undo t)
       (evil-start-undo-step t)))
    (t
     (overwrite-mode -1)
     (remove-hook 'pre-command-hook #'evil-replace-pre-command t)
-    (unless evil-want-fine-undo
+    (unless (eq evil-want-fine-undo t)
       (evil-end-undo-step t))
     (when evil-move-cursor-back
       (evil-move-cursor-back))))
