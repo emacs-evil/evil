@@ -379,13 +379,6 @@
 (when evil-want-C-w-in-emacs-state
   (define-key evil-emacs-state-map "\C-w" 'evil-window-map))
 
-;;; Minibuffer
-
-(define-key minibuffer-local-map "\C-p" 'evil-complete-next)
-(define-key minibuffer-local-map "\C-n" 'evil-complete-previous)
-(define-key minibuffer-local-map "\C-x\C-p" 'evil-complete-next-line)
-(define-key minibuffer-local-map "\C-x\C-n" 'evil-complete-previous-line)
-
 ;;; Mouse
 (define-key evil-motion-state-map [down-mouse-1] 'evil-mouse-drag-region)
 (define-key evil-visual-state-map [mouse-2] 'evil-exit-visual-and-repeat)
