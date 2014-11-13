@@ -2957,7 +2957,6 @@ Adds an undo boundary unless CONTINUE is specified."
     (evil-refresh-undo-step)
     (unless continue
       (undo-boundary))
-    (remove-hook 'post-command-hook #'evil-refresh-undo-step t)
     (setq evil-undo-list-pointer nil)))
 
 (defun evil-refresh-undo-step ()
