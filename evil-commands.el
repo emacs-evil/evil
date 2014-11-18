@@ -264,91 +264,87 @@ By default the first line."
   :type line
   (evil-goto-line (or count 1)))
 
-(evil-define-motion evil-move-empty-lines (count)
-  "Move to the next or previous empty line, repeated COUNT times."
-  :type exclusive
-  (evil-motion-loop (var (or count 1))
-    (cond
-     ((< var 0)
-      (goto-char
-       (or (save-excursion
-             (unless (bobp)
-               (backward-char)
-               (re-search-backward "^$" nil t)))
-           (point))))
-     (t
-      (let ((orig (point)))
-        (when (re-search-forward "^$" nil t)
-          (if (eobp)
-              (goto-char orig)
-            (forward-char))))))))
-
-(evil-define-union-move evil-move-word (count)
-  "Move by words."
-  (evil-move-chars "^ \t\r\n[:word:]" count)
-  (let ((word-separating-categories evil-cjk-word-separating-categories)
-        (word-combining-categories evil-cjk-word-combining-categories))
-    (evil-forward-word count))
-  (evil-move-empty-lines count))
-
-(evil-define-union-move evil-move-WORD (count)
-  "Move by WORDs."
-  (evil-move-chars evil-bigword count)
-  (evil-move-empty-lines count))
-
 (evil-define-motion evil-forward-word-begin (count &optional bigword)
   "Move the cursor to the beginning of the COUNT-th next word.
-If BIGWORD is non-nil, move by WORDS."
+If BIGWORD is non-nil, move by WORDS.
+
+If this command is called in operator-pending state it behaves
+differently. If point reaches the beginning of a word on a new
+line point is moved back to the end of the previous line.
+
+If called after a change operator, i.e. cw or cW,
+`evil-want-change-word-to-end' is non-nil and point is on a word,
+then both behave like ce or cE.
+
+If point is at the end of the buffer and cannot be moved signal
+'end-of-buffer is raised.
+"
   :type exclusive
-  (let ((move (if bigword #'evil-move-WORD #'evil-move-word))
-        (orig (point)))
-    (prog1 (if (and evil-want-change-word-to-end
-                    (not (looking-at "[[:space:]]"))
-                    (eq evil-this-operator #'evil-change))
-               (evil-move-end count move)
-             (evil-move-beginning count move))
-      ;; if we reached the beginning of a word on a new line in
-      ;; Operator-Pending state, go back to the end of the previous
-      ;; line
-      (when (and (evil-operator-state-p)
-                 (> (line-beginning-position) orig)
-                 (looking-back "^[[:space:]]*" (line-beginning-position)))
-        ;; move cursor back as long as the line contains only
-        ;; whitespaces and is non-empty
-        (evil-move-end-of-line 0)
-        ;; skip non-empty lines containing only spaces
-        (while (and (looking-back "^[[:space:]]+$" (line-beginning-position))
-                    (not (<= (line-beginning-position) orig)))
-          (evil-move-end-of-line 0))
-        ;; but if the previous line is empty, delete this line
-        (when (bolp) (forward-char))))))
+  (let ((thing (if bigword 'evil-WORD 'evil-word))
+        (orig (point))
+        (count (or count 1)))
+    (evil-signal-at-eob)
+    (cond
+     ;; default motion, beginning of next word
+     ((not (evil-operator-state-p))
+      (evil-forward-beginning thing count))
+     ;; the evil-change operator, maybe behave like ce or cE
+     ((and evil-want-change-word-to-end
+           (eq evil-this-operator #'evil-change)
+           (< orig (or (cdr-safe (bounds-of-thing-at-point thing)) orig)))
+      ;; forward-thing moves point to the correct position because
+      ;; this is an exclusive motion
+      (forward-thing thing count))
+     ;; operator state
+     (t
+      (prog1 (evil-forward-beginning thing count)
+        ;; if we reached the beginning of a word on a new line in
+        ;; Operator-Pending state, go back to the end of the previous
+        ;; line
+        (when (and (> (line-beginning-position) orig)
+                   (looking-back "^[[:space:]]*" (line-beginning-position)))
+          ;; move cursor back as long as the line contains only
+          ;; whitespaces and is non-empty
+          (evil-move-end-of-line 0)
+          ;; skip non-empty lines containing only spaces
+          (while (and (looking-back "^[[:space:]]+$" (line-beginning-position))
+                      (not (<= (line-beginning-position) orig)))
+            (evil-move-end-of-line 0))
+          ;; but if the previous line is empty, delete this line
+          (when (bolp) (forward-char))))))))
 
 (evil-define-motion evil-forward-word-end (count &optional bigword)
   "Move the cursor to the end of the COUNT-th next word.
 If BIGWORD is non-nil, move by WORDS."
   :type inclusive
-  (let ((move (if bigword #'evil-move-WORD #'evil-move-word)))
-    ;; if changing a one-letter word, don't move point to the
-    ;; next word (which would change two words)
-    (if (and (evil-operator-state-p)
-             (looking-at "[[:word:]]"))
-        (prog1 (evil-move-end count move)
-          (unless (bobp) (backward-char)))
-      (evil-move-end count move nil t))))
+  (let ((thing (if bigword 'evil-WORD 'evil-word)))
+    (evil-signal-at-eob)
+    ;; Evil special behaviour: e or E on a one-character word in
+    ;; operator state does not move point
+    (unless (and (evil-operator-state-p)
+                 (= 1 (or count 1))
+                 (let ((bnd (bounds-of-thing-at-point thing)))
+                   (and bnd
+                        (= (car bnd) (point))
+                        (= (cdr bnd) (1+ (point)))))
+                 (looking-at "[[:word:]]"))
+      (evil-forward-end thing count))))
 
 (evil-define-motion evil-backward-word-begin (count &optional bigword)
   "Move the cursor to the beginning of the COUNT-th previous word.
 If BIGWORD is non-nil, move by WORDS."
   :type exclusive
-  (let ((move (if bigword #'evil-move-WORD #'evil-move-word)))
-    (evil-move-beginning (- (or count 1)) move)))
+  (let ((thing (if bigword #'evil-WORD #'evil-word)))
+    (evil-signal-at-bob)
+    (evil-backward-beginning thing count)))
 
 (evil-define-motion evil-backward-word-end (count &optional bigword)
   "Move the cursor to the end of the COUNT-th previous word.
 If BIGWORD is non-nil, move by WORDS."
   :type inclusive
-  (let ((move (if bigword #'evil-move-WORD #'evil-move-word)))
-    (evil-move-end (- (or count 1)) move nil t)))
+  (let ((thing (if bigword #'evil-WORD #'evil-word)))
+    (evil-signal-at-bob)
+    (evil-backward-end thing count)))
 
 (evil-define-motion evil-forward-WORD-begin (count)
   "Move the cursor to the beginning of the COUNT-th next WORD."
@@ -375,78 +371,70 @@ If BIGWORD is non-nil, move by WORDS."
   "Move the cursor to the beginning of the COUNT-th next section."
   :jump t
   :type exclusive
-  (beginning-of-defun (- (or count 1))))
+  (evil-signal-at-eob)
+  (evil-forward-beginning 'evil-defun count))
 
 (evil-define-motion evil-forward-section-end (count)
   "Move the cursor to the end of the COUNT-th next section."
   :jump t
   :type inclusive
-  (end-of-defun (or count 1)))
+  (evil-signal-at-eob)
+  (evil-forward-end 'evil-defun count)
+  (unless (eobp) (forward-line)))
 
 (evil-define-motion evil-backward-section-begin (count)
   "Move the cursor to the beginning of the COUNT-th previous section."
   :jump t
   :type exclusive
-  (beginning-of-defun (or count 1)))
+  (evil-signal-at-bob)
+  (evil-backward-beginning 'evil-defun count))
 
 (evil-define-motion evil-backward-section-end (count)
   "Move the cursor to the end of the COUNT-th previous section."
   :jump t
   :type inclusive
-  (end-of-defun (- (or count 1))))
+  (evil-signal-at-bob)
+  (end-of-line -1)
+  (evil-backward-end 'evil-defun count)
+  (unless (eobp) (forward-line)))
 
-(evil-define-motion evil-forward-sentence (count)
+(evil-define-motion evil-forward-sentence-begin (count)
   "Move to the next COUNT-th beginning of a sentence or end of a paragraph."
   :jump t
   :type exclusive
-  (let ((count (or count 1))
-        beg-sentence end-paragraph)
-    (when (evil-eobp)
-      (signal 'end-of-buffer nil))
-    (evil-motion-loop (nil count)
-      (unless (eobp)
-        (setq beg-sentence
-              (save-excursion
-                (and (zerop (evil-move-beginning 1 #'evil-move-sentence))
-                     (point)))
-              end-paragraph
-              (save-excursion
-                (forward-paragraph)
-                (point)))
-        (evil-goto-min beg-sentence end-paragraph)))))
+  (evil-signal-at-eob)
+  (evil-forward-nearest count
+                        #'(lambda (cnt)
+                            (evil-forward-beginning 'evil-sentence))
+                        #'evil-forward-paragraph))
 
-(evil-define-motion evil-backward-sentence (count)
+(evil-define-motion evil-backward-sentence-begin (count)
   "Move to the previous COUNT-th beginning of a sentence or paragraph."
   :jump t
   :type exclusive
-  (let ((count (or count 1))
-        beg-sentence beg-paragraph)
-    (when (bobp)
-      (signal 'beginning-of-buffer nil))
-    (evil-motion-loop (nil count)
-      (unless (bobp)
-        (setq beg-sentence
-              (save-excursion
-                (and (zerop (evil-move-beginning -1 #'evil-move-sentence))
-                     (point)))
-              beg-paragraph
-              (save-excursion
-                (backward-paragraph)
-                (point)))
-        (evil-goto-max beg-sentence beg-paragraph)))))
+  (evil-signal-at-bob)
+  (evil-forward-nearest (- (or count 1))
+                        #'(lambda (cnt)
+                            (evil-backward-beginning 'evil-sentence))
+                        #'(lambda (cnt)
+                            (evil-backward-paragraph))))
 
 (evil-define-motion evil-forward-paragraph (count)
   "Move to the end of the COUNT-th next paragraph."
   :jump t
   :type exclusive
-  (evil-move-end count #'forward-paragraph #'backward-paragraph))
+  (evil-signal-at-eob)
+  (evil-forward-end 'evil-paragraph count)
+  (unless (eobp) (forward-line)))
 
 (evil-define-motion evil-backward-paragraph (count)
   "Move to the beginning of the COUNT-th previous paragraph."
   :jump t
   :type exclusive
-  (evil-move-beginning (- (or count 1))
-                       #'forward-paragraph #'backward-paragraph))
+  (evil-signal-at-bob)
+  (unless (eobp) (forward-line))
+  (evil-backward-beginning 'evil-paragraph count)
+  (unless (bobp) (forward-line -1)))
 
 (evil-define-motion evil-jump-item (count)
   "Find the next item in this line after or under the cursor
@@ -513,13 +501,17 @@ and jump to the corresponding one."
        ((not (or open-pair close-pair))
         ;; nothing found, check if we are inside a string
         (let ((pnt (point))
-              (state (syntax-ppss (point))))
-          (if (not (evil-in-string-p))
+              (state (syntax-ppss (point)))
+              (bnd (bounds-of-thing-at-point 'evil-string)))
+          (if (not (and bnd (< (point) (cdr bnd))))
               ;; no, then we really failed
               (user-error "No matching item found on the current line")
             ;; yes, go to the end of the string and try again
-            (let ((endstr (evil-string-end (point) (line-end-position))))
-              (when (or (evil-in-string-p endstr) ; not at end of string
+            (let ((endstr (cdr bnd)))
+              (when (or (save-excursion
+                          (goto-char endstr)
+                          (let ((b (bounds-of-thing-at-point 'evil-string)))
+                            (and b (< (point) (cdr b))))) ; not at end of string
                         (condition-case nil
                             (progn
                               (goto-char endstr)
@@ -535,38 +527,26 @@ and jump to the corresponding one."
 (evil-define-motion evil-previous-open-paren (count)
   "Go to [count] previous unmatched '('."
   :type exclusive
-  (let ((range (save-excursion
-                 (backward-char)
-                 (evil-paren-range count nil nil nil ?\( ?\)))))
-    (when range
-      (goto-char (evil-range-beginning range)))))
+  (evil-up-paren ?( ?) (- (or count 1))))
 
 (evil-define-motion evil-next-close-paren (count)
   "Go to [count] next unmatched ')'."
   :type exclusive
-  (let ((range (save-excursion
-                 (forward-char)
-                 (evil-paren-range count nil nil nil ?\( ?\)))))
-    (when range
-      (goto-char (1- (evil-range-end range))))))
+  (forward-char)
+  (evil-up-paren ?( ?) (or count 1))
+  (backward-char))
 
 (evil-define-motion evil-previous-open-brace (count)
   "Go to [count] previous unmatched '{'."
   :type exclusive
-  (let ((range (save-excursion
-                 (backward-char)
-                 (evil-paren-range count nil nil nil ?\{ ?\}))))
-    (when range
-      (goto-char (evil-range-beginning range)))))
+  (evil-up-paren ?{ ?} (- (or count 1))))
 
 (evil-define-motion evil-next-close-brace (count)
   "Go to [count] next unmatched '}'."
   :type exclusive
-  (let ((range (save-excursion
-                 (forward-char)
-                 (evil-paren-range count nil nil nil ?\{ ?\}))))
-    (when range
-      (goto-char (1- (evil-range-end range))))))
+  (forward-char)
+  (evil-up-paren ?{ ?} (or count 1))
+  (backward-char))
 
 (evil-define-motion evil-find-char (count char)
   "Move to the next COUNT'th occurrence of CHAR."
@@ -1039,127 +1019,125 @@ or line COUNT to the top of the window."
 
 (evil-define-text-object evil-a-word (count &optional beg end type)
   "Select a word."
-  (evil-an-object-range count beg end type #'evil-move-word))
+  (evil-select-an-object 'evil-word beg end type count))
 
 (evil-define-text-object evil-inner-word (count &optional beg end type)
   "Select inner word."
-  (evil-inner-object-range count beg end type #'evil-move-word))
+  (evil-select-inner-object 'evil-word beg end type count))
 
 (evil-define-text-object evil-a-WORD (count &optional beg end type)
   "Select a WORD."
-  (evil-an-object-range count beg end type #'evil-move-WORD))
+  (evil-select-an-object 'evil-WORD beg end type count))
 
 (evil-define-text-object evil-inner-WORD (count &optional beg end type)
   "Select inner WORD."
-  (evil-inner-object-range count beg end type #'evil-move-WORD))
+  (evil-select-inner-object 'evil-WORD beg end type count))
+
+(evil-define-text-object evil-a-symbol (count &optional beg end type)
+  "Select a symbol."
+  (evil-select-an-object 'evil-symbol beg end type count))
+
+(evil-define-text-object evil-inner-symbol (count &optional beg end type)
+  "Select inner symbol."
+  (evil-select-inner-object 'evil-symbol beg end type count))
 
 (evil-define-text-object evil-a-sentence (count &optional beg end type)
   "Select a sentence."
-  (evil-an-object-range count beg end type #'evil-move-sentence nil nil t))
+  (evil-select-an-object 'evil-sentence beg end type count))
 
 (evil-define-text-object evil-inner-sentence (count &optional beg end type)
   "Select inner sentence."
-  (evil-inner-object-range count beg end type #'evil-move-sentence))
+  (evil-select-inner-object 'evil-sentence beg end type count))
 
 (evil-define-text-object evil-a-paragraph (count &optional beg end type)
   "Select a paragraph."
   :type line
-  (evil-an-object-range count beg end type #'evil-move-paragraph nil nil t))
+  (evil-select-an-object 'evil-paragraph beg end type count))
 
 (evil-define-text-object evil-inner-paragraph (count &optional beg end type)
   "Select inner paragraph."
   :type line
-  (evil-inner-object-range count beg end type #'evil-move-paragraph))
+  (evil-select-inner-object 'evil-paragraph beg end type count t))
 
 (evil-define-text-object evil-a-paren (count &optional beg end type)
   "Select a parenthesis."
   :extend-selection nil
-  (evil-paren-range count beg end type ?\( ?\)))
+  (evil-select-paren ?( ?) beg end type count t))
 
 (evil-define-text-object evil-inner-paren (count &optional beg end type)
   "Select inner parenthesis."
   :extend-selection nil
-  (evil-paren-range count beg end type ?\( ?\) t))
+  (evil-select-paren ?( ?) beg end type count))
 
 (evil-define-text-object evil-a-bracket (count &optional beg end type)
   "Select a square bracket."
   :extend-selection nil
-  (evil-paren-range count beg end type ?\[ ?\]))
+  (evil-select-paren ?\[ ?\] beg end type count t))
 
 (evil-define-text-object evil-inner-bracket (count &optional beg end type)
   "Select inner square bracket."
   :extend-selection nil
-  (evil-paren-range count beg end type ?\[ ?\] t))
+  (evil-select-paren ?\[ ?\] beg end type count))
 
 (evil-define-text-object evil-a-curly (count &optional beg end type)
   "Select a curly bracket (\"brace\")."
   :extend-selection nil
-  (evil-paren-range count beg end type ?{ ?}))
+  (evil-select-paren ?{ ?} beg end type count t))
 
 (evil-define-text-object evil-inner-curly (count &optional beg end type)
   "Select inner curly bracket (\"brace\")."
   :extend-selection nil
-  (evil-paren-range count beg end type ?{ ?} t))
+  (evil-select-paren ?{ ?} beg end type count))
 
 (evil-define-text-object evil-an-angle (count &optional beg end type)
   "Select an angle bracket."
   :extend-selection nil
-  (evil-paren-range count beg end type ?< ?>))
+  (evil-select-paren ?< ?> beg end type count t))
 
 (evil-define-text-object evil-inner-angle (count &optional beg end type)
   "Select inner angle bracket."
   :extend-selection nil
-  (evil-paren-range count beg end type ?< ?> t))
+  (evil-select-paren ?< ?> beg end type count))
 
 (evil-define-text-object evil-a-single-quote (count &optional beg end type)
   "Select a single-quoted expression."
   :extend-selection t
-  (evil-quote-range count beg end type ?' ?'))
+  (evil-select-quote ?' beg end type count t))
 
 (evil-define-text-object evil-inner-single-quote (count &optional beg end type)
   "Select inner single-quoted expression."
   :extend-selection nil
-  (evil-quote-range count beg end type ?' ?' t))
+  (evil-select-quote ?' beg end type count))
 
 (evil-define-text-object evil-a-double-quote (count &optional beg end type)
   "Select a double-quoted expression."
   :extend-selection t
-  (evil-quote-range count beg end type ?\" ?\"))
+  (evil-select-quote ?\" beg end type count t))
 
 (evil-define-text-object evil-inner-double-quote (count &optional beg end type)
   "Select inner double-quoted expression."
   :extend-selection nil
-  (evil-quote-range count beg end type ?\" ?\" t))
+  (evil-select-quote ?\" beg end type count))
 
 (evil-define-text-object evil-a-back-quote (count &optional beg end type)
   "Select a back-quoted expression."
   :extend-selection t
-  (evil-quote-range count beg end type ?\` ?\`))
+  (evil-select-quote ?\` beg end type count t))
 
 (evil-define-text-object evil-inner-back-quote (count &optional beg end type)
   "Select inner back-quoted expression."
   :extend-selection nil
-  (evil-quote-range count beg end type ?\` ?\` t))
+  (evil-select-quote ?\` beg end type count))
 
 (evil-define-text-object evil-a-tag (count &optional beg end type)
   "Select a tag block."
   :extend-selection nil
-  (evil-xml-range count beg end type))
+  (evil-select-xml-tag beg end type count t))
 
 (evil-define-text-object evil-inner-tag (count &optional beg end type)
   "Select inner tag block."
   :extend-selection nil
-  (evil-xml-range count beg end type t))
-
-(evil-define-text-object evil-a-symbol (count &optional beg end type)
-  "Select a symbol."
-  (require 'thingatpt)
-  (evil-an-object-range count beg end type #'forward-symbol))
-
-(evil-define-text-object evil-inner-symbol (count &optional beg end type)
-  "Select inner symbol."
-  (require 'thingatpt)
-  (evil-inner-object-range count beg end type #'forward-symbol))
+  (evil-select-xml-tag beg end type count))
 
 (evil-define-text-object evil-next-match (count &optional beg end type)
   "Select next match."

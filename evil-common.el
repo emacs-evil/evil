@@ -27,6 +27,8 @@
 (require 'evil-vars)
 (require 'evil-digraphs)
 (require 'rect)
+(require 'thingatpt)
+(eval-when-compile (require 'cl))
 
 ;;; Code:
 
@@ -1087,6 +1089,8 @@ RESULT specifies a variable for storing this value.
          (setq ,result ,var))
        ,var)))
 
+;;; Motions
+
 (defmacro evil-motion-loop (spec &rest body)
   "Loop a certain number of times.
 Evaluate BODY repeatedly COUNT times with VAR bound to 1 or -1,
@@ -1127,6 +1131,29 @@ the loop immediately quits. See also `evil-loop'.
         (when (= p (point))
           (signal (car err) (cdr err)))))))
 
+(defun evil-signal-at-bob ()
+  "Signals 'beginning-of-buffer if `point' is at bob.
+This macro should be used in backward motions. If `point' is at
+to bob so that no further backward motion is possible the error
+'end-of-buffer is raised."
+  (when (bobp) (signal 'beginning-of-buffer nil)))
+
+(defun evil-signal-at-eob ()
+  "Signals 'end-of-buffer if `point' is at eob.
+This macro should be used in forward motions. If `point' is close
+to eob so that no further forward motion is possible the error
+'end-of-buffer is raised. This is the case if `point' is at
+`point-max' or if is one position before `point-max',
+`evil-move-cursor-back' is non-nil and `point' is not at the end
+of a line. The latter is necessary because `point' cannot be
+moved to `point-max' if `evil-move-cursor-back' is non-nil and
+the last line in the buffer is not empty."
+  (when (or (eobp)
+            (and (not (eolp))
+                 evil-move-cursor-back
+                 (save-excursion (forward-char) (eobp))))
+    (signal 'end-of-buffer nil)))
+
 (defmacro evil-with-hproject-point-on-window (&rest body)
   "Project point after BODY to current window.
 If point is on a position left or right of the current window
@@ -1166,6 +1193,120 @@ See also `evil-goto-min'."
                          positions))
     (goto-char (apply #'max positions))))
 
+(defun evil-forward-not-thing (thing &optional count)
+  "Move point to the end or beginning of the complement of THING."
+  (evil-motion-loop (dir (or count 1))
+    (let (bnd)
+      (cond
+       ((> dir 0)
+        (while (and (setq bnd (bounds-of-thing-at-point thing))
+                    (< (point) (cdr bnd)))
+          (goto-char (cdr bnd)))
+        ;; no thing at (point)
+        (goto-char
+         (if (and (zerop (forward-thing thing))
+                  (setq bnd (bounds-of-thing-at-point thing))
+                  (< (point) (cdr bnd)))
+             (car bnd)
+           (point-max))))
+       (t
+        (while (and (not (bobp))
+                    (or (backward-char) t)
+                    (setq bnd (bounds-of-thing-at-point thing))
+                    (< (point) (cdr bnd)))
+          (goto-char (car bnd)))
+        ;; either bob or no thing at point
+        (goto-char
+         (if (and (not (bobp))
+                  (zerop (forward-thing thing -1))
+                  (setq bnd (bounds-of-thing-at-point thing)))
+             (cdr bnd)
+           (point-min))))))))
+
+(defun evil-bounds-of-not-thing-at-point (thing &optional which)
+  "Returns the bounds of a complement of THING at point.
+If there is a THING at point nil is returned.  Otherwise if WHICH
+is nil or 0 a cons cell (BEG . END) is returned. If WHICH is
+negative the beginning is returned. If WHICH is positive the END
+is returned."
+  (let ((pnt (point)))
+    (let ((beg (save-excursion
+                 (and (zerop (forward-thing thing -1))
+                      (forward-thing thing))
+                 (if (> (point) pnt) (point-min) (point))))
+          (end (save-excursion
+                 (and (zerop (forward-thing thing))
+                      (forward-thing thing -1))
+                 (if (< (point) pnt) (point-max) (point)))))
+      (when (and (<= beg (point)) (<= (point) end) (< beg end))
+        (cond
+         ((or (not which) (zerop which)) (cons beg end))
+         ((< which 0) beg)
+         ((> which 0) end))))))
+
+(defun evil-forward-nearest (count &rest forwards)
+  "Moves point forward to the first of several motions.
+FORWARDS is a list of forward motion functions (i.e. each moves
+point forward to the next end of a text object (if passed a +1)
+or backward to the preceeding beginning of a text object (if
+passed a -1)). This function calls each of these functions once
+and moves point to the nearest of the resulting positions. If
+COUNT is positive point is moved forward COUNT times, if negative
+point is moved backward -COUNT times."
+  (evil-motion-loop (dir (or count 1))
+    (let ((pnt (point))
+          (nxt (if (> dir 0) (point-max) (point-min))))
+      (dolist (fwd forwards)
+        (goto-char pnt)
+        (condition-case nil
+            (evil-with-restriction
+                (and (< dir 0)
+                     (save-excursion
+                       (goto-char nxt)
+                       (line-beginning-position 0)))
+                (and (> dir 0)
+                     (save-excursion
+                       (goto-char nxt)
+                       (line-end-position 2)))
+              (if (and (zerop (funcall fwd dir))
+                       (/= (point) pnt)
+                       (or (and (> dir 0) (< (point) nxt))
+                           (and (< dir 0) (> (point) nxt))))
+                  (setq nxt (point))))
+          (error)))
+      (goto-char nxt))))
+
+(defun bounds-of-evil-string-at-point (&optional state)
+  "Return the bounds of a string at point.
+If STATE is given it used a parsing state at point."
+  (save-excursion
+    (let ((state (or state (syntax-ppss))))
+      (and (nth 3 state)
+           (cons (nth 8 state)
+                 (and (parse-partial-sexp (point)
+                                          (point-max)
+                                          nil
+                                          nil
+                                          state
+                                          'syntax-table)
+                      (point)))))))
+(put 'evil-string 'bounds-of-thing-at-point #'bounds-of-evil-string-at-point)
+
+(defun bounds-of-evil-comment-at-point ()
+  "Return the bounds of a string at point."
+  (save-excursion
+    (let ((state (syntax-ppss)))
+      (and (nth 4 state)
+           (cons (nth 8 state)
+                 (and (parse-partial-sexp (point)
+                                          (point-max)
+                                          nil
+                                          nil
+                                          state
+                                          'syntax-table)
+                      (point)))))))
+(put 'evil-comment 'bounds-of-thing-at-point #'bounds-of-evil-comment-at-point)
+
 ;; The purpose of this function is the provide line motions which
 ;; preserve the column. This is how `previous-line' and `next-line'
 ;; work, but unfortunately the behaviour is hard-coded: if and only if
@@ -1202,6 +1343,429 @@ Signals an error at buffer boundaries unless NOERROR is non-nil."
              ;; Maybe we should just `ding'?
              (signal (car err) (cdr err))))))))))
 
+(defun evil-forward-chars (chars &optional count)
+  "Move point to the end or beginning of a sequence of CHARS.
+CHARS is a character set as inside [...] in a regular expression."
+  (let ((notchars (if (= (aref chars 0) ?^)
+                      (substring chars 1)
+                    (concat "^" chars))))
+    (evil-motion-loop (dir (or count 1))
+      (cond
+       ((< dir 0)
+        (skip-chars-backward notchars)
+        (skip-chars-backward chars))
+       (t
+        (skip-chars-forward notchars)
+        (skip-chars-forward chars))))))
+
+(defun evil-up-block (beg end &optional count)
+  "Move point to the end or beginning of text enclosed by BEG and END.
+BEG and END should be regular expressions matching the opening
+and closing delimiters, respectively. If COUNT is greater than
+zero point is moved forward otherwise it is moved
+backwards. Whenever an opening delimiter is found the COUNT is
+increased by one, if a closing delimiter is found the COUNT is
+decreased by one. The motion stops when COUNT reaches zero. The
+match-data reflects the last successful match (that caused COUNT
+to reach zero). The behaviour of this functions is similar to
+`up-list'."
+  (let* ((count (or count 1))
+         (dir (if (> count 0) +1 -1)))
+    (catch 'done
+      (while (not (zerop count))
+        (let* ((cl (save-excursion
+                     (and (re-search-forward end nil t dir)
+                          (point))))
+               (match (match-data t))
+               (op (save-excursion
+                     (and (re-search-forward beg cl t dir)
+                          (point)))))
+          (cond
+           ((and (not op) (not cl))
+            (goto-char (if (> dir 0) (point-max) (point-min)))
+            (set-match-data nil)
+            (throw 'done count))
+           ((> dir 0)
+            (if cl
+                (progn
+                  (setq count (1- count))
+                  (if (zerop count) (set-match-data match))
+                  (goto-char cl))
+              (setq count (1+ count))
+              (goto-char op)))
+           ((< dir 0)
+            (if op
+                (progn
+                  (setq count (1+ count))
+                  (goto-char op))
+              (setq count (1- count))
+              (if (zerop count) (set-match-data match))
+              (goto-char cl))))))
+      0)))
+
+(defun evil-up-paren (open close &optional count)
+  "Move point to the end or beginning of balanced parentheses.
+OPEN and CLOSE should be characters identifying the opening and
+closing parenthesis, respectively. If COUNT is greater than zero
+point is moved forward otherwise it is moved backwards. Whenever
+an opening delimiter is found the COUNT is increased by one, if a
+closing delimiter is found the COUNT is decreased by one. The
+motion stops when COUNT reaches zero. The match-data reflects the
+last successful match (that caused COUNT to reach zero)."
+  ;; Always use the default `forward-sexp-function'. This is important
+  ;; for modes that use a custom one like `python-mode'.
+  ;; (addresses #364)
+  (let (forward-sexp-function)
+    (with-syntax-table (copy-syntax-table (syntax-table))
+      (modify-syntax-entry open (format "(%c" close))
+      (modify-syntax-entry close (format ")%c" open))
+      (let ((rest (evil-motion-loop (dir count)
+                    (let ((pnt (point)))
+                      (condition-case nil
+                          (cond
+                           ((> dir 0)
+                            (while (progn
+                                     (up-list dir)
+                                     (/= (char-before) close))))
+                           (t
+                            (while (progn
+                                     (up-list dir)
+                                     (/= (char-after) open)))))
+                        (error (goto-char pnt)))))))
+        (cond
+         ((= rest count) (set-match-data nil))
+         ((> count 0) (set-match-data (list (1- (point)) (point))))
+         (t (set-match-data (list (point) (1+ (point))))))
+        rest))))
+
+(defun evil-up-xml-tag (&optional count)
+  "Move point to the end or beginning of balanced xml tags.
+OPEN and CLOSE should be characters identifying the opening and
+closing parenthesis, respectively. If COUNT is greater than zero
+point is moved forward otherwise it is moved backwards. Whenever
+an opening delimiter is found the COUNT is increased by one, if a
+closing delimiter is found the COUNT is decreased by one. The
+motion stops when COUNT reaches zero. The match-data reflects the
+last successful match (that caused COUNT to reach zero)."
+  (let* ((dir (if (> (or count 1) 0) +1 -1))
+         (count (abs (or count 1)))
+         (match (> count 0))
+         (op (if (> dir 0) 1 2))
+         (cl (if (> dir 0) 2 1))
+         (orig (point))
+         pnt tags match)
+    (catch 'done
+      (while (> count 0)
+        ;; find the previous opening tag
+        (while
+            (and (setq match
+                       (re-search-forward
+                        "<\\([^/ >]+\\)[^/>]*?>\\|</\\([^>]+?\\)>"
+                        nil t dir))
+                 (cond
+                  ((match-beginning op)
+                   (push (match-string op) tags))
+                  ((null tags) nil) ; free closing tag
+                  ((and (< dir 0)
+                        (string= (car tags) (match-string cl)))
+                   ;; in backward direction we only accept matching
+                   ;; tags. If the current tag is a free opener
+                   ;; without matching closing tag, the subsequents
+                   ;; test will make us ignore this tag
+                   (pop tags))
+                  ((and (> dir 0))
+                   ;; non matching openers are considered free openers
+                   (while (and tags
+                               (not (string= (car tags)
+                                             (match-string cl))))
+                     (pop tags))
+                   (pop tags)))))
+        (unless (setq match (and match (match-data t)))
+          (setq match nil)
+          (throw 'done count))
+        ;; found closing tag, look for corresponding opening tag
+        (cond
+         ((> dir 0)
+          (setq pnt (match-end 0))
+          (goto-char (match-beginning 0)))
+         (t
+          (setq pnt (match-beginning 0))
+          (goto-char (match-end 0))))
+        (let* ((tag (match-string cl))
+               (refwd (concat "<\\(/\\)?"
+                              (regexp-quote tag)
+                              "\\(?:>\\| [^/>]*?>\\)"))
+               (cnt 1))
+          (while (and (> cnt 0) (re-search-backward refwd nil t dir))
+            (setq cnt (+ cnt (if (match-beginning 1) dir (- dir)))))
+          (if (zerop cnt) (setq count (1- count) tags nil))
+          (goto-char pnt)))
+      (if (> count 0)
+          (set-match-data nil)
+        (set-match-data match)
+        (goto-char (if (> dir 0) (match-end 0) (match-beginning 0)))))
+    ;; if not found, set to point-max/point-min
+    (unless (zerop count)
+      (set-match-data nil)
+      (goto-char (if (> dir 0) (point-max) (point-min)))
+      (if (/= (point) orig) (setq count (1- count))))
+    (* dir count)))
+
+(defun evil-forward-quote (quote &optional count)
+  "Move point to the end or beginning of a string.
+QUOTE is the character delimiting the string. If COUNT is greater
+than zero point is moved forward otherwise it is moved
+backwards."
+  (let (reset-parser)
+    (with-syntax-table (copy-syntax-table (syntax-table))
+      (unless (= (char-syntax quote) ?\")
+        (modify-syntax-entry quote "\"")
+        (setq reset-parser t))
+      ;; global parser state is out of state, use local one
+      (let* ((pnt (point))
+             (state (progn (beginning-of-defun)
+                           (parse-partial-sexp (point) pnt)))
+             (bnd (bounds-of-evil-string-at-point state)))
+        (when (and bnd (< (point) (cdr bnd)))
+          ;; currently within a string
+          (if (> count 0)
+              (progn
+                (goto-char (cdr bnd))
+                (setq count (1- count)))
+            (goto-char (car bnd))
+            (setq count (1+ count))))
+        ;; forward motions work with local parser state
+        (cond
+         ((> count 0)
+          ;; no need to reset global parser state because we only use
+          ;; the local one
+          (setq reset-parser nil)
+          (while (and (> count 0) (not (eobp)))
+            (setq state (parse-partial-sexp (point) (point-max)
+                                            nil
+                                            nil
+                                            state
+                                            'syntax-table))
+            (cond
+             ((nth 3 state)
+              (setq bnd (bounds-of-thing-at-point 'evil-string))
+              (goto-char (cdr bnd))
+              (setq count (1- count)))
+             ((eobp) (setq count (1- count))))))
+         ((< count 0)
+          ;; need to update global cache because of backward motion
+          (setq reset-parser (and reset-parser (point)))
+          (save-excursion
+            (beginning-of-defun)
+            (syntax-ppss-flush-cache (point)))
+          (while (and (< count 0) (not (bobp)))
+            (while (and (not (bobp))
+                        (or (eobp) (/= (char-after) quote)))
+              (backward-char))
+            (cond
+             ((setq bnd (bounds-of-thing-at-point 'evil-string))
+              (goto-char (car bnd))
+              (setq count (1+ count)))
+             ((bobp) (1+ count))
+             (t (backward-char)))))
+         (t (setq reset-parser nil)))))
+    (when reset-parser
+      ;; reset global cache
+      (save-excursion
+        (goto-char reset-parser)
+        (beginning-of-defun)
+        (syntax-ppss-flush-cache (point))))
+    count))
+
+;;; Thing-at-point motion functions for Evil text objects and motions
+(defun forward-evil-empty-line (&optional count)
+  "Move forward COUNT empty lines."
+  (setq count (or count 1))
+  (cond
+   ((> count 0)
+    (while (and (> count 0) (not (eobp)))
+      (when (and (bolp) (eolp))
+        (setq count (1- count)))
+      (forward-line 1)))
+   (t
+    (while (and (< count 0) (not (bobp))
+                (zerop (forward-line -1)))
+      (when (and (bolp) (eolp))
+        (setq count (1+ count))))))
+  count)
+
+(defun forward-evil-space (&optional count)
+  "Move forward COUNT whitespace sequences [[:space:]]+."
+  (evil-forward-chars "[:space:]" count))
+
+(defun forward-evil-word (&optional count)
+  "Move forward COUNT words.
+Moves point COUNT words forward or (- COUNT) words backward if
+COUNT is negative. Point is placed after the end of the word (if
+forward) or at the first character of the word (if backward). A
+word is a sequence of word characters matching
+\[[:word:]] (recognized by `forward-word'), a sequence of
+non-whitespace non-word characters '[^[:word:]\\n\\r\\t\\f ]', or
+an empty line matching ^$."
+  (evil-forward-nearest
+   count
+   #'(lambda (&optional cnt)
+       (let ((word-separating-categories evil-cjk-word-separating-categories)
+             (word-combining-categories evil-cjk-word-combining-categories)
+             (pnt (point)))
+         (forward-word cnt)
+         (if (= pnt (point)) cnt 0)))
+   #'(lambda (&optional cnt)
+       (evil-forward-chars "^[:word:]\n\r\t\f " cnt))
+   #'forward-evil-empty-line))
+
+(defun forward-evil-WORD (&optional count)
+  "Move forward COUNT \"WORDS\".
+Moves point COUNT WORDS forward or (- COUNT) WORDS backward if
+COUNT is negative. Point is placed after the end of the WORD (if
+forward) or at the first character of the WORD (if backward). A
+WORD is a sequence of non-whitespace characters
+'[^\\n\\r\\t\\f ]', or an empty line matching ^$."
+  (evil-forward-nearest count
+                        #'(lambda (&optional cnt)
+                            (evil-forward-chars "^\n\r\t\f " cnt))
+                        #'forward-evil-empty-line))
+
+(defun forward-evil-symbol (&optional count)
+  "Move forward COUNT symbols.
+Moves point COUNT symbols forward or (- COUNT) symbols backward
+if COUNT is negative. Point is placed after the end of the
+symbol (if forward) or at the first character of the symbol (if
+backward). The boundaries of a symbol are determined by
+`forward-symbol'."
+  (evil-motion-loop (dir (or count 1))
+    (forward-symbol dir)))
+
+(defun forward-evil-defun (&optional count)
+  "Move forward COUNT defuns.
+Moves point COUNT defuns forward or (- COUNT) defuns backward
+if COUNT is negative.  A defun is defined by
+`beginning-of-defun' and `end-of-defun' functions."
+  (evil-motion-loop (dir (or count 1))
+    (if (> dir 0) (end-of-defun) (beginning-of-defun))))
+
+(defun forward-evil-sentence (&optional count)
+  "Move forward COUNT sentences.
+Moves point COUNT sentences forward or (- COUNT) sentences
+backward if COUNT is negative.  This function is the same as
+`forward-sentence' but returns the number of sentences that could
+NOT be moved over."
+  (evil-motion-loop (dir (or count 1))
+    (condition-case nil
+        (forward-sentence dir)
+      (error))))
+
+(defun forward-evil-paragraph (&optional count)
+  "Move forward COUNT paragraphs.
+Moves point COUNT paragraphs forward or (- COUNT) paragraphs backward
+if COUNT is negative.  A paragraph is defined by
+`start-of-paragraph-text' and `forward-paragraph' functions."
+  (evil-motion-loop (dir (or count 1))
+    (cond
+     ((> dir 0) (forward-paragraph))
+     ((not (bobp)) (start-of-paragraph-text) (beginning-of-line)))))
+
+(defvar evil-forward-quote-char ?\"
+  "The character to be used by `forward-evil-quote'.")
+
+(defun forward-evil-quote (&optional count)
+  "Move forward COUNT strings.
+The quotation character is specified by the global variable
+`evil-forward-quote-char'. This character is passed to
+`evil-forward-quote'."
+  (evil-forward-quote evil-forward-quote-char count))
+
+(defun forward-evil-quote-simple (&optional count)
+  "Move forward COUNT strings.
+The quotation character is specified by the global variable
+`evil-forward-quote-char'. This functions uses Vim's rules
+parsing from the beginning of the current line for quotation
+characters. It should only be used when looking for strings
+within comments and buffer *must* be narrowed to the comment."
+  (let ((dir (if (> (or count 1) 0) 1 -1))
+        (ch evil-forward-quote-char)
+        (pnt (point))
+        (cnt 0))
+    (beginning-of-line)
+    ;; count number of quotes before pnt
+    (while (< (point) pnt)
+      (when (= (char-after) ch)
+        (setq cnt (1+ cnt)))
+      (forward-char))
+    (setq cnt (- (* 2 (abs count)) (mod cnt 2)))
+    (cond
+     ((> dir 0)
+      (while (and (not (eolp)) (not (zerop cnt)))
+        (when (= (char-after) ch) (setq cnt (1- cnt)))
+        (forward-char))
+      (when (not (zerop cnt)) (goto-char (point-max))))
+     (t
+      (while (and (not (bolp)) (not (zerop cnt)))
+        (when (= (char-before) ch) (setq cnt (1- cnt)))
+        (forward-char -1))
+      (when (not (zerop cnt)) (goto-char (point-min)))))
+    (/ cnt 2)))
+
+;;; Motion functions
+(defun evil-forward-beginning (thing &optional count)
+  "Move forward to beginning of THING.
+The motion is repeated COUNT times."
+  (setq count (or count 1))
+  (if (< count 0)
+      (forward-thing thing count)
+    (let ((bnd (bounds-of-thing-at-point thing))
+          rest)
+      (when (and bnd (< (point) (cdr bnd)))
+        (goto-char (cdr bnd)))
+      (condition-case nil
+          (when (zerop (setq rest (forward-thing thing count)))
+            (when (and (bounds-of-thing-at-point thing)
+                       (not (bobp))
+                       ;; handle final empty line
+                       (not (and (bolp) (eobp))))
+              (forward-char -1))
+            (beginning-of-thing thing))
+        (error))
+      rest)))
+
+(defun evil-backward-beginning (thing &optional count)
+  "Move backward to beginning of THING.
+The motion is repeated COUNT times. This is the same as calling
+`evil-backward-beginning' with -COUNT."
+  (evil-forward-beginning thing (- (or count 1))))
+
+(defun evil-forward-end (thing &optional count)
+  "Move forward to end of THING.
+The motion is repeated COUNT times."
+  (setq count (or count 1))
+  (cond
+   ((> count 0)
+    (unless (eobp) (forward-char))
+    (prog1 (forward-thing thing count)
+      (unless (bobp) (forward-char -1))))
+   (t
+    (let ((bnd (bounds-of-thing-at-point thing))
+          rest)
+      (when (and bnd (< (point) (cdr bnd) ))
+        (goto-char (car bnd)))
+      (condition-case nil
+          (when (zerop (setq rest (forward-thing thing count)))
+            (end-of-thing thing)
+            (forward-char -1))
+        (error))
+      rest))))
+
+(defun evil-backward-end (thing &optional count)
+  "Move backward to end of THING.
+The motion is repeated COUNT times. This is the same as calling
+`evil-backward-end' with -COUNT."
+  (evil-forward-end thing (- (or count 1))))
+
 (defun evil-forward-word (&optional count)
   "Move by words.
 Moves point COUNT words forward or (- COUNT) words backward if
@@ -1215,116 +1779,6 @@ moved."
                 (forward-word dir))
       (setq count (1- count)))
     count))
-
-(defun evil-move-chars (chars count)
-  "Move point to the end or beginning of a sequence of CHARS.
-CHARS is a character set as inside [...] in a regular expression."
-  (let ((regexp (format "[%s]" chars)))
-    (evil-motion-loop (var count)
-      (cond
-       ((< var 0)
-        (re-search-backward regexp nil t)
-        (skip-chars-backward chars))
-       (t
-        (re-search-forward regexp nil t)
-        (skip-chars-forward chars))))))
-
-;; this function is slightly adapted from paragraphs.el
-(defun evil-move-sentence (count)
-  "Move by sentence."
-  (let ((count (or count 1))
-        (opoint (point))
-        (sentence-end (sentence-end))
-        pos par-beg par-end)
-    (evil-motion-loop (var count)
-      (cond
-       ;; backward
-       ((< var 0)
-        (setq pos (point)
-              par-beg (save-excursion
-                        (and (zerop (evil-move-paragraph -1))
-                             (point))))
-        (if (and (re-search-backward sentence-end par-beg t)
-                 (or (< (match-end 0) pos)
-                     (re-search-backward sentence-end par-beg t)))
-            (goto-char (match-end 0))
-          (goto-char (or par-beg pos))))
-       ;; forward
-       (t
-        (setq par-end (save-excursion
-                        (and (zerop (evil-move-paragraph 1))
-                             (point))))
-        (if (re-search-forward sentence-end par-end t)
-            (skip-chars-backward " \t\n")
-          (goto-char (or par-end (point)))))))))
-
-(defun evil-move-paragraph (count)
-  "Move by paragraph."
-  (let ((count (or count 1))
-        npoint opoint)
-    (evil-motion-loop (var count)
-      (setq opoint (point))
-      (cond
-       ((< var 0)
-        (forward-paragraph -1)
-        (setq npoint (point))
-        (skip-chars-forward " \t\n")
-        (when (and (>= (point) opoint) (< npoint opoint))
-          (goto-char npoint)
-          (forward-paragraph -1)
-          (skip-chars-forward " \t\n")
-          (when (and (>= (point) opoint) (< npoint opoint))
-            (goto-char opoint))))
-       (t
-        (forward-paragraph 1)
-        (setq npoint (point))
-        (skip-chars-backward " \t\n")
-        (when (<= (point) opoint)
-          (goto-char npoint)
-          (forward-paragraph 1)
-          (skip-chars-backward " \t\n")
-          (when (<= (point) opoint)
-            (goto-char opoint))))))))
-
-(defun evil-in-regexp-p (regexp &optional pos)
-  "Whether POS is inside a match for REGEXP.
-POS defaults to the current position of point."
-  (let ((pos (or pos (point))))
-    (save-excursion
-      (goto-char pos)
-      (if (re-search-forward regexp nil t)
-          (goto-char (match-beginning 0))
-        (goto-char (point-max)))
-      (when (re-search-backward regexp nil t)
-        (and (> pos (match-beginning 0))
-             (< pos (match-end 0)))))))
-
-(defun evil-in-string-p (&optional pos)
-  "Whether POS is inside a string.
-POS defaults to the current position of point."
-  (save-excursion
-    (let ((state (syntax-ppss pos)))
-      (and (nth 3 state) (nth 8 state)))))
-
-(defun evil-string-beginning (&optional pos)
-  "Return beginning of string containing POS.
-POS defaults to the current position of point."
-  (evil-normalize-position (evil-in-string-p)))
-
-(defun evil-string-end (&optional pos limit)
-  "Return end of string containing POS.
-POS defaults to the current position of point. Stops at LIMIT,
-which defaults to the end of the buffer."
-  (save-excursion
-    (let ((state (syntax-ppss pos)))
-      (when (nth 3 state)
-        (parse-partial-sexp (or pos (point))
-                            (or limit (point-max))
-                            nil
-                            nil
-                            state
-                            'syntax-table)
-        (evil-normalize-position (point))))))
 
 (defun evil-in-comment-p (&optional pos)
   "Checks if POS is within a comment according to current syntax.
@@ -1405,43 +1859,6 @@ closer if MOVE is non-nil."
     (and (evil-in-comment-p)
          (not (evil-in-comment-p (1+ (point))))
          (prog1 t (when move (forward-char)))))))
-
-(defun evil-comment-beginning (&optional pos)
-  "Return beginning of comment containing POS.
-POS defaults to the current position of point."
-  (evil-in-comment-p pos))
-
-(defun evil-comment-end (&optional pos)
-  "Return end of comment containing POS.
-POS defaults to the current position of point."
-  (let ((beg (evil-in-comment-p pos)))
-    (and beg
-         (save-excursion
-           (goto-char beg)
-           (forward-comment 1)
-           (1- (point))))))
-
-(defmacro evil-narrow-to-comment (&rest body)
-  "Narrow to the current comment or docstring, if any."
-  (declare (indent defun)
-           (debug t))
-  `(save-restriction
-     (cond
-      ((evil-in-comment-p)
-       (narrow-to-region (evil-comment-beginning) (evil-comment-end)))
-      ((evil-in-string-p)
-       (narrow-to-region (evil-string-beginning) (evil-string-end))))
-     ,@body))
-
-(defmacro evil-with-or-without-comment (&rest body)
-  "Try BODY narrowed to the current comment; then try BODY unnarrowed.
-If BODY returns non-nil inside the current comment, return that.
-Otherwise, execute BODY again, but without the restriction."
-  (declare (indent defun)
-           (debug t))
-  `(or (when (or (evil-in-comment-p) (evil-in-string-p))
-         (evil-narrow-to-comment ,@body))
-       (progn ,@body)))
 
 (defun evil-insert-newline-above ()
   "Inserts a new line above point and places point in that line
@@ -2472,433 +2889,340 @@ This can be overridden with TYPE."
        (>= (evil-range-end range2)
            (evil-range-end range1))))
 
-(defun evil-add-whitespace-to-range (range &optional dir pos regexp)
-  "Add whitespace at one side of RANGE, depending on POS.
-If POS is before the range, add trailing whitespace;
-if POS is after the range, add leading whitespace.
-If there is no trailing whitespace, add leading and vice versa.
-If POS is inside the range, add trailing if DIR is positive and
-leading if DIR is negative. POS defaults to point.
-REGEXP is a regular expression for matching whitespace;
-the default is \"[ \\f\\t\\n\\r\\v]+\"."
-  (let* ((pos (or pos (point)))
-         (dir (or (when (<= pos (evil-range-beginning range)) 1)
-                  (when (>= pos (evil-range-end range)) -1)
-                  dir 1))
-         (regexp (or regexp "[ \f\t\n\r\v]+")))
-    (save-excursion
-      (save-match-data
-        (goto-char pos)
+(defun evil-select-inner-object (thing beg end type &optional count line)
+  "Return an inner text object range of COUNT objects.
+If COUNT is positive, return objects following point; if COUNT is
+negative, return objects preceding point.  FORWARD is a function
+which moves to the end of an object, and BACKWARD is a function
+which moves to the beginning.  If one is unspecified, the other
+is used with a negative argument.  THING is a symbol understood
+by thing-at-point. BEG, END and TYPE specify the current
+selection. If LINE is non-nil, the text object should be
+linewise, otherwise it is character wise."
+  (let* ((count (or count 1))
+         (bnd (or (let ((b (bounds-of-thing-at-point thing)))
+                    (and b (< (point) (cdr b)) b))
+                  (evil-bounds-of-not-thing-at-point thing))))
+    ;; check if current object is selected
+    (when (or (not beg) (not end)
+              (> beg (car bnd))
+              (< end (cdr bnd)))
+      (when (or (not beg) (< (car bnd) beg)) (setq beg (car bnd)))
+      (when (or (not end) (> (cdr bnd) end)) (setq end (cdr bnd)))
+      (setq count (if (> count 0) (1- count) (1+ count))))
+    (goto-char (if (< count 0) beg end))
+    (evil-forward-nearest count
+                          #'(lambda (cnt) (forward-thing thing cnt))
+                          #'(lambda (cnt) (evil-forward-not-thing thing cnt)))
+    (evil-range (if (>= count 0) beg (point))
+                (if (< count 0) end (point))
+                (if line 'line type)
+                :expanded t)))
+
+(defun evil-select-an-object (thing beg end type count &optional line)
+  "Return an outer text object range of COUNT objects.
+If COUNT is positive, return objects following point; if COUNT is
+negative, return objects preceding point.  FORWARD is a function
+which moves to the end of an object, and BACKWARD is a function
+which moves to the beginning.  If one is unspecified, the other
+is used with a negative argument.  THING is a symbol understood
+by thing-at-point. BEG, END and TYPE specify the current
+selection. If LINE is non-nil, the text object should be
+linewise, otherwise it is character wise."
+  (let* ((dir (if (> (or count 1) 0) +1 -1))
+         (count (abs (or count 1)))
+         (objbnd (let ((b (bounds-of-thing-at-point thing)))
+                   (and b (< (point) (cdr b)) b)))
+         (bnd (or objbnd (evil-bounds-of-not-thing-at-point thing)))
+         addcurrent other)
+    ;; check if current object is not selected
+    (when (or (not beg) (not end) (> beg (car bnd)) (< end (cdr bnd)))
+      ;; if not, enlarge selection
+      (when (or (not beg) (< (car bnd) beg)) (setq beg (car bnd)))
+      (when (or (not end) (> (cdr bnd) end)) (setq end (cdr bnd)))
+      (if objbnd (setq addcurrent t)))
+    ;; make other and (point) reflect the selection
+    (cond
+     ((> dir 0) (goto-char end) (setq other beg))
+     (t (goto-char beg) (setq other end)))
+    ;; if current is only selected object ...
+    (when (and (= beg (car bnd)) (= end (cdr bnd)))
+      (if objbnd
+          ;; current match is thing, add whitespace
+          (let ((wsend (evil-bounds-of-not-thing-at-point thing dir)))
+            (if (not wsend) ;; no whitespace at end, try beginning
+                (save-excursion
+                  (goto-char other)
+                  (setq wsend (evil-bounds-of-not-thing-at-point thing (- dir)))
+                  (when wsend (setq other wsend addcurrent t)))
+              ;; add whitespace at end
+              (goto-char wsend)
+              (setq addcurrent t)))
+        ;; current match is whitespace, add thing
+        (forward-thing thing dir)
+        (setq addcurrent t)))
+    ;; possibly count current object as selection
+    (if addcurrent (setq count (1- count)))
+    ;; move
+    (dotimes (var count)
+      (let ((wsend (evil-bounds-of-not-thing-at-point thing dir)))
+        (if (and wsend (/= wsend (point)))
+            ;; start with whitespace
+            (forward-thing thing dir)
+          ;; start with thing
+          (forward-thing thing dir)
+          (setq wsend (evil-bounds-of-not-thing-at-point thing dir))
+          (when wsend (goto-char wsend)))))
+    ;; return range
+    (evil-range (if (> dir 0) other (point))
+                (if (< dir 0) other (point))
+                (if line 'line type)
+                :expanded t)))
+
+(defun evil-select-block (thing beg end type count &optional inclusive countcurrent)
+  "Return a range (BEG END) of COUNT delimited text objects.
+BEG END TYPE are the currently selected (visual) range.  The
+delimited object must be given by THING-up function (see
+`evil-up-block'). If INCLUSIVE is non-nil, OPEN and CLOSE are
+included in the range; otherwise they are excluded. If
+COUNTCURRENT is non-nil an objected is counted if the current
+selection matches that object exactly."
+  (save-excursion
+    (save-match-data
+      (let ((beg (or beg (point)))
+            (end (or end (point)))
+            (count (abs (or count 1)))
+            op cl op-end cl-end)
+        ;; start scanning at beginning
+        (goto-char (if inclusive (1+ beg) end))
+        (when (and (zerop (funcall thing +1)) (match-beginning 0))
+          (setq cl (cons (match-beginning 0) (match-end 0)))
+          (goto-char (car cl))
+          (when (and (zerop (funcall thing -1)) (match-beginning 0))
+            (setq op (cons (match-beginning 0) (match-end 0)))))
+        ;; start scanning from end
+        (goto-char (if inclusive (1- end) beg))
+        (when (and (zerop (funcall thing -1)) (match-beginning 0))
+          (setq op-end (cons (match-beginning 0) (match-end 0)))
+          (goto-char (cdr op-end))
+          (when (and (zerop (funcall thing +1)) (match-beginning 0))
+            (setq cl-end (cons (match-beginning 0) (match-end 0)))))
+        ;; use the tighter one of both
         (cond
-         ((if (< dir 0)
-              (looking-back regexp (1- (line-beginning-position)))
-            (not (looking-at regexp)))
-          (or (evil-add-whitespace-after-range range regexp)
-              (evil-add-whitespace-before-range range regexp)))
-         (t
-          (or (evil-add-whitespace-before-range range regexp)
-              (evil-add-whitespace-after-range range regexp))))
-        range))))
+         ((and (not op) (not cl-end))
+          (error "No surrounding delimiters found"))
+         ((or (not op)    ; first not found
+              (and cl-end ; second better
+                   (>= (car op-end) (car op))
+                   (<= (cdr cl-end) (cdr cl))))
+          (setq op op-end cl cl-end)))
+        (setq op-end op cl-end cl) ; store copy
+        ;; if the current selection contains the surrounding
+        ;; delimiters, they do not count as new selection
+        (let ((cnt (if (or (and (not countcurrent) inclusive
+                                (<= beg (car op)) (>= end (cdr cl)))
+                           (and (not countcurrent) (not inclusive)
+                                (<= beg (cdr op)) (>= end (car cl))))
+                       count
+                     (1- count))))
+          ;; starting from the innermost surrounding delimiters
+          ;; increase selection
+          (when (> cnt 0)
+            (setq op (progn
+                       (goto-char (car op-end))
+                       (funcall thing (- cnt))
+                       (if (match-beginning 0)
+                           (cons (match-beginning 0) (match-end 0))
+                         op))
+                  cl (progn
+                       (goto-char (cdr cl-end))
+                       (funcall thing cnt)
+                       (if (match-beginning 0)
+                           (cons (match-beginning 0) (match-end 0))
+                         cl)))))
+        (if inclusive
+            (setq op (car op) cl (cdr cl))
+          (setq op (cdr op) cl (car cl)))
+        (if (and (= op beg) (= cl end)
+                 (or (not countcurrent)
+                     (and countcurrent (/= count 1))))
+            (error "No surrounding delimiters found")
+          (evil-range op cl type :expanded t))))))
 
-(defun evil-add-whitespace-before-range (range &optional regexp)
-  "Add whitespace at the beginning of RANGE.
-REGEXP is a regular expression for matching whitespace;
-the default is \"[ \\f\\t\\n\\r\\v]+\".
-Returns t if RANGE was successfully increased and nil otherwise."
-  (let ((orig (evil-copy-range range))
-        (regexp (or regexp "[ \f\t\n\r\v]+")))
-    (save-excursion
-      (save-match-data
-        (goto-char (evil-range-beginning range))
-        (when (looking-back regexp (1- (line-beginning-position)) t)
-          ;; exclude the newline on the preceding line
-          (goto-char (match-beginning 0))
-          (when (eolp) (forward-char))
-          (evil-set-range range (point)))
-        (not (evil-subrange-p range orig))))))
+(defun evil-select-paren (open close beg end type count &optional inclusive)
+  "Return a range (BEG END) of COUNT delimited text objects.
+OPEN and CLOSE specify the opening and closing delimiter,
+respectively. BEG END TYPE are the currently selected (visual)
+range.  If INCLUSIVE is non-nil, OPEN and CLOSE are included in
+the range; otherwise they are excluded.
 
-(defun evil-add-whitespace-after-range (range &optional regexp)
-  "Add whitespace at the end of RANGE.
-REGEXP is a regular expression for matching whitespace;
-the default is \"[ \\f\\t\\n\\r\\v]+\".
-Returns t if RANGE was successfully increased and nil otherwise."
-  (let ((orig (evil-copy-range range))
-        (regexp (or regexp "[ \f\t\n\r\v]+")))
-    (save-excursion
-      (save-match-data
-        (goto-char (evil-range-end range))
-        (when (looking-at regexp)
-          (evil-set-range range nil (match-end 0)))
-        (not (evil-subrange-p range orig))))))
-
-(defun evil-adjust-whitespace-inside-range (range &optional shrink regexp)
-  "Adjust whitespace inside RANGE.
-Leading whitespace at the end of the line is excluded.
-If SHRINK is non-nil, indentation may also be excluded,
-and the trailing whitespace is adjusted as well.
-REGEXP is a regular expression for matching whitespace;
-the default is \"[ \\f\\t\\n\\r\\v]*\".
-Returns t if RANGE was successfully adjusted and nil otherwise."
-  (let ((orig (evil-copy-range range))
-        (regexp (or regexp "[ \f\t\n\r\v]*")))
-    (save-excursion
-      (goto-char (evil-range-beginning range))
-      (when (looking-at (concat regexp "$"))
-        (forward-line)
-        (if (and shrink evil-auto-indent)
-            (back-to-indentation)
-          (evil-move-beginning-of-line))
-        (evil-set-range range (point) nil))
-      (goto-char (evil-range-end range))
-      (when (and shrink (looking-back (concat "^" regexp)
-                                      (line-beginning-position)))
-        (evil-set-range range nil (line-end-position 0)))
-      (not (evil-subrange-p orig range)))))
-
-(defun evil-inner-object-range (count beg end type forward &optional backward range-type)
-  "Return an inner text object range (BEG END) of COUNT objects.
-If COUNT is positive, return objects following point;
-if COUNT is negative, return objects preceding point.
-FORWARD is a function which moves to the end of an object, and
-BACKWARD is a function which moves to the beginning.
-If one is unspecified, the other is used with a negative argument."
-  (let* ((count (or count 1))
-         (forward-func forward)
-         (backward-func backward)
-         (forward  (or forward
-                       #'(lambda (count)
-                           (funcall backward-func (- count)))))
-         (backward (or backward
-                       #'(lambda (count)
-                           (funcall forward-func (- count)))))
-         (current
-          #'(lambda ()
+The types of OPEN and CLOSE specify which kind of THING is used
+for parsing with `evil-select-block'. If OPEN and CLOSE are
+characters `evil-up-paren' is used. Otherwise OPEN and CLOSE
+must be regular expressions and `evil-up-block' is used."
+  (lexical-let
+      ((open open) (close close))
+    (cond
+     ((and (characterp open) (characterp close))
+      (let ((thing #'(lambda (&optional cnt)
+                       (evil-up-paren open close cnt)))
+            (bnd (or (bounds-of-thing-at-point 'evil-string)
+                     (bounds-of-thing-at-point 'evil-comment)
+                     ;; If point is at the opening quote of a string,
+                     ;; this must be handled as if point is within the
+                     ;; string, i.e. the selection must be extended
+                     ;; around the string. Otherwise
+                     ;; `evil-select-block' might do the wrong thing
+                     ;; because it accidentally moves point inside the
+                     ;; string (for inclusive selection) when looking
+                     ;; for the current surrounding block. (re #364)
+                     (and (= (point) (or beg (point)))
+                          (save-excursion
+                            (goto-char (1+ (or beg (point))))
+                            (or (bounds-of-thing-at-point 'evil-string)
+                                (bounds-of-thing-at-point 'evil-comment)))))))
+        (if (not bnd)
+            (evil-select-block thing beg end type count inclusive)
+          (or (evil-with-restriction (car bnd) (cdr bnd)
+                (condition-case nil
+                    (evil-select-block thing beg end type count inclusive)
+                  (error nil)))
               (save-excursion
-                (let ((pnt (point))
-                      beg-obj end-obj)
-                  (funcall forward 1)
-                  (setq end-obj (point))
-                  (funcall backward 1)
-                  (setq beg-obj (point))
-                  (cond
-                   ((<= beg-obj pnt)
-                    (cons beg-obj end-obj))
-                   ((zerop (funcall backward 1))
-                    (funcall forward 1)
-                    (cons (if (and (eolp) (not (bolp)))
-                              (1+ (point))
-                            (point))
-                          beg-obj))
-                   (t
-                    (cons (point-min) beg-obj))))))))
+                (setq beg (or beg (point))
+                      end (or end (point)))
+                (goto-char (car bnd))
+                (let ((extbeg (min beg (- (car bnd) (if inclusive 1 0))))
+                      (extend (max end (+ (cdr bnd) (if inclusive 1 0)))))
+                  (evil-select-block thing
+                                     extbeg extend
+                                     type
+                                     count
+                                     inclusive
+                                     (or (< extbeg beg) (> extend end)))))))))
+     (t
+      (evil-select-block #'(lambda (&optional cnt)
+                             (evil-up-block open close cnt))
+                         beg end type count inclusive)))))
 
-    (save-excursion
+(defun evil-select-quote-thing (thing beg end type count &optional inclusive)
+  "Selection THING as if it described a quoted object.
+THING is typically either 'evil-quote or 'evil-chars. This
+function is called from `evil-select-quote'."
+  (save-excursion
+    (let* ((dir (if (> count 0) 1 -1))
+           (count (or count 1))
+           (bnd (let ((b (bounds-of-thing-at-point thing)))
+                  (and b (< (point) (cdr b)) b)))
+           contains-string
+           addcurrent
+           wsboth)
+      (if inclusive (setq inclusive t)
+        (when (= (abs count) 2)
+          (setq count dir)
+          (setq inclusive 'quote-only))
+        ;; never extend with exclusive selection
+        (setq beg nil end nil))
+      ;; check if the previously selected range does not contain a
+      ;; string
+      (unless (and beg end
+                   (save-excursion
+                     (goto-char (if (> dir 0) beg end))
+                     (forward-thing thing dir)
+                     (and (<= beg (point)) (< (point) end))))
+        ;; if so forget the range
+        (setq beg nil end nil))
+      ;; check if there is a current object, if not fetch one
+      (when (not bnd)
+        (unless (and (zerop (forward-thing thing dir))
+                     (setq bnd (bounds-of-thing-at-point thing)))
+          (error "No quoted string found"))
+        (if (> dir 0)
+            (setq end (point))
+          (setq beg (point)))
+        (setq addcurrent t))
+      ;; check if current object is not selected
+      (when (or (not beg) (not end) (> beg (car bnd)) (< end (cdr bnd)))
+        ;; if not, enlarge selection
+        (when (or (not beg) (< (car bnd) beg)) (setq beg (car bnd)))
+        (when (or (not end) (> (cdr bnd) end)) (setq end (cdr bnd)))
+        (setq addcurrent t wsboth t))
+      ;; maybe count current element
+      (when addcurrent
+        (setq count (if (> dir 0) (1- count) (1+ count))))
+      ;; enlarge selection
+      (goto-char (if (> dir 0) end beg))
+      (when (and (not addcurrent)
+                 (= count (forward-thing thing count)))
+        (error "No quoted string found"))
+      (if (> dir 0) (setq end (point)) (setq beg (point)))
+      ;; add whitespace
       (cond
-       ((> count 0)
-        (let ((obj (funcall current)))
-          (if (or (not beg) (not end)
-                  (> beg (car obj))
-                  (< end (cdr obj)))
-              ;; current object not yet selected
-              (progn
-                (when (or (not beg) (< (car obj) beg))
-                  (setq beg (car obj)))
-                (when (or (not end) (> (cdr obj) end))
-                  (setq end (cdr obj)))
-                (setq count (1- count))
-                (goto-char end))
-            (goto-char (cdr obj))))
-        (dotimes(i count)
-          (let ((obj (funcall current)))
-            (goto-char (cdr obj))))
-        (evil-range beg (point) range-type))
-       (t
-        (setq count (- count))
-        (let ((obj (funcall current)))
-          (if (or (not beg) (not end)
-                  (> beg (car obj))
-                  (< end (cdr obj)))
-              ;; current object not yet selected
-              (progn
-                (when (or (not beg) (< (car obj) beg))
-                  (setq beg (car obj)))
-                (when (or (not end) (> (cdr obj) end))
-                  (setq end (cdr obj)))
-                (setq count (1- count))
-                (goto-char beg))
-            (goto-char (car obj))))
-        (dotimes(i count)
-          (backward-char 1)
-          (let ((obj (funcall current)))
-            (goto-char (car obj))))
-        (evil-range (point) end range-type))))))
+       ((not inclusive) (setq beg (1+ beg) end (1- end)))
+       ((not (eq inclusive 'quote-only))
+        ;; try to add whitespace in forward direction
+        (goto-char (if (> dir 0) end beg))
+        (if (setq bnd (bounds-of-thing-at-point 'evil-space))
+            (if (> dir 0) (setq end (cdr bnd)) (setq beg (car bnd)))
+          ;; if not found try backward direction
+          (goto-char (if (> dir 0) beg end))
+          (if (and wsboth (setq bnd (bounds-of-thing-at-point 'evil-space)))
+              (if (> dir 0) (setq beg (car bnd)) (setq end (cdr bnd)))))))
+      (evil-range beg end 'inclusive :expanded t))))
 
-(defun evil-an-object-range (count beg end type forward &optional backward range-type newlines)
-  "Return a text object range of COUNT objects with whitespace.
-BEG, END and TYPE specify the range of the current selection that
-should be extended.  The function returns a list (B E) specifying
-the new (extended) text object range.  See
-`evil-inner-object-range' for more details."
-  (let* ((count (or count 1))
-         (forward-func forward)
-         (backward-func backward)
-         (forward  (or forward
-                       #'(lambda (count)
-                           (funcall backward-func (- count)))))
-         (backward (or backward
-                       #'(lambda (count)
-                           (funcall forward-func (- count))))))
-    (if (> count 0)
-        ;; Ensure we select the next object if there is an existing
-        ;; selection. If the selection contains only one character,
-        ;; we've just entered visual mode, and should select the
-        ;; current object as usual.
-        (when (and beg end (> (- end beg) 1)) (forward-char 1))
-      ;; going backward
-      (evil-swap forward backward)
-      (setq count (abs count)))
-    (let ((range
-           (evil-range (save-excursion
-                         (funcall forward 1)
-                         (funcall backward 1)
-                         (point))
-                       (save-excursion
-                         (funcall forward count)
-                         (point))
-                       range-type)))
-      (setq range
-            (save-excursion
-              (if newlines
-                  (evil-add-whitespace-to-range range count)
-                (evil-with-restriction
-                    (save-excursion
-                      (goto-char (evil-range-beginning range))
-                      (line-beginning-position))
-                    (save-excursion
-                      (goto-char (evil-range-end range))
-                      (line-end-position))
-                  (evil-add-whitespace-to-range range count)))))
-      (if (and beg end)
-          (evil-range-union range (evil-range beg end))
-        range))))
+(defun evil-select-quote (quote beg end type count &optional inclusive)
+  "Return a range (BEG END) of COUNT quoted text objects.
+QUOTE specifies the quotation delimiter. BEG END TYPE are the
+currently selected (visual) range.
 
-(defun evil-paren-range (count beg end type open close &optional exclusive)
-  "Return a range (BEG END) of COUNT delimited text objects.
-BEG, END and TYPE are the currently selected (visual) range.
-OPEN is an opening character and CLOSE is a closing character.
-If EXCLUSIVE is non-nil, OPEN and CLOSE are excluded from
-the range; otherwise they are included.
+If INCLUSIVE is nil the previous selection is ignore. If there is
+quoted string at point this object will be selected, otherwise
+the following (if (> COUNT 0)) or preceeding object (if (< COUNT
+0)) is selected. If (/= (abs COUNT) 2) the delimiting quotes are not
+contained in the range, otherwise they are contained in the range.
 
-This function uses Emacs' syntax table and can therefore only
-handle single-character delimiters. To match whole strings,
-use `evil-regexp-range'."
-  (let ((open-regexp (regexp-quote (string open)))
-        (close-regexp (regexp-quote (string close)))
-        (count (or count 1))
-        forward-sexp-function ; always use the default one
-        level range)
-    (save-excursion
-      (if (or (evil-in-comment-p)
-              (and (evil-in-string-p)
-                   ;; TODO: this checks whether the current closing
-                   ;; quote is indeed the end of a string. This is
-                   ;; only a quick fix and should be done more
-                   ;; carefully!
-                   (or (/= (char-after) close)
-                       (eobp)
-                       (evil-in-string-p (1+ (point))))))
-          ;; if in a comment, first look inside the comment only;
-          ;; failing that, look outside it
-          (or (evil-regexp-range count
-                                 beg end type
-                                 open-regexp close-regexp
-                                 exclusive)
-              (progn
-                (evil-goto-min (evil-string-beginning)
-                               (evil-comment-beginning))
-                (evil-paren-range count beg end type open close exclusive)))
-        (with-syntax-table (copy-syntax-table (syntax-table))
-          (cond
-           ((= count 0))
-           ;; if OPEN is equal to CLOSE, handle as string delimiters
-           ((eq open close)
-            (modify-syntax-entry open "\"")
-            ;; syntax table is out-of-date, encourage reparsing
-            (let ((pnt (point)))
-              (beginning-of-defun)
-              (let ((state (parse-partial-sexp (point) pnt)))
-                (when (not (nth 3 state))
-                  (setq state (parse-partial-sexp (point)
-                                                  (point-max)
-                                                  0
-                                                  nil
-                                                  state
-                                                  'syntax-table)))
-                (when (nth 3 state)
-                  (let ((beg (nth 8 state)))
-                    (parse-partial-sexp (point) (point-max)
-                                        0
-                                        nil
-                                        state
-                                        'syntax-table)
-                    (setq range (evil-range
-                                 (if exclusive (1+ beg) beg)
-                                 (if exclusive (1- (point)) (point)))))))))
-           (t
-            ;; otherwise handle as open and close parentheses
-            (modify-syntax-entry open (format "(%c" close))
-            (modify-syntax-entry close (format ")%c" open))
-            (if (< count 0)
-                (when (looking-back close-regexp (line-beginning-position))
-                  (backward-char))
-              (when (looking-at open-regexp)
-                (forward-char)
-                (when (and beg end (= (1+ beg) end))
-                  (setq beg (1+ beg)))))
-            ;; find OPEN, start at beginning of current range (if any)
-            (when (and beg end)
-              (goto-char (min beg (point)))
-              ;; check if current object matches current selection
+If INCLUSIVE is non-nil the selection depends on the previous
+selection. If the currently selection contains at least one
+character that is contained in a quoted string then the selection
+is extended, otherwise it is thrown away. If there is a
+non-selected object at point then this object is added to the
+selection. Otherwise the selection is extended to the
+following (if (> COUNT 0)) or preceeding object (if (< COUNT
+0)). Any whitespace following (or preceeding if (< COUNT 0)) the
+new selection is added to the selection. If no such whitespace
+exists and the selection contains only one quoted string then the
+preceeding (or following) whitespace is added to the range. "
+  (let ((evil-forward-quote-char quote))
+    (or (let ((bnd (or (bounds-of-thing-at-point 'evil-comment)
+                       (bounds-of-thing-at-point 'evil-string))))
+          (when (and bnd (< (point) (cdr bnd))
+                     (/= (char-after (car bnd)) quote)
+                     (/= (char-before (cdr bnd)) quote))
+            (evil-with-restriction (car bnd) (cdr bnd)
               (condition-case nil
-                  (save-excursion
-                    ;; find OPEN of current object
-                    (while (progn
-                             (backward-up-list 1)
-                             (not (looking-at open-regexp))))
-                    (let ((beg1 (point)))
-                      ;; find CLOSE of current object
-                      (forward-list)
-                      ;; modify current object of inclusive range
-                      (when exclusive
-                        (setq beg1 (1+ beg1))
-                        (backward-char))
-                      (when (and (= beg1 beg)
-                                 (= (point) end))
-                        ;; current object *is* current selection,
-                        ;; select one more
-                        (if (> count 0)
-                            (setq count (1+ count))
-                          (setq count (1- count))))))
-                (error nil)))
-            ;; find OPEN again with correct count
-            (evil-motion-loop (nil count level)
-              (condition-case nil
-                  (while (progn
-                           (backward-up-list 1)
-                           (not (looking-at open-regexp))))
-                (error nil)))
-            (when (/= level count)
-              (setq beg (if exclusive (1+ (point)) (point)))
-              ;; find CLOSE
-              (forward-list)
-              (setq end (if exclusive (1- (point)) (point)))
-              (setq range (evil-range beg end))
-              (when exclusive
-                (evil-adjust-whitespace-inside-range
-                 range (not (eq evil-this-operator 'evil-delete)))))))
-          range)))))
+                  (evil-select-quote-thing 'evil-quote-simple
+                                           beg end type
+                                           count
+                                           inclusive)
+                (error nil)))))
+        (let ((evil-forward-quote-char quote))
+          (evil-select-quote-thing 'evil-quote
+                                   beg end type
+                                   count
+                                   inclusive)))))
 
-(defun evil-quote-range (count beg end type open close &optional exclusive)
-  "Return a range (BEG END) of COUNT quotes.
-BEG, END and TYPE are the currently selected (visual) range.
-OPEN is the opening quote, CLOSE is the closing quote (often both
-are equal). If EXCLUSIVE is non-nil, OPEN and CLOSE are excluded
-from the range unless COUNT is 2 in which case they are included;
-otherwise they are included as well as any succeeding (or
-preceding if no whitespace follows) white space."
-  (if exclusive
-      (if (and count (= count 2))
-          (evil-paren-range 1 nil nil nil open close nil)
-        (evil-paren-range count nil nil nil open close t))
-    (let ((range (evil-paren-range count nil nil nil open close nil)))
-      (save-excursion
-        (if (progn
-              (goto-char (evil-range-end range))
-              (looking-at "[[:space:]]+"))
-            (evil-range (evil-range-beginning range) (match-end 0))
-          (goto-char (evil-range-beginning range))
-          (skip-chars-backward "[:space:]")
-          (evil-range (point) (evil-range-end range)))))))
-
-(defun evil-regexp-range (count beg end type open close &optional exclusive)
-  "Return a range (BEG END) of COUNT delimited text objects.
-BEG END TYPE are the currently selected (visual) range.
-OPEN is a regular expression matching the opening sequence,
-and CLOSE is a regular expression matching the closing sequence.
-If EXCLUSIVE is non-nil, OPEN and CLOSE are excluded from
-the range; otherwise they are included. See also `evil-paren-range'."
-  (let ((either (format "\\(%s\\)\\|\\(%s\\)" open close))
-        (count (or count 1))
-        (level 0))
-    (let ((select
-           #'(lambda (count)
-               ;; Is point inside a delimiter?
-               (evil-with-or-without-comment
-                 (save-excursion
-                   (save-match-data
-                     (let ((level 0)
-                           beg-inc end-inc beg-exc end-exc)
-                       (when (evil-in-regexp-p either)
-                         (if (< count 0)
-                             (goto-char (match-end 0))
-                           (goto-char (match-beginning 0))))
-                       ;; Is point next to a delimiter?
-                       (if (< count 0)
-                           (when (looking-back close (line-beginning-position))
-                             (goto-char (match-beginning 0)))
-                         (when (looking-at open)
-                           (goto-char (match-end 0))))
-                       ;; find beginning of range
-                       (while (and (< level (abs count))
-                                   (re-search-backward either nil t))
-                         (if (looking-at open)
-                             (setq level (1+ level))
-                           ;; found a CLOSE, so need to find another
-                           ;; OPEN first
-                           (setq level (1- level))))
-                       ;; find end of range
-                       (when (> level 0)
-                         (forward-char)
-                         (setq level 1
-                               beg-inc (match-beginning 0)
-                               beg-exc (match-end 0))
-                         (while (and (> level 0)
-                                     (re-search-forward either nil t))
-                           (if (looking-back close (line-beginning-position))
-                               (setq level (1- level))
-                             ;; found an OPEN, so need to find another
-                             ;; CLOSE first
-                             (setq level (1+ level))))
-                         (when (= level 0)
-                           (setq end-inc (match-end 0)
-                                 end-exc (match-beginning 0))
-                           (cons (evil-range beg-inc end-inc)
-                                 (evil-range beg-exc end-exc)))))))))))
-      (when (and beg end)
-        (let* ((ranges1 (funcall select (if (> count 0) 1 -1)))
-               (rng-inc1 (car ranges1))
-               (rng-exc1 (cdr ranges1)))
-          (cond
-           ((and (= beg (evil-range-beginning rng-inc1))
-                 (= end (evil-range-end rng-inc1)))
-            (setq count (+ count (if (> count 0) 1 -1))))
-           ((and exclusive
-                 (= beg (evil-range-beginning rng-exc1))
-                 (= end (evil-range-end rng-exc1)))
-            (if (= (abs count) 1)
-                (setq exclusive nil)
-              (setq count (+ count (if (> count 0) 1 -1))))))))
-      (let ((ranges (funcall select count)))
-        (if exclusive (cdr ranges) (car ranges))))))
-
-(defun evil-xml-range (&optional count beg end type exclusive)
+(defun evil-select-xml-tag (beg end type &optional count inclusive)
   "Return a range (BEG END) of COUNT matching XML tags.
 If EXCLUSIVE is non-nil, the tags themselves are excluded
 from the range."
-  (evil-regexp-range
-   count beg end type
-   "<\\(?:[^/ ]\\(?:[^>]*?[^/>]\\)?\\)?>" "</[^>]+?>"
-   exclusive))
+  (cond
+   ((and (not inclusive) (= (abs (or count 1)) 1))
+    (let ((rng (evil-select-block #'evil-up-xml-tag beg end type count nil t)))
+      (if (and beg (= beg (evil-range-beginning rng))
+               end (= end (evil-range-end rng)))
+          (evil-select-block #'evil-up-xml-tag beg end type count t)
+        rng)))
+   (t
+    (evil-select-block #'evil-up-xml-tag beg end type count inclusive))))
 
 (defun evil-expand-range (range &optional copy)
   "Expand RANGE according to its type.
