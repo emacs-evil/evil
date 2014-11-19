@@ -1131,16 +1131,27 @@ the loop immediately quits. See also `evil-loop'.
         (when (= p (point))
           (signal (car err) (cdr err)))))))
 
+(defun evil-signal-at-bob-or-eob (&optional count)
+  "Signals error if `point' is at boundaries.
+If `point' is at bob and COUNT is negative this function signal
+'beginning-of-buffer. If `point' is at eob and COUNT is positive
+this function singal 'end-of-buffer. This function should be used
+in motions. COUNT defaults to 1."
+  (setq count (or count 1))
+  (cond
+   ((< count 0) (evil-signal-at-bob))
+   ((> count 0) (evil-signal-at-eob))))
+
 (defun evil-signal-at-bob ()
   "Signals 'beginning-of-buffer if `point' is at bob.
-This macro should be used in backward motions. If `point' is at
-to bob so that no further backward motion is possible the error
-'end-of-buffer is raised."
+This function should be used in backward motions. If `point' is at
+bob so that no further backward motion is possible the error
+'beginning-of-buffer is raised."
   (when (bobp) (signal 'beginning-of-buffer nil)))
 
 (defun evil-signal-at-eob ()
   "Signals 'end-of-buffer if `point' is at eob.
-This macro should be used in forward motions. If `point' is close
+This function should be used in forward motions. If `point' is close
 to eob so that no further forward motion is possible the error
 'end-of-buffer is raised. This is the case if `point' is at
 `point-max' or if is one position before `point-max',

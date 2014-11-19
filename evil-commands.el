@@ -283,7 +283,7 @@ If point is at the end of the buffer and cannot be moved signal
   (let ((thing (if bigword 'evil-WORD 'evil-word))
         (orig (point))
         (count (or count 1)))
-    (evil-signal-at-eob)
+    (evil-signal-at-bob-or-eob count)
     (cond
      ;; default motion, beginning of next word
      ((not (evil-operator-state-p))
@@ -317,12 +317,13 @@ If point is at the end of the buffer and cannot be moved signal
   "Move the cursor to the end of the COUNT-th next word.
 If BIGWORD is non-nil, move by WORDS."
   :type inclusive
-  (let ((thing (if bigword 'evil-WORD 'evil-word)))
-    (evil-signal-at-eob)
+  (let ((thing (if bigword 'evil-WORD 'evil-word))
+        (count (or count 1)))
+    (evil-signal-at-bob-or-eob count)
     ;; Evil special behaviour: e or E on a one-character word in
     ;; operator state does not move point
     (unless (and (evil-operator-state-p)
-                 (= 1 (or count 1))
+                 (= 1 count)
                  (let ((bnd (bounds-of-thing-at-point thing)))
                    (and bnd
                         (= (car bnd) (point))
@@ -335,7 +336,7 @@ If BIGWORD is non-nil, move by WORDS."
 If BIGWORD is non-nil, move by WORDS."
   :type exclusive
   (let ((thing (if bigword #'evil-WORD #'evil-word)))
-    (evil-signal-at-bob)
+    (evil-signal-at-bob-or-eob (- (or count 1)))
     (evil-backward-beginning thing count)))
 
 (evil-define-motion evil-backward-word-end (count &optional bigword)
@@ -343,7 +344,7 @@ If BIGWORD is non-nil, move by WORDS."
 If BIGWORD is non-nil, move by WORDS."
   :type inclusive
   (let ((thing (if bigword #'evil-WORD #'evil-word)))
-    (evil-signal-at-bob)
+    (evil-signal-at-bob-or-eob (- (or count 1)))
     (evil-backward-end thing count)))
 
 (evil-define-motion evil-forward-WORD-begin (count)
@@ -371,14 +372,14 @@ If BIGWORD is non-nil, move by WORDS."
   "Move the cursor to the beginning of the COUNT-th next section."
   :jump t
   :type exclusive
-  (evil-signal-at-eob)
+  (evil-signal-at-bob-or-eob count)
   (evil-forward-beginning 'evil-defun count))
 
 (evil-define-motion evil-forward-section-end (count)
   "Move the cursor to the end of the COUNT-th next section."
   :jump t
   :type inclusive
-  (evil-signal-at-eob)
+  (evil-signal-at-bob-or-eob count)
   (evil-forward-end 'evil-defun count)
   (unless (eobp) (forward-line)))
 
@@ -386,14 +387,14 @@ If BIGWORD is non-nil, move by WORDS."
   "Move the cursor to the beginning of the COUNT-th previous section."
   :jump t
   :type exclusive
-  (evil-signal-at-bob)
+  (evil-signal-at-bob-or-eob (- (or count 1)))
   (evil-backward-beginning 'evil-defun count))
 
 (evil-define-motion evil-backward-section-end (count)
   "Move the cursor to the end of the COUNT-th previous section."
   :jump t
   :type inclusive
-  (evil-signal-at-bob)
+  (evil-signal-at-bob-or-eob (- (or count 1)))
   (end-of-line -1)
   (evil-backward-end 'evil-defun count)
   (unless (eobp) (forward-line)))
@@ -402,7 +403,7 @@ If BIGWORD is non-nil, move by WORDS."
   "Move to the next COUNT-th beginning of a sentence or end of a paragraph."
   :jump t
   :type exclusive
-  (evil-signal-at-eob)
+  (evil-signal-at-bob-or-eob count)
   (evil-forward-nearest count
                         #'(lambda (cnt)
                             (evil-forward-beginning 'evil-sentence))
@@ -412,7 +413,7 @@ If BIGWORD is non-nil, move by WORDS."
   "Move to the previous COUNT-th beginning of a sentence or paragraph."
   :jump t
   :type exclusive
-  (evil-signal-at-bob)
+  (evil-signal-at-bob-or-eob (- (or count 1)))
   (evil-forward-nearest (- (or count 1))
                         #'(lambda (cnt)
                             (evil-backward-beginning 'evil-sentence))
@@ -423,7 +424,7 @@ If BIGWORD is non-nil, move by WORDS."
   "Move to the end of the COUNT-th next paragraph."
   :jump t
   :type exclusive
-  (evil-signal-at-eob)
+  (evil-signal-at-bob-or-eob count)
   (evil-forward-end 'evil-paragraph count)
   (unless (eobp) (forward-line)))
 
@@ -431,7 +432,7 @@ If BIGWORD is non-nil, move by WORDS."
   "Move to the beginning of the COUNT-th previous paragraph."
   :jump t
   :type exclusive
-  (evil-signal-at-bob)
+  (evil-signal-at-bob-or-eob (- (or count 1)))
   (unless (eobp) (forward-line))
   (evil-backward-beginning 'evil-paragraph count)
   (unless (bobp) (forward-line -1)))
