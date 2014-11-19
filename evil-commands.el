@@ -3833,17 +3833,17 @@ START END), mark to end of word at (max START END)."
     (list
      (save-excursion
        (goto-char (min (point-max) (1+ start)))
-       (if (zerop (funcall evil-mouse-word -1))
+       (if (zerop (forward-thing evil-mouse-word -1))
            (let ((bpnt (point)))
-             (funcall evil-mouse-word +1)
+             (forward-thing evil-mouse-word +1)
              (if (> (point) start) bpnt (point)))
          (point-min)))
      (save-excursion
        (goto-char end)
        (1-
-        (if (zerop (funcall evil-mouse-word +1))
+        (if (zerop (forward-thing evil-mouse-word +1))
             (let ((epnt (point)))
-              (funcall evil-mouse-word -1)
+              (forward-thing evil-mouse-word -1)
               (if (<= (point) end) epnt (point)))
           (point-max)))))))
 
