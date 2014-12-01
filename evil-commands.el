@@ -335,7 +335,7 @@ If BIGWORD is non-nil, move by WORDS."
   "Move the cursor to the beginning of the COUNT-th previous word.
 If BIGWORD is non-nil, move by WORDS."
   :type exclusive
-  (let ((thing (if bigword #'evil-WORD #'evil-word)))
+  (let ((thing (if bigword 'evil-WORD 'evil-word)))
     (evil-signal-at-bob-or-eob (- (or count 1)))
     (evil-backward-beginning thing count)))
 
@@ -343,7 +343,7 @@ If BIGWORD is non-nil, move by WORDS."
   "Move the cursor to the end of the COUNT-th previous word.
 If BIGWORD is non-nil, move by WORDS."
   :type inclusive
-  (let ((thing (if bigword #'evil-WORD #'evil-word)))
+  (let ((thing (if bigword 'evil-WORD 'evil-word)))
     (evil-signal-at-bob-or-eob (- (or count 1)))
     (evil-backward-end thing count)))
 
