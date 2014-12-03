@@ -2162,7 +2162,7 @@ The earlier settings of Transient Mark mode are stored in
         (kill-local-variable var))
       (unless (equal (symbol-value var) val)
         (if (fboundp var)
-            (funcall var (if var 1 -1))
+            (funcall var (if val 1 -1))
           (setq var val))))))
 
 (defun evil-save-mark ()
