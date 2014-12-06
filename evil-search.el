@@ -229,14 +229,14 @@ one more than the current position."
       (set-text-properties 0 (length string) nil string)
       ;; position to search from
       (goto-char start)
+      (setq isearch-string string)
+      (isearch-update-ring string regexp-p)
       (condition-case nil
           (funcall search-func string)
         (search-failed
          (goto-char orig)
          (user-error "\"%s\": %s not found"
                      string (if regexp-p "pattern" "string"))))
-      (setq isearch-string string)
-      (isearch-update-ring string regexp-p)
       ;; handle opening and closing of invisible area
       (cond
        ((boundp 'isearch-filter-predicates)
