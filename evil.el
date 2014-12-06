@@ -9,6 +9,7 @@
 ;;      Frank Fischer <frank-fischer at shadow-soft.de>
 ;;      Frank Terbeck <ft at bewatermyfriend.org>
 ;;      Gordon Gustafson <gordon3.14@gmail.com>
+;;      Herbert Jones <jones.herbert at gmail.com>
 ;;      Jonathan Claggett <jclaggett at lonocloud.com>
 ;;      José A. Romero L. <escherdragon@gmail.com>
 ;;      Lars Andersen <expez at expez.com>
