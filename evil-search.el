@@ -1234,11 +1234,15 @@ a :substitute command with arguments."
     ;; the r flag
     (when (zerop (length pattern))
       (setq pattern
-            (if (and evil-ex-last-was-search (memq ?r flags))
-                (and evil-ex-search-pattern
-                     (evil-ex-pattern-regex evil-ex-search-pattern))
-              (and evil-ex-substitute-pattern
-                   (evil-ex-pattern-regex evil-ex-substitute-pattern)))
+            (if (eq evil-search-module 'evil-search)
+                (if (and evil-ex-last-was-search (memq ?r flags))
+                    (and evil-ex-search-pattern
+                         (evil-ex-pattern-regex evil-ex-search-pattern))
+                  (and evil-ex-substitute-pattern
+                       (evil-ex-pattern-regex evil-ex-substitute-pattern)))
+              (if (eq case-fold-search t)
+                  isearch-string
+                (concat isearch-string "\\C")))
             flags (remq ?r flags)))
     ;; generate pattern
     (when pattern
