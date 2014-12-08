@@ -6180,7 +6180,39 @@ Below some empty line."))
       :visual-end "}"
       "<a[a]a>bbbb</aaa>"
       ("vat")
-      "{<aaa>bbbb</aaa[>]}")))
+      "{<aaa>bbbb</aaa[>]}"))
+  (ert-info ("Handle quoted strings tags")
+    (evil-test-buffer
+      :visual-start "{"
+      :visual-end "}"
+      "<html>
+<body>
+<div id=\"content\">
+\[ ]
+<p>
+UPDATE
+</p>
+<p>
+test hello <a href=\"/deed.zh\">Creative Commons</a>
+</p>
+</div>
+</body>
+</html>
+"
+      ("vit")
+      "<html>
+<body>
+<div id=\"content\">{\n \n<p>
+UPDATE
+</p>
+<p>
+test hello <a href=\"/deed.zh\">Creative Commons</a>
+</p>[\n]}</div>
+</body>
+</html>
+"
+
+      )))
 
 ;;; Visual state
 

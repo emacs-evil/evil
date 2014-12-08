@@ -1471,7 +1471,7 @@ last successful match (that caused COUNT to reach zero)."
         (while
             (and (setq match
                        (re-search-forward
-                        "<\\([^/ >]+\\)[^/>]*?>\\|</\\([^>]+?\\)>"
+                        "<\\([^/ >]+\\)\\(?:[^\"/>]\\|\"[^\"]*\"\\)*?>\\|</\\([^>]+?\\)>"
                         nil t dir))
                  (cond
                   ((match-beginning op)
@@ -1505,7 +1505,7 @@ last successful match (that caused COUNT to reach zero)."
         (let* ((tag (match-string cl))
                (refwd (concat "<\\(/\\)?"
                               (regexp-quote tag)
-                              "\\(?:>\\| [^/>]*?>\\)"))
+                              "\\(?:>\\| \\(?:[^\"/>]\\|\"[^\"]*\"\\)*?>\\)"))
                (cnt 1))
           (while (and (> cnt 0) (re-search-backward refwd nil t dir))
             (setq cnt (+ cnt (if (match-beginning 1) dir (- dir)))))
