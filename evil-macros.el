@@ -717,7 +717,7 @@ via KEY-VALUE pairs. BODY should evaluate to a list of values.
    ;; and does not match all three-letter words.)
    '(("(\\(evil-\\(?:ex-\\)?define-\
 \\(?:[^ k][^ e][^ y]\\|[-[:word:]]\\{4,\\}\\)\\)\
-\\>[ \f\t\n\r\v]*\\(\\sw+\\)?"
+\\>[ \f\t\n\r\v]*\\(\\(?:\\sw\\|\\s_\\)+\\)?"
       (1 font-lock-keyword-face)
       (2 font-lock-function-name-face nil t))
      ("(\\(evil-\\(?:delay\\|narrow\\|signal\\|save\\|with\\(?:out\\)?\\)\
