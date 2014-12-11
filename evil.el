@@ -1,21 +1,21 @@
 ;;; evil.el --- extensible vi layer
 
 ;; Authors:
-;;      Alessandro Piras <laynor@gmail.com>
+;;      Alessandro Piras <laynor at gmail.com>
 ;;      Antono Vasiljev <antono.vasiljev at gmail.com>
 ;;      Barry O'Reilly <gundaetiapo at gmail.com>
 ;;      Christoph Lange <langec at web.de>
-;;      Emanuel Evans <emanuel.evans@gmail.com>
+;;      Emanuel Evans <emanuel.evans at gmail.com>
 ;;      Frank Fischer <frank-fischer at shadow-soft.de>
 ;;      Frank Terbeck <ft at bewatermyfriend.org>
-;;      Gordon Gustafson <gordon3.14@gmail.com>
+;;      Gordon Gustafson <gordon3.14 at gmail.com>
 ;;      Herbert Jones <jones.herbert at gmail.com>
 ;;      Jonathan Claggett <jclaggett at lonocloud.com>
-;;      José A. Romero L. <escherdragon@gmail.com>
+;;      José A. Romero L. <escherdragon at gmail.com>
 ;;      Lars Andersen <expez at expez.com>
 ;;      Lintaro Ina <tarao.gnn at gmail.com>
-;;      Lukasz Wrzosek <wrzoski@gmail.com>
-;;      Marian Schubert <maio@netsafe.cz>
+;;      Lukasz Wrzosek <wrzoski at mail.com>
+;;      Marian Schubert <maio at netsafe.cz>
 ;;      Michael Markert <markert.michael at googlemail.com>
 ;;      Nikolai Weibull <now at bitwi.se>
 ;;      phaebz <phaebz at gmail.com>
@@ -29,7 +29,7 @@
 ;;      Trevor Murphy <trevor.m.murphy at gmail.com>
 ;;      Ulrich Müller <ulm at gentoo.org>
 ;;      Vegard Øye <vegard_oye at hotmail.com>
-;;      Winfred Lu <winfred.lu@gmail.com>
+;;      Winfred Lu <winfred.lu at gmail.com>
 ;;      Wolfgang Jenkner <wjenkner at inode.at>
 ;;      Xiao Hanyu <xiaohanyu1988 at gmail.com>
 ;;      York Zhao <yzhao at telecor.com>
