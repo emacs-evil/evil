@@ -1450,7 +1450,19 @@ Elements have the form (NAME . FUNCTION).")
      :toggle     nil
      :open       show-ifdef-block
      :open-rec   nil
-     :close      hide-ifdef-block))
+     :close      hide-ifdef-block)
+    ((outline-mode
+      outline-minor-mode
+      org-mode)
+     :open-all   show-all
+     :close-all  ,(lambda ()
+                    (hide-sublevels 1))
+     :toggle     outline-toggle-children
+     :open       ,(lambda ()
+                    (show-entry)
+                    (show-children))
+     :open-rec   show-subtree
+     :close      hide-subtree))
   "Actions to be performed for various folding operations.
 
 The value should be a list of fold handlers, were a fold handler has
