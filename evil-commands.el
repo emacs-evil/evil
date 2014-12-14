@@ -2408,66 +2408,57 @@ The search is unbounded, i.e., the pattern is not wrapped in
         (evil-search search t t (point-min)))))))
 
 ;;; Folding
+(defun evil-fold-action (list action)
+  "Perform fold ACTION for each matching major or minor mode in LIST.
+
+ACTION will be performed for every matching handler in LIST.  For more
+information on its features and format, see the documentation for
+`evil-fold-list'.
+
+Errors will be demoted, so a problem in one handler will (hopefully)
+not interfere with another."
+  (unless (null list)
+    (let* ((modes   (caar list))
+           (actions (cdar list)))
+      (when (evil--mode-p modes)
+        (let ((fn (plist-get actions action)))
+          (when fn
+            (with-demoted-errors (funcall fn)))))
+      (evil-fold-action (cdr list) action))))
+
+(defun evil--mode-p (modes)
+  "Determines whether any symbol in MODES represents the current
+buffer's major mode or any of its minors."
+  (unless (eq modes '())
+    (let ((mode (car modes)))
+      (or (eq major-mode mode)
+          (and (boundp mode) (symbol-value mode))
+          (evil--mode-p (cdr modes))))))
 
 (evil-define-command evil-toggle-fold ()
-  "Open or close a fold."
-  (when (fboundp 'hs-minor-mode)
-    (hs-minor-mode 1)
-    (with-no-warnings (hs-toggle-hiding))))
+  "Open or close a fold under point.
+See also `evil-open-fold' and `evil-close-fold'."
+  (evil-fold-action evil-fold-list :toggle))
 
 (evil-define-command evil-open-folds ()
   "Open all folds.
 See also `evil-close-folds'."
-  (when (fboundp 'hs-minor-mode)
-    (hs-minor-mode 1)
-    (with-no-warnings (hs-show-all)))
-  (when (memq major-mode '(c-mode c++-mode))
-    (when (fboundp 'hide-ifdef-mode)
-      (hide-ifdef-mode 1)
-      (with-no-warnings (show-ifdefs)))))
+  (evil-fold-action evil-fold-list :open-all))
 
 (evil-define-command evil-close-folds ()
   "Close all folds.
 See also `evil-open-folds'."
-  (when (fboundp 'hs-minor-mode)
-    (hs-minor-mode 1)
-    (with-no-warnings (hs-hide-all)))
-  (when (memq major-mode '(c-mode c++-mode))
-    (when (fboundp 'hide-ifdef-mode)
-      (hide-ifdef-mode 1)
-      (with-no-warnings (hide-ifdefs)))))
+  (evil-fold-action evil-fold-list :close-all))
 
 (evil-define-command evil-open-fold ()
-  "Open fold.
+  "Open fold at point.
 See also `evil-close-fold'."
-  (with-no-warnings
-    (cond
-     ((and (memq major-mode '(c-mode c++-mode))
-           (fboundp 'hide-ifdef-mode)
-           (hide-ifdef-mode 1)
-           (save-excursion
-             (beginning-of-line)
-             (looking-at hif-ifx-else-endif-regexp)))
-      (show-ifdef-block))
-     ((fboundp 'hs-minor-mode)
-      (hs-minor-mode 1)
-      (hs-show-block)))))
+  (evil-fold-action evil-fold-list :open))
 
 (evil-define-command evil-close-fold ()
-  "Close fold.
+  "Close fold at point.
 See also `evil-open-fold'."
-  (with-no-warnings
-    (cond
-     ((and (memq major-mode '(c-mode c++-mode))
-           (fboundp 'hide-ifdef-mode)
-           (hide-ifdef-mode 1)
-           (save-excursion
-             (beginning-of-line)
-             (looking-at hif-ifx-else-endif-regexp)))
-      (hide-ifdef-block))
-     ((fboundp 'hs-minor-mode)
-      (hs-minor-mode 1)
-      (hs-hide-block)))))
+  (evil-fold-action evil-fold-list :close))
 
 ;;; Ex
 
