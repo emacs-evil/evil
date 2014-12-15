@@ -36,8 +36,9 @@
 (require 'evil-search)
 (require 'evil-ex)
 
-(define-derived-mode evil-command-window-mode text-mode "Evil-cmd"
+(define-derived-mode evil-command-window-mode fundamental-mode "Evil-cmd"
   "Major mode for the Evil command line window."
+  (auto-fill-mode 0)
   (setq-local after-change-functions (cons 'evil-command-window-draw-prefix
                                            after-change-functions)))
 
