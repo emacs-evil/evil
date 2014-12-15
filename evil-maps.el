@@ -72,6 +72,7 @@
 (define-key evil-normal-state-map "g?" 'evil-rot13)
 (define-key evil-normal-state-map "g~" 'evil-invert-case)
 (define-key evil-normal-state-map "zo" 'evil-open-fold)
+(define-key evil-normal-state-map "zO" 'evil-open-fold-rec)
 (define-key evil-normal-state-map "zc" 'evil-close-fold)
 (define-key evil-normal-state-map "za" 'evil-toggle-fold)
 (define-key evil-normal-state-map "zr" 'evil-open-folds)

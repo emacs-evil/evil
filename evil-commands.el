@@ -2455,6 +2455,11 @@ See also `evil-open-folds'."
 See also `evil-close-fold'."
   (evil-fold-action evil-fold-list :open))
 
+(evil-define-command evil-open-fold-rec ()
+  "Open fold at point recursively.
+See also `evil-open-fold' and `evil-close-fold'."
+  (evil-fold-action evil-fold-list :open-rec))
+
 (evil-define-command evil-close-fold ()
   "Close fold at point.
 See also `evil-open-fold'."

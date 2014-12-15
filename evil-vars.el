@@ -1442,12 +1442,14 @@ Elements have the form (NAME . FUNCTION).")
      :close-all  hs-hide-all
      :toggle     hs-toggle-hiding
      :open       hs-show-block
+     :open-rec   nil
      :close      hs-hide-block)
     ((hide-ifdef-mode)
      :open-all   show-ifdefs
      :close-all  hide-ifdefs
      :toggle     nil
      :open       show-ifdef-block
+     :open-rec   nil
      :close      hide-ifdef-block))
   "Actions to be performed for various folding operations.
 
@@ -1476,6 +1478,8 @@ supported properties are:
     Toggle the display of the fold at point.
   - `:open'
     Open the fold at point.
+  - `:open-rec'
+    Open the fold at point recursively.
   - `:close'
     Close the fold at point.
 
