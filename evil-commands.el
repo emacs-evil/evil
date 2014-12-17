@@ -1803,7 +1803,7 @@ will be opened instead."
   :suppress-operator t
   (interactive
    (list (unless (and evil-this-macro defining-kbd-macro)
-           (or evil-this-register (read-char)))))
+           (or evil-this-register (evil-read-key)))))
   (cond
    ((and evil-this-macro defining-kbd-macro)
     (condition-case nil
