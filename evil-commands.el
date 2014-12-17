@@ -2578,12 +2578,20 @@ files."
   "Switches to another buffer."
   :repeat nil
   (interactive "<b>")
-  (if buffer
-      (when (or (get-buffer buffer)
-                (y-or-n-p (format "No buffer with name \"%s\" exists. \
-Create new buffer? " buffer)))
-        (switch-to-buffer buffer))
-    (switch-to-buffer (other-buffer))))
+  (cond
+   ;; no buffer given, switch to "other" buffer
+   ((null buffer) (switch-to-buffer (other-buffer)))
+   ;; we are given the name of an existing buffer
+   ((get-buffer buffer) (switch-to-buffer buffer))
+   ;; try to complete the buffer
+   ((let ((all-buffers (internal-complete-buffer buffer nil t)))
+      (when (= (length all-buffers) 1)
+        (switch-to-buffer (car all-buffers)))))
+   (t
+    (when (y-or-n-p
+           (format "No buffer with name \"%s\" exists. Create new buffer? "
+                   buffer))
+      (switch-to-buffer buffer)))))
 
 (evil-define-command evil-next-buffer (&optional count)
   "Goes to the `count'-th next buffer in the buffer list."
