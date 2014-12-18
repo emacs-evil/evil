@@ -2408,23 +2408,32 @@ The search is unbounded, i.e., the pattern is not wrapped in
         (evil-search search t t (point-min)))))))
 
 ;;; Folding
-(defun evil-fold-action (list action)
+(defun evil-fold-action (list action &optional no-error)
   "Perform fold ACTION for each matching major or minor mode in LIST.
 
 ACTION will be performed for every matching handler in LIST.  For more
 information on its features and format, see the documentation for
 `evil-fold-list'.
 
-Errors will be demoted, so a problem in one handler will (hopefully)
+If no matching ACTION is found in LIST, an error will signaled unless
+NO-ERROR is non-nil.
+
+Handler errors will be demoted, so a problem in one handler will (hopefully)
 not interfere with another."
-  (unless (null list)
-    (let* ((modes   (caar list))
-           (actions (cdar list)))
-      (when (evil--mode-p modes)
-        (let ((fn (plist-get actions action)))
-          (when fn
-            (with-demoted-errors (funcall fn)))))
-      (evil-fold-action (cdr list) action))))
+  (if (null list)
+      (or no-error
+          (user-error
+           "Folding is not supported for any of these major/minor modes"))
+    (let* ((modes (caar list))
+           (handled
+            (when (evil--mode-p modes)
+              (let* ((actions (cdar list))
+                     (fn      (plist-get actions action)))
+                (when fn
+                  (with-demoted-errors (funcall fn))
+                  t)))))
+      (evil-fold-action (cdr list) action
+                        (or handled no-error)))))
 
 (defun evil--mode-p (modes)
   "Determines whether any symbol in MODES represents the current
