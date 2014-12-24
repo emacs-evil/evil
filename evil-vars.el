@@ -1456,11 +1456,12 @@ Elements have the form (NAME . FUNCTION).")
       org-mode)
      :open-all   show-all
      :close-all  ,(lambda ()
-                    (hide-sublevels 1))
+                    (with-no-warnings (hide-sublevels 1)))
      :toggle     outline-toggle-children
      :open       ,(lambda ()
-                    (show-entry)
-                    (show-children))
+                    (with-no-warnings
+                      (show-entry)
+                      (show-children)))
      :open-rec   show-subtree
      :close      hide-subtree))
   "Actions to be performed for various folding operations.
