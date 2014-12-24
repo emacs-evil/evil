@@ -17,6 +17,7 @@
 ;;      Lukasz Wrzosek <wrzoski at mail.com>
 ;;      Marian Schubert <maio at netsafe.cz>
 ;;      Michael Markert <markert.michael at googlemail.com>
+;;      Mike Gerwitz <mikegerwitz at gnu.org>
 ;;      Nikolai Weibull <now at bitwi.se>
 ;;      phaebz <phaebz at gmail.com>
 ;;      Sanel Zukan <sanelz at gmail.com>
