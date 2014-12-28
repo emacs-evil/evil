@@ -3303,15 +3303,21 @@ non-nil only the first boundary is removed.  See
 `evil-start-undo-step'."
   (when evil-undo-list-pointer
     (if first-only
-        (let ((bnd buffer-undo-list)
-              (cur buffer-undo-list))
+        (let ((cnt 0)
+              (cur buffer-undo-list)
+              (bnd nil))
+          ;; find last nil
           (while (and cur (not (eq cur evil-undo-list-pointer)))
-            (when (null (cadr cur))
-              (setq bnd cur))
+            (when (null (car cur)) (setq bnd cur))
             (pop cur))
-          ;; found the first boundary, remove it
-          (when (and bnd (null (cadr bnd)))
-            (setcdr bnd (cdr (cdr bnd)))))
+          ;; remove the last nil
+          (when bnd
+            (setq cur buffer-undo-list)
+            (if (eq cur bnd)
+                (pop buffer-undo-list)
+              (while (not (eq (cdr cur) bnd))
+                (pop cur))
+              (setcdr cur (cdr bnd)))))
       (setq buffer-undo-list
             (evil-filter-list #'null buffer-undo-list evil-undo-list-pointer)))
     (setq evil-undo-list-pointer (or buffer-undo-list t))))
