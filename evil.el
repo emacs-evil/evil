@@ -26,6 +26,7 @@
 ;;      Stefan Wehr <mail at stefanwehr.de>
 ;;      Sune Simonsen <sune.simonsen at jayway.com>
 ;;      Thomas Hisch <thomas at opentech.at>
+;;      Tim Harper <timcharper at gmail.com>
 ;;      Tom Willemse <tom at ryuslash.org>
 ;;      Trevor Murphy <trevor.m.murphy at gmail.com>
 ;;      Ulrich Müller <ulm at gentoo.org>
