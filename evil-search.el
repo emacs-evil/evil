@@ -273,7 +273,7 @@ otherwise for the word at point."
            (not (string= string "")))
       (evil-search string forward t))
      (t
-      (setq string (evil-find-thing forward (if symbol 'symbol 'word)))
+      (setq string (evil-find-thing forward (if symbol 'symbol 'evil-word)))
       (cond
        ((null string)
         (user-error "No word under point"))
