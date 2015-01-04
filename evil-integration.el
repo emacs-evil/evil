@@ -448,6 +448,13 @@ the mark and entering `recursive-edit'."
   '(with-no-warnings
      (push 'evil-mode-cmhh mumamo-change-major-mode-no-nos)))
 
+;;; ag.el
+(eval-after-load 'ag
+  '(progn
+     (defvar ag-mode-map)
+     (add-to-list 'evil-motion-state-modes 'ag-mode)
+     (evil-add-hjkl-bindings ag-mode-map 'motion)))
+
 (provide 'evil-integration)
 
 ;;; evil-integration.el ends here
