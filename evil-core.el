@@ -132,8 +132,7 @@
     (add-hook 'activate-mark-hook 'evil-visual-activate-hook nil t)
     (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
     (add-hook 'pre-command-hook 'evil-jump-hook nil t)
-    (add-hook 'post-command-hook 'evil-repeat-post-hook)
-    (add-hook 'post-command-hook 'evil-refresh-cursor))
+    (add-hook 'post-command-hook 'evil-repeat-post-hook))
    (t
     (evil-refresh-mode-line)
     (remove-hook 'pre-command-hook 'evil-jump-hook t)
@@ -350,6 +349,12 @@ then this function does nothing."
         (with-current-buffer buffer
           (unless evil-local-mode
             (evil-local-mode 1)))))))
+
+;; Refresh cursor color.
+;; Cursor color can only be set for each frame but not for each buffer.
+(add-hook 'window-configuration-change-hook 'evil-refresh-cursor)
+(defadvice select-window (after evil activate)
+  (evil-refresh-cursor))
 
 (defun evil-generate-mode-line-tag (&optional state)
   "Generate the evil mode-line tag for STATE."
