@@ -3244,6 +3244,14 @@ Default position is the beginning of the buffer."
         (message "\"%s\" %d %slines --%s--" file nlines readonly perc)
       (message "%d lines --%s--" nlines perc))))
 
+(evil-define-operator evil-ex-sort (beg end &optional reverse)
+  "The Ex sort command.
+\[BEG,END]sort[!]"
+  :motion mark-whole-buffer
+  :move-point nil
+  (interactive "<r><!>")
+  (sort-lines reverse beg end))
+
 ;;; Window navigation
 
 (defun evil-resize-window (new-size &optional horizontal)
