@@ -1125,7 +1125,13 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                (evil-normalize-keymaps)
                (if ',input-method
                    (activate-input-method evil-input-method)
-                 (deactivate-input-method))
+                 ;; BUG #475: Deactivate the current input method only
+                 ;; if there is a function to deactivate it, otherwise
+                 ;; an error would be raised. This strange situation
+                 ;; should not arise in general and there should
+                 ;; probably be a better way to handle this situation.
+                 (if deactivate-current-input-method-function
+                     (deactivate-input-method)))
                (unless evil-no-display
                  (evil-refresh-cursor ',state)
                  (evil-refresh-mode-line ',state)
