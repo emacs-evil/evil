@@ -3258,13 +3258,26 @@ Default position is the beginning of the buffer."
         (message "\"%s\" %d %slines --%s--" file nlines readonly perc)
       (message "%d lines --%s--" nlines perc))))
 
-(evil-define-operator evil-ex-sort (beg end &optional reverse)
+(evil-define-operator evil-ex-sort (beg end &optional options reverse)
   "The Ex sort command.
-\[BEG,END]sort[!]"
+\[BEG,END]sort[!] [i][u]
+The following additional options are supported:
+
+  * i   ignore case
+  * u   remove duplicate lines
+
+The 'bang' argument means to sort in reverse order."
   :motion mark-whole-buffer
   :move-point nil
-  (interactive "<r><!>")
-  (sort-lines reverse beg end))
+  (interactive "<r><a><!>")
+  (let (sort-fold-case uniq)
+    (dolist (opt (append options nil))
+      (cond
+       ((eq opt ?i) (setq sort-fold-case t))
+       ((eq opt ?u) (setq uniq t))
+       (t (user-error "Unsupported sort option: %c" opt))))
+    (sort-lines reverse beg end)
+    (when uniq (delete-duplicate-lines (region-beginning) (region-end)))))
 
 ;;; Window navigation
 
