@@ -3277,7 +3277,7 @@ The 'bang' argument means to sort in reverse order."
        ((eq opt ?u) (setq uniq t))
        (t (user-error "Unsupported sort option: %c" opt))))
     (sort-lines reverse beg end)
-    (when uniq (delete-duplicate-lines (region-beginning) (region-end)))))
+    (when uniq (delete-duplicate-lines beg end nil t))))
 
 ;;; Window navigation
 
