@@ -2729,9 +2729,23 @@ the previous shell command is executed instead."
       (if previous (user-error "No previous shell command")
         (user-error "No shell command")))
      (evil-ex-range
-      (shell-command-on-region beg end command nil t)
-      (goto-char beg)
-      (evil-first-non-blank))
+      (if (not evil-display-shell-error-in-message)
+          (shell-command-on-region beg end command nil t)
+        (let ((output-buffer (generate-new-buffer " *temp*"))
+              (error-buffer (generate-new-buffer " *temp*")))
+          (unwind-protect
+              (if (zerop (shell-command-on-region beg end
+                                                  command
+                                                  output-buffer nil
+                                                  error-buffer))
+                  (progn
+                    (delete-region beg end)
+                    (insert-buffer output-buffer)
+                    (goto-char beg)
+                    (evil-first-non-blank))
+                (display-message-or-buffer error-buffer))
+            (kill-buffer output-buffer)
+            (kill-buffer error-buffer)))))
      (t
       (shell-command command)))))
 
