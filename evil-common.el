@@ -533,8 +533,7 @@ Both COUNT and CMD may be nil."
                                    (list (car cmd) (* (or count 1)
                                                       (or (cadr cmd) 1))))))))
                ((or (eq cmd #'digit-argument)
-                    (and (eq cmd
-                             #'evil-digit-argument-or-evil-beginning-of-line)
+                    (and (eq cmd 'evil-digit-argument-or-evil-beginning-of-line)
                          count))
                 (let* ((event (aref seq (- (length seq) 1)))
                        (char (or (when (characterp event) event)
