@@ -2740,7 +2740,7 @@ the previous shell command is executed instead."
                                                   error-buffer))
                   (progn
                     (delete-region beg end)
-                    (insert-buffer output-buffer)
+                    (insert-buffer-substring output-buffer)
                     (goto-char beg)
                     (evil-first-non-blank))
                 (display-message-or-buffer error-buffer))
