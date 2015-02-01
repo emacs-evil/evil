@@ -3270,14 +3270,33 @@ The 'bang' argument means to sort in reverse order."
   :motion mark-whole-buffer
   :move-point nil
   (interactive "<r><a><!>")
-  (let (sort-fold-case uniq)
+  (let ((beg (copy-marker beg))
+        (end (copy-marker end))
+        sort-fold-case uniq)
     (dolist (opt (append options nil))
       (cond
        ((eq opt ?i) (setq sort-fold-case t))
        ((eq opt ?u) (setq uniq t))
        (t (user-error "Unsupported sort option: %c" opt))))
     (sort-lines reverse beg end)
-    (when uniq (delete-duplicate-lines beg end nil t))))
+    (when uniq
+      (let (line prev-line)
+        (goto-char beg)
+        (while (and (< (point) end) (not (eobp)))
+          (setq line (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+          (if (and (stringp prev-line)
+                   (eq t (compare-strings line nil nil
+                                          prev-line nil nil
+                                          sort-fold-case)))
+              (delete-region (progn (forward-line 0) (point))
+                             (progn (forward-line 1) (point)))
+            (setq prev-line line)
+            (forward-line 1)))))
+    (goto-char beg)
+    (set-marker beg nil)
+    (set-marker end nil)))
 
 ;;; Window navigation
 

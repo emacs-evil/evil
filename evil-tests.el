@@ -7251,6 +7251,35 @@ maybe we need one line more with some text\n")
               "line4\nline1\nline2\nline1\nline2\nline3\nline4\nline5\n")
         (delete-file filename)))))
 
+(ert-deftest evil-test-ex-sort ()
+  :tags '(evil ex)
+  "Text ex command :sort `evil-ex-sort`."
+  (ert-info ("Plain sort")
+    (evil-test-buffer
+      "[z]zyy\ntest\ntEst\ntesT\nTEST\ntest\n"
+      (":sort")
+      "[T]EST\ntEst\ntesT\ntest\ntest\nzzyy\n"))
+  (ert-info ("Reverse sort")
+    (evil-test-buffer
+      "[z]zyy\ntest\ntEst\ntesT\nTEST\ntest\n"
+      (":sort!")
+      "[z]zyy\ntest\ntest\ntesT\ntEst\nTEST\n"))
+  (ert-info ("case insensitive")
+    (evil-test-buffer
+      "[z]zyy\ntest\ntEst\ntesT\nTEST\ntest\n"
+      (":sort i")
+      "[t]est\ntEst\ntesT\nTEST\ntest\nzzyy\n"))
+  (ert-info ("unique")
+    (evil-test-buffer
+      "[z]zyy\ntest\ntEst\ntesT\nTEST\ntest\n"
+      (":sort u")
+      "[T]EST\ntEst\ntesT\ntest\nzzyy\n"))
+  (ert-info ("case insensitive and unique")
+    (evil-test-buffer
+      "[z]zyy\ntest\ntEst\ntesT\nTEST\ntest\n"
+      (":sort iu")
+      "[t]est\nzzyy\n")))
+
 ;;; Command line window
 
 (ert-deftest evil-test-command-window-ex ()
