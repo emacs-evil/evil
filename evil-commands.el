@@ -713,7 +713,10 @@ for specifying the tag."
   :jump t
   (interactive "P")
   (if arg (call-interactively #'find-tag)
-    (let ((tag (thing-at-point 'symbol)))
+    (let ((tag (funcall (or find-tag-default-function
+                            (get major-mode 'find-tag-default-function)
+                            #'find-tag-default))))
+      (unless tag (user-error "No tag candidate found around point"))
       (find-tag tag))))
 
 (evil-define-motion evil-lookup ()
