@@ -1352,12 +1352,25 @@ to reach zero). The behaviour of this functions is similar to
          (dir (if (> count 0) +1 -1)))
     (catch 'done
       (while (not (zerop count))
-        (let* ((cl (save-excursion
+        (let* ((pnt (point))
+               (cl (save-excursion
                      (and (re-search-forward end nil t dir)
+                          (or (/= pnt (point))
+                              (progn
+                                ;; zero size match, repeat search from
+                                ;; the next position
+                                (forward-char dir)
+                                (re-search-forward end nil t dir)))
                           (point))))
                (match (match-data t))
                (op (save-excursion
                      (and (re-search-forward beg cl t dir)
+                          (or (/= pnt (point))
+                              (progn
+                                ;; zero size match, repeat search from
+                                ;; the next position
+                                (forward-char dir)
+                                (re-search-forward beg cl t dir)))
                           (point)))))
           (cond
            ((and (not op) (not cl))
