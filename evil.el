@@ -16,6 +16,7 @@
 ;;      Lintaro Ina <tarao.gnn at gmail.com>
 ;;      Lukasz Wrzosek <wrzoski at mail.com>
 ;;      Marian Schubert <maio at netsafe.cz>
+;;      Matthew Malcomson <>
 ;;      Michael Markert <markert.michael at googlemail.com>
 ;;      Mike Gerwitz <mikegerwitz at gnu.org>
 ;;      Nikolai Weibull <now at bitwi.se>
