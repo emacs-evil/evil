@@ -451,7 +451,7 @@
 (evil-ex-define-cmd "=" 'evil-ex-line-number)
 (evil-ex-define-cmd "!" 'evil-shell-command)
 (evil-ex-define-cmd "@:" 'evil-ex-repeat)
-(evil-ex-define-cmd "m[ake]" 'evil-make)
+(evil-ex-define-cmd "mak[e]" 'evil-make)
 (evil-ex-define-cmd "cn[ext]" 'next-error)
 (evil-ex-define-cmd "cp[revious]" 'previous-error)
 (evil-ex-define-cmd "set-initial-state" 'evil-ex-set-initial-state)
