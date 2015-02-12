@@ -3438,34 +3438,20 @@ window are rebalanced."
 (evil-define-command evil-window-bottom-right ()
   "Move the cursor to bottom-right window."
   :repeat nil
-  (while (let (success)
-           (condition-case nil
-               (progn
-                 (windmove-right)
-                 (setq success t))
-             (error nil))
-           (condition-case nil
-               (progn
-                 (windmove-down)
-                 (setq success t))
-             (error nil))
-           success)))
+  (select-window
+   (let ((last-sibling (frame-root-window)))
+     (while (not (window-live-p last-sibling))
+       (setq last-sibling (window-last-child last-sibling)))
+     last-sibling)))
 
 (evil-define-command evil-window-top-left ()
   "Move the cursor to top-left window."
   :repeat nil
-  (while (let (success)
-           (condition-case nil
-               (progn
-                 (windmove-left)
-                 (setq success t))
-             (error nil))
-           (condition-case nil
-               (progn
-                 (windmove-up)
-                 (setq success t))
-             (error nil))
-           success)))
+  (select-window
+   (let ((first-child (window-child (frame-root-window))))
+     (while (not (window-live-p first-child))
+       (setq first-child (window-child first-child)))
+     first-child)))
 
 (evil-define-command evil-window-mru ()
   "Move the cursor to the previous (last accessed) buffer in another window.
