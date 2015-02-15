@@ -3362,12 +3362,14 @@ the deleted window's parent window are rebalanced."
 
 (evil-define-command evil-window-split (&optional count file)
   "Splits the current window horizontally, COUNT lines height,
-editing a certain FILE. If COUNT and `evil-auto-balance-windows'
-are both non-nil then all children of the parent of the splitted
-window are rebalanced."
+editing a certain FILE. The new window will be created below
+when `evil-split-window-below' is non-nil. If COUNT and
+`evil-auto-balance-windows' are both non-nil then all children
+of the parent of the splitted window are rebalanced."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count)
+  (split-window (selected-window) count
+                (if evil-split-window-below 'above 'below))
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (when file
@@ -3375,12 +3377,14 @@ window are rebalanced."
 
 (evil-define-command evil-window-vsplit (&optional count file)
   "Splits the current window vertically, COUNT columns width,
-editing a certain FILE. If COUNT and `evil-auto-balance-windows'
-are both non-nil then all children of the parent of the splitted
-window are rebalanced."
+editing a certain FILE. The new window will be created to the
+right when `evil-vsplit-window-right' is non-nil. If COUNT and
+`evil-auto-balance-windows'are both non-nil then all children
+of the parent of the splitted window are rebalanced."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count t)
+  (split-window (selected-window) count
+                (if evil-vsplit-window-right 'left 'right))
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (when file
