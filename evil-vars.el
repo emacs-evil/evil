@@ -1183,6 +1183,9 @@ describing it, etc.")
 (evil-define-local-var evil-this-motion-count nil
   "Current motion count.")
 
+(defvar evil-last-register nil
+  "The last executed register.")
+
 (defvar evil-inhibit-operator nil
   "Inhibit current operator.
 If an operator calls a motion and the motion sets this variable
