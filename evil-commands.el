@@ -3502,7 +3502,8 @@ top-left."
 and opens a new buffer or edits a certain FILE."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count)
+  (split-window (selected-window) count
+                (if evil-split-window-below 'above 'below))
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (if file
@@ -3517,7 +3518,8 @@ and opens a new buffer or edits a certain FILE."
 and opens a new buffer name or edits a certain FILE."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count t)
+  (split-window (selected-window) count
+                (if evil-vsplit-window-right 'left 'right))
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (if file
