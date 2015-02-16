@@ -6,6 +6,7 @@
 ;;      Barry O'Reilly <gundaetiapo at gmail.com>
 ;;      Christoph Lange <langec at web.de>
 ;;      Emanuel Evans <emanuel.evans at gmail.com>
+;;      Eric Siegel <siegel.eric at gmail.com>
 ;;      Frank Fischer <frank-fischer at shadow-soft.de>
 ;;      Frank Terbeck <ft at bewatermyfriend.org>
 ;;      Gordon Gustafson <gordon3.14 at gmail.com>
