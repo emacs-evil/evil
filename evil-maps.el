@@ -236,6 +236,7 @@
 (define-key evil-motion-state-map "_" 'evil-next-line-1-first-non-blank)
 (define-key evil-motion-state-map "-" 'evil-previous-line-first-non-blank)
 (define-key evil-motion-state-map "\C-w" 'evil-window-map)
+(define-key evil-motion-state-map (kbd "C-6") 'evil-switch-to-windows-last-buffer)
 (define-key evil-motion-state-map "\C-]" 'evil-jump-to-tag)
 (define-key evil-motion-state-map (kbd "C-b") 'evil-scroll-page-up)
 (define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down)

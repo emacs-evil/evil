@@ -3350,6 +3350,28 @@ TREE is the tree layout to be restored."
    (t
     (set-window-buffer win tree))))
 
+(defun evil-alternate-buffer (&optional window)
+  "Return the last buffer WINDOW has displayed other than the
+current one (equivalent to Vim's alternate buffer).
+
+Returns the first item in `window-prev-buffers' that isn't
+`window-buffer' of WINDOW."
+  ;; If the last buffer visitied has been killed, then `window-prev-buffers'
+  ;; returns a list with `current-buffer' at the head, we account for this
+  ;; possibility.
+  (let* ((prev-buffers (window-prev-buffers))
+         (head (car prev-buffers)))
+    (if (eq (car head) (window-buffer window))
+        (cadr prev-buffers)
+      head)))
+
+(defun evil-switch-to-windows-last-buffer ()
+  "Switch to current windows last open buffer."
+  (interactive)
+  (let ((previous-place (evil-alternate-buffer)))
+    (switch-to-buffer (car previous-place))
+    (goto-char (car (last previous-place)))))
+
 (evil-define-command evil-window-delete ()
   "Deletes the current window.
 If `evil-auto-balance-windows' is non-nil then all children of
