@@ -2580,6 +2580,20 @@ files."
   :repeat nil
   (buffer-menu 1))
 
+(evil-define-command evil-goto-error (count)
+  "Go to error number COUNT.
+
+If no COUNT supplied, move to the current error.
+
+Acts like `first-error' other than when given no counts, goes
+to the current error instead of the first, like in Vim's :cc
+command."
+  :repeat nil
+  (interactive "P")
+  (if count
+      (first-error (if (eql 0 count) 1 count))
+    (next-error 0)))
+
 (evil-define-command evil-buffer (buffer)
   "Switches to another buffer."
   :repeat nil
