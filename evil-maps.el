@@ -454,6 +454,8 @@
 (evil-ex-define-cmd "@:" 'evil-ex-repeat)
 (evil-ex-define-cmd "mak[e]" 'evil-make)
 (evil-ex-define-cmd "cc" 'evil-goto-error)
+(evil-ex-define-cmd "cfir[st]" 'first-error)
+(evil-ex-define-cmd "cr[ewind]" 'first-error)
 (evil-ex-define-cmd "cn[ext]" 'next-error)
 (evil-ex-define-cmd "cp[revious]" 'previous-error)
 (evil-ex-define-cmd "set-initial-state" 'evil-ex-set-initial-state)
