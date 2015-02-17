@@ -6418,7 +6418,7 @@ if no previous selection")
                  '(evil-ex-range
                    (evil-ex-line (string-to-number "5") nil)
                    (evil-ex-line (string-to-number "27") nil))))
-  (should (equal (evil-ex-parse "5;$" nil 'range)
+  (should (equal (evil-ex-parse "5,$" nil 'range)
                  '(evil-ex-range
                    (evil-ex-line (string-to-number "5") nil)
                    (evil-ex-line (evil-ex-last-line) nil))))
@@ -6438,7 +6438,7 @@ if no previous selection")
                    (evil-ex-line (string-to-number "5") nil)
                    (evil-ex-line
                     nil (+ (evil-ex-signed-number (intern "-") nil))))))
-  (should (equal (evil-ex-parse "5;4+2-7-3+10-" nil 'range)
+  (should (equal (evil-ex-parse "5,4+2-7-3+10-" nil 'range)
                  '(evil-ex-range
                    (evil-ex-line (string-to-number "5") nil)
                    (evil-ex-line
@@ -6452,7 +6452,7 @@ if no previous selection")
                        (evil-ex-signed-number
                         (intern "+") (string-to-number "10"))
                        (evil-ex-signed-number (intern "-") nil))))))
-  (should (equal (evil-ex-parse ".-2;4+2-7-3+10-" nil 'range)
+  (should (equal (evil-ex-parse ".-2,4+2-7-3+10-" nil 'range)
                  '(evil-ex-range
                    (evil-ex-line
                     (evil-ex-current-line)
