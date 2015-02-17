@@ -3365,12 +3365,13 @@ Returns the first item in `window-prev-buffers' that isn't
         (cadr prev-buffers)
       head)))
 
-(defun evil-switch-to-windows-last-buffer ()
+(evil-define-command evil-switch-to-windows-last-buffer ()
   "Switch to current windows last open buffer."
-  (interactive)
+  :repeat nil
   (let ((previous-place (evil-alternate-buffer)))
-    (switch-to-buffer (car previous-place))
-    (goto-char (car (last previous-place)))))
+    (when previous-place
+      (switch-to-buffer (car previous-place))
+      (goto-char (car (last previous-place))))))
 
 (evil-define-command evil-window-delete ()
   "Deletes the current window.
