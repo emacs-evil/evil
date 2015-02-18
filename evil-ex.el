@@ -71,6 +71,16 @@
      ("`" "[-a-zA-Z_<>']" ",`" "[-a-zA-Z_<>']"
       #'(evil-ex-char-marker-range $2 $4)))
     (line
+     (base (\? offset) search (\? offset)
+           #'(let ((tmp (evil-ex-line $1 $2)))
+               (save-excursion
+                 (goto-line tmp)
+                 (evil-ex-line $3 $4))))
+     ((\? base) offset search (\? offset)
+      #'(let ((tmp (evil-ex-line $1 $2)))
+          (save-excursion
+            (goto-line tmp)
+            (evil-ex-line $3 $4))))
      (base (\? offset) #'evil-ex-line)
      ((\? base) offset #'evil-ex-line))
     (base

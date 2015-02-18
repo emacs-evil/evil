@@ -6488,6 +6488,30 @@ if no previous selection")
                         (intern "+") (string-to-number "42"))))
                    nil))))
 
+(ert-deftest evil-text-ex-search-offset ()
+  "Test for addresses like /base//pattern/"
+  :tags '(evil ex)
+  (ert-info ("without base")
+    (evil-test-buffer
+      "[l]ine 1\naaa\nbbb\naaa\nccc\nddd"
+      (":/aaa/d")
+      "line 1\nbbb\naaa\nccc\nddd"))
+  (ert-info ("with base")
+    (evil-test-buffer
+      "[l]ine 1\naaa\nbbb\naaa\nccc\nddd"
+      (":/bbb//aaa/d")
+      "line 1\naaa\nbbb\nccc\nddd"))
+  (ert-info ("range without base")
+    (evil-test-buffer
+      "[l]ine 1\naaa\nbbb\naaa\nccc\nddd\nccc\neee\n"
+      (":/aaa/;/ccc/d")
+      "line 1\nddd\nccc\neee\n"))
+  (ert-info ("range with base")
+    (evil-test-buffer
+      "[l]ine 1\naaa\nbbb\naaa\nccc\nddd\nccc\neee\n"
+      (":/bbb//aaa/;/ddd//ccc/d")
+      "line 1\naaa\nbbb\neee\n")))
+
 (ert-deftest evil-test-ex-goto-line ()
   "Test if :number moves point to a certain line"
   :tags '(evil ex)
