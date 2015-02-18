@@ -1498,56 +1498,65 @@ but doesn't insert or remove any spaces."
   :motion evil-line
   (evil-indent beg end))
 
-(evil-define-operator evil-shift-left (beg end &optional count)
+(evil-define-operator evil-shift-left (beg end &optional count preserve-empty)
   "Shift text from BEG to END to the left.
 The text is shifted to the nearest multiple of `evil-shift-width'
 \(the rounding can be disabled by setting `evil-shift-round').
+If PRESERVE-EMPTY is non-nil, lines that contain only spaces are
+indented, too, otherwise they are ignored.  The relative column
+of point is preserved if this function is not called
+interactively. Otherwise, if the function is called as an
+operator, point is moved to the first non-blank character.
 See also `evil-shift-right'."
   :type line
   (interactive "<r><vc>")
-  (let ((beg (set-marker (make-marker) beg))
-        (end (set-marker (make-marker) end)))
-    (dotimes (i (or count 1))
-      (if (not evil-shift-round)
-          (indent-rigidly beg end (- evil-shift-width))
-        (let* ((indent
-                (save-excursion
-                  (goto-char beg)
-                  (evil-move-beginning-of-line)
-                  ;; ignore blank lines
-                  (while (and (< (point) end) (looking-at "[ \t]*$"))
-                    (forward-line))
-                  (if (> (point) end) 0
-                    (current-indentation))))
-               (offset (1+ (mod (1- indent) evil-shift-width))))
-          (indent-rigidly beg end (- offset)))))
-    (set-marker beg nil)
-    (set-marker end nil)))
+  (evil-shift-right beg end (- (or count 1)) preserve-empty))
 
-(evil-define-operator evil-shift-right (beg end &optional count)
+(evil-define-operator evil-shift-right (beg end &optional count preserve-empty)
   "Shift text from BEG to END to the right.
 The text is shifted to the nearest multiple of `evil-shift-width'
 \(the rounding can be disabled by setting `evil-shift-round').
+If PRESERVE-EMPTY is non-nil, lines that contain only spaces are
+indented, too, otherwise they are ignored.  The relative column
+of point is preserved if this function is not called
+interactively. Otherwise, if the function is called as an
+operator, point is moved to the first non-blank character.
 See also `evil-shift-left'."
   :type line
   (interactive "<r><vc>")
+  (setq count (or count 1))
   (let ((beg (set-marker (make-marker) beg))
-        (end (set-marker (make-marker) end)))
-    (dotimes (i (or count 1))
-      (if (not evil-shift-round)
-          (indent-rigidly beg end evil-shift-width)
-        (let* ((indent
-                (save-excursion
-                  (goto-char beg)
-                  (evil-move-beginning-of-line nil)
-                  (while (and (< (point) end) (looking-at "[ \t]*$"))
-                    (forward-line))
-                  (if (> (point) end) 0
-                    (current-indentation))))
-               (offset (- evil-shift-width (mod indent evil-shift-width))))
-          (indent-rigidly beg end offset))))
-    (set-marker beg nil)
-    (set-marker end nil)))
+        (end (set-marker (make-marker) end))
+        (pnt-indent (current-column))
+        first-shift) ; shift of first line
+    (save-excursion
+      (goto-char beg)
+      (while (< (point) end)
+        (let* ((indent (current-indentation))
+               (new-indent
+                (max 0
+                     (if (not evil-shift-round)
+                         (+ indent (* count evil-shift-width))
+                       (* (+ (/ indent evil-shift-width)
+                             count
+                             (cond
+                              ((> count 0) 0)
+                              ((zerop (mod indent evil-shift-width)) 0)
+                              (t 1)))
+                          evil-shift-width)))))
+          (unless first-shift
+            (setq first-shift (- new-indent indent)))
+          (when (or preserve-empty
+                    (save-excursion
+                      (skip-chars-forward " \t")
+                      (not (eolp))))
+            (indent-to new-indent 0))
+          (delete-region (point) (progn (skip-chars-forward " \t") (point)))
+          (forward-line 1))))
+    ;; assuming that point is in the first line, adjust its position
+    (if (called-interactively-p 'any)
+        (evil-first-non-blank)
+      (move-to-column (+ pnt-indent first-shift)))))
 
 (evil-define-command evil-shift-right-line (count)
   "Shift the current line COUNT times to the right.
@@ -1555,7 +1564,7 @@ The text is shifted to the nearest multiple of
 `evil-shift-width'. Like `evil-shift-right' but always works on
 the current line."
   (interactive "<c>")
-  (evil-shift-right (line-beginning-position) (line-end-position) count))
+  (evil-shift-right (line-beginning-position) (line-beginning-position 2) count t))
 
 (evil-define-command evil-shift-left-line (count)
   "Shift the current line COUNT times to the leeft.
@@ -1563,7 +1572,7 @@ The text is shifted to the nearest multiple of
 `evil-shift-width'. Like `evil-shift-leeft' but always works on
 the current line."
   (interactive "<c>")
-  (evil-shift-left (line-beginning-position) (line-end-position) count))
+  (evil-shift-left (line-beginning-position) (line-beginning-position 2) count t))
 
 (evil-define-operator evil-align-left (beg end type &optional width)
   "Right-align lines in the region at WIDTH columns.

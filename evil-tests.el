@@ -2274,19 +2274,19 @@ Below some empty line")))
       (evil-test-buffer
         "[l]ine 1\nline 2\nline 3\n"
         ("Vj>")
-        "[ ]   line 1\n    line 2\nline 3\n"))
+        "    [l]ine 1\n    line 2\nline 3\n"))
     (ert-info ("Shift char selection on whole line")
       (evil-test-buffer
         "[l]ine 1\nline 2\nline 3\n"
         ("v$>")
-        "[ ]   line 1\nline 2\nline 3\n"))
+        "    [l]ine 1\nline 2\nline 3\n"))
     (ert-info ("Shift visual with count")
       (evil-test-buffer
         "[l]ine 1\nline 2\nline 3\n"
         ("Vj3>")
-        "[ ]           line 1\n            line 2\nline 3\n"
+        "            [l]ine 1\n            line 2\nline 3\n"
         ("Vj2<")
-        "[ ]   line 1\n    line 2\nline 3\n"))
+        "    [l]ine 1\n    line 2\nline 3\n"))
     (ert-info ("Shift in insert state")
       (evil-test-buffer
         "line 1\nl[i]ne 2\nline 3\n"
