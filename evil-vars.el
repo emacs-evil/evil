@@ -637,6 +637,7 @@ If STATE is nil, Evil is disabled in the buffer."
     vc-annotate-mode
     vc-dir-mode
     vc-git-log-view-mode
+    vc-hg-log-view-mode
     vc-svn-log-view-mode
     vm-mode
     vm-summary-mode
