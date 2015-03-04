@@ -1516,7 +1516,7 @@ backwards."
       ;; global parser state is out of state, use local one
       (let* ((pnt (point))
              (state (progn (beginning-of-defun)
-                           (parse-partial-sexp (point) pnt)))
+                           (parse-partial-sexp (point) pnt nil nil (syntax-ppss))))
              (bnd (bounds-of-evil-string-at-point state)))
         (when (and bnd (< (point) (cdr bnd)))
           ;; currently within a string
