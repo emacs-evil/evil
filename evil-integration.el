@@ -405,7 +405,10 @@ the mark and entering `recursive-edit'."
       ;; to `evil-find-char-backward'
       (when (and (equal buf (current-buffer))
                  (< (point) pnt))
-        (setq evil-this-type 'exclusive)))))
+        (setq evil-this-type
+              (cond
+               ((eq evil-this-type 'exclusive) 'inclusive)
+               ((eq evil-this-type 'inclusive) 'exclusive)))))))
 
 (evil-define-motion evil-ace-jump-char-to-mode (count)
   "Jump visually to the char in front of a char using ace-jump."
@@ -419,7 +422,10 @@ the mark and entering `recursive-edit'."
                (< (point) pnt))
           (progn
             (or (eobp) (forward-char))
-            (setq evil-this-type 'exclusive))
+            (setq evil-this-type
+                  (cond
+                   ((eq evil-this-type 'exclusive) 'inclusive)
+                   ((eq evil-this-type 'inclusive) 'exclusive))))
         (backward-char)))))
 
 (evil-define-motion evil-ace-jump-line-mode (count)
