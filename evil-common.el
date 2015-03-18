@@ -623,7 +623,7 @@ HIDE-CHARS characters. HIDE-CHARS defaults to 1."
       (delete-overlay overlay))
     (or (evil-digraph (list char1 char2))
         ;; use the last character if undefined
-        (cadr char2))))
+        char2)))
 
 (defun evil-read-motion (&optional motion count type modifier)
   "Read a MOTION, motion COUNT and motion TYPE from the keyboard.
