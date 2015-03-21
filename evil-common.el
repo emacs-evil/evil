@@ -2986,14 +2986,14 @@ selection matches that object exactly."
             (count (abs (or count 1)))
             op cl op-end cl-end)
         ;; start scanning at beginning
-        (goto-char (if inclusive (1+ beg) end))
+        (goto-char (if (or inclusive (= beg end)) (1+ beg) end))
         (when (and (zerop (funcall thing +1)) (match-beginning 0))
           (setq cl (cons (match-beginning 0) (match-end 0)))
           (goto-char (car cl))
           (when (and (zerop (funcall thing -1)) (match-beginning 0))
             (setq op (cons (match-beginning 0) (match-end 0)))))
         ;; start scanning from end
-        (goto-char (if inclusive (1- end) beg))
+        (goto-char (if (or inclusive) (1- end) beg))
         (when (and (zerop (funcall thing -1)) (match-beginning 0))
           (setq op-end (cons (match-beginning 0) (match-end 0)))
           (goto-char (cdr op-end))
