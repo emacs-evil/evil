@@ -938,14 +938,14 @@ available for completion."
 (defface evil-ex-commands '(( nil
                               :underline t
                               :slant italic))
-  "Face for the evil command in completion in ex mode."
-  :group 'evil)
+         "Face for the evil command in completion in ex mode."
+         :group 'evil)
 
 (defface evil-ex-info '(( ((supports :slant))
                           :slant italic
                           :foreground "red"))
-  "Face for the info message in ex mode."
-  :group 'evil)
+         "Face for the info message in ex mode."
+         :group 'evil)
 
 (defcustom evil-ex-visual-char-range nil
   "Type of default ex range in visual char state.
@@ -1047,22 +1047,22 @@ specified, then is works only on the first match."
   :group 'evil)
 
 (defface evil-ex-search '((t :inherit isearch))
-  "Face for interactive search."
-  :group 'evil)
+         "Face for interactive search."
+         :group 'evil)
 
 (defface evil-ex-lazy-highlight '((t :inherit lazy-highlight))
-  "Face for highlighting all matches in interactive search."
-  :group 'evil)
+         "Face for highlighting all matches in interactive search."
+         :group 'evil)
 
 (defface evil-ex-substitute-matches '((t :inherit lazy-highlight))
-  "Face for interactive substitute matches."
-  :group 'evil)
+         "Face for interactive substitute matches."
+         :group 'evil)
 
 (defface evil-ex-substitute-replacement '((((supports :underline))
                                            :underline t
                                            :foreground "red"))
-  "Face for interactive replacement text."
-  :group 'evil)
+         "Face for interactive replacement text."
+         :group 'evil)
 
 (defcustom evil-command-window-height 8
   "Height (in lines) of the command line window.

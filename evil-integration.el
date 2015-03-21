@@ -313,21 +313,34 @@ activated."
              company-filter-candidates))))
 
 ;; Eval last sexp
-(defadvice preceding-sexp (around evil activate)
-  "In normal-state or motion-state, last sexp ends at point."
-  (if (or (evil-normal-state-p) (evil-motion-state-p))
-      (save-excursion
-        (unless (or (eobp) (eolp)) (forward-char))
-        ad-do-it)
-    ad-do-it))
+(cond
+ ((version< emacs-version "25")
+  (defadvice preceding-sexp (around evil activate)
+    "In normal-state or motion-state, last sexp ends at point."
+    (if (or (evil-normal-state-p) (evil-motion-state-p))
+        (save-excursion
+          (unless (or (eobp) (eolp)) (forward-char))
+          ad-do-it)
+      ad-do-it))
 
-(defadvice pp-last-sexp (around evil activate)
-  "In normal-state or motion-state, last sexp ends at point."
-  (if (or (evil-normal-state-p) (evil-motion-state-p))
-      (save-excursion
-        (unless (or (eobp) (eolp)) (forward-char))
-        ad-do-it)
-    ad-do-it))
+  (defadvice pp-last-sexp (around evil activate)
+    "In normal-state or motion-state, last sexp ends at point."
+    (if (or (evil-normal-state-p) (evil-motion-state-p))
+        (save-excursion
+          (unless (or (eobp) (eolp)) (forward-char))
+          ad-do-it)
+      ad-do-it)))
+ (t
+  (defun evil--preceding-sexp (command &rest args)
+    "In normal-state or motion-state, last sexp ends at point."
+    (if (or (evil-normal-state-p) (evil-motion-state-p))
+        (save-excursion
+          (unless (or (eobp) (eolp)) (forward-char))
+          (apply command args))
+      (apply command args)))
+
+  (advice-add 'elisp--preceding-sexp :around 'evil--preceding-sexp '((name . evil)))
+  (advice-add 'pp-last-sexp          :around 'evil--preceding-sexp '((name . evil)))))
 
 ;; Show key
 (defadvice quail-show-key (around evil activate)
