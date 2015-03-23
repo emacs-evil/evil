@@ -1182,12 +1182,15 @@ See also `evil-goto-min'."
                     (< (point) (cdr bnd)))
           (goto-char (cdr bnd)))
         ;; no thing at (point)
-        (goto-char
-         (if (and (zerop (forward-thing thing))
-                  (setq bnd (bounds-of-thing-at-point thing))
-                  (< (point) (cdr bnd)))
-             (car bnd)
-           (point-max))))
+        (if (zerop (forward-thing thing))
+            ;; now at the end of the next thing
+            (let ((bnd (bounds-of-thing-at-point thing)))
+              (if (or (< (car bnd) (point))    ; end of a thing
+                      (= (car bnd) (cdr bnd))) ; zero width thing
+                  (goto-char (car bnd))
+                ;; beginning of yet another thing, go back
+                (forward-thing thing -1)))
+          (goto-char (point-max))))
        (t
         (while (and (not (bobp))
                     (or (backward-char) t)

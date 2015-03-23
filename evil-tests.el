@@ -3140,6 +3140,14 @@ Below some empty line")))
     ("d0")
     "[T]his buffer is for notes."))
 
+(ert-deftest evil-test-forward-not-word ()
+  "Test `evil-forward-not-thing'"
+  :tags '(evil motion)
+  (evil-test-buffer
+    "[ ]    aa,,"
+    (evil-forward-not-thing 'evil-word)
+    "     [a]a,,"))
+
 ;; TODO: test Visual motions and window motions
 (ert-deftest evil-test-forward-word-begin ()
   "Test `evil-forward-word-begin'"
