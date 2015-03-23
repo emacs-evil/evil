@@ -5359,7 +5359,12 @@ Below some empty line."))
       (evil-test-buffer
         ";; This<[ ]buffer> is for notes."
         ("aw")
-        ";;<[ ]This buffer> is for notes."))))
+        ";;<[ ]This buffer> is for notes.")))
+  (ert-info ("select first visual word")
+    (evil-test-buffer
+      "([a])"
+      ("viw")
+      "(<[a]>)")))
 
 (ert-deftest evil-test-word-objects-cjk ()
   "Test `evil-inner-word' and `evil-a-word' on CJK words"

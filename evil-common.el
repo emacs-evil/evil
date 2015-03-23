@@ -2901,7 +2901,9 @@ linewise, otherwise it is character wise."
     ;; check if current object is selected
     (when (or (not beg) (not end)
               (> beg (car bnd))
-              (< end (cdr bnd)))
+              (< end (cdr bnd))
+              (and (eq type 'inclusive)
+                   (= (1+ beg) end))) ; empty region does not count
       (when (or (not beg) (< (car bnd) beg)) (setq beg (car bnd)))
       (when (or (not end) (> (cdr bnd) end)) (setq end (cdr bnd)))
       (setq count (if (> count 0) (1- count) (1+ count))))
@@ -2931,7 +2933,11 @@ linewise, otherwise it is character wise."
          (bnd (or objbnd (evil-bounds-of-not-thing-at-point thing)))
          addcurrent other)
     ;; check if current object is not selected
-    (when (or (not beg) (not end) (> beg (car bnd)) (< end (cdr bnd)))
+    (when (or (not beg) (not end)
+              (> beg (car bnd))
+              (< end (cdr bnd))
+              (and (eq type 'inclusive)
+                   (= (1+ beg) end))) ; empty region does not count
       ;; if not, enlarge selection
       (when (or (not beg) (< (car bnd) beg)) (setq beg (car bnd)))
       (when (or (not end) (> (cdr bnd) end)) (setq end (cdr bnd)))
