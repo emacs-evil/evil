@@ -1535,34 +1535,37 @@ backwards."
           ;; no need to reset global parser state because we only use
           ;; the local one
           (setq reset-parser nil)
-          (while (and (> count 0) (not (eobp)))
-            (setq state (parse-partial-sexp (point) (point-max)
-                                            nil
-                                            nil
-                                            state
-                                            'syntax-table))
-            (cond
-             ((nth 3 state)
-              (setq bnd (bounds-of-thing-at-point 'evil-string))
-              (goto-char (cdr bnd))
-              (setq count (1- count)))
-             ((eobp) (setq count (1- count))))))
+          (catch 'done
+            (while (and (> count 0) (not (eobp)))
+              (setq state (parse-partial-sexp (point) (point-max)
+                                              nil
+                                              nil
+                                              state
+                                              'syntax-table))
+              (cond
+               ((nth 3 state)
+                (setq bnd (bounds-of-thing-at-point 'evil-string))
+                (goto-char (cdr bnd))
+                (setq count (1- count)))
+               ((eobp) (goto-char pnt) (throw 'done nil))))))
          ((< count 0)
           ;; need to update global cache because of backward motion
           (setq reset-parser (and reset-parser (point)))
           (save-excursion
             (beginning-of-defun)
             (syntax-ppss-flush-cache (point)))
-          (while (and (< count 0) (not (bobp)))
-            (while (and (not (bobp))
-                        (or (eobp) (/= (char-after) quote)))
-              (backward-char))
-            (cond
-             ((setq bnd (bounds-of-thing-at-point 'evil-string))
-              (goto-char (car bnd))
-              (setq count (1+ count)))
-             ((bobp) (1+ count))
-             (t (backward-char)))))
+          (catch 'done
+            (while (and (< count 0) (not (bobp)))
+              (setq pnt (point))
+              (while (and (not (bobp))
+                          (or (eobp) (/= (char-after) quote)))
+                (backward-char))
+              (cond
+               ((setq bnd (bounds-of-thing-at-point 'evil-string))
+                (goto-char (car bnd))
+                (setq count (1+ count)))
+               ((bobp) (goto-char pnt) (throw 'done nil))
+               (t (backward-char))))))
          (t (setq reset-parser nil)))))
     (when reset-parser
       ;; reset global cache
