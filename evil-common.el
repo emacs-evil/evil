@@ -3110,8 +3110,8 @@ must be regular expressions and `evil-up-block' is used."
 THING is typically either 'evil-quote or 'evil-chars. This
 function is called from `evil-select-quote'."
   (save-excursion
-    (let* ((dir (if (> count 0) 1 -1))
-           (count (or count 1))
+    (let* ((count (or count 1))
+           (dir (if (> count 0) 1 -1))
            (bnd (let ((b (bounds-of-thing-at-point thing)))
                   (and b (< (point) (cdr b)) b)))
            contains-string
