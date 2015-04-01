@@ -3226,8 +3226,9 @@ from the range."
   (cond
    ((and (not inclusive) (= (abs (or count 1)) 1))
     (let ((rng (evil-select-block #'evil-up-xml-tag beg end type count nil t)))
-      (if (and beg (= beg (evil-range-beginning rng))
-               end (= end (evil-range-end rng)))
+      (if (or (and beg (= beg (evil-range-beginning rng))
+                   end (= end (evil-range-end rng)))
+              (= (evil-range-beginning rng) (evil-range-end rng)))
           (evil-select-block #'evil-up-xml-tag beg end type count t)
         rng)))
    (t
