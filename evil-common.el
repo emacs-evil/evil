@@ -2998,14 +2998,19 @@ selection matches that object exactly."
             (count (abs (or count 1)))
             op cl op-end cl-end)
         ;; start scanning at beginning
-        (goto-char (if (or inclusive (= beg end)) (1+ beg) end))
+        (goto-char beg)
         (when (and (zerop (funcall thing +1)) (match-beginning 0))
           (setq cl (cons (match-beginning 0) (match-end 0)))
           (goto-char (car cl))
           (when (and (zerop (funcall thing -1)) (match-beginning 0))
             (setq op (cons (match-beginning 0) (match-end 0)))))
         ;; start scanning from end
-        (goto-char (if (or inclusive) (1- end) beg))
+        ;;
+        ;; We always assume at least one selected character, otherwise
+        ;; commands like 'dib' on '(word)' with `point' being at the
+        ;; opening parenthesis would fail, because Emacs considers
+        ;; this position as outside of the parentheses.
+        (goto-char (if (= beg end) (1+ end) end))
         (when (and (zerop (funcall thing -1)) (match-beginning 0))
           (setq op-end (cons (match-beginning 0) (match-end 0)))
           (goto-char (cdr op-end))
@@ -3095,8 +3100,8 @@ must be regular expressions and `evil-up-block' is used."
                 (setq beg (or beg (point))
                       end (or end (point)))
                 (goto-char (car bnd))
-                (let ((extbeg (min beg (- (car bnd) (if inclusive 1 0))))
-                      (extend (max end (+ (cdr bnd) (if inclusive 1 0)))))
+                (let ((extbeg (min beg (car bnd)))
+                      (extend (max end (cdr bnd))))
                   (evil-select-block thing
                                      extbeg extend
                                      type

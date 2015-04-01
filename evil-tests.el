@@ -6096,6 +6096,40 @@ Below some empty line."))
         (emacs-lisp-mode)
         ("vi(")
         "((<aa[a]>))")))
+  (ert-info ("Select double inner parentheses")
+    (evil-test-buffer
+      "([(]word))"
+      ("dib")
+      "(())")
+    (evil-test-buffer
+      "[(](word))"
+      ("dib")
+      "()")
+    (evil-test-buffer
+      "((word[)])"
+      ("dib")
+      "(())")
+    (evil-test-buffer
+      "((word)[)]"
+      ("dib")
+      "()"))
+  (ert-info ("Select double outer parentheses")
+    (evil-test-buffer
+      "a([(]word))b"
+      ("dab")
+      "a()b")
+    (evil-test-buffer
+      "a[(](word))b"
+      ("dab")
+      "ab")
+    (evil-test-buffer
+      "a((word[)])b"
+      ("dab")
+      "a()b")
+    (evil-test-buffer
+      "a((word)[)]b"
+      ("dab")
+      "ab"))
   (ert-info ("Select parentheses inside strings")
     (evil-test-buffer
       "(aaa \"b(b[b]b)\" aa)"
