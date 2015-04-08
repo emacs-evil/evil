@@ -1,0 +1,162 @@
+#!/usr/bin/emacs --script
+;;; evilupate.el -- Publishing script for Evil
+
+;;; Header:
+
+;; This file is not part of Emacs
+
+;; Author: Frank Fischer <frank-fischer@shadow-soft.de>
+;; Maintainer: Frank Fischer <frank-fischer@shadow-soft.de>
+;; Version: 1.0
+;; Package-Requires: ((emacs "24.3") (s "1.9.0") (f "0.17.2") yaoddmuse)
+
+;; The contents of this file are subject to the GPL License, Version 3.0.
+
+;; Copyright (C) 2015, Frank Fischer
+
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; This is a small script to update Evil's version at certain places:
+;;
+;;  - topic of the IRC channel #evil-mode in irc.freenode.net
+;;  - EmacsWiki page
+;;  - header of all source files
+;;  - the ELPA package file
+;;
+;; The script should be invoked with the new version string
+;;
+;;   evil-update.el 1.2.3
+;;
+
+;;; Code:
+
+(package-initialize)
+
+(require 'f)
+(require 'erc)
+(require 'yaoddmuse)
+(eval-when-compile (require 'cl))
+
+(defconst evilupdate-irc-nick "#lyrobot")
+(defconst evilupdate-irc-channel "#evil-mode")
+(defconst evilupdate-irc-topic
+  "Evil = Extensible vi layer for Emacs | Current version: VERSION | http://gitorious.org/evil | If you don't get an answer here, please use the mailing-list implementations-list@lists.ourproject.org")
+(defconst evilupdate-wiki-page "Evil")
+(defvar evilupdate-version "1.0.0")
+(defvar evilupdate-done nil)
+
+(defun evilupdate-wait ()
+  "Wait until `evilupdate-done' is set to t."
+  (while (not evilupdate-done)
+    (sleep-for 1))
+  (setq evilupdate-done nil))
+
+(defun evilupdate-done ()
+  "Set `evilupdate-done' to t to stop the corresponding `evilupdate-wait'."
+  (setq evilupdate-done t))
+
+(defun evilupdate-update-irc ()
+  "Update the topic of the IRC channel."
+  (erc-tls :server "irc.freenode.net" :port "6697" :nick "lyrobot")
+  (add-hook 'erc-join-hook
+            (lambda ()
+              (let (case-fold-search)
+                (erc-set-topic (replace-regexp-in-string "VERSION"
+                                                         evilupdate-version
+                                                         evilupdate-irc-topic
+                                                         nil t)))
+              (erc-quit-server "")
+              (evilupdate-done)))
+  (erc-join-channel evilupdate-irc-channel)
+  (evilupdate-wait))
+
+(defun evilupdate-wiki-trace (page-buffer-name)
+  "Callback for updating the EmacsWiki page in buffer PAGE-BUFFER-NAME."
+  (with-current-buffer page-buffer-name
+    (goto-char (point-min))
+    (when (re-search-forward "Current stable version: \\*\\*\\([^*]*\\)\\*\\*")
+      (goto-char (match-beginning 1))
+      (delete-region (match-beginning 1) (match-end 1))
+      (insert evilupdate-version)
+      (yaoddmuse-post-current-buffer nil)
+      (evilupdate-done))))
+
+(defun evilupdate-update-emacswiki ()
+  "Update the version information on the EmacsWiki page."
+  (setq yaoddmuse-wikis
+        '(("EmacsWiki" "http://www.emacswiki.org/emacs" utf-8 "uihnscuskc=1;")))
+  (advice-add 'yaoddmuse-display-page :after 'evilupdate-wiki-trace)
+  (yaoddmuse-edit "EmacsWiki" evilupdate-wiki-page t)
+  (evilupdate-wait))
+
+(defun evilupdate-update-regexp (file regexp)
+  "Update version tag in FILE.
+The version tag is defined by the REGEXP, in particular by the first
+match group."
+  (find-file file)
+  (goto-char (point-min))
+  (when (re-search-forward regexp nil t)
+    (goto-char (match-beginning 1))
+    (delete-region (match-beginning 1) (match-end 1))
+    (insert evilupdate-version)
+    (save-buffer)))
+
+(defun evilupdate-update-files ()
+  "Replace version comments in all source files."
+  (dolist (file (f-glob "*.el"))
+    (evilupdate-update-regexp file ";;\\s-*Version:\\s-*\\([^\n]+\\)")))
+
+(defun evilupdate-update-pkg ()
+  "Replace version in package file."
+  (evilupdate-update-regexp "evil-pkg.el" "\"evil\"[ \t\n\r]*\"\\([^\"]+\\)\""))
+
+(defun evilupdate-update-var ()
+  "Replace version in `evil-version' variable."
+  (evilupdate-update-regexp
+   "evil-vars.el"
+   "t \"\\([^\"]*\\)\"[) \n\r\t]*\"The current version of Evil"))
+
+(defun evilupdate-update-news ()
+  "Send an posting to the mailing list."
+  (shell-command (concat "thunderbird -compose \"newsgroups=gmane.emacs.vim-emulation,preselectid=id2,subject='[ANN] Evil version " evilupdate-version " released',body='"
+                         "Evil version " evilupdate-version " has been released.
+
+The stable version can be installed from MELPA stable [1].
+The latest development version is available from MELPA [2].
+
+The Evil developers.
+
+[1] http://stable.melpa.org
+[2] http://melpa.org
+'\"")))
+
+(defun evilupdate-update (version)
+  "Update Evil to VERSION."
+  (setq evilupdate-cnt 0)
+  (setq evilupdate-version version)
+  (evilupdate-update-emacswiki)
+  (evilupdate-update-irc)
+  (evilupdate-update-files)
+  (evilupdate-update-pkg)
+  (evilupdate-update-var)
+  (evilupdate-update-news))
+
+(when (/= (length argv) 1)
+  (user-error "Usage: evilupdate.el VERSION"))
+
+(evilupdate-update (car argv))
+
+;;; evilupdate.el ends here

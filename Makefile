@@ -112,24 +112,6 @@ elpa:
 
 # Change the version using make VERSION=x.y.z
 version:
-	$(EMACS) --batch --eval '(setq vc-handled-backends nil)' ${FILES} evil-tests.el -Q \
---eval "\
-(progn \
-  (find-file \"evil-vars.el\") \
-  (when (re-search-forward \"^(defconst evil-version \\\"\\\\([-_.[:word:]]*\\\\)\\\"\" nil t) \
-    (replace-match \"${VERSION}\" t t nil 1)) \
-  (find-file \"evil-pkg.el\") \
-  (goto-line 3) \
-  (when (and (string-match-p \"[[:digit:]]+\\.[[:digit:]]+\\.[[:digit:]]+\" \"${VERSION}\") \
-             (re-search-forward \"\\\"\\\\([-_.[:word:]]*\\\\)\\\"\" nil t)) \
-    (replace-match \"${VERSION}\" t t nil 1)) \
-  (dolist (buffer (reverse (buffer-list))) \
-    (when (buffer-file-name buffer) \
-      (set-buffer buffer) \
-      (goto-char (point-min)) \
-      (when (re-search-forward \"^;;[[:space:]]*Version:[[:space:]]*\\\\([-_.[:word:]]*\\\\)\" nil t) \
-        (replace-match \"${VERSION}\" t t nil 1)) \
-      (when (buffer-modified-p) (save-buffer 0))))) \
-"
+	@$(EMACS) --script scripts/evilupdate "${VERSION}"
 
 
