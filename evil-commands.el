@@ -1556,7 +1556,7 @@ See also `evil-shift-left'."
     ;; assuming that point is in the first line, adjust its position
     (if (called-interactively-p 'any)
         (evil-first-non-blank)
-      (move-to-column (+ pnt-indent first-shift)))))
+      (move-to-column (max 0 (+ pnt-indent first-shift))))))
 
 (evil-define-command evil-shift-right-line (count)
   "Shift the current line COUNT times to the right.
