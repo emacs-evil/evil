@@ -1973,6 +1973,10 @@ The following special registers are supported.
   \"  the unnamed register
   *  the clipboard contents
   +  the clipboard contents
+  <C-w> the word at point (ex mode only)
+  <C-a> the WORD at point (ex mode only)
+  <C-o> the symbol at point (ex mode only)
+  <C-f> the current file at point (ex mode only)
   %  the current file name (read only)
   #  the alternate file name (read only)
   /  the last search pattern (read only)
@@ -1994,6 +1998,26 @@ The following special registers are supported.
               (x-get-selection-value))
              ((eq register ?+)
               (x-get-clipboard))
+             ((eq register ?\C-W)
+              (unless (evil-ex-p)
+                (user-error "Register <C-w> only available in ex state"))
+              (with-current-buffer evil-ex-current-buffer
+                (thing-at-point 'evil-word)))
+             ((eq register ?\C-A)
+              (unless (evil-ex-p)
+                (user-error "Register <C-a> only available in ex state"))
+              (with-current-buffer evil-ex-current-buffer
+                (thing-at-point 'evil-WORD)))
+             ((eq register ?\C-O)
+              (unless (evil-ex-p)
+                (user-error "Register <C-o> only available in ex state"))
+              (with-current-buffer evil-ex-current-buffer
+                (thing-at-point 'evil-symbol)))
+             ((eq register ?\C-F)
+              (unless (evil-ex-p)
+                (user-error "Register <C-f> only available in ex state"))
+              (with-current-buffer evil-ex-current-buffer
+                (thing-at-point 'filename)))
              ((eq register ?%)
               (or (buffer-file-name) (user-error "No file name")))
              ((= register ?#)
