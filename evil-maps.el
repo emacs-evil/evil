@@ -461,6 +461,7 @@
 (evil-ex-define-cmd "set-initial-state" 'evil-ex-set-initial-state)
 (evil-ex-define-cmd "show-digraphs" 'evil-ex-show-digraphs)
 (evil-ex-define-cmd "sor[t]" 'evil-ex-sort)
+(evil-ex-define-cmd "res[ize]" 'evil-ex-resize)
 
 ;; search command line
 (define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
