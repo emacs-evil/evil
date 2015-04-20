@@ -91,7 +91,7 @@
       (goto-char (match-beginning 1))
       (delete-region (match-beginning 1) (match-end 1))
       (insert evilupdate-version)
-      (yaoddmuse-post-current-buffer nil)
+      (yaoddmuse-post-buffer (current-buffer) evilupdate-version nil)
       (evilupdate-done))))
 
 (unless (require 'nadvice nil t)
