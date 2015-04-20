@@ -94,11 +94,16 @@
       (yaoddmuse-post-current-buffer nil)
       (evilupdate-done))))
 
+(unless (require 'nadvice nil t)
+  (defadvice yaoddmuse-display-page (around evilupdate activate)
+    (evilupdate-wiki-trace (ad-get-arg 0))))
+
 (defun evilupdate-update-emacswiki ()
   "Update the version information on the EmacsWiki page."
   (setq yaoddmuse-wikis
         '(("EmacsWiki" "http://www.emacswiki.org/emacs" utf-8 "uihnscuskc=1;")))
-  (advice-add 'yaoddmuse-display-page :after 'evilupdate-wiki-trace)
+  (when (featurep 'nadvice)
+    (advice-add 'yaoddmuse-display-page :after 'evilupdate-wiki-trace))
   (yaoddmuse-edit "EmacsWiki" evilupdate-wiki-page t)
   (evilupdate-wait))
 
