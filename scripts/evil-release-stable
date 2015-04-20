@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+
+# Copyright (c) 2015 Frank Fischer <frank-fischer@shadow-soft.de>
+#
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see  <http://www.gnu.org/licenses/>
+
+
+# This script releases a new (minor) stable release given that some
+# new commits on the stable branch since the last tag exist.
+
+Dir.chdir File.dirname(__FILE__)
+
+def die(msg = "Failed")
+	STDERR.puts msg
+	exit 1
+end
+
+def run(cmd)
+	system(cmd) or die(cmd)
+end
+
+run 'hg pull -r stable'
+run 'hg update -r stable'
+
+tag = `hg tags`.split("\n").select{|line| line =~ /^\d+\.\d+\.\d+/}.map do |line|
+	tag, rev = line.split
+	major, minor, tiny = tag.split(/\./).map(&:to_i)
+	[major, minor, tiny, rev[/\d+/].to_i]
+end.max
+
+tag or die 'No tagged revision found'
+
+stable = `hg log -r stable`[/changeset:\s*(\d+)/,1]
+stable or die 'No stable branch found'
+
+if tag[3] != stable
+	new_tag = "#{tag[0]}.#{tag[1]}.#{tag[2]+1}"
+	run "make -C .. nversion VERSION='#{new_tag}'"
+	run "hg commit -m 'update version to #{new_tag}'"
+	run "hg gexport"
+	run "git tag -a -m 'version #{new_tag}' #{new_tag}"
+	run "git push #{new_tag} git@gitorious.org/evil/evil.git"
+	run "hg pull -r stable"
+	run "hg push -r stable bby://evil"
+end
