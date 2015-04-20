@@ -116,5 +116,5 @@ version:
 
 # Change the version using make VERSION=x.y.z, but do not post to the newsgroup
 nversion:
-	@$(EMACS) --script scripts/evilupdate -n "${VERSION}"
+	@$(EMACS) --script scripts/evilupdate nonews "${VERSION}"
 
