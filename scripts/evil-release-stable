@@ -51,6 +51,7 @@ if tag[3] != stable
 	run "hg gexport"
 	run "git tag -a -m 'version #{new_tag}' #{new_tag}"
 	run "git push git@gitorious.org:evil/evil.git #{new_tag}"
+	run "git push git@gitorious.org:evil/evil.git stable"
 	run "hg pull -r stable"
 	run "hg push -r stable bby://evil"
 end
