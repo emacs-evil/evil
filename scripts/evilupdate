@@ -143,8 +143,9 @@ The Evil developers.
 [2] http://melpa.org
 '\"")))
 
-(defun evilupdate-update (version)
-  "Update Evil to VERSION."
+(defun evilupdate-update (version nonews)
+  "Update Evil to VERSION.
+If NONEWS is non-nil do not post a message to the newsgroup."
   (setq evilupdate-cnt 0)
   (setq evilupdate-version version)
   (evilupdate-update-emacswiki)
@@ -152,11 +153,16 @@ The Evil developers.
   (evilupdate-update-files)
   (evilupdate-update-pkg)
   (evilupdate-update-var)
-  (evilupdate-update-news))
+  (unless nonews (evilupdate-update-news)))
 
-(when (/= (length argv) 1)
-  (user-error "Usage: evilupdate.el VERSION"))
-
-(evilupdate-update (car argv))
+(cond
+ ((= (length argv) 2)
+  (unless (= (car argv) "-n")
+    (user-error "Usage: evilupdate.el [-n] VERSION"))
+  (evilupdate-update (cadr argv) t))
+ ((= (length argv) 1)
+  (evilupdate-update (cadr argv)))
+ (t
+  (user-error "Usage: evilupdate.el [-n] VERSION")))
 
 ;;; evilupdate.el ends here
