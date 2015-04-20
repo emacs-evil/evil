@@ -348,6 +348,7 @@
 
 ;;; Insert state
 
+(define-key evil-insert-state-map "\C-v" 'quoted-insert)
 (define-key evil-insert-state-map "\C-k" 'evil-insert-digraph)
 (define-key evil-insert-state-map "\C-o" 'evil-execute-in-normal-state)
 (define-key evil-insert-state-map "\C-r" 'evil-paste-from-register)
