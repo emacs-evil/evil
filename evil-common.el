@@ -2019,7 +2019,10 @@ The following special registers are supported.
               (with-current-buffer evil-ex-current-buffer
                 (thing-at-point 'filename)))
              ((eq register ?%)
-              (or (buffer-file-name) (user-error "No file name")))
+              (or (buffer-file-name (and (evil-ex-p)
+                                         (minibufferp)
+                                         evil-ex-current-buffer))
+                  (user-error "No file name")))
              ((= register ?#)
               (or (with-current-buffer (other-buffer) (buffer-file-name))
                   (user-error "No file name")))
