@@ -49,7 +49,7 @@ if tag[3] != stable
 	run "make -C .. nversion VERSION='#{new_tag}'"
 	run "hg commit -m 'update version to #{new_tag}'"
 	run "hg gexport"
-	run "git tag -a -m 'version #{new_tag}' #{new_tag}"
+	run "git tag -a -m 'version #{new_tag}' #{new_tag} stable"
 	run "git push git@gitorious.org:evil/evil.git #{new_tag}"
 	run "git push git@gitorious.org:evil/evil.git stable"
 	run "hg pull -r stable"
