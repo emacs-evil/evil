@@ -3631,7 +3631,7 @@ If ARG is empty, maximize the current window height."
   (interactive "<a>")
   (if (or (not arg) (= 0 (length arg)))
       (evil-window-set-height nil)
-    (let ((n (string-to-int arg)))
+    (let ((n (string-to-number arg)))
       (if (> n 0)
           (if (= ?+ (aref arg 0))
               (evil-window-increase-height n)
