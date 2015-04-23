@@ -55,7 +55,7 @@
 (define-key evil-normal-state-map "S" 'evil-change-whole-line)
 (define-key evil-normal-state-map "x" 'evil-delete-char)
 (define-key evil-normal-state-map "X" 'evil-delete-backward-char)
-(define-key evil-normal-state-map (kbd "DEL") 'evil-delete-char)
+(define-key evil-normal-state-map [deletechar] 'evil-delete-char)
 (define-key evil-normal-state-map "y" 'evil-yank)
 (define-key evil-normal-state-map "Y" 'evil-yank-line)
 (define-key evil-normal-state-map "&" 'evil-ex-repeat-substitute)
