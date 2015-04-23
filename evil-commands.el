@@ -2000,10 +2000,12 @@ lines.  This is the default behaviour for Visual-state insertion."
          (and (evil-visual-state-p)
               (memq (evil-visual-type) '(line block))
               (save-excursion
-                ;; go to upper-left corner temporarily so
-                ;; `count-lines' yields accurate results
-                (evil-visual-rotate 'upper-left)
-                (count-lines evil-visual-beginning evil-visual-end)))
+                (let ((m (mark)))
+                  ;; go to upper-left corner temporarily so
+                  ;; `count-lines' yields accurate results
+                  (evil-visual-rotate 'upper-left)
+                  (prog1 (count-lines evil-visual-beginning evil-visual-end)
+                    (set-mark m)))))
          (evil-visual-state-p)))
   (if (and (evil-called-interactively-p)
            (evil-visual-state-p))
@@ -2042,10 +2044,12 @@ the lines."
          (and (evil-visual-state-p)
               (memq (evil-visual-type) '(line block))
               (save-excursion
-                ;; go to upper-left corner temporarily so
-                ;; `count-lines' yields accurate results
-                (evil-visual-rotate 'upper-left)
-                (count-lines evil-visual-beginning evil-visual-end)))))
+                (let ((m (mark)))
+                  ;; go to upper-left corner temporarily so
+                  ;; `count-lines' yields accurate results
+                  (evil-visual-rotate 'upper-left)
+                  (prog1 (count-lines evil-visual-beginning evil-visual-end)
+                    (set-mark m)))))))
   (if (and (evil-called-interactively-p)
            (evil-visual-state-p))
       (cond
