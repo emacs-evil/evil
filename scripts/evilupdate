@@ -79,6 +79,7 @@
                                                          evilupdate-irc-topic
                                                          nil t)))
               (erc-quit-server "")
+              (sleep-for 5)
               (evilupdate-done)))
   (erc-join-channel evilupdate-irc-channel)
   (evilupdate-wait))
