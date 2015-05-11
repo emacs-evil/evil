@@ -43,6 +43,7 @@ tag or die 'No tagged revision found'
 
 stable = `hg log -r stable`[/changeset:\s*(\d+)/,1]
 stable or die 'No stable branch found'
+stable = stable.to_i
 
 if tag[3] != stable
 	new_tag = "#{tag[0]}.#{tag[1]}.#{tag[2]+1}"
