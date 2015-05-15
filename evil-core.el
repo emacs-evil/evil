@@ -628,7 +628,9 @@ mapping will always be the ESC prefix map."
   (if (and (not evil-inhibit-esc)
            (or evil-local-mode (evil-ex-p))
            (not (evil-emacs-state-p))
-           (equal (this-single-command-keys) [?\e])
+           (let ((keys (this-single-command-keys)))
+             (and (> (length keys) 0)
+                  (= (aref keys (1- (length keys))) ?\e)))
            (sit-for evil-esc-delay))
       (prog1 [escape]
         (when defining-kbd-macro
