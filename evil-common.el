@@ -976,6 +976,7 @@ Like `move-end-of-line', but retains the goal column."
 This behavior is contingent on the variable `evil-move-cursor-back';
 use the FORCE parameter to override it."
   (when (and (eolp)
+             (not evil-move-beyond-eol)
              (not (bolp))
              (= (point)
                 (save-excursion
