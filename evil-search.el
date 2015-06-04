@@ -669,8 +669,11 @@ The following properties are supported:
               (search-failed
                (setq result (nth 2 lossage)))
 
+              (error
+               (setq result (format "%s" (cadr lossage))))
+
               (user-error
-               (setq result (format "%s" lossage)))))
+               (setq result (format "%s" (cadr lossage))))))
         ;; no pattern, remove all highlights
         (mapc #'delete-overlay old-ovs)
         (evil-ex-hl-set-overlays hl new-ovs))
