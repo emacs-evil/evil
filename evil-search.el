@@ -453,7 +453,7 @@ The following properties are supported:
              with two arguments, the highlight and a message string
              describing the current match status."
   (unless (symbolp name)
-    (error "Expected symbol as name of highlight"))
+    (user-error "Expected symbol as name of highlight"))
   (let ((face 'evil-ex-lazy-highlight)
         (win (selected-window))
         min max match-hook update-hook)
@@ -467,7 +467,7 @@ The following properties are supported:
          ((eq key :max)  (setq max val))
          ((eq key :match-hook) (setq match-hook val))
          ((eq key :update-hook) (setq update-hook val))
-         (t (error "Unexpected keyword: %s" key)))))
+         (t (user-error "Unexpected keyword: %s" key)))))
     (when (assoc name evil-ex-active-highlights-alist)
       (evil-ex-delete-hl name))
     (when (null evil-ex-active-highlights-alist)
@@ -669,8 +669,11 @@ The following properties are supported:
               (search-failed
                (setq result (nth 2 lossage)))
 
+              (error
+               (setq result (format "%s" (cadr lossage))))
+
               (user-error
-               (setq result (format "%s" lossage)))))
+               (setq result (format "%s" (cadr lossage))))))
         ;; no pattern, remove all highlights
         (mapc #'delete-overlay old-ovs)
         (evil-ex-hl-set-overlays hl new-ovs))
@@ -705,7 +708,7 @@ Note that this function ignores the whole-line property of PATTERN."
             (goto-char pnt)
             ret)))))
      (t
-      (error "Unknown search direction: %s" direction)))))
+      (user-error "Unknown search direction: %s" direction)))))
 
 (defun evil-ex-hl-idle-update ()
   "Triggers the timer to update the highlights in the current buffer."
