@@ -39,6 +39,7 @@ AKA \"Command\" state."
   :exit-hook (evil-repeat-start-hook)
   (cond
    ((evil-normal-state-p)
+    (overwrite-mode -1)
     (add-hook 'post-command-hook #'evil-normal-post-command nil t))
    (t
     (remove-hook 'post-command-hook #'evil-normal-post-command t))))
