@@ -285,7 +285,7 @@ in case of incomplete or unknown commands."
                         count)
                        ((numberp count)
                         (evil-ex-range count count)))
-                bang (and (string-match ".!$" cmd) t))))
+                bang (and (save-match-data (string-match ".!$" cmd)) t))))
       (setq evil-ex-tree tree
             evil-ex-expression expr
             evil-ex-range range
@@ -467,12 +467,13 @@ in case of incomplete or unknown commands."
 
 (defun evil-ex-define-cmd (cmd function)
   "Binds the function FUNCTION to the command CMD."
-  (if (string-match "^[^][]*\\(\\[\\(.*\\)\\]\\)[^][]*$" cmd)
-      (let ((abbrev (replace-match "" nil t cmd 1))
-            (full (replace-match "\\2" nil nil cmd 1)))
-        (evil-add-to-alist 'evil-ex-commands full function)
-        (evil-add-to-alist 'evil-ex-commands abbrev full))
-    (evil-add-to-alist 'evil-ex-commands cmd function)))
+  (save-match-data
+    (if (string-match "^[^][]*\\(\\[\\(.*\\)\\]\\)[^][]*$" cmd)
+        (let ((abbrev (replace-match "" nil t cmd 1))
+              (full (replace-match "\\2" nil nil cmd 1)))
+          (evil-add-to-alist 'evil-ex-commands full function)
+          (evil-add-to-alist 'evil-ex-commands abbrev full))
+      (evil-add-to-alist 'evil-ex-commands cmd function))))
 
 (defun evil-ex-make-argument-handler (runner completer)
   (list runner completer))
@@ -622,19 +623,20 @@ works accordingly."
 
 (defun evil-ex-binding (command &optional noerror)
   "Returns the final binding of COMMAND."
-  (let ((binding command))
-    (when binding
-      (string-match "^\\(.+?\\)\\!?$" binding)
-      (setq binding (match-string 1 binding))
-      (while (progn
-               (setq binding (cdr (assoc binding evil-ex-commands)))
-               (stringp binding)))
-      (unless binding
-        (setq binding (intern command)))
-      (if (commandp binding)
-          binding
-        (unless noerror
-          (user-error "Unknown command: `%s'" command))))))
+  (save-match-data
+    (let ((binding command))
+      (when binding
+        (string-match "^\\(.+?\\)\\!?$" binding)
+        (setq binding (match-string 1 binding))
+        (while (progn
+                 (setq binding (cdr (assoc binding evil-ex-commands)))
+                 (stringp binding)))
+        (unless binding
+          (setq binding (intern command)))
+        (if (commandp binding)
+            binding
+          (unless noerror
+            (user-error "Unknown command: `%s'" command)))))))
 
 (defun evil-ex-completed-binding (command &optional noerror)
   "Returns the final binding of the completion of COMMAND."
@@ -696,7 +698,7 @@ This function interprets special file names like # and %."
   "Execute the given command COMMAND."
   (let* ((count (when (numberp range) range))
          (range (when (evil-range-p range) range))
-         (bang (and (string-match ".!$" command) t))
+         (bang (and (save-match-data (string-match ".!$" command)) t))
          (evil-ex-point (point))
          (evil-ex-range
           (or range (and count (evil-ex-range count count))))
@@ -789,11 +791,12 @@ Signal an error if MARKER is in a different buffer."
   "Search forward for PATTERN.
 Returns the line number of the match."
   (condition-case err
-      (save-excursion
-        (set-text-properties 0 (length pattern) nil pattern)
-        (evil-move-end-of-line)
-        (and (re-search-forward pattern nil t)
-             (line-number-at-pos (1- (match-end 0)))))
+      (save-match-data
+        (save-excursion
+          (set-text-properties 0 (length pattern) nil pattern)
+          (evil-move-end-of-line)
+          (and (re-search-forward pattern nil t)
+               (line-number-at-pos (1- (match-end 0))))))
     (invalid-regexp
      (evil-ex-echo (cadr err))
      nil)))
@@ -802,11 +805,12 @@ Returns the line number of the match."
   "Search backward for PATTERN.
 Returns the line number of the match."
   (condition-case err
-      (save-excursion
-        (set-text-properties 0 (length pattern) nil pattern)
-        (evil-move-beginning-of-line)
-        (and (re-search-backward pattern nil t)
-             (line-number-at-pos (match-beginning 0))))
+      (save-match-data
+        (save-excursion
+          (set-text-properties 0 (length pattern) nil pattern)
+          (evil-move-beginning-of-line)
+          (and (re-search-backward pattern nil t)
+               (line-number-at-pos (match-beginning 0)))))
     (invalid-regexp
      (evil-ex-echo (cadr err))
      nil)))
@@ -1091,8 +1095,9 @@ The following symbols have reserved meanings within a grammar:
                 #'(lambda (obj)
                     (when (symbolp obj)
                       (let ((str (symbol-name obj)))
-                        (when (string-match "\\$\\([0-9]+\\)" str)
-                          (string-to-number (match-string 1 str)))))))
+                        (save-match-data
+                          (when (string-match "\\$\\([0-9]+\\)" str)
+                            (string-to-number (match-string 1 str))))))))
                ;; traverse a tree for dollar expressions
                (dval nil)
                (dval
@@ -1140,7 +1145,7 @@ The following symbols have reserved meanings within a grammar:
       (if (not greedy) pair
         (if (null (cdr pair)) pair
           ;; ignore trailing whitespace
-          (when (string-match "^[ \f\t\n\r\v]*$" (cdr pair))
+          (when (save-match-data (string-match "^[ \f\t\n\r\v]*$" (cdr pair)))
             (unless syntax (setcdr pair nil))
             pair))))))
 
