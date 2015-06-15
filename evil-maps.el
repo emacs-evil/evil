@@ -41,6 +41,8 @@
 (define-key evil-normal-state-map "d" 'evil-delete)
 (define-key evil-normal-state-map "D" 'evil-delete-line)
 (define-key evil-normal-state-map "i" 'evil-insert)
+(define-key evil-normal-state-map (kbd "<insert>") 'evil-insert)
+(define-key evil-normal-state-map (kbd "<insertchar>") 'evil-insert)
 (define-key evil-normal-state-map "I" 'evil-insert-line)
 (define-key evil-normal-state-map "J" 'evil-join)
 (define-key evil-normal-state-map "m" 'evil-set-marker)
@@ -333,6 +335,8 @@
 (define-key evil-visual-state-map "z=" 'ispell-word)
 (define-key evil-visual-state-map "a" evil-outer-text-objects-map)
 (define-key evil-visual-state-map "i" evil-inner-text-objects-map)
+(define-key evil-visual-state-map (kbd "<insert>") 'undefined)
+(define-key evil-visual-state-map (kbd "<insertchar>") 'undefined)
 (define-key evil-visual-state-map [remap evil-repeat] 'undefined)
 (define-key evil-visual-state-map [escape] 'evil-exit-visual-state)
 
