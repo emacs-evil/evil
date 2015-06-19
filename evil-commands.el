@@ -1493,9 +1493,9 @@ but doesn't insert or remove any spaces."
     (indent-region beg end))
   ;; We also need to tabify or untabify the leading white characters
   (let* ((beg-line (line-number-at-pos beg))
-          (end-line (line-number-at-pos end))
-          (ln beg-line)
-          (convert-white (if indent-tabs-mode 'tabify 'untabify)))
+         (end-line (line-number-at-pos end))
+         (ln beg-line)
+         (convert-white (if indent-tabs-mode 'tabify 'untabify)))
     (save-excursion
       (while (<= ln end-line)
         (goto-char (point-min))
