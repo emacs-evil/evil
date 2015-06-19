@@ -56,6 +56,8 @@
     (command #'evil-ex-parse-command)
     (binding
      "[~&*@<>=:]+\\|[[:alpha:]-]+\\|!")
+    (emacs-binding
+     "[[:alpha:]-][[:alnum:][:punct:]-]+")
     (bang
      (\? (! space) "!" #'$1))
     (argument
@@ -848,6 +850,20 @@ START is the start symbol, which defaults to `expression'."
     (when result
       (setq command (car-safe result)
             string (cdr-safe result))
+      ;; check whether the command is followed by a slash and the
+      ;; part before the slash is not a known ex binding
+      ;; (maybe we should check for other characters, too? But only
+      ;; the slash is used commonly in Emacs functions)
+      (when (and (> (length string) 0)
+                 (= (aref string 0) ?/)
+                 (not (evil-ex-binding command t)))
+        ;; if this is the case, assume the slash and all following
+        ;; symbol characters form an (Emacs-)command
+        (setq result (evil-parser (concat command string)
+                                  'emacs-binding
+                                  evil-ex-grammar)
+              command (car-safe result)
+              string (cdr-safe result)))
       ;; parse a following "!" as bang only if
       ;; the command has the property :ex-bang t
       (when (evil-ex-command-force-p command)
