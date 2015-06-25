@@ -1327,6 +1327,22 @@ Signals an error at buffer boundaries unless NOERROR is non-nil."
              ;; Maybe we should just `ding'?
              (signal (car err) (cdr err))))))))))
 
+(defun evil-forward-syntax (syntax &optional count)
+  "Move point to the end or beginning of a sequence of characters in
+SYNTAX.
+Stop on reaching a character not in SYNTAX."
+  (let ((notsyntax (if (= (aref syntax 0) ?^)
+                      (substring syntax 1)
+                    (concat "^" syntax))))
+    (evil-motion-loop (dir (or count 1))
+      (cond
+       ((< dir 0)
+        (skip-syntax-backward notsyntax)
+        (skip-syntax-backward syntax))
+       (t
+        (skip-syntax-forward notsyntax)
+        (skip-syntax-forward syntax))))))
+
 (defun evil-forward-chars (chars &optional count)
   "Move point to the end or beginning of a sequence of CHARS.
 CHARS is a character set as inside [...] in a regular expression."
@@ -1636,10 +1652,17 @@ WORD is a sequence of non-whitespace characters
 Moves point COUNT symbols forward or (- COUNT) symbols backward
 if COUNT is negative. Point is placed after the end of the
 symbol (if forward) or at the first character of the symbol (if
-backward). The boundaries of a symbol are determined by
-`forward-symbol'."
-  (evil-motion-loop (dir (or count 1))
-    (forward-symbol dir)))
+backward). A symbol is either determined by `forward-symbol', or
+is a sequence of characters not in the word, symbol or whitespace
+syntax classes."
+  (evil-forward-nearest
+   count
+   #'(lambda (&optional cnt)
+       (evil-forward-syntax "^w_-" cnt))
+   #'(lambda (&optional cnt)
+       (let ((pnt (point)))
+         (forward-symbol cnt)
+         (if (= pnt (point)) cnt 0)))))
 
 (defun forward-evil-defun (&optional count)
   "Move forward COUNT defuns.
