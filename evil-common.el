@@ -1658,11 +1658,14 @@ syntax classes."
   (evil-forward-nearest
    count
    #'(lambda (&optional cnt)
-       (evil-forward-syntax "^w_-" cnt))
+       (with-syntax-table (make-syntax-table (syntax-table))
+         (modify-syntax-entry ?\C-j "-")
+         (evil-forward-syntax "^w_-" cnt)))
    #'(lambda (&optional cnt)
        (let ((pnt (point)))
          (forward-symbol cnt)
-         (if (= pnt (point)) cnt 0)))))
+         (if (= pnt (point)) cnt 0)))
+   #'forward-evil-empty-line))
 
 (defun forward-evil-defun (&optional count)
   "Move forward COUNT defuns.
