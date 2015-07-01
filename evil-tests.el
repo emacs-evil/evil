@@ -7944,7 +7944,16 @@ maybe we need one line more with some text\n")
     (evil-test-buffer
      "(test[ ]dio with whitespace)"
      ("dio")
-     "(test[d]io with whitespace)")))
+     "(test[d]io with whitespace)"))
+  (ert-info ("Test dao/dio with empty lines")
+    (evil-test-buffer
+     "there are two lines in this file\n[\n]and some whitespace between them"
+     ("dao")
+     "there are two lines in this file[a]nd some whitespace between them")
+    (evil-test-buffer
+     "here are another two lines\n[\n]with a blank line between them"
+     ("dio")
+     "here are another two lines\n[w]ith a blank line between them")))
 
 (provide 'evil-tests)
 
