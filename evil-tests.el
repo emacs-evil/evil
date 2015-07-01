@@ -7926,6 +7926,26 @@ maybe we need one line more with some text\n")
       ("@q\"qp")
       "fooifoo\e")))
 
+(ert-deftest evil-test-forward-symbol ()
+  :tags '(evil)
+  (ert-info ("Test symbol deletion")
+    (evil-test-buffer
+     "(test [t]his (hello there) with dao)"
+     ("dao")
+     "(test [(]hello there) with dao)"))
+  (ert-info ("Test symbol motion")
+    (evil-test-buffer
+     "(test[ ](hello there) with dao)"
+     (should (eq 0 (forward-evil-symbol 1)))
+     "(test ([h]ello there) with dao)"
+     (should (eq 0 (forward-evil-symbol 1)))
+     "(test (hello[ ]there) with dao)"))
+  (ert-info ("Test dio on whitespace")
+    (evil-test-buffer
+     "(test[ ]dio with whitespace)"
+     ("dio")
+     "(test[d]io with whitespace)")))
+
 (provide 'evil-tests)
 
 ;;; evil-tests.el ends here
