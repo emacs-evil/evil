@@ -7953,7 +7953,12 @@ maybe we need one line more with some text\n")
     (evil-test-buffer
      "here are another two lines\n[\n]with a blank line between them"
      ("dio")
-     "here are another two lines\n[w]ith a blank line between them")))
+     "here are another two lines\n[w]ith a blank line between them"))
+  (ert-info ("Test dao/dio with empty lines and punctuation")
+    (evil-test-buffer
+     "These two lines \n[\n]!have punctuation on them"
+     ("dao")
+     ("These two lines [!]have punctuation on them"))))
 
 (provide 'evil-tests)
 
