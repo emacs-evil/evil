@@ -1658,9 +1658,7 @@ syntax classes."
   (evil-forward-nearest
    count
    #'(lambda (&optional cnt)
-       (with-syntax-table (make-syntax-table (syntax-table))
-         (modify-syntax-entry ?\C-j "-")
-         (evil-forward-syntax "^w_-" cnt)))
+       (evil-forward-syntax "^w_->" cnt))
    #'(lambda (&optional cnt)
        (let ((pnt (point)))
          (forward-symbol cnt)
