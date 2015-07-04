@@ -7930,35 +7930,35 @@ maybe we need one line more with some text\n")
   :tags '(evil)
   (ert-info ("Test symbol deletion")
     (evil-test-buffer
-     "(test [t]his (hello there) with dao)"
-     ("dao")
-     "(test [(]hello there) with dao)"))
+      "(test [t]his (hello there) with dao)"
+      ("dao")
+      "(test [(]hello there) with dao)"))
   (ert-info ("Test symbol motion")
     (evil-test-buffer
-     "(test[ ](hello there) with dao)"
-     (should (eq 0 (forward-evil-symbol 1)))
-     "(test ([h]ello there) with dao)"
-     (should (eq 0 (forward-evil-symbol 1)))
-     "(test (hello[ ]there) with dao)"))
+      "(test[ ](hello there) with dao)"
+      (should (eq 0 (forward-evil-symbol 1)))
+      "(test ([h]ello there) with dao)"
+      (should (eq 0 (forward-evil-symbol 1)))
+      "(test (hello[ ]there) with dao)"))
   (ert-info ("Test dio on whitespace")
     (evil-test-buffer
-     "(test[ ]dio with whitespace)"
-     ("dio")
-     "(test[d]io with whitespace)"))
+      "(test[ ]dio with whitespace)"
+      ("dio")
+      "(test[d]io with whitespace)"))
   (ert-info ("Test dao/dio with empty lines")
     (evil-test-buffer
-     "there are two lines in this file\n[\n]and some whitespace between them"
-     ("dao")
-     "there are two lines in this file[a]nd some whitespace between them")
+      "there are two lines in this file\n[\n]and some whitespace between them"
+      ("dao")
+      "there are two lines in this file[a]nd some whitespace between them")
     (evil-test-buffer
-     "here are another two lines\n[\n]with a blank line between them"
-     ("dio")
-     "here are another two lines\n[w]ith a blank line between them"))
+      "here are another two lines\n[\n]with a blank line between them"
+      ("dio")
+      "here are another two lines\n[w]ith a blank line between them"))
   (ert-info ("Test dao/dio with empty lines and punctuation")
     (evil-test-buffer
-     "These two lines \n[\n]!have punctuation on them"
-     ("dao")
-     ("These two lines [!]have punctuation on them"))))
+      "These two lines \n[\n]!have punctuation on them"
+      ("dao")
+      ("These two lines [!]have punctuation on them"))))
 
 (provide 'evil-tests)
 

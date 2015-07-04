@@ -1332,8 +1332,8 @@ Signals an error at buffer boundaries unless NOERROR is non-nil."
 SYNTAX.
 Stop on reaching a character not in SYNTAX."
   (let ((notsyntax (if (= (aref syntax 0) ?^)
-                      (substring syntax 1)
-                    (concat "^" syntax))))
+                       (substring syntax 1)
+                     (concat "^" syntax))))
     (evil-motion-loop (dir (or count 1))
       (cond
        ((< dir 0)
