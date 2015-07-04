@@ -11,6 +11,7 @@
 ;;      Frank Terbeck <ft at bewatermyfriend.org>
 ;;      Gordon Gustafson <gordon3.14 at gmail.com>
 ;;      Herbert Jones <jones.herbert at gmail.com>
+;;      Jonas Bernoulli <jonas at bernoul.li>
 ;;      Jonathan Claggett <jclaggett at lonocloud.com>
 ;;      José A. Romero L. <escherdragon at gmail.com>
 ;;      Lars Andersen <expez at expez.com>
