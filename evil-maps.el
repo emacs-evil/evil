@@ -41,6 +41,8 @@
 (define-key evil-normal-state-map "d" 'evil-delete)
 (define-key evil-normal-state-map "D" 'evil-delete-line)
 (define-key evil-normal-state-map "i" 'evil-insert)
+(define-key evil-normal-state-map (kbd "<insert>") 'evil-insert)
+(define-key evil-normal-state-map (kbd "<insertchar>") 'evil-insert)
 (define-key evil-normal-state-map "I" 'evil-insert-line)
 (define-key evil-normal-state-map "J" 'evil-join)
 (define-key evil-normal-state-map "m" 'evil-set-marker)
@@ -139,13 +141,9 @@
 (define-key evil-window-map "\C-b" 'evil-window-bottom-right)
 (define-key evil-window-map "\C-c" 'evil-window-delete)
 (define-key evil-window-map (kbd "C-S-h") 'evil-window-move-far-left)
-(define-key evil-window-map "\C-h" 'evil-window-left)
 (define-key evil-window-map (kbd "C-S-j") 'evil-window-move-very-bottom)
-(define-key evil-window-map "\C-j" 'evil-window-down)
 (define-key evil-window-map (kbd "C-S-k") 'evil-window-move-very-top)
-(define-key evil-window-map "\C-k" 'evil-window-up)
 (define-key evil-window-map (kbd "C-S-l") 'evil-window-move-far-right)
-(define-key evil-window-map "\C-l" 'evil-window-right)
 (define-key evil-window-map "\C-n" 'evil-window-new)
 (define-key evil-window-map "\C-o" 'delete-other-windows)
 (define-key evil-window-map "\C-p" 'evil-window-mru)
@@ -337,6 +335,8 @@
 (define-key evil-visual-state-map "z=" 'ispell-word)
 (define-key evil-visual-state-map "a" evil-outer-text-objects-map)
 (define-key evil-visual-state-map "i" evil-inner-text-objects-map)
+(define-key evil-visual-state-map (kbd "<insert>") 'undefined)
+(define-key evil-visual-state-map (kbd "<insertchar>") 'undefined)
 (define-key evil-visual-state-map [remap evil-repeat] 'undefined)
 (define-key evil-visual-state-map [escape] 'evil-exit-visual-state)
 
@@ -468,6 +468,8 @@
 ;; search command line
 (define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
 (define-key evil-ex-search-keymap "\C-r" 'evil-paste-from-register)
+(define-key evil-ex-search-keymap "\C-n" 'next-history-element)
+(define-key evil-ex-search-keymap "\C-p" 'previous-history-element)
 
 ;; ex command line
 (define-key evil-ex-completion-map "\d" #'evil-ex-delete-backward-char)

@@ -195,6 +195,12 @@ moves the cursor."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-move-beyond-eol nil
+  "Whether the cursor is allowed to move past the last character of \
+a line."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-repeat-find-to-skip-next t
   "Whether a repeat of t or T should skip an adjacent character."
   :type 'boolean
@@ -567,6 +573,7 @@ If STATE is nil, Evil is disabled in the buffer."
     gdb-registers-mode
     gdb-threads-mode
     gist-list-mode
+    git-commit-mode
     gnus-article-mode
     gnus-browse-mode
     gnus-group-mode
@@ -575,18 +582,27 @@ If STATE is nil, Evil is disabled in the buffer."
     google-maps-static-mode
     ibuffer-mode
     jde-javadoc-checker-report-mode
-    magit-commit-mode
+    magit-cherry-mode
     magit-diff-mode
-    magit-key-mode
     magit-log-mode
-    magit-mode
-    magit-reflog-mode
-    magit-show-branches-mode
-    magit-branch-manager-mode ;; New name for magit-show-branches-mode
-    magit-stash-mode
-    magit-status-mode
-    magit-wazzup-mode
+    magit-log-select-mode
+    magit-popup-mode
+    magit-popup-sequence-mode
     magit-process-mode
+    magit-reflog-mode
+    magit-refs-mode
+    magit-revision-mode
+    magit-stash-mode
+    magit-stashes-mode
+    magit-status-mode
+    ;; Obsolete as of Magit v2.1.0
+    magit-mode
+    magit-branch-manager-mode
+    magit-commit-mode
+    magit-key-mode
+    magit-rebase-mode
+    magit-wazzup-mode
+    ;; end obsolete
     mh-folder-mode
     monky-mode
     mu4e-main-mode
