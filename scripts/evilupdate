@@ -53,7 +53,7 @@
 (defconst evilupdate-irc-nick "#lyrobot")
 (defconst evilupdate-irc-channel "#evil-mode")
 (defconst evilupdate-irc-topic
-  "Evil = Extensible vi layer for Emacs | Current version: VERSION | http://gitorious.org/evil | If you don't get an answer here, please use the mailing-list implementations-list@lists.ourproject.org")
+  "Evil = Extensible vi layer for Emacs | Current version: VERSION | http://bitbucket.org/lyro/evil | If you don't get an answer here, please use the mailing-list implementations-list@lists.ourproject.org")
 (defconst evilupdate-wiki-page "Evil")
 (defvar evilupdate-version "1.0.0")
 (defvar evilupdate-done nil)

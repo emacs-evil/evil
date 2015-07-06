@@ -30,7 +30,7 @@ def run(cmd)
 	system(cmd) or die(cmd)
 end
 
-run 'hg pull -r stable'
+run 'hg pull'
 run 'hg update -r stable'
 
 tag = `hg tags`.split("\n").select{|line| line =~ /^\d+\.\d+\.\d+/}.map do |line|
@@ -41,18 +41,12 @@ end.max
 
 tag or die 'No tagged revision found'
 
-stable = `hg log -r stable`[/changeset:\s*(\d+)/,1]
-stable or die 'No stable branch found'
-stable = stable.to_i
+stable = `hg log -r 'branch(stable) and not file("../.hgtags") and not ..tag("re:\\d+\\.\\d+\\.\\d+")' | wc -l`.to_i != 0
 
-if tag[3] != stable
+if stable
 	new_tag = "#{tag[0]}.#{tag[1]}.#{tag[2]+1}"
 	run "make -C .. nversion VERSION='#{new_tag}'"
 	run "hg commit -m 'update version to #{new_tag}'"
-	run "hg gexport"
-	run "git tag -a -m 'version #{new_tag}' #{new_tag} stable"
-	run "git push git@gitorious.org:evil/evil.git #{new_tag}"
-	run "git push git@gitorious.org:evil/evil.git stable"
-	run "hg pull -r stable"
-	run "hg push -r stable bby://evil"
+	run "hg tag -m 'version #{new_tag}' -r stable #{new_tag}"
+	run "hg push -r stable"
 end

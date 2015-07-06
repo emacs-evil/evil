@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.1.6
+;; Version: 1.2.1
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -3682,15 +3682,16 @@ If ARG is empty, maximize the current window height."
 and redisplays the current buffer there."
   :repeat nil
   (unless (one-window-p)
-    (let ((b (current-buffer)))
-      (delete-window)
-      (let ((btree (evil-get-buffer-tree (car (window-tree)))))
-        (delete-other-windows)
-        (let ((newwin (selected-window))
-              (subwin (split-window)))
-          (evil-restore-window-tree subwin btree)
-          (set-window-buffer newwin b)
-          (select-window newwin))))
+    (save-excursion
+      (let ((b (current-buffer)))
+        (delete-window)
+        (let ((btree (evil-get-buffer-tree (car (window-tree)))))
+          (delete-other-windows)
+          (let ((newwin (selected-window))
+                (subwin (split-window)))
+            (evil-restore-window-tree subwin btree)
+            (set-window-buffer newwin b)
+            (select-window newwin)))))
     (balance-windows)))
 
 (evil-define-command evil-window-move-far-left ()
@@ -3698,15 +3699,16 @@ and redisplays the current buffer there."
 and redisplays the current buffer there."
   :repeat nil
   (unless (one-window-p)
-    (let ((b (current-buffer)))
-      (delete-window)
-      (let ((btree (evil-get-buffer-tree (car (window-tree)))))
-        (delete-other-windows)
-        (let ((newwin (selected-window))
-              (subwin (split-window-horizontally)))
-          (evil-restore-window-tree subwin btree)
-          (set-window-buffer newwin b)
-          (select-window newwin))))
+    (save-excursion
+      (let ((b (current-buffer)))
+        (delete-window)
+        (let ((btree (evil-get-buffer-tree (car (window-tree)))))
+          (delete-other-windows)
+          (let ((newwin (selected-window))
+                (subwin (split-window-horizontally)))
+            (evil-restore-window-tree subwin btree)
+            (set-window-buffer newwin b)
+            (select-window newwin)))))
     (balance-windows)))
 
 (evil-define-command evil-window-move-far-right ()
@@ -3714,15 +3716,16 @@ and redisplays the current buffer there."
 and redisplays the current buffer there."
   :repeat nil
   (unless (one-window-p)
-    (let ((b (current-buffer)))
-      (delete-window)
-      (let ((btree (evil-get-buffer-tree (car (window-tree)))))
-        (delete-other-windows)
-        (let ((subwin (selected-window))
-              (newwin (split-window-horizontally)))
-          (evil-restore-window-tree subwin btree)
-          (set-window-buffer newwin b)
-          (select-window newwin))))
+    (save-excursion
+      (let ((b (current-buffer)))
+        (delete-window)
+        (let ((btree (evil-get-buffer-tree (car (window-tree)))))
+          (delete-other-windows)
+          (let ((subwin (selected-window))
+                (newwin (split-window-horizontally)))
+            (evil-restore-window-tree subwin btree)
+            (set-window-buffer newwin b)
+            (select-window newwin)))))
     (balance-windows)))
 
 (evil-define-command evil-window-move-very-bottom ()
@@ -3730,15 +3733,16 @@ and redisplays the current buffer there."
 and redisplays the current buffer there."
   :repeat nil
   (unless (one-window-p)
-    (let ((b (current-buffer)))
-      (delete-window)
-      (let ((btree (evil-get-buffer-tree (car (window-tree)))))
-        (delete-other-windows)
-        (let ((subwin (selected-window))
-              (newwin (split-window)))
-          (evil-restore-window-tree subwin btree)
-          (set-window-buffer newwin b)
-          (select-window newwin))))
+    (save-excursion
+      (let ((b (current-buffer)))
+        (delete-window)
+        (let ((btree (evil-get-buffer-tree (car (window-tree)))))
+          (delete-other-windows)
+          (let ((subwin (selected-window))
+                (newwin (split-window)))
+            (evil-restore-window-tree subwin btree)
+            (set-window-buffer newwin b)
+            (select-window newwin)))))
     (balance-windows)))
 
 ;;; Mouse handling
