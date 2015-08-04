@@ -1154,12 +1154,16 @@ or line COUNT to the top of the window."
       (unless (eobp) (forward-char))
       (evil-ex-search-previous 1)
       (when (and (<= evil-ex-search-match-beg pnt)
-                 (> evil-ex-search-match-end pnt))
+                 (> evil-ex-search-match-end pnt)
+                 (not (evil-visual-state-p)))
         (setq count (1- count)))
       (if (> count 0) (evil-ex-search-next count)))
      (t
       (unless (eobp) (forward-char))
       (evil-ex-search-next count))))
+  ;; active visual state if command is executed in normal state
+  (when (evil-normal-state-p)
+    (evil-visual-select evil-ex-search-match-beg evil-ex-search-match-end 'inclusive +1 t))
   (list evil-ex-search-match-beg evil-ex-search-match-end))
 
 (evil-define-text-object evil-previous-match (count &optional beg end type)
