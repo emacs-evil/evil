@@ -1834,6 +1834,8 @@ will be opened instead."
    (list (unless (and evil-this-macro defining-kbd-macro)
            (or evil-this-register (evil-read-key)))))
   (cond
+   ((eq register ?\C-g)
+    (keyboard-quit))
    ((and evil-this-macro defining-kbd-macro)
     (condition-case nil
         (end-kbd-macro)
@@ -1849,11 +1851,14 @@ will be opened instead."
     (evil-command-window-search-forward))
    ((eq register ??)
     (evil-command-window-search-backward))
-   (t
+   ((or (and (>= register ?0) (<= register ?9))
+        (and (>= register ?a) (<= register ?z))
+        (and (>= register ?A) (<= register ?Z)))
     (when defining-kbd-macro (end-kbd-macro))
     (setq evil-this-macro register)
     (evil-set-register evil-this-macro nil)
-    (start-kbd-macro nil))))
+    (start-kbd-macro nil))
+   (t (error "Invalid register"))))
 
 (evil-define-command evil-execute-macro (count macro)
   "Execute keyboard macro MACRO, COUNT times.
