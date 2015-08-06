@@ -484,6 +484,10 @@ and jump to the corresponding one."
            (close (point-max))
            (open-pair (condition-case nil
                           (save-excursion
+                            ;; consider the character right before eol given that
+                            ;; point may be placed there, e.g. in visual state
+                            (when (and (eolp) (not (bolp)))
+                              (backward-char))
                             (setq open (1- (scan-lists (point) 1 -1)))
                             (when (< open (line-end-position))
                               (goto-char open)
@@ -492,6 +496,10 @@ and jump to the corresponding one."
                         (error nil)))
            (close-pair (condition-case nil
                            (save-excursion
+                             ;; consider the character right before eol given that
+                             ;; point may be placed there, e.g. in visual state
+                             (when (and (eolp) (not (bolp)))
+                               (backward-char))
                              (setq close (1- (scan-lists (point) 1 1)))
                              (when (< close (line-end-position))
                                (goto-char (1+ close))
