@@ -484,6 +484,10 @@ and jump to the corresponding one."
            (close (point-max))
            (open-pair (condition-case nil
                           (save-excursion
+                            ;; consider the character right before eol given that
+                            ;; point may be placed there, e.g. in visual state
+                            (when (and (eolp) (not (bolp)))
+                              (backward-char))
                             (setq open (1- (scan-lists (point) 1 -1)))
                             (when (< open (line-end-position))
                               (goto-char open)
@@ -492,6 +496,10 @@ and jump to the corresponding one."
                         (error nil)))
            (close-pair (condition-case nil
                            (save-excursion
+                             ;; consider the character right before eol given that
+                             ;; point may be placed there, e.g. in visual state
+                             (when (and (eolp) (not (bolp)))
+                               (backward-char))
                              (setq close (1- (scan-lists (point) 1 1)))
                              (when (< close (line-end-position))
                                (goto-char (1+ close))
@@ -1154,12 +1162,16 @@ or line COUNT to the top of the window."
       (unless (eobp) (forward-char))
       (evil-ex-search-previous 1)
       (when (and (<= evil-ex-search-match-beg pnt)
-                 (> evil-ex-search-match-end pnt))
+                 (> evil-ex-search-match-end pnt)
+                 (not (evil-visual-state-p)))
         (setq count (1- count)))
       (if (> count 0) (evil-ex-search-next count)))
      (t
       (unless (eobp) (forward-char))
       (evil-ex-search-next count))))
+  ;; active visual state if command is executed in normal state
+  (when (evil-normal-state-p)
+    (evil-visual-select evil-ex-search-match-beg evil-ex-search-match-end 'inclusive +1 t))
   (list evil-ex-search-match-beg evil-ex-search-match-end))
 
 (evil-define-text-object evil-previous-match (count &optional beg end type)
@@ -1830,6 +1842,8 @@ will be opened instead."
    (list (unless (and evil-this-macro defining-kbd-macro)
            (or evil-this-register (evil-read-key)))))
   (cond
+   ((eq register ?\C-g)
+    (keyboard-quit))
    ((and evil-this-macro defining-kbd-macro)
     (condition-case nil
         (end-kbd-macro)
@@ -1845,11 +1859,14 @@ will be opened instead."
     (evil-command-window-search-forward))
    ((eq register ??)
     (evil-command-window-search-backward))
-   (t
+   ((or (and (>= register ?0) (<= register ?9))
+        (and (>= register ?a) (<= register ?z))
+        (and (>= register ?A) (<= register ?Z)))
     (when defining-kbd-macro (end-kbd-macro))
     (setq evil-this-macro register)
     (evil-set-register evil-this-macro nil)
-    (start-kbd-macro nil))))
+    (start-kbd-macro nil))
+   (t (error "Invalid register"))))
 
 (evil-define-command evil-execute-macro (count macro)
   "Execute keyboard macro MACRO, COUNT times.
