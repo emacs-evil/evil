@@ -518,8 +518,8 @@ Based on `evil-enclose-ace-jump-for-motion'."
                    avy-goto-word-1
                    avy-goto-subword-0
                    avy-goto-subword-1))
-  (global-set-key (vector 'remap command)
-                  (intern-soft (format "evil-%s" command))))
+  (define-key evil-motion-state-map
+    (vector 'remap command) (intern-soft (format "evil-%s" command))))
 
 ;;; nXhtml/mumamo
 ;; ensure that mumamo does not toggle evil through its globalized mode
