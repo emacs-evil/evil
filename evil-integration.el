@@ -502,8 +502,8 @@ Based on `evil-enclose-ace-jump-for-motion'."
 ;; define evil-avy-* motion commands for avy-* commands
 (evil-define-avy-motion avy-goto-word-or-subword-1 exclusive)
 (evil-define-avy-motion avy-goto-line line)
-(evil-define-avy-motion avy-goto-char exclusive)
-(evil-define-avy-motion avy-goto-char-2 exclusive)
+(evil-define-avy-motion avy-goto-char inclusive)
+(evil-define-avy-motion avy-goto-char-2 inclusive)
 (evil-define-avy-motion avy-goto-word-0 exclusive)
 (evil-define-avy-motion avy-goto-word-1 exclusive)
 (evil-define-avy-motion avy-goto-subword-0 exclusive)
