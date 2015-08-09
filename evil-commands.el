@@ -1825,6 +1825,11 @@ The return value is the yanked text."
     ;; go to end of pasted text
     (forward-char)))
 
+(defun evil-paste-last-insertion ()
+  "Paste last insertion."
+  (interactive)
+  (evil-paste-from-register ?.))
+
 (evil-define-command evil-use-register (register)
   "Use REGISTER for the next command."
   :keep-visual t
