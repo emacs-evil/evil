@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.1
+;; Version: 1.2.2
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -360,6 +360,7 @@
 (define-key evil-insert-state-map "\C-x\C-p" 'evil-complete-previous-line)
 (define-key evil-insert-state-map "\C-t" 'evil-shift-right-line)
 (define-key evil-insert-state-map "\C-d" 'evil-shift-left-line)
+(define-key evil-insert-state-map "\C-a" 'evil-paste-last-insertion)
 (define-key evil-insert-state-map [remap delete-backward-char] 'evil-delete-backward-char-and-join)
 (define-key evil-insert-state-map [delete] 'delete-char)
 (define-key evil-insert-state-map [escape] 'evil-normal-state)

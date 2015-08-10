@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.1
+;; Version: 1.2.2
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -1824,6 +1824,11 @@ The return value is the yanked text."
   (when (evil-paste-before nil register t)
     ;; go to end of pasted text
     (forward-char)))
+
+(defun evil-paste-last-insertion ()
+  "Paste last insertion."
+  (interactive)
+  (evil-paste-from-register ?.))
 
 (evil-define-command evil-use-register (register)
   "Use REGISTER for the next command."
