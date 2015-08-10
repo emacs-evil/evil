@@ -76,6 +76,7 @@ of the line or the buffer; just return nil."
       (forward-char)
       ;; don't put the cursor on a newline
       (when (and evil-move-cursor-back
+                 (not evil-move-beyond-eol)
                  (not (evil-visual-state-p))
                  (not (evil-operator-state-p))
                  (eolp) (not (eobp)) (not (bolp)))
@@ -1437,6 +1438,7 @@ of the block."
       (goto-char end)
       (when (and evil-cross-lines
                  evil-move-cursor-back
+                 (not evil-move-beyond-eol)
                  (not (evil-visual-state-p))
                  (not (evil-operator-state-p))
                  (eolp) (not (eobp)) (not (bolp)))
