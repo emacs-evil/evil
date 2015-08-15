@@ -464,6 +464,63 @@ the mark and entering `recursive-edit'."
 (define-key evil-motion-state-map [remap ace-jump-line-mode] #'evil-ace-jump-line-mode)
 (define-key evil-motion-state-map [remap ace-jump-word-mode] #'evil-ace-jump-word-mode)
 
+;;; avy
+(declare-function 'avy-goto-word-or-subword-1 "avy")
+(declare-function 'avy-goto-line "avy")
+(declare-function 'avy-goto-char "avy")
+(declare-function 'avy-goto-char-2 "avy")
+(declare-function 'avy-goto-word-0 "avy")
+(declare-function 'avy-goto-word-1 "avy")
+(declare-function 'avy-goto-subword-0 "avy")
+(declare-function 'avy-goto-subword-1 "avy")
+
+(defmacro evil-enclose-avy-for-motion (&rest body)
+  "Enclose avy to make it suitable for motions.
+Based on `evil-enclose-ace-jump-for-motion'."
+  (declare (indent defun)
+           (debug t))
+  `(let ((avy-all-windows
+          (if (and (not (memq evil-state '(visual operator)))
+                   (boundp 'avy-all-windows))
+              avy-all-windows
+            nil)))
+     ,@body))
+
+(defmacro evil-define-avy-motion (command type)
+  (declare (indent defun)
+           (debug t))
+  (let ((name (intern (format "evil-%s" command))))
+    `(evil-define-motion ,name (_count)
+       ,(format "Evil motion for `%s'." command)
+       :type ,type
+       :jump t
+       :repeat abort
+       (evil-without-repeat
+         (evil-enclose-avy-for-motion
+           (call-interactively ',command))))))
+
+;; define evil-avy-* motion commands for avy-* commands
+(evil-define-avy-motion avy-goto-word-or-subword-1 exclusive)
+(evil-define-avy-motion avy-goto-line line)
+(evil-define-avy-motion avy-goto-char inclusive)
+(evil-define-avy-motion avy-goto-char-2 inclusive)
+(evil-define-avy-motion avy-goto-word-0 exclusive)
+(evil-define-avy-motion avy-goto-word-1 exclusive)
+(evil-define-avy-motion avy-goto-subword-0 exclusive)
+(evil-define-avy-motion avy-goto-subword-1 exclusive)
+
+;; remap avy-* commands to evil-avy-* commands
+(dolist (command '(avy-goto-word-or-subword-1
+                   avy-goto-line
+                   avy-goto-char
+                   avy-goto-char-2
+                   avy-goto-word-0
+                   avy-goto-word-1
+                   avy-goto-subword-0
+                   avy-goto-subword-1))
+  (define-key evil-motion-state-map
+    (vector 'remap command) (intern-soft (format "evil-%s" command))))
+
 ;;; nXhtml/mumamo
 ;; ensure that mumamo does not toggle evil through its globalized mode
 (eval-after-load 'mumamo
