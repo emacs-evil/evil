@@ -330,25 +330,15 @@ then this function does nothing."
 ;; When a buffer is created in a low-level way, it is invisible to
 ;; Evil (as well as other globalized minor modes) because no hooks are
 ;; run. This is appropriate since many buffers are used for throwaway
-;; purposes. Passing the buffer to `display-buffer' indicates
+;; purposes. Passing the buffer to `set-window-buffer' indicates
 ;; otherwise, though, so advise this function to initialize Evil.
-(defadvice display-buffer (before evil)
+(defadvice set-window-buffer (before evil)
   "Initialize Evil in the displayed buffer."
   (when evil-mode
-    (when (get-buffer (ad-get-arg 0))
-      (with-current-buffer (ad-get-arg 0)
+    (when (get-buffer (ad-get-arg 1))
+      (with-current-buffer (ad-get-arg 1)
         (unless evil-local-mode
           (evil-local-mode 1))))))
-
-(defadvice switch-to-buffer (before evil)
-  "Initialize Evil in the displayed buffer."
-  (when evil-mode
-    (let* ((arg0 (ad-get-arg 0))
-           (buffer (if arg0 (get-buffer arg0) (other-buffer))))
-      (when buffer
-        (with-current-buffer buffer
-          (unless evil-local-mode
-            (evil-local-mode 1)))))))
 
 ;; Refresh cursor color.
 ;; Cursor color can only be set for each frame but not for each buffer.
