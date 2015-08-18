@@ -1007,6 +1007,11 @@ uses plain Emacs regular expressions."
                 (const :tag "Disable highlighting." nil))
   :group 'evil)
 
+(defcustom evil-ex-search-persistent-highlight t
+  "If non-nil matches remained highlighted when the search ends."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-ex-search-case 'smart
   "The case behaviour of the search command.
 Smart case means that the pattern is case sensitive if and only

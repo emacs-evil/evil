@@ -1085,7 +1085,9 @@ current search result."
             (setq evil-ex-search-match-beg (match-beginning 0)
                   evil-ex-search-match-end (match-end 0))
             (evil-ex-search-goto-offset offset)
-            (evil-push-search-history search-string (eq direction 'forward)))
+            (evil-push-search-history search-string (eq direction 'forward))
+            (unless evil-ex-search-persistent-highlight
+              (evil-ex-delete-hl 'evil-ex-search)))
            (t
             (goto-char evil-ex-search-start-point)
             (evil-ex-delete-hl 'evil-ex-search)
