@@ -865,7 +865,7 @@ The default is half the screen."
       (scroll-down nil))))
 
 (evil-define-command evil-scroll-page-down (count)
-  "Scrolls the window COUNT pages upwards."
+  "Scrolls the window COUNT pages downwards."
   :repeat nil
   :keep-visual t
   (interactive "p")
