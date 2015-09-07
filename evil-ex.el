@@ -216,10 +216,16 @@ Otherwise behaves like `delete-backward-char'."
        #'abort-recursive-edit
      #'delete-backward-char)))
 
+(defun evil-ex-abort ()
+  "Cancel ex state when another buffer is selected."
+  (unless (minibufferp)
+    (abort-recursive-edit)))
+
 (defun evil-ex-setup ()
   "Initialize Ex minibuffer.
 This function registers several hooks that are used for the
 interactive actions during ex state."
+  (add-hook 'post-command-hook #'evil-ex-abort)
   (add-hook 'after-change-functions #'evil-ex-update nil t)
   (add-hook 'minibuffer-exit-hook #'evil-ex-teardown)
   (when evil-ex-previous-command
@@ -235,6 +241,7 @@ interactive actions during ex state."
 (defun evil-ex-teardown ()
   "Deinitialize Ex minibuffer.
 Clean up everything set up by `evil-ex-setup'."
+  (remove-hook 'post-command-hook #'evil-ex-abort)
   (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown)
   (remove-hook 'after-change-functions #'evil-ex-update t)
   (when evil-ex-argument-handler
