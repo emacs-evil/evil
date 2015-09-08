@@ -1594,9 +1594,9 @@ the current line."
   (evil-shift-right (line-beginning-position) (line-beginning-position 2) count t))
 
 (evil-define-command evil-shift-left-line (count)
-  "Shift the current line COUNT times to the leeft.
+  "Shift the current line COUNT times to the left.
 The text is shifted to the nearest multiple of
-`evil-shift-width'. Like `evil-shift-leeft' but always works on
+`evil-shift-width'. Like `evil-shift-left' but always works on
 the current line."
   (interactive "<c>")
   (evil-shift-left (line-beginning-position) (line-beginning-position 2) count t))
