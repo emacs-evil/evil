@@ -428,7 +428,7 @@ before point."
   :type 'boolean
   :group 'evil)
 
-(defcustom evil-want-Y-yank-to-eol t
+(defcustom evil-want-Y-yank-to-eol nil
   "Whether \"Y\" yanks to the end of the line.
 The default behavior is to yank the whole line."
   :group 'evil
