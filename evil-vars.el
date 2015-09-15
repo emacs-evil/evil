@@ -27,6 +27,9 @@
 
 ;;; Code:
 
+(declare-function evil-add-command-properties "evil-common"
+                  (command &rest properties))
+
 ;;; Hooks
 
 (defvar evil-after-load-hook nil
@@ -424,6 +427,17 @@ before point."
   "Whether \"cw\" behaves like \"ce\"."
   :type 'boolean
   :group 'evil)
+
+(defcustom evil-want-Y-yank-to-eol t
+  "Whether \"Y\" yanks to the end of the line.
+The default behavior is to yank the whole line."
+  :group 'evil
+  :type 'boolean
+  :initialize #'evil-custom-initialize-pending-reset
+  :set #'(lambda (sym value)
+           (evil-add-command-properties
+            'evil-yank-line
+            :motion (if value 'evil-end-of-line 'evil-line))))
 
 (defcustom evil-echo-state t
   "Whether to signal the current state in the echo area."
