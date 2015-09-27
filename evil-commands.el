@@ -1065,7 +1065,7 @@ or line COUNT to the top of the window."
 (evil-define-text-object evil-a-paragraph (count &optional beg end type)
   "Select a paragraph."
   :type line
-  (evil-select-an-object 'evil-paragraph beg end type count))
+  (evil-select-an-object 'evil-paragraph beg end type count t))
 
 (evil-define-text-object evil-inner-paragraph (count &optional beg end type)
   "Select inner paragraph."
