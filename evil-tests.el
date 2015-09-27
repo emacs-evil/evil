@@ -5956,7 +5956,7 @@ Below some empty line."))
 (ert-deftest evil-test-paragraph-objects ()
   "Test `evil-inner-paragraph' and `evil-a-paragraph'"
   :tags '(evil text-object)
-  (ert-info ("Select a paragraph")
+  (ert-info ("Select a paragraph with point at beginning")
     (evil-test-buffer
       "[;]; This buffer is for notes,
 ;; and for Lisp evaluation.
@@ -5968,7 +5968,8 @@ Below some empty line."))
 ;; and for Lisp evaluation.
 \[]\n>\
 ;; This buffer is for notes,
-;; and for Lisp evaluation.")
+;; and for Lisp evaluation."))
+  (ert-info ("Select a paragraph with point at last line")
     (evil-test-buffer
       ";; This buffer is for notes,
 \[;]; and for Lisp evaluation.
@@ -5980,7 +5981,8 @@ Below some empty line."))
 ;; and for Lisp evaluation.
 \[]\n>\
 ;; This buffer is for notes,
-;; and for Lisp evaluation.")
+;; and for Lisp evaluation."))
+  (ert-info ("Select a paragraph with point after paragraph")
     (evil-test-buffer
       ";; This buffer is for notes,
 ;; and for Lisp evaluation.
