@@ -7957,7 +7957,7 @@ maybe we need one line more with some text\n")
     (evil-test-buffer
       "there are two lines in this file\n[\n]and some whitespace between them"
       ("dao")
-      "there are two lines in this file[a]nd some whitespace between them")
+      "there are two lines in this file\n[a]nd some whitespace between them")
     (evil-test-buffer
       "here are another two lines\n[\n]with a blank line between them"
       ("dio")
@@ -7966,7 +7966,7 @@ maybe we need one line more with some text\n")
     (evil-test-buffer
       "These two lines \n[\n]!have punctuation on them"
       ("dao")
-      ("These two lines [!]have punctuation on them"))))
+      "These two lines \n[!]have punctuation on them")))
 
 (provide 'evil-tests)
 
