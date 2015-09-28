@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.3
+;; Version: 1.2.5
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -1065,7 +1065,7 @@ or line COUNT to the top of the window."
 (evil-define-text-object evil-a-paragraph (count &optional beg end type)
   "Select a paragraph."
   :type line
-  (evil-select-an-object 'evil-paragraph beg end type count))
+  (evil-select-an-object 'evil-paragraph beg end type count t))
 
 (evil-define-text-object evil-inner-paragraph (count &optional beg end type)
   "Select inner paragraph."
@@ -1594,9 +1594,9 @@ the current line."
   (evil-shift-right (line-beginning-position) (line-beginning-position 2) count t))
 
 (evil-define-command evil-shift-left-line (count)
-  "Shift the current line COUNT times to the leeft.
+  "Shift the current line COUNT times to the left.
 The text is shifted to the nearest multiple of
-`evil-shift-width'. Like `evil-shift-leeft' but always works on
+`evil-shift-width'. Like `evil-shift-left' but always works on
 the current line."
   (interactive "<c>")
   (evil-shift-left (line-beginning-position) (line-beginning-position 2) count t))

@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.3
+;; Version: 1.2.5
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -3002,22 +3002,36 @@ linewise, otherwise it is character wise."
     (cond
      ((> dir 0) (goto-char end) (setq other beg))
      (t (goto-char beg) (setq other end)))
-    ;; if current is only selected object ...
-    (when (and (= beg (car bnd)) (= end (cdr bnd)))
-      (if objbnd
-          ;; current match is thing, add whitespace
-          (let ((wsend (evil-bounds-of-not-thing-at-point thing dir)))
-            (if (not wsend) ;; no whitespace at end, try beginning
-                (save-excursion
-                  (goto-char other)
-                  (setq wsend (evil-bounds-of-not-thing-at-point thing (- dir)))
-                  (when wsend (setq other wsend addcurrent t)))
-              ;; add whitespace at end
-              (goto-char wsend)
-              (setq addcurrent t)))
-        ;; current match is whitespace, add thing
-        (forward-thing thing dir)
-        (setq addcurrent t)))
+    (cond
+     ;; do nothing more than only current is selected
+     ((not (and (= beg (car bnd)) (= end (cdr bnd)))))
+     ;; current match is thing, add whitespace
+     (objbnd
+      (let ((wsend (evil-with-restriction
+                       ;; restrict to current line if we do non-line selection
+                       (and (not line) (line-beginning-position))
+                       (and (not line) (line-end-position))
+                     (evil-bounds-of-not-thing-at-point thing dir))))
+        (cond
+         (wsend
+          ;; add whitespace at end
+          (goto-char wsend)
+          (setq addcurrent t))
+         (t
+          ;; no whitespace at end, try beginning
+          (save-excursion
+            (goto-char other)
+            (setq wsend
+                  (evil-with-restriction
+                      ;; restrict to current line if we do non-line selection
+                      (and (not line) (line-beginning-position))
+                      (and (not line) (line-end-position))
+                    (evil-bounds-of-not-thing-at-point thing (- dir))))
+            (when wsend (setq other wsend addcurrent t)))))))
+     ;; current match is whitespace, add thing
+     (t
+      (forward-thing thing dir)
+      (setq addcurrent t)))
     ;; possibly count current object as selection
     (if addcurrent (setq count (1- count)))
     ;; move

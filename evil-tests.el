@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.3
+;; Version: 1.2.5
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -5956,7 +5956,7 @@ Below some empty line."))
 (ert-deftest evil-test-paragraph-objects ()
   "Test `evil-inner-paragraph' and `evil-a-paragraph'"
   :tags '(evil text-object)
-  (ert-info ("Select a paragraph")
+  (ert-info ("Select a paragraph with point at beginning")
     (evil-test-buffer
       "[;]; This buffer is for notes,
 ;; and for Lisp evaluation.
@@ -5968,7 +5968,8 @@ Below some empty line."))
 ;; and for Lisp evaluation.
 \[]\n>\
 ;; This buffer is for notes,
-;; and for Lisp evaluation.")
+;; and for Lisp evaluation."))
+  (ert-info ("Select a paragraph with point at last line")
     (evil-test-buffer
       ";; This buffer is for notes,
 \[;]; and for Lisp evaluation.
@@ -5980,7 +5981,8 @@ Below some empty line."))
 ;; and for Lisp evaluation.
 \[]\n>\
 ;; This buffer is for notes,
-;; and for Lisp evaluation.")
+;; and for Lisp evaluation."))
+  (ert-info ("Select a paragraph with point after paragraph")
     (evil-test-buffer
       ";; This buffer is for notes,
 ;; and for Lisp evaluation.
@@ -7955,7 +7957,7 @@ maybe we need one line more with some text\n")
     (evil-test-buffer
       "there are two lines in this file\n[\n]and some whitespace between them"
       ("dao")
-      "there are two lines in this file[a]nd some whitespace between them")
+      "there are two lines in this file\n[a]nd some whitespace between them")
     (evil-test-buffer
       "here are another two lines\n[\n]with a blank line between them"
       ("dio")
@@ -7964,7 +7966,7 @@ maybe we need one line more with some text\n")
     (evil-test-buffer
       "These two lines \n[\n]!have punctuation on them"
       ("dao")
-      ("These two lines [!]have punctuation on them"))))
+      "These two lines \n[!]have punctuation on them")))
 
 (provide 'evil-tests)
 
