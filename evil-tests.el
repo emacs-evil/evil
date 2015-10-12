@@ -6077,7 +6077,13 @@ Below some empty line."))
       "Th[i]s is \"a test\". For \"quote\" objects."
       (emacs-lisp-mode)
       ("da\"")
-      "This is[.] For \"quote\" objects.")))
+      "This is[.] For \"quote\" objects."))
+  (ert-info ("Operator on empty quotes")
+    (evil-test-buffer
+      "This is [a]n \"\" empty quote"
+      (emacs-lisp-mode)
+      ("ci\"XXX" [escape])
+      "This is an \"XX[X]\" empty quote")))
 
 (ert-deftest evil-test-paren-objects ()
   "Test `evil-inner-paren', etc."

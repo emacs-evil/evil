@@ -3256,7 +3256,16 @@ function is called from `evil-select-quote'."
           (goto-char (if (> dir 0) beg end))
           (if (and wsboth (setq bnd (bounds-of-thing-at-point 'evil-space)))
               (if (> dir 0) (setq beg (car bnd)) (setq end (cdr bnd)))))))
-      (evil-range beg end 'inclusive :expanded t))))
+      (evil-range beg end
+                  ;; HACK: fixes #583
+                  ;; When not in visual state, an empty range is
+                  ;; possible. However, this cannot be achieved with
+                  ;; inclusive ranges, hence we use exclusive ranges
+                  ;; in this case. In visual state the range must be
+                  ;; inclusive because otherwise the selection would
+                  ;; be wrong.
+                  (if (evil-visual-state-p) 'inclusive 'exclusive)
+                  :expanded t))))
 
 (defun evil-select-quote (quote beg end type count &optional inclusive)
   "Return a range (BEG END) of COUNT quoted text objects.
