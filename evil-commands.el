@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.5
+;; Version: 1.2.6
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -3548,20 +3548,21 @@ of the parent of the splitted window are rebalanced."
 (evil-define-command evil-window-bottom-right ()
   "Move the cursor to bottom-right window."
   :repeat nil
-  (select-window
-   (let ((last-sibling (frame-root-window)))
-     (while (not (window-live-p last-sibling))
-       (setq last-sibling (window-last-child last-sibling)))
-     last-sibling)))
+  (let ((last-sibling (frame-root-window)))
+    (while (and last-sibling (not (window-live-p last-sibling)))
+      (setq last-sibling (window-last-child last-sibling)))
+    (when last-sibling
+      (select-window last-sibling))))
 
 (evil-define-command evil-window-top-left ()
   "Move the cursor to top-left window."
   :repeat nil
-  (select-window
-   (let ((first-child (window-child (frame-root-window))))
-     (while (not (window-live-p first-child))
-       (setq first-child (window-child first-child)))
-     first-child)))
+  (let ((first-child (window-child (frame-root-window))))
+    (while (and first-child (not (window-live-p first-child)))
+      (setq first-child (window-child first-child)))
+    (when first-child
+      (select-window
+       first-child))))
 
 (evil-define-command evil-window-mru ()
   "Move the cursor to the previous (last accessed) buffer in another window.
