@@ -166,6 +166,13 @@ of `evil-shift-width'."
   :group 'evil)
 (make-variable-buffer-local 'evil-shift-round)
 
+(defcustom evil-indent-convert-tabs t
+  "If non-nil `evil-indent' converts between leading tabs and spaces.
+  Whether tabs are converted to spaces or vice versa depends on the
+  value of `indent-tabs-mode'."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-default-cursor t
   "The default cursor.
 May be a cursor type as per `cursor-type', a color string as passed
