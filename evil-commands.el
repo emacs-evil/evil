@@ -1506,19 +1506,20 @@ but doesn't insert or remove any spaces."
     (goto-char beg)
     (indent-region beg end))
   ;; We also need to tabify or untabify the leading white characters
-  (let* ((beg-line (line-number-at-pos beg))
-         (end-line (line-number-at-pos end))
-         (ln beg-line)
-         (convert-white (if indent-tabs-mode 'tabify 'untabify)))
-    (save-excursion
-      (while (<= ln end-line)
-        (goto-char (point-min))
-        (forward-line (- ln 1))
-        (back-to-indentation)
-        ;; Whether tab or space should be used is determined by indent-tabs-mode
-        (funcall convert-white (line-beginning-position) (point))
-        (setq ln (1+ ln)))))
-  (back-to-indentation))
+  (when evil-indent-convert-tabs
+    (let* ((beg-line (line-number-at-pos beg))
+           (end-line (line-number-at-pos end))
+           (ln beg-line)
+           (convert-white (if indent-tabs-mode 'tabify 'untabify)))
+      (save-excursion
+        (while (<= ln end-line)
+          (goto-char (point-min))
+          (forward-line (- ln 1))
+          (back-to-indentation)
+          ;; Whether tab or space should be used is determined by indent-tabs-mode
+          (funcall convert-white (line-beginning-position) (point))
+          (setq ln (1+ ln)))))
+    (back-to-indentation)))
 
 (evil-define-operator evil-indent-line (beg end)
   "Indent the line."
