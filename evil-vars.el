@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.6
+;; Version: 1.2.7
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -1732,7 +1732,7 @@ Otherwise the previous command is assumed as substitute.")
           (goto-char (point-min))
           (buffer-substring (point-min) (line-end-position)))
          ;; no repo, use plain version
-         (t "1.2.6")))))
+         (t "1.2.7")))))
   "The current version of Evil")
 
 (defun evil-version ()

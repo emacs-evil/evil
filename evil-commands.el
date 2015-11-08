@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.6
+;; Version: 1.2.7
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -2420,7 +2420,7 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
   (dotimes (var (or count 1))
     (evil-search-word t nil symbol)))
 
-(evil-define-motion evil-search-unbounded-word-backward (count &optiona symbol)
+(evil-define-motion evil-search-unbounded-word-backward (count &optional symbol)
   "Search backward for symbol under point.
 The search is unbounded, i.e., the pattern is not wrapped in
 \\<...\\>."
@@ -2431,7 +2431,7 @@ The search is unbounded, i.e., the pattern is not wrapped in
   (dotimes (var (or count 1))
     (evil-search-word nil t symbol)))
 
-(evil-define-motion evil-search-unbounded-word-forward (count &optiona symbol)
+(evil-define-motion evil-search-unbounded-word-forward (count &optional symbol)
   "Search forward for symbol under point.
 The search is unbounded, i.e., the pattern is not wrapped in
 \\<...\\>."
