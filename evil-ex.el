@@ -186,7 +186,7 @@ is appended to the line."
              ":"
              (or initial-input
                  (and evil-ex-previous-command
-                      (format "(default: %s) " evil-ex-previous-command)))
+                      (propertize evil-ex-previous-command 'face 'shadow)))
              evil-ex-completion-map
              nil
              'evil-ex-history
