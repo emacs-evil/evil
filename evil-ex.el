@@ -256,7 +256,10 @@ Clean up everything set up by `evil-ex-setup'."
 When ex starts, the previous command is shown enclosed in
 parenthesis. This function removes this text when the first key
 is pressed."
-  (unless (eq this-command 'exit-minibuffer)
+  (when (and (not (eq this-command 'exit-minibuffer))
+             (/= (minibuffer-prompt-end) (point-max)))
+    (if (eq this-command 'evil-ex-delete-backward-char)
+        (setq this-command 'ignore))
     (delete-minibuffer-contents))
   (remove-hook 'pre-command-hook #'evil-ex-remove-default))
 (put 'evil-ex-remove-default 'permanent-local-hook t)
