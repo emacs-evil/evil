@@ -350,28 +350,61 @@
 
 ;;; Insert state
 
-(define-key evil-insert-state-map "\C-v" 'quoted-insert)
-(define-key evil-insert-state-map "\C-k" 'evil-insert-digraph)
-(define-key evil-insert-state-map "\C-o" 'evil-execute-in-normal-state)
-(define-key evil-insert-state-map "\C-r" 'evil-paste-from-register)
-(define-key evil-insert-state-map "\C-y" 'evil-copy-from-above)
-(define-key evil-insert-state-map "\C-e" 'evil-copy-from-below)
-(define-key evil-insert-state-map "\C-n" 'evil-complete-next)
-(define-key evil-insert-state-map "\C-p" 'evil-complete-previous)
-(define-key evil-insert-state-map "\C-x\C-n" 'evil-complete-next-line)
-(define-key evil-insert-state-map "\C-x\C-p" 'evil-complete-previous-line)
-(define-key evil-insert-state-map "\C-t" 'evil-shift-right-line)
-(define-key evil-insert-state-map "\C-d" 'evil-shift-left-line)
-(define-key evil-insert-state-map "\C-a" 'evil-paste-last-insertion)
-(define-key evil-insert-state-map [remap delete-backward-char] 'evil-delete-backward-char-and-join)
+(defvar evil-insert-state-bindings
+  `(("\C-v" . quoted-insert)
+    ("\C-k" . evil-insert-digraph)
+    ("\C-o" . evil-execute-in-normal-state)
+    ("\C-r" . evil-paste-from-register)
+    ("\C-y" . evil-copy-from-above)
+    ("\C-e" . evil-copy-from-below)
+    ("\C-n" . evil-complete-next)
+    ("\C-p" . evil-complete-previous)
+    ("\C-x\C-n" . evil-complete-next-line)
+    ("\C-x\C-p" . evil-complete-previous-line)
+    ("\C-t" . evil-shift-right-line)
+    ("\C-d" . evil-shift-left-line)
+    ("\C-a" . evil-paste-last-insertion)
+    ([remap delete-backward-char] . evil-delete-backward-char-and-join)
+    ,(if evil-want-C-w-delete
+         '("\C-w" . evil-delete-backward-word)
+       '("\C-w" . evil-window-map))
+    ([mouse-2] . mouse-yank-primary))
+  "Evil's bindings for insert state (for
+`evil-insert-state-map'), excluding <delete>, <escape>, and
+`evil-toggle-key'.")
+
+(defun evil-add-insert-state-bindings (&optional force)
+  "Add bindings to `evil-insert-state-map' specified in
+`evil-insert-state-bindings' without overwriting existing
+bindings (unless FORCE is non nil). Note that <delete>, <escape>
+and `evil-toggle-key' are not included in
+`evil-insert-state-bindings' by default."
+  (interactive)
+  (dolist (binding evil-insert-state-bindings)
+    (when (or force
+              (null (lookup-key evil-insert-state-map (car binding))))
+      (define-key evil-insert-state-map (car binding) (cdr binding)))))
+
+(defun evil-remove-insert-state-bindings (&optional force)
+  "Remove bindings from `evil-insert-state-map' specified in
+`evil-insert-state-bindings'. This will not remove non-default
+bindings unless FORCE is non nil. Note that <delete>, <escape>
+and `evil-toggle-key' are not included in
+`evil-insert-state-bindings' by default."
+  (interactive)
+  (dolist (binding evil-insert-state-bindings)
+    (when (or force
+              (eq (lookup-key evil-insert-state-map (car binding))
+                  (cdr binding)))
+      (define-key evil-insert-state-map (car binding) nil))))
+
+(unless evil-disable-insert-state-bindings
+  (evil-add-insert-state-bindings))
+
 (define-key evil-insert-state-map [delete] 'delete-char)
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
 (define-key evil-insert-state-map
   (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
-
-(if evil-want-C-w-delete
-    (define-key evil-insert-state-map "\C-w" 'evil-delete-backward-word)
-  (define-key evil-insert-state-map "\C-w" 'evil-window-map))
 
 ;;; Replace state
 
@@ -390,7 +423,6 @@
 (define-key evil-motion-state-map [down-mouse-1] 'evil-mouse-drag-region)
 (define-key evil-visual-state-map [mouse-2] 'evil-exit-visual-and-repeat)
 (define-key evil-normal-state-map [mouse-2] 'mouse-yank-primary)
-(define-key evil-insert-state-map [mouse-2] 'mouse-yank-primary)
 
 ;; Ex
 (define-key evil-motion-state-map ":" 'evil-ex)

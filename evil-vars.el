@@ -446,6 +446,12 @@ The default behavior is to yank the whole line."
             'evil-yank-line
             :motion (if value 'evil-end-of-line 'evil-line))))
 
+(defcustom evil-disable-insert-state-bindings nil
+  "Whether insert state bindings should be used. Excludes
+bindings for escape, delete and `evil-toggle-key'."
+  :group 'evil
+  :type 'boolean)
+
 (defcustom evil-echo-state t
   "Whether to signal the current state in the echo area."
   :type 'boolean
