@@ -450,7 +450,9 @@ The default behavior is to yank the whole line."
   "Whether insert state bindings should be used. Excludes
 bindings for escape, delete and `evil-toggle-key'."
   :group 'evil
-  :type 'boolean)
+  :type 'boolean
+  :initialize #'evil-custom-initialize-pending-reset
+  :set #'evil-update-insert-state-bindings)
 
 (defcustom evil-echo-state t
   "Whether to signal the current state in the echo area."

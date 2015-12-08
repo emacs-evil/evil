@@ -373,33 +373,31 @@
 `evil-insert-state-map'), excluding <delete>, <escape>, and
 `evil-toggle-key'.")
 
-(defun evil-add-insert-state-bindings (&optional force)
-  "Add bindings to `evil-insert-state-map' specified in
-`evil-insert-state-bindings' without overwriting existing
-bindings (unless FORCE is non nil). Note that <delete>, <escape>
-and `evil-toggle-key' are not included in
-`evil-insert-state-bindings' by default."
+(defun evil-update-insert-state-bindings (&optional _option-name remove force)
+  "Update bindings in `evil-insert-state-map'.
+If no arguments are given add the bindings specified in
+`evil-insert-state-bindings'. If REMOVE is non nil, remove only
+these bindings. Unless FORCE is non nil, this will not
+overwriting existing bindings, which means bindings will not be
+added if one already exists for a key and only default bindings
+are removed.
+
+Note that <delete>, <escape> and `evil-toggle-key' are not
+included in `evil-insert-state-bindings' by default."
   (interactive)
   (dolist (binding evil-insert-state-bindings)
-    (when (or force
-              (null (lookup-key evil-insert-state-map (car binding))))
-      (define-key evil-insert-state-map (car binding) (cdr binding)))))
-
-(defun evil-remove-insert-state-bindings (&optional force)
-  "Remove bindings from `evil-insert-state-map' specified in
-`evil-insert-state-bindings'. This will not remove non-default
-bindings unless FORCE is non nil. Note that <delete>, <escape>
-and `evil-toggle-key' are not included in
-`evil-insert-state-bindings' by default."
-  (interactive)
-  (dolist (binding evil-insert-state-bindings)
-    (when (or force
-              (eq (lookup-key evil-insert-state-map (car binding))
-                  (cdr binding)))
-      (define-key evil-insert-state-map (car binding) nil))))
-
-(unless evil-disable-insert-state-bindings
-  (evil-add-insert-state-bindings))
+    (cond
+     ((and remove
+           (or force
+               ;; Only remove if the default binding has not changed
+               (eq (lookup-key evil-insert-state-map (car binding))
+                   (cdr binding))))
+      (define-key evil-insert-state-map (car binding) nil))
+     ((and (null remove)
+           (or force
+               ;; Check to see that nothing is bound here before adding
+               (null (lookup-key evil-insert-state-map (car binding)))))
+      (define-key evil-insert-state-map (car binding) (cdr binding))))))
 
 (define-key evil-insert-state-map [delete] 'delete-char)
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
