@@ -16,6 +16,7 @@
 ;;      Jonas Bernoulli <jonas at bernoul.li>
 ;;      Jonathan Claggett <jclaggett at lonocloud.com>
 ;;      José A. Romero L. <escherdragon at gmail.com>
+;;      Justin Burkett <justin@burkett.cc>
 ;;      Lars Andersen <expez at expez.com>
 ;;      Lintaro Ina <tarao.gnn at gmail.com>
 ;;      Lukasz Wrzosek <wrzoski at mail.com>

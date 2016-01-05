@@ -29,6 +29,8 @@
 
 (declare-function evil-add-command-properties "evil-common"
                   (command &rest properties))
+(declare-function evil-update-insert-state-bindings "evil-maps"
+                  (&optional _option-name remove force))
 
 ;;; Hooks
 
@@ -445,6 +447,14 @@ The default behavior is to yank the whole line."
            (evil-add-command-properties
             'evil-yank-line
             :motion (if value 'evil-end-of-line 'evil-line))))
+
+(defcustom evil-disable-insert-state-bindings nil
+  "Whether insert state bindings should be used. Excludes
+bindings for escape, delete and `evil-toggle-key'."
+  :group 'evil
+  :type 'boolean
+  :initialize #'evil-custom-initialize-pending-reset
+  :set #'evil-update-insert-state-bindings)
 
 (defcustom evil-echo-state t
   "Whether to signal the current state in the echo area."
