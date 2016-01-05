@@ -3008,6 +3008,31 @@ Below some empty line"
       (should-error (execute-kbd-macro "j"))
       (should-error (execute-kbd-macro "42j")))))
 
+(ert-deftest evil-test-preserve-column ()
+  "Test `evil-previous-line' and `evil-next-line' preserve the column."
+  :tags '(evil motion)
+  (ert-info ("Simple")
+    (evil-test-buffer
+      "ab[c]\nabcdef\n\nabcd\n"
+      ("j")
+      "abc\nab[c]def\n\nabcd\n")
+    (evil-test-buffer
+      "ab[c]\nabcdef\n\nabcd\n"
+      ("jj")
+      "abc\nabcdef\n[\n]abcd\n")
+    (evil-test-buffer
+      "ab[c]\nabcdef\n\nabcd\n"
+      ("jjj")
+      "abc\nabcdef\n\nab[c]d\n")
+    (evil-test-buffer
+      "ab[c]\nabcdef\n\nabcd\n"
+      ("jjjk")
+      "abc\nabcdef\n[\n]abcd\n")
+    (evil-test-buffer
+      "ab[c]\nabcdef\n\nabcd\n"
+      ("jjjkk")
+      "abc\nab[c]def\n\nabcd\n")))
+
 (ert-deftest evil-test-beginning-of-line ()
   "Test `evil-beginning-of-line' motion"
   :tags '(evil motion)
