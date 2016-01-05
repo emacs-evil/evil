@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.7
+;; Version: 1.2.8
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -69,8 +69,16 @@ of the line or the buffer; just return nil."
         (save-excursion
           (evil-forward-char (1+ (or count 1)) t t)
           (point))
-      (evil-narrow-to-line
-        (evil-forward-char count t noerror))))
+      (condition-case err
+          (evil-narrow-to-line
+            (evil-forward-char count t noerror))
+        (error
+         ;; Restore the previous command (this one never happend).
+         ;; Actually, this preserves the current column if the
+         ;; previous command was `evil-next-line' or
+         ;; `evil-previous-line'.
+         (setq this-command last-command)
+         (signal (car err) (cdr err))))))
    (t
     (evil-motion-loop (nil (or count 1))
       (forward-char)
@@ -102,8 +110,16 @@ of the line or the buffer; just return nil."
           (evil-backward-char (1+ (or count 1)) t t)
           (point))
         (1+ (point))
-      (evil-narrow-to-line
-        (evil-backward-char count t noerror))))
+      (condition-case err
+          (evil-narrow-to-line
+            (evil-backward-char count t noerror))
+        (error
+         ;; Restore the previous command (this one never happend).
+         ;; Actually, this preserves the current column if the
+         ;; previous command was `evil-next-line' or
+         ;; `evil-previous-line'.
+         (setq this-command last-command)
+         (signal (car err) (cdr err))))))
    (t
     (evil-motion-loop (nil (or count 1))
       (backward-char)
@@ -2167,6 +2183,7 @@ The insertion will be repeated COUNT times."
   "Insert a new line below point and switch to Insert state.
 The insertion will be repeated COUNT times."
   (interactive "p")
+  (push (point) buffer-undo-list)
   (evil-insert-newline-below)
   (setq evil-insert-count count
         evil-insert-lines t
@@ -2183,6 +2200,7 @@ line.  The insertion will be repeated COUNT times.  If VCOUNT is
 non nil it should be number > 0. The insertion will be repeated
 in the next VCOUNT - 1 lines below the current one."
   (interactive "p")
+  (push (point) buffer-undo-list)
   (back-to-indentation)
   (setq evil-insert-count count
         evil-insert-lines nil

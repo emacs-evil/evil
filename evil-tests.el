@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.7
+;; Version: 1.2.8
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -974,7 +974,14 @@ de[f]
       "[(]let (var)\n  test)\n"
       (emacs-lisp-mode)
       ("odo-it" [escape])
-      "(let (var)\n  do-i[t]\n  test)\n")))
+      "(let (var)\n  do-i[t]\n  test)\n"))
+  (let ((evil-auto-indent t))
+    (ert-info ("With count")
+      (evil-test-buffer
+        "[(]and a\n     c)\n"
+        (emacs-lisp-mode)
+        ("3ob" [escape])
+        "(and a\n     b\n     b\n     [b]\n     c)\n"))))
 
 (ert-deftest evil-test-open-below-folded ()
   "Test `evil-open-below' on folded lines"
@@ -3007,6 +3014,31 @@ Below some empty line"
       ";; This buffer is for notes you don't want to [s]ave."
       (should-error (execute-kbd-macro "j"))
       (should-error (execute-kbd-macro "42j")))))
+
+(ert-deftest evil-test-preserve-column ()
+  "Test `evil-previous-line' and `evil-next-line' preserve the column."
+  :tags '(evil motion)
+  (ert-info ("Simple")
+    (evil-test-buffer
+      "ab[c]\nabcdef\n\nabcd\n"
+      ("j")
+      "abc\nab[c]def\n\nabcd\n")
+    (evil-test-buffer
+      "ab[c]\nabcdef\n\nabcd\n"
+      ("jj")
+      "abc\nabcdef\n[\n]abcd\n")
+    (evil-test-buffer
+      "ab[c]\nabcdef\n\nabcd\n"
+      ("jjj")
+      "abc\nabcdef\n\nab[c]d\n")
+    (evil-test-buffer
+      "ab[c]\nabcdef\n\nabcd\n"
+      ("jjjk")
+      "abc\nabcdef\n[\n]abcd\n")
+    (evil-test-buffer
+      "ab[c]\nabcdef\n\nabcd\n"
+      ("jjjkk")
+      "abc\nab[c]def\n\nabcd\n")))
 
 (ert-deftest evil-test-beginning-of-line ()
   "Test `evil-beginning-of-line' motion"

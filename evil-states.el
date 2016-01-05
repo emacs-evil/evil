@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.7
+;; Version: 1.2.8
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -107,7 +107,9 @@ Handles the repeat-count of the insertion command."
   (when evil-insert-count
     (dotimes (i (1- evil-insert-count))
       (when evil-insert-lines
-        (evil-insert-newline-below))
+        (evil-insert-newline-below)
+        (when evil-auto-indent
+          (indent-according-to-mode)))
       (when (fboundp 'evil-execute-repeat-info)
         (evil-execute-repeat-info
          (cdr evil-insert-repeat-info)))))
