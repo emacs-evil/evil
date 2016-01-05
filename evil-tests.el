@@ -6219,6 +6219,42 @@ Below some empty line."))
       ("dab")
       "([)]\n")))
 
+(ert-deftest evil-test-forces-linewise-text-objects ()
+  "Test `evil-text-object-change-visual-type' option."
+  :tags '(evil text-object)
+  (let ((evil-text-object-change-visual-type t))
+    (ert-info ("Change visual type")
+      (evil-test-buffer
+        "function(opts) {
+    this.var1 = something();
+    [t]his.var2 = something_else();
+    return something_nasty();
+}
+"
+        ("Vi}")
+        "function(opts) {<
+    this.var1 = something();
+    this.var2 = something_else();
+    return something_nasty();[\n]>}
+"
+        (should (eq (evil-visual-type) 'inclusive)))))
+  (let ((evil-text-object-change-visual-type nil))
+    (ert-info ("Change visual type")
+      (evil-test-buffer
+        "function(opts) {
+    this.var1 = something();
+    [t]his.var2 = something_else();
+    return something_nasty();
+}
+"
+        ("Vi}")
+        "function(opts) {
+<    this.var1 = something();
+    this.var2 = something_else();
+    return something_nasty();[\n]>}
+"
+        (should (eq (evil-visual-type) 'line))))))
+
 (ert-deftest evil-test-tag-objects ()
   "Test `evil-inner-tag', etc."
   :tags '(evil text-object)

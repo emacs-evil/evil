@@ -375,7 +375,17 @@ if COUNT is positive, and to the left of it if negative.
                ;; unless the selection goes the other way
                (setq mark  (evil-range-beginning range)
                      point (evil-range-end range)
-                     type  (evil-type range))
+                     type  (evil-type
+                            (if evil-text-object-change-visual-type
+                                range
+                              (evil-visual-range))))
+               ;; if new type is linewise, do not include a newline
+               ;; as first character
+               (when (and (eq type 'line)
+                          (save-excursion
+                            (goto-char mark)
+                            (and (not (bolp)) (eolp))))
+                 (setq mark (1+ mark)))
                (when (< dir 0)
                  (evil-swap mark point))
                ;; select the union

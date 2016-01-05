@@ -912,6 +912,15 @@ that line."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-text-object-change-visual-type t
+  "Text objects change the current visual state type.
+If non-nil then a text-object changes the type of the visual state to
+its default selection type (e.g. a word object always changes to
+charwise visual state). Otherwise the current visual state type is
+preserved."
+  :type 'boolean
+  :group 'evil)
+
 (defgroup evil-cjk nil
   "CJK support"
   :prefix "evil-cjk-"
