@@ -2151,6 +2151,7 @@ The insertion will be repeated COUNT times."
   "Insert a new line below point and switch to Insert state.
 The insertion will be repeated COUNT times."
   (interactive "p")
+  (push (point) buffer-undo-list)
   (evil-insert-newline-below)
   (setq evil-insert-count count
         evil-insert-lines t
@@ -2167,6 +2168,7 @@ line.  The insertion will be repeated COUNT times.  If VCOUNT is
 non nil it should be number > 0. The insertion will be repeated
 in the next VCOUNT - 1 lines below the current one."
   (interactive "p")
+  (push (point) buffer-undo-list)
   (back-to-indentation)
   (setq evil-insert-count count
         evil-insert-lines nil
