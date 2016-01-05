@@ -29,6 +29,8 @@
 
 (declare-function evil-add-command-properties "evil-common"
                   (command &rest properties))
+(declare-function evil-update-insert-state-bindings "evil-maps"
+                  (&optional _option-name remove force))
 
 ;;; Hooks
 
