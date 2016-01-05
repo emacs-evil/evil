@@ -437,6 +437,7 @@
 (evil-ex-define-cmd "x[it]" 'evil-save-modified-and-close)
 (evil-ex-define-cmd "exi[t]" 'evil-save-modified-and-close)
 (evil-ex-define-cmd "bd[elete]" 'evil-delete-buffer)
+(evil-ex-define-cmd "bw[ipeout]" 'evil-delete-buffer)
 (evil-ex-define-cmd "g[lobal]" 'evil-ex-global)
 (evil-ex-define-cmd "v[global]" 'evil-ex-global-inverted)
 (evil-ex-define-cmd "norm[al]" 'evil-ex-normal)
