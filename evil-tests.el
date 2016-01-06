@@ -6257,33 +6257,34 @@ Below some empty line."))
   (let ((evil-text-object-change-visual-type t))
     (ert-info ("Change visual type")
       (evil-test-buffer
-        "function(opts) {
+        "  function(opts) {
     this.var1 = something();
     [t]his.var2 = something_else();
     return something_nasty();
-}
+  }
 "
         ("Vi}")
-        "function(opts) {<
+        "  function(opts) {<
     this.var1 = something();
     this.var2 = something_else();
-    return something_nasty();[\n]>}
+    return something_nasty();
+ [ ]>}
 "
         (should (eq (evil-visual-type) 'inclusive)))))
   (let ((evil-text-object-change-visual-type nil))
-    (ert-info ("Change visual type")
+    (ert-info ("Change visual type keeping linewise")
       (evil-test-buffer
-        "function(opts) {
+        "  function(opts) {
     this.var1 = something();
     [t]his.var2 = something_else();
     return something_nasty();
-}
+  }
 "
         ("Vi}")
-        "function(opts) {
+        "  function(opts) {
 <    this.var1 = something();
     this.var2 = something_else();
-    return something_nasty();[\n]>}
+    return something_nasty();[\n]>  }
 "
         (should (eq (evil-visual-type) 'line))))))
 

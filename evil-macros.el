@@ -379,13 +379,30 @@ if COUNT is positive, and to the left of it if negative.
                             (if evil-text-object-change-visual-type
                                 range
                               (evil-visual-range))))
-               ;; if new type is linewise, do not include a newline
-               ;; as first character
-               (when (and (eq type 'line)
-                          (save-excursion
-                            (goto-char mark)
-                            (and (not (bolp)) (eolp))))
-                 (setq mark (1+ mark)))
+               ;; Bug #607
+               ;; If new type is linewise and the selection of the
+               ;; first line consists of whitespace only, the
+               ;; beginning is moved to the start of the next line. If
+               ;; the selections of the last line consists of
+               ;; whitespace only, the end is moved to the end of the
+               ;; previous line.
+               (when (eq type 'line)
+                 (let ((beg mark) (end point))
+                   (save-excursion
+                     ;; skip whitespace at the beginning
+                     (goto-char beg)
+                     (skip-chars-forward " \t")
+                     (when (and (not (bolp)) (eolp))
+                       (setq beg (1+ (point))))
+                     ;; skip whitepsace at the end
+                     (goto-char end)
+                     (skip-chars-backward " \t")
+                     (when (and (not (eolp)) (bolp))
+                       (setq end (1- (point))))
+                     ;; only modify range if result is not empty
+                     (when (<= beg end)
+                       (setq mark beg)
+                       (setq point end)))))
                (when (< dir 0)
                  (evil-swap mark point))
                ;; select the union
