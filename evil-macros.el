@@ -315,6 +315,36 @@ of the object; otherwise it is placed at the end of the object."
      (t
       count))))
 
+(defun evil-text-object-make-linewise (beg end)
+  "Turn the text object selection between BEG and END to linewise.
+The selection is adjusted in a sensible way so that the selected
+lines match the user intent. In particular, whitespace-only parts
+at the first and last lines are omitted. This function returns
+the new pair (BEG . END) of buffer positions."
+  ;; Bug #607
+  ;; If new type is linewise and the selection of the
+  ;; first line consists of whitespace only, the
+  ;; beginning is moved to the start of the next line. If
+  ;; the selections of the last line consists of
+  ;; whitespace only, the end is moved to the end of the
+  ;; previous line.
+  (let ((newbeg beg) (newend end))
+    (save-excursion
+      ;; skip whitespace at the beginning
+      (goto-char beg)
+      (skip-chars-forward " \t")
+      (when (and (not (bolp)) (eolp))
+        (setq newbeg (1+ (point))))
+      ;; skip whitepsace at the end
+      (goto-char end)
+      (skip-chars-backward " \t")
+      (when (and (not (eolp)) (bolp))
+        (setq newend (1- (point))))
+      ;; only modify range if result is not empty
+      (if (<= newbeg newend)
+          (cons newbeg newend)
+        (cons beg end)))))
+
 (defmacro evil-define-text-object (object args &rest body)
   "Define a text object command OBJECT.
 BODY should return a range (BEG END) to the right of point
@@ -379,30 +409,10 @@ if COUNT is positive, and to the left of it if negative.
                             (if evil-text-object-change-visual-type
                                 range
                               (evil-visual-range))))
-               ;; Bug #607
-               ;; If new type is linewise and the selection of the
-               ;; first line consists of whitespace only, the
-               ;; beginning is moved to the start of the next line. If
-               ;; the selections of the last line consists of
-               ;; whitespace only, the end is moved to the end of the
-               ;; previous line.
                (when (eq type 'line)
-                 (let ((beg mark) (end point))
-                   (save-excursion
-                     ;; skip whitespace at the beginning
-                     (goto-char beg)
-                     (skip-chars-forward " \t")
-                     (when (and (not (bolp)) (eolp))
-                       (setq beg (1+ (point))))
-                     ;; skip whitepsace at the end
-                     (goto-char end)
-                     (skip-chars-backward " \t")
-                     (when (and (not (eolp)) (bolp))
-                       (setq end (1- (point))))
-                     ;; only modify range if result is not empty
-                     (when (<= beg end)
-                       (setq mark beg)
-                       (setq point end)))))
+                 (let ((newsel (evil-text-object-make-linewise mark point)))
+                   (setq mark (car newsel)
+                         point (cdr newsel))))
                (when (< dir 0)
                  (evil-swap mark point))
                ;; select the union
@@ -421,6 +431,13 @@ if COUNT is positive, and to the left of it if negative.
                ;; ensure the range is properly expanded
                (evil-contract-range range)
                (evil-expand-range range)
+               ;; possibly convert to linewise
+               (when (eq evil-this-type-modified 'line)
+                 (let ((newsel (evil-text-object-make-linewise
+                                (evil-range-beginning range)
+                                (evil-range-end range))))
+                   (evil-set-range-beginning range (car newsel))
+                   (evil-set-range-end range (cdr newsel)) ))
                (evil-set-range-properties range nil)
                range))))))))
 
@@ -515,6 +532,7 @@ RETURN-TYPE is non-nil."
         (type evil-operator-range-type)
         (range (evil-range (point) (point)))
         command count modifier)
+    (setq evil-this-type-modified nil)
     (evil-save-echo-area
       (cond
        ;; Ex mode

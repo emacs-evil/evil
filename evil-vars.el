@@ -1230,6 +1230,11 @@ describing it, etc.")
 (evil-define-local-var evil-this-type nil
   "Current motion type.")
 
+(evil-define-local-var evil-this-type-modified nil
+  "Non-nil iff current motion type has been modified by the user.
+If the type has been modified, this variable contains the new
+type.")
+
 (evil-define-local-var evil-this-register nil
   "Current register.")
 

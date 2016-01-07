@@ -6298,7 +6298,17 @@ Below some empty line."))
     this.var2 = something_else();
     return something_nasty();[\n]>  }
 "
-        (should (eq (evil-visual-type) 'line))))))
+        (should (eq (evil-visual-type) 'line)))))
+  (ert-info ("Forced motion type should change text object type")
+    (evil-test-buffer
+      "for (int i=0; i<10; i++) {
+  if ([c]ond) {
+    do_something();
+  }
+}"
+      ("dVi}")
+      "for (int i=0; i<10; i++) {
+\[}]")))
 
 (ert-deftest evil-test-tag-objects ()
   "Test `evil-inner-tag', etc."

@@ -635,6 +635,7 @@ Return a list (MOTION COUNT [TYPE])."
                      (evil-visual-line . line)
                      (evil-visual-block . block)))
         command prefix)
+    (setq evil-this-type-modified nil)
     (unless motion
       (while (progn
                (setq command (evil-keypress-parser)
@@ -660,7 +661,8 @@ Return a list (MOTION COUNT [TYPE])."
             (setq type 'inclusive)
           (setq type 'exclusive)))
        (t
-        (setq type modifier))))
+        (setq type modifier)))
+      (setq evil-this-type-modified type))
     (list motion count type)))
 
 (defun evil-mouse-events-p (keys)
