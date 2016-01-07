@@ -6249,7 +6249,19 @@ Below some empty line."))
     (evil-test-buffer
       "(([\"]\"))\n"
       ("dab")
-      "([)]\n")))
+      "([)]\n"))
+  (ert-info ("Enlarge to smallest complete surrounding")
+    (evil-test-buffer
+      "for (auto i : vector) {
+  if (c<ond) {
+    do_[s]>omething();
+  }
+}"
+      ("i}")
+      "for (auto i : vector) {<
+  if (cond) {
+    do_something();
+  }[\n]>}")))
 
 (ert-deftest evil-test-forces-linewise-text-objects ()
   "Test `evil-text-object-change-visual-type' option."

@@ -3096,14 +3096,18 @@ selection matches that object exactly."
           (goto-char (cdr op-end))
           (when (and (zerop (funcall thing +1)) (match-beginning 0))
             (setq cl-end (cons (match-beginning 0) (match-end 0)))))
-        ;; use the tighter one of both
+        ;; Bug #607: use the tightest selection that contains the
+        ;; original selection. If non selection contains the original,
+        ;; use the larger one.
         (cond
          ((and (not op) (not cl-end))
           (error "No surrounding delimiters found"))
-         ((or (not op)    ; first not found
-              (and cl-end ; second better
-                   (>= (car op-end) (car op))
-                   (<= (cdr cl-end) (cdr cl))))
+         ((or (not op) ; first not found
+              (and cl-end ; second found
+                   (>= (car op-end) (car op)) ; second smaller
+                   (<= (cdr cl-end) (cdr cl))
+                   (<= (car op-end) beg)      ; second contains orig
+                   (>= (cdr cl-end) end)))
           (setq op op-end cl cl-end)))
         (setq op-end op cl-end cl) ; store copy
         ;; if the current selection contains the surrounding
