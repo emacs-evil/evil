@@ -315,12 +315,12 @@ of the object; otherwise it is placed at the end of the object."
      (t
       count))))
 
-(defun evil-text-object-make-linewise (beg end)
-  "Turn the text object selection between BEG and END to linewise.
+(defun evil-text-object-make-linewise (range)
+  "Turn the text object selection RANGE to linewise.
 The selection is adjusted in a sensible way so that the selected
 lines match the user intent. In particular, whitespace-only parts
 at the first and last lines are omitted. This function returns
-the new pair (BEG . END) of buffer positions."
+the new range."
   ;; Bug #607
   ;; If new type is linewise and the selection of the
   ;; first line consists of whitespace only, the
@@ -328,22 +328,26 @@ the new pair (BEG . END) of buffer positions."
   ;; the selections of the last line consists of
   ;; whitespace only, the end is moved to the end of the
   ;; previous line.
-  (let ((newbeg beg) (newend end))
+  (let ((expanded (plist-get (evil-range-properties range) :expanded))
+        (newrange (evil-expand-range range t)))
     (save-excursion
       ;; skip whitespace at the beginning
-      (goto-char beg)
+      (goto-char (evil-range-beginning newrange))
       (skip-chars-forward " \t")
       (when (and (not (bolp)) (eolp))
-        (setq newbeg (1+ (point))))
+        (evil-set-range-beginning newrange (1+ (point))))
       ;; skip whitepsace at the end
-      (goto-char end)
+      (goto-char (evil-range-end newrange))
       (skip-chars-backward " \t")
       (when (and (not (eolp)) (bolp))
-        (setq newend (1- (point))))
+        (evil-set-range-end newrange (1- (point))))
       ;; only modify range if result is not empty
-      (if (<= newbeg newend)
-          (cons newbeg newend)
-        (cons beg end)))))
+      (if (> (evil-range-beginning newrange)
+             (evil-range-end newrange))
+          range
+        (unless expanded
+          (evil-contract-range newrange))
+        newrange))))
 
 (defmacro evil-define-text-object (object args &rest body)
   "Define a text object command OBJECT.
@@ -409,10 +413,11 @@ if COUNT is positive, and to the left of it if negative.
                             (if evil-text-object-change-visual-type
                                 range
                               (evil-visual-range))))
-               (when (eq type 'line)
-                 (let ((newsel (evil-text-object-make-linewise mark point)))
-                   (setq mark (car newsel)
-                         point (cdr newsel))))
+               (when (and (eq type 'line)
+                          (not (eq type (evil-type range))))
+                 (let ((newrange (evil-text-object-make-linewise range)))
+                   (setq mark (evil-range-beginning newrange)
+                         point (evil-range-end newrange))))
                (when (< dir 0)
                  (evil-swap mark point))
                ;; select the union
@@ -433,11 +438,7 @@ if COUNT is positive, and to the left of it if negative.
                (evil-expand-range range)
                ;; possibly convert to linewise
                (when (eq evil-this-type-modified 'line)
-                 (let ((newsel (evil-text-object-make-linewise
-                                (evil-range-beginning range)
-                                (evil-range-end range))))
-                   (evil-set-range-beginning range (car newsel))
-                   (evil-set-range-end range (cdr newsel)) ))
+                 (setq range (evil-text-object-make-linewise range)))
                (evil-set-range-properties range nil)
                range))))))))
 

@@ -6296,8 +6296,25 @@ Below some empty line."))
         "  function(opts) {
 <    this.var1 = something();
     this.var2 = something_else();
-    return something_nasty();[\n]>  }
+    return something_nasty();\n>  }
 "
+        (should (eq (evil-visual-type) 'line)))))
+  (let ((evil-text-object-change-visual-type nil))
+    (ert-info ("Linewise outer block")
+      (evil-test-buffer
+        "  function(opts) {
+    this.var1 = something();
+    [t]his.var2 = something_else();
+    return something_nasty();
+  }
+"
+        ("Va}")
+        "<  function(opts) {
+    this.var1 = something();
+    this.var2 = something_else();
+    return something_nasty();
+  }
+>"
         (should (eq (evil-visual-type) 'line)))))
   (ert-info ("Forced motion type should change text object type")
     (evil-test-buffer
