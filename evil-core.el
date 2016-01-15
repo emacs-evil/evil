@@ -113,7 +113,11 @@
   "Minor mode for setting up Evil in a single buffer."
   :init-value nil
   (cond
-   ((evil-disabled-buffer-p))
+   ((evil-disabled-buffer-p)
+    ;; Don't leave the mode variable on in buffers where evil disabled, because
+    ;; functions that check this variable will get an incorrect result (e.g.,
+    ;; evil-refresh-cursor).
+    (setq evil-local-mode nil))
    (evil-local-mode
     (setq emulation-mode-map-alists
           (evil-concat-lists '(evil-mode-map-alist)
