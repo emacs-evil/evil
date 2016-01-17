@@ -837,8 +837,8 @@ if MAP does not have one."
        (create
         (evil-set-auxiliary-keymap map state))))))
 
-(defun evil-get-minor-mode-keymap (state map)
-  "Get the auxiliary keymap for MAP in STATE, creating one if it
+(defun evil-get-minor-mode-keymap (state mode)
+  "Get the auxiliary keymap for MODE in STATE, creating one if it
 does not already exist."
   (let ((state-entry (assq state evil-minor-mode-keymaps-alist)))
     (if (and state-entry
