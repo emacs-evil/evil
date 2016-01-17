@@ -1189,6 +1189,12 @@ reinitialized in each buffer. Entries have the form
 \(MODE . KEYMAP), where KEYMAP is the variable containing
 the keymap for MODE.")
 
+(defvar evil-minor-mode-keymaps-alist nil
+  "Association list of keymap variables that must be
+reinitialized in each buffer. Entries have the form
+\(MODE . KEYMAP), where KEYMAP is the variable containing
+the keymap for MODE.")
+
 (defvar evil-state-properties nil
   "Specifications made by `evil-define-state'.
 Entries have the form (STATE . PLIST), where PLIST is a property

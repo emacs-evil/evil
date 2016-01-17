@@ -47,6 +47,7 @@
 ;;     * Intercept keymaps...
 ;;     * Local state keymap
 ;;     * Auxiliary keymaps...
+;;     * Minor-mode keymaps...
 ;;     * Overriding keymaps...
 ;;     * Global state keymap
 ;;     * Keymaps for other states...
@@ -55,17 +56,19 @@
 ;; in `emulation-mode-map-alist'.
 ;;
 ;; Most of the key bindings for a state are stored in its global
-;; keymap, which has a name such as `evil-normal-state-map'.  (See the
-;; file evil-maps.el, which contains all the default key bindings.)
-;; A state also has a local keymap (`evil-normal-state-local-map'),
+;; keymap, which has a name such as `evil-normal-state-map'. (See the
+;; file evil-maps.el, which contains all the default key bindings.) A
+;; state also has a local keymap (`evil-normal-state-local-map'),
 ;; which may contain user customizations for the current buffer.
 ;; Furthermore, any Emacs mode may be assigned state bindings of its
-;; own by passing the mode's keymap to the function `evil-define-key'.
-;; These mode-specific bindings are ultimately stored in so-called
-;; auxiliary keymaps, which are sandwiched between the local keymap
-;; and the global keymap.  Finally, the state may also activate the
-;; keymaps of other states (e.g., Normal state inherits bindings
-;; from Motion state).
+;; own by passing the mode's keymap to the function `evil-define-key'
+;; or `evil-define-minor-mode-key'. The former uses a specific map to
+;; define the key in while the latter associates the key with a
+;; particular mode. These mode-specific bindings are ultimately stored
+;; in so-called auxiliary and minor-mode keymaps respectively, which
+;; are sandwiched between the local keymap and the global keymap.
+;; Finally, the state may also activate the ;; keymaps of other states
+;; (e.g., Normal state inherits bindings ;; from Motion state).
 ;;
 ;; For integration purposes, a regular Emacs keymap may be "elevated"
 ;; to emulation status by passing it to `evil-make-intercept-map' or
@@ -652,6 +655,7 @@ infinite recursion, keeping track of processed states.)"
                      (evil-state-property state :local)
                      (evil-state-property state :local-keymap t)))
          (aux-maps (evil-state-auxiliary-keymaps state))
+         (minor-mode-maps (evil-state-minor-mode-keymaps state))
          (overriding-maps
           (evil-state-overriding-keymaps state))
          (intercept-maps
@@ -669,6 +673,7 @@ infinite recursion, keeping track of processed states.)"
         (setq result `(,@result
                        (,local-map)
                        ,aux-maps
+                       ,minor-mode-maps
                        ,overriding-maps
                        (,map)))
         (push state excluded))
@@ -708,7 +713,8 @@ This is a keymap alist, determined by the current state
       (if (or (memq mode excluded)
               (evil-intercept-keymap-p map)
               (evil-overriding-keymap-p map)
-              (evil-auxiliary-keymap-p map))
+              (evil-auxiliary-keymap-p map)
+              (evil-minor-mode-keymap-p map))
           (push mode excluded)
         (when (and (fboundp mode) (symbol-value mode))
           (funcall mode -1))
@@ -730,7 +736,8 @@ This is a keymap alist, determined by the current state
         (if (or (memq mode excluded)
                 (evil-intercept-keymap-p map)
                 (evil-overriding-keymap-p map)
-                (evil-auxiliary-keymap-p map))
+                (evil-auxiliary-keymap-p map)
+                (evil-minor-mode-keymap-p map))
             (push mode excluded)
           (setcdr entry (or (evil-keymap-for-mode mode) map))))
       ;; update `evil-mode-map-alist'
@@ -775,6 +782,13 @@ See also `evil-mode-for-keymap'."
       (when (setq aux (evil-get-auxiliary-keymap map state))
         (push (cons (evil-mode-for-keymap map t) aux) result)))
     (nreverse result)))
+
+(defun evil-state-minor-mode-keymaps (state)
+  "Return a keymap alist of minor-mode keymaps for STATE."
+  (let* ((state (or state evil-state))
+         (state-entry (assq state evil-minor-mode-keymaps-alist)))
+    (when state-entry
+      (cdr state-entry))))
 
 (defun evil-state-overriding-keymaps (&optional state)
   "Return a keymap alist of overriding keymaps for STATE."
@@ -823,10 +837,36 @@ if MAP does not have one."
        (create
         (evil-set-auxiliary-keymap map state))))))
 
+(defun evil-get-minor-mode-keymap (state map)
+  "Get the auxiliary keymap for MAP in STATE, creating one if it
+does not already exist."
+  (let ((state-entry (assq state evil-minor-mode-keymaps-alist)))
+    (if (and state-entry
+             (assq mode state-entry))
+        (cdr (assq mode state-entry))
+      (let ((map (make-sparse-keymap)))
+        (evil-set-keymap-prompt
+         map (format "Minor-mode keymap for %s in %s"
+                     (symbol-name mode)
+                     (or (evil-state-property state :name)
+                         (format "%s state" state))))
+        (if state-entry
+            (setcdr state-entry
+                    (append (list (cons mode map)) (cdr state-entry)))
+          (push (cons state (list (cons mode map)))
+                evil-minor-mode-keymaps-alist))
+        map))))
+
 (defun evil-auxiliary-keymap-p (map)
   "Whether MAP is an auxiliary keymap."
   (and (keymapp map)
        (string-match "Auxiliary keymap"
+                     (or (keymap-prompt map) "")) t))
+
+(defun evil-minor-mode-keymap-p (map)
+  "Whether MAP is a minor-mode keymap."
+  (and (keymapp map)
+       (string-match "Minor-mode keymap"
                      (or (keymap-prompt map) "")) t))
 
 (defun evil-intercept-keymap-p (map &optional state)
@@ -922,6 +962,25 @@ to `after-load-functions', delaying execution as necessary."
      (format "evil-define-key-in-%s"
              ',(if (symbolp keymap) keymap 'keymap))))
 (defalias 'evil-declare-key 'evil-define-key)
+
+(defun evil-define-minor-mode-key (state mode key def &optional bindings)
+  "Similar to `evil-define-key' but the bindings are associated
+with the minor-mode symbol MODE instead of a particular map.
+Associating bindings with a mode symbol instead of a map allows
+evil to use Emacs' built-in mechanisms to enable the bindings
+automatically when MODE is active without relying on calling
+`evil-normalize-keymaps'. Another less significant difference is
+that the bindings can be created immediately, because this
+function only uses the symbol MODE and does not rely on its
+value.
+
+See `evil-define-key' for the usage of STATE, KEY, DEF and
+BINDINGS."
+  (let ((map (evil-get-minor-mode-keymap state mode)))
+    (while key
+      (define-key map key def)
+      (setq key (pop bindings)
+            def (pop bindings)))))
 
 (defmacro evil-add-hjkl-bindings (keymap &optional state &rest bindings)
   "Add \"h\", \"j\", \"k\", \"l\" bindings to KEYMAP in STATE.
