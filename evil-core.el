@@ -67,8 +67,8 @@
 ;; particular mode. These mode-specific bindings are ultimately stored
 ;; in so-called auxiliary and minor-mode keymaps respectively, which
 ;; are sandwiched between the local keymap and the global keymap.
-;; Finally, the state may also activate the ;; keymaps of other states
-;; (e.g., Normal state inherits bindings ;; from Motion state).
+;; Finally, the state may also activate the keymaps of other states
+;; (e.g., Normal state inherits bindings from Motion state).
 ;;
 ;; For integration purposes, a regular Emacs keymap may be "elevated"
 ;; to emulation status by passing it to `evil-make-intercept-map' or
