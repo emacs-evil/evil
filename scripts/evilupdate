@@ -12,7 +12,7 @@
 
 ;; The contents of this file are subject to the GPL License, Version 3.0.
 
-;; Copyright (C) 2015, Frank Fischer
+;; Copyright (C) 2015, 2016, Frank Fischer
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@
 (require 'yaoddmuse)
 (eval-when-compile (require 'cl))
 
-(defconst evilupdate-irc-nick "#lyrobot")
+(defconst evilupdate-irc-nick "lyrobot")
 (defconst evilupdate-irc-channel "#evil-mode")
 (defconst evilupdate-irc-topic
   "Evil = Extensible vi layer for Emacs | Current version: VERSION | http://bitbucket.org/lyro/evil | If you don't get an answer here, please use the mailing-list implementations-list@lists.ourproject.org")
@@ -70,19 +70,22 @@
 
 (defun evilupdate-update-irc ()
   "Update the topic of the IRC channel."
-  (erc-tls :server "irc.freenode.net" :port "6697" :nick "lyrobot")
-  (add-hook 'erc-join-hook
-            (lambda ()
-              (let (case-fold-search)
-                (erc-set-topic (replace-regexp-in-string "VERSION"
-                                                         evilupdate-version
-                                                         evilupdate-irc-topic
-                                                         nil t)))
-              (erc-quit-server "")
-              (sleep-for 5)
-              (evilupdate-done)))
-  (erc-join-channel evilupdate-irc-channel)
-  (evilupdate-wait))
+  (let ((erc-nick evilupdate-irc-nick)
+        (erc-autojoin-channels-alist nil)
+        (auth-sources nil))
+    (erc-tls :server "irc.freenode.net" :port "6697" :nick evilupdate-irc-nick)
+    (add-hook 'erc-join-hook
+              (lambda ()
+                (let (case-fold-search)
+                  (erc-set-topic (replace-regexp-in-string "VERSION"
+                                                           evilupdate-version
+                                                           evilupdate-irc-topic
+                                                           nil t)))
+                (erc-quit-server "")
+                (sleep-for 5)
+                (evilupdate-done)))
+    (erc-join-channel evilupdate-irc-channel)
+    (evilupdate-wait)))
 
 (defun evilupdate-wiki-trace (page-buffer-name)
   "Callback for updating the EmacsWiki page in buffer PAGE-BUFFER-NAME."
