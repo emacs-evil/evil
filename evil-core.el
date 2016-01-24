@@ -726,7 +726,10 @@ This is a keymap alist, determined by the current state
       (dolist (entry temp)
         (setq mode (car entry)
               map (cdr entry))
-        (unless (and (boundp mode) (symbol-value mode))
+        (unless (or (and (boundp mode) (symbol-value mode))
+                    ;; the minor-mode keymaps include modes that are not
+                    ;; necessarily active
+                    (evil-minor-mode-keymap-p map))
           (when (fboundp mode)
             (funcall mode 1))
           (set mode t))
