@@ -852,8 +852,7 @@ The default is half the screen."
       (save-excursion
         (scroll-down (min (evil-max-scroll-up) c)))
       (forward-line (- c))
-      (when (= (line-number-at-pos p)
-               (line-number-at-pos (point)))
+      (when (= 0 (count-lines p (point)))
         (signal 'beginning-of-buffer nil)))))
 
 (evil-define-command evil-scroll-down (count)
@@ -868,8 +867,7 @@ The default is half the screen."
       (save-excursion
         (scroll-up (min (evil-max-scroll-down) c)))
       (forward-line c)
-      (when (= (line-number-at-pos p)
-               (line-number-at-pos (point)))
+      (when (= 0 (count-lines p (point)))
         (signal 'end-of-buffer nil)))))
 
 (evil-define-command evil-scroll-page-up (count)
@@ -1348,8 +1346,7 @@ If TYPE is `block', the inserted text in inserted at each line
 of the block."
   (interactive "<R><x><y>")
   (let ((delete-func (or delete-func #'evil-delete))
-        (nlines (1+ (- (line-number-at-pos end)
-                       (line-number-at-pos beg))))
+        (nlines (1+ (count-lines beg end)))
         (opoint (save-excursion
                   (goto-char beg)
                   (line-beginning-position))))

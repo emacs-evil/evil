@@ -872,14 +872,13 @@ Inhibits echo area messages, mode line updates and cursor changes."
 
 (defun evil-max-scroll-up ()
   "Returns the maximal number of lines that can be scrolled up."
-  (1- (line-number-at-pos (window-start))))
+  (count-lines (point-min) (window-start)))
 
 (defun evil-max-scroll-down ()
   "Returns the maximal number of lines that can be scrolled down."
   (if (pos-visible-in-window-p (window-end))
       0
-    (1+ (- (line-number-at-pos (point-max))
-           (line-number-at-pos (window-end))))))
+    (1+ (count-lines (window-end)(point-max)))))
 
 ;;; Movement
 
