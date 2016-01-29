@@ -878,7 +878,7 @@ Inhibits echo area messages, mode line updates and cursor changes."
   "Returns the maximal number of lines that can be scrolled down."
   (if (pos-visible-in-window-p (window-end))
       0
-    (1+ (count-lines (window-end)(point-max)))))
+    (1+ (count-lines (window-end) (point-max)))))
 
 ;;; Movement
 
