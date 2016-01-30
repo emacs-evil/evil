@@ -439,9 +439,9 @@ before point."
                         'evil-delete-backward-word))
                (define-key evil-motion-state-map (kbd "C-w") 'evil-window-map))
               ((and value
-                    (eq (lookup-key evil-motion-state-map (kbd "C-u"))
+                    (eq (lookup-key evil-motion-state-map (kbd "C-w"))
                         'evil-window-map))
-               (define-key evil-motion-state-map (kbd "C-u") 'evil-delete-backward-word))))))
+               (define-key evil-motion-state-map (kbd "C-w") 'evil-delete-backward-word))))))
 
 (defcustom evil-want-C-w-in-emacs-state nil
   "Whether \"C-w\" prefixes windows commands in Emacs state."
