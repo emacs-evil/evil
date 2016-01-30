@@ -848,9 +848,13 @@ The default is half the screen."
   (interactive "P")
   (evil-save-column
     (let ((p (point))
-          (c (or count (/ (evil-num-visible-lines) 2))))
+          (c (or count (/ (evil-num-visible-lines) 2)))
+          (scrollable (max 0
+                           (+ c (save-excursion
+                                  (goto-char (window-start))
+                                  (forward-line (- c)))))))
       (save-excursion
-        (scroll-down (min (evil-max-scroll-up) c)))
+        (scroll-down scrollable))
       (forward-line (- c))
       (when (= 0 (count-lines p (point)))
         (signal 'beginning-of-buffer nil)))))
@@ -862,11 +866,18 @@ The default is half the screen."
   :keep-visual t
   (interactive "P")
   (evil-save-column
-    (let ((p (point))
-          (c (or count (/ (evil-num-visible-lines) 2))))
+    (let* ((p (point))
+           (c (or count (/ (evil-num-visible-lines) 2)))
+           (scrollable (- c (save-excursion (forward-line c)))))
       (save-excursion
-        (scroll-up (min (evil-max-scroll-down) c)))
+        (scroll-up scrollable))
       (forward-line c)
+      ;; If we're at end of buffer, let the last line be at the bottom:
+      (let ((win-beg (window-start))
+            (win-end (window-end nil 'update)))
+        (when (= win-end (point-max))
+          (scroll-down (- (evil-num-visible-lines)
+                          (count-lines win-beg win-end)))))
       (when (= 0 (count-lines p (point)))
         (signal 'end-of-buffer nil)))))
 
