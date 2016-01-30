@@ -410,6 +410,22 @@ before point."
                     (not (lookup-key evil-motion-state-map (kbd "C-u"))))
                (define-key evil-motion-state-map (kbd "C-u") 'evil-scroll-up))))))
 
+(defcustom evil-want-C-d-scroll t
+  "Whether \"C-d\" scrolls like in Vim."
+  :type 'boolean
+  :group 'evil
+  :set #'(lambda (sym value)
+           (set-default sym value)
+           (when (boundp 'evil-motion-state-map)
+             (cond
+              ((and (not value)
+                    (eq (lookup-key evil-motion-state-map (kbd "C-d"))
+                        'evil-scroll-down))
+               (define-key evil-motion-state-map (kbd "C-d") nil))
+              ((and value
+                    (not (lookup-key evil-motion-state-map (kbd "C-d"))))
+               (define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down))))))
+
 (defcustom evil-want-C-w-delete t
   "Whether \"C-w\" deletes a word in Insert state."
   :type 'boolean
