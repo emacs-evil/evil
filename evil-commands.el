@@ -847,12 +847,12 @@ The default is half the screen."
   :keep-visual t
   (interactive "P")
   (evil-save-column
-    (let ((p (point))
-          (c (or count (/ (evil-num-visible-lines) 2)))
-          (scrollable (max 0
-                           (+ c (save-excursion
-                                  (goto-char (window-start))
-                                  (forward-line (- c)))))))
+    (let* ((p (point))
+           (c (or count (/ (evil-num-visible-lines) 2)))
+           (scrollable (max 0
+                            (+ c (save-excursion
+                                   (goto-char (window-start))
+                                   (forward-line (- c)))))))
       (save-excursion
         (scroll-down scrollable))
       (forward-line (- c))
