@@ -1051,8 +1051,8 @@ only has influence if the evil search module is chosen in
   "If non-nil Vim-style backslash codes are supported in search patterns.
 See `evil-transform-vim-style-regexp' for the supported backslash
 codes.  Note that this only affects the search command if
-`evil-search-module' is set to 'evil. The isearch module always
-uses plain Emacs regular expressions."
+`evil-search-module' is set to 'evil-search. The isearch module
+always uses plain Emacs regular expressions."
   :type 'boolean
   :group 'evil)
 
