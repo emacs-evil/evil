@@ -9,6 +9,7 @@
 ;;      Eivind Fonn <evfonn@gmail.com>
 ;;      Emanuel Evans <emanuel.evans at gmail.com>
 ;;      Eric Siegel <siegel.eric at gmail.com>
+;;      Eugene Yaremenko <w3techplayground@gmail.com>
 ;;      Frank Fischer <frank-fischer at shadow-soft.de>
 ;;      Frank Terbeck <ft at bewatermyfriend.org>
 ;;      Gordon Gustafson <gordon3.14 at gmail.com>
