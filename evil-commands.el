@@ -840,19 +840,32 @@ on the first non-blank character."
   (interactive "p")
   (scroll-up count))
 
+(evil-define-command evil-ud-scroll-count-reset ()
+  "Sets `evil-ud-scroll-count' to 0.
+`evil-scroll-up' and `evil-scroll-down' will scroll
+for a half of the screen(default)."
+  :repeat nil
+  :keep-visual t
+  (interactive)
+  (setq evil-ud-scroll-count 0))
+
 (evil-define-command evil-scroll-up (count)
-  "Scrolls the window and the cursor COUNT lines upwards.
-The default is half the screen."
+  "Scrolls the window and the cursor COUNT lines upwards
+and sets `evil-ud-scroll-count'
+Uses `evil-ud-scroll-count' instead If COUNT not specified.
+Scrolls half the screen if `evil-ud-scroll-count' equals 0."
   :repeat nil
   :keep-visual t
   (interactive "P")
   (evil-save-column
     (let* ((p (point))
-           (c (or count (/ (evil-num-visible-lines) 2)))
+           (cv (if count count (max 0 evil-ud-scroll-count)))
+           (c (if (= cv 0) (/ (evil-num-visible-lines) 2) cv))
            (scrollable (max 0
                             (+ c (save-excursion
                                    (goto-char (window-start))
                                    (forward-line (- c)))))))
+      (setq evil-ud-scroll-count cv)
       (save-excursion
         (scroll-down scrollable))
       (forward-line (- c))
@@ -860,15 +873,19 @@ The default is half the screen."
         (signal 'beginning-of-buffer nil)))))
 
 (evil-define-command evil-scroll-down (count)
-  "Scrolls the window and the cursor COUNT lines downwards.
-The default is half the screen."
+  "Scrolls the window and the cursor COUNT lines downwards
+and sets `evil-ud-scroll-count'
+Uses `evil-ud-scroll-count' instead If COUNT not specified.
+Scrolls half the screen if `evil-ud-scroll-count' equals 0."
   :repeat nil
   :keep-visual t
   (interactive "P")
   (evil-save-column
     (let* ((p (point))
-           (c (or count (/ (evil-num-visible-lines) 2)))
+           (cv (if count count (max 0 evil-ud-scroll-count)))
+           (c (if (= cv 0) (/ (evil-num-visible-lines) 2) cv))
            (scrollable (- c (save-excursion (forward-line c)))))
+      (setq evil-ud-scroll-count cv)
       (save-excursion
         (scroll-up scrollable))
       (forward-line c)
