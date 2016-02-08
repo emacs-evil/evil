@@ -3650,32 +3650,34 @@ top-left."
 and opens a new buffer or edits a certain FILE."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count
-                (if evil-split-window-below 'above 'below))
-  (when (and (not count) evil-auto-balance-windows)
-    (balance-windows (window-parent)))
-  (if file
-      (evil-edit file)
-    (let ((buffer (generate-new-buffer "*new*")))
-      (set-window-buffer (selected-window) buffer)
-      (with-current-buffer buffer
-        (funcall (default-value 'major-mode))))))
+  (let ((new-window (split-window (selected-window) count
+                                  (if evil-split-window-below 'below 'above))))
+    (when (and (not count) evil-auto-balance-windows)
+      (balance-windows (window-parent)))
+    (if file
+        (evil-edit file)
+      (let ((buffer (generate-new-buffer "*new*")))
+        (set-window-buffer new-window buffer)
+        (select-window new-window)
+        (with-current-buffer buffer
+          (funcall (default-value 'major-mode)))))))
 
 (evil-define-command evil-window-vnew (count file)
   "Splits the current window vertically
 and opens a new buffer name or edits a certain FILE."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count
-                (if evil-vsplit-window-right 'left 'right))
-  (when (and (not count) evil-auto-balance-windows)
-    (balance-windows (window-parent)))
-  (if file
-      (evil-edit file)
-    (let ((buffer (generate-new-buffer "*new*")))
-      (set-window-buffer (selected-window) buffer)
-      (with-current-buffer buffer
-        (funcall (default-value 'major-mode))))))
+  (let ((new-window (split-window (selected-window) count
+                                  (if evil-vsplit-window-right 'right 'left))))
+    (when (and (not count) evil-auto-balance-windows)
+      (balance-windows (window-parent)))
+    (if file
+        (evil-edit file)
+      (let ((buffer (generate-new-buffer "*new*")))
+        (set-window-buffer new-window buffer)
+        (select-window new-window)
+        (with-current-buffer buffer
+          (funcall (default-value 'major-mode)))))))
 
 (evil-define-command evil-window-increase-height (count)
   "Increase current window height by COUNT."
