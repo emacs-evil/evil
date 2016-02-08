@@ -3,6 +3,7 @@
 ;; Authors:
 ;;      Alessandro Piras <laynor at gmail.com>
 ;;      Antono Vasiljev <antono.vasiljev at gmail.com>
+;;      Bailey Ling <bling@live.ca>
 ;;      Barry O'Reilly <gundaetiapo at gmail.com>
 ;;      Christoph Lange <langec at web.de>
 ;;      Daniel Reiter <danieltreiter@gmail.com>
