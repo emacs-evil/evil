@@ -130,6 +130,7 @@
 (require 'evil-digraphs)
 (require 'evil-types)
 (require 'evil-commands)
+(require 'evil-jumps)
 (require 'evil-maps)
 (require 'evil-integration)
 

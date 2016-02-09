@@ -1971,17 +1971,6 @@ or a marker object pointing nowhere."
   (when (evil-get-command-property command :jump)
     (evil-set-jump)))
 
-(defun evil-set-jump (&optional pos)
-  "Set jump point at POS.
-POS defaults to point."
-  (unless (or (region-active-p) (evil-visual-state-p))
-    (evil-save-echo-area
-      (mapc #'(lambda (marker)
-                (set-marker marker nil))
-            evil-jump-list)
-      (setq evil-jump-list nil)
-      (push-mark pos t))))
-
 (defun evil-get-register (register &optional noerror)
   "Return contents of REGISTER.
 Signal an error if empty, unless NOERROR is non-nil.

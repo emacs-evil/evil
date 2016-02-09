@@ -8082,6 +8082,35 @@ maybe we need one line more with some text\n")
       ("dao")
       "These two lines \n[!]have punctuation on them")))
 
+(ert-deftest evil-test-jump ()
+  :tags '(evil jumps)
+  (ert-info ("Test jumping backward and forward in a single buffer")
+    (evil-test-buffer
+     ""
+     (":new" [return] "iz z z z z z z z z z" [escape] "0")
+     "[z] z z z z z z z z z"
+     ("/z" [return])
+     "z [z] z z z z z z z z"
+     ("nnnn")
+     "z z z z z [z] z z z z"
+     ("\C-o")
+     "z z z z [z] z z z z z"
+     ("\C-o")
+     "z z z [z] z z z z z z"
+     ("\C-i\C-i")
+     "z z z z z [z] z z z z"))
+  (ert-info ("Test jumping backward and forward across buffers")
+    (evil-test-buffer
+     ""
+     (":new" [return] "iz z z z z z z z z z" [escape] "0")
+     "[z] z z z z z z z z z"
+     (":new" [return] "inew buffer" [escape])
+     "new buffe[r]"
+     ("\C-o")
+     "[z] z z z z z z z z z"
+     ("\C-i")
+     "new buffe[r]")))
+
 (provide 'evil-tests)
 
 ;;; evil-tests.el ends here
