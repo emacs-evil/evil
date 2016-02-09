@@ -859,7 +859,7 @@ Scrolls half the screen if `evil-ud-scroll-count' equals 0."
   (interactive "P")
   (evil-save-column
     (let* ((p (point))
-           (cv (if count count (max 0 evil-ud-scroll-count)))
+           (cv (or count (max 0 evil-ud-scroll-count)))
            (c (if (= cv 0) (/ (evil-num-visible-lines) 2) cv))
            (scrollable (max 0
                             (+ c (save-excursion
@@ -883,7 +883,7 @@ Scrolls half the screen if `evil-ud-scroll-count' equals 0."
   (interactive "P")
   (evil-save-column
     (let* ((p (point))
-           (cv (if count count (max 0 evil-ud-scroll-count)))
+           (cv (or count (max 0 evil-ud-scroll-count)))
            (c (if (= cv 0) (/ (evil-num-visible-lines) 2) cv))
            (scrollable (- c (save-excursion (forward-line c)))))
       (setq evil-ud-scroll-count cv)
