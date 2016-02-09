@@ -155,7 +155,8 @@
     (let* ((range (evil-visual-range))
            (beg (evil-range-beginning range))
            (end (1- (evil-range-end range)))
-           (nfwdlines (count-lines beg end)))
+           (nfwdlines (- (line-number-at-pos end)
+                         (line-number-at-pos beg))))
       (evil-repeat-record
        (cond
         ((eq evil-visual-selection 'char)

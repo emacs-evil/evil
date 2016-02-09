@@ -869,7 +869,8 @@ Scrolls half the screen if `evil-ud-scroll-count' equals 0."
       (save-excursion
         (scroll-down scrollable))
       (forward-line (- c))
-      (when (= 0 (count-lines p (point)))
+      (when (= (line-number-at-pos p)
+               (line-number-at-pos (point)))
         (signal 'beginning-of-buffer nil)))))
 
 (evil-define-command evil-scroll-down (count)
@@ -1374,7 +1375,8 @@ If TYPE is `block', the inserted text in inserted at each line
 of the block."
   (interactive "<R><x><y>")
   (let ((delete-func (or delete-func #'evil-delete))
-        (nlines (1+ (count-lines beg end)))
+        (nlines (1+ (- (line-number-at-pos end)
+                       (line-number-at-pos beg))))
         (opoint (save-excursion
                   (goto-char beg)
                   (line-beginning-position))))
