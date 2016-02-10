@@ -877,9 +877,8 @@ and `end` are."
   (if (= beg end)
       0
     (let* ((last (max beg end))
-           (end-at-bol
-            (save-excursion (goto-char last)
-                            (= last (line-beginning-position)))))
+           (end-at-bol (save-excursion (goto-char last)
+                                       (bolp))))
       (if end-at-bol
           (count-lines beg end)
         (1- (count-lines beg end))))))
