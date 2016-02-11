@@ -229,7 +229,16 @@ To go the other way, press \
                  (remhash key evil--jumps-window-jumps)))
              evil--jumps-window-jumps)))
 
-(defun turn-on-evil-jumps-mode ()
+(defadvice switch-to-buffer (before evil-jumps activate)
+  (evil-set-jump))
+
+(defadvice split-window-internal (before evil-jumps activate)
+  (evil-set-jump))
+
+(defadvice find-tag-noselect (before evil-jumps activate)
+  (evil-set-jump))
+
+(defun turn-on-evil-jumps ()
   (unless evil--jumps-wired
     (evil--jumps-set-window-jump-list evil--jumps-jump-list)
     (eval-after-load 'savehist
@@ -239,24 +248,16 @@ To go the other way, press \
     (setq evil--jumps-wired t))
 
   (add-hook 'next-error-hook #'evil-set-jump)
-  (add-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook)
-  (defadvice switch-to-buffer (before evil-jumps activate)
-    (evil-set-jump))
-  (defadvice split-window-internal (before evil-jumps activate)
-    (evil-set-jump))
-  (defadvice find-tag-noselect (before evil-jumps activate)
-    (evil-set-jump)))
+  (add-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook))
 
-(defun turn-off-evil-jumps-mode ()
+(defun turn-off-evil-jumps ()
   (remove-hook 'next-error-hook #'evil-set-jump)
-  (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook)
-  (ad-remove-advice 'switch-to-buffer 'before 'evil-jumps)
-  (ad-remove-advice 'find-tag-noselect 'before 'evil-jumps))
+  (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook))
 
 (add-hook 'evil-local-mode-hook (lambda ()
                                   (if evil-local-mode
-                                      (turn-on-evil-jumps-mode)
-                                    (turn-off-evil-jumps-mode))))
+                                      (turn-on-evil-jumps)
+                                    (turn-off-evil-jumps))))
 
 (provide 'evil-jumps)
 
