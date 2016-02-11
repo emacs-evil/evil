@@ -185,26 +185,26 @@ POS defaults to point."
   "Go to older position in jump list.
 To go the other way, press \
 \\<evil-motion-state-map>\\[evil-jump-forward]."
-  (let* ((count (or count 1))
-         (struct (evil--jumps-get-current))
-         (idx (evil-jumps-struct-idx struct)))
+  (let ((count (or count 1)))
     (evil-motion-loop (nil count)
-      (evil--jumps-message "jumping back %s" idx)
-      (when (= idx -1)
-        (setq idx (+ idx 1))
-        (setf (evil-jumps-struct-idx struct) 0)
-        (evil--jumps-push))
-      (evil--jumps-jump-to-index (+ idx 1)))))
+      (let* ((struct (evil--jumps-get-current))
+             (idx (evil-jumps-struct-idx struct)))
+        (evil--jumps-message "jumping back %s" idx)
+        (when (= idx -1)
+          (setq idx (+ idx 1))
+          (setf (evil-jumps-struct-idx struct) 0)
+          (evil--jumps-push))
+        (evil--jumps-jump-to-index (+ idx 1))))))
 
 (evil-define-motion evil-jump-forward (count)
   "Go to newer position in jump list.
 To go the other way, press \
 \\<evil-motion-state-map>\\[evil-jump-backward]."
-  (let* ((count (or count 1))
-         (struct (evil--jumps-get-current))
-         (idx (evil-jumps-struct-idx struct)))
+  (let ((count (or count 1)))
     (evil-motion-loop (nil count)
-      (evil--jumps-jump-to-index (- idx 1)))))
+      (let* ((struct (evil--jumps-get-current))
+             (idx (evil-jumps-struct-idx struct)))
+        (evil--jumps-jump-to-index (- idx 1))))))
 
 (defun evil--jumps-window-configuration-hook (&rest args)
   (let* ((window-list (window-list-1 nil nil t))
