@@ -65,7 +65,7 @@
   "Hashtable which stores all jumps on a per window basis.")
 
 (defvar evil-jumps-history nil
-  "History of `evil-mode' jumps that persisted with `savehist'.")
+  "History of `evil-mode' jumps that are persisted with `savehist'.")
 
 (cl-defstruct evil-jumps-struct
   ring
@@ -233,29 +233,28 @@ To go the other way, press \
 (defadvice find-tag-noselect (before evil-jumps activate)
   (evil-set-jump))
 
-(defun evil--jumps-savehist-load ()
-  (let ((ring (make-ring evil-jumps-max-length)))
-    (cl-loop for jump in (reverse evil-jumps-history)
-             do (ring-insert ring jump))
-    (setf (evil-jumps-struct-ring (evil--jumps-get-current)) ring)))
+(add-hook 'evil-local-mode-hook
+          (lambda ()
+            (if evil-local-mode
+                (progn
+                  (add-hook 'next-error-hook #'evil-set-jump nil t)
+                  (add-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook nil t))
+              (progn
+                (remove-hook 'next-error-hook #'evil-set-jump t)
+                (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)))))
 
-(defun turn-on-evil-jumps ()
-  (eval-after-load 'savehist
-    '(progn
-       (add-to-list 'savehist-additional-variables 'evil-jumps-history)
-       (add-hook 'savehist-save-hook #'evil--jumps-savehist-sync)
-       (add-hook 'savehist-mode-hook #'evil--jumps-savehist-load)))
-  (add-hook 'next-error-hook #'evil-set-jump)
-  (add-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook))
+(add-hook 'evil-mode-hook
+          (lambda ()
+            (when evil-mode
+              (eval-after-load 'savehist
+                '(progn
+                   (add-to-list 'savehist-additional-variables 'evil-jumps-history)
+                   (let ((ring (make-ring evil-jumps-max-length)))
+                     (cl-loop for jump in (reverse evil-jumps-history)
+                              do (ring-insert ring jump))
+                     (setf (evil-jumps-struct-ring (evil--jumps-get-current)) ring))
 
-(defun turn-off-evil-jumps ()
-  (remove-hook 'next-error-hook #'evil-set-jump)
-  (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook))
-
-(add-hook 'evil-local-mode-hook (lambda ()
-                                  (if evil-local-mode
-                                      (turn-on-evil-jumps)
-                                    (turn-off-evil-jumps))))
+                   (add-hook 'savehist-save-hook #'evil--jumps-savehist-sync))))))
 
 (provide 'evil-jumps)
 
