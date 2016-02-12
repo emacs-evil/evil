@@ -29,7 +29,7 @@
 (require 'cl-lib)
 
 (defgroup evil-jumps nil
-  "evil-jumps configuration options."
+  "Evil jump list configuration options."
   :prefix "evil-jumps"
   :group 'evil)
 
@@ -57,7 +57,6 @@
 
 (defvar evil--jumps-jumping nil)
 (defvar evil--jumps-debug nil)
-(defvar evil--jumps-wired nil)
 
 (defvar evil--jumps-buffer-targets "\\*\\(new\\|scratch\\)\\*"
   "Regexp to match against `buffer-name' to determine whether it's a valid jump target.")
@@ -65,11 +64,11 @@
 (defvar evil--jumps-window-jumps (make-hash-table)
   "Hashtable which stores all jumps on a per window basis.")
 
-(defvar evil--jumps-jump-list nil
-  "Printable version of `evil--jumps-window-jumps'.")
+(defvar evil-jumps-history nil
+  "History of `evil-mode' jumps that persisted with `savehist'.")
 
 (cl-defstruct evil-jumps-struct
-  jumps
+  ring
   (idx -1))
 
 (defun evil--jumps-message (format &rest args)
@@ -87,17 +86,20 @@
       (puthash window jump-struct evil--jumps-window-jumps))
     jump-struct))
 
+(defun evil--jumps-get-jumps (struct)
+  (let ((ring (evil-jumps-struct-ring struct)))
+    (unless ring
+      (setq ring (make-ring evil-jumps-max-length))
+      (setf (evil-jumps-struct-ring struct) ring))
+    ring))
+
 (defun evil--jumps-get-window-jump-list ()
   (let ((struct (evil--jumps-get-current)))
-    (evil-jumps-struct-jumps struct)))
-
-(defun evil--jumps-set-window-jump-list (list)
-  (let ((struct (evil--jumps-get-current)))
-    (setf (evil-jumps-struct-jumps struct) list)))
+    (evil--jumps-get-jumps struct)))
 
 (defun evil--jumps-savehist-sync ()
   "Updates the printable value of window jumps for `savehist'."
-  (setq evil--jumps-jump-list
+  (setq evil-jumps-history
         (cl-remove-if-not #'identity
                           (mapcar #'(lambda (jump)
                                       (let* ((mark (car jump))
@@ -110,17 +112,17 @@
                                                  pos)
                                             (list pos file-name)
                                           nil)))
-                                  (evil--jumps-get-window-jump-list)))))
+                                  (ring-elements (evil--jumps-get-window-jump-list))))))
 
 (defun evil--jumps-jump-to-index (idx)
   (let ((target-list (evil--jumps-get-window-jump-list)))
     (evil--jumps-message "jumping to %s" idx)
     (evil--jumps-message "target list = %s" target-list)
-    (when (and (< idx (length target-list))
+    (when (and (< idx (ring-length target-list))
                (>= idx 0))
       (run-hooks 'evil-jumps-pre-jump-hook)
       (setf (evil-jumps-struct-idx (evil--jumps-get-current)) idx)
-      (let* ((place (nth idx target-list))
+      (let* ((place (ring-ref target-list idx))
              (pos (car place))
              (file-name (cadr place)))
         (setq evil--jumps-jumping t)
@@ -134,8 +136,6 @@
 (defun evil--jumps-push ()
   "Pushes the current cursor/file position to the jump list."
   (let ((target-list (evil--jumps-get-window-jump-list)))
-    (while (> (length target-list) evil-jumps-max-length)
-      (nbutlast target-list 1))
     (let ((file-name (buffer-file-name))
           (buffer-name (buffer-name))
           (current-pos (point-marker))
@@ -150,34 +150,29 @@
           (when (string-match-p pattern file-name)
             (setq excluded t)))
         (unless excluded
-          (when target-list
-            (setq first-pos (caar target-list))
-            (setq first-file-name (car (cdar target-list))))
+          (unless (ring-empty-p target-list)
+            (setq first-pos (car (ring-ref target-list 0)))
+            (setq first-file-name (car (cdr (ring-ref target-list 0)))))
           (unless (and (equal first-pos current-pos)
                        (equal first-file-name file-name))
             (evil--jumps-message "pushing %s on %s" current-pos file-name)
-            (push `(,current-pos ,file-name) target-list)))))
-    (evil--jumps-message "%s %s" (selected-window) (car target-list))
-    (evil--jumps-set-window-jump-list target-list)))
+            (ring-insert target-list `(,current-pos ,file-name))))))
+    (evil--jumps-message "%s %s" (selected-window) (ring-ref target-list 0))))
 
 (defun evil-set-jump (&optional pos)
   "Set jump point at POS.
 POS defaults to point."
   (unless (or (region-active-p) (evil-visual-state-p))
     (evil-save-echo-area
-      (mapc #'(lambda (marker)
-                (set-marker marker nil))
-            evil-jump-list)
-      (setq evil-jump-list nil)
       (push-mark pos t)))
 
   (unless evil--jumps-jumping
     ;; clear out intermediary jumps when a new one is set
     (let* ((struct (evil--jumps-get-current))
-           (target-list (evil-jumps-struct-jumps struct))
+           (target-list (evil--jumps-get-jumps struct))
            (idx (evil-jumps-struct-idx struct)))
-      (nbutlast target-list idx)
-      (setf (evil-jumps-struct-jumps struct) target-list)
+      (cl-loop repeat idx
+               do (ring-remove target-list))
       (setf (evil-jumps-struct-idx struct) -1))
     (evil--jumps-push)))
 
@@ -213,15 +208,15 @@ To go the other way, press \
     (when (and (not (eq existing-window new-window))
                (> (length window-list) 1))
       (let* ((target-jump-struct (evil--jumps-get-current new-window))
-             (target-jump-count (length (evil-jumps-struct-jumps target-jump-struct))))
-        (if (evil-jumps-struct-jumps target-jump-struct)
+             (target-jump-count (ring-length (evil--jumps-get-jumps target-jump-struct))))
+        (if (not (ring-empty-p (evil--jumps-get-jumps target-jump-struct)))
             (evil--jumps-message "target window %s already has %s jumps" new-window target-jump-count)
           (evil--jumps-message "new target window detected; copying %s to %s" existing-window new-window)
           (let* ((source-jump-struct (evil--jumps-get-current existing-window))
-                 (source-list (evil-jumps-struct-jumps source-jump-struct)))
-            (when (= (length (evil-jumps-struct-jumps target-jump-struct)) 0)
+                 (source-list (evil--jumps-get-jumps source-jump-struct)))
+            (when (= (ring-length (evil--jumps-get-jumps target-jump-struct)) 0)
               (setf (evil-jumps-struct-idx target-jump-struct) (evil-jumps-struct-idx source-jump-struct))
-              (setf (evil-jumps-struct-jumps target-jump-struct) (copy-sequence source-list)))))))
+              (setf (evil-jumps-struct-ring target-jump-struct) (ring-copy source-list)))))))
     ;; delete obsolete windows
     (maphash (lambda (key val)
                (unless (member key window-list)
@@ -238,15 +233,18 @@ To go the other way, press \
 (defadvice find-tag-noselect (before evil-jumps activate)
   (evil-set-jump))
 
-(defun turn-on-evil-jumps ()
-  (unless evil--jumps-wired
-    (evil--jumps-set-window-jump-list evil--jumps-jump-list)
-    (eval-after-load 'savehist
-      '(progn
-         (push 'evil--jumps-jump-list savehist-additional-variables)
-         (add-hook 'savehist-save-hook #'evil--jumps-savehist-sync)))
-    (setq evil--jumps-wired t))
+(defun evil--jumps-savehist-load ()
+  (let ((ring (make-ring evil-jumps-max-length)))
+    (cl-loop for jump in (reverse evil-jumps-history)
+             do (ring-insert ring jump))
+    (setf (evil-jumps-struct-ring (evil--jumps-get-current)) ring)))
 
+(defun turn-on-evil-jumps ()
+  (eval-after-load 'savehist
+    '(progn
+       (add-to-list 'savehist-additional-variables 'evil-jumps-history)
+       (add-hook 'savehist-save-hook #'evil--jumps-savehist-sync)
+       (add-hook 'savehist-mode-hook #'evil--jumps-savehist-load)))
   (add-hook 'next-error-hook #'evil-set-jump)
   (add-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook))
 

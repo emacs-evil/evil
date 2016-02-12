@@ -1329,9 +1329,6 @@ The global value of this variable holds markers available from
 every buffer, while the buffer-local value holds markers available
 only in the current buffer.")
 
-(evil-define-local-var evil-jump-list nil
-  "Jump list.")
-
 (defconst evil-suppress-map (make-keymap)
   "Full keymap disabling default bindings to `self-insert-command'.")
 (suppress-keymap evil-suppress-map t)
