@@ -30,6 +30,7 @@
 (require 'evil-ex)
 (require 'evil-types)
 (require 'evil-command-window)
+(require 'evil-jumps)
 
 ;;; Compatibility for Emacs 23
 (unless (fboundp 'window-body-width)
@@ -692,6 +693,18 @@ Columns are counted from zero."
   (interactive (list (read-char)))
   (evil-goto-mark char noerror)
   (evil-first-non-blank))
+
+(evil-define-motion evil-jump-backward (count)
+  "Go to older position in jump list.
+To go the other way, press \
+\\<evil-motion-state-map>\\[evil-jump-forward]."
+  (evil--jump-backward count))
+
+(evil-define-motion evil-jump-forward (count)
+  "Go to newer position in jump list.
+To go the other way, press \
+\\<evil-motion-state-map>\\[evil-jump-backward]."
+  (evil--jump-forward count))
 
 (evil-define-motion evil-jump-to-tag (arg)
   "Jump to tag under point.

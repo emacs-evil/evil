@@ -8087,47 +8087,47 @@ maybe we need one line more with some text\n")
   (let ((evil--jumps-buffer-targets "\\*\\(new\\|scratch\\|test\\)\\*"))
     (ert-info ("Test jumping backward and forward in a single buffer")
       (evil-test-buffer
-       "[z] z z z z z z z z z"
-       ("/z" [return])
-       "z [z] z z z z z z z z"
-       ("nnnn")
-       "z z z z z [z] z z z z"
-       ("\C-o")
-       "z z z z [z] z z z z z"
-       ("\C-o")
-       "z z z [z] z z z z z z"
-       ("\C-i\C-i")
-       "z z z z z [z] z z z z"))
+        "[z] z z z z z z z z z"
+        ("/z" [return])
+        "z [z] z z z z z z z z"
+        ("nnnn")
+        "z z z z z [z] z z z z"
+        ("\C-o")
+        "z z z z [z] z z z z z"
+        ("\C-o")
+        "z z z [z] z z z z z z"
+        ("\C-i\C-i")
+        "z z z z z [z] z z z z"))
     (ert-info ("Test jumping backward and forward across buffers")
       (evil-test-buffer
-       "[z] z z z z z z z z z"
-       (":new" [return] "inew buffer" [escape])
-       "new buffe[r]"
-       ("\C-o")
-       "[z] z z z z z z z z z"
-       ("\C-i")
-       "new buffe[r]"))
+        "[z] z z z z z z z z z"
+        (":new" [return] "inew buffer" [escape])
+        "new buffe[r]"
+        ("\C-o")
+        "[z] z z z z z z z z z"
+        ("\C-i")
+        "new buffe[r]"))
     (ert-info ("Test jumping backward and forward with counts")
       (evil-test-buffer
-       "[z] z z z z z z z z z"
-       ("/z" [return] "nnnn")
-       "z z z z z [z] z z z z"
-       ("3\C-o")
-       "z z [z] z z z z z z z"
-       ("2\C-i")
-       "z z z z [z] z z z z z"
-       ))
+        "[z] z z z z z z z z z"
+        ("/z" [return] "nnnn")
+        "z z z z z [z] z z z z"
+        ("3\C-o")
+        "z z [z] z z z z z z z"
+        ("2\C-i")
+        "z z z z [z] z z z z z"
+        ))
     (ert-info ("Jump list branches off when new jump is set")
       (evil-test-buffer
-       "[z] z z z z z z z"
-       ("/z" [return] "nnnn4\C-o") ;; adds a bunch of jumps after the 2nd z
-       "z [z] z z z z z z"
-       ("/z" [return]) ;; sets a new jump, list should be reset
-       "z z [z] z z z z z"
-       ("\C-o")
-       "z [z] z z z z z z"
-       ("3\C-i") ;; even after jumping forward 3 times it can't get past the 3rd z
-       "z z [z] z z z z z"))))
+        "[z] z z z z z z z"
+        ("/z" [return] "nnnn4\C-o") ;; adds a bunch of jumps after the 2nd z
+        "z [z] z z z z z z"
+        ("/z" [return]) ;; sets a new jump, list should be reset
+        "z z [z] z z z z z"
+        ("\C-o")
+        "z [z] z z z z z z"
+        ("3\C-i") ;; even after jumping forward 3 times it can't get past the 3rd z
+        "z z [z] z z z z z"))))
 
 (provide 'evil-tests)
 

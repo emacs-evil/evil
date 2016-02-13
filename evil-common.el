@@ -1965,12 +1965,6 @@ or a marker object pointing nowhere."
                                   (marker-position (cdr entry))))))))
 (put 'evil-swap-out-markers 'permanent-local-hook t)
 
-(defun evil-jump-hook (&optional command)
-  "Set jump point if COMMAND has a non-nil :jump property."
-  (setq command (or command this-command))
-  (when (evil-get-command-property command :jump)
-    (evil-set-jump)))
-
 (defun evil-get-register (register &optional noerror)
   "Return contents of REGISTER.
 Signal an error if empty, unless NOERROR is non-nil.

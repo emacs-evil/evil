@@ -24,9 +24,12 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; Code:
+(eval-when-compile (require 'cl))
 
-(require 'cl-lib)
+(require 'evil-core)
+(require 'evil-states)
+
+;;; Code:
 
 (defgroup evil-jumps nil
   "Evil jump list configuration options."
@@ -74,7 +77,7 @@
 (defun evil--jumps-message (format &rest args)
   (when evil--jumps-debug
     (with-current-buffer (get-buffer-create "*evil-jumps*")
-      (end-of-buffer)
+      (goto-char (point-max))
       (insert (apply #'format format args) "\n"))))
 
 (defun evil--jumps-get-current (&optional window)
@@ -176,10 +179,7 @@ POS defaults to point."
       (setf (evil-jumps-struct-idx struct) -1))
     (evil--jumps-push)))
 
-(evil-define-motion evil-jump-backward (count)
-  "Go to older position in jump list.
-To go the other way, press \
-\\<evil-motion-state-map>\\[evil-jump-forward]."
+(defun evil--jump-backward (count)
   (let ((count (or count 1)))
     (evil-motion-loop (nil count)
       (let* ((struct (evil--jumps-get-current))
@@ -191,10 +191,7 @@ To go the other way, press \
           (evil--jumps-push))
         (evil--jumps-jump-to-index (+ idx 1))))))
 
-(evil-define-motion evil-jump-forward (count)
-  "Go to newer position in jump list.
-To go the other way, press \
-\\<evil-motion-state-map>\\[evil-jump-backward]."
+(defun evil--jump-forward (count)
   (let ((count (or count 1)))
     (evil-motion-loop (nil count)
       (let* ((struct (evil--jumps-get-current))
@@ -224,6 +221,12 @@ To go the other way, press \
                  (remhash key evil--jumps-window-jumps)))
              evil--jumps-window-jumps)))
 
+(defun evil--jump-hook (&optional command)
+  "Set jump point if COMMAND has a non-nil :jump property."
+  (setq command (or command this-command))
+  (when (evil-get-command-property command :jump)
+    (evil-set-jump)))
+
 (defadvice switch-to-buffer (before evil-jumps activate)
   (evil-set-jump))
 
@@ -237,17 +240,21 @@ To go the other way, press \
           (lambda ()
             (if evil-local-mode
                 (progn
+                  (add-hook 'pre-command-hook #'evil--jump-hook nil t)
                   (add-hook 'next-error-hook #'evil-set-jump nil t)
                   (add-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook nil t))
               (progn
+                (remove-hook 'pre-command-hook #'evil--jump-hook t)
                 (remove-hook 'next-error-hook #'evil-set-jump t)
                 (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)))))
 
+(defvar evil-mode)
 (add-hook 'evil-mode-hook
           (lambda ()
             (when evil-mode
               (eval-after-load 'savehist
                 '(progn
+                   (defvar savehist-additional-variables)
                    (add-to-list 'savehist-additional-variables 'evil-jumps-history)
                    (let ((ring (make-ring evil-jumps-max-length)))
                      (cl-loop for jump in (reverse evil-jumps-history)

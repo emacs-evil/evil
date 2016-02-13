@@ -138,11 +138,9 @@
     (add-hook 'input-method-deactivate-hook 'evil-deactivate-input-method t t)
     (add-hook 'activate-mark-hook 'evil-visual-activate-hook nil t)
     (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
-    (add-hook 'pre-command-hook 'evil-jump-hook nil t)
     (add-hook 'post-command-hook 'evil-repeat-post-hook))
    (t
     (evil-refresh-mode-line)
-    (remove-hook 'pre-command-hook 'evil-jump-hook t)
     (remove-hook 'activate-mark-hook 'evil-visual-activate-hook t)
     (remove-hook 'input-method-activate-hook 'evil-activate-input-method t)
     (remove-hook 'input-method-deactivate-hook 'evil-deactivate-input-method t)
