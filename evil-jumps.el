@@ -59,7 +59,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar evil--jumps-jumping nil)
-(defvar evil--jumps-debug nil)
+
+(eval-when-compile (defvar evil--jumps-debug nil))
 
 (defvar evil--jumps-buffer-targets "\\*\\(new\\|scratch\\)\\*"
   "Regexp to match against `buffer-name' to determine whether it's a valid jump target.")
@@ -74,11 +75,11 @@
   ring
   (idx -1))
 
-(defun evil--jumps-message (format &rest args)
+(defmacro evil--jumps-message (format &rest args)
   (when evil--jumps-debug
-    (with-current-buffer (get-buffer-create "*evil-jumps*")
-      (goto-char (point-max))
-      (insert (apply #'format format args) "\n"))))
+    `(with-current-buffer (get-buffer-create "*evil-jumps*")
+       (goto-char (point-max))
+       (insert (apply #'format ,format ',args) "\n"))))
 
 (defun evil--jumps-get-current (&optional window)
   (unless window
@@ -160,7 +161,10 @@
                        (equal first-file-name file-name))
             (evil--jumps-message "pushing %s on %s" current-pos file-name)
             (ring-insert target-list `(,current-pos ,file-name))))))
-    (evil--jumps-message "%s %s" (selected-window) (ring-ref target-list 0))))
+    (evil--jumps-message "%s %s"
+                         (selected-window)
+                         (and (not (ring-empty-p target-list))
+                              (ring-ref target-list 0)))))
 
 (evil-define-command evil-show-jumps ()
   "Display the contents of the jump list."
