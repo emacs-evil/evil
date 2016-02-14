@@ -834,7 +834,7 @@ Scrolls half the screen if `evil-ud-scroll-count' equals 0."
   (interactive "P")
   (evil-save-column
     (let* ((p (point))
-           (cv (if count count (max 0 evil-ud-scroll-count)))
+           (cv (or count (max 0 evil-ud-scroll-count)))
            (c (if (= cv 0) (/ (evil-num-visible-lines) 2) cv))
            (scrollable (max 0
                             (+ c (save-excursion
@@ -844,7 +844,7 @@ Scrolls half the screen if `evil-ud-scroll-count' equals 0."
       (save-excursion
         (scroll-down scrollable))
       (forward-line (- c))
-      (when (= 0 (count-lines p (point)))
+      (when (= 0 (evil-count-lines p (point)))
         (signal 'beginning-of-buffer nil)))))
 
 (evil-define-command evil-scroll-down (count)
@@ -857,7 +857,7 @@ Scrolls half the screen if `evil-ud-scroll-count' equals 0."
   (interactive "P")
   (evil-save-column
     (let* ((p (point))
-           (cv (if count count (max 0 evil-ud-scroll-count)))
+           (cv (or count (max 0 evil-ud-scroll-count)))
            (c (if (= cv 0) (/ (evil-num-visible-lines) 2) cv))
            (scrollable (- c (save-excursion (forward-line c)))))
       (setq evil-ud-scroll-count cv)
@@ -869,7 +869,7 @@ Scrolls half the screen if `evil-ud-scroll-count' equals 0."
             (win-end (window-end nil 'update)))
         (when (= win-end (point-max))
           (scroll-down (- (evil-num-visible-lines)
-                          (count-lines win-beg win-end)))))
+                          (evil-count-lines win-beg win-end)))))
       (when (= 0 (count-lines p (point)))
         (signal 'end-of-buffer nil)))))
 
@@ -1349,7 +1349,7 @@ If TYPE is `block', the inserted text in inserted at each line
 of the block."
   (interactive "<R><x><y>")
   (let ((delete-func (or delete-func #'evil-delete))
-        (nlines (1+ (count-lines beg end)))
+        (nlines (1+ (evil-count-lines beg end)))
         (opoint (save-excursion
                   (goto-char beg)
                   (line-beginning-position))))
