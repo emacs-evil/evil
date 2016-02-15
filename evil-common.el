@@ -3776,27 +3776,55 @@ should be left-aligned for left justification."
       (back-to-indentation))))
 
 ;;; View helper
-(defun evil-view-list (name body)
-  "Open new view buffer.
-The view buffer is named *NAME*. After the buffer is created, the
-function BODY is called with the view buffer being the current
-buffer. The new buffer is opened in view-mode with evil come up
-in motion state."
-  (let ((buf (get-buffer-create (concat "*" name "*")))
-        (inhibit-read-only t))
-    (with-current-buffer buf
-      (evil-motion-state)
-      (erase-buffer)
-      (funcall body)
-      (goto-char (point-min))
-      (view-buffer-other-window buf nil #'kill-buffer))))
 
-(defmacro evil-with-view-list (name &rest body)
-  "Execute BODY in new view-mode buffer *NAME*.
-This macro is a small convenience wrapper around
-`evil-view-list'."
-  (declare (indent 1) (debug t))
-  `(evil-view-list ,name #'(lambda () ,@body)))
+(defvar-local evil-list-view-select-action nil)
+(put 'evil-list-view-select-action 'permanent-local t)
+
+(define-derived-mode evil-list-view-mode tabulated-list-mode
+  "Evil List View"
+  (tabulated-list-init-header)
+  (tabulated-list-print))
+
+(defun evil-list-view-goto-entry ()
+  (interactive)
+  (when (and evil-list-view-select-action
+             (not (eobp)))
+    (let* ((line (line-number-at-pos (point)))
+           (entry (elt tabulated-list-entries (1- line))))
+      (funcall evil-list-view-select-action (nth 1 entry)))))
+
+(define-key evil-list-view-mode-map (kbd "q") #'kill-this-buffer)
+(define-key evil-list-view-mode-map [follow-link] nil) ;; allows mouse-1 to be activated
+(define-key evil-list-view-mode-map [mouse-1] #'evil-list-view-goto-entry)
+(define-key evil-list-view-mode-map [return] #'evil-list-view-goto-entry)
+
+(defmacro evil-with-view-list (&rest properties)
+  "Opens new list view buffer.
+
+PROPERTIES is a property-list which supports the following properties:
+
+:name           (required)   The name of the buffer.
+:mode-name      (required)   The name for the mode line.
+:format         (required)   The value for `tabulated-list-format'.
+:entries        (required)   The value for `tabulated-list-entries'.
+:select-action  (optional)   A function for row selection.
+                             It takes in a single parameter, which is the selected row's
+                             vector value that is passed into `:entries'.
+"
+  (declare (indent defun) (debug t))
+  `(let ((bufname (concat "*" ,(plist-get properties :name) "*"))
+         (inhibit-read-only t))
+     (and (get-buffer bufname)
+          (kill-buffer bufname))
+     (let ((buf (get-buffer-create bufname)))
+       (with-current-buffer buf
+         (setq tabulated-list-format ,(plist-get properties :format))
+         (setq tabulated-list-entries ,(plist-get properties :entries))
+         (setq evil-list-view-select-action ,(plist-get properties :select-action))
+         (evil-list-view-mode)
+         (setq mode-name ,(plist-get properties :mode-name))
+         (evil-motion-state))
+       (switch-to-buffer-other-window buf))))
 
 (provide 'evil-common)
 
