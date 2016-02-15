@@ -29,6 +29,8 @@
 (require 'evil-core)
 (require 'evil-states)
 
+(declare-function evil-show-jumps-mode "evil-jumps")
+
 ;;; Code:
 
 (defgroup evil-jumps nil
@@ -169,21 +171,41 @@
 (evil-define-command evil-show-jumps ()
   "Display the contents of the jump list."
   :repeat nil
-  (evil-with-view-list "evil-jumps"
+  (unless (fboundp 'evil-show-jumps-mode)
     (require 'tabulated-list)
-    (setq tabulated-list-format [("Jump" 5 t)
-                                 ("Marker" 8 t)
-                                 ("File/text" 1000 t)])
-    (tabulated-list-init-header)
-    (setq tabulated-list-entries
-          (lambda ()
+    (define-derived-mode evil-show-jumps-mode tabulated-list-mode
+      "Evil Jumps"
+      (setq tabulated-list-format [("Jump" 5 nil)
+                                   ("Marker" 8 nil)
+                                   ("File/text" 1000 t)])
+      (tabulated-list-init-header)
+      (setq tabulated-list-entries
             (let* ((jumps (evil--jumps-savehist-sync))
                    (count 0))
               (cl-loop for jump in jumps
                        collect `(,(incf count) [,(number-to-string count)
                                                 ,(number-to-string (car jump))
-                                                ,(cdr jump)])))))
-    (tabulated-list-print)))
+                                                ,(cadr jump)]))))
+      (tabulated-list-print))
+
+    (evil-define-key 'motion evil-show-jumps-mode-map [return]
+      (lambda ()
+        (interactive)
+        (unless (eq (point) (point-max))
+          (let* ((line (line-number-at-pos (point)))
+                 (entry (elt tabulated-list-entries (1- line)))
+                 (jump (cadr entry))
+                 (position (elt jump 1))
+                 (file (elt jump 2)))
+            (kill-buffer)
+            (switch-to-buffer (find-file file))))))
+    (evil-define-key 'motion evil-show-jumps-mode-map (kbd "q") #'kill-buffer-and-window))
+
+  (let ((buf (get-buffer-create "*evil-jumps*")))
+    (with-current-buffer buf
+      (evil-show-jumps-mode)
+      (evil-motion-state))
+    (switch-to-buffer-other-window buf)))
 
 (defun evil-set-jump (&optional pos)
   "Set jump point at POS.
