@@ -646,12 +646,9 @@ works accordingly."
                  (stringp binding)))
         (unless binding
           (setq binding (intern command)))
-        ;; check for remaps
-        (when (and (commandp binding)
-                   (commandp (command-remapping binding)))
-          (setq binding (command-remapping binding)))
         (if (commandp binding)
-            binding
+            ;; check for remaps
+            (or (command-remapping binding) binding)
           (unless noerror
             (user-error "Unknown command: `%s'" command)))))))
 
