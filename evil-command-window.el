@@ -63,9 +63,9 @@ execute on the result that the user selects."
   (setq evil-command-window-current-buffer (current-buffer))
   (ignore-errors (kill-buffer "*Command Line*"))
   (switch-to-buffer "*Command Line*")
-  (evil-command-window-mode)
   (setq-local evil-command-window-execute-fn execute-fn)
   (setq-local evil-command-window-cmd-key cmd-key)
+  (evil-command-window-mode)
   (evil-command-window-insert-commands hist))
 
 (defun evil-command-window-ex (&optional current-command)
@@ -73,7 +73,7 @@ execute on the result that the user selects."
 If CURRENT-COMMAND is present, it will be inserted under the
 cursor as the current command to be edited."
   (interactive)
-  (evil-command-window (cons (or current-command " ") evil-ex-history)
+  (evil-command-window (cons (or current-command "") evil-ex-history)
                        ":"
                        'evil-command-window-ex-execute))
 
@@ -105,7 +105,7 @@ function to execute."
 (defun evil-command-window-search-forward ()
   "Open a command line window for forward searches."
   (interactive)
-  (evil-command-window (cons " " evil-search-forward-history)
+  (evil-command-window (cons "" evil-search-forward-history)
                        "/"
                        (lambda (result)
                          (evil-command-window-search-execute result t))))
@@ -113,14 +113,15 @@ function to execute."
 (defun evil-command-window-search-backward ()
   "Open a command line window for backward searches."
   (interactive)
-  (evil-command-window (cons " " evil-search-backward-history)
+  (evil-command-window (cons "" evil-search-backward-history)
                        "?"
                        (lambda (result)
                          (evil-command-window-search-execute result nil))))
 
 (defun evil-command-window-search-execute (result forward)
   "Search for RESULT using FORWARD to determine direction."
-  (unless (equal result " ")
+  (unless (zerop (length result))
+
     (if (and (boundp 'evil-search-module) (eq evil-search-module 'evil-search))
         (progn
           (setq evil-ex-search-pattern (evil-ex-make-search-pattern result)
@@ -133,17 +134,19 @@ function to execute."
 Parameters passed in through IGNORED are ignored."
   (let ((prefix (propertize evil-command-window-cmd-key
                             'font-lock-face 'minibuffer-prompt)))
-    (set-text-properties (line-beginning-position) (line-end-position)
+    (set-text-properties (line-beginning-position) (line-beginning-position 2)
                          (list 'line-prefix prefix))))
 
 (defun evil-command-window-insert-commands (hist)
   "Insert the commands in HIST."
   (let ((inhibit-modification-hooks t))
     (mapc #'(lambda (cmd) (insert cmd) (newline)) hist)
-    (join-line)
-    (delete-char 1))
-  (reverse-region (point-min) (point-max)) ; draws prefixes as a side-effect
+    (reverse-region (point-min) (point-max)))
+  (let ((prefix (propertize evil-command-window-cmd-key
+                            'font-lock-face 'minibuffer-prompt)))
+    (set-text-properties (point-min) (point-max) (list 'line-prefix prefix)))
   (goto-char (point-max))
+  (when (and (bolp) (not (bobp))) (backward-char))
   (evil-adjust-cursor))
 
 (provide 'evil-command-window)
