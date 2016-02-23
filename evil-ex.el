@@ -646,6 +646,10 @@ works accordingly."
                  (stringp binding)))
         (unless binding
           (setq binding (intern command)))
+        ;; check for remaps
+        (when (and (commandp binding)
+                   (commandp (command-remapping binding)))
+          (setq binding (command-remapping binding)))
         (if (commandp binding)
             binding
           (unless noerror
