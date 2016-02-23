@@ -36,6 +36,8 @@
 (require 'evil-search)
 (require 'evil-ex)
 
+(defvar evil-search-module)
+
 (define-derived-mode evil-command-window-mode fundamental-mode "Evil-cmd"
   "Major mode for the Evil command line window."
   (auto-fill-mode 0)
@@ -128,7 +130,7 @@ function to execute."
   "Search for RESULT using FORWARD to determine direction."
   (unless (zerop (length result))
 
-    (if (and (boundp 'evil-search-module) (eq evil-search-module 'evil-search))
+    (if (eq evil-search-module 'evil-search)
         (progn
           (setq evil-ex-search-pattern (evil-ex-make-search-pattern result)
                 evil-ex-search-direction (if forward 'forward 'backward))
