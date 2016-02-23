@@ -869,6 +869,7 @@ Scrolls half the screen if `evil-ud-scroll-count' equals 0."
             (win-end (window-end nil 'update)))
         (when (= win-end (point-max))
           (scroll-down (- (evil-num-visible-lines)
+                          scroll-margin
                           (evil-count-lines win-beg win-end)))))
       (when (= 0 (count-lines p (point)))
         (signal 'end-of-buffer nil)))))
