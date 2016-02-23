@@ -105,7 +105,10 @@ function to execute."
 (defun evil-command-window-search-forward ()
   "Open a command line window for forward searches."
   (interactive)
-  (evil-command-window (cons "" evil-search-forward-history)
+  (evil-command-window (cons ""
+                             (if (eq evil-search-module 'evil-search)
+                                 evil-ex-search-history
+                               evil-search-forward-history))
                        "/"
                        (lambda (result)
                          (evil-command-window-search-execute result t))))
@@ -113,7 +116,10 @@ function to execute."
 (defun evil-command-window-search-backward ()
   "Open a command line window for backward searches."
   (interactive)
-  (evil-command-window (cons "" evil-search-backward-history)
+  (evil-command-window (cons ""
+                             (if (eq evil-search-module 'evil-search)
+                                 evil-ex-search-history
+                               evil-search-backward-history))
                        "?"
                        (lambda (result)
                          (evil-command-window-search-execute result nil))))
@@ -126,7 +132,14 @@ function to execute."
         (progn
           (setq evil-ex-search-pattern (evil-ex-make-search-pattern result)
                 evil-ex-search-direction (if forward 'forward 'backward))
+          (unless (equal result (car-safe evil-ex-search-history))
+            (push result evil-ex-search-history))
           (evil-ex-search))
+      (if forward
+          (unless (equal result (car-safe evil-search-forward-history))
+            (push result evil-search-forward-history))
+        (unless (equal result (car-safe evil-search-backward-history))
+          (push result evil-search-backward-history)))
       (evil-search result forward evil-regexp-search))))
 
 (defun evil-command-window-draw-prefix (&rest ignored)
