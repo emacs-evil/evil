@@ -879,7 +879,12 @@ The default is half the screen."
   (interactive "p")
   (evil-save-column
     (dotimes (i count)
-      (scroll-down nil))))
+      (condition-case err
+          (scroll-down nil)
+        (beginning-of-buffer
+         (if (and (bobp) (zerop i))
+             (signal (car err) (cdr err))
+           (goto-char (point-min))))))))
 
 (evil-define-command evil-scroll-page-down (count)
   "Scrolls the window COUNT pages upwards."
@@ -888,7 +893,12 @@ The default is half the screen."
   (interactive "p")
   (evil-save-column
     (dotimes (i count)
-      (scroll-up nil))))
+      (condition-case err
+          (scroll-up nil)
+        (end-of-buffer
+         (if (and (eobp) (zerop i))
+             (signal (car err) (cdr err))
+           (goto-char (point-max))))))))
 
 (evil-define-command evil-scroll-line-to-top (count)
   "Scrolls line number COUNT (or the cursor line) to the top of the window."
