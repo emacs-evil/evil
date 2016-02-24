@@ -621,6 +621,7 @@ If STATE is nil, Evil is disabled in the buffer."
     gdb-threads-mode
     gist-list-mode
     git-commit-mode
+    git-rebase-mode
     gnus-article-mode
     gnus-browse-mode
     gnus-group-mode
