@@ -2963,7 +2963,7 @@ corresponding to the characters of this string are shown."
 
 (defun evil--show-marks-select-action (entry)
   (kill-buffer)
-  (switch-to-buffer (elt entry 3))
+  (switch-to-buffer (car (elt entry 3)))
   (evil-goto-mark (string-to-char (elt entry 0))))
 
 (eval-when-compile (require 'ffap))
