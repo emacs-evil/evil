@@ -3050,34 +3050,44 @@ linewise, otherwise it is character wise."
                 (if line 'line type)
                 :expanded t)))
 
-(defun evil-select-block (thing beg end type count &optional inclusive countcurrent)
+(defun evil-select-block (thing beg end type count
+                                &optional
+                                inclusive
+                                countcurrent
+                                fixedscan)
   "Return a range (BEG END) of COUNT delimited text objects.
 BEG END TYPE are the currently selected (visual) range.  The
 delimited object must be given by THING-up function (see
 `evil-up-block'). If INCLUSIVE is non-nil, OPEN and CLOSE are
 included in the range; otherwise they are excluded. If
 COUNTCURRENT is non-nil an objected is counted if the current
-selection matches that object exactly."
+selection matches that object exactly.
+
+Usually scanning for the surrounding block starts at (1+ beg) and (1-
+end). If this might fail due to the behavior of THING then FIXEDSCAN
+can be set to t. In this case the scan starts at BEG and END. One
+example where this might fail is if BEG and END are the delimiters of
+a string or comment."
   (save-excursion
     (save-match-data
-      (let ((beg (or beg (point)))
-            (end (or end (point)))
-            (count (abs (or count 1)))
-            op cl op-end cl-end)
-        ;; start scanning at beginning
-        (goto-char beg)
+      (let* ((orig-beg beg)
+             (orig-end end)
+             (beg (or beg (point)))
+             (end (or end (point)))
+             (count (abs (or count 1)))
+             op cl op-end cl-end)
+        ;; We always assume at least one selected character.
+        (if (= beg end) (setq end (1+ end)))
+        ;; We scan twice: starting at (1+ beg) forward and at (1- end)
+        ;; backward. The resulting selection is the smaller one.
+        (goto-char (if fixedscan beg (1+ beg)))
         (when (and (zerop (funcall thing +1)) (match-beginning 0))
           (setq cl (cons (match-beginning 0) (match-end 0)))
           (goto-char (car cl))
           (when (and (zerop (funcall thing -1)) (match-beginning 0))
             (setq op (cons (match-beginning 0) (match-end 0)))))
         ;; start scanning from end
-        ;;
-        ;; We always assume at least one selected character, otherwise
-        ;; commands like 'dib' on '(word)' with `point' being at the
-        ;; opening parenthesis would fail, because Emacs considers
-        ;; this position as outside of the parentheses.
-        (goto-char (if (= beg end) (1+ end) end))
+        (goto-char (if fixedscan end (1- end)))
         (when (and (zerop (funcall thing -1)) (match-beginning 0))
           (setq op-end (cons (match-beginning 0) (match-end 0)))
           (goto-char (cdr op-end))
@@ -3099,10 +3109,13 @@ selection matches that object exactly."
         (setq op-end op cl-end cl) ; store copy
         ;; if the current selection contains the surrounding
         ;; delimiters, they do not count as new selection
-        (let ((cnt (if (or (and (not countcurrent) inclusive
-                                (<= beg (car op)) (>= end (cdr cl)))
-                           (and (not countcurrent) (not inclusive)
-                                (<= beg (cdr op)) (>= end (car cl))))
+        (let ((cnt (if (and orig-beg orig-end
+                            (or (and (not countcurrent) inclusive
+                                     (<= orig-beg (car op))
+                                     (>= orig-end (cdr cl)))
+                                (and (not countcurrent) (not inclusive)
+                                     (<= orig-beg (cdr op))
+                                     (>= orig-end (car cl)))))
                        count
                      (1- count))))
           ;; starting from the innermost surrounding delimiters
@@ -3123,7 +3136,7 @@ selection matches that object exactly."
         (if inclusive
             (setq op (car op) cl (cdr cl))
           (setq op (cdr op) cl (car cl)))
-        (if (and (= op beg) (= cl end)
+        (if (and (equal op orig-beg) (equal cl orig-end)
                  (or (not countcurrent)
                      (and countcurrent (/= count 1))))
             (error "No surrounding delimiters found")
@@ -3178,7 +3191,8 @@ must be regular expressions and `evil-up-block' is used."
                                      type
                                      count
                                      inclusive
-                                     (or (< extbeg beg) (> extend end)))))))))
+                                     (or (< extbeg beg) (> extend end))
+                                     t)))))))
      (t
       (evil-select-block #'(lambda (&optional cnt)
                              (evil-up-block open close cnt))
