@@ -433,9 +433,6 @@ if COUNT is positive, and to the left of it if negative.
                (if extend
                    (setq range (evil-range-union range selection))
                  (evil-set-type range (evil-type range type)))
-               ;; ensure the range is properly expanded
-               (evil-contract-range range)
-               (evil-expand-range range)
                ;; possibly convert to linewise
                (when (eq evil-this-type-modified 'line)
                  (setq range (evil-text-object-make-linewise range)))

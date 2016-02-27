@@ -6279,7 +6279,16 @@ Below some empty line."))
       "for (auto i : vector) {<
   if (cond) {
     do_something();
-  }[\n]>}")))
+  }[\n]>}"))
+  (ert-info ("Operator on empty parentheses")
+    (evil-test-buffer
+      "a([(]))b"
+      ("cibx" [escape])
+      "a(([x]))b")
+    (evil-test-buffer
+      "a(([)])b"
+      ("cibx" [escape])
+      "a(([x]))b")))
 
 (ert-deftest evil-test-forces-linewise-text-objects ()
   "Test `evil-text-object-change-visual-type' option."
