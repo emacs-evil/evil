@@ -194,8 +194,7 @@
   "Set jump point at POS.
 POS defaults to point."
   (unless (or (region-active-p) (evil-visual-state-p))
-    (evil-save-echo-area
-      (push-mark pos t)))
+    (push-mark pos t))
 
   (unless evil--jumps-jumping
     ;; clear out intermediary jumps when a new one is set
