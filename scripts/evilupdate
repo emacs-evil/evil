@@ -105,7 +105,7 @@
 (defun evilupdate-update-emacswiki ()
   "Update the version information on the EmacsWiki page."
   (setq yaoddmuse-wikis
-        '(("EmacsWiki" "http://www.emacswiki.org/emacs" utf-8 "uihnscuskc=1;")))
+        '(("EmacsWiki" "https://www.emacswiki.org/emacs" utf-8 "uihnscuskc=1;")))
   (when (featurep 'nadvice)
     (advice-add 'yaoddmuse-display-page :after 'evilupdate-wiki-trace))
   (yaoddmuse-edit "EmacsWiki" evilupdate-wiki-page t)
