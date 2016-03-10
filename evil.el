@@ -136,10 +136,6 @@
 
 (run-hooks 'evil-after-load-hook)
 
-;;;###autoload
-(define-globalized-minor-mode evil-mode
-  evil-local-mode evil-initialize)
-
 (provide 'evil)
 
 ;;; evil.el ends here
