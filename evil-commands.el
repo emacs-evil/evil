@@ -2159,10 +2159,13 @@ the lines."
 
 (defun evil-insert-resume (count)
   "Switch to Insert state at previous insertion point.
-The insertion will be repeated COUNT times."
+The insertion will be repeated COUNT times. If called from visual
+state, only place point at the previous insertion position but do not
+switch to insert state."
   (interactive "p")
   (evil-goto-mark ?^ t)
-  (evil-insert count))
+  (unless (evil-visual-state-p)
+    (evil-insert count)))
 
 (defun evil-maybe-remove-spaces ()
   "Remove space from newly opened empty line.
