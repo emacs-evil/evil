@@ -270,7 +270,7 @@ By default the last line."
   :jump t
   :type line
   (if (null count)
-      (goto-char (point-max))
+      (end-of-buffer)
     (goto-char (point-min))
     (forward-line (1- count)))
   (evil-first-non-blank))
