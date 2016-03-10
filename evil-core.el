@@ -968,7 +968,7 @@ to `after-load-functions', delaying execution as necessary."
              ',(if (symbolp keymap) keymap 'keymap))))
 (defalias 'evil-declare-key 'evil-define-key)
 
-(defun evil-define-minor-mode-key (state mode key def &optional bindings)
+(defun evil-define-minor-mode-key (state mode key def &rest bindings)
   "Similar to `evil-define-key' but the bindings are associated
 with the minor-mode symbol MODE instead of a particular map.
 Associating bindings with a mode symbol instead of a map allows
