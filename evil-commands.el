@@ -706,6 +706,13 @@ To go the other way, press \
 \\<evil-motion-state-map>\\[evil-jump-backward]."
   (evil--jump-forward count))
 
+(evil-define-motion evil-jump-backward-swap (count)
+  "Go to the previous position in jump list.
+The current position is placed in the jump list."
+  (let ((pnt (point)))
+    (evil--jump-backward 1)
+    (evil-set-jump pnt)))
+
 (evil-define-motion evil-jump-to-tag (arg)
   "Jump to tag under point.
 If called with a prefix argument, provide a prompt
