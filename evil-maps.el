@@ -457,6 +457,7 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "sp[lit]" 'evil-window-split)
 (evil-ex-define-cmd "vs[plit]" 'evil-window-vsplit)
 (evil-ex-define-cmd "new" 'evil-window-new)
+(evil-ex-define-cmd "ene[w]" 'evil-buffer-new)
 (evil-ex-define-cmd "vne[w]" 'evil-window-vnew)
 (evil-ex-define-cmd "clo[se]" 'evil-window-delete)
 (evil-ex-define-cmd "on[ly]" 'delete-other-windows)

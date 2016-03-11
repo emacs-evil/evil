@@ -3711,6 +3711,18 @@ and opens a new buffer name or edits a certain FILE."
         (with-current-buffer buffer
           (funcall (default-value 'major-mode)))))))
 
+(evil-define-command evil-buffer-new (count file)
+  "Creates a new buffer replacing the current window, optionaly
+   editing a certain FILE"
+  :repeat nil
+  (interactive "P<f>")
+  (if file
+      (evil-edit file)
+    (let ((buffer (generate-new-buffer "*new*")))
+      (set-window-buffer nil buffer)
+      (with-current-buffer buffer
+        (funcall (default-value 'major-mode))))))
+
 (evil-define-command evil-window-increase-height (count)
   "Increase current window height by COUNT."
   :repeat nil
