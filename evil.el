@@ -29,6 +29,7 @@
 ;;      Nikolai Weibull <now at bitwi.se>
 ;;      phaebz <phaebz at gmail.com>
 ;;      ralesi <scio62@gmail.com>
+;;      Rodrigo Setti <rodrigosetti@gmail.com>
 ;;      Sanel Zukan <sanelz at gmail.com>
 ;;      Sarah Brofeldt <sarah at thinkmonster.(none)>
 ;;      Simon Hafner <hafnersimon at gmail.com>
