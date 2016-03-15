@@ -2817,6 +2817,19 @@ is closed."
           (set-process-query-on-exit-flag process nil))
         (kill-emacs)))))
 
+(evil-define-command evil-quit-all-with-error-code (&optional force)
+  "Exits Emacs without saving, returning an non-zero error code.
+The FORCE argument is only there for compatibility and is ignored.
+This function fails with an error if Emacs is run in server mode."
+  :repeat nil
+  (interactive "<!>")
+  (if (and (boundp 'server-buffer-clients)
+           (fboundp 'server-edit)
+           (fboundp 'server-buffer-done)
+           server-buffer-clients)
+      (user-error "Cannot exit client process with error code.")
+    (kill-emacs 1)))
+
 (evil-define-command evil-save-and-quit ()
   "Exits Emacs, without saving."
   (save-buffers-kill-terminal t))

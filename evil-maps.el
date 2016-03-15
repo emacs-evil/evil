@@ -465,6 +465,7 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "wq" 'evil-save-and-close)
 (evil-ex-define-cmd "quita[ll]" 'evil-quit-all)
 (evil-ex-define-cmd "qa[ll]" "quitall")
+(evil-ex-define-cmd "cq[uit]" 'evil-quit-all-with-error-code)
 (evil-ex-define-cmd "wqa[ll]" 'evil-save-and-quit)
 (evil-ex-define-cmd "xa[ll]" "wqall")
 (evil-ex-define-cmd "x[it]" 'evil-save-modified-and-close)
