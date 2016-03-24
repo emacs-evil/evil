@@ -981,6 +981,7 @@ value.
 
 See `evil-define-key' for the usage of STATE, KEY, DEF and
 BINDINGS."
+  (declare (indent defun))
   (let ((map (evil-get-minor-mode-keymap state mode)))
     (while key
       (define-key map key def)
