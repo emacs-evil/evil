@@ -6268,6 +6268,22 @@ Below some empty line."))
       "(([\"]\"))\n"
       ("dab")
       "([)]\n"))
+  (ert-info ("Select inner paren on different lines")
+    (evil-test-buffer
+      "for (auto i : vector) {
+  if (cond) {
+    do_[s]omething();
+  }
+}"
+      ("vi}")
+      "for (auto i : vector) {
+  if (cond) {
+<    do_something();[\n]>  }\n}"
+      ("i}")
+      "for (auto i : vector) {
+<  if (cond) {
+    do_something();
+  }[\n]>}"))
   (ert-info ("Enlarge to smallest complete surrounding")
     (evil-test-buffer
       "for (auto i : vector) {
@@ -6276,8 +6292,8 @@ Below some empty line."))
   }
 }"
       ("i}")
-      "for (auto i : vector) {<
-  if (cond) {
+      "for (auto i : vector) {
+<  if (cond) {
     do_something();
   }[\n]>}"))
   (ert-info ("Operator on empty parentheses")
@@ -6303,11 +6319,11 @@ Below some empty line."))
   }
 "
         ("Vi}")
-        "  function(opts) {<
-    this.var1 = something();
+        "  function(opts) {
+<    this.var1 = something();
     this.var2 = something_else();
-    return something_nasty();
- [ ]>}
+    return something_nasty();[
+]>  }
 "
         (should (eq (evil-visual-type) 'inclusive)))))
   (let ((evil-text-object-change-visual-type nil))

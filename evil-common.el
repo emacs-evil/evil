@@ -3185,9 +3185,15 @@ the range; otherwise they are excluded.
 The types of OPEN and CLOSE specify which kind of THING is used
 for parsing with `evil-select-block'. If OPEN and CLOSE are
 characters `evil-up-paren' is used. Otherwise OPEN and CLOSE
-must be regular expressions and `evil-up-block' is used."
+must be regular expressions and `evil-up-block' is used.
+
+If the selection is exclusive, whitespace at the end or at the
+beginning of the selection until the end-of-line or beginning-of-line
+is ignored."
   (lexical-let
       ((open open) (close close))
+    ;; we need special linewise exclusive selection
+    (unless inclusive (setq inclusive 'exclusive-line))
     (cond
      ((and (characterp open) (characterp close))
       (let ((thing #'(lambda (&optional cnt)
