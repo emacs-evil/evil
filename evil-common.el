@@ -3050,24 +3050,59 @@ linewise, otherwise it is character wise."
                 (if line 'line type)
                 :expanded t)))
 
+(defun evil--get-block-range (op cl selection-type)
+  "Return the exclusive range of a visual selection.
+OP and CL are pairs of buffer positions for the opening and
+closing delimiter of a range. SELECTION-TYPE is the desired type
+of selection.  It is a symbol that determines which parts of the
+block are selected.  If it is 'inclusive or t the returned range
+is \(cons (car OP) (cdr CL)). If it is 'exclusive or nil the
+returned range is (cons (cdr OP) (car CL)).  If it is
+'exclusive-line the returned range will skip whitespace at the
+end of the line of OP and at the beginning of the line of CL."
+  (cond
+   ((memq selection-type '(inclusive t)) (cons (car op) (cdr cl)))
+   ((memq selection-type '(exclusive nil)) (cons (cdr op) (car cl)))
+   ((eq selection-type 'exclusive-line)
+    (let ((beg (cdr op))
+          (end (car cl)))
+      (save-excursion
+        (goto-char beg)
+        (when (and (eolp) (not (eobp)))
+          (setq beg (line-beginning-position 2)))
+        (goto-char end)
+        (skip-chars-backward " \t")
+        (when (bolp)
+          (setq end (point))))
+      (cons beg end)))
+   (t
+    (user-error "Unknown selection-type %s" selection-type))))
+
 (defun evil-select-block (thing beg end type count
                                 &optional
-                                inclusive
+                                selection-type
                                 countcurrent
                                 fixedscan)
   "Return a range (BEG END) of COUNT delimited text objects.
 BEG END TYPE are the currently selected (visual) range.  The
 delimited object must be given by THING-up function (see
-`evil-up-block'). If INCLUSIVE is non-nil, OPEN and CLOSE are
-included in the range; otherwise they are excluded. If
-COUNTCURRENT is non-nil an objected is counted if the current
+`evil-up-block').
+
+SELECTION-TYPE is symbol that determines which parts of the block
+are selected.  If it is 'inclusive or t OPEN and CLOSE are included in
+the range. If it is 'exclusive or nil the delimiters are not
+contained. If it is 'exclusive-line the delimiters are not
+included as well as adjacent whitespace until the beginning of
+the next line or the end of the previous line.
+
+If COUNTCURRENT is non-nil an objected is counted if the current
 selection matches that object exactly.
 
-Usually scanning for the surrounding block starts at (1+ beg) and (1-
-end). If this might fail due to the behavior of THING then FIXEDSCAN
-can be set to t. In this case the scan starts at BEG and END. One
-example where this might fail is if BEG and END are the delimiters of
-a string or comment."
+Usually scanning for the surrounding block starts at (1+ beg)
+and (1- end). If this might fail due to the behavior of THING
+then FIXEDSCAN can be set to t. In this case the scan starts at
+BEG and END. One example where this might fail is if BEG and END
+are the delimiters of a string or comment."
   (save-excursion
     (save-match-data
       (let* ((orig-beg beg)
@@ -3109,14 +3144,12 @@ a string or comment."
         (setq op-end op cl-end cl) ; store copy
         ;; if the current selection contains the surrounding
         ;; delimiters, they do not count as new selection
-        (let ((cnt (if (and orig-beg orig-end
-                            (or (and (not countcurrent) inclusive
-                                     (<= orig-beg (car op))
-                                     (>= orig-end (cdr cl)))
-                                (and (not countcurrent) (not inclusive)
-                                     (<= orig-beg (cdr op))
-                                     (>= orig-end (car cl)))))
-                       count
+        (let ((cnt (if (and orig-beg orig-end (not countcurrent))
+                       (let ((sel (evil--get-block-range op cl selection-type)))
+                         (if (and (<= orig-beg (car sel))
+                                  (>= orig-end (cdr sel)))
+                             count
+                           (1- count)))
                      (1- count))))
           ;; starting from the innermost surrounding delimiters
           ;; increase selection
@@ -3133,9 +3166,9 @@ a string or comment."
                        (if (match-beginning 0)
                            (cons (match-beginning 0) (match-end 0))
                          cl)))))
-        (if inclusive
-            (setq op (car op) cl (cdr cl))
-          (setq op (cdr op) cl (car cl)))
+        (let ((sel (evil--get-block-range op cl selection-type)))
+          (setq op (car sel)
+                cl (cdr sel)))
         (if (and (equal op orig-beg) (equal cl orig-end)
                  (or (not countcurrent)
                      (and countcurrent (/= count 1))))
