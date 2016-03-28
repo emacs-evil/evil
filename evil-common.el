@@ -3073,7 +3073,10 @@ end of the line of OP and at the beginning of the line of CL."
         (goto-char end)
         (skip-chars-backward " \t")
         (when (bolp)
-          (setq end (point))))
+          (setq end (point))
+          (goto-char beg)
+          (when (and (not (bolp)) (< beg end))
+            (setq end (1- end)))))
       (cons beg end)))
    (t
     (user-error "Unknown selection-type %s" selection-type))))

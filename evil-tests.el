@@ -6301,6 +6301,11 @@ Below some empty line."))
       "{\n  [f]oo();\n}\n"
       ("yiBp")
       "{\n  foo();\n  [f]oo();\n}\n"))
+  (ert-info ("exclusive like if ending at bol")
+    (evil-test-buffer
+      "(defun foo ()\n[ ] (insert \"bar\")\n  )\n"
+      ("cibx" [escape])
+      "([x]\n  )\n"))
   (ert-info ("Operator on empty parentheses")
     (evil-test-buffer
       "a([(]))b"
