@@ -6296,6 +6296,11 @@ Below some empty line."))
 <  if (cond) {
     do_something();
   }[\n]>}"))
+  (ert-info ("yank on blocks is turned linewise")
+    (evil-test-buffer
+      "{\n  [f]oo();\n}\n"
+      ("yiBp")
+      "{\n  foo();\n  [f]oo();\n}\n"))
   (ert-info ("Operator on empty parentheses")
     (evil-test-buffer
       "a([(]))b"

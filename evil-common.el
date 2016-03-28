@@ -3089,11 +3089,13 @@ delimited object must be given by THING-up function (see
 `evil-up-block').
 
 SELECTION-TYPE is symbol that determines which parts of the block
-are selected.  If it is 'inclusive or t OPEN and CLOSE are included in
-the range. If it is 'exclusive or nil the delimiters are not
-contained. If it is 'exclusive-line the delimiters are not
-included as well as adjacent whitespace until the beginning of
-the next line or the end of the previous line.
+are selected.  If it is 'inclusive or t OPEN and CLOSE are
+included in the range. If it is 'exclusive or nil the delimiters
+are not contained. If it is 'exclusive-line the delimiters are
+not included as well as adjacent whitespace until the beginning
+of the next line or the end of the previous line. If the
+resulting selection consists of complete lines only and visual
+state is not active, the returned selection is linewise.
 
 If COUNTCURRENT is non-nil an objected is counted if the current
 selection matches that object exactly.
@@ -3169,11 +3171,19 @@ are the delimiters of a string or comment."
         (let ((sel (evil--get-block-range op cl selection-type)))
           (setq op (car sel)
                 cl (cdr sel)))
-        (if (and (equal op orig-beg) (equal cl orig-end)
-                 (or (not countcurrent)
-                     (and countcurrent (/= count 1))))
-            (error "No surrounding delimiters found")
-          (evil-range op cl type :expanded t))))))
+        (cond
+         ((and (equal op orig-beg) (equal cl orig-end)
+               (or (not countcurrent)
+                   (and countcurrent (/= count 1))))
+          (error "No surrounding delimiters found"))
+         ((save-excursion
+            (and (not (evil-visual-state-p))
+                 (eq type 'inclusive)
+                 (progn (goto-char op) (bolp))
+                 (progn (goto-char cl) (bolp))))
+          (evil-range op cl 'line :expanded t))
+         (t
+          (evil-range op cl type :expanded t)))))))
 
 (defun evil-select-paren (open close beg end type count &optional inclusive)
   "Return a range (BEG END) of COUNT delimited text objects.
