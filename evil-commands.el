@@ -1946,12 +1946,14 @@ when called interactively."
                        0) 1)
            register (or evil-this-register (read-char)))
      (cond
+      ((or (and (eq register ?@) (eq evil-last-register ?:))
+           (eq register ?:))
+       (setq macro (lambda () (evil-ex-repeat nil))
+             evil-last-register ?:))
       ((eq register ?@)
        (unless evil-last-register
          (user-error "No previously executed keyboard macro."))
        (setq macro (evil-get-register evil-last-register t)))
-      ((eq register ?:)
-       (setq macro (lambda () (evil-ex-repeat nil))))
       (t
        (setq macro (evil-get-register register t)
              evil-last-register register)))
