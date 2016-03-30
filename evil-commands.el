@@ -2951,30 +2951,29 @@ corresponding to the characters of this string are shown."
   ;; used; this is list maintained by Evil for each buffer.
   (let ((all-markers
          ;; get global and local marks
-         (append (evil-filter-list #'(lambda (m)
-                                       (or (evil-global-marker-p (car m))
-                                           (not (markerp (cdr m)))))
-                                   evil-markers-alist)
-                 (evil-filter-list #'(lambda (m)
-                                       (or (not (evil-global-marker-p
-                                                 (car m)))
-                                           (not (markerp (cdr m)))))
-                                   (default-value 'evil-markers-alist)))))
+         (append (cl-remove-if (lambda (m)
+                                 (or (evil-global-marker-p (car m))
+                                     (not (markerp (cdr m)))))
+                               evil-markers-alist)
+                 (cl-remove-if (lambda (m)
+                                 (or (not (evil-global-marker-p (car m)))
+                                     (not (markerp (cdr m)))))
+                               (default-value 'evil-markers-alist)))))
     (when mrks
       (setq mrks (string-to-list mrks))
-      (setq all-markers (evil-filter-list #'(lambda (m)
-                                              (not (member (car m) mrks)))
-                                          all-markers)))
+      (setq all-markers (cl-delete-if (lambda (m)
+                                        (not (member (car m) mrks)))
+                                      all-markers)))
     ;; map marks to list of 4-tuples (char row col file)
     (setq all-markers
-          (mapcar #'(lambda (m)
-                      (with-current-buffer (marker-buffer (cdr m))
-                        (save-excursion
-                          (goto-char (cdr m))
-                          (list (car m)
-                                (1+ (count-lines 1 (line-beginning-position)))
-                                (current-column)
-                                (buffer-name)))))
+          (mapcar (lambda (m)
+                    (with-current-buffer (marker-buffer (cdr m))
+                      (save-excursion
+                        (goto-char (cdr m))
+                        (list (car m)
+                              (line-number-at-pos (point))
+                              (current-column)
+                              (buffer-name)))))
                   all-markers))
     (evil-with-view-list
       :name "evil-marks"
@@ -2983,7 +2982,7 @@ corresponding to the characters of this string are shown."
                ("Line" 8 nil)
                ("Column" 8 nil)
                ("Buffer" 1000 nil)]
-      :entries (cl-loop for m in (sort all-markers #'(lambda (a b) (< (car a) (car b))))
+      :entries (cl-loop for m in (sort all-markers (lambda (a b) (< (car a) (car b))))
                         collect `(nil [,(char-to-string (nth 0 m))
                                        ,(number-to-string (nth 1 m))
                                        ,(number-to-string (nth 2 m))
