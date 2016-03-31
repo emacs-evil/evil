@@ -840,21 +840,21 @@ If the scroll count is zero the command scrolls half the screen."
   :keep-visual t
   (interactive "P")
   (evil-save-column
-    (let* ((p (point))
-           (cv (or count (max 0 evil-ud-scroll-count)))
-           (c (if (= cv 0) (/ (evil-num-visible-lines) 2) cv))
-           (scrollable (max 0
-                            (+ c (save-excursion
-                                   (goto-char (window-start))
-                                   (forward-line (- c)))))))
-      (setq evil-ud-scroll-count cv)
-      ;; bug #637: only scroll if (> scrollable 0)
-      (unless (zerop scrollable)
-        (save-excursion
-          (scroll-down scrollable)))
-      (forward-line (- c))
-      (when (= 0 (evil-count-lines p (point)))
-        (signal 'beginning-of-buffer nil)))))
+    (setq count (or count (max 0 evil-ud-scroll-count)))
+    (setq evil-ud-scroll-count count)
+    (when (= (point-min) (line-beginning-position))
+      (signal 'beginning-of-buffer nil))
+    (when (zerop count)
+      (setq count (/ (1- (window-height)) 2)))
+    (let ((xy (posn-x-y (posn-at-point))))
+      (condition-case nil
+          (progn
+            (scroll-down count)
+            (goto-char (posn-point (posn-at-x-y (car xy) (cdr xy)))))
+        (beginning-of-buffer
+         (condition-case nil
+             (with-no-warnings (previous-line count))
+           (beginning-of-buffer)))))))
 
 (evil-define-command evil-scroll-down (count)
   "Scrolls the window and the cursor COUNT lines downwards.
@@ -865,23 +865,31 @@ If the scroll count is zero the command scrolls half the screen."
   :keep-visual t
   (interactive "P")
   (evil-save-column
-    (let* ((p (point))
-           (cv (or count (max 0 evil-ud-scroll-count)))
-           (c (if (= cv 0) (/ (evil-num-visible-lines) 2) cv))
-           (scrollable (- c (save-excursion (forward-line c)))))
-      (setq evil-ud-scroll-count cv)
-      (save-excursion
-        (scroll-up scrollable))
-      (forward-line c)
-      ;; If we're at end of buffer, let the last line be at the bottom:
-      (let ((win-beg (window-start))
-            (win-end (window-end nil 'update)))
-        (when (= win-end (point-max))
-          (scroll-down (- (evil-num-visible-lines)
-                          scroll-margin
-                          (evil-count-lines win-beg win-end)))))
-      (when (= 0 (count-lines p (point)))
-        (signal 'end-of-buffer nil)))))
+    (setq count (or count (max 0 evil-ud-scroll-count)))
+    (setq evil-ud-scroll-count count)
+    (when (eobp) (signal 'end-of-buffer nil))
+    (when (zerop count)
+      (setq count (/ (1- (window-height)) 2)))
+    (let ((xy (posn-x-y (posn-at-point))))
+      (condition-case nil
+          (progn
+            (scroll-up count)
+            (let* ((wend (window-end nil t))
+                   (p (posn-at-x-y (car xy) (cdr xy)))
+                   (margin (max 0 (- scroll-margin
+                                     (cdr (posn-col-row p))))))
+              (goto-char (posn-point p))
+              ;; ensure point is not within the scroll-margin
+              (when (> margin 0)
+                (with-no-warnings (next-line margin))
+                (recenter scroll-margin))
+              (when (<= (point-max) wend)
+                (save-excursion
+                  (goto-char (point-max))
+                  (recenter (- (max 1 scroll-margin)))))))
+        (end-of-buffer
+         (goto-char (point-max))
+         (recenter (- (max 1 scroll-margin))))))))
 
 (evil-define-command evil-scroll-page-up (count)
   "Scrolls the window COUNT pages upwards."
