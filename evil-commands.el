@@ -848,8 +848,10 @@ Scrolls half the screen if `evil-ud-scroll-count' equals 0."
                                    (goto-char (window-start))
                                    (forward-line (- c)))))))
       (setq evil-ud-scroll-count cv)
-      (save-excursion
-        (scroll-down scrollable))
+      ;; bug #637: only scroll if (> scrollable 0)
+      (unless (zerop scrollable)
+        (save-excursion
+          (scroll-down scrollable)))
       (forward-line (- c))
       (when (= 0 (evil-count-lines p (point)))
         (signal 'beginning-of-buffer nil)))))
