@@ -928,7 +928,7 @@ If the scroll count is zero the command scrolls half the screen."
     (let ((line (or count (line-number-at-pos (point)))))
       (goto-char (point-min))
       (forward-line (1- line)))
-    (recenter 0)))
+    (recenter (1- (max 1 scroll-margin)))))
 
 (evil-define-command evil-scroll-line-to-center (count)
   "Scrolls line number COUNT (or the cursor line) to the center of the window."
@@ -950,7 +950,7 @@ If the scroll count is zero the command scrolls half the screen."
     (let ((line (or count (line-number-at-pos (point)))))
       (goto-char (point-min))
       (forward-line (1- line)))
-    (recenter -1)))
+    (recenter (- (max 1 scroll-margin)))))
 
 (evil-define-command evil-scroll-bottom-line-to-top (count)
   "Scrolls the line right below the window,
@@ -964,7 +964,7 @@ or line COUNT to the top of the window."
         (forward-line (1- count)))
     (goto-char (window-end))
     (evil-move-cursor-back))
-  (recenter 0)
+  (recenter (1- (max 0 scroll-margin)))
   (evil-first-non-blank))
 
 (evil-define-command evil-scroll-top-line-to-bottom (count)
@@ -978,7 +978,7 @@ or line COUNT to the top of the window."
         (goto-char (point-min))
         (forward-line (1- count)))
     (goto-char (window-start)))
-  (recenter -1)
+  (recenter (- (max 1 scroll-margin)))
   (evil-first-non-blank))
 
 (evil-define-command evil-scroll-left (count)
