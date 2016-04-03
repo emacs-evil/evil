@@ -580,6 +580,7 @@ If STATE is nil, Evil is disabled in the buffer."
 (defcustom evil-emacs-state-modes
   '(archive-mode
     bbdb-mode
+    biblio-selection-mode
     bookmark-bmenu-mode
     bookmark-edit-annotation-mode
     browse-kill-ring-mode
@@ -609,6 +610,7 @@ If STATE is nil, Evil is disabled in the buffer."
     emms-mark-mode
     emms-metaplaylist-mode
     emms-playlist-mode
+    ess-help-mode
     etags-select-mode
     fj-mode
     gc-issues-mode
