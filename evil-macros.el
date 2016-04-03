@@ -328,26 +328,28 @@ the new range."
   ;; the selections of the last line consists of
   ;; whitespace only, the end is moved to the end of the
   ;; previous line.
-  (let ((expanded (plist-get (evil-range-properties range) :expanded))
-        (newrange (evil-expand-range range t)))
-    (save-excursion
-      ;; skip whitespace at the beginning
-      (goto-char (evil-range-beginning newrange))
-      (skip-chars-forward " \t")
-      (when (and (not (bolp)) (eolp))
-        (evil-set-range-beginning newrange (1+ (point))))
-      ;; skip whitepsace at the end
-      (goto-char (evil-range-end newrange))
-      (skip-chars-backward " \t")
-      (when (and (not (eolp)) (bolp))
-        (evil-set-range-end newrange (1- (point))))
-      ;; only modify range if result is not empty
-      (if (> (evil-range-beginning newrange)
-             (evil-range-end newrange))
-          range
-        (unless expanded
-          (evil-contract-range newrange))
-        newrange))))
+  (if (eq (evil-type range) 'line)
+      range
+    (let ((expanded (plist-get (evil-range-properties range) :expanded))
+          (newrange (evil-expand-range range t)))
+      (save-excursion
+        ;; skip whitespace at the beginning
+        (goto-char (evil-range-beginning newrange))
+        (skip-chars-forward " \t")
+        (when (and (not (bolp)) (eolp))
+          (evil-set-range-beginning newrange (1+ (point))))
+        ;; skip whitepsace at the end
+        (goto-char (evil-range-end newrange))
+        (skip-chars-backward " \t")
+        (when (and (not (eolp)) (bolp))
+          (evil-set-range-end newrange (1- (point))))
+        ;; only modify range if result is not empty
+        (if (> (evil-range-beginning newrange)
+               (evil-range-end newrange))
+            range
+          (unless expanded
+            (evil-contract-range newrange))
+          newrange)))))
 
 (defmacro evil-define-text-object (object args &rest body)
   "Define a text object command OBJECT.

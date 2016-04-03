@@ -832,54 +832,64 @@ for a half of the screen(default)."
   (setq evil-ud-scroll-count 0))
 
 (evil-define-command evil-scroll-up (count)
-  "Scrolls the window and the cursor COUNT lines upwards
-and sets `evil-ud-scroll-count'
-Uses `evil-ud-scroll-count' instead If COUNT not specified.
-Scrolls half the screen if `evil-ud-scroll-count' equals 0."
+  "Scrolls the window and the cursor COUNT lines upwards.
+If COUNT is not specified the function scrolls down
+`evil-ud-scroll-count', which is the last used count.
+If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "P")
   (evil-save-column
-    (let* ((p (point))
-           (cv (or count (max 0 evil-ud-scroll-count)))
-           (c (if (= cv 0) (/ (evil-num-visible-lines) 2) cv))
-           (scrollable (max 0
-                            (+ c (save-excursion
-                                   (goto-char (window-start))
-                                   (forward-line (- c)))))))
-      (setq evil-ud-scroll-count cv)
-      (save-excursion
-        (scroll-down scrollable))
-      (forward-line (- c))
-      (when (= 0 (evil-count-lines p (point)))
-        (signal 'beginning-of-buffer nil)))))
+    (setq count (or count (max 0 evil-ud-scroll-count)))
+    (setq evil-ud-scroll-count count)
+    (when (= (point-min) (line-beginning-position))
+      (signal 'beginning-of-buffer nil))
+    (when (zerop count)
+      (setq count (/ (1- (window-height)) 2)))
+    (let ((xy (posn-x-y (posn-at-point))))
+      (condition-case nil
+          (progn
+            (scroll-down count)
+            (goto-char (posn-point (posn-at-x-y (car xy) (cdr xy)))))
+        (beginning-of-buffer
+         (condition-case nil
+             (with-no-warnings (previous-line count))
+           (beginning-of-buffer)))))))
 
 (evil-define-command evil-scroll-down (count)
-  "Scrolls the window and the cursor COUNT lines downwards
-and sets `evil-ud-scroll-count'
-Uses `evil-ud-scroll-count' instead If COUNT not specified.
-Scrolls half the screen if `evil-ud-scroll-count' equals 0."
+  "Scrolls the window and the cursor COUNT lines downwards.
+If COUNT is not specified the function scrolls down
+`evil-ud-scroll-count', which is the last used count.
+If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "P")
   (evil-save-column
-    (let* ((p (point))
-           (cv (or count (max 0 evil-ud-scroll-count)))
-           (c (if (= cv 0) (/ (evil-num-visible-lines) 2) cv))
-           (scrollable (- c (save-excursion (forward-line c)))))
-      (setq evil-ud-scroll-count cv)
-      (save-excursion
-        (scroll-up scrollable))
-      (forward-line c)
-      ;; If we're at end of buffer, let the last line be at the bottom:
-      (let ((win-beg (window-start))
-            (win-end (window-end nil 'update)))
-        (when (= win-end (point-max))
-          (scroll-down (- (evil-num-visible-lines)
-                          scroll-margin
-                          (evil-count-lines win-beg win-end)))))
-      (when (= 0 (count-lines p (point)))
-        (signal 'end-of-buffer nil)))))
+    (setq count (or count (max 0 evil-ud-scroll-count)))
+    (setq evil-ud-scroll-count count)
+    (when (eobp) (signal 'end-of-buffer nil))
+    (when (zerop count)
+      (setq count (/ (1- (window-height)) 2)))
+    (let ((xy (posn-x-y (posn-at-point))))
+      (condition-case nil
+          (progn
+            (scroll-up count)
+            (let* ((wend (window-end nil t))
+                   (p (posn-at-x-y (car xy) (cdr xy)))
+                   (margin (max 0 (- scroll-margin
+                                     (cdr (posn-col-row p))))))
+              (goto-char (posn-point p))
+              ;; ensure point is not within the scroll-margin
+              (when (> margin 0)
+                (with-no-warnings (next-line margin))
+                (recenter scroll-margin))
+              (when (<= (point-max) wend)
+                (save-excursion
+                  (goto-char (point-max))
+                  (recenter (- (max 1 scroll-margin)))))))
+        (end-of-buffer
+         (goto-char (point-max))
+         (recenter (- (max 1 scroll-margin))))))))
 
 (evil-define-command evil-scroll-page-up (count)
   "Scrolls the window COUNT pages upwards."
@@ -918,7 +928,7 @@ Scrolls half the screen if `evil-ud-scroll-count' equals 0."
     (let ((line (or count (line-number-at-pos (point)))))
       (goto-char (point-min))
       (forward-line (1- line)))
-    (recenter 0)))
+    (recenter (1- (max 1 scroll-margin)))))
 
 (evil-define-command evil-scroll-line-to-center (count)
   "Scrolls line number COUNT (or the cursor line) to the center of the window."
@@ -940,7 +950,7 @@ Scrolls half the screen if `evil-ud-scroll-count' equals 0."
     (let ((line (or count (line-number-at-pos (point)))))
       (goto-char (point-min))
       (forward-line (1- line)))
-    (recenter -1)))
+    (recenter (- (max 1 scroll-margin)))))
 
 (evil-define-command evil-scroll-bottom-line-to-top (count)
   "Scrolls the line right below the window,
@@ -954,7 +964,7 @@ or line COUNT to the top of the window."
         (forward-line (1- count)))
     (goto-char (window-end))
     (evil-move-cursor-back))
-  (recenter 0)
+  (recenter (1- (max 0 scroll-margin)))
   (evil-first-non-blank))
 
 (evil-define-command evil-scroll-top-line-to-bottom (count)
@@ -968,7 +978,7 @@ or line COUNT to the top of the window."
         (goto-char (point-min))
         (forward-line (1- count)))
     (goto-char (window-start)))
-  (recenter -1)
+  (recenter (- (max 1 scroll-margin)))
   (evil-first-non-blank))
 
 (evil-define-command evil-scroll-left (count)
@@ -1946,12 +1956,14 @@ when called interactively."
                        0) 1)
            register (or evil-this-register (read-char)))
      (cond
+      ((or (and (eq register ?@) (eq evil-last-register ?:))
+           (eq register ?:))
+       (setq macro (lambda () (evil-ex-repeat nil))
+             evil-last-register ?:))
       ((eq register ?@)
        (unless evil-last-register
          (user-error "No previously executed keyboard macro."))
        (setq macro (evil-get-register evil-last-register t)))
-      ((eq register ?:)
-       (setq macro (lambda () (evil-ex-repeat nil))))
       (t
        (setq macro (evil-get-register register t)
              evil-last-register register)))
@@ -2949,30 +2961,29 @@ corresponding to the characters of this string are shown."
   ;; used; this is list maintained by Evil for each buffer.
   (let ((all-markers
          ;; get global and local marks
-         (append (evil-filter-list #'(lambda (m)
-                                       (or (evil-global-marker-p (car m))
-                                           (not (markerp (cdr m)))))
-                                   evil-markers-alist)
-                 (evil-filter-list #'(lambda (m)
-                                       (or (not (evil-global-marker-p
-                                                 (car m)))
-                                           (not (markerp (cdr m)))))
-                                   (default-value 'evil-markers-alist)))))
+         (append (cl-remove-if (lambda (m)
+                                 (or (evil-global-marker-p (car m))
+                                     (not (markerp (cdr m)))))
+                               evil-markers-alist)
+                 (cl-remove-if (lambda (m)
+                                 (or (not (evil-global-marker-p (car m)))
+                                     (not (markerp (cdr m)))))
+                               (default-value 'evil-markers-alist)))))
     (when mrks
       (setq mrks (string-to-list mrks))
-      (setq all-markers (evil-filter-list #'(lambda (m)
-                                              (not (member (car m) mrks)))
-                                          all-markers)))
+      (setq all-markers (cl-delete-if (lambda (m)
+                                        (not (member (car m) mrks)))
+                                      all-markers)))
     ;; map marks to list of 4-tuples (char row col file)
     (setq all-markers
-          (mapcar #'(lambda (m)
-                      (with-current-buffer (marker-buffer (cdr m))
-                        (save-excursion
-                          (goto-char (cdr m))
-                          (list (car m)
-                                (1+ (count-lines 1 (line-beginning-position)))
-                                (current-column)
-                                (buffer-name)))))
+          (mapcar (lambda (m)
+                    (with-current-buffer (marker-buffer (cdr m))
+                      (save-excursion
+                        (goto-char (cdr m))
+                        (list (car m)
+                              (line-number-at-pos (point))
+                              (current-column)
+                              (buffer-name)))))
                   all-markers))
     (evil-with-view-list
       :name "evil-marks"
@@ -2981,7 +2992,7 @@ corresponding to the characters of this string are shown."
                ("Line" 8 nil)
                ("Column" 8 nil)
                ("Buffer" 1000 nil)]
-      :entries (cl-loop for m in (sort all-markers #'(lambda (a b) (< (car a) (car b))))
+      :entries (cl-loop for m in (sort all-markers (lambda (a b) (< (car a) (car b))))
                         collect `(nil [,(char-to-string (nth 0 m))
                                        ,(number-to-string (nth 1 m))
                                        ,(number-to-string (nth 2 m))

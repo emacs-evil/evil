@@ -58,6 +58,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defvar savehist-additional-variables)
+
 (defvar evil--jumps-jumping nil)
 
 (eval-when-compile (defvar evil--jumps-debug nil))
@@ -100,6 +102,15 @@
 (defun evil--jumps-get-window-jump-list ()
   (let ((struct (evil--jumps-get-current)))
     (evil--jumps-get-jumps struct)))
+
+(defun evil--jumps-savehist-load ()
+  (add-to-list 'savehist-additional-variables 'evil-jumps-history)
+  (let ((ring (make-ring evil-jumps-max-length)))
+    (cl-loop for jump in (reverse evil-jumps-history)
+             do (ring-insert ring jump))
+    (setf (evil-jumps-struct-ring (evil--jumps-get-current)) ring))
+  (add-hook 'savehist-save-hook #'evil--jumps-savehist-sync)
+  (remove-hook 'savehist-mode-hook #'evil--jumps-savehist-load))
 
 (defun evil--jumps-savehist-sync ()
   "Updates the printable value of window jumps for `savehist'."
@@ -263,6 +274,10 @@ POS defaults to point."
 (defadvice find-tag-noselect (before evil-jumps activate)
   (evil-set-jump))
 
+(if (bound-and-true-p savehist-loaded)
+    (evil--jumps-savehist-load)
+  (add-hook 'savehist-mode-hook #'evil--jumps-savehist-load))
+
 (add-hook 'evil-local-mode-hook
           (lambda ()
             (if evil-local-mode
@@ -274,21 +289,6 @@ POS defaults to point."
                 (remove-hook 'pre-command-hook #'evil--jump-hook t)
                 (remove-hook 'next-error-hook #'evil-set-jump t)
                 (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)))))
-
-(defvar evil-mode)
-(add-hook 'evil-mode-hook
-          (lambda ()
-            (when evil-mode
-              (eval-after-load 'savehist
-                '(progn
-                   (defvar savehist-additional-variables)
-                   (add-to-list 'savehist-additional-variables 'evil-jumps-history)
-                   (let ((ring (make-ring evil-jumps-max-length)))
-                     (cl-loop for jump in (reverse evil-jumps-history)
-                              do (ring-insert ring jump))
-                     (setf (evil-jumps-struct-ring (evil--jumps-get-current)) ring))
-
-                   (add-hook 'savehist-save-hook #'evil--jumps-savehist-sync))))))
 
 (provide 'evil-jumps)
 
