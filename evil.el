@@ -2,6 +2,7 @@
 
 ;; Authors:
 ;;      Alessandro Piras <laynor at gmail.com>
+;;      Alexander Baier <alexander.baier at mailbox.org>
 ;;      Antono Vasiljev <antono.vasiljev at gmail.com>
 ;;      Bailey Ling <bling@live.ca>
 ;;      Barry O'Reilly <gundaetiapo at gmail.com>
