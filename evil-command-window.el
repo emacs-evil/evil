@@ -52,12 +52,11 @@ the key whose history is being shown (one of \":\", \"/\", or
 execute on the result that the user selects."
   (when (eq major-mode 'evil-command-window-mode)
     (user-error "Cannot recursively open command line window"))
-  (mapc #'(lambda (win)
-            (when (equal (buffer-name (window-buffer win))
-                         "*Command Line*")
-              (kill-buffer (window-buffer win))
-              (delete-window win)))
-        (window-list))
+  (dolist (win (window-list))
+    (when (equal (buffer-name (window-buffer win))
+                 "*Command Line*")
+      (kill-buffer (window-buffer win))
+      (delete-window win)))
   (split-window nil
                 (unless (zerop evil-command-window-height)
                   evil-command-window-height)
