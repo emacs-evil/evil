@@ -98,10 +98,10 @@ function to execute."
 (defun evil-command-window-ex-execute (result)
   "Execute RESULT as an ex command in the appropriate buffer."
   (unless (string-match-p "^ *$" result)
-    (let ((evil-ex-current-buffer evil-command-window-current-buffer))
-      (evil-ex-execute result))
     (unless (equal result (car evil-ex-history))
-      (setq evil-ex-history (cons result evil-ex-history)))))
+      (setq evil-ex-history (cons result evil-ex-history)))
+    (let ((evil-ex-current-buffer evil-command-window-current-buffer))
+      (evil-ex-execute result))))
 
 (defun evil-command-window-search-forward ()
   "Open a command line window for forward searches."
