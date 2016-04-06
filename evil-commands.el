@@ -810,7 +810,7 @@ on the first non-blank character."
 ;; scrolling
 (evil-define-command evil-scroll-line-up (count)
   "Scrolls the window COUNT lines upwards.
-If COUNT is not specified the function scrolls down.
+If COUNT is not specified the function uses
 `evil-scroll-line-count', which is the last used count."
   :repeat nil
   :keep-visual t
@@ -822,7 +822,7 @@ If COUNT is not specified the function scrolls down.
 
 (evil-define-command evil-scroll-line-down (count)
   "Scrolls the window COUNT lines downwards.
-If COUNT is not specified the function scrolls up
+If COUNT is not specified the function uses
 `evil-scroll-line-count', which is the last used count."
   :repeat nil
   :keep-visual t
