@@ -822,26 +822,26 @@ on the first non-blank character."
   (interactive "p")
   (scroll-up count))
 
-(evil-define-command evil-ud-scroll-count-reset ()
-  "Sets `evil-ud-scroll-count' to 0.
+(evil-define-command evil-scroll-count-reset ()
+  "Sets `evil-scroll-count' to 0.
 `evil-scroll-up' and `evil-scroll-down' will scroll
 for a half of the screen(default)."
   :repeat nil
   :keep-visual t
   (interactive)
-  (setq evil-ud-scroll-count 0))
+  (setq evil-scroll-count 0))
 
 (evil-define-command evil-scroll-up (count)
   "Scrolls the window and the cursor COUNT lines upwards.
 If COUNT is not specified the function scrolls down
-`evil-ud-scroll-count', which is the last used count.
+`evil-scroll-count', which is the last used count.
 If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "P")
   (evil-save-column
-    (setq count (or count (max 0 evil-ud-scroll-count)))
-    (setq evil-ud-scroll-count count)
+    (setq count (or count (max 0 evil-scroll-count)))
+    (setq evil-scroll-count count)
     (when (= (point-min) (line-beginning-position))
       (signal 'beginning-of-buffer nil))
     (when (zerop count)
@@ -859,14 +859,14 @@ If the scroll count is zero the command scrolls half the screen."
 (evil-define-command evil-scroll-down (count)
   "Scrolls the window and the cursor COUNT lines downwards.
 If COUNT is not specified the function scrolls down
-`evil-ud-scroll-count', which is the last used count.
+`evil-scroll-count', which is the last used count.
 If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "P")
   (evil-save-column
-    (setq count (or count (max 0 evil-ud-scroll-count)))
-    (setq evil-ud-scroll-count count)
+    (setq count (or count (max 0 evil-scroll-count)))
+    (setq evil-scroll-count count)
     (when (eobp) (signal 'end-of-buffer nil))
     (when (zerop count)
       (setq count (/ (1- (window-height)) 2)))
