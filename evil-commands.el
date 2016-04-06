@@ -809,18 +809,28 @@ on the first non-blank character."
 
 ;; scrolling
 (evil-define-command evil-scroll-line-up (count)
-  "Scrolls the window COUNT lines upwards."
+  "Scrolls the window COUNT lines upwards.
+If COUNT is not specified the function scrolls down.
+`evil-scroll-line-count', which is the last used count."
   :repeat nil
   :keep-visual t
-  (interactive "p")
-  (scroll-down count))
+  (interactive "P")
+  (progn
+    (setq count (or count evil-scroll-line-count))
+    (setq evil-scroll-line-count count)
+    (scroll-down count)))
 
 (evil-define-command evil-scroll-line-down (count)
-  "Scrolls the window COUNT lines downwards."
+  "Scrolls the window COUNT lines downwards.
+If COUNT is not specified the function scrolls up
+`evil-scroll-line-count', which is the last used count."
   :repeat nil
   :keep-visual t
-  (interactive "p")
-  (scroll-up count))
+  (interactive "P")
+  (progn
+    (setq count (or count evil-scroll-line-count))
+    (setq evil-scroll-line-count count)
+    (scroll-up count)))
 
 (evil-define-command evil-scroll-count-reset ()
   "Sets `evil-scroll-count' to 0.
