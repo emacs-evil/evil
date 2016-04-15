@@ -664,6 +664,8 @@ If STATE is nil, Evil is disabled in the buffer."
     occur-mode
     org-agenda-mode
     package-menu-mode
+    pdf-outline-buffer-mode
+    pdf-view-mode
     proced-mode
     rcirc-mode
     rebase-mode
