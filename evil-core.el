@@ -829,14 +829,25 @@ If AUX is nil, create a new auxiliary keymap."
   aux)
 (put 'evil-set-auxiliary-keymap 'lisp-indent-function 'defun)
 
-(defun evil-get-auxiliary-keymap (map state &optional create)
+(defun evil-get-auxiliary-keymap (map state &optional create ignore-parent)
   "Get the auxiliary keymap for MAP in STATE.
 If CREATE is non-nil, create an auxiliary keymap
-if MAP does not have one."
+if MAP does not have one. If CREATE and
+IGNORE-PARENT are non-nil then a new auxiliary
+keymap is created even if the parent of MAP has
+one already."
   (when state
     (let* ((key (vconcat (list (intern (format "%s-state" state)))))
+           (parent-aux (when (and ignore-parent
+                                  (keymap-parent map)
+                                  state)
+                         (lookup-key (keymap-parent map) key)))
            (aux (if state (lookup-key map key) map)))
       (cond
+       ((and ignore-parent
+             (equal parent-aux aux)
+             create)
+        (evil-set-auxiliary-keymap map state))
        ((evil-auxiliary-keymap-p aux)
         aux)
        (create
