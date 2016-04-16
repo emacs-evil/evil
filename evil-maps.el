@@ -482,6 +482,7 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "~&" 'evil-ex-repeat-substitute-with-search-and-flags)
 (evil-ex-define-cmd "registers" 'evil-show-registers)
 (evil-ex-define-cmd "marks" 'evil-show-marks)
+(evil-ex-define-cmd "delm[arks]" 'evil-delete-marks)
 (evil-ex-define-cmd "ju[mps]" 'evil-show-jumps)
 (evil-ex-define-cmd "noh[lsearch]" 'evil-ex-nohighlight)
 (evil-ex-define-cmd "f[ile]" 'evil-show-file-info)
