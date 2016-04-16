@@ -577,7 +577,6 @@ and jump to the corresponding one."
 
 (evil-define-motion evil-find-char (count char)
   "Move to the next COUNT'th occurrence of CHAR."
-  :jump t
   :type inclusive
   (interactive "<c><C>")
   (setq count (or count 1))
@@ -597,14 +596,12 @@ and jump to the corresponding one."
 
 (evil-define-motion evil-find-char-backward (count char)
   "Move to the previous COUNT'th occurrence of CHAR."
-  :jump t
   :type exclusive
   (interactive "<c><C>")
   (evil-find-char (- (or count 1)) char))
 
 (evil-define-motion evil-find-char-to (count char)
   "Move before the next COUNT'th occurrence of CHAR."
-  :jump t
   :type inclusive
   (interactive "<c><C>")
   (unwind-protect
@@ -617,14 +614,12 @@ and jump to the corresponding one."
 
 (evil-define-motion evil-find-char-to-backward (count char)
   "Move before the previous COUNT'th occurrence of CHAR."
-  :jump t
   :type exclusive
   (interactive "<c><C>")
   (evil-find-char-to (- (or count 1)) char))
 
 (evil-define-motion evil-repeat-find-char (count)
   "Repeat the last find COUNT times."
-  :jump t
   :type inclusive
   (setq count (or count 1))
   (if evil-last-find
@@ -650,7 +645,6 @@ and jump to the corresponding one."
 
 (evil-define-motion evil-repeat-find-char-reverse (count)
   "Repeat the last find COUNT times in the opposite direction."
-  :jump t
   :type inclusive
   (evil-repeat-find-char (- (or count 1))))
 
