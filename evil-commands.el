@@ -867,33 +867,37 @@ If COUNT is not specified the function scrolls down
 If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
-  (interactive "P")
+  (interactive "<c>")
   (evil-save-column
     (setq count (or count (max 0 evil-scroll-count)))
     (setq evil-scroll-count count)
     (when (eobp) (signal 'end-of-buffer nil))
     (when (zerop count)
       (setq count (/ (1- (window-height)) 2)))
-    (let ((xy (posn-x-y (posn-at-point))))
-      (condition-case nil
-          (progn
-            (scroll-up count)
-            (let* ((wend (window-end nil t))
-                   (p (posn-at-x-y (car xy) (cdr xy)))
-                   (margin (max 0 (- scroll-margin
-                                     (cdr (posn-col-row p))))))
-              (goto-char (posn-point p))
-              ;; ensure point is not within the scroll-margin
-              (when (> margin 0)
-                (with-no-warnings (next-line margin))
-                (recenter scroll-margin))
-              (when (<= (point-max) wend)
-                (save-excursion
-                  (goto-char (point-max))
-                  (recenter (- (max 1 scroll-margin)))))))
-        (end-of-buffer
-         (goto-char (point-max))
-         (recenter (- (max 1 scroll-margin))))))))
+    ;; BUG #660: First check whether the eob is visible.
+    ;; In that case we do not scroll but merely move point.
+    (if (<= (point-max) (window-end))
+        (with-no-warnings (next-line count nil))
+      (let ((xy (posn-x-y (posn-at-point))))
+        (condition-case nil
+            (progn
+              (scroll-up count)
+              (let* ((wend (window-end nil t))
+                     (p (posn-at-x-y (car xy) (cdr xy)))
+                     (margin (max 0 (- scroll-margin
+                                       (cdr (posn-col-row p))))))
+                (goto-char (posn-point p))
+                ;; ensure point is not within the scroll-margin
+                (when (> margin 0)
+                  (with-no-warnings (next-line margin))
+                  (recenter scroll-margin))
+                (when (<= (point-max) wend)
+                  (save-excursion
+                    (goto-char (point-max))
+                    (recenter (- (max 1 scroll-margin)))))))
+          (end-of-buffer
+           (goto-char (point-max))
+           (recenter (- (max 1 scroll-margin)))))))))
 
 (evil-define-command evil-scroll-page-up (count)
   "Scrolls the window COUNT pages upwards."
