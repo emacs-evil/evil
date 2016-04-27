@@ -432,16 +432,16 @@ before point."
   :group 'evil
   :set #'(lambda (sym value)
            (set-default sym value)
-           (when (boundp 'evil-motion-state-map)
+           (when (boundp 'evil-insert-state-map)
              (cond
               ((and (not value)
-                    (eq (lookup-key evil-motion-state-map (kbd "C-w"))
+                    (eq (lookup-key evil-insert-state-map (kbd "C-w"))
                         'evil-delete-backward-word))
-               (define-key evil-motion-state-map (kbd "C-w") 'evil-window-map))
+               (define-key evil-insert-state-map (kbd "C-w") 'evil-window-map))
               ((and value
-                    (eq (lookup-key evil-motion-state-map (kbd "C-w"))
+                    (eq (lookup-key evil-insert-state-map (kbd "C-w"))
                         'evil-window-map))
-               (define-key evil-motion-state-map (kbd "C-w") 'evil-delete-backward-word))))))
+               (define-key evil-insert-state-map (kbd "C-w") 'evil-delete-backward-word))))))
 
 (defcustom evil-want-C-w-in-emacs-state nil
   "Whether \"C-w\" prefixes windows commands in Emacs state."
