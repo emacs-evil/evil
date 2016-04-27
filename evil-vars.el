@@ -446,7 +446,18 @@ before point."
 (defcustom evil-want-C-w-in-emacs-state nil
   "Whether \"C-w\" prefixes windows commands in Emacs state."
   :type 'boolean
-  :group 'evil)
+  :group 'evil
+  :set #'(lambda (sym value)
+           (set-default sym value)
+           (when (boundp 'evil-emacs-state-map)
+             (cond
+              ((and (not value)
+                    (eq (lookup-key evil-emacs-state-map (kbd "C-w"))
+                        'evil-window-map))
+               (define-key evil-emacs-state-map (kbd "C-w") nil))
+              ((and value
+                    (not (lookup-key evil-emacs-state-map (kbd "C-w"))))
+               (define-key evil-emacs-state-map (kbd "C-w") 'evil-window-map))))))
 
 (defcustom evil-want-change-word-to-end t
   "Whether \"cw\" behaves like \"ce\"."
