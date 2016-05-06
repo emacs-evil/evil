@@ -727,8 +727,13 @@ This function interprets special file names like # and %."
        0 (length evil-ex-argument) nil evil-ex-argument))
     (let ((buf (current-buffer)))
       (unwind-protect
-          (if (not evil-ex-range)
-              (call-interactively evil-ex-command)
+          (cond
+           ((not evil-ex-range)
+            (setq this-command evil-ex-command)
+            (run-hooks 'pre-command-hook)
+            (call-interactively evil-ex-command)
+            (run-hooks 'post-command-hook))
+           (t
             ;; set visual selection to match the region if an explicit
             ;; range has been specified
             (let ((ex-range (evil-copy-range evil-ex-range))
@@ -737,10 +742,13 @@ This function interprets special file names like # and %."
               (setq beg (evil-range-beginning ex-range)
                     end (evil-range-end ex-range))
               (evil-sort beg end)
+              (setq this-command evil-ex-command)
+              (run-hooks 'pre-command-hook)
               (set-mark end)
               (goto-char beg)
               (activate-mark)
-              (call-interactively evil-ex-command)))
+              (call-interactively evil-ex-command)
+              (run-hooks 'post-command-hook))))
         (when (buffer-live-p buf)
           (with-current-buffer buf
             (deactivate-mark)))))))
