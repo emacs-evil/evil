@@ -3367,7 +3367,7 @@ preceeding (or following) whitespace is added to the range. "
 
 (defun evil-select-xml-tag (beg end type &optional count inclusive)
   "Return a range (BEG END) of COUNT matching XML tags.
-If EXCLUSIVE is non-nil, the tags themselves are excluded
+If INCLUSIVE is non-nil, the tags themselves are included
 from the range."
   (cond
    ((and (not inclusive) (= (abs (or count 1)) 1))
