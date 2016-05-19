@@ -944,8 +944,9 @@ A return value of t means all states."
 (defmacro evil-define-key (state keymap key def &rest bindings)
   "Create a STATE binding from KEY to DEF for KEYMAP.
 STATE is one of `normal', `insert', `visual', `replace',
-`operator', `motion' and `emacs'. The remaining arguments
-are like those of `define-key'. For example:
+`operator', `motion', `emacs', or a list of one or more of
+these. The remaining arguments are like those of
+`define-key'. For example:
 
     (evil-define-key 'normal foo-map \"a\" 'bar)
 
@@ -964,16 +965,25 @@ to `after-load-functions', delaying execution as necessary."
                      `(and (boundp ',keymap) (keymapp ,keymap))
                    `(keymapp ,keymap))
        '(let* ((state ,state) (keymap ,keymap) (key ,key) (def ,def)
-               (bindings (list ,@bindings)) aux)
-          (if state
-              (setq aux (evil-get-auxiliary-keymap keymap state t))
-            (setq aux keymap))
+               (bindings (list ,@bindings)) aux-maps)
+          (cond ((listp state)
+                 (setq aux-maps (mapcar
+                                 (lambda (st)
+                                   (evil-get-auxiliary-keymap keymap st t))
+                                 state)))
+                (state
+                 (setq aux-maps
+                       (list (evil-get-auxiliary-keymap keymap state t))))
+                (t
+                 (setq aux-maps (list keymap))))
           (while key
-            (define-key aux key def)
+            (dolist (map aux-maps)
+              (define-key map key def))
             (setq key (pop bindings)
                   def (pop bindings)))
           ;; ensure the prompt string comes first
-          (evil-set-keymap-prompt aux (keymap-prompt aux)))
+          (dolist (map aux-maps)
+            (evil-set-keymap-prompt map (keymap-prompt map))))
      'after-load-functions t nil
      (format "evil-define-key-in-%s"
              ',(if (symbolp keymap) keymap 'keymap))))
