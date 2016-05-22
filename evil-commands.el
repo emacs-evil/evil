@@ -2182,7 +2182,8 @@ the lines."
         (evil-visual-rotate 'lower-right)
         (evil-append count)))
     (unless (eolp) (forward-char))
-    (evil-insert count vcount skip-empty-lines)))
+    (evil-insert count vcount skip-empty-lines)
+    (add-hook 'post-command-hook #'evil-maybe-remove-spaces)))
 
 (defun evil-insert-resume (count)
   "Switch to Insert state at previous insertion point.
@@ -2202,14 +2203,25 @@ finished insert state and if the current line consists of
 whitespaces only, then those spaces have been inserted because of
 the indentation.  In this case those spaces are removed leaving a
 completely empty line."
-  (unless (memq this-command '(evil-open-above evil-open-below))
-    (remove-hook 'post-command-hook 'evil-maybe-remove-spaces)
-    (when (and (not (evil-insert-state-p))
-               (save-excursion
-                 (beginning-of-line)
-                 (looking-at "^\\s-*$")))
+  (cond
+   ((memq this-command
+          '(evil-open-above
+            evil-open-below
+            evil-append
+            evil-append-line
+            newline
+            newline-and-indent
+            indent-and-newline)))
+   ((not (evil-insert-state-p))
+    (when (save-excursion
+            (beginning-of-line)
+            (looking-at "^\\s-*$"))
       (delete-region (line-beginning-position)
-                     (line-end-position)))))
+                     (line-end-position)))
+    (unless (evil-insert-state-p)
+      (remove-hook 'post-command-hook #'evil-maybe-remove-spaces)))
+   (t
+    (remove-hook 'post-command-hook #'evil-maybe-remove-spaces))))
 
 (defun evil-open-above (count)
   "Insert a new line above point and switch to Insert state.
@@ -2272,7 +2284,8 @@ next VCOUNT - 1 lines below the current one."
              (list (line-number-at-pos)
                    #'end-of-line
                    vcount)))
-  (evil-insert-state 1))
+  (evil-insert-state 1)
+  (add-hook 'post-command-hook #'evil-maybe-remove-spaces))
 
 (evil-define-command evil-insert-digraph (count)
   "Insert COUNT digraphs."
