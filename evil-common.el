@@ -36,6 +36,7 @@
 (declare-function evil-visual-restore "evil-states")
 (declare-function evil-motion-state "evil-states")
 (declare-function evil-ex-p "evil-ex")
+(declare-function evil-set-jump "evil-jumps")
 
 ;;; Compatibility for Emacs 23
 (unless (fboundp 'deactivate-input-method)
