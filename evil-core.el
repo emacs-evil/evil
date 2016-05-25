@@ -964,7 +964,7 @@ to `after-load-functions', delaying execution as necessary."
   `(evil-delay ',(if (symbolp keymap)
                      `(and (boundp ',keymap) (keymapp ,keymap))
                    `(keymapp ,keymap))
-       '(evil-define-key* ,state ,keymap ,key ,def (list ,@bindings))
+       '(evil-define-key* ,state ,keymap ,key ,def ,@bindings)
      'after-load-functions t nil
      (format "evil-define-key-in-%s"
              ',(if (symbolp keymap) keymap 'keymap))))
