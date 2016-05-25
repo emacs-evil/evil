@@ -2864,7 +2864,7 @@ This function fails with an error if Emacs is run in server mode."
     (kill-emacs 1)))
 
 (evil-define-command evil-save-and-quit ()
-  "Exits Emacs, without saving."
+  "Save all buffers and exit Emacs."
   (save-buffers-kill-terminal t))
 
 (evil-define-command evil-save-and-close (file &optional bang)
