@@ -186,6 +186,9 @@ cursor, or a list of the above."
   :type '(set symbol (cons symbol symbol) string function)
   :group 'evil)
 
+(defvar evil-force-cursor nil
+  "Overwrite the current states default cursor.")
+
 (defcustom evil-repeat-move-cursor t
   "Whether \"\\<evil-normal-state-map>\\[evil-repeat]\" \
 moves the cursor."

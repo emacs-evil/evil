@@ -792,10 +792,10 @@ function for changing the cursor, or a list of the above."
 
 (defun evil-refresh-cursor (&optional state buffer)
   "Refresh the cursor for STATE in BUFFER.
-STATE defaults to the current state.
-BUFFER defaults to the current buffer."
+BUFFER defaults to the current buffer.  If STATE is nil the
+cursor type is either `evil-force-cursor' or the current state."
   (when (and (boundp 'evil-local-mode) evil-local-mode)
-    (let* ((state (or state evil-state 'normal))
+    (let* ((state (or state evil-force-cursor evil-state 'normal))
            (default (or evil-default-cursor t))
            (cursor (evil-state-property state :cursor t))
            (color (or (and (stringp cursor) cursor)
