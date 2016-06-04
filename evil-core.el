@@ -964,30 +964,42 @@ to `after-load-functions', delaying execution as necessary."
   `(evil-delay ',(if (symbolp keymap)
                      `(and (boundp ',keymap) (keymapp ,keymap))
                    `(keymapp ,keymap))
-       '(let* ((state ,state) (keymap ,keymap) (key ,key) (def ,def)
-               (bindings (list ,@bindings)) aux-maps)
-          (cond ((listp state)
-                 (setq aux-maps (mapcar
-                                 (lambda (st)
-                                   (evil-get-auxiliary-keymap keymap st t))
-                                 state)))
-                (state
-                 (setq aux-maps
-                       (list (evil-get-auxiliary-keymap keymap state t))))
-                (t
-                 (setq aux-maps (list keymap))))
-          (while key
-            (dolist (map aux-maps)
-              (define-key map key def))
-            (setq key (pop bindings)
-                  def (pop bindings)))
-          ;; ensure the prompt string comes first
-          (dolist (map aux-maps)
-            (evil-set-keymap-prompt map (keymap-prompt map))))
+       '(evil-define-key* ,state ,keymap ,key ,def ,@bindings)
      'after-load-functions t nil
      (format "evil-define-key-in-%s"
              ',(if (symbolp keymap) keymap 'keymap))))
 (defalias 'evil-declare-key 'evil-define-key)
+
+(defun evil-define-key* (state keymap key def &rest bindings)
+  "Create a STATE binding from KEY to DEF for KEYMAP.
+STATE is one of `normal', `insert', `visual', `replace',
+`operator', `motion', `emacs', or a list of one or more of these.
+
+The use is identical to `evil-define-key' with the exception that
+this is a function and not a macro (and so will not be expanded
+when compiled which can have unintended
+consequences). `evil-define-key*' also does not defer any
+bindings like `evil-define-key' does using `evil-delay'. This
+allows errors in the bindings to be caught immediately, and makes
+its behavior more predictable."
+  (let ((aux-maps
+         (cond ((listp state)
+                (mapcar
+                 (lambda (st)
+                   (evil-get-auxiliary-keymap keymap st t))
+                 state))
+               (state
+                (list (evil-get-auxiliary-keymap keymap state t)))
+               (t
+                (list keymap)))))
+    (while key
+      (dolist (map aux-maps)
+        (define-key map key def))
+      (setq key (pop bindings)
+            def (pop bindings)))
+    ;; ensure the prompt string comes first
+    (dolist (map aux-maps)
+      (evil-set-keymap-prompt map (keymap-prompt map)))))
 
 (defun evil-define-minor-mode-key (state mode key def &rest bindings)
   "Similar to `evil-define-key' but the bindings are associated
