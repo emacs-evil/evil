@@ -3434,42 +3434,24 @@ are included. The step is terminated with `evil-end-undo-step'."
         (undo-boundary))
       (setq evil-undo-list-pointer (or buffer-undo-list t)))))
 
-(defun evil-end-undo-step (&optional continue first-only)
+(defun evil-end-undo-step (&optional continue)
   "End a undo step started with `evil-start-undo-step'.
-Adds an undo boundary unless CONTINUE is specified. If FIRST-ONLY
-is non-nil, only the first boundary is removed."
+Adds an undo boundary unless CONTINUE is specified."
   (when (and evil-undo-list-pointer
              (not evil-in-single-undo))
-    (evil-refresh-undo-step first-only)
-    (unless continue
+    (evil-refresh-undo-step)
+    (unless (or continue (null (car-safe buffer-undo-list)))
       (undo-boundary))
     (setq evil-undo-list-pointer nil)))
 
-(defun evil-refresh-undo-step (&optional first-only)
+(defun evil-refresh-undo-step ()
   "Refresh `buffer-undo-list' entries for current undo step.
 Undo boundaries until `evil-undo-list-pointer' are removed to
-make the entries undoable as a single action. If FIRST-ONLY is
-non-nil only the first boundary is removed.  See
+make the entries undoable as a single action. See
 `evil-start-undo-step'."
   (when evil-undo-list-pointer
-    (if first-only
-        (let ((cnt 0)
-              (cur buffer-undo-list)
-              (bnd nil))
-          ;; find last nil
-          (while (and cur (not (eq cur evil-undo-list-pointer)))
-            (when (null (car cur)) (setq bnd cur))
-            (pop cur))
-          ;; remove the last nil
-          (when bnd
-            (setq cur buffer-undo-list)
-            (if (eq cur bnd)
-                (pop buffer-undo-list)
-              (while (not (eq (cdr cur) bnd))
-                (pop cur))
-              (setcdr cur (cdr bnd)))))
-      (setq buffer-undo-list
-            (evil-filter-list #'null buffer-undo-list evil-undo-list-pointer)))
+    (setq buffer-undo-list
+          (evil-filter-list #'null buffer-undo-list evil-undo-list-pointer))
     (setq evil-undo-list-pointer (or buffer-undo-list t))))
 
 (defmacro evil-with-undo (&rest body)

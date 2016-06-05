@@ -1389,6 +1389,8 @@ of the block."
         (opoint (save-excursion
                   (goto-char beg)
                   (line-beginning-position))))
+    (unless (eq evil-want-fine-undo t)
+      (evil-start-undo-step))
     (funcall delete-func beg end type register yank-handler)
     (cond
      ((eq type 'line)
@@ -1697,6 +1699,8 @@ The default for width is the value of `fill-column'."
                      (evil-refresh-cursor)
                      (list (evil-read-key)))
                  (evil-refresh-cursor)))
+  (unless (eq evil-want-fine-undo t)
+    (evil-start-undo-step))
   (when char
     (if (eq type 'block)
         (save-excursion

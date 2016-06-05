@@ -83,13 +83,13 @@ If the region is activated, enter Visual state."
    ((evil-insert-state-p)
     (add-hook 'pre-command-hook #'evil-insert-repeat-hook)
     (unless (eq evil-want-fine-undo t)
-      (evil-start-undo-step t)))
+      (evil-start-undo-step)))
    (t
     (remove-hook 'pre-command-hook #'evil-insert-repeat-hook)
     (setq evil-insert-repeat-info evil-repeat-info)
     (evil-set-marker ?^ nil t)
     (unless (eq evil-want-fine-undo t)
-      (evil-end-undo-step t (eq evil-want-fine-undo 'fine)))
+      (evil-end-undo-step))
     (when evil-move-cursor-back
       (when (or (evil-normal-state-p evil-next-state)
                 (evil-motion-state-p evil-next-state))
@@ -814,12 +814,12 @@ CORNER defaults to `upper-left'."
     (overwrite-mode 1)
     (add-hook 'pre-command-hook #'evil-replace-pre-command nil t)
     (unless (eq evil-want-fine-undo t)
-      (evil-start-undo-step t)))
+      (evil-start-undo-step)))
    (t
     (overwrite-mode -1)
     (remove-hook 'pre-command-hook #'evil-replace-pre-command t)
     (unless (eq evil-want-fine-undo t)
-      (evil-end-undo-step t))
+      (evil-end-undo-step))
     (when evil-move-cursor-back
       (evil-move-cursor-back))))
   (setq evil-replace-alist nil))

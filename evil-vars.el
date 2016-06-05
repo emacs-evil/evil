@@ -278,18 +278,23 @@ This should be a regexp set without the enclosing []."
   :group 'evil)
 (make-variable-buffer-local 'evil-bigword)
 
-(defcustom evil-want-fine-undo 'fine
+(defcustom evil-want-fine-undo nil
   "Whether actions like \"cw\" are undone in several steps.
-There are three possible choices. \"No\" means all chances made
+There are three possible choices. \"No\" means all changes made
 during insert state including a possible delete after a change
-operation are collected in a single undo step. If \"Fine\" is
-selected, insertion commands create several undo steps as Emacs
-would do and the delete after a change operation is merged with
-the first undo step of the insertion. \"Very fine\" is the same
-but the delete operation is a separate undo step."
+operation are collected in a single undo step. If \"Yes\" is
+selected, undo steps are determined according to Emacs heuristics
+and no attempt is made to further aggregate changes.
+
+As of 1.2.13, the option \"fine\" is ignored and means the same
+thing as \"No\". It used to be the case that fine would only try
+to merge the first two changes in an insert operation. For
+example, merging the delete and first insert operation after
+\"cw\", but this option was removed because it did not work
+consistently."
   :type '(radio (const :tag "No" :value nil)
-                (const :tag "Fine" :value fine)
-                (const :tag "Very fine" :value t))
+                (const :tag "Fine (obsolete)" :value fine)
+                (const :tag "Yes" :value t))
   :group 'evil)
 
 (defcustom evil-regexp-search t
