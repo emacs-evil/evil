@@ -1699,8 +1699,6 @@ The default for width is the value of `fill-column'."
                      (evil-refresh-cursor)
                      (list (evil-read-key)))
                  (evil-refresh-cursor)))
-  (unless (eq evil-want-fine-undo t)
-    (evil-start-undo-step))
   (when char
     (if (eq type 'block)
         (save-excursion
