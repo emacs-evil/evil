@@ -2231,6 +2231,8 @@ completely empty line."
   "Insert a new line above point and switch to Insert state.
 The insertion will be repeated COUNT times."
   (interactive "p")
+  (unless (eq evil-want-fine-undo t)
+    (evil-start-undo-step))
   (evil-insert-newline-above)
   (setq evil-insert-count count
         evil-insert-lines t
@@ -2244,6 +2246,8 @@ The insertion will be repeated COUNT times."
   "Insert a new line below point and switch to Insert state.
 The insertion will be repeated COUNT times."
   (interactive "p")
+  (unless (eq evil-want-fine-undo t)
+    (evil-start-undo-step))
   (push (point) buffer-undo-list)
   (evil-insert-newline-below)
   (setq evil-insert-count count
