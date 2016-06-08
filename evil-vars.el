@@ -1415,6 +1415,10 @@ has been repeated.")
 (defvar evil-repeat-count nil
   "The explicit count when repeating a command.")
 
+(defvar evil-maybe-remove-spaces nil
+  "Flag to determine if newly inserted spaces should be removed.
+See the function `evil-maybe-remove-spaces'.")
+
 (evil-define-local-var evil-insert-count nil
   "The explicit count passed to an command starting Insert state.")
 
