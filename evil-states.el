@@ -71,6 +71,40 @@ If the region is activated, enter Visual state."
 
 ;;; Insert state
 
+(defun evil-maybe-remove-spaces (&optional do-remove)
+  "Remove space from newly opened empty line.
+This function removes (indentation) spaces that have been
+inserted by opening a new empty line. The behavior depends on the
+variable `evil-maybe-remove-spaces'. If this variable is nil the
+function does nothing. Otherwise the behavior depends on
+DO-REMOVE.  If DO-REMOVE is non-nil the spaces are
+removed. Otherwise `evil-maybe-remove-spaces' is set to nil
+unless the last command opened yet another new line.
+
+This function should be added as a post-command-hook to track
+commands opening a new line."
+  (cond
+   ((not evil-maybe-remove-spaces)
+    (remove-hook 'post-command-hook #'evil-maybe-remove-spaces))
+   (do-remove
+    (when (save-excursion
+            (beginning-of-line)
+            (looking-at "^\\s-*$"))
+      (delete-region (line-beginning-position)
+                     (line-end-position)))
+    (setq evil-maybe-remove-spaces nil)
+    (remove-hook 'post-command-hook #'evil-maybe-remove-spaces))
+   ((not (memq this-command
+               '(evil-open-above
+                 evil-open-below
+                 evil-append
+                 evil-append-line
+                 newline
+                 newline-and-indent
+                 indent-and-newline)))
+    (setq evil-maybe-remove-spaces nil)
+    (remove-hook 'post-command-hook #'evil-maybe-remove-spaces))))
+
 (evil-define-state insert
   "Insert state."
   :tag " <I> "
@@ -81,11 +115,15 @@ If the region is activated, enter Visual state."
   :input-method t
   (cond
    ((evil-insert-state-p)
+    (add-hook 'post-command-hook #'evil-maybe-remove-spaces)
     (add-hook 'pre-command-hook #'evil-insert-repeat-hook)
+    (setq evil-maybe-remove-spaces t)
     (unless (eq evil-want-fine-undo t)
       (evil-start-undo-step t)))
    (t
+    (remove-hook 'post-command-hook #'evil-maybe-remove-spaces)
     (remove-hook 'pre-command-hook #'evil-insert-repeat-hook)
+    (evil-maybe-remove-spaces t)
     (setq evil-insert-repeat-info evil-repeat-info)
     (evil-set-marker ?^ nil t)
     (unless (eq evil-want-fine-undo t)
