@@ -249,19 +249,22 @@ of the current screen line."
 (evil-define-motion evil-next-line-first-non-blank (count)
   "Move the cursor COUNT lines down on the first non-blank character."
   :type line
-  (evil-next-line (or count 1))
+  (let ((this-command this-command))
+    (evil-next-line (or count 1)))
   (evil-first-non-blank))
 
 (evil-define-motion evil-next-line-1-first-non-blank (count)
   "Move the cursor COUNT-1 lines down on the first non-blank character."
   :type line
-  (evil-next-line (1- (or count 1)))
+  (let ((this-command this-command))
+    (evil-next-line (1- (or count 1))))
   (evil-first-non-blank))
 
 (evil-define-motion evil-previous-line-first-non-blank (count)
   "Move the cursor COUNT lines up on the first non-blank character."
   :type line
-  (evil-previous-line (or count 1))
+  (let ((this-command this-command))
+    (evil-previous-line (or count 1)))
   (evil-first-non-blank))
 
 (evil-define-motion evil-goto-line (count)
