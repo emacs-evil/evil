@@ -115,7 +115,7 @@ of the line or the buffer; just return nil."
           (evil-narrow-to-line
             (evil-backward-char count t noerror))
         (error
-         ;; Restore the previous command (this one never happend).
+         ;; Restore the previous command (this one never happened).
          ;; Actually, this preserves the current column if the
          ;; previous command was `evil-next-line' or
          ;; `evil-previous-line'.
@@ -3592,7 +3592,7 @@ current one (equivalent to Vim's alternate buffer).
 
 Returns the first item in `window-prev-buffers' that isn't
 `window-buffer' of WINDOW."
-  ;; If the last buffer visitied has been killed, then `window-prev-buffers'
+  ;; If the last buffer visited has been killed, then `window-prev-buffers'
   ;; returns a list with `current-buffer' at the head, we account for this
   ;; possibility.
   (let* ((prev-buffers (window-prev-buffers))
@@ -3617,7 +3617,7 @@ the deleted window's parent window are rebalanced."
     (delete-window)
     (when evil-auto-balance-windows
       ;; balance-windows raises an error if the parent does not have
-      ;; any futher childs (then rebalancing is not necessary anywa)
+      ;; any further children (then rebalancing is not necessary anyway)
       (condition-case nil
           (balance-windows p)
         (error)))))
@@ -3722,7 +3722,7 @@ of the parent of the splitted window are rebalanced."
 
 (evil-define-command evil-window-mru ()
   "Move the cursor to the previous (last accessed) buffer in another window.
-More precisely, it selectes the most recently used buffer that is
+More precisely, it selects the most recently used buffer that is
 shown in some other window, preferably of the current frame, and
 is different from the current one."
   :repeat nil
@@ -3792,7 +3792,7 @@ and opens a new buffer name or edits a certain FILE."
           (funcall (default-value 'major-mode)))))))
 
 (evil-define-command evil-buffer-new (count file)
-  "Creates a new buffer replacing the current window, optionaly
+  "Creates a new buffer replacing the current window, optionally
    editing a certain FILE"
   :repeat nil
   (interactive "P<f>")
