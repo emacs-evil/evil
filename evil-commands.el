@@ -3571,16 +3571,20 @@ otherwise its height is changed."
 
 (defun evil-restore-window-tree (win tree)
   "Restore the given buffer-tree layout as subwindows of WIN.
-TREE is the tree layout to be restored."
-  (cond
-   ((and (consp tree) (cddr tree))
-    (let ((newwin (split-window win nil (not (car tree)))))
-      (evil-restore-window-tree win (cadr tree))
-      (evil-restore-window-tree newwin (cons (car tree) (cddr tree)))))
-   ((consp tree)
-    (set-window-buffer win (cadr tree)))
-   (t
-    (set-window-buffer win tree))))
+TREE is the tree layout to be restored.
+A tree layout is either a buffer or a list of the form (DIR TREE ...),
+where DIR is t for horizontal split and nil otherwise. All other
+elements of the list are tree layouts itself."
+  (if (bufferp tree)
+      (set-window-buffer win tree)
+    ;; if tree is buffer list with one buffer only, do not split
+    ;; anymore
+    (if (not (cddr tree))
+        (evil-restore-window-tree win (cadr tree))
+      ;; tree is a regular list, split recursively
+      (let ((newwin (split-window win nil (not (car tree)))))
+        (evil-restore-window-tree win (cadr tree))
+        (evil-restore-window-tree newwin (cons (car tree) (cddr tree)))))))
 
 (defun evil-alternate-buffer (&optional window)
   "Return the last buffer WINDOW has displayed other than the
