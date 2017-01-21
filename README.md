@@ -29,7 +29,7 @@ Evil requires [http://www.emacswiki.org/emacs/UndoTree](undo-tree.el) in the
 # Documentation
 
 A brief
-[PDF manual](https://raw.githubusercontent.com/emacs-evil/evil/master/doc/logo.png) is
+[PDF manual](https://raw.githubusercontent.com/emacs-evil/evil/master/doc/evil.pdf) is
 available.
 
 # Mailing list
