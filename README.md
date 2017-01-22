@@ -1,9 +1,9 @@
 ![An extensible vi layer for Emacs](https://raw.githubusercontent.com/emacs-evil/evil/master/doc/logo.png)
 
 Evil is an **e**xtensible **vi** **l**ayer
-for [http://www.gnu.org/software/emacs/](Emacs). It emulates the main features
-of [http://www.vim.org/](Vim), and provides facilities for writing custom
-extensions. Also see our page on [http://emacswiki.org/emacs/Evil](EmacsWiki).
+for [Emacs](http://www.gnu.org/software/emacs/). It emulates the main features
+of [Vim](http://www.vim.org/), and provides facilities for writing custom
+extensions. Also see our page on [EmacsWiki](http://emacswiki.org/emacs/Evil).
 
 # Download
 
@@ -23,7 +23,7 @@ Move Evil to `~/.emacs.d/evil`. Then add the following lines to `~/.emacs`:
 (evil-mode 1)
 ```
 
-Evil requires [http://www.emacswiki.org/emacs/UndoTree](undo-tree.el) in the
+Evil requires [undo-tree.el](http://www.emacswiki.org/emacs/UndoTree) in the
 `load-path` for linear undo and undo branches.
 
 # Documentation
