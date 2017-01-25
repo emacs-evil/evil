@@ -972,6 +972,36 @@ A return value of t means all states."
      (t
       state))))
 
+(defun evil-send-leader ()
+  "Put symbol leader in `unread-command-events' to trigger any
+<leader> bindings."
+  (interactive)
+  (setq prefix-arg current-prefix-arg)
+  (push '(t . leader) unread-command-events))
+
+(defun evil-send-localleader ()
+  "Put symbol localleader in `unread-command-events' to trigger any
+<localleader> bindings."
+  (interactive)
+  (setq prefix-arg current-prefix-arg)
+  (push '(t. localleader) unread-command-events))
+
+(defun evil-set-leader (state key &optional localleader)
+  "Set KEY to trigger <leader> bindings in STATE.
+KEY should be in the form produced by `kbd'. STATE is one of
+`normal', `insert', `visual', `replace', `operator', `motion',
+`emacs', a list of one or more of these, or nil. nil means all of
+the above. If LOCAL is non-nil, set localleader instead."
+  (let* ((all-states '(normal insert visual replace operator motion emacs))
+         (states (cond ((listp state) state)
+                       ((member state all-states) (list state))
+                       ((null state) all-states)
+                       ;; Maybe throw error here
+                       (t (list state))))
+         (binding (if localleader 'evil-send-localleader 'evil-send-leader)))
+    (dolist (state states)
+      (evil-global-set-key state key binding))))
+
 (defmacro evil-define-key (state keymap key def &rest bindings)
   "Create a STATE binding from KEY to DEF for KEYMAP.
 STATE is one of normal, insert, visual, replace, operator,
