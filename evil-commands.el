@@ -3131,7 +3131,7 @@ If FORCE is non-nil all local marks except 0-9 are removed.
       (while (< i n)
         (cond
          ;; skip spaces
-         ((= (aref i ?\ )) (cl-incf i))
+         ((= (aref marks i) ?\ ) (cl-incf i))
          ;; ranges of marks
          ((and (< (+ i 2) n)
                (= (aref marks (1+ i)) ?-)
