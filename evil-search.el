@@ -76,6 +76,7 @@ search module is used."
 
 (defun evil-search-incrementally (forward regexp-p)
   "Search incrementally for user-entered text."
+  (make-local-variable 'isearch-search-fun-function)
   (let ((evil-search-prompt (evil-search-prompt forward))
         (isearch-search-fun-function 'evil-isearch-function)
         (point (point))
