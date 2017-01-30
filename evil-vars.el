@@ -1175,7 +1175,7 @@ Set to 0 to use the default height for `split-window'."
   "Show error output of a shell command in the error buffer.
 If this variable is non-nil the error output of a shell command
 goes to the messages buffer instead of being mixed with the
-regular output. This happens only of the exit status of the
+regular output. This happens only if the exit status of the
 command is non-zero."
   :type 'boolean
   :group 'evil)
