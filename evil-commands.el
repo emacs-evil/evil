@@ -2187,6 +2187,7 @@ the lines."
           (evil-insert count vcount skip-empty-lines)))
        (t
         (evil-visual-rotate 'lower-right)
+        (backward-char)
         (evil-append count)))
     (unless (eolp) (forward-char))
     (evil-insert count vcount skip-empty-lines)
