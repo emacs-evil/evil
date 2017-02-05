@@ -596,6 +596,14 @@ Below some empty line"
     ("aevil rulz " [escape])
     ";; Tevil rulz[ ]his buffer is for notes you don't want to save"))
 
+(ert-deftest evil-test-visual-append ()
+  "Test `evil-append' from visual state"
+  :tags '(evil insert)
+  (evil-test-buffer
+   ";; [T]his buffer is for notes you don't want to save"
+   ("veA_evil rulz " [escape])
+   ";; This_evil rulz[ ] buffer is for notes you don't want to save"))
+
 (ert-deftest evil-test-open-above ()
   "Test `evil-open-above'"
   :tags '(evil insert)
