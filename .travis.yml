@@ -1,0 +1,24 @@
+language: generic
+sudo: false
+before_install:
+  - curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > x.sh && source ./x.sh
+  - evm install $EVM_EMACS --use --skip
+  - cask --debug
+
+env:
+  matrix:
+    - EVM_EMACS=emacs-24.3-travis
+    - EVM_EMACS=emacs-24.4-travis
+    - EVM_EMACS=emacs-24.5-travis
+    - EVM_EMACS=emacs-25.1-travis
+    - EVM_EMACS=emacs-git-snapshot-travis
+
+# FIXME: Emacs 25 segfaults when running make test.
+matrix:
+  allow_failures:
+    - env: EVM_EMACS=emacs-25.1-travis
+    - env: EVM_EMACS=emacs-git-snapshot-travis
+
+script:
+  - emacs --version
+  - make test
