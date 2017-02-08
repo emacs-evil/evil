@@ -48,16 +48,16 @@
 ;;      Xiao Hanyu <xiaohanyu1988 at gmail.com>
 ;;      York Zhao <yzhao at telecor.com>
 
-;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
+;; Maintainers: The emacs-evil team. <https://github.com/orgs/emacs-evil/people>
 ;;      To get in touch, please use the bug tracker or the
 ;;      mailing list (see below).
 ;; Created: 2011-03-01
 ;; Version: 1.2.12
 ;; Keywords: emulation, vim
-;; URL: http://gitorious.org/evil
-;;      Repository: git://gitorious.org/evil/evil.git
+;; URL: https://github.com/emacs-evil/evil
+;;      Repository: https://github.com/emacs-evil/evil.git
 ;;      EmacsWiki: http://www.emacswiki.org/emacs/Evil
-;; Bug tracker: https://bitbucket.org/lyro/evil/issues
+;; Bug tracker: https://github.com/emacs-evil/evil/issues
 ;;      If you have bug reports, suggestions or patches, please
 ;;      create an issue at the bug tracker (open for everyone).
 ;;      Other discussions (tips, extensions) go to the mailing list.
