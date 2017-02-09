@@ -77,7 +77,7 @@ Like Emacs in general, Evil is extensible in Emacs Lisp.
 Evil lives in a Git repository.  To download Evil, do:
 
 @example
-git clone git://gitorious.org/evil/evil.git
+git clone https://github.com/emacs-evil/evil.git
 @end example
 
 @noindent Move Evil to @code{~/.emacs.d/evil}.  Then add the following
