@@ -8184,6 +8184,25 @@ maybe we need one line more with some text\n")
         ("3\C-i") ;; even after jumping forward 3 times it can't get past the 3rd z
         "z z [z] z z z z z"))))
 
+(ert-deftest evil-test-abbrev-expand ()
+  :tags '(evil abbrev)
+  (ert-info ("Test abbrev expansion on insert state exit")
+    (define-abbrev-table 'global-abbrev-table
+      '(("undef" "undefined"))) ;; add global abbrev
+    (evil-test-buffer
+     "foo unde[f] bar"
+     ("a" [escape])
+     "foo undefine[d] bar") ;; 'undef' should be expanded
+    (evil-test-buffer
+     "fo[o] undef bar"
+     ("a" [escape])
+     "fo[o] undef bar") ;; 'foo' shouldn't be expanded, it's not an abbrev
+    (kill-all-abbrevs) ;; remove abbrevs
+    (evil-test-buffer
+     "foo unde[f] bar"
+     ("a" [escape])
+     "foo unde[f] bar"))) ;; 'undef' is not an abbrev, shouldn't be expanded
+
 (provide 'evil-tests)
 
 ;;; evil-tests.el ends here

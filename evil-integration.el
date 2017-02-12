@@ -552,4 +552,9 @@ Based on `evil-enclose-ace-jump-for-motion'."
 
 (provide 'evil-integration)
 
+;;; abbrev.el
+(when evil-want-abbrev-expand-on-insert-exit
+  (eval-after-load 'abbrev
+    '(add-hook 'evil-insert-state-exit-hook 'expand-abbrev)))
+
 ;;; evil-integration.el ends here
