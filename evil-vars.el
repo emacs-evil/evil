@@ -1180,6 +1180,12 @@ command is non-zero."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-want-abbrev-expand-on-insert-exit t
+  "If non-nil abbrevs will be expanded when leaving Insert state
+like in Vim. This variable is read only on load."
+  :type 'boolean
+  :group 'evil)
+
 ;;; Variables
 
 (defmacro evil-define-local-var (symbol &optional initvalue docstring)
