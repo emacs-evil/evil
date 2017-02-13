@@ -5336,6 +5336,72 @@ Below some empty line."))
       ("2])")
       "foo ( { ( bar ) baz } [)]")))
 
+(ert-deftest evil-test-flyspell-motions ()
+  "Test flyspell motions"
+  :tags '(evil motion)
+  (ert-info ("Simple")
+    (evil-test-buffer
+      "[I] cannt tpye for lyfe"
+      (flyspell-mode)
+      (flyspell-buffer)
+      ("]s")
+      "I [c]annt tpye for lyfe"
+      ("]s")
+      "I cannt [t]pye for lyfe"
+      ("]s")
+      "I cannt tpye for [l]yfe"
+      ("]s")
+      "I [c]annt tpye for lyfe"
+      ("[s")
+      "I cannt tpye for [l]yfe"
+      ("[s")
+      "I cannt [t]pye for lyfe"))
+  (ert-info ("With count")
+    (evil-test-buffer
+      "[I] cannt tpye for lyfe"
+      (flyspell-mode)
+      (flyspell-buffer)
+      ("2]s")
+      "I cannt [t]pye for lyfe"
+      ("2]s")
+      "I [c]annt tpye for lyfe"
+      ("2[s")
+      "I cannt [t]pye for lyfe"
+      ("2[s")
+      "I cannt tpye for [l]yfe"))
+  (ert-info ("With evil-search-wrap disabled")
+    (let (evil-search-wrap)
+      (evil-test-buffer
+       "[I] cannt tpye for lyfe"
+       (flyspell-mode)
+       (flyspell-buffer)
+       ("]s")
+       "I [c]annt tpye for lyfe"
+       ("]s")
+       "I cannt [t]pye for lyfe"
+       ("]s")
+       "I cannt tpye for [l]yfe"
+       ("]s")
+       "I cannt tpye for [l]yfe")))
+  (ert-info ("One mistake")
+    (evil-test-buffer
+     "[I]'m almst there..."
+     (flyspell-mode)
+     (flyspell-buffer)
+      ("]s")
+     "I'm [a]lmst there..."
+      ("]s")
+     "I'm [a]lmst there..."))
+  (ert-info ("No mistakes")
+    (evil-test-buffer
+     "[I]'ve learned to type!"
+     (flyspell-mode)
+     (flyspell-buffer)
+      ("]s")
+     "[I]'ve learned to type!"
+      ("[s")
+     "[I]'ve learned to type!")))
+
 ;;; Text objects
 
 (ert-deftest evil-test-text-object ()
