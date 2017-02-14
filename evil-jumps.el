@@ -24,8 +24,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
-(eval-when-compile (require 'cl))
-
+(require 'cl-lib)
 (require 'evil-core)
 (require 'evil-states)
 
@@ -189,7 +188,7 @@
     :entries (let* ((jumps (evil--jumps-savehist-sync))
                     (count 0))
                (cl-loop for jump in jumps
-                        collect `(nil [,(number-to-string (incf count))
+                        collect `(nil [,(number-to-string (cl-incf count))
                                        ,(number-to-string (car jump))
                                        (,(cadr jump))])))
     :select-action #'evil--show-jumps-select-action))
