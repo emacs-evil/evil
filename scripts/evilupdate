@@ -48,7 +48,6 @@
 (require 'f)
 (require 'erc)
 (require 'yaoddmuse)
-(eval-when-compile (require 'cl))
 
 (defconst evilupdate-irc-nick "lyrobot")
 (defconst evilupdate-irc-channel "#evil-mode")

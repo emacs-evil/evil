@@ -3208,52 +3208,50 @@ must be regular expressions and `evil-up-block' is used.
 If the selection is exclusive, whitespace at the end or at the
 beginning of the selection until the end-of-line or beginning-of-line
 is ignored."
-  (lexical-let
-      ((open open) (close close))
-    ;; we need special linewise exclusive selection
-    (unless inclusive (setq inclusive 'exclusive-line))
-    (cond
-     ((and (characterp open) (characterp close))
-      (let ((thing #'(lambda (&optional cnt)
-                       (evil-up-paren open close cnt)))
-            (bnd (or (bounds-of-thing-at-point 'evil-string)
-                     (bounds-of-thing-at-point 'evil-comment)
-                     ;; If point is at the opening quote of a string,
-                     ;; this must be handled as if point is within the
-                     ;; string, i.e. the selection must be extended
-                     ;; around the string. Otherwise
-                     ;; `evil-select-block' might do the wrong thing
-                     ;; because it accidentally moves point inside the
-                     ;; string (for inclusive selection) when looking
-                     ;; for the current surrounding block. (re #364)
-                     (and (= (point) (or beg (point)))
-                          (save-excursion
-                            (goto-char (1+ (or beg (point))))
-                            (or (bounds-of-thing-at-point 'evil-string)
-                                (bounds-of-thing-at-point 'evil-comment)))))))
-        (if (not bnd)
-            (evil-select-block thing beg end type count inclusive)
-          (or (evil-with-restriction (car bnd) (cdr bnd)
-                (condition-case nil
-                    (evil-select-block thing beg end type count inclusive)
-                  (error nil)))
-              (save-excursion
-                (setq beg (or beg (point))
-                      end (or end (point)))
-                (goto-char (car bnd))
-                (let ((extbeg (min beg (car bnd)))
-                      (extend (max end (cdr bnd))))
-                  (evil-select-block thing
-                                     extbeg extend
-                                     type
-                                     count
-                                     inclusive
-                                     (or (< extbeg beg) (> extend end))
-                                     t)))))))
-     (t
-      (evil-select-block #'(lambda (&optional cnt)
-                             (evil-up-block open close cnt))
-                         beg end type count inclusive)))))
+  ;; we need special linewise exclusive selection
+  (unless inclusive (setq inclusive 'exclusive-line))
+  (cond
+   ((and (characterp open) (characterp close))
+    (let ((thing #'(lambda (&optional cnt)
+                     (evil-up-paren open close cnt)))
+          (bnd (or (bounds-of-thing-at-point 'evil-string)
+                   (bounds-of-thing-at-point 'evil-comment)
+                   ;; If point is at the opening quote of a string,
+                   ;; this must be handled as if point is within the
+                   ;; string, i.e. the selection must be extended
+                   ;; around the string. Otherwise
+                   ;; `evil-select-block' might do the wrong thing
+                   ;; because it accidentally moves point inside the
+                   ;; string (for inclusive selection) when looking
+                   ;; for the current surrounding block. (re #364)
+                   (and (= (point) (or beg (point)))
+                        (save-excursion
+                          (goto-char (1+ (or beg (point))))
+                          (or (bounds-of-thing-at-point 'evil-string)
+                              (bounds-of-thing-at-point 'evil-comment)))))))
+      (if (not bnd)
+          (evil-select-block thing beg end type count inclusive)
+        (or (evil-with-restriction (car bnd) (cdr bnd)
+              (condition-case nil
+                  (evil-select-block thing beg end type count inclusive)
+                (error nil)))
+            (save-excursion
+              (setq beg (or beg (point))
+                    end (or end (point)))
+              (goto-char (car bnd))
+              (let ((extbeg (min beg (car bnd)))
+                    (extend (max end (cdr bnd))))
+                (evil-select-block thing
+                                   extbeg extend
+                                   type
+                                   count
+                                   inclusive
+                                   (or (< extbeg beg) (> extend end))
+                                   t)))))))
+   (t
+    (evil-select-block #'(lambda (&optional cnt)
+                           (evil-up-block open close cnt))
+                       beg end type count inclusive))))
 
 (defun evil-select-quote-thing (thing beg end type count &optional inclusive)
   "Selection THING as if it described a quoted object.
