@@ -579,43 +579,9 @@ argument handler that requires shell completion."
           '(evil-ex-command-completion-at-point
             evil-ex-argument-completion-at-point))))
 
-;; because this variable is used only for Emacs 23 shell completion,
-;; we put it here instead of "evil-vars.el"
-(defvar evil-ex-shell-argument-range nil
-  "Internal helper variable for Emacs 23 shell completion.")
-
-(defun evil-ex-shell-command-completion-at-point ()
-  "Completion at point function for shell commands."
-  (cond
-   ;; Emacs 24
-   ((fboundp 'comint-completion-at-point)
-    (comint-completion-at-point))
-   ;; Emacs 23
-   ((fboundp 'minibuffer-complete-shell-command)
-    (set (make-local-variable 'evil-ex-shell-argument-range)
-         (list (point-min) (point-max)))
-    #'(lambda ()
-        ;; We narrow the buffer to the argument so
-        ;; `minibuffer-complete-shell-command' will correctly detect
-        ;; the beginning of the argument.  When narrowing the buffer
-        ;; to the argument the leading text in the minibuffer will be
-        ;; hidden. Therefore we add a dummy overlay which shows that
-        ;; text during narrowing.
-        (let* ((beg (car evil-ex-shell-argument-range))
-               (end (cdr evil-ex-shell-argument-range))
-               (prev-text (buffer-substring
-                           (point-min)
-                           (car evil-ex-shell-argument-range)))
-               (ov (make-overlay beg beg)))
-          (overlay-put ov 'before-string prev-text)
-          (save-restriction
-            (apply #'narrow-to-region evil-ex-shell-argument-range)
-            (minibuffer-complete-shell-command))
-          (delete-overlay ov))))))
-
 (evil-ex-define-argument-type shell
   "Shell argument type, supports completion."
-  :completion-at-point evil-ex-shell-command-completion-at-point
+  :completion-at-point comint-completion-at-point
   :runner evil-ex-init-shell-argument-completion)
 
 (defun evil-ex-file-or-shell-command-completion-at-point ()
@@ -623,7 +589,7 @@ argument handler that requires shell completion."
            (= (char-after (point-min)) ?!))
       (save-restriction
         (narrow-to-region (1+ (point-min)) (point-max))
-        (evil-ex-shell-command-completion-at-point))
+        (comint-completion-at-point))
     (list (point-min) (point-max) #'read-file-name-internal)))
 
 (evil-ex-define-argument-type file-or-shell
