@@ -1229,7 +1229,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                (unless evil-no-display
                  (evil-refresh-cursor ',state)
                  (evil-refresh-mode-line ',state)
-                 (when (evil-called-interactively-p)
+                 (when (called-interactively-p 'any)
                    (redisplay)))
                ,@body
                (run-hooks ',entry-hook)

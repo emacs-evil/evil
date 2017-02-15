@@ -38,41 +38,12 @@
 (declare-function evil-ex-p "evil-ex")
 (declare-function evil-set-jump "evil-jumps")
 
-;;; Compatibility for Emacs 23
-(unless (fboundp 'deactivate-input-method)
-  (defalias 'deactivate-input-method 'inactivate-input-method))
-(unless (boundp 'input-method-deactivate-hook)
-  (defvaralias 'input-method-deactivate-hook 'input-method-inactivate-hook))
-
 (condition-case nil
     (require 'windmove)
   (error
    (message "evil: Could not load `windmove', \
 window commands not available.")
    nil))
-
-;;; Compatibility with different Emacs versions
-
-(defmacro evil-called-interactively-p ()
-  "Wrapper for `called-interactively-p'.
-In older versions of Emacs, `called-interactively-p' takes
-no arguments.  In Emacs 23.2 and newer, it takes one argument."
-  (if (version< emacs-version "23.2")
-      '(called-interactively-p)
-    '(called-interactively-p 'any)))
-
-(unless (fboundp 'region-active-p)
-  (defun region-active-p ()
-    "Returns t iff region and mark are active."
-    (and transient-mark-mode mark-active)))
-
-;; Emacs <23 does not know `characterp'
-(unless (fboundp 'characterp)
-  (defalias 'characterp 'char-valid-p))
-
-;; `make-char-table' requires this property in Emacs 22
-(unless (get 'display-table 'char-table-extra-slots)
-  (put 'display-table 'char-table-extra-slots 0))
 
 ;; macro helper
 (eval-and-compile
