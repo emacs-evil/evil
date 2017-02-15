@@ -1,6 +1,9 @@
 ;;; evil.el --- extensible vi layer
 
-;; Authors:
+;; The following list of authors was kept up to date until the beginning of
+;; 2017, when evil moved under new maintainers. For authors since then, please
+;; consult the git logs.
+
 ;;      Alessandro Piras <laynor at gmail.com>
 ;;      Alexander Baier <alexander.baier at mailbox.org>
 ;;      Antono Vasiljev <antono.vasiljev at gmail.com>
