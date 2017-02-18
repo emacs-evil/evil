@@ -811,7 +811,8 @@ If COUNT is not specified the function uses
   (progn
     (setq count (or count evil-scroll-line-count))
     (setq evil-scroll-line-count count)
-    (scroll-down count)))
+    (let ((scroll-preserve-screen-position nil))
+      (scroll-down count))))
 
 (evil-define-command evil-scroll-line-down (count)
   "Scrolls the window COUNT lines downwards.
@@ -823,7 +824,8 @@ If COUNT is not specified the function uses
   (progn
     (setq count (or count evil-scroll-line-count))
     (setq evil-scroll-line-count count)
-    (scroll-up count)))
+    (let ((scroll-preserve-screen-position nil))
+      (scroll-up count))))
 
 (evil-define-command evil-scroll-count-reset ()
   "Sets `evil-scroll-count' to 0.
