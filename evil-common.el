@@ -45,6 +45,16 @@
 window commands not available.")
    nil))
 
+;;; Compatibility with different Emacs versions
+
+(defmacro evil-called-interactively-p ()
+  "Wrapper for `called-interactively-p'.
+In older versions of Emacs, `called-interactively-p' takes
+no arguments.  In Emacs 23.2 and newer, it takes one argument."
+  (called-interactively-p 'any))
+(make-obsolete 'evil-called-interactively-p
+               "please use (called-interactively-p 'any) instead.")
+
 ;; macro helper
 (eval-and-compile
   (defun evil-unquote (exp)

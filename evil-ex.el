@@ -579,6 +579,10 @@ argument handler that requires shell completion."
           '(evil-ex-command-completion-at-point
             evil-ex-argument-completion-at-point))))
 
+(define-obsolete-function-alias
+  'evil-ex-shell-command-completion-at-point
+  'comint-completion-at-point)
+
 (evil-ex-define-argument-type shell
   "Shell argument type, supports completion."
   :completion-at-point comint-completion-at-point
