@@ -743,6 +743,13 @@ filename."
   (when prompt
     (setcdr map (cons prompt (cdr map)))))
 
+(defun evil-lookup-key (map key)
+  "Returns non-nil value if KEY is bound in MAP."
+  (let ((definition (lookup-key map key)))
+    (if (numberp definition) ; in-band error
+        nil
+      definition)))
+
 ;;; Display
 
 (defun evil-set-cursor (specs)
