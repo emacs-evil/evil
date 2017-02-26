@@ -29,6 +29,7 @@
 (require 'evil-ex)
 (require 'evil-commands)
 (require 'evil-command-window)
+(require 'evil-common)
 
 ;;; Code:
 
@@ -390,13 +391,13 @@ included in `evil-insert-state-bindings' by default."
      ((and remove
            (or force
                ;; Only remove if the default binding has not changed
-               (eq (lookup-key evil-insert-state-map (car binding))
+               (eq (evil-lookup-key evil-insert-state-map (car binding))
                    (cdr binding))))
       (define-key evil-insert-state-map (car binding) nil))
      ((and (null remove)
            (or force
                ;; Check to see that nothing is bound here before adding
-               (null (lookup-key evil-insert-state-map (car binding)))))
+               (not (evil-lookup-key evil-insert-state-map (car binding)))))
       (define-key evil-insert-state-map (car binding) (cdr binding))))))
 
 (define-key evil-insert-state-map [delete] 'delete-char)
