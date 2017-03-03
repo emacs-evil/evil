@@ -1531,6 +1531,18 @@ but doesn't insert or remove any spaces."
       (unless (eobp)
         (delete-char 1)))))
 
+(evil-define-operator evil-ex-join (beg end &optional count bang)
+  "Join the selected lines with optional COUNT and BANG."
+  (interactive "<r><a><!>")
+  (let ((join-fn (if bang 'evil-join-whitespace 'evil-join)))
+    (cond
+     ((or (not count) (region-active-p))
+      (funcall join-fn beg end))
+     ((string-match-p "^[1-9][0-9]*$" count)
+      (funcall join-fn beg (point-at-eol (string-to-number count))))
+     (t
+      (user-error "Invalid count")))))
+
 (evil-define-operator evil-fill (beg end)
   "Fill text."
   :move-point nil

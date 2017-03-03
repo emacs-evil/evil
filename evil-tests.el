@@ -2255,7 +2255,7 @@ ABCthen enter the text in that file's own buffer.")))
 
 (ert-deftest evil-test-join ()
   "Test `evil-join'"
-  :tags '(evil operator)
+  :tags '(evil join operator)
   (ert-info ("Simple")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save.
@@ -2270,7 +2270,32 @@ ABCthen enter the text in that file's own buffer.")))
 ;; If you want to create a file, visit that file with C-x C-f.>"
       ("J")
       ";; This buffer is for notes you don't want to save.[ ]\
-;; If you want to create a file, visit that file with C-x C-f.")))
+;; If you want to create a file, visit that file with C-x C-f."))
+  (ert-info ("Join with count")
+    (evil-test-buffer
+     "[l]ine 1\nline 2\nline 3\nline 4"
+     (":join 3")
+     "line 1 line 2 line 3\nline 4"))
+  (ert-info ("Join with bang and count")
+    (evil-test-buffer
+     "[l]ine 1\nline 2\nline 3\nline 4"
+     (":join! 3")
+     "line 1line 2line 3\nline 4"))
+  (ert-info ("Join with bang and count, exceeding end-of-buffer")
+    (evil-test-buffer
+     "[l]ine 1\nline 2\nline 3\nline 4"
+     (":join! 10")
+     "line 1line 2line 3line 4"))
+  (ert-info ("Join with count 1 should be the same as without count")
+    (evil-test-buffer
+     "[l]ine 1\nline 2\nline 3\nline 4"
+     (":join 1")
+     "line 1 line 2\nline 3\nline 4"))
+  (ert-info ("Join with count 2 should be the same as with count 1")
+    (evil-test-buffer
+     "[l]ine 1\nline 2\nline 3\nline 4"
+     (":join 2")
+     "line 1 line 2\nline 3\nline 4")))
 
 (ert-deftest evil-test-substitute ()
   "Test `evil-substitute'"
