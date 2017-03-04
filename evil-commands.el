@@ -1515,6 +1515,7 @@ of the block."
   (let ((count (count-lines beg end)))
     (when (> count 1)
       (setq count (1- count)))
+    (goto-char beg)
     (dotimes (var count)
       (join-line 1))))
 
@@ -1526,6 +1527,7 @@ but doesn't insert or remove any spaces."
   (let ((count (count-lines beg end)))
     (when (> count 1)
       (setq count (1- count)))
+    (goto-char beg)
     (dotimes (var count)
       (evil-move-end-of-line 1)
       (unless (eobp)
@@ -1534,14 +1536,25 @@ but doesn't insert or remove any spaces."
 (evil-define-operator evil-ex-join (beg end &optional count bang)
   "Join the selected lines with optional COUNT and BANG."
   (interactive "<r><a><!>")
-  (let ((join-fn (if bang 'evil-join-whitespace 'evil-join)))
-    (cond
-     ((or (not count) (region-active-p))
-      (funcall join-fn beg end))
-     ((string-match-p "^[1-9][0-9]*$" count)
-      (funcall join-fn beg (point-at-eol (string-to-number count))))
-     (t
-      (user-error "Invalid count")))))
+  (if (and count (not (string-match-p "^[1-9][0-9]*$" count)))
+      (user-error "Invalid count")
+    (let ((join-fn (if bang 'evil-join-whitespace 'evil-join)))
+      (cond
+       ((not count)
+        ;; without count - just join the given region
+        (funcall join-fn beg end))
+       (t
+        ;; emulate vim's :join when count is given - start from the
+        ;; end of the region and join COUNT lines from there
+        (let* ((count-num (string-to-number count))
+               (beg-adjusted (save-excursion
+                               (goto-char end)
+                               (forward-line -1)
+                               (point)))
+               (end-adjusted (save-excursion
+                               (goto-char end)
+                               (point-at-bol count-num))))
+          (funcall join-fn beg-adjusted end-adjusted)))))))
 
 (evil-define-operator evil-fill (beg end)
   "Fill text."
