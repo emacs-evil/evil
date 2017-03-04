@@ -2295,7 +2295,28 @@ ABCthen enter the text in that file's own buffer.")))
     (evil-test-buffer
      "[l]ine 1\nline 2\nline 3\nline 4"
      (":join 2")
-     "line 1 line 2\nline 3\nline 4")))
+     "line 1 line 2\nline 3\nline 4"))
+  (ert-info ("Join with count and single line range")
+    (evil-test-buffer
+     "[l]ine 1\nline 2\nline 3\nline 4"
+     (":2join 3")
+     "line 1\nline 2 line 3 line 4"))
+  (ert-info ("Join with count and range")
+    (evil-test-buffer
+     "[l]ine 1\nline 2\nline 3\nline 4"
+     (":1,2join 3")
+     "line 1\nline 2 line 3 line 4"))
+  (ert-info ("Join with count, range and bang")
+    (evil-test-buffer
+     "[l]ine 1\nline 2\nline 3\nline 4"
+     (":1,2join! 3")
+     "line 1\nline 2line 3line 4"))
+  (ert-info ("Join with range")
+    (evil-test-buffer
+     "[l]ine 1\nline 2\nline 3\nline 4"
+     (":1,3join")
+     "line 1 line 2 line 3\nline 4"))
+  )
 
 (ert-deftest evil-test-substitute ()
   "Test `evil-substitute'"
