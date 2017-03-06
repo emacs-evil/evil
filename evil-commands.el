@@ -1767,7 +1767,8 @@ The return value is the yanked text."
                         (point))) ; end
             (evil-set-marker ?\[ opoint)
             (evil-set-marker ?\] (1- (point)))
-            (when (> (length text) 0)
+            (when (and evil-move-cursor-back
+                       (> (length text) 0))
               (backward-char))))
         ;; no paste-pop after pasting from a register
         (when register
