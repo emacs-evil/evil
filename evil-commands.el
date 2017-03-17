@@ -2306,6 +2306,13 @@ next VCOUNT - 1 lines below the current one."
                    (setq row nil)))
         rows))))
 
+(defun evil--self-insert-string (string)
+  "Insert STRING as if typed interactively."
+  (let ((chars (append string nil)))
+    (dolist (char chars)
+      (let ((last-command-event char))
+        (self-insert-command 1)))))
+
 (defun evil-copy-from-above (arg)
   "Copy characters from preceding non-blank line.
 The copied text is inserted before point.
@@ -2320,7 +2327,7 @@ See also \\<evil-insert-state-map>\\[evil-copy-from-below]."
      (list (prefix-numeric-value current-prefix-arg)))
     (t
      (list (prefix-numeric-value current-prefix-arg)))))
-  (insert (evil-copy-chars-from-line 1 (- arg))))
+  (evil--self-insert-string (evil-copy-chars-from-line arg -1)))
 
 (defun evil-copy-from-below (arg)
   "Copy characters from following non-blank line.
@@ -2335,7 +2342,7 @@ See also \\<evil-insert-state-map>\\[evil-copy-from-above]."
      (list (prefix-numeric-value current-prefix-arg)))
     (t
      (list (prefix-numeric-value current-prefix-arg)))))
-  (insert (evil-copy-chars-from-line 1 arg)))
+  (evil--self-insert-string (evil-copy-chars-from-line arg 1)))
 
 ;; adapted from `copy-from-above-command' in misc.el
 (defun evil-copy-chars-from-line (n num &optional col)

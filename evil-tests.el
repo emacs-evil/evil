@@ -6604,6 +6604,44 @@ if no previous selection")
       "<;; This buffer is for notes,
 ;;[ ]>and for Lisp evaluation.")))
 
+;;; Replace state
+
+(ert-deftest evil-test-replacement ()
+  "Test replacing consecutive characters"
+  :tags '(evil replace)
+  (ert-info ("Replace and restore consecutive characters")
+    (evil-test-buffer
+     ";; [T]his buffer is for notes"
+     ("Rfoo")
+     ";; foo[s] buffer is for notes"
+     ([backspace backspace backspace])
+     ";; [T]his buffer is for notes"))
+  (ert-info ("Replace and restore consecutive characters beyond eol")
+    (evil-test-buffer
+     ";; [T]his buffer is for notes"
+     ("wwwwRxxxxxxx")
+     ";; This buffer is for xxxxxxx[]"
+     ([backspace backspace backspace backspace backspace backspace backspace])
+     ";; This buffer is for [n]otes"))
+  (ert-info ("Replace from line below and restore")
+    (define-key evil-replace-state-map (kbd "C-e") 'evil-copy-from-below)
+    (evil-test-buffer
+     ";; [f]oo bar\n;; qux quux"
+     ("R\C-e\C-e\C-e")
+     ";; qux[ ]bar\n;; qux quux"
+     ([backspace backspace backspace])
+     ";; [f]oo bar\n;; qux quux")
+    (define-key evil-replace-state-map (kbd "C-e") nil))
+  (ert-info ("Replace from line above and restore")
+    (define-key evil-replace-state-map (kbd "C-y") 'evil-copy-from-above)
+    (evil-test-buffer
+     ";; foo bar\n;; [q]ux quux"
+     ("R\C-y\C-y\C-y")
+     ";; foo bar\n;; foo[ ]quux"
+     ([backspace backspace backspace])
+     ";; foo bar\n;; [q]ux quux")
+    (define-key evil-replace-state-map (kbd "C-y") nil)))
+
 ;;; Ex
 
 (ert-deftest evil-test-ex-parse ()
