@@ -8351,7 +8351,8 @@ maybe we need one line more with some text\n")
     (evil-test-buffer
      "foo unde[f] bar"
      ("a" [escape])
-     "foo unde[f] bar"))) ;; 'undef' is not an abbrev, shouldn't be expanded
+     "foo unde[f] bar") ;; 'undef' is not an abbrev, shouldn't be expanded
+    (setq abbrevs-changed nil)))
 
 (provide 'evil-tests)
 
