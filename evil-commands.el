@@ -1440,14 +1440,12 @@ be joined with the previous line if and only if
       (progn
         (unless evil-backspace-join-lines (user-error "Beginning of line"))
         (delete-char -1))
-    (evil-delete (max
-                  (save-excursion
-                    (evil-backward-word-begin)
-                    (point))
-                  (line-beginning-position))
-                 (point)
-                 'exclusive
-                 nil)))
+    (delete-region (max
+                    (save-excursion
+                      (evil-backward-word-begin)
+                      (point))
+                    (line-beginning-position))
+                   (point))))
 
 (evil-define-operator evil-change
   (beg end type register yank-handler delete-func)
