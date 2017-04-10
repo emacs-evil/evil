@@ -1204,7 +1204,19 @@ This handler highlights the pattern of the current substitution."
 
 (defun evil-ex-parse-global (string)
   "Parse STRING as a global argument."
-  (evil-delimited-arguments string 2))
+  (let* ((args (evil-delimited-arguments string 2))
+         (pattern (nth 0 args))
+         (command (nth 1 args)))
+    ;; use last pattern if none given
+    (when (zerop (length pattern))
+      (setq pattern
+            (cond
+             ((and (eq evil-search-module 'evil-search) evil-ex-search-pattern)
+              (evil-ex-pattern-regex evil-ex-search-pattern))
+             ((and (eq evil-search-module 'isearch) (not (zerop (length isearch-string))))
+              isearch-string)
+             (t (user-error "No previous pattern")))))
+    (list pattern command)))
 
 (defun evil-ex-get-substitute-info (string &optional implicit-r)
   "Returns the substitution info of command line STRING.
