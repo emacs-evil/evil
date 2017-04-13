@@ -782,7 +782,6 @@ If STATE is nil, Evil is disabled in the buffer."
     Man-mode
     speedbar-mode
     undo-tree-visualizer-mode
-    view-mode
     woman-mode)
   "Modes that should come up in Motion state."
   :type  '(repeat symbol)
