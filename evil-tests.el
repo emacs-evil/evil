@@ -7510,7 +7510,7 @@ maybe we need one line more with some text\n")
 
 (ert-deftest evil-test-global ()
   "Test `evil-ex-global'."
-  :tags '(evil ex)
+  :tags '(evil ex global)
   (ert-info ("global delete")
     (evil-test-buffer
       "[n]o 1\nno 2\nno 3\nyes 4\nno 5\nno 6\nno 7\n"
@@ -7522,7 +7522,27 @@ maybe we need one line more with some text\n")
       (":g/no/s/[3-6]/x" [return])
       "no 1\nno 2\nno x\nyes 4\nno x\nno x\n[n]o 7\n"
       ("u")
-      "no 1\nno 2\nno [3]\nyes 4\nno 5\nno 6\nno 7\n")))
+     "no 1\nno 2\nno [3]\nyes 4\nno 5\nno 6\nno 7\n"))
+  (evil-select-search-module 'evil-search-module 'evil-search)
+  (ert-info ("global use last match if none given, with evil-search")
+    (evil-test-buffer
+      "[n]o 1\nno 2\nno 3\nyes 4\nno 5\nno 6\nno 7\n"
+      ("/yes" [return])
+      "no 1\nno 2\nno 3\nyes 4\nno 5\nno 6\nno 7\n"
+      (":g//d" [return])
+      "no 1\nno 2\nno 3\n[n]o 5\nno 6\nno 7\n"
+      (":v//d" [return])
+      ""))
+  (evil-select-search-module 'evil-search-module 'isearch)
+  (ert-info ("global use last match if none given, with isearch")
+    (evil-test-buffer
+     "[n]o 1\nno 2\nno 3\nisearch 4\nno 5\nno 6\nno 7\n"
+     ("/isearch" [return])
+     "no 1\nno 2\nno 3\nisearch 4\nno 5\nno 6\nno 7\n"
+     (":g//d" [return])
+     "no 1\nno 2\nno 3\n[n]o 5\nno 6\nno 7\n"
+     (":v//d" [return])
+     "")))
 
 (ert-deftest evil-test-normal ()
   "Test `evil-ex-normal'."

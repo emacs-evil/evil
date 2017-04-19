@@ -3502,6 +3502,9 @@ This is the same as :%s//~/&"
     (user-error "No pattern given"))
   (unless command
     (user-error "No command given"))
+  ;; TODO: `evil-ex-make-substitute-pattern' should be executed so
+  ;; :substitute can re-use :global's pattern depending on its `r'
+  ;; flag. This isn't supported currently but should be simple to add
   (evil-with-single-undo
     (let ((case-fold-search
            (eq (evil-ex-regex-case pattern 'smart) 'insensitive))
