@@ -643,7 +643,10 @@ The following properties are supported:
                             (push ov new-ovs)
                             (when match-hook (funcall match-hook hl ov)))
                           (cond
-                           ((not (evil-ex-pattern-whole-line pattern))
+                           ((and (not (evil-ex-pattern-whole-line pattern))
+                                 (not (string-match-p "\n" (buffer-substring-no-properties
+                                                            (match-beginning 0)
+                                                            (match-end 0)))))
                             (forward-line))
                            ((= (match-beginning 0) (match-end 0))
                             (forward-char))
