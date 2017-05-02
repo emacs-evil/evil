@@ -7075,7 +7075,17 @@ if no previous selection")
     (evil-test-buffer
       "[a]bc\niiiXiiiXiiiXiii\n"
       ("\"ayiwj:s/X/\\=@a/g" [return])
-      "abc\n[i]iiabciiiabciiiabciii\n")))
+      "abc\n[i]iiabciiiabciiiabciii\n"))
+  (ert-info ("Substitute newlines")
+    (evil-test-buffer
+      "[a]bc\ndef\nghi\n"
+      (":%s/\n/z/" [return])
+      "[a]bczdefzghiz"))
+  (ert-info ("Substitute newlines with g flag")
+    (evil-test-buffer
+      "[a]bc\ndef\nghi\n"
+      (":%s/\n/z/g" [return])
+      "[a]bczdefzghi")))
 
 (ert-deftest evil-test-ex-repeat-substitute-replacement ()
   "Test `evil-ex-substitute' with repeating of previous substitutions."
