@@ -229,6 +229,13 @@ one more than the current position."
       (set-text-properties 0 (length string) nil string)
       ;; position to search from
       (goto-char start)
+      ;; when `evil-move-beyond-eol' is nil and we're looking at a \n after a
+      ;; search, evil will move the cursor back so that we start the new search
+      ;; at a position prior to the \n that we just found.
+      (when (and (not evil-move-beyond-eol)
+                 (not (eobp))
+                 (= (char-after) ?\n))
+        (forward-char))
       (setq isearch-string string)
       (isearch-update-ring string regexp-p)
       (condition-case nil
