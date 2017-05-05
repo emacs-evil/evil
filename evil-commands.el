@@ -2565,14 +2565,18 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
         (search-string (if evil-regexp-search
                            (car-safe regexp-search-ring)
                          (car-safe search-ring))))
-    (evil-search search-string isearch-forward evil-regexp-search)
-    (when (and (> (point) orig)
-               (save-excursion
-                 (evil-adjust-cursor)
-                 (= (point) orig)))
-      ;; Point won't move after first attempt and `evil-adjust-cursor' takes
-      ;; effect, so try again.
-      (evil-search search-string isearch-forward evil-regexp-search))
+    (goto-char
+     ;; Wrap in `save-excursion' so that multiple searches have no visual effect.
+     (save-excursion
+       (evil-search search-string isearch-forward evil-regexp-search)
+       (when (and (> (point) orig)
+                  (save-excursion
+                    (evil-adjust-cursor)
+                    (= (point) orig)))
+         ;; Point won't move after first attempt and `evil-adjust-cursor' takes
+         ;; effect, so start again.
+         (evil-search search-string isearch-forward evil-regexp-search))
+       (point)))
     (when (and count (> count 1))
       (dotimes (var (1- count))
         (evil-search search-string isearch-forward evil-regexp-search)))))
