@@ -7225,7 +7225,18 @@ if no previous selection")
         (error search-failed "n")
         "foo foo foo\nbar [b]ar\nbaz baz baz\n"
         (error search-failed "N")
-        "foo foo foo\nbar [b]ar\nbaz baz baz\n"))))
+        "foo foo foo\nbar [b]ar\nbaz baz baz\n"))
+    (ert-info ("Test search for newline")
+      (evil-test-buffer
+        "[s]tart\nline 2\nline 3\n\n"
+        ("/\\n" [return])
+        "star[t]\nline 2\nline 3\n\n"
+        ("n")
+        "start\nline [2]\nline 3\n\n"
+        ("n")
+        "start\nline 2\nline [3]\n\n"
+        ("n")
+        "start\nline 2\nline 3\n[]\n"))))
 
 (ert-deftest evil-test-ex-search-offset ()
   "Test search offsets."
