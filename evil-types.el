@@ -382,8 +382,7 @@ Returns a list (REGISTER COUNT)."
          (arg-count (length split-args))
          (arg0 (car split-args))
          (arg1 (cadr split-args))
-         (number-regex "^[1-9][0-9]*$")
-         (register-regex "^[a-zA-Z]$")
+         (number-regex "^-?[1-9][0-9]*$")
          (register nil)
          (count nil))
     (cond
@@ -400,13 +399,21 @@ Returns a list (REGISTER COUNT)."
      ((> arg-count 2)
       (user-error "Invalid use")))
 
-    (when (and register (not (string-match-p register-regex register)))
-      (user-error "Invalid register"))
-    (when (and count (not (string-match-p number-regex count)))
-      (user-error "Invalid count"))
+    ;; if register is given, check it's valid
+    (when register
+      (unless (= (length register) 1)
+        (user-error "Invalid register"))
+      (setq register (string-to-char register)))
 
-    (list (if register (string-to-char register) nil)
-          (if count (string-to-number count) nil))))
+    ;; if count is given, check it's valid
+    (when count
+      (unless (string-match-p number-regex count)
+        (user-error "Invalid count"))
+      (setq count (string-to-number count))
+      (unless (> count 0)
+        (user-error "Invalid count")))
+
+    (list register count)))
 
 (provide 'evil-types)
 
