@@ -1449,6 +1449,23 @@ be joined with the previous line if and only if
                  'exclusive
                  nil)))
 
+(evil-define-operator evil-ex-delete (beg end type register count yank-handler)
+  "The Ex delete command.
+\[BEG,END]delete [REGISTER] [COUNT]"
+  (interactive "<R><d/><y>")
+  (when count
+    ;; with COUNT, :delete should go the end of the region and delete
+    ;; COUNT lines from there
+    (setq beg (save-excursion
+                (goto-char end)
+                (forward-line -1)
+                (point))
+          end (save-excursion
+                (goto-char end)
+                (point-at-bol count))
+          type 'line))
+  (evil-delete beg end type register yank-handler))
+
 (evil-define-operator evil-change
   (beg end type register yank-handler delete-func)
   "Change text from BEG to END with TYPE.

@@ -370,6 +370,51 @@ If visual state is inactive then those values are nil."
   (when (evil-ex-p)
     (evil-ex-get-substitute-info evil-ex-argument t)))
 
+(evil-define-interactive-code "<d/>"
+  "Ex delete argument."
+  (when (evil-ex-p)
+    (evil-ex-get-delete-info evil-ex-argument)))
+
+(defun evil-ex-get-delete-info (string)
+  "Parse STRING as a :delete argument.
+Returns a list (REGISTER COUNT)."
+  (let* ((split-args (split-string (or string "")))
+         (arg-count (length split-args))
+         (arg0 (car split-args))
+         (arg1 (cadr split-args))
+         (number-regex "^-?[1-9][0-9]*$")
+         (register nil)
+         (count nil))
+    (cond
+     ;; :delete REGISTER or :delete COUNT
+     ((= arg-count 1)
+      (if (string-match-p number-regex arg0)
+          (setq count arg0)
+        (setq register arg0)))
+     ;; :delete REGISTER COUNT
+     ((eq arg-count 2)
+      (setq register arg0
+            count arg1))
+     ;; more than 2 args aren't allowed
+     ((> arg-count 2)
+      (user-error "Invalid use")))
+
+    ;; if register is given, check it's valid
+    (when register
+      (unless (= (length register) 1)
+        (user-error "Invalid register"))
+      (setq register (string-to-char register)))
+
+    ;; if count is given, check it's valid
+    (when count
+      (unless (string-match-p number-regex count)
+        (user-error "Invalid count"))
+      (setq count (string-to-number count))
+      (unless (> count 0)
+        (user-error "Invalid count")))
+
+    (list register count)))
+
 (provide 'evil-types)
 
 ;;; evil-types.el ends here

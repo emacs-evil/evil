@@ -2066,7 +2066,7 @@ New Tex[t]
 
 (ert-deftest evil-test-delete ()
   "Test `evil-delete'"
-  :tags '(evil operator)
+  :tags '(evil operator delete)
   (ert-info ("Delete characters")
     (evil-test-buffer
       ";; This buffer is for notes you don't want to save[.]"
@@ -2111,7 +2111,35 @@ New Tex[t]
       ("d3s")
       "[T]his buffer is for notes you don't want to save.
 If you want to create a file, visit that file with C-x C-f,
-then enter the text in that file's own buffer.")))
+then enter the text in that file's own buffer."))
+  (ert-info (":delete")
+    (evil-test-buffer
+     "a\n[b]\nc\nd\n"
+     (":delete")
+     "a\nc\nd\n"))
+  (ert-info (":delete with COUNT")
+    (evil-test-buffer
+     "a\n[b]\nc\nd\n"
+     (":delete 2")
+     "a\nd\n"))
+  (ert-info (":delete with COUNT in visual state")
+    (evil-test-buffer
+     "a\n<b\nc>\nd\ne\nf\n"
+     (":delete 3")
+     "a\nb\nf\n"))
+  (ert-info (":delete with REGISTER")
+    (evil-test-buffer
+     "a\n[b]\nc\nd\n"
+     (":delete r") ;; delete into the 'r' register
+     "a\nc\nd\n"
+     ;; chech the 'r' register contains the deleted text
+     (should (string= (substring-no-properties (evil-get-register ?r)) "b\n"))))
+  (ert-info (":delete with REGISTER and COUNT")
+    (evil-test-buffer
+     "a\n[b]\nc\nd\ne\nf\n"
+     (":delete r 3")
+     "a\ne\nf\n"
+     (should (string= (substring-no-properties (evil-get-register ?r)) "b\nc\nd\n")))))
 
 (ert-deftest evil-test-delete-line ()
   "Test `evil-delete-line'"
