@@ -840,15 +840,13 @@ START is the start symbol, which defaults to `expression'."
     (when result
       (setq command (car-safe result)
             string (cdr-safe result))
-      ;; check whether the command is followed by a slash and the
-      ;; part before the slash is not a known ex binding
-      ;; (maybe we should check for other characters, too? But only
-      ;; the slash is used commonly in Emacs functions)
+      ;; check whether the parsed command is followed by a slash or
+      ;; number and the part before it is not a known ex binding
       (when (and (> (length string) 0)
-                 (= (aref string 0) ?/)
+                 (string-match-p "^[/[:digit:]]" string)
                  (not (evil-ex-binding command t)))
-        ;; if this is the case, assume the slash and all following
-        ;; symbol characters form an (Emacs-)command
+        ;; if this is the case, assume the slash or number and all
+        ;; following symbol characters form an (Emacs-)command
         (setq result (evil-parser (concat command string)
                                   'emacs-binding
                                   evil-ex-grammar)
