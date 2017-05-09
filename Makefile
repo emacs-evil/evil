@@ -68,7 +68,7 @@ tests: compile
 emacs:
 	$(EMACS) -Q -L . $(LIBS) -l goto-chg.el -l evil-tests.el \
 --eval "(evil-mode 1)" \
---eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)" &
+--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)"
 
 # Load Evil in a terminal Emacs and run all tests.
 term: terminal
