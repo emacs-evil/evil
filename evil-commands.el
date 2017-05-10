@@ -3423,7 +3423,10 @@ resp.  after executing the command."
                                (goto-char m)
                                (move-marker m nil))
                              (when (re-search-forward evil-ex-substitute-regex
-                                                      (line-end-position) t nil)
+                                                      (save-excursion
+                                                        (forward-line)
+                                                        (point))
+                                                      t nil)
                                (goto-char (match-beginning 0))
                                (throw 'found (match-data))))))))
                 (evil-ex-delete-hl 'evil-ex-substitute)
@@ -3436,7 +3439,10 @@ resp.  after executing the command."
               (goto-char m)
               (move-marker m nil))
             (when (re-search-forward evil-ex-substitute-regex
-                                     (line-end-position) t nil)
+                                     (save-excursion
+                                       (forward-line)
+                                       (point))
+                                      t nil)
               (setq evil-ex-substitute-nreplaced
                     (1+ evil-ex-substitute-nreplaced))
               (evil-replace-match evil-ex-substitute-replacement
