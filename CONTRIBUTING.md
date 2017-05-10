@@ -14,11 +14,13 @@ Bug reports and feature requests should be made on the
   - Whether you use Emacs/Evil in terminal mode with some terminal multiplexer
     like **tmux** or **screen** (and see below).
 
-2. Test the bug in a clean Emacs environment without any additional packages
-   loaded (besides Evil itself). You can easily get such an environment by
-   executing either `make emacs` (for X) or `make terminal` (for terminal mode)
-   in Evil's source directory. If your bug is related to some other packages,
-   try to load only this package directly from the clean environment.
+2. Test the bug in a clean Emacs environment without any additional
+   packages loaded (besides Evil itself). You can easily get such an
+   environment by executing either `make emacs` (for X) or `make
+   terminal` (for terminal mode) in Evil's source directory. If your
+   bug is related to some other package, try to load only this package
+   from the clean environment after using `M-x package-initialize`
+   first.
 
 3. If you've just updated your Evil from the repository, **do not forget to
    recompile** Evil by executing `make` in Evil's source directory.
