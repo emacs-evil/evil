@@ -874,31 +874,37 @@ on the first non-blank character."
   (back-to-indentation))
 
 ;; scrolling
-(evil-define-command evil-scroll-line-up (count)
-  "Scrolls the window COUNT lines upwards.
-If COUNT is not specified the function uses
-`evil-scroll-line-count', which is the last used count."
+(evil-define-command evil-scroll-line-up (&optional count)
+  "Scrolls the window one or COUNT lines upwards.
+If COUNT isn't specified, then the last used COUNT
+is read from the `evil-scroll-line-count' variable.
+If COUNT is negative, then it scrolls downwards.
+If COUNT is 0, then it gets reset to 1."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (progn
-    (setq count (or count evil-scroll-line-count))
+  (let ((count (cond ((not count) evil-scroll-line-count)
+                     ((= count 0) 1)
+                     (t           count)))
+        (scroll-preserve-screen-position nil))
     (setq evil-scroll-line-count count)
-    (let ((scroll-preserve-screen-position nil))
-      (scroll-down count))))
+    (scroll-down count)))
 
-(evil-define-command evil-scroll-line-down (count)
-  "Scrolls the window COUNT lines downwards.
-If COUNT is not specified the function uses
-`evil-scroll-line-count', which is the last used count."
+(evil-define-command evil-scroll-line-down (&optional count)
+  "Scrolls the window one or COUNT lines downwards.
+If COUNT isn't specified, then the last used COUNT
+is read from the `evil-scroll-line-count' variable.
+If COUNT is negative, then it scrolls upwards.
+If COUNT is 0, then it gets reset to 1."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (progn
-    (setq count (or count evil-scroll-line-count))
+  (let ((count (cond ((not count) evil-scroll-line-count)
+                     ((= count 0) 1)
+                     (t           count)))
+        (scroll-preserve-screen-position nil))
     (setq evil-scroll-line-count count)
-    (let ((scroll-preserve-screen-position nil))
-      (scroll-up count))))
+    (scroll-up count)))
 
 (evil-define-command evil-scroll-count-reset ()
   "Sets `evil-scroll-count' to 0.
