@@ -51,7 +51,7 @@ Visit us on `irc.freenode.net #evil-mode`.
 # Contribution
 
 See
-[CONTRIBUTING.md](https://raw.githubusercontent.com/emacs-evil/evil/master/CONTRIBUTING.md)
+[CONTRIBUTING.md](https://github.com/emacs-evil/evil/blob/master/CONTRIBUTING.md)
 for guidelines for issues and pull requests.
 
 # FAQ
