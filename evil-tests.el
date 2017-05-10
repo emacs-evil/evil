@@ -6888,6 +6888,16 @@ if no previous selection")
                         (intern "+") (string-to-number "42"))))
                    nil))))
 
+(ert-deftest evil-test-ex-parse-emacs-commands ()
+  "Test parsing of Emacs commands"
+  :tags '(evil ex)
+  (should (equal (evil-ex-parse "ido-mode")
+                 '(evil-ex-call-command nil "ido-mode" nil)))
+  (should (equal (evil-ex-parse "yas/reload-all")
+                 '(evil-ex-call-command nil "yas/reload-all" nil)))
+  (should (equal (evil-ex-parse "mu4e")
+                 '(evil-ex-call-command nil "mu4e" nil))))
+
 (ert-deftest evil-text-ex-search-offset ()
   "Test for addresses like /base//pattern/"
   :tags '(evil ex)
