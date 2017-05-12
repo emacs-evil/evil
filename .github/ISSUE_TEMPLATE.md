@@ -17,13 +17,13 @@ Graphical/Terminal: <!-- Whether you're running Emacs in a terminal emulator or 
 Terminal multiplexer: <!-- If you're in a terminal, are you running Emacs inside screen/tmux? -->
 
 # Reproduction steps
-<!-- Minimal list of steps that manage reproducing the bug -->
-
 - Start Emacs
-<!-- More steps -->
+<!-- Minimal list of steps to reproduce the bug -->
 
 # Expected behavior
 <!-- Describe how it should behave -->
 
 # Actual behavior
 <!-- Describe how it does behave -->
+
+# Further notes
