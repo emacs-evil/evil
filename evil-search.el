@@ -1173,7 +1173,7 @@ This handler highlights the pattern of the current substitution."
                               (evil-range (line-beginning-position)
                                           (line-end-position)
                                           'line
-                                          :expaned t))))
+                                          :expanded t))))
               (setq evil-ex-substitute-current-replacement replacement)
               (evil-expand-range range)
               (evil-ex-hl-set-region 'evil-ex-substitute
