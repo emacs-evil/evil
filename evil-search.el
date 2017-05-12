@@ -634,7 +634,9 @@ The following properties are supported:
                         ;; reusing old overlays (if possible)
                         (while (and (not (eobp))
                                     (evil-ex-search-find-next-pattern pattern)
-                                    (<= (match-end 0) end))
+                                    (<= (match-end 0) end)
+                                    (not (and (= (match-end 0) end)
+                                              (string= pattern "^"))))
                           (let ((ov (or (pop old-ovs) (make-overlay 0 0))))
                             (move-overlay ov (match-beginning 0) (match-end 0))
                             (overlay-put ov 'face face)
@@ -643,7 +645,10 @@ The following properties are supported:
                             (push ov new-ovs)
                             (when match-hook (funcall match-hook hl ov)))
                           (cond
-                           ((not (evil-ex-pattern-whole-line pattern))
+                           ((and (not (evil-ex-pattern-whole-line pattern))
+                                 (not (string-match-p "\n" (buffer-substring-no-properties
+                                                            (match-beginning 0)
+                                                            (match-end 0)))))
                             (forward-line))
                            ((= (match-beginning 0) (match-end 0))
                             (forward-char))
@@ -1168,7 +1173,7 @@ This handler highlights the pattern of the current substitution."
                               (evil-range (line-beginning-position)
                                           (line-end-position)
                                           'line
-                                          :expaned t))))
+                                          :expanded t))))
               (setq evil-ex-substitute-current-replacement replacement)
               (evil-expand-range range)
               (evil-ex-hl-set-region 'evil-ex-substitute
