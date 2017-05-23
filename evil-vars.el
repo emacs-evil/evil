@@ -608,6 +608,7 @@ If STATE is nil, Evil is disabled in the buffer."
     cfw:calendar-mode
     completion-list-mode
     Custom-mode
+    custom-theme-choose-mode
     debugger-mode
     delicious-search-mode
     desktop-menu-blist-mode
