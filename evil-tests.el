@@ -2021,7 +2021,7 @@ New Tex[t]
 
 (ert-deftest evil-test-yank ()
   "Test `evil-yank'"
-  :tags '(evil operator)
+  :tags '(evil operator yank)
   (ert-info ("Yank characters")
     (evil-test-buffer
       ";; [T]his buffer is for notes you don't want to save."
@@ -2062,7 +2062,35 @@ New Tex[t]
       (should (string= (current-kill 0) "Thi\nIf \nthe"))
       (should (eq (car-safe (get-text-property 0 'yank-handler
                                                (current-kill 0)))
-                  'evil-yank-block-handler)))))
+                  'evil-yank-block-handler))))
+  (ert-info (":yank, then paste")
+    (evil-test-buffer
+     "a\n[b]\nc\nd\n"
+     (":yank" [return] "p")
+     "a\nb\nb\nc\nd\n"))
+  (ert-info (":yank with COUNT")
+    (evil-test-buffer
+     "a\n[b]\nc\nd\n"
+     (":yank 2" [return] "p")
+     "a\nb\nb\nc\nc\nd\n"))
+  (ert-info (":yank with COUNT in visual state")
+    (evil-test-buffer
+     "a\n<b\nc>\nd\ne\nf\n"
+     (":yank 3" [return] "p")
+     "a\nb\nc\nd\ne\nc\nd\ne\nf\n"))
+  (ert-info (":yank with REGISTER")
+    (evil-test-buffer
+     "a\n[b]\nc\nd\n"
+     (":yank r") ;; yank into the 'r' register
+     "a\nb\nc\nd\n"
+     ;; check the 'r' register contains the yanked text
+     (should (string= (substring-no-properties (evil-get-register ?r)) "b\n"))))
+  (ert-info (":yank with REGISTER and COUNT")
+    (evil-test-buffer
+     "a\n[b]\nc\nd\ne\nf\n"
+     (":yank r 3")
+     "a\nb\nc\nd\ne\nf\n"
+     (should (string= (substring-no-properties (evil-get-register ?r)) "b\nc\nd\n")))))
 
 (ert-deftest evil-test-delete ()
   "Test `evil-delete'"
@@ -2132,7 +2160,7 @@ then enter the text in that file's own buffer."))
      "a\n[b]\nc\nd\n"
      (":delete r") ;; delete into the 'r' register
      "a\nc\nd\n"
-     ;; chech the 'r' register contains the deleted text
+     ;; check the 'r' register contains the deleted text
      (should (string= (substring-no-properties (evil-get-register ?r)) "b\n"))))
   (ert-info (":delete with REGISTER and COUNT")
     (evil-test-buffer

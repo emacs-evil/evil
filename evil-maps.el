@@ -451,7 +451,7 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "t" "copy")
 (evil-ex-define-cmd "m[ove]" 'evil-move)
 (evil-ex-define-cmd "d[elete]" 'evil-ex-delete)
-(evil-ex-define-cmd "y[ank]" 'evil-yank)
+(evil-ex-define-cmd "y[ank]" 'evil-ex-yank)
 (evil-ex-define-cmd "go[to]" 'evil-goto-char)
 (evil-ex-define-cmd "j[oin]" 'evil-ex-join)
 (evil-ex-define-cmd "le[ft]" 'evil-align-left)
