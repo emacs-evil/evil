@@ -61,7 +61,7 @@
 ;; of all commands that are executed starting and ending in normal
 ;; state.
 ;;
-;; Not all commands are recored. There are several commands that are
+;; Not all commands are recorded. There are several commands that are
 ;; completely ignored and other commands that even abort the currently
 ;; active recording, e.g., commands that change the current buffer.
 ;;
