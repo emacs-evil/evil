@@ -2003,7 +2003,7 @@ The return value is the yanked text."
   "Use REGISTER for the next command."
   :keep-visual t
   :repeat ignore
-  (interactive "<C>")
+  (interactive (list (read-char)))
   (setq evil-this-register register))
 
 (defvar evil-macro-buffer nil
