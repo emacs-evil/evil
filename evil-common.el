@@ -1363,48 +1363,41 @@ match-data reflects the last successful match (that caused COUNT
 to reach zero). The behaviour of this functions is similar to
 `up-list'."
   (let* ((count (or count 1))
-         (dir (if (> count 0) +1 -1)))
+         (forwardp (> count 0))
+         (dir (if forwardp +1 -1)))
     (catch 'done
       (while (not (zerop count))
         (let* ((pnt (point))
                (cl (save-excursion
-                     (and (re-search-forward end nil t dir)
+                     (and (re-search-forward (if forwardp end beg) nil t dir)
                           (or (/= pnt (point))
                               (progn
                                 ;; zero size match, repeat search from
                                 ;; the next position
                                 (forward-char dir)
-                                (re-search-forward end nil t dir)))
+                                (re-search-forward (if forwardp end beg) nil t dir)))
                           (point))))
                (match (match-data t))
                (op (save-excursion
-                     (and (re-search-forward beg cl t dir)
+                     (and (re-search-forward (if forwardp beg end) cl t dir)
                           (or (/= pnt (point))
                               (progn
                                 ;; zero size match, repeat search from
                                 ;; the next position
                                 (forward-char dir)
-                                (re-search-forward beg cl t dir)))
+                                (re-search-forward (if forwardp beg end) cl t dir)))
                           (point)))))
           (cond
-           ((and (not op) (not cl))
-            (goto-char (if (> dir 0) (point-max) (point-min)))
+           ((not cl)
+            (goto-char (if forwardp (point-max) (point-min)))
             (set-match-data nil)
             (throw 'done count))
-           ((> dir 0)
-            (if cl
-                (progn
-                  (setq count (1- count))
-                  (if (zerop count) (set-match-data match))
-                  (goto-char cl))
-              (setq count (1+ count))
-              (goto-char op)))
-           ((< dir 0)
+           (t
             (if op
                 (progn
-                  (setq count (1+ count))
+                  (setq count (if forwardp (1+ count) (1- count)))
                   (goto-char op))
-              (setq count (1- count))
+              (setq count (if forwardp (1- count) (1+ count)))
               (if (zerop count) (set-match-data match))
               (goto-char cl))))))
       0)))
