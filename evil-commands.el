@@ -1437,12 +1437,14 @@ be joined with the previous line if and only if
                     (line-beginning-position))
                    (point))))
 
-(evil-define-operator evil-ex-delete (beg end type register count yank-handler)
-  "The Ex delete command.
-\[BEG,END]delete [REGISTER] [COUNT]"
-  (interactive "<R><d/><y>")
+(defun evil-ex-delete-or-yank (should-delete beg end type register count yank-handler)
+  "Execute evil-delete or evil-yank on the given region.
+If SHOULD-DELETE is t, evil-delete will be executed, otherwise
+evil-yank.
+The region specified by BEG and END will be adjusted if COUNT is
+given."
   (when count
-    ;; with COUNT, :delete should go the end of the region and delete
+    ;; with COUNT, the command should go the end of the region and delete/yank
     ;; COUNT lines from there
     (setq beg (save-excursion
                 (goto-char end)
@@ -1452,7 +1454,19 @@ be joined with the previous line if and only if
                 (goto-char end)
                 (point-at-bol count))
           type 'line))
-  (evil-delete beg end type register yank-handler))
+  (funcall (if should-delete 'evil-delete 'evil-yank) beg end type register yank-handler))
+
+(evil-define-operator evil-ex-delete (beg end type register count yank-handler)
+  "The Ex delete command.
+\[BEG,END]delete [REGISTER] [COUNT]"
+  (interactive "<R><xc/><y>")
+  (evil-ex-delete-or-yank t beg end type register count yank-handler))
+
+(evil-define-operator evil-ex-yank (beg end type register count yank-handler)
+  "The Ex yank command.
+\[BEG,END]yank [REGISTER] [COUNT]"
+  (interactive "<R><xc/><y>")
+  (evil-ex-delete-or-yank nil beg end type register count yank-handler))
 
 (evil-define-operator evil-change
   (beg end type register yank-handler delete-func)
