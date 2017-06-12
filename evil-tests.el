@@ -7123,7 +7123,12 @@ if no previous selection")
     (evil-test-buffer
       "[a]bc\naef\nahi\n"
       (":%s/a//gn" [return])
-      "[a]bc\naef\nahi\n")))
+      "[a]bc\naef\nahi\n"))
+  (ert-info ("Substitute $ does not loop infinitely")
+    (evil-test-buffer
+      "[a]bc\ndef\nghi"
+      (":%s/$/ END/g" [return])
+      "abc END\ndef END\n[g]hi END")))
 
 (ert-deftest evil-test-ex-repeat-substitute-replacement ()
   "Test `evil-ex-substitute' with repeating of previous substitutions."
