@@ -3435,9 +3435,13 @@ resp.  after executing the command."
                                       (not case-replace)))
                 (setq evil-ex-substitute-last-point (point)))
               (goto-char (match-end 0))
-              (unless (or whole-line
-                          match-contains-newline)
-                (forward-line)))))
+              (cond ((and (not whole-line)
+                          (not match-contains-newline))
+                     (forward-line))
+                    ((= (match-beginning 0) (match-end 0))
+                     (if (eobp)
+                         (throw 'exit-search t)
+                       (forward-char)))))))
       (evil-ex-delete-hl 'evil-ex-substitute)
       (delete-overlay evil-ex-substitute-overlay))
 
