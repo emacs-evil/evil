@@ -1980,7 +1980,8 @@ The return value is the yanked text."
         (if paste-eob
             (evil-paste-after count register)
           (evil-paste-before count register)))
-      (kill-new new-kill)
+      (when evil-kill-on-visual-paste
+        (kill-new new-kill))
       ;; mark the last paste as visual-paste
       (setq evil-last-paste
             (list (nth 0 evil-last-paste)

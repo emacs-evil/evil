@@ -386,6 +386,13 @@ before point."
   :type '(repeat symbol)
   :group 'evil)
 
+(defcustom evil-kill-on-visual-paste t
+  "Whether `evil-visual-paste' adds the replaced text to the kill
+ring, making it the default for the next paste. The default, t,
+replicates the default vim behavior."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-want-C-i-jump t
   "Whether \"C-i\" jumps forward like in Vim."
   :type 'boolean
