@@ -2676,7 +2676,19 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       ("p")
       ";; This buffer is for notes you don't want to save.;;
 ;; If you want to create a file, visit that file wi;; th C-x C-f,
-;; then enter the text in that file's own buffer.  ;;")))
+;; then enter the text in that file's own buffer.  ;;"))
+  (ert-info ("Paste preserves preceding text properties")
+    (evil-test-buffer
+     "[;]; This buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer."
+     (put-text-property (point) (line-end-position) 'font-lock-face 'warning)
+     ("yyp")
+     ";; This buffer is for notes you don't want to save.
+[;]; This buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer."
+ (should (equal (get-text-property (point-min) 'font-lock-face) 'warning)))))
 
 (ert-deftest evil-test-paste-pop-before ()
   "Test `evil-paste-pop' after `evil-paste-before'"
