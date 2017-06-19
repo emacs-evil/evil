@@ -2430,7 +2430,9 @@ The tracked insertion is set to `evil-last-insertion'."
   "Saves the lines in the region BEG and END into the kill-ring."
   (let* ((text (filter-buffer-substring beg end))
          (yank-handler (list (or yank-handler
-                                 #'evil-yank-line-handler))))
+                                 #'evil-yank-line-handler)
+                             nil
+                             t)))
     ;; Ensure the text ends with a newline. This is required
     ;; if the deleted lines were the last lines in the buffer.
     (when (or (zerop (length text))
@@ -2457,7 +2459,7 @@ The tracked insertion is set to `evil-last-insertion'."
     (let* ((yank-handler (list (or yank-handler
                                    #'evil-yank-block-handler)
                                lines
-                               nil
+                               t
                                'evil-delete-yanked-rectangle))
            (text (propertize (mapconcat #'identity lines "\n")
                              'yank-handler yank-handler)))
