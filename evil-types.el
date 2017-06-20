@@ -244,7 +244,7 @@ the last column is excluded."
 
 (evil-define-interactive-code "c"
   "Read character."
-  (list (read-char)))
+  (list (read-key)))
 
 (evil-define-interactive-code "p"
   "Prefix argument converted to number."

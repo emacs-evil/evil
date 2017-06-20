@@ -732,7 +732,7 @@ Columns are counted from zero."
   :keep-visual t
   :repeat nil
   :type exclusive
-  (interactive (list (read-char)))
+  (interactive (list (read-key)))
   (let ((marker (evil-get-marker char)))
     (cond
      ((markerp marker)
@@ -756,7 +756,7 @@ Columns are counted from zero."
   :keep-visual t
   :repeat nil
   :type line
-  (interactive (list (read-char)))
+  (interactive (list (read-key)))
   (evil-goto-mark char noerror)
   (evil-first-non-blank))
 
@@ -2002,7 +2002,7 @@ The return value is the yanked text."
            (put-text-property 0 1 'face 'minibuffer-prompt string)
            (put-text-property 0 1 'cursor t string)
            (overlay-put overlay 'after-string string)
-           (list (or evil-this-register (read-char))))
+           (list (or evil-this-register (read-key))))
        (delete-overlay overlay))))
   (when (evil-paste-before nil register t)
     ;; go to end of pasted text
@@ -2087,7 +2087,7 @@ when called interactively."
                      (if (numberp current-prefix-arg)
                          current-prefix-arg
                        0) 1)
-           register (or evil-this-register (read-char)))
+           register (or evil-this-register (read-key)))
      (cond
       ((or (and (eq register ?@) (eq evil-last-register ?:))
            (eq register ?:))
@@ -3407,8 +3407,8 @@ resp.  after executing the command."
                     (move-overlay evil-ex-substitute-overlay
                                   (match-beginning 0)
                                   (match-end 0))
-                    (catch 'exit-read-char
-                      (while (setq response (read-char prompt))
+                    (catch 'exit-read-key
+                      (while (setq response (read-key prompt))
                         (when (member response '(?y ?a ?l))
                           (unless count-only
                             (evil-replace-match evil-ex-substitute-replacement
@@ -3423,9 +3423,9 @@ resp.  after executing the command."
                                                  (evil-ex-hl-get-max
                                                   'evil-ex-substitute)))
                         (cl-case response
-                          ((?y ?n) (throw 'exit-read-char t))
+                          ((?y ?n) (throw 'exit-read-key t))
                           (?a (setq confirm nil)
-                              (throw 'exit-read-char t))
+                              (throw 'exit-read-key t))
                           ((?q ?l ?\C-\[) (throw 'exit-search t))
                           (?\C-e (evil-scroll-line-down 1))
                           (?\C-y (evil-scroll-line-up 1))))))
