@@ -1900,7 +1900,7 @@ with regard to indentation."
 POS defaults to the current position of point.
 If ADVANCE is t, the marker advances when inserting text at it;
 otherwise, it stays behind."
-  (interactive (list (read-char)))
+  (interactive (list (read-char nil t)))
   (catch 'done
     (let ((marker (evil-get-marker char t)) alist)
       (unless (markerp marker)
