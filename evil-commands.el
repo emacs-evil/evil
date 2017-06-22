@@ -3391,58 +3391,59 @@ resp.  after executing the command."
           (goto-char beg)
           (catch 'exit-search
             (while (re-search-forward evil-ex-substitute-regex end-marker t)
-              (goto-char (match-beginning 0))
-              (setq match-contains-newline
-                    (string-match-p "\n" (buffer-substring-no-properties
-                                          (match-beginning 0)
-                                          (match-end 0))))
-              (if confirm
-                  (let ((prompt
-                         (format "Replace %s with %s (y/n/a/q/l/^E/^Y)? "
-                                 (match-string 0)
-                                 (evil-match-substitute-replacement
-                                  evil-ex-substitute-replacement
-                                  (not case-replace))))
-                        response)
-                    (move-overlay evil-ex-substitute-overlay
-                                  (match-beginning 0)
-                                  (match-end 0))
-                    (catch 'exit-read-char
-                      (while (setq response (read-char prompt))
-                        (when (member response '(?y ?a ?l))
-                          (unless count-only
-                            (evil-replace-match evil-ex-substitute-replacement
-                                                (not case-replace)))
-                          (setq evil-ex-substitute-last-point (point))
-                          (setq evil-ex-substitute-nreplaced
-                                (1+ evil-ex-substitute-nreplaced))
-                          (evil-ex-hl-set-region 'evil-ex-substitute
-                                                 (save-excursion
-                                                   (forward-line)
-                                                   (point))
-                                                 (evil-ex-hl-get-max
-                                                  'evil-ex-substitute)))
-                        (cl-case response
-                          ((?y ?n) (throw 'exit-read-char t))
-                          (?a (setq confirm nil)
-                              (throw 'exit-read-char t))
-                          ((?q ?l ?\C-\[) (throw 'exit-search t))
-                          (?\C-e (evil-scroll-line-down 1))
-                          (?\C-y (evil-scroll-line-up 1))))))
-                (setq evil-ex-substitute-nreplaced
-                      (1+ evil-ex-substitute-nreplaced))
-                (unless count-only
-                  (evil-replace-match evil-ex-substitute-replacement
-                                      (not case-replace)))
-                (setq evil-ex-substitute-last-point (point)))
-              (goto-char (match-end 0))
-              (cond ((and (not whole-line)
-                          (not match-contains-newline))
-                     (forward-line))
-                    ((= (match-beginning 0) (match-end 0))
-                     (if (eobp)
-                         (throw 'exit-search t)
-                       (forward-char)))))))
+              (let ((match-str (match-string 0))
+                    (match-beg (move-marker (make-marker) (match-beginning 0)))
+                    (match-end (move-marker (make-marker) (match-end 0)))
+                    (match-data (match-data)))
+                (goto-char match-beg)
+                (setq match-contains-newline (string-match-p "\n" match-str))
+                (if confirm
+                    (let ((prompt
+                           (format "Replace %s with %s (y/n/a/q/l/^E/^Y)? "
+                                   match-str
+                                   (evil-match-substitute-replacement
+                                    evil-ex-substitute-replacement
+                                    (not case-replace))))
+                          response)
+                      (move-overlay evil-ex-substitute-overlay match-beg match-end)
+                      (catch 'exit-read-char
+                        (while (setq response (read-char prompt))
+                          (when (member response '(?y ?a ?l))
+                            (unless count-only
+                              (set-match-data match-data)
+                              (evil-replace-match evil-ex-substitute-replacement
+                                                  (not case-replace)))
+                            (setq evil-ex-substitute-last-point (point))
+                            (setq evil-ex-substitute-nreplaced
+                                  (1+ evil-ex-substitute-nreplaced))
+                            (evil-ex-hl-set-region 'evil-ex-substitute
+                                                   (save-excursion
+                                                     (forward-line)
+                                                     (point))
+                                                   (evil-ex-hl-get-max
+                                                    'evil-ex-substitute)))
+                          (cl-case response
+                            ((?y ?n) (throw 'exit-read-char t))
+                            (?a (setq confirm nil)
+                                (throw 'exit-read-char t))
+                            ((?q ?l ?\C-\[) (throw 'exit-search t))
+                            (?\C-e (evil-scroll-line-down 1))
+                            (?\C-y (evil-scroll-line-up 1))))))
+                  (setq evil-ex-substitute-nreplaced
+                        (1+ evil-ex-substitute-nreplaced))
+                  (unless count-only
+                    (set-match-data match-data)
+                    (evil-replace-match evil-ex-substitute-replacement
+                                        (not case-replace)))
+                  (setq evil-ex-substitute-last-point (point)))
+                (goto-char match-end)
+                (cond ((and (not whole-line)
+                            (not match-contains-newline))
+                       (forward-line))
+                      ((= match-beg match-end)
+                       (if (eobp)
+                           (throw 'exit-search t)
+                         (forward-char))))))))
       (evil-ex-delete-hl 'evil-ex-substitute)
       (delete-overlay evil-ex-substitute-overlay))
 
