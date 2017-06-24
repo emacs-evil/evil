@@ -625,7 +625,8 @@ happen when the keymap is accessed from `read-key-sequence'. In
 particular, if it is access from `define-key' the returned
 mapping will always be the ESC prefix map."
   (if (and (not evil-inhibit-esc)
-           (or evil-local-mode (evil-ex-p))
+           (or evil-local-mode (evil-ex-p)
+               (active-minibuffer-window))
            (not (evil-emacs-state-p))
            (let ((keys (this-single-command-keys)))
              (and (> (length keys) 0)
