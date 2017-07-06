@@ -479,6 +479,7 @@ the mark and entering `recursive-edit'."
 (declare-function 'avy-goto-word-1-below "avy")
 (declare-function 'avy-goto-subword-0 "avy")
 (declare-function 'avy-goto-subword-1 "avy")
+(declare-function 'avy-goto-char-timer "avy")
 
 (defmacro evil-enclose-avy-for-motion (&rest body)
   "Enclose avy to make it suitable for motions.
@@ -513,6 +514,7 @@ Based on `evil-enclose-ace-jump-for-motion'."
 (evil-define-avy-motion avy-goto-char-2-above inclusive)
 (evil-define-avy-motion avy-goto-char-2-below inclusive)
 (evil-define-avy-motion avy-goto-char-in-line inclusive)
+(evil-define-avy-motion avy-goto-char-timer inclusive)
 (evil-define-avy-motion avy-goto-word-0 exclusive)
 (evil-define-avy-motion avy-goto-word-1 exclusive)
 (evil-define-avy-motion avy-goto-word-1-above exclusive)
@@ -528,6 +530,7 @@ Based on `evil-enclose-ace-jump-for-motion'."
                    avy-goto-char-2-above
                    avy-goto-char-2-below
                    avy-goto-char-in-line
+                   avy-goto-char-timer
                    avy-goto-word-0
                    avy-goto-word-1
                    avy-goto-word-1-above
