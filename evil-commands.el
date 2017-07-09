@@ -2652,6 +2652,14 @@ The search is unbounded, i.e., the pattern is not wrapped in
   (dotimes (var (or count 1))
     (evil-search-word t t symbol)))
 
+(defun semantic-goto-definition (offset)
+  "Wrapper around semantic-ia-fast-jump returning nil on
+error. On success it α) goes to the definition, and β) returns
+non-nil"
+  (condition-case nil
+	  (semantic-ia-fast-jump offset)
+	(error nil)))
+
 (evil-define-motion evil-goto-definition ()
   "Go to definition or first occurrence of symbol under point."
   :jump t
@@ -2683,10 +2691,15 @@ The search is unbounded, i.e., the pattern is not wrapped in
          ;; highlight the occurrence
          ((numberp ipos)
           (evil-search search t t ipos))
-         ;; imenu failed, so just go to first occurrence in buffer
-         (t
-          (evil-search search t t (point-min)))))
+		 ;; imenu failed, try semantic
+		 ((and (fboundp 'semantic-ia-fast-jump)
+			   (semantic-goto-definition ipos))
+		  ()) ;;noop, because semantic-goto-definition already jumped
+		 ((fboundp 'xref-find-definitions) ;; semantic failed, try the generic func
+		  (xref-find-definitions string))))
        ;; no imenu, so just go to first occurrence in buffer
+       ((fboundp 'xref-find-definitions)
+        (xref-find-definitions string))
        (t
         (evil-search search t t (point-min)))))))
 
