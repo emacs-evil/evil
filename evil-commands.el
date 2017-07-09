@@ -2683,10 +2683,13 @@ The search is unbounded, i.e., the pattern is not wrapped in
          ;; highlight the occurrence
          ((numberp ipos)
           (evil-search search t t ipos))
-         ;; imenu failed, so just go to first occurrence in buffer
-         (t
-          (evil-search search t t (point-min)))))
-       ;; no imenu, so just go to first occurrence in buffer
+         ;; imenu failed, try semantic
+         ((and (fboundp 'semantic-ia-fast-jump)
+               (ignore-errors (semantic-ia-fast-jump ipos)))
+          ()) ;; noop, already jumped
+         ((fboundp 'xref-find-definitions) ;; semantic failed, try the generic func
+          (xref-find-definitions string))))
+       ;; otherwise just go to first occurrence in buffer
        (t
         (evil-search search t t (point-min)))))))
 
