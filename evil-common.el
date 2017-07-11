@@ -2329,7 +2329,7 @@ be passed via ARGS."
         (setq endcol (max endcol
                           (min eol-col
                                (1+ (min (1- most-positive-fixnum)
-                                        temporary-goal-column))))))
+                                        (truncate temporary-goal-column)))))))
       ;; start looping over lines
       (goto-char startpt)
       (while (< (point) endpt)
