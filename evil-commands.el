@@ -2709,46 +2709,50 @@ The search is unbounded, i.e., the pattern is not wrapped in
   (dotimes (var (or count 1))
     (evil-search-word t t symbol)))
 
+(defun evil-goto-definition-imenu (string _position)
+  "Find definition for STRING with imenu."
+  (require 'imenu nil t)
+  (let (ientry ipos)
+    (when (fboundp 'imenu--make-index-alist)
+      (ignore-errors (setq ientry (imenu--make-index-alist)))
+      (setq ientry (assoc string ientry))
+      (setq ipos (cdr ientry))
+      (when (and (markerp ipos)
+                 (eq (marker-buffer ipos) (current-buffer)))
+        (setq ipos (marker-position ipos))
+        (when (numberp ipos)
+          (evil-search (format "\\_<%s\\_>" (regexp-quote string)) t t ipos)
+          t)))))
+
+(defun evil-goto-definition-semantic (_string position)
+  "Find definition for POSITION with semantic."
+  (and (fboundp 'semantic-ia-fast-jump)
+       (ignore-errors (semantic-ia-fast-jump position))))
+
+(defun evil-goto-definition-xref (string _position)
+  "Find definition for STRING with xref."
+  (when (fboundp 'xref-find-definitions)
+    (ignore-error user-error
+      (xref-find-definitions string))))
+
+(defun evil-goto-definition-search (string _position)
+  "Find definition for STRING with evil-search."
+  (evil-search (format "\\_<%s\\_>" (regexp-quote string)) t t (point-min))
+  t)
+
 (evil-define-motion evil-goto-definition ()
-  "Go to definition or first occurrence of symbol under point."
+  "Go to definition or first occurrence of symbol under point.
+See also `evil-goto-definition-functions'."
   :jump t
   :type exclusive
-  (let* ((string (evil-find-symbol t))
-         (search (format "\\_<%s\\_>" (regexp-quote string)))
-         ientry ipos)
-    ;; load imenu if available
-    (unless (featurep 'imenu)
-      (condition-case nil
-          (require 'imenu)
-        (error nil)))
+  (let* ((match (evil--find-thing t 'symbol))
+         (string (car match))
+         (position (cdr match)))
     (if (null string)
         (user-error "No symbol under cursor")
       (setq isearch-forward t)
-      ;; if imenu is available, try it
-      (cond
-       ((fboundp 'imenu--make-index-alist)
-        (condition-case nil
-            (setq ientry (imenu--make-index-alist))
-          (error nil))
-        (setq ientry (assoc string ientry))
-        (setq ipos (cdr ientry))
-        (when (and (markerp ipos)
-                   (eq (marker-buffer ipos) (current-buffer)))
-          (setq ipos (marker-position ipos)))
-        (cond
-         ;; imenu found a position, so go there and
-         ;; highlight the occurrence
-         ((numberp ipos)
-          (evil-search search t t ipos))
-         ;; imenu failed, try semantic
-         ((and (fboundp 'semantic-ia-fast-jump)
-               (ignore-errors (semantic-ia-fast-jump ipos)))
-          ()) ;; noop, already jumped
-         ((fboundp 'xref-find-definitions) ;; semantic failed, try the generic func
-          (xref-find-definitions string))))
-       ;; otherwise just go to first occurrence in buffer
-       (t
-        (evil-search search t t (point-min)))))))
+      (run-hook-with-args-until-success 'evil-goto-definition-functions
+                                        string position))))
 
 ;;; Folding
 (defun evil-fold-action (list action)

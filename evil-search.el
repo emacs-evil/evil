@@ -286,8 +286,8 @@ otherwise for the word at point."
       (evil-push-search-history string forward)
       (evil-search string forward t)))))
 
-(defun evil-find-thing (forward thing)
-  "Return THING near point as a string.
+(defun evil--find-thing (forward thing)
+  "Return a cons of THING near point as a string and its position.
 THING should be a symbol understood by `thing-at-point',
 e.g. 'symbol or 'word.  If FORWARD is nil, search backward,
 otherwise forward.  Returns nil if nothing is found."
@@ -304,7 +304,14 @@ otherwise forward.  Returns nil if nothing is found."
       (when (stringp string)
         (set-text-properties 0 (length string) nil string))
       (when (> (length string) 0)
-        string))))
+        (cons string (point))))))
+
+(defun evil-find-thing (forward thing)
+  "Return a THING near point as a string.
+THING should be a symbol understood by `thing-at-point',
+e.g. 'symbol or 'word.  If FORWARD is nil, search backward,
+otherwise forward.  Returns nil if nothing is found."
+  (car (evil--find-thing forward thing)))
 
 (defun evil-find-word (forward)
   "Return word near point as a string.
