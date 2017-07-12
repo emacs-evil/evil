@@ -39,6 +39,15 @@
 This hook can be used the execute some initialization routines
 when Evil is completely loaded.")
 
+(defcustom evil-goto-definition-functions
+  '(evil-goto-definition-imenu
+    evil-goto-definition-semantic
+    evil-goto-definition-xref
+    evil-goto-definition-search)
+  "List of functions run until success by `evil-goto-definition'."
+  :type 'hook
+  :group 'evil)
+
 ;;; Initialization
 
 (defvar evil-pending-custom-initialize nil
