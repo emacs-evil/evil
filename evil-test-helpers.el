@@ -2,7 +2,7 @@
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
-
+;; Package-Requires: ((evil "1.2.12"))
 ;; Version: 1.2.12
 
 ;; This file is NOT part of GNU Emacs.
@@ -52,8 +52,6 @@
 (require 'evil)
 
 ;;; Code:
-
-(provide 'evil-test-helpers)
 
 (when (fboundp 'font-lock-add-keywords)
   (font-lock-add-keywords 'emacs-lisp-mode
@@ -176,6 +174,18 @@ raised.  Remaining forms are evaluated as-is.
                   body)))
          (and (buffer-name buffer)
               (kill-buffer buffer))))))
+
+(defmacro evil-test-selection (string &optional end-string
+                                      before-predicate after-predicate)
+  "Verify that the Visual selection contains STRING."
+  (declare (indent defun))
+  `(progn
+     (save-excursion
+       (goto-char (or evil-visual-beginning (region-beginning)))
+       (evil-test-text nil (or ,string ,end-string) ,before-predicate))
+     (save-excursion
+       (goto-char (or evil-visual-end (region-end)))
+       (evil-test-text (or ,end-string ,string) nil nil ,after-predicate))))
 
 (defun evil-test-buffer-string (string &optional
                                        point-start point-end
@@ -349,18 +359,6 @@ is executed at the end."
         (forward-char (length after))
         (should (funcall after-predicate))))))
 
-(defmacro evil-test-selection (string &optional end-string
-                                      before-predicate after-predicate)
-  "Verify that the Visual selection contains STRING."
-  (declare (indent defun))
-  `(progn
-     (save-excursion
-       (goto-char (or evil-visual-beginning (region-beginning)))
-       (evil-test-text nil (or ,string ,end-string) ,before-predicate))
-     (save-excursion
-       (goto-char (or evil-visual-end (region-end)))
-       (evil-test-text (or ,end-string ,string) nil nil ,after-predicate))))
-
 (defmacro evil-test-region (string &optional end-string
                                    before-predicate after-predicate)
   "Verify that the region contains STRING."
@@ -415,5 +413,7 @@ the end of the execution of BODY."
     (insert-file-contents name)
     (should (string= (buffer-string)
                      contents))))
+
+(provide 'evil-test-helpers)
 
 ;;; evil-test-helpers.el ends here
