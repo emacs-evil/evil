@@ -124,3 +124,7 @@ modify the syntax-table in all buffers of some mode, e.g.:
 ```
 
 This gives the underscore the word syntax-class in all C-like buffers.
+
+# Limitations
+
+Lookahead and lookbehind regex is not supported.
