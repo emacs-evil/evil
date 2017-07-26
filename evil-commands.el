@@ -3379,6 +3379,7 @@ resp.  after executing the command."
          (evil-ex-substitute-hl (evil-ex-make-hl 'evil-ex-substitute))
          (orig-point-marker (move-marker (make-marker) (point)))
          (end-marker (move-marker (make-marker) end))
+         zero-length-match
          match-contains-newline
          transient-mark-mode)
     (setq evil-ex-substitute-pattern pattern
@@ -3400,6 +3401,14 @@ resp.  after executing the command."
                     (match-data (match-data)))
                 (goto-char match-beg)
                 (setq match-contains-newline (string-match-p "\n" match-str))
+                (setq zero-length-match (= match-beg match-end))
+                (when (and (string= "^" evil-ex-substitute-regex)
+                           (= (point) end-marker))
+                  ;; The range (beg end) includes the final newline which means
+                  ;; end-marker is on one line down. With the regex "^" the
+                  ;; beginning of this last line will be matched which we don't
+                  ;; want, so we abort here.
+                  (throw 'exit-search t))
                 (if confirm
                     (let ((prompt
                            (format "Replace %s with %s (y/n/a/q/l/^E/^Y)? "
@@ -3442,9 +3451,25 @@ resp.  after executing the command."
                 (goto-char match-end)
                 (cond ((and (not whole-line)
                             (not match-contains-newline))
-                       (forward-line))
-                      ((= match-beg match-end)
-                       (if (eobp)
+                       (forward-line)
+                       ;; forward-line just moves to the end of the line on the
+                       ;; last line of the buffer.
+                       (when (or (eobp)
+                                 (> (point) end-marker))
+                         (throw 'exit-search t)))
+                      ;; For zero-length matches check to see if point won't
+                      ;; move next time. This is a problem when matching the
+                      ;; regexp "$" because we can enter an infinite loop,
+                      ;; repeatedly matching the same character
+                      ((and zero-length-match
+                            (let ((pnt (point)))
+                              (save-excursion
+                                (and
+                                 (re-search-forward
+                                  evil-ex-substitute-regex end-marker t)
+                                 (= pnt (point))))))
+                       (if (or (eobp)
+                               (= (point) end-marker))
                            (throw 'exit-search t)
                          (forward-char))))))))
       (evil-ex-delete-hl 'evil-ex-substitute)
