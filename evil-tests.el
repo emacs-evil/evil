@@ -6781,7 +6781,22 @@ if no previous selection")
     (evil-test-buffer
       "[a]bc\ndef\nghi"
       (":%s/$/ END/g" [return])
-      "abc END\ndef END\n[g]hi END")))
+      "abc END\ndef END\n[g]hi END"))
+  (ert-info ("Substitute the zero-length beginning of line character")
+    (evil-test-buffer
+      "[a]bc\ndef\nghi"
+      (":s/^/ #/" [return])
+      " [#]abc\ndef\nghi"))
+  (ert-info ("Substitute the zero-length beginning of line character with g flag")
+    (evil-test-buffer
+      "[a]bc\ndef\nghi"
+      (":s/^/ #/g" [return])
+      " [#]abc\ndef\nghi"))
+  (ert-info ("Use Substitute to delete individual characters")
+    (evil-test-buffer
+      "[x]xyxxz"
+      (":%s/x//g" [return])
+      "[y]z")))
 
 (ert-deftest evil-test-ex-repeat-substitute-replacement ()
   "Test `evil-ex-substitute' with repeating of previous substitutions."
