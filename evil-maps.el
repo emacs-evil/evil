@@ -124,6 +124,7 @@
 (define-key evil-window-map "n" 'evil-window-new)
 (define-key evil-window-map "o" 'delete-other-windows)
 (define-key evil-window-map "p" 'evil-window-mru)
+(define-key evil-window-map "q" 'evil-quit)
 (define-key evil-window-map "r" 'evil-window-rotate-downwards)
 (define-key evil-window-map "R" 'evil-window-rotate-upwards)
 (define-key evil-window-map "s" 'evil-window-split)
