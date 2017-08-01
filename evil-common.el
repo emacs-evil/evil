@@ -1379,7 +1379,8 @@ to reach zero). The behaviour of this functions is similar to
                           (point))))
                (match (match-data t))
                (op (save-excursion
-                     (and (re-search-forward (if forwardp beg end) cl t dir)
+                     (and (not (equal beg end))
+                          (re-search-forward (if forwardp beg end) cl t dir)
                           (or (/= pnt (point))
                               (progn
                                 ;; zero size match, repeat search from

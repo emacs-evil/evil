@@ -8144,6 +8144,42 @@ maybe we need one line more with some text\n")
      "foo unde[f] bar") ;; 'undef' is not an abbrev, shouldn't be expanded
     (setq abbrevs-changed nil)))
 
+(ert-deftest evil-test-text-object-macro ()
+  :tags '(evil abbrev)
+  (ert-info ("Test pipe character and other delimiters as object delimiters")
+    ;; This is the macro that broke after pull #747.
+    (defmacro evil-test-define-and-bind-text-object (name key start-regex end-regex)
+      (let ((inner-name (make-symbol (concat "evil-inner-" name)))
+            (outer-name (make-symbol (concat "evil-a-" name))))
+        `(progn
+           (evil-define-text-object ,inner-name (count &optional beg end type)
+             (evil-select-paren ,start-regex ,end-regex beg end type count nil))
+           (evil-define-text-object ,outer-name (count &optional beg end type)
+             (evil-select-paren ,start-regex ,end-regex beg end type count t))
+           (define-key evil-inner-text-objects-map ,key #',inner-name)
+           (define-key evil-outer-text-objects-map ,key #',outer-name))))
+    (evil-test-define-and-bind-text-object "pipe" "|" "|" "|")
+    (evil-test-define-and-bind-text-object "rackety" "#" "#|" "|#")
+
+    (evil-test-buffer
+     "#|this i[s] a test #|with rackety|# multiline
+  and nestable comments|#"
+     ("vi#")
+     "#|<this is a test #|with rackety|# multiline
+  and nestable comments>|#")
+    (evil-test-buffer
+     "| foo | aoe[u] | bar |"
+     ("vi|")
+     "| foo |< aoeu >| bar |"
+     ("a|")
+     "| foo <| aoeu |> bar |"
+     ("a|")
+     "<| foo | aoeu | bar |>")
+    (evil-test-buffer
+     "| foo | aoe[u] | bar |"
+     ("ci|testing" [escape])
+     "| foo |testing| bar |")))
+
 (provide 'evil-tests)
 
 ;;; evil-tests.el ends here
