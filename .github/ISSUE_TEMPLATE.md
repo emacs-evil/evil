@@ -14,7 +14,7 @@ Operating System: <!-- Name and version, e.g. Windows 10, macOS Sierra, Debian J
 Evil version: <!-- M-x evil-version -->
 Evil installation type: <!-- MELPA, MELPA stable, Quelpa, El-Get, manual -->
 Graphical/Terminal: <!-- Whether you're running Emacs in a terminal emulator or under X -->
-Terminal multiplexer: <!-- If you're in a terminal, are you running Emacs inside screen/tmux? -->
+Tested in a [clean environment](https://github.com/emacs-evil/evil/blob/master/CONTRIBUTING.md#bug-reports): <!-- Yes / No -->
 
 # Reproduction steps
 - Start Emacs
