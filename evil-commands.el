@@ -2014,6 +2014,26 @@ The return value is the yanked text."
   (interactive)
   (evil-paste-from-register ?.))
 
+(evil-define-command evil-paste-before-and-indent
+  (count &optional register yank-handler)
+  "Pastes the latest yanked text before point
+and gives it the same indentation as the surrounding code.
+The return value is the yanked text."
+  (interactive "P<x>")
+  (evil-with-single-undo
+    (evil-paste-before count register yank-handler)
+    (evil-indent (evil-get-marker ?[) (evil-get-marker ?]))))
+
+(evil-define-command evil-paste-after-and-indent
+  (count &optional register yank-handler)
+  "Pastes the latest yanked text behind point
+and gives it the same indentation as the surrounding code.
+The return value is the yanked text."
+  (interactive "P<x>")
+  (evil-with-single-undo
+    (evil-paste-after count register yank-handler)
+    (evil-indent (evil-get-marker ?[) (evil-get-marker ?]))))
+
 (evil-define-command evil-use-register (register)
   "Use REGISTER for the next command."
   :keep-visual t
