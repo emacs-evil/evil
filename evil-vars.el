@@ -216,6 +216,14 @@ a line."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-respect-visual-line-mode nil
+  "Make certain evil commands respect `visual-line-mode'.
+
+Currently, this affects the behavior of `evil-insert-line' and
+`evil-append-line', or I and A in normal state."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-repeat-find-to-skip-next t
   "Whether a repeat of t or T should skip an adjacent character."
   :type 'boolean
