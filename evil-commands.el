@@ -127,13 +127,17 @@ of the line or the buffer; just return nil."
 (evil-define-motion evil-next-line (count)
   "Move the cursor COUNT lines down."
   :type line
-  (let (line-move-visual)
+  (let ((line-move-visual (and evil-respect-visual-line-mode
+                               visual-line-mode
+                               line-move-visual)))
     (evil-line-move (or count 1))))
 
 (evil-define-motion evil-previous-line (count)
   "Move the cursor COUNT lines up."
   :type line
-  (let (line-move-visual)
+  (let ((line-move-visual (and evil-respect-visual-line-mode
+                               visual-line-mode
+                               line-move-visual)))
     (evil-line-move (- (or count 1)))))
 
 (evil-define-motion evil-next-visual-line (count)
@@ -152,7 +156,9 @@ of the line or the buffer; just return nil."
 (evil-define-motion evil-line (count)
   "Move COUNT - 1 lines down."
   :type line
-  (let (line-move-visual)
+  (let ((line-move-visual (and evil-respect-visual-line-mode
+                               visual-line-mode
+                               line-move-visual)))
     ;; Catch bob and eob errors. These are caused when not moving
     ;; point starting in the first or last line, respectively. In this
     ;; case the current line should be selected.
@@ -163,13 +169,13 @@ of the line or the buffer; just return nil."
 (evil-define-motion evil-beginning-of-line ()
   "Move the cursor to the beginning of the current line."
   :type exclusive
-  (move-beginning-of-line nil))
+  (evil-move-beginning-of-line nil))
 
 (evil-define-motion evil-end-of-line (count)
   "Move the cursor to the end of the current line.
 If COUNT is given, move COUNT - 1 lines downward first."
   :type inclusive
-  (move-end-of-line count)
+  (evil-move-end-of-line count)
   (when evil-track-eol
     (setq temporary-goal-column most-positive-fixnum
           this-command 'next-line))
@@ -1393,7 +1399,10 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
      ((eq type 'line)
       (evil-delete beg end type register yank-handler))
      (t
-      (evil-delete beg (line-end-position) type register yank-handler)))))
+      (evil-delete beg (progn
+                         (evil-move-end-of-line)
+                         (point))
+                   type register yank-handler)))))
 
 (evil-define-operator evil-delete-whole-line
   (beg end type register yank-handler)
@@ -2357,7 +2366,16 @@ non nil it should be number > 0. The insertion will be repeated
 in the next VCOUNT - 1 lines below the current one."
   (interactive "p")
   (push (point) buffer-undo-list)
-  (back-to-indentation)
+  (if (and evil-respect-visual-line-mode
+           visual-line-mode)
+      (let ((visual-beg (save-excursion
+                          (beginning-of-visual-line)
+                          (point)))
+            (indent (save-excursion
+                      (back-to-indentation)
+                      (point))))
+        (goto-char (max visual-beg indent)))
+    (back-to-indentation))
   (setq evil-insert-count count
         evil-insert-lines nil
         evil-insert-vcount

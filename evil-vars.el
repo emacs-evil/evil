@@ -216,6 +216,26 @@ a line."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-respect-visual-line-mode nil
+  "Make certain evil commands respect `visual-line-mode'.
+
+This affects the behavior of these commands (among others)
+
+I: `evil-insert-line'
+A: `evil-append-line'
+j: `evil-next-line'
+k: `evil-previous-line'
+c: `evil-change'
+C: `evil-change-line'
+d: `evil-delete'
+D: `evil-delete-line'
+y: `evil-yank'
+Y: `evil-delete-yank-line'
+0: `evil-beginning-of-line'
+$: `evil-end-of-line'"
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-repeat-find-to-skip-next t
   "Whether a repeat of t or T should skip an adjacent character."
   :type 'boolean
