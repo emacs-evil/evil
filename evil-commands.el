@@ -2357,7 +2357,16 @@ non nil it should be number > 0. The insertion will be repeated
 in the next VCOUNT - 1 lines below the current one."
   (interactive "p")
   (push (point) buffer-undo-list)
-  (back-to-indentation)
+  (if (and evil-respect-visual-line-mode
+           visual-line-mode)
+      (let ((visual-beg (save-excursion
+                          (beginning-of-visual-line)
+                          (point)))
+            (indent (save-excursion
+                      (back-to-indentation)
+                      (point))))
+        (goto-char (max visual-beg indent)))
+    (back-to-indentation))
   (setq evil-insert-count count
         evil-insert-lines nil
         evil-insert-vcount
@@ -2374,7 +2383,10 @@ The insertion will be repeated COUNT times.  If VCOUNT is non nil
 it should be number > 0. The insertion will be repeated in the
 next VCOUNT - 1 lines below the current one."
   (interactive "p")
-  (evil-move-end-of-line)
+  (if (and evil-respect-visual-line-mode
+           visual-line-mode)
+      (end-of-visual-line)
+    (evil-move-end-of-line))
   (setq evil-insert-count count
         evil-insert-lines nil
         evil-insert-vcount
