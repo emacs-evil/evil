@@ -122,18 +122,12 @@ line and `evil-want-visual-char-semi-exclusive', then:
             (evil-range
              (progn
                (goto-char beg)
-               (min (line-beginning-position)
-                    (progn
-                      ;; move to beginning of line as displayed
-                      (evil-move-beginning-of-line)
-                      (line-beginning-position))))
+               (evil-move-beginning-of-line)
+               (point))
              (progn
                (goto-char end)
-               (max (line-beginning-position 2)
-                    (progn
-                      ;; move to end of line as displayed
-                      (evil-move-end-of-line)
-                      (line-beginning-position 2))))))
+               (evil-move-beginning-of-line 2)
+               (point))))
   :contract (lambda (beg end)
               (evil-range beg (max beg (1- end))))
   :string (lambda (beg end)
