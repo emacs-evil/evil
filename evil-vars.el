@@ -216,6 +216,18 @@ a line."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-respect-visual-line-mode nil
+  "Whether to remap movement commands when `visual-line-mode' is active.
+This variable must be set before evil is loaded. The commands
+swapped are
+
+`evil-next-line'         <-> `evil-next-visual-line'
+`evil-previous-line'     <-> `evil-previous-visual-line'
+`evil-beginning-of-line' <-> `evil-beginning-of-visual-line'
+`evil-end-of-line'       <-> `evil-end-of-visual-line'"
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-repeat-find-to-skip-next t
   "Whether a repeat of t or T should skip an adjacent character."
   :type 'boolean
