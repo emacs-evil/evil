@@ -723,8 +723,10 @@ has already been started; otherwise TARGET is called."
            (setq this-command #'digit-argument)
            (call-interactively #'digit-argument))
           (t
-           (setq this-command #',target)
-           (call-interactively #',target)))))))
+           (let ((target (or (command-remapping #',target)
+                             #',target)))
+             (setq this-command target)
+             (call-interactively target))))))))
 
 (defun evil-extract-append (file-or-append)
   "Return an (APPEND . FILENAME) pair based on FILE-OR-APPEND.
