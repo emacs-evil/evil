@@ -553,6 +553,16 @@ Based on `evil-enclose-ace-jump-for-motion'."
      (add-to-list 'evil-motion-state-modes 'ag-mode)
      (evil-add-hjkl-bindings ag-mode-map 'motion)))
 
+;; visual-line-mode integration
+(when evil-respect-visual-line-mode
+  (let ((swaps '((evil-next-line . evil-next-visual-line)
+                 (evil-previous-line . evil-previous-visual-line)
+                 (evil-beginning-of-line . evil-beginning-of-visual-line)
+                 (evil-end-of-line . evil-end-of-visual-line))))
+    (dolist (swap swaps)
+      (define-key visual-line-mode-map (vector 'remap (car swap)) (cdr swap))
+      (define-key visual-line-mode-map (vector 'remap (cdr swap)) (car swap)))))
+
 (provide 'evil-integration)
 
 ;;; abbrev.el
