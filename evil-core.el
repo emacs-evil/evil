@@ -313,7 +313,7 @@ initial state for a mode can be set with
 `evil-set-initial-state'."
   (let (state modes)
     (catch 'done
-      (dolist (entry (nreverse (evil-state-property t :modes)) default)
+      (dolist (entry (evil-state-property t :modes) default)
         (setq state (car entry)
               modes (symbol-value (cdr entry)))
         (when (or (memq mode modes)
