@@ -10,12 +10,12 @@ extensions. Also see our page on [EmacsWiki](http://emacswiki.org/emacs/Evil).
 Evil lives in a git repository. To download Evil, do
 
 ```
-git clone https://github.com/emacs-evil/evil
+git clone https://github.com/emacs-evil/evil ~/.emacs.d/evil
 ```
 
 # Install
 
-Move Evil to `~/.emacs.d/evil`. Then add the following lines to `~/.emacs`:
+After the download step, add the following lines to `~/.emacs`:
 
 ```elisp
 (add-to-list 'load-path "~/.emacs.d/evil")
