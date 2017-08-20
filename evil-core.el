@@ -316,10 +316,11 @@ initial state for a mode can be set with
   (let ((parents (if noinherit
 		     (list mode)
 		   (evil--get-parents mode)))
+	(modes-states (evil-state-property t :modes))
 	state modes)
     (catch 'done
       (dolist (parent parents default)
-	(dolist (entry (evil-state-property t :modes))
+	(dolist (entry modes-states)
 	  (setq state (car entry)
 		modes (symbol-value (cdr entry)))
 	  (when (memq parent modes)
