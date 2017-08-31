@@ -31,6 +31,7 @@
 (require 'evil-types)
 (require 'evil-command-window)
 (require 'evil-jumps)
+(require 'flyspell)
 
 ;;; Motions
 
@@ -550,9 +551,6 @@ and jump to the corresponding one."
        ((< open close) (goto-char open-pair))
        (t (goto-char close-pair)))))))
 
-(eval-when-compile
-  (require 'flyspell))
-
 (defun evil--flyspell-overlays-in-p (beg end)
   (let ((ovs (overlays-in beg end))
         done)
@@ -589,7 +587,6 @@ and jump to the corresponding one."
     done))
 
 (defun evil--next-flyspell-error (forwardp)
-  (require 'flyspell)
   (when (evil--flyspell-overlays-in-p (point-min) (point-max))
     (let ((pos (point))
           limit
