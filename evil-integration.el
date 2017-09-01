@@ -221,7 +221,7 @@ some buffer, but only if `global-undo-tree-mode' is also
 activated."
        (when (and (boundp 'global-undo-tree-mode)
                   global-undo-tree-mode)
-         (undo-tree-mode 1)))
+         (turn-on-undo-tree-mode)))
 
      (add-hook 'evil-local-mode-hook #'evil-turn-on-undo-tree-mode)
 
