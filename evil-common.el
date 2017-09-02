@@ -2041,7 +2041,7 @@ The following special registers are supported.
                                          evil-ex-current-buffer))
                   (user-error "No file name")))
              ((= register ?#)
-              (or (with-current-buffer (other-buffer) (buffer-file-name))
+              (or (buffer-file-name (window-buffer (next-window)))
                   (user-error "No file name")))
              ((eq register ?/)
               (or (car-safe
