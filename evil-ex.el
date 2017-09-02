@@ -42,6 +42,7 @@
 
 (require 'evil-common)
 (require 'evil-states)
+(require 'shell)
 
 ;;; Code:
 
@@ -564,9 +565,7 @@ keywords and function:
 This function must be called from the :runner function of some
 argument handler that requires shell completion."
   (when (and (eq flag 'start)
-             (not evil-ex-shell-argument-initialized)
-             (require 'shell nil t)
-             (require 'comint nil t))
+             (not evil-ex-shell-argument-initialized))
     (set (make-local-variable 'evil-ex-shell-argument-initialized) t)
     (cond
      ;; Emacs 24

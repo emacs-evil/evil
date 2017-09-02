@@ -53,7 +53,8 @@ In older versions of Emacs, `called-interactively-p' takes
 no arguments.  In Emacs 23.2 and newer, it takes one argument."
   (called-interactively-p 'any))
 (make-obsolete 'evil-called-interactively-p
-               "please use (called-interactively-p 'any) instead.")
+               "please use (called-interactively-p 'any) instead."
+               "Git commit 222b791")
 
 ;; macro helper
 (eval-and-compile
