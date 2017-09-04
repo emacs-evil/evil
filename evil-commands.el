@@ -308,7 +308,7 @@ If point is at the end of the buffer and cannot be moved signal
       (evil-forward-beginning thing count))
      ;; the evil-change operator, maybe behave like ce or cE
      ((and evil-want-change-word-to-end
-           (eq evil-this-operator #'evil-change)
+           (memq evil-this-operator evil-change-commands)
            (< orig (or (cdr-safe (bounds-of-thing-at-point thing)) orig)))
       ;; forward-thing moves point to the correct position because
       ;; this is an exclusive motion
