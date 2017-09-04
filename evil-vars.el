@@ -1280,6 +1280,11 @@ having higher priority.")
 (defvar evil-command-properties nil
   "Specifications made by `evil-define-command'.")
 
+(defvar evil-change-commands '(evil-change)
+  "Commands that wrap or replace `evil-change'.
+This list exists to apply an inconsistency with vim's change command
+to commands that wrap or redefine it. See emacs-evil/evil#916.")
+
 (defvar evil-transient-vars '(cua-mode transient-mark-mode select-active-regions)
   "List of variables pertaining to Transient Mark mode.")
 
