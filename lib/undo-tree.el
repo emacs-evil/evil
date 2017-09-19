@@ -1,9 +1,9 @@
 ;;; undo-tree.el --- Treat undo history as a tree  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009-2012  Free Software Foundation, Inc
+;; Copyright (C) 2009-2013  Free Software Foundation, Inc
 
 ;; Author: Toby Cubitt <toby-undo-tree@dr-qubit.org>
-;; Version: 0.6.3
+;; Version: 0.6.5
 ;; Keywords: convenience, files, undo, redo, history, tree
 ;; URL: http://www.dr-qubit.org/emacs.php
 ;; Repository: http://www.dr-qubit.org/git/undo-tree.git
@@ -51,7 +51,9 @@
 ;; Installation
 ;; ============
 ;;
-;; This package requires Emacs version 24 or newer.
+;; This package has only been tested with Emacs versions 24 and CVS. It should
+;; work in Emacs versions 22 and 23 too, but will not work without
+;; modifications in earlier versions of Emacs.
 ;;
 ;; To install `undo-tree-mode', make sure this file is saved in a directory in
 ;; your `load-path', and add the line:
@@ -206,9 +208,7 @@
 ;;
 ;; Persistent undo history:
 ;;
-;; Note: Requires a recent development version of Emacs checked out out from
-;;       the Emacs bzr repository. All stable versions of Emacs currently
-;;       break this feature.
+;; Note: Requires Emacs version 24.3 or higher.
 ;;
 ;; `undo-tree-auto-save-history' (variable)
 ;;    automatically save and restore undo-tree history along with buffer
@@ -883,9 +883,11 @@ when a buffer is saved to file.
 It will automatically load undo history when a buffer is loaded
 from file, if an undo save file exists.
 
-Undo-tree history is saved to a file called
-\".<buffer-file-name>.~undo-tree\" in the same directory as the
-file itself.
+By default, undo-tree history is saved to a file called
+\".<buffer-file-name>.~undo-tree~\" in the same directory as the
+file itself. To save under a different directory, customize
+`undo-tree-history-directory-alist' (see the documentation for
+that variable for details).
 
 WARNING! `undo-tree-auto-save-history' will not work properly in
 Emacs versions prior to 24.3, so it cannot be enabled via
@@ -1199,6 +1201,42 @@ in visualizer."
     (define-key map "d" 'undo-tree-visualizer-selection-toggle-diff)
     ;; set keymap
     (setq undo-tree-visualizer-selection-mode-map map)))
+
+
+(defvar undo-tree-old-undo-menu-item nil)
+
+(defun undo-tree-update-menu-bar ()
+  "Update `undo-tree-mode' Edit menu items."
+  (if undo-tree-mode
+      (progn
+	;; save old undo menu item, and install undo/redo menu items
+	(setq undo-tree-old-undo-menu-item
+	      (cdr (assq 'undo (lookup-key global-map [menu-bar edit]))))
+	(define-key (lookup-key global-map [menu-bar edit])
+	  [undo] '(menu-item "Undo" undo-tree-undo
+			     :enable (and undo-tree-mode
+					  (not buffer-read-only)
+					  (not (eq t buffer-undo-list))
+					  (undo-tree-node-previous
+					   (undo-tree-current buffer-undo-tree)))
+			     :help "Undo last operation"))
+	(define-key-after (lookup-key global-map [menu-bar edit])
+	  [redo] '(menu-item "Redo" undo-tree-redo
+			     :enable (and undo-tree-mode
+					  (not buffer-read-only)
+					  (not (eq t buffer-undo-list))
+					  (undo-tree-node-next
+					   (undo-tree-current buffer-undo-tree)))
+			     :help "Redo last operation")
+	  'undo))
+    ;; uninstall undo/redo menu items
+    (define-key (lookup-key global-map [menu-bar edit])
+      [undo] undo-tree-old-undo-menu-item)
+    (define-key (lookup-key global-map [menu-bar edit])
+      [redo] nil)))
+
+(add-hook 'menu-bar-update-hook 'undo-tree-update-menu-bar)
+
 
 
 
@@ -2592,7 +2630,7 @@ Within the undo-tree visualizer, the following keys are available:
 
   ;; if disabling `undo-tree-mode', rebuild `buffer-undo-list' from tree so
   ;; Emacs undo can work
-  (if (not undo-tree-mode)
+  (when (not undo-tree-mode)
     (undo-list-rebuild-from-tree)
     (setq buffer-undo-tree nil)))
 
@@ -2984,16 +3022,16 @@ Argument is a character, naming the register."
 
 (defun undo-tree-make-history-save-file-name (file)
   "Create the undo history file name for FILE.
-Normally this is the file's name with `.' prepended and
-`~undo-tree~' appended.
+Normally this is the file's name with \".\" prepended and
+\".~undo-tree~\" appended.
 
-A match for FILE is sought in `undo-tree-history-directory-alist';
-see the documentation of that variable.  If the directory for the
-backup doesn't exist, it is created."
+A match for FILE is sought in `undo-tree-history-directory-alist'
+\(see the documentation of that variable for details\). If the
+directory for the backup doesn't exist, it is created."
   (let* ((backup-directory-alist undo-tree-history-directory-alist)
 	 (name (make-backup-file-name-1 file)))
     (concat (file-name-directory name) "." (file-name-nondirectory name)
-	    "~undo-tree~")))
+	    ".~undo-tree~")))
 
 
 (defun undo-tree-save-history (&optional filename overwrite)
@@ -3182,6 +3220,8 @@ signaling an error if file is not found."
 		  (undo-tree-current undo-tree)
 		(undo-tree-root undo-tree))))
     (erase-buffer)
+    (setq undo-tree-visualizer-needs-extending-down nil
+	  undo-tree-visualizer-needs-extending-up nil)
     (undo-tree-clear-visualizer-data undo-tree)
     (undo-tree-compute-widths node)
     ;; lazy drawing starts vertically centred and displaced horizontally to
@@ -4301,6 +4341,75 @@ specifies `saved', and a negative prefix argument specifies
     (when win
       (balance-windows)
       (shrink-window-if-larger-than-buffer win))))
+
+;;;; ChangeLog:
+
+;; 2013-12-28  Toby S. Cubitt  <tsc25@cantab.net>
+;; 
+;; 	* undo-tree: Update to version 0.6.5.
+;; 
+;; 2012-12-05  Toby S. Cubitt  <tsc25@cantab.net>
+;; 
+;; 	Update undo-tree to version 0.6.3
+;; 
+;; 	* undo-tree.el: Implement lazy tree drawing to significantly speed up 
+;; 	visualization of large trees + various more minor improvements.
+;; 
+;; 2012-09-25  Toby S. Cubitt  <tsc25@cantab.net>
+;; 
+;; 	Updated undo-tree package to version 0.5.5.
+;; 
+;; 	Small bug-fix to avoid hooks triggering an error when trying to save
+;; 	undo history in a buffer where undo is disabled.
+;; 
+;; 2012-09-11  Toby S. Cubitt  <tsc25@cantab.net>
+;; 
+;; 	Updated undo-tree package to version 0.5.4
+;; 
+;; 	Bug-fixes and improvements to persistent history storage.
+;; 
+;; 2012-07-18  Toby S. Cubitt  <tsc25@cantab.net>
+;; 
+;; 	Update undo-tree to version 0.5.3
+;; 
+;; 	* undo-tree.el: Cope gracefully with undo boundaries being deleted
+;; 	 (cf. bug#11774). Allow customization of directory to which undo
+;; 	history is
+;; 	 saved.
+;; 
+;; 2012-05-24  Toby S. Cubitt  <tsc25@cantab.net>
+;; 
+;; 	updated undo-tree package to version 0.5.2
+;; 
+;; 	* undo-tree.el: add diff view feature in undo-tree visualizer.
+;; 
+;; 2012-05-02  Toby S. Cubitt  <tsc25@cantab.net>
+;; 
+;; 	undo-tree.el: Update package to version 0.4
+;; 
+;; 2012-04-20  Toby S. Cubitt  <tsc25@cantab.net>
+;; 
+;; 	undo-tree.el: Update package to version 0.3.4
+;; 
+;; 	* undo-tree.el (undo-list-pop-changeset): fix pernicious bug causing
+;; 	undo history to be lost.
+;; 	(buffer-undo-tree): set permanent-local property.
+;; 	(undo-tree-enable-undo-in-region): add new customization option
+;; 	allowing undo-in-region to be disabled.
+;; 
+;; 2012-01-26  Toby S. Cubitt  <tsc25@cantab.net>
+;; 
+;; 	undo-tree.el: Fixed copyright attribution and Emacs status.
+;; 
+;; 2012-01-26  Toby S. Cubitt  <tsc25@cantab.net>
+;; 
+;; 	undo-tree.el: Update package to version 0.3.3
+;; 
+;; 2011-09-17  Stefan Monnier  <monnier@iro.umontreal.ca>
+;; 
+;; 	Add undo-tree.el
+;; 
+
 
 
 
