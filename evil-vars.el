@@ -1650,7 +1650,14 @@ Elements have the form (NAME . FUNCTION).")
      :toggle     ,(lambda () (origami-toggle-node (current-buffer) (point)))
      :open       ,(lambda () (origami-open-node (current-buffer) (point)))
      :open-rec   ,(lambda () (origami-open-node-recursively (current-buffer) (point)))
-     :close      ,(lambda () (origami-close-node (current-buffer) (point)))))
+     :close      ,(lambda () (origami-close-node (current-buffer) (point))))
+    ((vdiff-mode)
+     :open-all   vdiff-open-all-folds
+     :close-all  vdiff-close-all-folds
+     :toggle     nil
+     :open       vdiff-open-fold
+     :open-rec   vdiff-open-fold
+     :close      vdiff-close-fold))
   "Actions to be performed for various folding operations.
 
 The value should be a list of fold handlers, were a fold handler has
