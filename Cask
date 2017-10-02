@@ -1,4 +1,4 @@
-(package "evil" "1.2.12" "Extensible Vi layer for Emacs.")
+(package "evil" "1.2.13" "Extensible Vi layer for Emacs.")
 
 (files "*.el")
 
