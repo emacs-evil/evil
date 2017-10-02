@@ -29,7 +29,7 @@ After the download step, add the following lines to `~/.emacs`:
 `load-path` for linear undo and undo branches.
 
 * For the motions `g;` `g,` and for the last-change-register `.`, Evil requires the
-[goto-chg.el](https://www.emacswiki.org/emacs/GotoChg) package,
+[goto-chg.el](https://github.com/emacs-evil/goto-chg) package,
 which provides the functions `goto-last-change` and `goto-last-change-reverse`.
 
 # Documentation
