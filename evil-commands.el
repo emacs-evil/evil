@@ -623,13 +623,13 @@ and jump to the corresponding one."
 (evil-define-motion evil-previous-open-paren (count)
   "Go to [count] previous unmatched '('."
   :type exclusive
-  (evil-up-paren ?( ?) (- (or count 1))))
+  (evil-up-paren ?\( ?\) (- (or count 1))))
 
 (evil-define-motion evil-next-close-paren (count)
   "Go to [count] next unmatched ')'."
   :type exclusive
   (forward-char)
-  (evil-up-paren ?( ?) (or count 1))
+  (evil-up-paren ?\( ?\) (or count 1))
   (backward-char))
 
 (evil-define-motion evil-previous-open-brace (count)
@@ -1189,12 +1189,12 @@ or line COUNT to the top of the window."
 (evil-define-text-object evil-a-paren (count &optional beg end type)
   "Select a parenthesis."
   :extend-selection nil
-  (evil-select-paren ?( ?) beg end type count t))
+  (evil-select-paren ?\( ?\) beg end type count t))
 
 (evil-define-text-object evil-inner-paren (count &optional beg end type)
   "Select inner parenthesis."
   :extend-selection nil
-  (evil-select-paren ?( ?) beg end type count))
+  (evil-select-paren ?\( ?\) beg end type count))
 
 (evil-define-text-object evil-a-bracket (count &optional beg end type)
   "Select a square bracket."
@@ -3166,7 +3166,7 @@ If FORCE is non-nil all local marks except 0-9 are removed.
       (while (< i n)
         (cond
          ;; skip spaces
-         ((= (aref marks i) ?\ ) (cl-incf i))
+         ((= (aref marks i) ?\s) (cl-incf i))
          ;; ranges of marks
          ((and (< (+ i 2) n)
                (= (aref marks (1+ i)) ?-)

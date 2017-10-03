@@ -655,7 +655,7 @@ Reuse overlays where possible to prevent flicker."
             (setq before
                   (propertize
                    (make-string
-                    (- beg-col (current-column)) ?\ )
+                    (- beg-col (current-column)) ?\s)
                    'face
                    (or (get-text-property (1- (point)) 'face)
                        'default))))
@@ -672,7 +672,7 @@ Reuse overlays where possible to prevent flicker."
                     (if (= (point) row-beg)
                         (- end-col beg-col)
                       (- end-col (current-column)))
-                    ?\ ) 'face 'region))
+                    ?\s) 'face 'region))
             ;; place cursor on one of the virtual spaces
             (if (= point row-beg)
                 (put-text-property
