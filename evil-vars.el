@@ -1320,7 +1320,7 @@ type.")
 (evil-define-local-var evil-this-register nil
   "Current register.")
 
-(evil-define-local-var evil-this-macro nil
+(defvar evil-this-macro nil
   "Current macro register.")
 
 (evil-define-local-var evil-this-operator nil
