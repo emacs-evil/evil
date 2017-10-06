@@ -2693,7 +2693,8 @@ Handler errors will be demoted, so a problem in one handler will (hopefully)
 not interfere with another."
   (if (null list)
       (user-error
-       "Folding is not supported for any of these major/minor modes")
+       "Enable one of the following modes for folding to work: %s"
+       (mapconcat 'symbol-name (mapcar 'caar evil-fold-list) ", "))
     (let* ((modes (caar list)))
       (if (evil--mode-p modes)
           (let* ((actions (cdar list))
