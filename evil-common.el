@@ -2478,8 +2478,10 @@ The tracked insertion is set to `evil-last-insertion'."
   "Inserts the current text linewise."
   (let ((text (apply #'concat (make-list (or evil-paste-count 1) text)))
         (opoint (point)))
-    (remove-list-of-text-properties
-     0 (length text) yank-excluded-properties text)
+    (if (eq yank-excluded-properties t)
+        (set-text-properties 0 (length text) nil text)
+      (remove-list-of-text-properties 0 (length text)
+                                      yank-excluded-properties text))
     (cond
      ((eq this-command 'evil-paste-before)
       (evil-move-beginning-of-line)
