@@ -276,7 +276,8 @@ has :repeat nil."
         ;; called.
         (evil-repeat-abort))
        ;; ignore those commands completely
-       ((null repeat-type))
+       ((or (null repeat-type)
+            (evil-mouse-events-p (this-command-keys))))
        ;; record command
        (t
         ;; In normal-state or visual state, each command is a single
