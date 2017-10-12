@@ -2475,7 +2475,7 @@ The tracked insertion is set to `evil-last-insertion'."
         (kill-new text)))))
 
 (defun evil-remove-yank-excluded-properties (text)
-  "Removes `yank-excluded-properties' from text."
+  "Removes `yank-excluded-properties' from TEXT."
   (if (eq yank-excluded-properties t)
       (set-text-properties 0 (length text) nil text)
     (remove-list-of-text-properties 0 (length text)
