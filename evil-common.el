@@ -2474,12 +2474,18 @@ The tracked insertion is set to `evil-last-insertion'."
       (unless (eq register ?_)
         (kill-new text)))))
 
+(defun evil-remove-yank-excluded-properties (text)
+  "Removes `yank-excluded-properties' from TEXT."
+  (if (eq yank-excluded-properties t)
+      (set-text-properties 0 (length text) nil text)
+    (remove-list-of-text-properties 0 (length text)
+                                    yank-excluded-properties text)))
+
 (defun evil-yank-line-handler (text)
   "Inserts the current text linewise."
   (let ((text (apply #'concat (make-list (or evil-paste-count 1) text)))
         (opoint (point)))
-    (remove-list-of-text-properties
-     0 (length text) yank-excluded-properties text)
+    (evil-remove-yank-excluded-properties text)
     (cond
      ((eq this-command 'evil-paste-before)
       (evil-move-beginning-of-line)
@@ -2546,8 +2552,7 @@ The tracked insertion is set to `evil-last-insertion'."
               (move-to-column (+ col begextra) t)
             (move-to-column col t)
             (insert (make-string begextra ?\s)))
-          (remove-list-of-text-properties 0 (length text)
-                                          yank-excluded-properties text)
+          (evil-remove-yank-excluded-properties text)
           (insert text)
           (unless (eolp)
             ;; text follows, so we have to insert spaces
