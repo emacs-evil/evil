@@ -1655,9 +1655,9 @@ Elements have the form (NAME . FUNCTION).")
      :open-all   vdiff-open-all-folds
      :close-all  vdiff-close-all-folds
      :toggle     nil
-     :open       vdiff-open-fold
-     :open-rec   vdiff-open-fold
-     :close      vdiff-close-fold))
+     :open       ,(lambda () (call-interactively 'vdiff-open-fold))
+     :open-rec   ,(lambda () (call-interactively 'vdiff-open-fold))
+     :close      ,(lambda () (call-interactively 'vdiff-close-fold))))
   "Actions to be performed for various folding operations.
 
 The value should be a list of fold handlers, were a fold handler has
