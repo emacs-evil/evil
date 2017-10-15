@@ -1875,6 +1875,7 @@ The return value is the yanked text."
                     ;; for non-interactive use
                     (this-command #'evil-paste-before))
                 (push-mark opoint t)
+                (setq text (propertize text 'yank-handler (list yank-handler)))
                 (insert-for-yank text))
             ;; no yank-handler, default
             (when (vectorp text)
@@ -1921,6 +1922,7 @@ The return value is the yanked text."
               (let ((evil-paste-count count)
                     ;; for non-interactive use
                     (this-command #'evil-paste-after))
+                (setq text (propertize text 'yank-handler (list yank-handler)))
                 (insert-for-yank text))
             ;; no yank-handler, default
             (when (vectorp text)
@@ -2020,6 +2022,58 @@ The return value is the yanked text."
   "Paste last insertion."
   (interactive)
   (evil-paste-from-register ?.))
+
+(defun evil--get-common-indent-in-region (start end)
+  "Return the minimum indent (in columns) between START and END ignoring empty lines."
+  (let (indentation)
+    (save-excursion
+      (goto-char start)
+      (or (bolp) (forward-line 1))
+      (while (< (point) end)
+        (skip-chars-forward " \t")
+        (unless (eolp)
+          (setq indentation
+                (if indentation
+                    (min (current-column) indentation)
+                  (current-column))))
+        (forward-line 1)))
+    (or indentation 0)))
+
+(defun evil--paste-and-adjust-indent-yank-handler (text)
+  "Insert TEXT linewise (to be used in `evil--paste-and-adjust-indent')."
+  (unless (string-suffix-p "\n" text)
+    (setq text (concat text "\n")))
+  (evil-yank-line-handler text))
+
+(defun evil--paste-and-adjust-indent (command count register)
+  "Paste region using COMMAND and adjust indentation relative to current line.
+The COUNT and REGISTER arguments are passed on to the specified command, which
+should be one of `evil-paste-before' or `evil-paste-after'."
+  (evil-with-single-undo
+    (let* ((columns (save-excursion
+                      (forward-line 0)
+                      (skip-chars-forward " \t")
+                      (current-column)))
+           ;; vim's ]p and [p always paste line-wise
+           (yank-handler #'evil--paste-and-adjust-indent-yank-handler)
+           ;; TODO: yank-handler argument is not handled in evil-paste-{after,before}
+           (result (funcall command count register yank-handler))
+           (start (evil-get-marker ?\[))
+           (end (evil-get-marker ?\]))
+           (common (evil--get-common-indent-in-region start end)))
+      (indent-rigidly start end (- columns common)))))
+
+(evil-define-command evil-paste-before-adjusting-indent (count &optional register)
+  "Like `evil-paste-before' but adjusts the indent to the current line."
+  :suppress-operator t
+  (interactive "P<x>")
+  (evil--paste-and-adjust-indent #'evil-paste-before count register))
+
+(evil-define-command evil-paste-after-adjusting-indent (count &optional register)
+  "Like `evil-paste-after' but adjusts the indent to the current line."
+  :suppress-operator t
+  (interactive "P<x>")
+  (evil--paste-and-adjust-indent #'evil-paste-after count register))
 
 (evil-define-command evil-use-register (register)
   "Use REGISTER for the next command."

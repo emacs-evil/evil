@@ -2590,6 +2590,45 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       ("Vp\C-p\C-p")
       "word1a word1b word1c\nword1[a]word3a word3b word3c word3d\n")))
 
+(ert-deftest evil-test-paste-adjusting-indent ()
+  "Test `evil-paste-adjust-adjusting-indent` and `evil:paste-before-adjusting-indent`."
+  :tags '(evil paste)
+  (ert-info ("Paste linewise after")
+    (evil-test-buffer
+      "[u]iae\n    aaabbb\n  xxx\n\nxlvc\n  aaaa"
+      ("VjjyG]p")
+      "uiae\n    aaabbb\n  xxx\n\nxlvc\n  aaaa\n[ ] uiae\n      aaabbb\n    xxx"))
+  (ert-info ("Paste linewise before")
+    (evil-test-buffer
+      "[u]iae\n    aaabbb\n  xxx\n\nxlvc\n  aaaa"
+      ("VjjyG[p")
+      "uiae\n    aaabbb\n  xxx\n\nxlvc\n[ ] uiae\n      aaabbb\n    xxx\n  aaaa"))
+  ;; vim's ]p and [p always paste line-wise
+  (ert-info ("Paste words on same line after -> pasted line-wise")
+    (evil-test-buffer
+      "[u]iae\n    aaabbb\n  xxx"
+      ("y$jfb]p")
+      "uiae\n    aaabbb\n    uiae\n  xxx"))
+  (ert-info ("Paste words on same line before -> pasted line-wise")
+    (evil-test-buffer
+      "[u]iae\n    aaabbb\n  xxx"
+      ("y$jfb[p")
+      "uiae\n    uiae\n    aaabbb\n  xxx"))
+  (ert-info ("Paste block after -> pasted line-wise")
+    (evil-test-buffer
+      "[u]iae\n    aaabbb\n  xxx"
+      ("vjEy")
+      "[u]iae\n    aaabbb\n  xxx"
+      ("jfb]p")
+      "uiae\n    aaabbb\n    uiae\n        aaabbb\n  xxx"))
+  (ert-info ("Paste block before -> pasted line-wise")
+    (evil-test-buffer
+      "[u]iae\n    aaabbb\n  xxx"
+      ("vjEy")
+      "[u]iae\n    aaabbb\n  xxx"
+      ("jfb[p")
+      "uiae\n    uiae\n        aaabbb\n    aaabbb\n  xxx")))
+
 (ert-deftest evil-test-register ()
   "Test yanking and pasting to and from register."
   :tags '(evil yank paste)
