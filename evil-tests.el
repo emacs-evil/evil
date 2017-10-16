@@ -8180,6 +8180,43 @@ maybe we need one line more with some text\n")
      ("ci|testing" [escape])
      "| foo |testing| bar |")))
 
+;;; Core
+
+(ert-deftest evil-test-initial-state ()
+  "Test `evil-initial-state'"
+  :tags '(evil core)
+  (ert-info ("Check default state")
+    (should (eq (evil-initial-state 'prog-mode 'normal) 'normal)))
+  (ert-info ("Basic functionality")
+    (evil-set-initial-state 'prog-mode 'insert)
+    (should (eq (evil-initial-state 'prog-mode) 'insert)))
+  (ert-info ("Inherit initial state from a parent")
+    (require 'cc-mode)
+    (should (eq (evil-initial-state 'c-mode) 'insert)))
+  (ert-info ("Do not inherit initial state, if so specified")
+    (should (eq (evil-initial-state 'c-mode 'emacs t)
+                'emacs)))
+  (ert-info ("Check for inheritance loops")
+    (put 'prog-mode 'derived-mode-parent 'c-mode)
+    (should (eq (unwind-protect
+                   (condition-case nil
+                       (evil-initial-state 'c-mode) ; raise error
+                     (error                         ; catch error
+                      nil))
+                 (put 'prog-mode 'derived-mode-parent nil))
+            nil)))
+  (ert-info ("Don't check for inheritance loops")
+    (put 'prog-mode 'derived-mode-parent 'c-mode)
+    (should (eq (unwind-protect
+                   (condition-case nil
+                       (evil-initial-state 'c-mode 'emacs t)
+                     (error
+                      nil))
+                 (put 'prog-mode 'derived-mode-parent nil))
+            'emacs)))
+  ;; restore normality, other tests seem to rely on this
+  (evil-set-initial-state 'prog-mode 'normal))
+
 (provide 'evil-tests)
 
 ;;; evil-tests.el ends here

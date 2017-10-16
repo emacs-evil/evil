@@ -285,18 +285,46 @@ See also `evil-initial-state'."
         (evil-initial-state major-mode)
         default)))
 
-(defun evil-initial-state (mode &optional default)
+(defun evil--real-function (fun)
+  "Figure out the actual symbol behind a function.
+Returns a different symbol if FUN is an alias, otherwise FUN."
+  (let ((symbol-function (symbol-function fun)))
+    (if (symbolp symbol-function)
+        symbol-function
+      fun)))
+
+(defun evil--get-parents (mode)
+  "Returns the parents of the MODE in a bottom-up list,
+including (and starting with) the mode itself."
+  (let ((parent (evil--real-function mode))
+	modes)
+    (while parent
+      (push parent modes)
+      (setq parent
+	    (evil--real-function (get parent 'derived-mode-parent)))
+      (when (memq parent modes)
+	(error "Circular parent list detected. Aborting.")))
+    (nreverse modes)))
+
+(defun evil-initial-state (mode &optional default noinherit)
   "Return the Evil state to use for MODE.
-Returns DEFAULT if no initial state is associated with MODE.
-The initial state for a mode can be set with
+Returns DEFAULT if no initial state is associated with either
+MODE, or any of its parents. If NOINHERIT is not nil, returns
+DEFAULT if no initial state is associated with this mode. The
+initial state for a mode can be set with
 `evil-set-initial-state'."
-  (let (state modes)
+  (let ((parents (if noinherit
+		     (list mode)
+		   (evil--get-parents mode)))
+	(modes-states (evil-state-property t :modes))
+	state modes)
     (catch 'done
-      (dolist (entry (evil-state-property t :modes) default)
-        (setq state (car entry)
-              modes (symbol-value (cdr entry)))
-        (when (memq mode modes)
-          (throw 'done state))))))
+      (dolist (parent parents default)
+	(dolist (entry modes-states)
+	  (setq state (car entry)
+		modes (symbol-value (cdr entry)))
+	  (when (memq parent modes)
+	    (throw 'done state)))))))
 
 (defun evil-set-initial-state (mode state)
   "Set the initial state for MODE to STATE.
