@@ -216,6 +216,11 @@ a line."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-v$-gets-eol t
+  "Whether when v$ is performed, the new line character is taken as well"
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-respect-visual-line-mode nil
   "Whether to remap movement commands when `visual-line-mode' is active.
 This variable must be set before evil is loaded. The commands
