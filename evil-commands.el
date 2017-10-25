@@ -645,7 +645,8 @@ and jump to the corresponding one."
   (backward-char))
 
 (evil-define-motion evil-find-char (count char)
-  "Move to the next COUNT'th occurrence of CHAR."
+  "Move to the next COUNT'th occurrence of CHAR.
+Movement is restricted to the current line unless `evil-cross-lines' is non-nil."
   :type inclusive
   (interactive "<c><C>")
   (setq count (or count 1))
