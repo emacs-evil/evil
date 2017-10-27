@@ -799,6 +799,7 @@ Calls `evil-lookup-func'."
   (let* ((field  (get-char-property (point) 'field))
          (button (get-char-property (point) 'button))
          (doc    (get-char-property (point) 'widget-doc))
+         (url    (thing-at-point 'url))
          (widget (or field button doc)))
     (cond
      ((and widget
@@ -826,6 +827,8 @@ Calls `evil-lookup-func'."
         (delete-horizontal-space t)
         (newline count)
         (indent-according-to-mode)))
+     (url
+      (goto-address-at-point))
      (t
       (evil-next-line-first-non-blank count)))))
 
