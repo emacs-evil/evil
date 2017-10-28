@@ -8180,6 +8180,35 @@ maybe we need one line more with some text\n")
      ("ci|testing" [escape])
      "| foo |testing| bar |")))
 
+(ert-deftest evil-test-undo-kbd-macro ()
+  "Test if evil can undo the changes made by a keyboard macro 
+when an error stops the execution of the macro"
+  :tags '(evil undo kbd-macro)
+  (ert-info ("When kbd-macro goes to the end of buffer")
+    (evil-test-buffer
+ 	 "[l]ine 1\nline 2\nline 3\nline 4"
+     (evil-set-register ?q "jdd")
+     ("jdd")
+     (should-error (execute-kbd-macro "2@q"))
+ 	 ("uu")
+ 	 "line 1\n[l]ine 2\nline 3\nline 4"))
+  (ert-info ("When kbd-macro goes to the end of line")
+    (evil-test-buffer
+ 	 "[f]ofof"
+     (evil-set-register ?q "lx")
+     ("lx")
+     (should-error (execute-kbd-macro "2@q"))
+ 	 ("uu")
+ 	 "f[o]fof"))
+  (ert-info ("When kbd-macro goes to the beginning of buffer")
+    (evil-test-buffer
+ 	 "line 1\nline 2\n[l]ine 3"
+     (evil-set-register ?q "kx")
+     ("kx")
+     (should-error (execute-kbd-macro "2@q"))
+ 	 ("uu")
+ 	 "line 1\n[l]ine 2\nline 3")))
+
 (provide 'evil-tests)
 
 ;;; evil-tests.el ends here
