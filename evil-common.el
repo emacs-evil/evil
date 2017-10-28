@@ -2946,12 +2946,10 @@ This can be overridden with TYPE."
 (defun evil-select-inner-object (thing beg end type &optional count line)
   "Return an inner text object range of COUNT objects.
 If COUNT is positive, return objects following point; if COUNT is
-negative, return objects preceding point.  FORWARD is a function
-which moves to the end of an object, and BACKWARD is a function
-which moves to the beginning.  If one is unspecified, the other
-is used with a negative argument.  THING is a symbol understood
-by thing-at-point. BEG, END and TYPE specify the current
-selection. If LINE is non-nil, the text object should be
+negative, return objects preceding point.  If one is unspecified,
+the other is used with a negative argument.  THING is a symbol
+understood by thing-at-point.  BEG, END and TYPE specify the
+current selection.  If LINE is non-nil, the text object should be
 linewise, otherwise it is character wise."
   (let* ((count (or count 1))
          (bnd (or (let ((b (bounds-of-thing-at-point thing)))
@@ -2978,12 +2976,10 @@ linewise, otherwise it is character wise."
 (defun evil-select-an-object (thing beg end type count &optional line)
   "Return an outer text object range of COUNT objects.
 If COUNT is positive, return objects following point; if COUNT is
-negative, return objects preceding point.  FORWARD is a function
-which moves to the end of an object, and BACKWARD is a function
-which moves to the beginning.  If one is unspecified, the other
-is used with a negative argument.  THING is a symbol understood
-by thing-at-point. BEG, END and TYPE specify the current
-selection. If LINE is non-nil, the text object should be
+negative, return objects preceding point.  If one is unspecified,
+the other is used with a negative argument.  THING is a symbol
+understood by thing-at-point.  BEG, END and TYPE specify the
+current selection.  If LINE is non-nil, the text object should be
 linewise, otherwise it is character wise."
   (let* ((dir (if (> (or count 1) 0) +1 -1))
          (count (abs (or count 1)))
