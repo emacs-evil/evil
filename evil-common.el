@@ -3454,7 +3454,7 @@ is stored in `evil-temporary-undo' instead of `buffer-undo-list'."
            (debug t))
   `(unwind-protect
        (let (buffer-undo-list)
-         (prog1
+         (unwind-protect
              (progn ,@body)
            (setq evil-temporary-undo buffer-undo-list)
            ;; ensure evil-temporary-undo starts with exactly one undo
