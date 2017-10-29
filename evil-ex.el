@@ -56,7 +56,7 @@
      number)
     (command #'evil-ex-parse-command)
     (binding
-     "[~&*@<>=:]+\\|[[:alpha:]-]+\\|!")
+     "[~&*@<>=:]+\\|[[:alpha:]_]+\\|!")
     (emacs-binding
      "[[:alpha:]-][[:alnum:][:punct:]-]+")
     (bang
@@ -852,13 +852,13 @@ START is the start symbol, which defaults to `expression'."
     (when result
       (setq command (car-safe result)
             string (cdr-safe result))
-      ;; check whether the parsed command is followed by a slash or
-      ;; number and the part before it is not a known ex binding
+      ;; check whether the parsed command is followed by a slash, dash
+      ;; or number and the part before it is not a known ex binding
       (when (and (> (length string) 0)
-                 (string-match-p "^[/[:digit:]]" string)
+                 (string-match-p "^[-/[:digit:]]" string)
                  (not (evil-ex-binding command t)))
-        ;; if this is the case, assume the slash or number and all
-        ;; following symbol characters form an (Emacs-)command
+        ;; if this is the case, assume the slash, dash or number and
+        ;; all following symbol characters form an (Emacs-)command
         (setq result (evil-parser (concat command string)
                                   'emacs-binding
                                   evil-ex-grammar)
