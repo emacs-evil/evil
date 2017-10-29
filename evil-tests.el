@@ -6542,7 +6542,22 @@ if no previous selection")
                     (evil-ex-line (string-to-number "5") nil)
                     (evil-ex-line (string-to-number "2") nil))
                    "arg"
-                   nil))))
+                   nil)))
+  (should (equal (evil-ex-parse "+1,+2t-1")
+                 '(evil-ex-call-command
+                   (evil-ex-range
+                    (evil-ex-line
+                     nil
+                     (+ (evil-ex-signed-number
+                         (intern "+")
+                         (string-to-number "1"))))
+                    (evil-ex-line
+                     nil
+                     (+ (evil-ex-signed-number
+                         (intern "+")
+                         (string-to-number "2")))))
+                   "t"
+                   "-1"))))
 
 (ert-deftest evil-test-ex-parse-ranges ()
   "Test parsing of ranges"
