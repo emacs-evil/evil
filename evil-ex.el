@@ -460,7 +460,7 @@ in case of incomplete or unknown commands."
     (when (memq 'argument context)
       ;; if it's an autoload, load the function; this allows external
       ;; packages to register autoloaded ex commands which will be
-      ;; loaded when ex argument completion is triggerred
+      ;; loaded when ex argument completion is triggered
       (let ((binding-definition (symbol-function (evil-ex-binding evil-ex-cmd))))
         (when (autoloadp binding-definition)
           (autoload-do-load binding-definition)))
