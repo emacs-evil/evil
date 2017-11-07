@@ -175,7 +175,7 @@ To enable Evil globally, do (evil-mode 1)."
     (evil-local-mode 1)
     (evil-initialize-state)))
 
-;;;###autoload (autoload 'evil-mode "evil")
+;;;###autoload (autoload 'evil-mode "evil" nil t)
 (define-globalized-minor-mode evil-mode
   evil-local-mode evil-initialize)
 
