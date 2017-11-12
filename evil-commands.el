@@ -4202,7 +4202,7 @@ DO-MOUSE-DRAG-REGION-POST-PROCESS should only be used by
     ;; Track the mouse until we get a non-movement event.
     (track-mouse
       (while (progn
-               (setq event (read-event))
+               (setq event (read-key))
                (or (mouse-movement-p event)
                    (memq (car-safe event) '(switch-frame select-window))))
         (unless (evil-visual-state-p)
