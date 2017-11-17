@@ -151,7 +151,7 @@ commands."
   :prefix 'evil-)
 
 (defcustom evil-auto-indent t
-  "Whether to auto-indent when entering Insert state."
+  "Whether to auto-indent when opening lines."
   :type  'boolean
   :group 'evil)
 (make-variable-buffer-local 'evil-auto-indent)
