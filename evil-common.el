@@ -47,6 +47,13 @@ window commands not available.")
 
 ;;; Compatibility with different Emacs versions
 
+;; x-set-selection and x-get-selection have been deprecated since 25.1
+;; by gui-set-selection and gui-get-selection
+(defalias 'evil-get-selection
+  (if (fboundp 'gui-get-selection) 'gui-get-selection 'x-get-selection))
+(defalias 'evil-set-selection
+  (if (fboundp 'gui-set-selection) 'gui-set-selection 'x-set-selection))
+
 (defmacro evil-called-interactively-p ()
   "Wrapper for `called-interactively-p'.
 In older versions of Emacs, `called-interactively-p' takes
@@ -2010,7 +2017,7 @@ The following special registers are supported.
                   (setq request-type (list request-type)))
                 (while (and request-type (not text))
                   (condition-case nil
-                      (setq text (x-get-selection what (pop request-type)))
+                      (setq text (evil-get-selection what (pop request-type)))
                     (error nil)))
                 (when text
                   (remove-text-properties 0 (length text) '(foreign-selection nil) text))
@@ -2098,9 +2105,9 @@ register instead of replacing its content."
         (current-kill (- register ?1))
         (setcar kill-ring-yank-pointer text))))
    ((eq register ?*)
-    (x-set-selection 'PRIMARY text))
+    (evil-set-selection 'PRIMARY text))
    ((eq register ?+)
-    (x-set-selection 'CLIPBOARD text))
+    (evil-set-selection 'CLIPBOARD text))
    ((eq register ?-)
     (setq evil-last-small-deletion text))
    ((eq register ?_) ; the black hole register
