@@ -960,15 +960,33 @@ to specify multiple bindings at once:
       \"b\" 'foo)
 
 If foo-map has not been initialized yet, this macro adds an entry
-to `after-load-functions', delaying execution as necessary."
+to `after-load-functions', delaying execution as necessary.
+
+KEYMAP may also be a quoted symbol. If the symbol is global, the
+global evil keymap corresponding to the state(s) is used, meaning
+the following are equivalent:
+
+    (evil-define-key 'normal 'global \"a\" 'bar)
+
+    (evil-global-set-key 'normal \"a\" 'bar)
+
+The symbol local may also be used, which corresponds to using
+`evil-local-set-key'. If a quoted symbol is used that is not
+global or local, it is assumed to be the name of a minor mode, in
+which case `evil-define-minor-mode-key' is used."
   (declare (indent defun))
-  `(evil-delay ',(if (symbolp keymap)
-                     `(and (boundp ',keymap) (keymapp ,keymap))
-                   `(keymapp ,keymap))
-       '(evil-define-key* ,state ,keymap ,key ,def ,@bindings)
-     'after-load-functions t nil
-     (format "evil-define-key-in-%s"
-             ',(if (symbolp keymap) keymap 'keymap))))
+  (cond ((member keymap '('global 'local))
+         `(evil-define-key* ,state ,keymap ,key ,def ,@bindings))
+        ((and (consp keymap) (eq (car keymap) 'quote))
+         `(evil-define-minor-mode-key ,state ,keymap ,key ,def ,@bindings))
+        (t
+         `(evil-delay ',(if (symbolp keymap)
+                            `(and (boundp ',keymap) (keymapp ,keymap))
+                          `(keymapp ,keymap))
+              '(evil-define-key* ,state ,keymap ,key ,def ,@bindings)
+            'after-load-functions t nil
+            (format "evil-define-key-in-%s"
+                    ',(if (symbolp keymap) keymap 'keymap))))))
 (defalias 'evil-declare-key 'evil-define-key)
 
 (defun evil-define-key* (state keymap key def &rest bindings)
@@ -984,15 +1002,17 @@ bindings like `evil-define-key' does using `evil-delay'. This
 allows errors in the bindings to be caught immediately, and makes
 its behavior more predictable."
   (let ((aux-maps
-         (cond ((listp state)
-                (mapcar
-                 (lambda (st)
-                   (evil-get-auxiliary-keymap keymap st t))
-                 state))
-               (state
-                (list (evil-get-auxiliary-keymap keymap state t)))
-               (t
-                (list keymap)))))
+         (if (null state)
+             (list keymap)
+           (mapcar
+            (lambda (st)
+              (cond ((eq keymap 'global)
+                     (evil-state-property st :keymap t))
+                    ((eq keymap 'local)
+                     (evil-state-property st :local-keymap t))
+                    (t
+                     (evil-get-auxiliary-keymap keymap st t))))
+            (if (listp state) state (list state))))))
     (while key
       (dolist (map aux-maps)
         (define-key map key def))
@@ -1016,9 +1036,13 @@ value.
 See `evil-define-key' for the usage of STATE, KEY, DEF and
 BINDINGS."
   (declare (indent defun))
-  (let ((map (evil-get-minor-mode-keymap state mode)))
+  (let ((maps (mapcar
+               (lambda (st)
+                 (evil-get-minor-mode-keymap st mode))
+               (if (listp state) state (list state)))))
     (while key
-      (define-key map key def)
+      (dolist (map maps)
+        (define-key map key def))
       (setq key (pop bindings)
             def (pop bindings)))))
 
