@@ -3439,7 +3439,11 @@ resp.  after executing the command."
                                         (not case-replace)))
                   (setq evil-ex-substitute-last-point (point)))
                 (goto-char match-end)
-                (cond ((and (not whole-line)
+                (cond ((>= (point) end-marker)
+                       ;; Don't want to perform multiple replacements at the end
+                       ;; of the search region.
+                       (throw 'exit-search t))
+                      ((and (not whole-line)
                             (not match-contains-newline))
                        (forward-line)
                        ;; forward-line just moves to the end of the line on the
@@ -3459,7 +3463,7 @@ resp.  after executing the command."
                                   evil-ex-substitute-regex end-marker t)
                                  (= pnt (point))))))
                        (if (or (eobp)
-                               (= (point) end-marker))
+                               (>= (point) end-marker))
                            (throw 'exit-search t)
                          (forward-char))))))))
       (evil-ex-delete-hl 'evil-ex-substitute)
