@@ -3388,7 +3388,9 @@ resp.  after executing the command."
                     (match-end (move-marker (make-marker) (match-end 0)))
                     (match-data (match-data)))
                 (goto-char match-beg)
-                (setq match-contains-newline (string-match-p "\n" match-str))
+                (setq match-contains-newline
+                      (string-match-p "\n" (buffer-substring-no-properties
+                                            match-beg match-end)))
                 (setq zero-length-match (= match-beg match-end))
                 (when (and (string= "^" evil-ex-substitute-regex)
                            (= (point) end-marker))
