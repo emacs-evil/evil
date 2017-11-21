@@ -6767,6 +6767,11 @@ if no previous selection")
       "[a]bc\ndef\nghi\n"
       (":%s/\n/z/g" [return])
       "[a]bczdefzghiz"))
+  (ert-info ("Substitute newlines without newline in regexp")
+    (evil-test-buffer
+      "[A]BC\nDEF\nGHI\n"
+      (":%s/[^]]*/z/" [return])
+      "Z"))
   (ert-info ("Substitute n flag does not replace")
     (evil-test-buffer
       "[a]bc\naef\nahi\n"

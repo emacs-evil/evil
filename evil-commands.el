@@ -3388,7 +3388,9 @@ resp.  after executing the command."
                     (match-end (move-marker (make-marker) (match-end 0)))
                     (match-data (match-data)))
                 (goto-char match-beg)
-                (setq match-contains-newline (string-match-p "\n" match-str))
+                (setq match-contains-newline
+                      (string-match-p "\n" (buffer-substring-no-properties
+                                            match-beg match-end)))
                 (setq zero-length-match (= match-beg match-end))
                 (when (and (string= "^" evil-ex-substitute-regex)
                            (= (point) end-marker))
@@ -3437,7 +3439,11 @@ resp.  after executing the command."
                                         (not case-replace)))
                   (setq evil-ex-substitute-last-point (point)))
                 (goto-char match-end)
-                (cond ((and (not whole-line)
+                (cond ((>= (point) end-marker)
+                       ;; Don't want to perform multiple replacements at the end
+                       ;; of the search region.
+                       (throw 'exit-search t))
+                      ((and (not whole-line)
                             (not match-contains-newline))
                        (forward-line)
                        ;; forward-line just moves to the end of the line on the
@@ -3457,7 +3463,7 @@ resp.  after executing the command."
                                   evil-ex-substitute-regex end-marker t)
                                  (= pnt (point))))))
                        (if (or (eobp)
-                               (= (point) end-marker))
+                               (>= (point) end-marker))
                            (throw 'exit-search t)
                          (forward-char))))))))
       (evil-ex-delete-hl 'evil-ex-substitute)
