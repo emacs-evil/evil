@@ -959,12 +959,22 @@ to specify multiple bindings at once:
       \"a\" 'bar
       \"b\" 'foo)
 
+If KEYMAP is nil, the binding is placed in the respective global
+evil map for the state(s), meaning the following are equivalent:
+
+    (evil-define-key 'normal nil \"a\" 'bar)
+
+    (evil-global-set-key 'normal \"a\" 'bar)
+
 If foo-map has not been initialized yet, this macro adds an entry
 to `after-load-functions', delaying execution as necessary."
   (declare (indent defun))
-  `(evil-delay ',(if (symbolp keymap)
-                     `(and (boundp ',keymap) (keymapp ,keymap))
-                   `(keymapp ,keymap))
+  `(evil-delay ',(cond ((null keymap)
+                        `(null ,keymap))
+                       ((symbolp keymap)
+                        `(and (boundp ',keymap) (keymapp ,keymap)))
+                       (t
+                        `(keymapp ,keymap)))
        '(evil-define-key* ,state ,keymap ,key ,def ,@bindings)
      'after-load-functions t nil
      (format "evil-define-key-in-%s"
@@ -984,15 +994,16 @@ bindings like `evil-define-key' does using `evil-delay'. This
 allows errors in the bindings to be caught immediately, and makes
 its behavior more predictable."
   (let ((aux-maps
-         (cond ((listp state)
-                (mapcar
-                 (lambda (st)
-                   (evil-get-auxiliary-keymap keymap st t))
-                 state))
-               (state
-                (list (evil-get-auxiliary-keymap keymap state t)))
-               (t
-                (list keymap)))))
+         (if (null state)
+             (list keymap)
+           (mapcar
+            (lambda (st)
+              (if (null keymap)
+                  (evil-state-property st :keymap t)
+                (evil-get-auxiliary-keymap keymap st t)))
+            (if (listp state)
+                state
+              (list state))))))
     (while key
       (dolist (map aux-maps)
         (define-key map key def))
