@@ -32,6 +32,7 @@
 (require 'evil-command-window)
 (require 'evil-jumps)
 (require 'flyspell)
+(require 'cl-lib)
 
 ;;; Motions
 
