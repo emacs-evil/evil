@@ -153,7 +153,7 @@ raised.  Remaining forms are evaluated as-is.
                                    ',visual-start ',visual-end))
                                 ((eq (car-safe form) 'file)
                                  `(evil-test-file-contents ,(cadr form)
-                                                           ,(caddr form)))
+                                                           ,(car (cddr form))))
                                 ((or (stringp (car-safe form))
                                      (vectorp (car-safe form))
                                      (memq (car-safe (car-safe form))

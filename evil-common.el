@@ -28,7 +28,6 @@
 (require 'evil-digraphs)
 (require 'rect)
 (require 'thingatpt)
-(eval-when-compile (require 'cl))
 
 ;;; Code:
 
