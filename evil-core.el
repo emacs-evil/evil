@@ -991,7 +991,11 @@ which case `evil-define-minor-mode-key' is used."
          `(evil-delay ',(if (symbolp keymap)
                             `(and (boundp ',keymap) (keymapp ,keymap))
                           `(keymapp ,keymap))
-              '(evil-define-key* ,state ,keymap ,key ,def ,@bindings)
+              '(condition-case-unless-debug err
+                   (evil-define-key* ,state ,keymap ,key ,def ,@bindings)
+                 (error
+                  (message "error in evil-define-key: %s"
+                           (error-message-string err))))
             'after-load-functions t nil
             (format "evil-define-key-in-%s"
                     ',(if (symbolp keymap) keymap 'keymap))))))
