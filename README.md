@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/emacs-evil/evil.svg?branch=master)](https://travis-ci.org/emacs-evil/evil)
 [![MELPA](https://melpa.org/packages/evil-badge.svg)](https://melpa.org/#/evil)
+[![MELPA Stable](https://stable.melpa.org/packages/evil-badge.svg)](https://stable.melpa.org/#/evil)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Evil is an **e**xtensible **vi** **l**ayer
