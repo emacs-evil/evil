@@ -1053,7 +1053,7 @@ its behavior more predictable."
                       ((eq keymap 'local)
                        (evil-state-property st :local-keymap t))
                       (t
-                       (evil-get-auxiliary-keymap keymap st t))))
+                       (evil-get-auxiliary-keymap keymap st t t))))
               (if (listp state) state (list state)))
            (list
             (cond ((eq keymap 'global)
