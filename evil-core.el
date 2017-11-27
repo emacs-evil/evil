@@ -283,20 +283,41 @@ See also `evil-initial-state'."
               (when (setq mode (evil-initial-state mode))
                 (throw 'done mode)))))
         (evil-initial-state major-mode)
+        ;; Check parent modes. Similar to `derived-mode-p'
+        (catch 'state
+          (let ((mode major-mode)
+                checked-modes)
+            (while (and mode (symbolp mode))
+              (when (memq mode checked-modes)
+                (message "Circular reference detected in ancestors of %s\n%s"
+                         major-mode checked-modes)
+                (throw 'state nil))
+              (let ((state (evil-initial-state mode)))
+                (when state
+                  (throw 'state state)))
+              (push mode checked-modes)
+              (setq mode (get mode 'derived-mode-parent)))
+            nil))
         default)))
 
 (defun evil-initial-state (mode &optional default)
-  "Return the Evil state to use for MODE.
+  "Return the Evil state to use for MODE or its alias.
 Returns DEFAULT if no initial state is associated with MODE.
 The initial state for a mode can be set with
 `evil-set-initial-state'."
-  (let (state modes)
-    (catch 'done
-      (dolist (entry (evil-state-property t :modes) default)
-        (setq state (car entry)
-              modes (symbol-value (cdr entry)))
-        (when (memq mode modes)
-          (throw 'done state))))))
+  (when mode
+    (let ((mode-alias (let ((func (symbol-function mode)))
+                        (when (symbolp func)
+                          func)))
+          state modes)
+      (catch 'done
+        (dolist (entry (evil-state-property t :modes) default)
+          (setq state (car entry)
+                modes (symbol-value (cdr entry)))
+          (when (or (memq mode modes)
+                    (and mode-alias
+                         (memq mode-alias modes)))
+            (throw 'done state)))))))
 
 (defun evil-set-initial-state (mode state)
   "Set the initial state for MODE to STATE.
