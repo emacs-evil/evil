@@ -283,6 +283,11 @@ See also `evil-initial-state'."
               (when (setq mode (evil-initial-state mode))
                 (throw 'done mode)))))
         (evil-initial-state major-mode)
+        ;; see `help-fns--parent-mode'
+        (when (and evil-use-derived-mode-state
+                   (symbolp major-mode)
+                   (get major-mode 'derived-mode-parent))
+          (evil-initial-state (get major-mode 'derived-mode-parent)))
         default)))
 
 (defun evil-initial-state (mode &optional default)
