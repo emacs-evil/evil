@@ -3468,16 +3468,16 @@ resp.  after executing the command."
                          (if (or (eobp)
                                  (>= (point) end-marker))
                              (throw 'exit-search t)
-                           (forward-char))))))))
+                           (forward-char)))))))))
       (evil-ex-delete-hl 'evil-ex-substitute)
-      (delete-overlay evil-ex-substitute-overlay))
+      (delete-overlay evil-ex-substitute-overlay)
 
-    (if count-only
-        (goto-char orig-point-marker)
-      (goto-char evil-ex-substitute-last-point))
+      (if count-only
+          (goto-char orig-point-marker)
+        (goto-char evil-ex-substitute-last-point))
 
-    (move-marker orig-point-marker nil)
-    (move-marker end-marker nil)
+      (move-marker orig-point-marker nil)
+      (move-marker end-marker nil))
 
     (message "%s %d occurrence%s"
              (if count-only "Found" "Replaced")
