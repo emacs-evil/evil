@@ -3468,7 +3468,7 @@ resp.  after executing the command."
                          (if (or (eobp)
                                  (>= (point) end-marker))
                              (throw 'exit-search t)
-                           (forward-char))))))))
+                           (forward-char)))))))))
       (evil-ex-delete-hl 'evil-ex-substitute)
       (delete-overlay evil-ex-substitute-overlay))
 
