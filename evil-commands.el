@@ -3384,89 +3384,91 @@ resp.  after executing the command."
           (goto-char beg)
           (catch 'exit-search
             (while (re-search-forward evil-ex-substitute-regex end-marker t)
-              (let ((match-str (match-string 0))
-                    (match-beg (move-marker (make-marker) (match-beginning 0)))
-                    (match-end (move-marker (make-marker) (match-end 0)))
-                    (match-data (match-data)))
-                (goto-char match-beg)
-                (setq match-contains-newline
-                      (string-match-p "\n" (buffer-substring-no-properties
-                                            match-beg match-end)))
-                (setq zero-length-match (= match-beg match-end))
-                (when (and (string= "^" evil-ex-substitute-regex)
-                           (= (point) end-marker))
-                  ;; The range (beg end) includes the final newline which means
-                  ;; end-marker is on one line down. With the regex "^" the
-                  ;; beginning of this last line will be matched which we don't
-                  ;; want, so we abort here.
-                  (throw 'exit-search t))
-                (if confirm
-                    (let ((prompt
-                           (format "Replace %s with %s (y/n/a/q/l/^E/^Y)? "
-                                   match-str
-                                   (evil-match-substitute-replacement
-                                    evil-ex-substitute-replacement
-                                    (not case-replace))))
-                          response)
-                      (move-overlay evil-ex-substitute-overlay match-beg match-end)
-                      (catch 'exit-read-char
-                        (while (setq response (read-char prompt))
-                          (when (member response '(?y ?a ?l))
-                            (unless count-only
-                              (set-match-data match-data)
-                              (evil-replace-match evil-ex-substitute-replacement
-                                                  (not case-replace)))
-                            (setq evil-ex-substitute-last-point (point))
-                            (setq evil-ex-substitute-nreplaced
-                                  (1+ evil-ex-substitute-nreplaced))
-                            (evil-ex-hl-set-region 'evil-ex-substitute
-                                                   (save-excursion
-                                                     (forward-line)
-                                                     (point))
-                                                   (evil-ex-hl-get-max
-                                                    'evil-ex-substitute)))
-                          (cl-case response
-                            ((?y ?n) (throw 'exit-read-char t))
-                            (?a (setq confirm nil)
-                                (throw 'exit-read-char t))
-                            ((?q ?l ?\C-\[) (throw 'exit-search t))
-                            (?\C-e (evil-scroll-line-down 1))
-                            (?\C-y (evil-scroll-line-up 1))))))
-                  (setq evil-ex-substitute-nreplaced
-                        (1+ evil-ex-substitute-nreplaced))
-                  (unless count-only
-                    (set-match-data match-data)
-                    (evil-replace-match evil-ex-substitute-replacement
-                                        (not case-replace)))
-                  (setq evil-ex-substitute-last-point (point)))
-                (goto-char match-end)
-                (cond ((>= (point) end-marker)
-                       ;; Don't want to perform multiple replacements at the end
-                       ;; of the search region.
-                       (throw 'exit-search t))
-                      ((and (not whole-line)
-                            (not match-contains-newline))
-                       (forward-line)
-                       ;; forward-line just moves to the end of the line on the
-                       ;; last line of the buffer.
-                       (when (or (eobp)
-                                 (> (point) end-marker))
-                         (throw 'exit-search t)))
-                      ;; For zero-length matches check to see if point won't
-                      ;; move next time. This is a problem when matching the
-                      ;; regexp "$" because we can enter an infinite loop,
-                      ;; repeatedly matching the same character
-                      ((and zero-length-match
-                            (let ((pnt (point)))
-                              (save-excursion
-                                (and
-                                 (re-search-forward
-                                  evil-ex-substitute-regex end-marker t)
-                                 (= pnt (point))))))
-                       (if (or (eobp)
-                               (>= (point) end-marker))
-                           (throw 'exit-search t)
-                         (forward-char))))))))
+              (when (not (and query-replace-skip-read-only
+                              (text-property-any (match-beginning 0) (match-end 0) 'read-only t)))
+                (let ((match-str (match-string 0))
+                      (match-beg (move-marker (make-marker) (match-beginning 0)))
+                      (match-end (move-marker (make-marker) (match-end 0)))
+                      (match-data (match-data)))
+                  (goto-char match-beg)
+                  (setq match-contains-newline
+                        (string-match-p "\n" (buffer-substring-no-properties
+                                              match-beg match-end)))
+                  (setq zero-length-match (= match-beg match-end))
+                  (when (and (string= "^" evil-ex-substitute-regex)
+                             (= (point) end-marker))
+                    ;; The range (beg end) includes the final newline which means
+                    ;; end-marker is on one line down. With the regex "^" the
+                    ;; beginning of this last line will be matched which we don't
+                    ;; want, so we abort here.
+                    (throw 'exit-search t))
+                  (if confirm
+                      (let ((prompt
+                             (format "Replace %s with %s (y/n/a/q/l/^E/^Y)? "
+                                     match-str
+                                     (evil-match-substitute-replacement
+                                      evil-ex-substitute-replacement
+                                      (not case-replace))))
+                            response)
+                        (move-overlay evil-ex-substitute-overlay match-beg match-end)
+                        (catch 'exit-read-char
+                          (while (setq response (read-char prompt))
+                            (when (member response '(?y ?a ?l))
+                              (unless count-only
+                                (set-match-data match-data)
+                                (evil-replace-match evil-ex-substitute-replacement
+                                                    (not case-replace)))
+                              (setq evil-ex-substitute-last-point (point))
+                              (setq evil-ex-substitute-nreplaced
+                                    (1+ evil-ex-substitute-nreplaced))
+                              (evil-ex-hl-set-region 'evil-ex-substitute
+                                                     (save-excursion
+                                                       (forward-line)
+                                                       (point))
+                                                     (evil-ex-hl-get-max
+                                                      'evil-ex-substitute)))
+                            (cl-case response
+                              ((?y ?n) (throw 'exit-read-char t))
+                              (?a (setq confirm nil)
+                                  (throw 'exit-read-char t))
+                              ((?q ?l ?\C-\[) (throw 'exit-search t))
+                              (?\C-e (evil-scroll-line-down 1))
+                              (?\C-y (evil-scroll-line-up 1))))))
+                    (setq evil-ex-substitute-nreplaced
+                          (1+ evil-ex-substitute-nreplaced))
+                    (unless count-only
+                      (set-match-data match-data)
+                      (evil-replace-match evil-ex-substitute-replacement
+                                          (not case-replace)))
+                    (setq evil-ex-substitute-last-point (point)))
+                  (goto-char match-end)
+                  (cond ((>= (point) end-marker)
+                         ;; Don't want to perform multiple replacements at the end
+                         ;; of the search region.
+                         (throw 'exit-search t))
+                        ((and (not whole-line)
+                              (not match-contains-newline))
+                         (forward-line)
+                         ;; forward-line just moves to the end of the line on the
+                         ;; last line of the buffer.
+                         (when (or (eobp)
+                                   (> (point) end-marker))
+                           (throw 'exit-search t)))
+                        ;; For zero-length matches check to see if point won't
+                        ;; move next time. This is a problem when matching the
+                        ;; regexp "$" because we can enter an infinite loop,
+                        ;; repeatedly matching the same character
+                        ((and zero-length-match
+                              (let ((pnt (point)))
+                                (save-excursion
+                                  (and
+                                   (re-search-forward
+                                    evil-ex-substitute-regex end-marker t)
+                                   (= pnt (point))))))
+                         (if (or (eobp)
+                                 (>= (point) end-marker))
+                             (throw 'exit-search t)
+                           (forward-char))))))))
       (evil-ex-delete-hl 'evil-ex-substitute)
       (delete-overlay evil-ex-substitute-overlay))
 
