@@ -605,6 +605,21 @@ in `evil-emacs-state-modes', `evil-insert-state-modes' or
   :type  'symbol
   :group 'evil)
 
+(defcustom evil-use-derived-mode-state nil
+  "Whether to consider parent modes when deciding on initial state.
+When non-nil, if the current major mode does not have an initial
+state set for it using `evil-set-initial-state', but its parent
+mode does, then use the initial state from the parent mode. For
+example,
+
+  (setq evil-use-derived-mode-state t)
+  (evil-set-initial-state 'special-mode 'motion)
+
+makes motion state the default for all modes derived from
+`special-mode'."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-buffer-regexps
   '(("^ \\*load\\*" . nil))
   "Regular expression determining the initial state for a buffer.

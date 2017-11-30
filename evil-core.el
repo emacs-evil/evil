@@ -283,6 +283,19 @@ See also `evil-initial-state'."
               (when (setq mode (evil-initial-state mode))
                 (throw 'done mode)))))
         (evil-initial-state major-mode)
+        ;; similar to `derived-mode-p'
+        (when evil-use-derived-mode-state
+          (let ((mode major-mode)
+                (checked-modes (list major-mode))
+                state)
+            (while (and (not state)
+                        (symbolp mode)
+                        (setq mode (get mode 'derived-mode-parent))
+                        ;; in case there's a cycle
+                        (not (memq mode checked-modes)))
+              (push mode checked-modes)
+              (setq state (evil-initial-state mode)))
+            state))
         default)))
 
 (defun evil-initial-state (mode &optional default)
