@@ -373,6 +373,33 @@ when exiting Operator-Pending state")
       (should (eq (lookup-key aux "f") 'foo))
       (should (eq (lookup-key aux "b") 'bar)))))
 
+(ert-deftest evil-test-global-local-map-binding ()
+  "Test use of `evil-define-key' for binding in global maps."
+  :tags '(evil state)
+  (let ((evil-normal-state-map (copy-keymap evil-normal-state-map))
+        (evil-normal-state-local-map
+         (when (keymapp evil-normal-state-local-map)
+           (copy-keymap evil-normal-state-local-map)))
+        (global-map (copy-keymap global-map))
+        (orig-local-map
+         (when (keymapp (current-local-map))
+           (copy-keymap (current-local-map))))
+        (map (or (current-local-map) (make-sparse-keymap))))
+    (use-local-map map)
+    (ert-info ("Bind in a global state map")
+      (evil-define-key 'normal 'global "f" 'foo)
+      (should (eq (lookup-key evil-normal-state-map "f") 'foo)))
+    (ert-info ("Bind in a local state map")
+      (evil-define-key 'normal 'local "f" 'foo)
+      (should (eq (lookup-key evil-normal-state-local-map "f") 'foo)))
+    (ert-info ("Bind in the global map")
+      (evil-define-key nil 'global "b" 'bar)
+      (should (eq (lookup-key global-map "b") 'bar)))
+    (ert-info ("Bind in the local map")
+      (evil-define-key nil 'local "b" 'bar)
+      (should (eq (lookup-key (current-local-map) "b") 'bar)))
+    (use-local-map orig-local-map)))
+
 ;;; Type system
 
 (ert-deftest evil-test-exclusive-type ()
