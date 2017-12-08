@@ -2924,6 +2924,27 @@ for the last window in each frame."
                   (error nil)))
             wins))))
 
+(evil-define-command evil-wipeout-buffer (buffer &optional bang)
+  "Deletes a buffer. Also clears related jump marks.
+All windows currently showing this buffer will be closed except
+for the last window in each frame."
+  (interactive "<b><!>")
+  (let* ((ring (make-ring evil-jumps-max-length))
+         (jump-struct (evil--jumps-get-current))
+         (idx (evil-jumps-struct-idx jump-struct))
+         (i 0))
+    (cl-loop for jump in (ring-elements (evil--jumps-get-window-jump-list))
+             do (let* ((file-name (cadr jump)))
+                  (if (or (string= file-name (buffer-file-name))
+                          (string-match-p evil--jumps-buffer-targets (buffer-name)))
+                      (if (<= i idx) (setq idx (1- idx)))
+                    ;; else
+                    (ring-insert ring jump)
+                    (setq i (1+ i)))))
+    (setf (evil-jumps-struct-ring jump-struct) ring)
+    (setf (evil-jumps-struct-idx jump-struct) idx))
+  (evil-delete-buffer buffer bang))
+
 (evil-define-command evil-quit (&optional force)
   "Closes the current window, current frame, Emacs.
 If the current frame belongs to some client the client connection
