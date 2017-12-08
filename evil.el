@@ -137,7 +137,12 @@
 (require 'evil-commands)
 (require 'evil-jumps)
 (require 'evil-maps)
+
+(when evil-want-integration
+;; TODO creating the .depend file breaks if the following require is
+;; not on a line of its own
 (require 'evil-integration)
+)
 
 (run-hooks 'evil-after-load-hook)
 

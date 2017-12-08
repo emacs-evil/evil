@@ -1853,6 +1853,12 @@ Otherwise the previous command is assumed as substitute.")
           "1.2.13"))))
   "The current version of Evil")
 
+(defcustom evil-want-integration t
+  "Whether to load evil-integration.el.
+This variable must be set before evil is loaded."
+  :type 'boolean
+  :group 'evil)
+
 (defun evil-version ()
   (interactive)
   (message "Evil version %s" evil-version))
