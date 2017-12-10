@@ -563,11 +563,11 @@ Based on `evil-enclose-ace-jump-for-motion'."
       (define-key visual-line-mode-map (vector 'remap (car swap)) (cdr swap))
       (define-key visual-line-mode-map (vector 'remap (cdr swap)) (car swap)))))
 
-(provide 'evil-integration)
-
 ;;; abbrev.el
 (when evil-want-abbrev-expand-on-insert-exit
   (eval-after-load 'abbrev
     '(add-hook 'evil-insert-state-exit-hook 'expand-abbrev)))
+
+(provide 'evil-integration)
 
 ;;; evil-integration.el ends here
