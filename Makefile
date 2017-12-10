@@ -20,7 +20,7 @@ compile: $(ELCFILES)
 	@echo Compute dependencies
 	@rm -f .depend
 	@for f in $(FILES); do \
-	    sed -n "s/(require '\(evil-.*\))/$${f}c: \1.elc/p" $$f >> .depend;\
+	    sed -n "s/ *(require '\(evil-[^)]*\).*)/$${f}c: \1.elc/p" $$f >> .depend;\
 	done
 
 -include .depend
