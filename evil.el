@@ -137,7 +137,9 @@
 (require 'evil-commands)
 (require 'evil-jumps)
 (require 'evil-maps)
-(require 'evil-integration)
+
+(when evil-want-integration
+  (require 'evil-integration))
 
 (run-hooks 'evil-after-load-hook)
 
