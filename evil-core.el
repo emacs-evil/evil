@@ -1075,6 +1075,49 @@ its behavior more predictable."
     (dolist (map maps)
       (evil-set-keymap-prompt map (keymap-prompt map)))))
 
+(defmacro evil-define-key-with-key-func (key-func state keymap &rest bindings)
+  "Call `evil-define-key' using KEY-FUNC on each key in BINDINGS.
+KEY-FUNC can take one of two forms. It can be an unquoted
+function that takes a string and returns a valid key
+description. It can also be an unquoted form involving the
+unbound symbol key. For example, the following three statements
+are equivalent.
+
+\(evil-define-key-with-key-func (kbd key) 'normal key-map
+  \"C-f\" 'foo
+  \"C-b\" 'bar)
+
+\(evil-define-key-with-key-func kbd 'normal key-map
+  \"C-f\" 'foo
+  \"C-b\" 'bar)
+
+\(evil-define-key 'normal key-map
+  (kbd \"C-f\") 'foo
+  (kbd \"C-b\") 'bar)
+
+The first two translate into calls to `evil-define-key' after
+applying `kbd' to each key in BINDINGS. As with
+`evil-define-key', BINDINGS is assumed to be an alternating list
+of keys and their associated bindings. The arguments STATE and
+KEYMAP have the same meaning as they do in `evil-define-key'.
+
+If KEY-FUNC is nil there is no meaningful difference between this
+macro and `evil-define-key'."
+  (declare (indent defun))
+  (let ((key-func (cond ((functionp key-func)
+                         key-func)
+                        (key-func
+                         `(lambda (key) ,key-func))
+                        (t
+                         'identity))))
+    `(evil-define-key ,state ,keymap
+       ,@(let ((is-key t))
+           (mapcar (lambda (bnd)
+                     (prog1
+                         (if is-key (funcall key-func bnd) bnd)
+                       (setq is-key (not is-key))))
+                   bindings)))))
+
 (defun evil-define-minor-mode-key (state mode key def &rest bindings)
   "Similar to `evil-define-key' but the bindings are associated
 with the minor-mode symbol MODE instead of a particular map.
