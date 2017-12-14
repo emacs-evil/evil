@@ -18,7 +18,7 @@ Tested in a `make emacs` session (see [CONTRIBUTING.md](https://github.com/emacs
 
 # Reproduction steps
 - Start Emacs
-<!-- Minimal list of steps to reproduce the bug -->
+<!-- Minimal list of steps to reproduce the bug, preferably using `make emacs` as described above -->
 
 # Expected behavior
 <!-- Describe how it should behave -->
