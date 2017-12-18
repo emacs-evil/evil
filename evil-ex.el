@@ -181,7 +181,7 @@ is appended to the line."
         evil-ex-info-string
         result)
     (minibuffer-with-setup-hook
-        #'evil-ex-setup
+        (if initial-input #'evil-ex-setup-and-update #'evil-ex-setup)
       (setq result
             (read-from-minibuffer
              ":"
@@ -238,6 +238,11 @@ interactive actions during ex state."
         '(evil-ex-command-completion-at-point
           evil-ex-argument-completion-at-point)))
 (put 'evil-ex-setup 'permanent-local-hook t)
+
+(defun evil-ex-setup-and-update ()
+  "Initialize Ex minibuffer with `evil-ex-setup', then call `evil-ex-update'."
+  (evil-ex-setup)
+  (evil-ex-update))
 
 (defun evil-ex-teardown ()
   "Deinitialize Ex minibuffer.
