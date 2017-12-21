@@ -2,21 +2,19 @@ language: generic
 sudo: false
 
 env:
-  global:
-    - CURL="curl -fsSkL --retry 9 --retry-delay 9"
-  matrix:
-  - EMACS_VERSION=24.3
-  - EMACS_VERSION=24.4
-  - EMACS_VERSION=24.5
-  - EMACS_VERSION=25.1
-  - EMACS_VERSION=25.2
-  - EMACS_VERSION=master
+  - EVM_EMACS=emacs-24.3-travis
+  - EVM_EMACS=emacs-24.4-travis
+  - EVM_EMACS=emacs-24.5-travis
+  - EVM_EMACS=emacs-25.1-travis
+  - EVM_EMACS=emacs-25.2-travis
+  - EVM_EMACS=emacs-25.3-travis
+  - EVM_EMACS=emacs-26-pretest-travis
+  - EVM_EMACS=emacs-git-snapshot-travis
 
 matrix:
   allow_failures:
-    - env: EMACS_VERSION=master
-    # Emacs 25.1 segfaults when running make test
-    - env: EMACS_VERSION=25.1
+    - env: EVM_EMACS=emacs-26-pretest-travis
+    - env: EVM_EMACS=emacs-git-snapshot-travis
 
 # NOTE: flyspell test
 addons:
@@ -25,14 +23,18 @@ addons:
       - aspell
       - aspell-en
 
-install:
-  - $CURL -O https://github.com/npostavs/emacs-travis/releases/download/bins/emacs-bin-${EMACS_VERSION}.tar.gz
-  - tar -xaf emacs-bin-${EMACS_VERSION}.tar.gz -C /
-  - export EMACS=/tmp/emacs/bin/emacs
+before_install:
+  - sudo apt-get build-dep emacs24
+  - git clone https://github.com/rejeep/evm.git $HOME/.evm
+  - export PATH="$HOME/.evm/bin:$PATH"
+  - export PATH="$HOME/.cask/bin:$PATH"
+  - evm config path /tmp
+  - evm install $EVM_EMACS --use --skip
+  - curl -fsSkL https://raw.github.com/cask/cask/master/go | python
 
 script:
-  - $EMACS --version
-  - emacs=$EMACS make test
+  - emacs --version
+  - make test
 
 notifications:
   email:
