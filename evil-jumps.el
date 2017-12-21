@@ -290,8 +290,9 @@ POS defaults to point."
 (defadvice split-window-internal (before evil-jumps activate)
   (evil-set-jump))
 
-(defadvice find-tag-noselect (before evil-jumps activate)
-  (evil-set-jump))
+(eval-after-load 'etags
+  '(defadvice find-tag-noselect (before evil-jumps activate)
+     (evil-set-jump)))
 
 (if (bound-and-true-p savehist-loaded)
     (evil--jumps-savehist-load)
