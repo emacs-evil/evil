@@ -507,36 +507,46 @@ Based on `evil-enclose-ace-jump-for-motion'."
            (call-interactively ',command))))))
 
 ;; define evil-avy-* motion commands for avy-* commands
-(evil-define-avy-motion avy-goto-word-or-subword-1 exclusive)
-(evil-define-avy-motion avy-goto-line line)
 (evil-define-avy-motion avy-goto-char inclusive)
 (evil-define-avy-motion avy-goto-char-2 inclusive)
 (evil-define-avy-motion avy-goto-char-2-above inclusive)
 (evil-define-avy-motion avy-goto-char-2-below inclusive)
 (evil-define-avy-motion avy-goto-char-in-line inclusive)
 (evil-define-avy-motion avy-goto-char-timer inclusive)
+(evil-define-avy-motion avy-goto-line line)
+(evil-define-avy-motion avy-goto-line-above line)
+(evil-define-avy-motion avy-goto-line-below line)
+(evil-define-avy-motion avy-goto-subword-0 exclusive)
+(evil-define-avy-motion avy-goto-subword-1 exclusive)
+(evil-define-avy-motion avy-goto-symbol-1 exclusive)
+(evil-define-avy-motion avy-goto-symbol-1-above exclusive)
+(evil-define-avy-motion avy-goto-symbol-1-below exclusive)
 (evil-define-avy-motion avy-goto-word-0 exclusive)
 (evil-define-avy-motion avy-goto-word-1 exclusive)
 (evil-define-avy-motion avy-goto-word-1-above exclusive)
 (evil-define-avy-motion avy-goto-word-1-below exclusive)
-(evil-define-avy-motion avy-goto-subword-0 exclusive)
-(evil-define-avy-motion avy-goto-subword-1 exclusive)
+(evil-define-avy-motion avy-goto-word-or-subword-1 exclusive)
 
 ;; remap avy-* commands to evil-avy-* commands
-(dolist (command '(avy-goto-word-or-subword-1
-                   avy-goto-line
-                   avy-goto-char
+(dolist (command '(avy-goto-char
                    avy-goto-char-2
                    avy-goto-char-2-above
                    avy-goto-char-2-below
                    avy-goto-char-in-line
                    avy-goto-char-timer
+                   avy-goto-line
+                   avy-goto-line-above
+                   avy-goto-line-below
+                   avy-goto-subword-0
+                   avy-goto-subword-1
+                   avy-goto-symbol-1
+                   avy-goto-symbol-1-above
+                   avy-goto-symbol-1-below
                    avy-goto-word-0
                    avy-goto-word-1
                    avy-goto-word-1-above
                    avy-goto-word-1-below
-                   avy-goto-subword-0
-                   avy-goto-subword-1))
+                   avy-goto-word-or-subword-1))
   (define-key evil-motion-state-map
     (vector 'remap command) (intern-soft (format "evil-%s" command))))
 
