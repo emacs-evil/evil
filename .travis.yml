@@ -1,29 +1,22 @@
 language: generic
-sudo: false
+sudo: true
 
 env:
   global:
     - CURL="curl -fsSkL --retry 9 --retry-delay 9"
   matrix:
   - EMACS_VERSION=24.3
-  - EMACS_VERSION=24.4
   - EMACS_VERSION=24.5
-  - EMACS_VERSION=25.1
-  - EMACS_VERSION=25.2
+  - EMACS_VERSION=25.3
   - EMACS_VERSION=master
 
 matrix:
   allow_failures:
     - env: EMACS_VERSION=master
-    # Emacs 25.1 segfaults when running make test
-    - env: EMACS_VERSION=25.1
 
-# NOTE: flyspell test
-addons:
-  apt:
-    packages:
-      - aspell
-      - aspell-en
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y aspell aspell-en # required for flyspell test
 
 install:
   - $CURL -O https://github.com/npostavs/emacs-travis/releases/download/bins/emacs-bin-${EMACS_VERSION}.tar.gz
