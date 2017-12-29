@@ -3346,6 +3346,29 @@ resp.  after executing the command."
                      evil-symbol-word-search))
   (evil-ex-start-word-search t 'backward count symbol))
 
+(defun evil-revert-reveal (open-spots)
+  "Unconditionally close overlays in OPEN-SPOTS in current window.
+Modified version of `reveal-close-old-overlays' from
+reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
+  (dolist (spot open-spots)
+    (let ((window (car spot))
+          (ol (cdr spot)))
+      (unless (eq window (selected-window))
+        (error "evil-revert-reveal: slot with wrong window"))
+      (let* ((inv (overlay-get ol 'reveal-invisible))
+             (open (or (overlay-get ol 'reveal-toggle-invisible)
+                       (get inv 'reveal-toggle-invisible)
+                       (overlay-get ol 'isearch-open-invisible-temporary))))
+        (if (and (overlay-start ol) ;Check it's still live.
+                 open)
+            (condition-case err
+                (funcall open ol t)
+              (error (message "!!Reveal-hide (funcall %s %s t): %s !!"
+                              open ol err)))
+          (overlay-put ol 'invisible inv))
+        ;; Remove the overlay from the list of open spots.
+        (overlay-put ol 'reveal-invisible nil)))))
+
 (evil-define-operator evil-ex-substitute
   (beg end pattern replacement flags)
   "The Ex substitute command.
@@ -3373,6 +3396,8 @@ resp.  after executing the command."
          (evil-ex-substitute-hl (evil-ex-make-hl 'evil-ex-substitute))
          (orig-point-marker (move-marker (make-marker) (point)))
          (end-marker (move-marker (make-marker) end))
+         (use-reveal (and confirm (require 'reveal nil t)))
+         reveal-open-spots
          zero-length-match
          match-contains-newline
          transient-mark-mode)
@@ -3415,8 +3440,13 @@ resp.  after executing the command."
                                      (evil-match-substitute-replacement
                                       evil-ex-substitute-replacement
                                       (not case-replace))))
+                            (search-invisible t)
                             response)
                         (move-overlay evil-ex-substitute-overlay match-beg match-end)
+                        ;; Simulate `reveal-mode'. `reveal-mode' uses
+                        ;; `post-command-hook' but that won't work here.
+                        (when use-reveal
+                          (reveal-post-command))
                         (catch 'exit-read-char
                           (while (setq response (read-char prompt))
                             (when (member response '(?y ?a ?l))
@@ -3481,7 +3511,10 @@ resp.  after executing the command."
         (goto-char evil-ex-substitute-last-point))
 
       (move-marker orig-point-marker nil)
-      (move-marker end-marker nil))
+      (move-marker end-marker nil)
+
+      (when use-reveal
+        (evil-revert-reveal reveal-open-spots)))
 
     (message "%s %d occurrence%s"
              (if count-only "Found" "Replaced")
