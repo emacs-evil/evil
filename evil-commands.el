@@ -3407,6 +3407,7 @@ resp.  after executing the command."
                     ;; beginning of this last line will be matched which we don't
                     ;; want, so we abort here.
                     (throw 'exit-search t))
+                  (setq evil-ex-substitute-last-point match-beg)
                   (if confirm
                       (let ((prompt
                              (format "Replace %s with %s (y/n/a/q/l/^E/^Y)? "
@@ -3423,7 +3424,6 @@ resp.  after executing the command."
                                 (set-match-data match-data)
                                 (evil-replace-match evil-ex-substitute-replacement
                                                     (not case-replace)))
-                              (setq evil-ex-substitute-last-point (point))
                               (setq evil-ex-substitute-nreplaced
                                     (1+ evil-ex-substitute-nreplaced))
                               (evil-ex-hl-set-region 'evil-ex-substitute
@@ -3444,8 +3444,7 @@ resp.  after executing the command."
                     (unless count-only
                       (set-match-data match-data)
                       (evil-replace-match evil-ex-substitute-replacement
-                                          (not case-replace)))
-                    (setq evil-ex-substitute-last-point (point)))
+                                          (not case-replace))))
                   (goto-char match-end)
                   (cond ((>= (point) end-marker)
                          ;; Don't want to perform multiple replacements at the end
