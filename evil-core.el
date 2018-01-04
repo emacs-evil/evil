@@ -289,8 +289,8 @@ See also `evil-initial-state'."
                 checked-modes)
             (while (and mode (symbolp mode))
               (when (memq mode checked-modes)
-                (message "Circular reference detected in ancestors of %s\n%s"
-                         major-mode checked-modes)
+                (error "Circular reference detected in ancestors of %s\n%s"
+                       major-mode checked-modes)
                 (throw 'state nil))
               (let ((state (evil-initial-state mode)))
                 (when state
