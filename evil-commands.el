@@ -33,6 +33,7 @@
 (require 'evil-jumps)
 (require 'flyspell)
 (require 'cl-lib)
+(require 'reveal)
 
 ;;; Motions
 
@@ -3396,7 +3397,7 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
          (evil-ex-substitute-hl (evil-ex-make-hl 'evil-ex-substitute))
          (orig-point-marker (move-marker (make-marker) (point)))
          (end-marker (move-marker (make-marker) end))
-         (use-reveal (and confirm (require 'reveal nil t)))
+         (use-reveal confirm)
          reveal-open-spots
          zero-length-match
          match-contains-newline
