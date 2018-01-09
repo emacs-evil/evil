@@ -7444,22 +7444,27 @@ maybe we need one line more with some text\n")
         "line1\nline2\nline3\nline4\nline5\n"
         (":w")
         (file filename "line1\nline2\nline3\nline4\nline5\n"))))
-  (let ((filename (evil-temp-filename)))
-    (ert-info ("Write current buffer to new file")
+  (ert-info ("Write current buffer to new file")
+    (let ((filename (make-temp-file "evil-test-write")))
       (evil-test-buffer
         "[l]ine1\nline2\nline3\nline4\nline5\n"
+        (delete-file filename)
         ((vconcat ":w " filename [return]))
         (file filename "line1\nline2\nline3\nline4\nline5\n")
-        (delete-file filename)))
-    (ert-info ("Write part of a buffer")
+        (delete-file filename))))
+  (ert-info ("Write part of a buffer")
+    (let ((filename (make-temp-file "evil-test-write")))
       (evil-test-buffer
         "[l]ine1\nline2\nline3\nline4\nline5\n"
+        (delete-file filename)
         ((vconcat ":2,3w " filename [return]))
         (file filename "line2\nline3\n")
-        (delete-file filename)))
-    (ert-info ("Appending a file")
+        (delete-file filename))))
+  (ert-info ("Appending a file")
+    (let ((filename (make-temp-file "evil-test-write")))
       (evil-test-buffer
         "[l]ine1\nline2\nline3\nline4\nline5\n"
+        (delete-file filename)
         ((vconcat ":4w " filename [return]))
         (file filename "line4\n")
         ((vconcat ":1,2w >>" filename [return]))
