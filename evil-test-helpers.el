@@ -385,8 +385,7 @@ is executed at the end."
 
 (defun evil-temp-filename ()
   "Return an appropriate temporary filename."
-  (make-temp-name (expand-file-name "evil-test"
-                                    temporary-file-directory)))
+  (make-temp-file "evil-test"))
 
 (defmacro evil-with-temp-file (file-var content &rest body)
   "Create a temp file with CONTENT and bind its name to FILE-VAR within BODY.
