@@ -7445,7 +7445,7 @@ maybe we need one line more with some text\n")
         (":w")
         (file filename "line1\nline2\nline3\nline4\nline5\n"))))
   (ert-info ("Write current buffer to new file")
-    (let ((filename (evil-temp-filename)))
+    (let ((filename (make-temp-file "evil-test-write")))
       (evil-test-buffer
         "[l]ine1\nline2\nline3\nline4\nline5\n"
         (delete-file filename)
@@ -7453,7 +7453,7 @@ maybe we need one line more with some text\n")
         (file filename "line1\nline2\nline3\nline4\nline5\n")
         (delete-file filename))))
   (ert-info ("Write part of a buffer")
-    (let ((filename (evil-temp-filename)))
+    (let ((filename (make-temp-file "evil-test-write")))
       (evil-test-buffer
         "[l]ine1\nline2\nline3\nline4\nline5\n"
         (delete-file filename)
@@ -7461,7 +7461,7 @@ maybe we need one line more with some text\n")
         (file filename "line2\nline3\n")
         (delete-file filename))))
   (ert-info ("Appending a file")
-    (let ((filename (evil-temp-filename)))
+    (let ((filename (make-temp-file "evil-test-write")))
       (evil-test-buffer
         "[l]ine1\nline2\nline3\nline4\nline5\n"
         (delete-file filename)
