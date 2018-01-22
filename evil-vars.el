@@ -700,6 +700,7 @@ If STATE is nil, Evil is disabled in the buffer."
     notmuch-hello-mode
     notmuch-search-mode
     notmuch-show-mode
+    notmuch-tree-mode
     occur-mode
     org-agenda-mode
     package-menu-mode
