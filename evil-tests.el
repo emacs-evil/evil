@@ -8246,6 +8246,17 @@ when an error stops the execution of the macro"
  	 ("uu")
  	 "line 1\n[l]ine 2\nline 3")))
 
+(ert-deftest evil-test-visual-update-x-selection ()
+  "Test `evil-visual-update-x-selection'."
+  :tags '(evil)
+  (ert-info ("Buffer argument isn't a live buffer")
+    ; create buffer in normal mode, so we don't try to actually copy anything to
+    ; the X selection.
+    (let ((buf (evil-test-buffer-from-string "foobar")))
+      (kill-buffer buf)
+      ; should not raise an "Selecting deleted buffer" error
+      (evil-visual-update-x-selection buf))))
+
 (provide 'evil-tests)
 
 ;;; evil-tests.el ends here
