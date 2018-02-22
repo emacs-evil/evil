@@ -73,6 +73,7 @@
 (define-key evil-normal-state-map "gU" 'evil-upcase)
 (define-key evil-normal-state-map "gf" 'find-file-at-point)
 (define-key evil-normal-state-map "gF" 'evil-find-file-at-point-with-line)
+(define-key evil-normal-state-map "gx" 'browse-url-at-point)
 (define-key evil-normal-state-map "g?" 'evil-rot13)
 (define-key evil-normal-state-map "g~" 'evil-invert-case)
 (define-key evil-normal-state-map "zo" 'evil-open-fold)
