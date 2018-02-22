@@ -3599,6 +3599,9 @@ This is the same as :%s//~/&"
   (evil-with-single-undo
     (let ((case-fold-search
            (eq (evil-ex-regex-case pattern 'smart) 'insensitive))
+          (command-form (evil-ex-parse command))
+          (transient-mark-mode transient-mark-mode)
+          (deactivate-mark deactivate-mark)
           match markers)
       (when (and pattern command)
         (setq isearch-string pattern)
@@ -3618,7 +3621,7 @@ This is the same as :%s//~/&"
         (unwind-protect
             (dolist (marker markers)
               (goto-char marker)
-              (evil-ex-eval command))
+              (eval command-form))
           ;; ensure that all markers are deleted afterwards,
           ;; even in the event of failure
           (dolist (marker markers)

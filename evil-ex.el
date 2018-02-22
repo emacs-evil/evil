@@ -826,14 +826,8 @@ Returns the line number of the match."
 NUMBER defaults to 1."
   (funcall sign (or number 1)))
 
-(defun evil-ex-eval (string &optional start)
-  "Evaluate STRING as an Ex command.
-START is the start symbol, which defaults to `expression'."
-  ;; disable the mark before executing, otherwise the visual region
-  ;; may be used as operator range instead of the ex-range
-  (let ((form (evil-ex-parse string nil start))
-        transient-mark-mode deactivate-mark)
-    (eval form)))
+;; function `evil-ex-eval' has been superseded by `evil-ex-parse' plus `eval'
+(make-obsolete 'evil-ex-eval 'evil-ex-parse "1.2.14")
 
 (defun evil-ex-parse (string &optional syntax start)
   "Parse STRING as an Ex expression and return an evaluation tree.
