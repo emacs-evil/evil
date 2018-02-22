@@ -732,6 +732,7 @@ Columns are counted from zero."
   :keep-visual t
   :repeat nil
   :type exclusive
+  :jump t
   (interactive (list (read-char)))
   (let ((marker (evil-get-marker char)))
     (cond
@@ -756,6 +757,7 @@ Columns are counted from zero."
   :keep-visual t
   :repeat nil
   :type line
+  :jump t
   (interactive (list (read-char)))
   (evil-goto-mark char noerror)
   (evil-first-non-blank))
