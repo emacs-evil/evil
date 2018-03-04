@@ -7344,7 +7344,28 @@ maybe we need one line more with some text\n")
      (":g//d" [return])
      "no 1\nno 2\nno 3\n[n]o 5\nno 6\nno 7\n"
      (":v//d" [return])
-     "")))
+     ""))
+  (ert-info (":global should take into account evil-ex-search-case")
+    (evil-with-both-search-modules
+     (let ((evil-ex-search-case 'sensitive))
+       (evil-test-buffer
+        "this\nThis\n"
+        (":g/this/d" [return])
+        "This\n"))
+     (let ((evil-ex-search-case 'insensitive))
+       (evil-test-buffer
+        "this\nThis\n"
+        (":g/this/d" [return])
+        ""))
+     (let ((evil-ex-search-case 'smart))
+       (evil-test-buffer
+        "this\nThis\n"
+        (":g/this/d" [return])
+        "")
+       (evil-test-buffer
+        "this\nThis\n"
+        (":g/This/d" [return])
+        "this\n")))))
 
 (ert-deftest evil-test-normal ()
   "Test `evil-ex-normal'."

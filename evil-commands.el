@@ -3600,7 +3600,7 @@ This is the same as :%s//~/&"
   ;; flag. This isn't supported currently but should be simple to add
   (evil-with-single-undo
     (let ((case-fold-search
-           (eq (evil-ex-regex-case pattern 'smart) 'insensitive))
+           (eq (evil-ex-regex-case pattern evil-ex-search-case) 'insensitive))
           (command-form (evil-ex-parse command))
           (transient-mark-mode transient-mark-mode)
           (deactivate-mark deactivate-mark)
