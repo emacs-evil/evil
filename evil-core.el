@@ -898,14 +898,14 @@ does not already exist."
 (defun evil-auxiliary-keymap-p (map)
   "Whether MAP is an auxiliary keymap."
   (and (keymapp map)
-       (string-match "Auxiliary keymap"
-                     (or (keymap-prompt map) "")) t))
+       (string-match-p "Auxiliary keymap"
+                       (or (keymap-prompt map) "")) t))
 
 (defun evil-minor-mode-keymap-p (map)
   "Whether MAP is a minor-mode keymap."
   (and (keymapp map)
-       (string-match "Minor-mode keymap"
-                     (or (keymap-prompt map) "")) t))
+       (string-match-p "Minor-mode keymap"
+                       (or (keymap-prompt map) "")) t))
 
 (defun evil-intercept-keymap-p (map &optional state)
   "Whether MAP is an intercept keymap for STATE.
