@@ -378,10 +378,12 @@ then this function does nothing."
 
 (defun evil-generate-mode-line-tag (&optional state)
   "Generate the evil mode-line tag for STATE."
-  (let ((tag (evil-state-property state :tag t)))
+  (let ((tag (evil-state-property state :tag t))
+        (tag-face (evil-state-property state :tag-face t)))
     ;; prepare mode-line: add tooltip
     (if (stringp tag)
         (propertize tag
+                    'face tag-face
                     'help-echo (evil-state-property state :name)
                     'mouse-face 'mode-line-highlight)
       tag)))
@@ -1164,6 +1166,7 @@ the first line of the string should be the full name of the state.
 Then follows one or more optional keywords:
 
 :tag STRING             Mode line indicator.
+:tag-face LIST          Face property for the mode line indicator.
 :message STRING         Echo area message when changing to STATE.
 :cursor SPEC            Cursor to use in STATE.
 :entry-hook LIST        Hooks run when changing to STATE.
@@ -1204,6 +1207,7 @@ the local keymap will be `evil-test-state-local-map', and so on.
          (local (intern (format "%s-local-minor-mode" toggle)))
          (local-keymap (intern (format "%s-local-map" toggle)))
          (tag (intern (format "%s-tag" toggle)))
+         (tag-face (intern (format "%s-tag-face" toggle)))
          (message (intern (format "%s-message" toggle)))
          (cursor (intern (format "%s-cursor" toggle)))
          (entry-hook (intern (format "%s-entry-hook" toggle)))
@@ -1211,7 +1215,8 @@ the local keymap will be `evil-test-state-local-map', and so on.
          (modes (intern (format "%s-modes" toggle)))
          (predicate (intern (format "%s-p" toggle)))
          arg cursor-value enable entry-hook-value exit-hook-value
-         input-method key message-value suppress-keymap tag-value)
+         input-method key message-value suppress-keymap tag-value
+         tag-face-value)
     ;; collect keywords
     (while (keywordp (car-safe body))
       (setq key (pop body)
@@ -1219,6 +1224,8 @@ the local keymap will be `evil-test-state-local-map', and so on.
       (cond
        ((eq key :tag)
         (setq tag-value arg))
+       ((eq key :tag-face)
+        (setq tag-face-value arg))
        ((eq key :message)
         (setq message-value arg))
        ((eq key :cursor)
@@ -1264,6 +1271,8 @@ Use the command `%s' to change this variable." name toggle))
                         ,(format "Buffer-local keymap for %s." name))
         :tag (defvar ,tag ,tag-value
                ,(format "Mode line tag for %s." name))
+        :tag-face (defvar ,tag-face ,tag-face-value
+               ,(format "Face property for the mode line tag for %s." name))
         :message (defvar ,message ,message-value
                    ,(format "Echo area message for %s." name))
         :cursor (defvar ,cursor ',cursor-value
