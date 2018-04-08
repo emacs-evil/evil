@@ -2180,7 +2180,7 @@ Variables pertaining to Transient Mark mode are listed in
     (when (and (boundp var)
                (not (assq var evil-transient-vals)))
       (push (list var (symbol-value var)
-                  (and (assq var (buffer-local-variables)) t))
+                  (local-variable-p var))
             evil-transient-vals)
       (make-variable-buffer-local var)
       (put var 'permanent-local t))))
