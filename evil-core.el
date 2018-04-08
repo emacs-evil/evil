@@ -480,7 +480,7 @@ The initial value is that of `make-sparse-keymap'."
     (let ((mode (car entry))
           (map  (cdr entry)))
       (unless (and (keymapp (symbol-value map))
-                   (assq map (buffer-local-variables)))
+                   (local-variable-p map))
         (set map (make-sparse-keymap))))))
 
 (defun evil-make-overriding-map (keymap &optional state copy)
