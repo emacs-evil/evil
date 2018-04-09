@@ -60,7 +60,7 @@ no arguments.  In Emacs 23.2 and newer, it takes one argument."
   (called-interactively-p 'any))
 (make-obsolete 'evil-called-interactively-p
                "please use (called-interactively-p 'any) instead."
-               "Git commit 222b791")
+               "1.2.14")
 
 ;; macro helper
 (eval-and-compile
