@@ -3435,7 +3435,8 @@ are included. The step is terminated with `evil-end-undo-step'."
 (defun evil-end-undo-step (&optional continue)
   "End a undo step started with `evil-start-undo-step'.
 Adds an undo boundary unless CONTINUE is specified."
-  (when (and evil-undo-list-pointer
+  (when (and (listp buffer-undo-list)
+             evil-undo-list-pointer
              (not evil-in-single-undo))
     (evil-refresh-undo-step)
     (unless (or continue (null (car-safe buffer-undo-list)))
