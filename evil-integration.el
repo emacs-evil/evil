@@ -578,6 +578,11 @@ Based on `evil-enclose-ace-jump-for-motion'."
   (eval-after-load 'abbrev
     '(add-hook 'evil-insert-state-exit-hook 'expand-abbrev)))
 
+;;; ElDoc
+(eval-after-load 'eldoc
+  '(when (fboundp 'eldoc-add-command-completions)
+     (eldoc-add-command-completions "evil-window-")))
+
 (provide 'evil-integration)
 
 ;;; evil-integration.el ends here
