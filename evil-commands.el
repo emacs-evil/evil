@@ -4159,9 +4159,9 @@ and redisplays the current buffer there."
             (select-window newwin)))))
     (balance-windows)))
 
-(with-eval-after-load 'eldoc
-  (when (fboundp 'eldoc-add-command-completions)
-    (eldoc-add-command-completions "evil-window-")))
+(eval-after-load 'eldoc
+  '(when (fboundp 'eldoc-add-command-completions)
+     (eldoc-add-command-completions "evil-window-")))
 
 ;;; Mouse handling
 
