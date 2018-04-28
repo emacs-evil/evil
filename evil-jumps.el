@@ -230,7 +230,10 @@ POS defaults to point."
       (cl-loop repeat idx
                do (ring-remove target-list))
       (setf (evil-jumps-struct-idx struct) -1))
-    (evil--jumps-push)))
+    (save-excursion
+      (when pos
+        (goto-char pos))
+      (evil--jumps-push))))
 
 (defun evil--jump-backward (count)
   (let ((count (or count 1)))
