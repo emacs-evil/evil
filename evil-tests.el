@@ -1760,6 +1760,20 @@ New Tex[t]
      "a\nb\nc\nd\ne\nf\n"
      (should (string= (substring-no-properties (evil-get-register ?r)) "b\nc\nd\n")))))
 
+(ert-deftest evil-test-yank-line ()
+  "Test `evil-yank-line'"
+  :tags '(evil operator)
+  (ert-info ("Yank line with eof being part of visual selection")
+    (evil-test-buffer
+      ";; This is line one
+;; This is lin[e] two
+;; This is line three"
+      ("v$Yjp")
+      ";; This is line one
+;; This is line two
+;; This is line three
+[;]; This is line two")))
+
 (ert-deftest evil-test-delete ()
   "Test `evil-delete'"
   :tags '(evil operator delete)
@@ -1868,7 +1882,15 @@ and for Lisp evaluation."
       ("0P")
       "ine1 line1 line1line1 l
 ine2            line2 l
-ine3 line3      line3 l\n")))
+ine3 line3      line3 l\n"))
+  (ert-info ("Delete line with eof being part of visual selection")
+    (evil-test-buffer
+      ";; This is line one
+;; This is lin[e] two
+;; This is line three"
+      ("v$D")
+      ";; This is line one
+;; This is line three")))
 
 (ert-deftest evil-test-delete-folded ()
   "Test `evil-delete' on folded lines."
@@ -1952,6 +1974,18 @@ AB[C]"))
       "AB[C]This buffer is for notes you don't want to save.
 ABCIf you want to create a file, visit that file with C-x C-f,
 ABCthen enter the text in that file's own buffer.")))
+
+(ert-deftest evil-test-change-line ()
+  "Test `evil-change-line'"
+  :tags '(evil operator)
+  (ert-info ("Change line with eof being part of visual selection")
+    (evil-test-buffer
+      "This is line one
+This is lin[e] two
+This is line three"
+      ("v$C")
+      "This is line one
+[T]his is line three")))
 
 (ert-deftest evil-test-change-word ()
   "Test changing words"
@@ -8239,33 +8273,33 @@ maybe we need one line more with some text\n")
      "| foo |testing| bar |")))
 
 (ert-deftest evil-test-undo-kbd-macro ()
-  "Test if evil can undo the changes made by a keyboard macro 
+  "Test if evil can undo the changes made by a keyboard macro
 when an error stops the execution of the macro"
   :tags '(evil undo kbd-macro)
   (ert-info ("When kbd-macro goes to the end of buffer")
     (evil-test-buffer
- 	 "[l]ine 1\nline 2\nline 3\nline 4"
+        "[l]ine 1\nline 2\nline 3\nline 4"
      (evil-set-register ?q "jdd")
      ("jdd")
      (should-error (execute-kbd-macro "2@q"))
- 	 ("uu")
- 	 "line 1\n[l]ine 2\nline 3\nline 4"))
+        ("uu")
+        "line 1\n[l]ine 2\nline 3\nline 4"))
   (ert-info ("When kbd-macro goes to the end of line")
     (evil-test-buffer
- 	 "[f]ofof"
+        "[f]ofof"
      (evil-set-register ?q "lx")
      ("lx")
      (should-error (execute-kbd-macro "2@q"))
- 	 ("uu")
- 	 "f[o]fof"))
+        ("uu")
+        "f[o]fof"))
   (ert-info ("When kbd-macro goes to the beginning of buffer")
     (evil-test-buffer
- 	 "line 1\nline 2\n[l]ine 3"
+        "line 1\nline 2\n[l]ine 3"
      (evil-set-register ?q "kx")
      ("kx")
      (should-error (execute-kbd-macro "2@q"))
- 	 ("uu")
- 	 "line 1\n[l]ine 2\nline 3")))
+        ("uu")
+        "line 1\n[l]ine 2\nline 3")))
 
 (ert-deftest evil-test-visual-update-x-selection ()
   "Test `evil-visual-update-x-selection'."
