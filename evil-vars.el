@@ -1019,7 +1019,8 @@ preserved."
 used in `evil-cjk-word-boundary-p'. See the documentation of
 `word-separating-categories'. Use `describe-categories' to see
 the list of categories."
-  :type '((character . character))
+  :type '(alist :key-type (choice character (const nil))
+                :value-type (choice character (const nil)))
   :group 'evil-cjk)
 
 (defcustom evil-cjk-word-combining-categories
@@ -1038,7 +1039,8 @@ the list of categories."
 used in `evil-cjk-word-boundary-p'. See the documentation of
 `word-combining-categories'. Use `describe-categories' to see the
 list of categories."
-  :type '((character . character))
+  :type '(alist :key-type (choice character (const nil))
+                :value-type (choice character (const nil)))
   :group 'evil-cjk)
 
 (defcustom evil-ex-complete-emacs-commands 'in-turn
