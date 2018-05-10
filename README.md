@@ -40,7 +40,7 @@ which provides the functions `goto-last-change` and `goto-last-change-reverse`.
 # Documentation
 
 A brief
-[PDF manual](https://raw.githubusercontent.com/emacs-evil/evil/master/doc/evil.pdf) is
+[PDF manual](https://github.com/emacs-evil/evil/raw/master/doc/evil.pdf) is
 available.
 
 # Mailing list
