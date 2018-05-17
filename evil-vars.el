@@ -616,12 +616,15 @@ If STATE is nil, Evil is disabled in the buffer."
   :group 'evil)
 
 (defcustom evil-emacs-state-modes
-  '(archive-mode
+  '(5x5-mode
+    archive-mode
     bbdb-mode
     biblio-selection-mode
+    blackbox-mode
     bookmark-bmenu-mode
     bookmark-edit-annotation-mode
     browse-kill-ring-mode
+    bubbles-mode
     bzr-annotate-mode
     calc-mode
     cfw:calendar-mode
@@ -633,6 +636,7 @@ If STATE is nil, Evil is disabled in the buffer."
     desktop-menu-blist-mode
     desktop-menu-mode
     doc-view-mode
+    dun-mode
     dvc-bookmarks-mode
     dvc-diff-mode
     dvc-info-buffer-mode
@@ -668,6 +672,7 @@ If STATE is nil, Evil is disabled in the buffer."
     gnus-group-mode
     gnus-server-mode
     gnus-summary-mode
+    gomoku-mode
     google-maps-static-mode
     ibuffer-mode
     jde-javadoc-checker-report-mode
@@ -694,6 +699,7 @@ If STATE is nil, Evil is disabled in the buffer."
     ;; end obsolete
     mh-folder-mode
     monky-mode
+    mpuz-mode
     mu4e-main-mode
     mu4e-headers-mode
     mu4e-view-mode
@@ -717,6 +723,8 @@ If STATE is nil, Evil is disabled in the buffer."
     slime-inspector-mode
     slime-thread-control-mode
     slime-xref-mode
+    snake-mode
+    solitaire-mode
     sr-buttons-mode
     sr-mode
     sr-tree-mode
