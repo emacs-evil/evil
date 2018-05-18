@@ -1331,18 +1331,36 @@ or line COUNT to the top of the window."
      (t
       (evil-yank-characters beg end register yank-handler)))))
 
-(evil-define-operator evil-yank-line (beg end type register)
-  "Saves whole lines into the kill-ring."
-  :motion evil-line
-  :move-point nil
-  (interactive "<R><x>")
+(defun evil-expand-line-for-line-based-operators (beg end type)
+  "Expand to line when in visual mode possibly changing BEG, END and TYPE.
+Avoids double expansion for line based commands like 'V' or 'D'."
   (when (evil-visual-state-p)
     (unless (memq type '(line block))
+      ;; Subtract 1 from end to avoid expanding to the next line
+      ;; when \n is part of the visually selected region.
+      ;; If removed (evil-expand beg end 'line)
+      ;; will expand to the end of the next line instead of the current
+      ;; line which will cause line expanding commands like 'Y' to
+      ;; misbehave when used in visual state.
+      (when (and (number-or-marker-p end)
+                 (= (char-before end) ?\n))
+        (setq end (1- end)))
       (let ((range (evil-expand beg end 'line)))
         (setq beg (evil-range-beginning range)
               end (evil-range-end range)
               type (evil-type range))))
     (evil-exit-visual-state))
+  (list beg end type))
+
+(evil-define-operator evil-yank-line (beg end type register)
+  "Saves whole lines into the kill-ring."
+  :motion evil-line
+  :move-point nil
+  (interactive "<R><x>")
+  (let ((pos (evil-expand-line-for-line-based-operators beg end type)))
+    (setq beg (car pos))
+    (setq end (cadr pos))
+    (setq type (nth 2 pos)))
   (evil-yank beg end type register))
 
 (evil-define-operator evil-delete (beg end type register yank-handler)
@@ -1378,29 +1396,26 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   :motion nil
   :keep-visual t
   (interactive "<R><x>")
-  ;; act linewise in Visual state
-  (let* ((beg (or beg (point)))
-         (end (or end beg)))
-    (when (evil-visual-state-p)
-      (unless (memq type '(line block))
-        (let ((range (evil-expand beg end 'line)))
-          (setq beg (evil-range-beginning range)
-                end (evil-range-end range)
-                type (evil-type range))))
-      (evil-exit-visual-state))
-    (cond
-     ((eq type 'block)
-      ;; equivalent to $d, i.e., we use the block-to-eol selection and
-      ;; call `evil-delete'. In this case we fake the call to
-      ;; `evil-end-of-line' by setting `temporary-goal-column' and
-      ;; `last-command' appropriately as `evil-end-of-line' would do.
-      (let ((temporary-goal-column most-positive-fixnum)
-            (last-command 'next-line))
-        (evil-delete beg end 'block register yank-handler)))
-     ((eq type 'line)
-      (evil-delete beg end type register yank-handler))
-     (t
-      (evil-delete beg (line-end-position) type register yank-handler)))))
+  ;; Prepare BEG, END and for line expansion
+  (setq beg (or beg (point)))
+  (setq end (or end beg))
+  (let ((pos (evil-expand-line-for-line-based-operators beg end type)))
+    (setq beg (car pos))
+    (setq end (cadr pos))
+    (setq type (nth 2 pos)))
+  (cond
+   ((eq type 'block)
+    ;; equivalent to $d, i.e., we use the block-to-eol selection and
+    ;; call `evil-delete'. In this case we fake the call to
+    ;; `evil-end-of-line' by setting `temporary-goal-column' and
+    ;; `last-command' appropriately as `evil-end-of-line' would do.
+    (let ((temporary-goal-column most-positive-fixnum)
+          (last-command 'next-line))
+      (evil-delete beg end 'block register yank-handler)))
+   ((eq type 'line)
+    (evil-delete beg end type register yank-handler))
+   (t
+    (evil-delete beg (line-end-position) type register yank-handler))))
 
 (evil-define-operator evil-delete-whole-line
   (beg end type register yank-handler)
