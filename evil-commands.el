@@ -4263,10 +4263,11 @@ DO-MOUSE-DRAG-REGION-POST-PROCESS should only be used by
          (bounds (window-edges start-window))
          (make-cursor-line-fully-visible nil)
          (top (nth 1 bounds))
-         (bottom (if (window-minibuffer-p start-window)
-                     (nth 3 bounds)
-                   ;; Don't count the mode line.
-                   (1- (nth 3 bounds))))
+         (bottom (if (or (window-minibuffer-p start-window)
+                         (not mode-line-format))
+		                 (nth 3 bounds)
+		               ;; Don't count the mode line.
+		               (1- (nth 3 bounds))))
          (on-link (and mouse-1-click-follows-link
                        (or mouse-1-click-in-non-selected-windows
                            (eq start-window original-window))
