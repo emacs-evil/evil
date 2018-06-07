@@ -129,6 +129,9 @@
     ;; restore the proper value of `major-mode' in Fundamental buffers
     (when (eq major-mode 'turn-on-evil-mode)
       (setq major-mode 'fundamental-mode))
+    (when (minibufferp)
+      (setq-local evil-default-state 'insert)
+      (setq-local evil-echo-state nil))
     ;; The initial state is usually setup by `evil-initialize' when
     ;; the major-mode in a buffer changes. This preliminary
     ;; initialization is only for the case when `evil-local-mode' is
@@ -170,8 +173,7 @@
 (defun evil-initialize ()
   "Enable Evil in the current buffer, if appropriate.
 To enable Evil globally, do (evil-mode 1)."
-  ;; TODO: option for enabling vi keys in the minibuffer
-  (unless (minibufferp)
+  (unless (and (minibufferp) (not evil-want-minibuffer))
     (evil-local-mode 1)
     (evil-initialize-state)))
 
