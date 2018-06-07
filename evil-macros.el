@@ -527,22 +527,23 @@ if COUNT is positive, and to the left of it if negative.
   "Read a motion from the keyboard and return its buffer positions.
 The return value is a list (BEG END), or (BEG END TYPE) if
 RETURN-TYPE is non-nil."
-  (let ((motion (or evil-operator-range-motion
-                    (when (evil-ex-p) 'evil-line)))
-        (type evil-operator-range-type)
-        (range (evil-range (point) (point)))
-        command count modifier)
+  (let* ((evil-ex-p (and (not (minibufferp)) (evil-ex-p)))
+         (motion (or evil-operator-range-motion
+                     (when evil-ex-p 'evil-line)))
+         (type evil-operator-range-type)
+         (range (evil-range (point) (point)))
+         command count modifier)
     (setq evil-this-type-modified nil)
     (evil-save-echo-area
       (cond
        ;; Ex mode
-       ((and (evil-ex-p) evil-ex-range)
+       ((and evil-ex-p evil-ex-range)
         (setq range evil-ex-range))
        ;; Visual selection
-       ((and (not (evil-ex-p)) (evil-visual-state-p))
+       ((and (not evil-ex-p) (evil-visual-state-p))
         (setq range (evil-visual-range)))
        ;; active region
-       ((and (not (evil-ex-p)) (region-active-p))
+       ((and (not evil-ex-p) (region-active-p))
         (setq range (evil-range (region-beginning)
                                 (region-end)
                                 (or evil-this-type 'exclusive))))

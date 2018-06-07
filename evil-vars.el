@@ -35,15 +35,15 @@
 ;;; Hooks
 
 (defvar evil-after-load-hook nil
-  "Functions to be run when loading of evil is finished.
+  "Functions to be run when loading of Evil is finished.
 This hook can be used the execute some initialization routines
-when evil is completely loaded.")
+when Evil is completely loaded.")
 
 ;;; Initialization
 
 (defvar evil-pending-custom-initialize nil
   "A list of pending initializations for custom variables.
-Each element is a triple (FUNC VAR VALUE). When evil is
+Each element is a triple (FUNC VAR VALUE). When Evil is
 completely loaded then the functions (funcall FUNC VAR VALUE) is
 called for each element. FUNC should be a function suitable for
 the :initialize property of `defcustom'.")
@@ -218,7 +218,7 @@ a line."
 
 (defcustom evil-respect-visual-line-mode nil
   "Whether to remap movement commands when `visual-line-mode' is active.
-This variable must be set before evil is loaded. The commands
+This variable must be set before Evil is loaded. The commands
 swapped are
 
 `evil-next-line'         <-> `evil-next-visual-line'
@@ -360,9 +360,9 @@ Used by `evil-esc-mode'.")
   "If non-nil, the \\e event will never be translated to 'escape.")
 
 (defcustom evil-intercept-esc 'always
-  "Whether evil should intercept the ESC key.
+  "Whether Evil should intercept the ESC key.
 In terminal, a plain ESC key and a meta-key-sequence both
-generate the same event. In order to distinguish both evil
+generate the same event. In order to distinguish both Evil
 modifies `input-decode-map'. This is necessary in terminal but
 not in X mode. However, the terminal ESC is equivalent to C-[, so
 if you want to use C-[ instead of ESC in X, then Evil must
@@ -596,7 +596,7 @@ Must be readable by `read-kbd-macro'. For example: \"C-z\"."
            (set-default sym value)))
 
 (defcustom evil-default-state 'normal
-  "The default state.
+  "The default Evil state.
 This is the state a mode comes up in when it is not listed
 in `evil-emacs-state-modes', `evil-insert-state-modes' or
 `evil-motion-state-modes'. The value may be one of `normal',
@@ -1064,7 +1064,7 @@ available for completion."
 (defface evil-ex-commands '(( nil
                               :underline t
                               :slant italic))
-  "Face for the evil command in completion in ex mode."
+  "Face for the Evil command in completion in ex mode."
   :group 'evil)
 
 (defface evil-ex-info '(( ((supports :slant))
@@ -1093,7 +1093,7 @@ be extended to contain full lines."
 (defcustom evil-magic t
   "Meaning which characters in a pattern are magic.
 The meaning of those values is the same as in Vim. Note that it
-only has influence if the evil search module is chosen in
+only has influence if the Evil search module is chosen in
 `evil-search-module'."
   :group 'evil
   :type '(radio (const :tag "Very magic." :value very-magic)
@@ -1272,7 +1272,7 @@ reinitialized in each buffer. Entries have the form
 the keymap for MODE.")
 
 (defvar evil-minor-mode-keymaps-alist nil
-  "Association list of evil states to minor-mode keymap alists.
+  "Association list of Evil states to minor-mode keymap alists.
 Entries have the form (STATE . MODE-MAP-ALIST), where
 MODE-MAP-ALIST is an alist taking the form of
 `minor-mode-map-alist'.")
@@ -1866,9 +1866,19 @@ Otherwise the previous command is assumed as substitute.")
 
 (defcustom evil-want-integration t
   "Whether to load evil-integration.el.
-This variable must be set before evil is loaded."
+This variable must be set before Evil is loaded."
   :type 'boolean
   :group 'evil)
+
+(defcustom evil-want-minibuffer nil
+  "Whether to enable Evil in minibuffer(s)."
+  :type 'boolean
+  :group 'evil
+  :set #'(lambda (sym value)
+           (set-default sym value)
+           (if value
+               (add-hook 'minibuffer-setup-hook 'evil-initialize)
+             (remove-hook 'minibuffer-setup-hook 'evil-initialize))))
 
 (defun evil-version ()
   (interactive)
