@@ -7513,6 +7513,16 @@ maybe we need one line more with some text\n")
       "[z]zyy\ntest\ntEst\ntesT\nTEST\ntest\n"
       (":sort i")
       "[t]est\ntEst\ntesT\nTEST\ntest\nzzyy\n"))
+  (ert-info ("sort with number")
+    (evil-test-buffer
+      "[8]0\n005\n3\n22\n1000\n01\n"
+      (":sort n")
+      "[0]1\n3\n005\n22\n80\n1000\n"))
+  (ert-info ("reverse sort with number")
+    (evil-test-buffer
+      "[8]0\n005\n3\n22\n1000\n01\n"
+      (":sort! n")
+      "[1]000\n80\n22\n005\n3\n01\n"))
   (ert-info ("unique")
     (evil-test-buffer
       "[z]zyy\ntest\ntEst\ntesT\nTEST\ntest\n"
