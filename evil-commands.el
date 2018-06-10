@@ -925,7 +925,10 @@ If the scroll count is zero the command scrolls half the screen."
       (condition-case nil
           (progn
             (scroll-down count)
-            (goto-char (posn-point (posn-at-x-y (car xy) (cdr xy)))))
+            (let ((p (posn-at-x-y (car xy) (cdr xy))))
+              (if (eq (posn-area p) 'header-line)
+                  (move-to-window-line 0)
+                (goto-char (posn-point p)))))
         (beginning-of-buffer
          (condition-case nil
              (with-no-warnings (previous-line count))
@@ -957,7 +960,9 @@ If the scroll count is zero the command scrolls half the screen."
                      (p (posn-at-x-y (car xy) (cdr xy)))
                      (margin (max 0 (- scroll-margin
                                        (cdr (posn-col-row p))))))
-                (goto-char (posn-point p))
+                (if (eq (posn-area p) 'header-line)
+                    (move-to-window-line 0)
+                  (goto-char (posn-point p)))
                 ;; ensure point is not within the scroll-margin
                 (when (> margin 0)
                   (with-no-warnings (next-line margin))
