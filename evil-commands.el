@@ -34,6 +34,7 @@
 (require 'flyspell)
 (require 'cl-lib)
 (require 'reveal)
+(require 'sort)
 
 ;;; Motions
 
@@ -3699,12 +3700,45 @@ Default position is the beginning of the buffer."
         (message "\"%s\" %d %slines --%s--" file nlines readonly perc)
       (message "%d lines --%s--" nlines perc))))
 
+(defun evil--sort-numeric-fields (field beg end)
+  "Modifed version of sort-numberic-fields.
+`sort-skip-fields' will not be called when the line is empty."
+  (let ;; To make `end-of-line' and etc. to ignore fields.
+      ((inhibit-field-text-motion t))
+    (sort-fields-1 field beg end
+                   (lambda ()
+                     (when (not (string-match-p "^\\s-*$" (thing-at-point 'line)))
+                       (sort-skip-fields field))
+                     (let* ((case-fold-search t)
+                            (base
+                             (if (looking-at "\\(0x\\)[0-9a-f]\\|\\(0\\)[0-7]")
+                                 (cond ((match-beginning 1)
+                                        (goto-char (match-end 1))
+                                        16)
+                                       ((match-beginning 2)
+                                        (goto-char (match-end 2))
+                                        8)
+                                       (t nil)))))
+                       (string-to-number (buffer-substring (point)
+                                                           (save-excursion
+                                                             (forward-sexp 1)
+                                                             (point)))
+                                         (or base sort-numeric-base))))
+                   nil)))
+
+(defun evil--ex-sort-number (reverse beg end)
+  "Sort with the first number in the lines."
+  (evil--sort-numeric-fields 1 beg end)
+  (when reverse
+      (reverse-region beg end)))
+
 (evil-define-operator evil-ex-sort (beg end &optional options reverse)
   "The Ex sort command.
-\[BEG,END]sort[!] [i][u]
+\[BEG,END]sort[!] [i][n][u]
 The following additional options are supported:
 
   * i   ignore case
+  * n   sort with the first number in the lines.
   * u   remove duplicate lines
 
 The 'bang' argument means to sort in reverse order."
@@ -3713,13 +3747,16 @@ The 'bang' argument means to sort in reverse order."
   (interactive "<r><a><!>")
   (let ((beg (copy-marker beg))
         (end (copy-marker end))
-        sort-fold-case uniq)
+        sort-fold-case uniq numeric)
     (dolist (opt (append options nil))
       (cond
        ((eq opt ?i) (setq sort-fold-case t))
        ((eq opt ?u) (setq uniq t))
+       ((eq opt ?n) (setq numeric t))
        (t (user-error "Unsupported sort option: %c" opt))))
-    (sort-lines reverse beg end)
+    (if numeric
+        (evil--ex-sort-number reverse beg end)
+      (sort-lines reverse beg end))
     (when uniq
       (let (line prev-line)
         (goto-char beg)
