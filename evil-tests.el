@@ -8781,7 +8781,40 @@ Source
     (evil-test-buffer
       "[z]zyy\ntest\ntEst\ntesT\nTEST\ntest\n"
       (":sort iu")
-      "[t]est\nzzyy\n")))
+      "[t]est\nzzyy\n"))
+  (ert-info ("pattern sort")
+    (evil-test-buffer
+      "[t]e|z|t\nzz|a|y\n"
+      (":sort /|[a-z]|/ r")
+      ("zz|a|y\nte|z|t\n"))
+    (evil-test-buffer
+      "[a],b\nb,a\n"
+      (":sort /[^,]*,/")
+      "b,a\na,b\n")
+    (evil-test-buffer
+      "[a],b\nb,a\n"
+      ("/," [return] ":sort //")
+      "b,a\na,b\n"))
+  (ert-info ("numeric sort")
+    (ert-info ("decimal")
+      (evil-test-buffer
+        "27\n027\n2\na\n1\n"
+        (":sort n")
+        "a\n1\n2\n27\n027\n"))
+    (ert-info ("octal")
+      (evil-test-buffer
+        "9\n8\n"
+        (":sort o")
+        "9\n8\n")
+      (evil-test-buffer
+        "777\n776\n7239\n"
+        (":sort o")
+        "7239\n776\n777\n"))
+    (ert-info ("hexadecimal")
+      (evil-test-buffer
+        "0xae\n0xb\nae\nad\n"
+        (":sort x")
+        "0xb\nad\n0xae\nae\n"))))
 
 ;;; Command line window
 
