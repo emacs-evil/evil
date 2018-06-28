@@ -766,7 +766,8 @@ filename."
 SPECS may be a cursor type as per `cursor-type', a color
 string as passed to `set-cursor-color', a zero-argument
 function for changing the cursor, or a list of the above."
-  (unless (and (listp specs)
+  (unless (and (not (functionp specs))
+               (listp specs)
                (null (cdr-safe (last specs))))
     (setq specs (list specs)))
   (dolist (spec specs)
