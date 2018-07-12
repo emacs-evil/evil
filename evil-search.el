@@ -191,10 +191,10 @@ of the buffer."
            result)
        (setq result (funcall search-fun string bound
                              ,(if wrap t 'noerror) count))
-       (when (and ,wrap (null result))
+       (when (and ,wrap (null result) (> start 1))
          (goto-char ,(if forward '(point-min) '(point-max)))
          (unwind-protect
-             (setq result (funcall search-fun string bound noerror count))
+             (setq result (funcall search-fun string (1- start) noerror count))
            (unless result
              (goto-char start))))
        result)))
