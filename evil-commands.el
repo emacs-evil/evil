@@ -3084,10 +3084,11 @@ If ARG is nil this function calls `recompile', otherwise it calls
     :entries
     (cl-loop for (key . val) in (evil-register-list)
              collect `(nil [,(char-to-string key)
-                            ,(or (and val
-                                      (stringp val)
-                                      (replace-regexp-in-string "\n" "^J" val))
-                                 "")]))))
+                            ,(cond ((stringp val)
+                                    (replace-regexp-in-string "\n" "^J" val))
+				   ((vectorp val)
+				    (key-description val))
+				   (t ""))]))))
 
 (evil-define-command evil-show-marks (mrks)
   "Shows all marks.
