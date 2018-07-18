@@ -1634,6 +1634,13 @@ Elements have the form (NAME . FUNCTION).")
      :open       ,(lambda () (call-interactively 'vdiff-open-fold))
      :open-rec   ,(lambda () (call-interactively 'vdiff-open-fold))
      :close      ,(lambda () (call-interactively 'vdiff-close-fold)))
+    ((vdiff-3way-mode)
+     :open-all   vdiff-open-all-folds
+     :close-all  vdiff-close-all-folds
+     :toggle     nil
+     :open       ,(lambda () (call-interactively 'vdiff-open-fold))
+     :open-rec   ,(lambda () (call-interactively 'vdiff-open-fold))
+     :close      ,(lambda () (call-interactively 'vdiff-close-fold)))
     ((hs-minor-mode)
      :open-all   hs-show-all
      :close-all  hs-hide-all
