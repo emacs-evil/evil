@@ -1627,7 +1627,21 @@ Elements have the form (NAME . FUNCTION).")
 (declare-function origami-close-node "origami.el")
 
 (defvar evil-fold-list
-  `(((hs-minor-mode)
+  `(((vdiff-mode)
+     :open-all   vdiff-open-all-folds
+     :close-all  vdiff-close-all-folds
+     :toggle     nil
+     :open       ,(lambda () (call-interactively 'vdiff-open-fold))
+     :open-rec   ,(lambda () (call-interactively 'vdiff-open-fold))
+     :close      ,(lambda () (call-interactively 'vdiff-close-fold)))
+    ((vdiff-3way-mode)
+     :open-all   vdiff-open-all-folds
+     :close-all  vdiff-close-all-folds
+     :toggle     nil
+     :open       ,(lambda () (call-interactively 'vdiff-open-fold))
+     :open-rec   ,(lambda () (call-interactively 'vdiff-open-fold))
+     :close      ,(lambda () (call-interactively 'vdiff-close-fold)))
+    ((hs-minor-mode)
      :open-all   hs-show-all
      :close-all  hs-hide-all
      :toggle     hs-toggle-hiding
@@ -1661,14 +1675,7 @@ Elements have the form (NAME . FUNCTION).")
      :toggle     ,(lambda () (origami-toggle-node (current-buffer) (point)))
      :open       ,(lambda () (origami-open-node (current-buffer) (point)))
      :open-rec   ,(lambda () (origami-open-node-recursively (current-buffer) (point)))
-     :close      ,(lambda () (origami-close-node (current-buffer) (point))))
-    ((vdiff-mode)
-     :open-all   vdiff-open-all-folds
-     :close-all  vdiff-close-all-folds
-     :toggle     nil
-     :open       ,(lambda () (call-interactively 'vdiff-open-fold))
-     :open-rec   ,(lambda () (call-interactively 'vdiff-open-fold))
-     :close      ,(lambda () (call-interactively 'vdiff-close-fold))))
+     :close      ,(lambda () (origami-close-node (current-buffer) (point)))))
   "Actions to be performed for various folding operations.
 
 The value should be a list of fold handlers, were a fold handler has
