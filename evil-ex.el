@@ -228,7 +228,7 @@ This function registers several hooks that are used for the
 interactive actions during ex state."
   (add-hook 'post-command-hook #'evil-ex-abort)
   (add-hook 'after-change-functions #'evil-ex-update nil t)
-  (add-hook 'minibuffer-exit-hook #'evil-ex-teardown)
+  (add-hook 'minibuffer-exit-hook #'evil-ex-teardown nil t)
   (when evil-ex-previous-command
     (add-hook 'pre-command-hook #'evil-ex-remove-default))
   (remove-hook 'minibuffer-setup-hook #'evil-ex-setup)
@@ -248,7 +248,7 @@ interactive actions during ex state."
   "Deinitialize Ex minibuffer.
 Clean up everything set up by `evil-ex-setup'."
   (remove-hook 'post-command-hook #'evil-ex-abort)
-  (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown)
+  (remove-hook 'minibuffer-exit-hook #'evil-ex-teardown t)
   (remove-hook 'after-change-functions #'evil-ex-update t)
   (when evil-ex-argument-handler
     (let ((runner (evil-ex-argument-handler-runner
