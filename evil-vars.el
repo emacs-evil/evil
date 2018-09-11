@@ -1877,6 +1877,16 @@ This variable must be set before Evil is loaded."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-want-keybinding t
+  "Whether to load evil-keybindings.el.
+
+This loads a set of keybindings for evil in other modes as well as
+setting the initial evil state in those modes.
+
+This variable must be set before evil is loaded."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-want-minibuffer nil
   "Whether to enable Evil in minibuffer(s)."
   :type 'boolean

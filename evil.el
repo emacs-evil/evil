@@ -141,6 +141,9 @@
 (when evil-want-integration
   (require 'evil-integration))
 
+(when evil-want-keybinding
+  (require 'evil-keybindings))
+
 (run-hooks 'evil-after-load-hook)
 
 (provide 'evil)
