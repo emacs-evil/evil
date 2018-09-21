@@ -420,13 +420,6 @@ which causes the parenthesis to be highlighted."
   :type 'integer
   :group 'evil)
 
-(defcustom evil-ex-hl-update-delay 0.02
-  "Time in seconds of idle before updating search highlighting.
-Setting this to a period shorter than that of keyboard's repeat
-rate allows highlights to update while scrolling."
-  :type 'number
-  :group 'evil)
-
 (defcustom evil-highlight-closing-paren-at-point-states
   '(not emacs insert replace)
   "The states in which the closing parenthesis at point should be highlighted.
@@ -1916,9 +1909,6 @@ Otherwise the previous command is assumed as substitute.")
 ;; The lazy-highlighting framework.
 (evil-define-local-var evil-ex-active-highlights-alist nil
   "An alist of currently active highlights.")
-
-(evil-define-local-var evil-ex-hl-update-timer nil
-  "Time used for updating highlights.")
 
 (defvar evil-ex-search-keymap (make-sparse-keymap)
   "Keymap used in ex-search-mode.")
