@@ -170,7 +170,7 @@ is appended to the line."
                 (let ((arg (prefix-numeric-value current-prefix-arg)))
                   (cond ((< arg 0) (setq arg (1+ arg)))
                         ((> arg 0) (setq arg (1- arg))))
-                  (if (= arg 0) '(".")
+                  (if (= arg 0) "."
                     (format ".,.%+d" arg)))))
               evil-ex-initial-input)))
       (and (> (length s) 0) s))))
