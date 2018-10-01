@@ -8328,6 +8328,31 @@ when an error stops the execution of the macro"
     (test-3-mode)
     (should (eq evil-state 'insert))))
 
+(ert-deftest evil-test-marker ()
+  "Test `evil-test-marker'"
+  :tags '(evil)
+  (ert-info ("Set a local mark")
+    (evil-test-buffer
+      "[f]oo\nbar\nbaz"
+      ("ma" "j")
+      "foo\n[b]ar\nbaz"
+      ("'a")
+      "[f]oo\nbar\nbaz"))
+  (ert-info ("Set a global mark")
+    (evil-test-buffer
+      "foo\n[b]ar\nbaz"
+      ("mA" "k")
+      "[f]oo\nbar\nbaz"
+      ("'A")
+      "foo\n[b]ar\nbaz"))
+  (ert-info ("Persist global marks on buffer close")
+    (evil-test-buffer
+      "foo\n[b]ar\nbaz"
+      ("ma" "mA")
+      (write-file (make-temp-file "tmp"))
+      (kill-buffer)
+      (should (alist-get ?A evil-markers-alist)))))
+
 (provide 'evil-tests)
 
 ;;; evil-tests.el ends here
