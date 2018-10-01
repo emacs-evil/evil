@@ -1927,11 +1927,11 @@ otherwise, it stays behind."
           (setq alist (default-value 'evil-markers-alist)
                 marker (make-marker))
           (evil-add-to-alist 'alist char marker)
-          (setq-default evil-markers-alist alist))
+          (setq-default evil-markers-alist alist)
+          (add-hook 'kill-buffer-hook #'evil-swap-out-markers nil t))
          (t
           (setq marker (make-marker))
           (evil-add-to-alist 'evil-markers-alist char marker))))
-      (add-hook 'kill-buffer-hook #'evil-swap-out-markers nil t)
       (set-marker-insertion-type marker advance)
       (set-marker marker (or pos (point))))))
 
@@ -1967,8 +1967,8 @@ or a marker object pointing nowhere."
 
 (defun evil-swap-out-markers ()
   "Turn markers into file references when the buffer is killed."
-  (and buffer-file-name
-       (dolist (entry evil-markers-alist)
+  (when buffer-file-name
+       (dolist (entry (default-value 'evil-markers-alist))
          (and (markerp (cdr entry))
               (eq (marker-buffer (cdr entry)) (current-buffer))
               (setcdr entry (cons buffer-file-name
