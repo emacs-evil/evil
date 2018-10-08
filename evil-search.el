@@ -556,12 +556,18 @@ The following properties are supported:
   "Set the list of active overlays of the highlight HL to OVERLAYS."
   (aset hl 8 overlays))
 
+(defcustom evil-ex-hl-skip-major-mode-list '()
+  "List."
+  :type '(repeat :type function)
+  :group 'evil)
+
 (defun evil-ex-hl-buffers()
   "Return buffers to highlight in."
   (let ((bufs (list)) buf)
     (dolist (win (window-list nil -1 nil))
       (setq buf (window-buffer win))
-      (unless (memq buf bufs)
+      (unless (or (memq buf bufs)
+                  (memq (with-current-buffer buf major-mode) evil-ex-hl-skip-major-mode-list))
         (setq bufs (append bufs (list buf)))))
     bufs))
 
