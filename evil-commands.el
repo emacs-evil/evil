@@ -2685,7 +2685,8 @@ The search is unbounded, i.e., the pattern is not wrapped in
                (ignore-errors (semantic-ia-fast-jump ipos)))
           ()) ;; noop, already jumped
          ((fboundp 'xref-find-definitions) ;; semantic failed, try the generic func
-          (xref-find-definitions string))))
+          (xref-find-definitions (xref-backend-identifier-at-point
+                                  (xref-find-backend))))))
        ;; otherwise just go to first occurrence in buffer
        (t
         (evil-search search t t (point-min)))))))
