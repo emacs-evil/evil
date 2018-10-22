@@ -564,11 +564,12 @@ The following properties are supported:
 (defun evil-ex-hl-buffers()
   "Return buffers to highlight in."
   (let ((bufs (list)) buf)
-    (dolist (win (window-list nil -1 nil))
-      (setq buf (window-buffer win))
-      (unless (or (memq buf bufs)
-                  (memq (with-current-buffer buf major-mode) evil-ex-hl-skip-major-mode-list))
-        (setq bufs (append bufs (list buf)))))
+    (dolist (frame (frame-list))
+      (dolist (win (window-list frame -1 nil))
+        (setq buf (window-buffer win))
+        (unless (or (memq buf bufs)
+                    (memq (with-current-buffer buf major-mode) evil-ex-hl-skip-major-mode-list))
+          (setq bufs (append bufs (list buf))))))
     bufs))
 
 (defun evil-ex-delete-hl (name)
