@@ -245,7 +245,6 @@
 (define-key evil-motion-state-map (kbd "C-6") 'evil-switch-to-windows-last-buffer)
 (define-key evil-motion-state-map "\C-]" 'evil-jump-to-tag)
 (define-key evil-motion-state-map (kbd "C-b") 'evil-scroll-page-up)
-(define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down)
 (define-key evil-motion-state-map (kbd "C-e") 'evil-scroll-line-down)
 (define-key evil-motion-state-map (kbd "C-f") 'evil-scroll-page-down)
 (define-key evil-motion-state-map (kbd "C-o") 'evil-jump-backward)
@@ -329,6 +328,9 @@
 
 (when evil-want-C-u-scroll
   (define-key evil-motion-state-map (kbd "C-u") 'evil-scroll-up))
+
+(when evil-want-C-d-scroll
+  (define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down))
 
 ;;; Visual state
 
