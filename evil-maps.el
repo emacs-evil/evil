@@ -546,6 +546,7 @@ included in `evil-insert-state-bindings' by default."
 ;; evil-read-key
 (define-key evil-read-key-map (kbd "ESC") #'keyboard-quit)
 (define-key evil-read-key-map (kbd "C-]") #'keyboard-quit)
+(define-key evil-read-key-map (kbd "C-g") #'keyboard-quit)
 (define-key evil-read-key-map (kbd "C-q") #'evil-read-quoted-char)
 (define-key evil-read-key-map (kbd "C-v") #'evil-read-quoted-char)
 (define-key evil-read-key-map (kbd "C-k") #'evil-read-digraph-char)
