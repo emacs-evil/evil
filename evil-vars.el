@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.13
+;; Version: 1.2.14
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -298,7 +298,7 @@ operation are collected in a single undo step. If \"Yes\" is
 selected, undo steps are determined according to Emacs heuristics
 and no attempt is made to further aggregate changes.
 
-As of 1.2.13, the option \"fine\" is ignored and means the same
+As of 1.2.14, the option \"fine\" is ignored and means the same
 thing as \"No\". It used to be the case that fine would only try
 to merge the first two changes in an insert operation. For
 example, merging the delete and first insert operation after
@@ -1868,7 +1868,7 @@ Otherwise the previous command is assumed as substitute.")
                       (buffer-substring (point-min)
                                         (line-end-position))))
           ;; no repo, use plain version
-          "1.2.13"))))
+          "1.2.14"))))
   "The current version of Evil")
 
 (defcustom evil-want-integration t
