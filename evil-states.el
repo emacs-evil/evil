@@ -211,6 +211,7 @@ the selection is enabled.
 
 \(fn SELECTION DOC [[KEY VAL]...] BODY...)"
   (declare (indent defun)
+           (doc-string 2)
            (debug (&define name stringp
                            [&rest keywordp sexp]
                            def-body)))
