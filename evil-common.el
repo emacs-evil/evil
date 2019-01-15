@@ -300,6 +300,7 @@ sorting in between."
 
 \(fn COMMAND (ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
+           (doc-string 3)
            (debug (&define name
                            [&optional lambda-list]
                            [&optional stringp]

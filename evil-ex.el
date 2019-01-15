@@ -541,6 +541,7 @@ keywords and function:
   or 'update then ARG is the current value of this argument. If
   FLAG is 'stop then arg is nil."
   (declare (indent defun)
+           (doc-string 2)
            (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp function-form]])))

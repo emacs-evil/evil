@@ -114,6 +114,7 @@ The return value is a list (BEG END TYPE)."
 
 \(fn MOTION (COUNT ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
+           (doc-string 3)
            (debug (&define name lambda-list
                            [&optional stringp]
                            [&rest keywordp sexp]
@@ -357,6 +358,7 @@ if COUNT is positive, and to the left of it if negative.
 
 \(fn OBJECT (COUNT) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
+           (doc-string 3)
            (debug (&define name lambda-list
                            [&optional stringp]
                            [&rest keywordp sexp]
@@ -445,6 +447,7 @@ if COUNT is positive, and to the left of it if negative.
 
 \(fn OPERATOR (BEG END ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
+           (doc-string 3)
            (debug (&define name lambda-list
                            [&optional stringp]
                            [&rest keywordp sexp]
@@ -632,6 +635,7 @@ be transformations on buffer positions, like :expand and :contract.
 
 \(fn TYPE DOC [[KEY FUNC]...])"
   (declare (indent defun)
+           (doc-string 2)
            (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp function-form]])))

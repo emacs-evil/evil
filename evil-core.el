@@ -526,6 +526,7 @@ may be specified before the body code:
 
 \(fn KEYMAP DOC [[KEY VAL]...] BODY...)"
   (declare (indent defun)
+           (doc-string 2)
            (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp sexp]]
@@ -1189,6 +1190,7 @@ the local keymap will be `evil-test-state-local-map', and so on.
 
 \(fn STATE DOC [[KEY VAL]...] BODY...)"
   (declare (indent defun)
+           (doc-string 2)
            (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp sexp]]

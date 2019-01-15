@@ -1220,6 +1220,7 @@ like in Vim. This variable is read only on load."
 The parameters are the same as for `defvar', but the variable
 SYMBOL is made permanent buffer local."
   (declare (indent defun)
+           (doc-string 3)
            (debug (symbolp &optional form stringp)))
   `(progn
      (defvar ,symbol ,initvalue ,docstring)
