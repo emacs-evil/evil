@@ -790,7 +790,10 @@ the direcion is determined by `evil-ex-search-direction'."
     (setq evil-ex-search-match-beg (match-beginning 0)
           evil-ex-search-match-end (match-end 0))
     (evil-ex-search-goto-offset evil-ex-search-offset)
-    (evil-ex-search-activate-highlight evil-ex-search-pattern)))
+    (evil-ex-search-activate-highlight evil-ex-search-pattern))
+  (unless evil-ex-search-persistent-highlight
+    (sit-for 0.1)
+    (evil-ex-delete-hl 'evil-ex-search)))
 
 (defun evil-ex-find-next (&optional pattern direction nowrap)
   "Search for the next occurrence of the PATTERN in DIRECTION.
