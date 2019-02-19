@@ -1109,6 +1109,12 @@ codes.  Note that this only affects the search command if
 always uses plain Emacs regular expressions."
   :type 'boolean
   :group 'evil)
+(defcustom evil-ex-search-skip-matches-under-point t
+  "Whether skips matches that don't move the cursor.
+Note that this only affects the search command
+if `evil-search-module' is set to 'evil-search."
+  :type 'boolean
+  :group 'evil)
 
 (defcustom evil-ex-interactive-search-highlight 'all-windows
   "Determine in which windows the interactive highlighting should be shown."
