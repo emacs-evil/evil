@@ -1630,7 +1630,7 @@ Elements have the form (NAME . FUNCTION).")
   `(((vdiff-mode)
      :open-all   vdiff-open-all-folds
      :close-all  vdiff-close-all-folds
-     :toggle     nil
+     :toggle     ,(lambda () (call-interactively 'vdiff-toggle-fold))
      :open       ,(lambda () (call-interactively 'vdiff-open-fold))
      :open-rec   ,(lambda () (call-interactively 'vdiff-open-fold))
      :close      ,(lambda () (call-interactively 'vdiff-close-fold)))
