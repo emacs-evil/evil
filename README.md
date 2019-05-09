@@ -15,7 +15,7 @@ extensions. Also see our page on [EmacsWiki](http://emacswiki.org/emacs/Evil).
 Evil lives in a git repository. To download Evil, do
 
 ```
-git clone https://github.com/emacs-evil/evil ~/.emacs.d/evil
+git clone --depth 1 https://github.com/emacs-evil/evil ~/.emacs.d/evil
 ```
 
 # Install
