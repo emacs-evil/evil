@@ -68,6 +68,11 @@
   "Marker for Visual end.")
 (make-variable-buffer-local 'evil-test-visual-end)
 
+(defvaralias 'evil-test-select-enable-clipboard
+  (if (boundp 'select-enable-clipboard)
+      'select-enable-clipboard
+    'x-select-enable-clipboard))
+
 (defmacro evil-test-buffer (&rest body)
   "Execute FORMS in a temporary buffer.
 The following optional keywords specify the buffer's properties:
@@ -127,7 +132,7 @@ raised.  Remaining forms are evaluated as-is.
                     ',visual ,visual-start ,visual-end))
            (kill-ring kill-ring)
            (kill-ring-yank-pointer kill-ring-yank-pointer)
-           x-select-enable-clipboard
+           evil-test-select-enable-clipboard
            message-log-max)
        (unwind-protect
            (save-window-excursion
