@@ -219,18 +219,21 @@
 (defun evil-set-jump (&optional pos)
   "Set jump point at POS.
 POS defaults to point."
-  (unless (or (region-active-p) (evil-visual-state-p))
-    (push-mark pos t))
+  (save-excursion
+    (when (markerp pos)
+      (set-buffer (marker-buffer pos)))
 
-  (unless evil--jumps-jumping
-    ;; clear out intermediary jumps when a new one is set
-    (let* ((struct (evil--jumps-get-current))
-           (target-list (evil--jumps-get-jumps struct))
-           (idx (evil-jumps-struct-idx struct)))
-      (cl-loop repeat idx
-               do (ring-remove target-list))
-      (setf (evil-jumps-struct-idx struct) -1))
-    (save-excursion
+    (unless (or (region-active-p) (evil-visual-state-p))
+      (push-mark pos t))
+
+    (unless evil--jumps-jumping
+      ;; clear out intermediary jumps when a new one is set
+      (let* ((struct (evil--jumps-get-current))
+             (target-list (evil--jumps-get-jumps struct))
+             (idx (evil-jumps-struct-idx struct)))
+        (cl-loop repeat idx
+                 do (ring-remove target-list))
+        (setf (evil-jumps-struct-idx struct) -1))
       (when pos
         (goto-char pos))
       (evil--jumps-push))))
