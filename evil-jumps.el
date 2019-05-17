@@ -304,17 +304,17 @@ POS defaults to point."
     (evil--jumps-savehist-load)
   (add-hook 'savehist-mode-hook #'evil--jumps-savehist-load))
 
-(add-hook 'evil-local-mode-hook
-          (lambda ()
-            (if evil-local-mode
-                (progn
-                  (add-hook 'pre-command-hook #'evil--jump-hook nil t)
-                  (add-hook 'next-error-hook #'evil-set-jump nil t)
-                  (add-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook nil t))
-              (progn
-                (remove-hook 'pre-command-hook #'evil--jump-hook t)
-                (remove-hook 'next-error-hook #'evil-set-jump t)
-                (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)))))
+(defun evil--jumps-install-or-uninstall ()
+  (if evil-local-mode
+      (progn
+        (add-hook 'pre-command-hook #'evil--jump-hook nil t)
+        (add-hook 'next-error-hook #'evil-set-jump nil t)
+        (add-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook nil t))
+    (remove-hook 'pre-command-hook #'evil--jump-hook t)
+    (remove-hook 'next-error-hook #'evil-set-jump t)
+    (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)))
+
+(add-hook 'evil-local-mode-hook #'evil--jumps-install-or-uninstall)
 
 (provide 'evil-jumps)
 
