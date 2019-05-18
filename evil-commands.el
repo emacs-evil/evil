@@ -956,7 +956,7 @@ If the scroll count is zero the command scrolls half the screen."
       (signal 'beginning-of-buffer nil))
     (when (zerop count)
       (setq count (/ (1- (window-height)) 2)))
-    (let ((xy (posn-x-y (posn-at-point))))
+    (let ((xy (evil-posn-x-y (posn-at-point))))
       (condition-case nil
           (progn
             (scroll-down count)
@@ -984,7 +984,7 @@ If the scroll count is zero the command scrolls half the screen."
     ;; In that case we do not scroll but merely move point.
     (if (<= (point-max) (window-end))
         (with-no-warnings (next-line count nil))
-      (let ((xy (posn-x-y (posn-at-point))))
+      (let ((xy (evil-posn-x-y (posn-at-point))))
         (condition-case nil
             (progn
               (scroll-up count)
