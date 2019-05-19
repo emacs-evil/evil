@@ -1,4 +1,4 @@
-;;; evil-jumps.el --- Jump list implementation
+;;; evil-jumps.el --- Jump list implementation -*- lexical-binding: t -*-
 
 ;; Author: Bailey Ling <bling at live.ca>
 
@@ -145,8 +145,7 @@
         ;; skip jump marks pointing to other buffers
         (while (and (< idx size) (>= idx 0)
                     (not (string= current-file-name
-                                  (let* ((place (ring-ref target-list idx))
-                                         (pos (car place)))
+                                  (let* ((place (ring-ref target-list idx)))
                                     (cadr place)))))
           (setq idx (+ idx shift))))
       (when (and (< idx size) (>= idx 0))
@@ -259,7 +258,7 @@ POS defaults to point."
           (evil--jumps-push))
           (evil--jumps-jump idx -1)))))
 
-(defun evil--jumps-window-configuration-hook (&rest args)
+(defun evil--jumps-window-configuration-hook (&rest _args)
   (let* ((window-list (window-list-1 nil nil t))
          (existing-window (selected-window))
          (new-window (previous-window)))
@@ -276,7 +275,7 @@ POS defaults to point."
               (setf (evil-jumps-struct-idx target-jump-struct) (evil-jumps-struct-idx source-jump-struct))
               (setf (evil-jumps-struct-ring target-jump-struct) (ring-copy source-list)))))))
     ;; delete obsolete windows
-    (maphash (lambda (key val)
+    (maphash (lambda (key _val)
                (unless (member key window-list)
                  (evil--jumps-message "removing %s" key)
                  (remhash key evil--jumps-window-jumps)))
