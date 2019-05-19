@@ -66,6 +66,10 @@
 
 (defvar evil--jumps-jumping nil)
 
+(defvar evil--jumps-jumping-backward nil
+  "Set by `evil--jump-backward', used and cleared in the
+`post-command-hook' by `evil--jump-handle-buffer-crossing'")
+
 (eval-when-compile (defvar evil--jumps-debug nil))
 
 (defvar evil--jumps-buffer-targets "\\*\\(new\\|scratch\\)\\*"
@@ -79,7 +83,8 @@
 
 (cl-defstruct evil-jumps-struct
   ring
-  (idx -1))
+  (idx -1)
+  previous-pos)
 
 ;; Is inlining this really worth it?
 (defsubst evil--jumps-message (format &rest args)
@@ -239,6 +244,7 @@ POS defaults to point."
       (evil--jumps-push))))
 
 (defun evil--jump-backward (count)
+  (setq evil--jumps-jumping-backward t)
   (let ((count (or count 1)))
     (evil-motion-loop (nil count)
       (let* ((struct (evil--jumps-get-current))
@@ -275,6 +281,7 @@ POS defaults to point."
           (let* ((source-jump-struct (evil--jumps-get-current existing-window))
                  (source-list (evil--jumps-get-jumps source-jump-struct)))
             (when (= (ring-length (evil--jumps-get-jumps target-jump-struct)) 0)
+              (setf (evil-jumps-struct-previous-pos target-jump-struct) (evil-jumps-struct-previous-pos source-jump-struct))
               (setf (evil-jumps-struct-idx target-jump-struct) (evil-jumps-struct-idx source-jump-struct))
               (setf (evil-jumps-struct-ring target-jump-struct) (ring-copy source-list)))))))
     ;; delete obsolete windows
@@ -285,20 +292,31 @@ POS defaults to point."
              evil--jumps-window-jumps)))
 
 (defun evil--jump-hook (&optional command)
-  "Set jump point if COMMAND has a non-nil :jump property."
+  "`pre-command-hook' for evil-jumps.
+Set jump point if COMMAND has a non-nil `:jump' property. Otherwise,
+save the current position in case the command being executed will
+change the current buffer."
   (setq command (or command this-command))
-  (when (evil-get-command-property command :jump)
-    (evil-set-jump)))
+  (if (evil-get-command-property command :jump)
+      (evil-set-jump)
+    (setf (evil-jumps-struct-previous-pos (evil--jumps-get-current))
+          (point-marker))))
 
-(defadvice switch-to-buffer (before evil-jumps activate)
-  (evil-set-jump))
-
-(defadvice split-window-internal (before evil-jumps activate)
-  (evil-set-jump))
-
-(eval-after-load 'etags
-  '(defadvice find-tag-noselect (before evil-jumps activate)
-     (evil-set-jump)))
+(defun evil--jump-handle-buffer-crossing ()
+  (let ((jumping-backward evil--jumps-jumping-backward))
+    (setq evil--jumps-jumping-backward nil)
+    (dolist (frame (frame-list))
+      (dolist (window (window-list frame))
+        (let* ((struct (evil--jumps-get-current window))
+               (previous-pos (evil-jumps-struct-previous-pos struct)))
+          (when previous-pos
+            (setf (evil-jumps-struct-previous-pos struct) nil)
+            (if (and (not jumping-backward)
+                     (let ((previous-buffer (marker-buffer previous-pos)))
+                       (and previous-buffer
+                            (not (eq previous-buffer (window-buffer window))))))
+                (evil-set-jump previous-pos)
+              (set-marker previous-pos nil))))))))
 
 (if (bound-and-true-p savehist-loaded)
     (evil--jumps-savehist-load)
@@ -308,11 +326,14 @@ POS defaults to point."
   (if evil-local-mode
       (progn
         (add-hook 'pre-command-hook #'evil--jump-hook nil t)
+        (add-hook 'post-command-hook #'evil--jump-handle-buffer-crossing nil t)
         (add-hook 'next-error-hook #'evil-set-jump nil t)
         (add-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook nil t))
     (remove-hook 'pre-command-hook #'evil--jump-hook t)
+    (remove-hook 'post-command-hook #'evil--jump-handle-buffer-crossing t)
     (remove-hook 'next-error-hook #'evil-set-jump t)
-    (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)))
+    (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)
+    (evil--jump-handle-buffer-crossing)))
 
 (add-hook 'evil-local-mode-hook #'evil--jumps-install-or-uninstall)
 
