@@ -867,10 +867,6 @@ Inhibits echo area messages, mode line updates and cursor changes."
   `(let ((evil-no-display t))
      ,@body))
 
-(defun evil-num-visible-lines ()
-  "Returns the number of currently visible lines."
-  (- (window-height) 1))
-
 (defvar evil-cached-header-line-height nil
   "Cached height of the header line.")
 
