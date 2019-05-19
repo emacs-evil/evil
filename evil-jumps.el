@@ -81,11 +81,12 @@
   ring
   (idx -1))
 
-(defmacro evil--jumps-message (format &rest args)
-  (when evil--jumps-debug
-    `(with-current-buffer (get-buffer-create "*evil-jumps*")
+;; Is inlining this really worth it?
+(defsubst evil--jumps-message (format &rest args)
+  (when (eval-when-compile evil--jumps-debug)
+    (with-current-buffer (get-buffer-create "*evil-jumps*")
        (goto-char (point-max))
-       (insert (apply #'format ,format ',args) "\n"))))
+       (insert (apply #'format format args) "\n"))))
 
 (defun evil--jumps-get-current (&optional window)
   (unless window
