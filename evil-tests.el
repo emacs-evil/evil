@@ -8265,7 +8265,22 @@ maybe we need one line more with some text\n")
         ("\C-o")
         "z [z] z z z z z z"
         ("3\C-i") ;; even after jumping forward 3 times it can't get past the 3rd z
-        "z z [z] z z z z z"))))
+        "z z [z] z z z z z"))
+    (ert-info ("Jump across files")
+      (let ((temp-file (make-temp-file "evil-test-")))
+        (unwind-protect
+          (evil-test-buffer
+            "[z] z z z z z z"
+            ("\M-x" "find-file" [return] temp-file [return] "inew buffer" [escape])
+            "new buffe[r]"
+            ("\C-o")
+            "[z] z z z z z z"
+            ("\C-i")
+            "new buffe[r]")
+          (delete-file temp-file)
+          (with-current-buffer (get-file-buffer temp-file)
+            (set-buffer-modified-p nil))
+          (kill-buffer (get-file-buffer temp-file)))))))
 
 (ert-deftest evil-test-jump-buffers ()
   :tags '(evil jums)
