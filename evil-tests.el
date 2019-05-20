@@ -8090,12 +8090,12 @@ Line 3 Line 3"
       ))
   (ert-info ("Test if advised `tempo-forward-mark' works in insert mode")
     (evil-test-buffer
-      :state 'insert
+      :state insert
       "
 "
       ("\M-xtempo-template-evil--test" [return])
       "Line 1
-Line [2]
+Line 2[]
 Line 3 Line 3"
       ("\M-xtempo-forward-mark" [return])
       "Line 1
@@ -8104,10 +8104,10 @@ Line 3[ ]Line 3"
       ("\M-xtempo-forward-mark" [return])
       "Line 1
 Line 2
-Line 3 Line [3]"
+Line 3 Line 3[]"
       ("\M-xtempo-backward-mark" [return] "\M-xtempo-backward-mark" [return])
       "Line 1
-Line [2]
+Line 2[]
 Line 3 Line 3")))
 
 ;;; ESC
