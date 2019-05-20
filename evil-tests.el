@@ -8057,6 +8057,7 @@ maybe we need one line more with some text\n")
 
 (ert-deftest evil-test-tempo ()
   "Test advised `tempo-forward-mark'"
+  :tags '(evil advice tempo)
   (require 'tempo)
   (tempo-define-template "evil--test"
                          '("Line 1" n
