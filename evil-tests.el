@@ -8059,6 +8059,10 @@ maybe we need one line more with some text\n")
   "Test advised `tempo-forward-mark'"
   :tags '(evil advice tempo)
   (require 'tempo)
+  ;; evil-mode is not turned on when running "make tests" so we have to make
+  ;; sure the advice we're testing is actually active.
+  (ad-enable-advice 'tempo-forward-mark 'before 'evil)
+  (ad-activate 'tempo-forward-mark)
   (tempo-define-template "evil--test"
                          '("Line 1" n
                            "Line 2" p n
