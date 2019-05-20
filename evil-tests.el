@@ -8055,6 +8055,56 @@ maybe we need one line more with some text\n")
       ((kbd "C-z") (kbd "C-u") (kbd "C-x C-e"))
       "(+ 1 (+ 2 33[)])")))
 
+(ert-deftest evil-test-tempo ()
+  "Test advised `tempo-forward-mark'"
+  (require 'tempo)
+  (tempo-define-template "evil--test"
+                         '("Line 1" n
+                           "Line 2" p n
+                           "Line 3" p " Line 3"))
+  (ert-info ("Test if advised `tempo-forward-mark' works in normal mode")
+    (evil-test-buffer
+      "
+"
+      ("\M-xtempo-template-evil--test" [return])
+      "Line 1
+Line [2]
+Line 3 Line 3"
+      ("\M-xtempo-forward-mark" [return])
+      "Line 1
+Line 2
+Line 3[ ]Line 3"
+      ("\M-xtempo-forward-mark" [return])
+      "Line 1
+Line 2
+Line 3 Line [3]"
+      ("\M-xtempo-backward-mark" [return] "\M-xtempo-backward-mark" [return])
+      "Line 1
+Line [2]
+Line 3 Line 3"
+      ))
+  (ert-info ("Test if advised `tempo-forward-mark' works in insert mode")
+    (evil-test-buffer
+      :state 'insert
+      "
+"
+      ("\M-xtempo-template-evil--test" [return])
+      "Line 1
+Line [2]
+Line 3 Line 3"
+      ("\M-xtempo-forward-mark" [return])
+      "Line 1
+Line 2
+Line 3[ ]Line 3"
+      ("\M-xtempo-forward-mark" [return])
+      "Line 1
+Line 2
+Line 3 Line [3]"
+      ("\M-xtempo-backward-mark" [return] "\M-xtempo-backward-mark" [return])
+      "Line 1
+Line [2]
+Line 3 Line 3")))
+
 ;;; ESC
 
 (ert-deftest evil-test-esc-count ()
