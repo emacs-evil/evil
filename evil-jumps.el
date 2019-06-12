@@ -311,10 +311,25 @@ change the current buffer."
                (previous-pos (evil-jumps-struct-previous-pos struct)))
           (when previous-pos
             (setf (evil-jumps-struct-previous-pos struct) nil)
-            (if (and (not jumping-backward)
-                     (let ((previous-buffer (marker-buffer previous-pos)))
-                       (and previous-buffer
-                            (not (eq previous-buffer (window-buffer window))))))
+            (if (and
+                 ;; `evil-jump-backward' (and other backward jumping
+                 ;; commands) needs to be handled specially. When
+                 ;; jumping backward multiple times, calling
+                 ;; `evil-set-jump' is always wrong: If you jump back
+                 ;; twice and we call `evil-set-jump' after the second
+                 ;; time, we clear the forward jump list and
+                 ;; `evil--jump-forward' won't work.
+
+                 ;; The first time you jump backward, setting a jump
+                 ;; point is sometimes correct. But we don't do it
+                 ;; here because this function is called after
+                 ;; `evil--jump-backward' has updated our position in
+                 ;; the jump list so, again, `evil-set-jump' would
+                 ;; break `evil--jump-forward'.
+                 (not jumping-backward)
+                 (let ((previous-buffer (marker-buffer previous-pos)))
+                   (and previous-buffer
+                        (not (eq previous-buffer (window-buffer window))))))
                 (evil-set-jump previous-pos)
               (set-marker previous-pos nil))))))))
 
