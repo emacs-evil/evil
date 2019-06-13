@@ -379,6 +379,8 @@
     ,(if evil-want-C-w-delete
          '("\C-w" . evil-delete-backward-word)
        '("\C-w" . evil-window-map))
+    ,@(when evil-want-C-u-delete
+        '(("\C-u" . evil-delete-back-to-indentation)))
     ([mouse-2] . mouse-yank-primary))
   "Evil's bindings for insert state (for
 `evil-insert-state-map'), excluding <delete>, <escape>, and

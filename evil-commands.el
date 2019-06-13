@@ -1493,6 +1493,21 @@ be joined with the previous line if and only if
                     (line-beginning-position))
                    (point))))
 
+(evil-define-command evil-delete-back-to-indentation ()
+  "Delete from the cursor to the first non-whitespace character of the current line.
+If point is before the first non-whitespace character of a current line then
+delete from the point to the beginning of the current line."
+  (if (bolp)
+      (progn
+        (unless evil-backspace-join-lines (user-error "Beginning of line"))
+        (delete-char -1))
+    (delete-region (if (<= (current-column) (current-indentation))
+                       (line-beginning-position)
+                     (save-excursion
+                       (evil-first-non-blank)
+                       (point)))
+                   (point))))
+
 (defun evil-ex-delete-or-yank (should-delete beg end type register count yank-handler)
   "Execute evil-delete or evil-yank on the given region.
 If SHOULD-DELETE is t, evil-delete will be executed, otherwise

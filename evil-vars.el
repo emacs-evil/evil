@@ -456,6 +456,22 @@ replicates the default vim behavior."
                     (not (lookup-key evil-motion-state-map (kbd "C-d"))))
                (define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down))))))
 
+(defcustom evil-want-C-u-delete nil
+  "Whether \"C-u\" deletes back to indentation in Insert state."
+  :type 'boolean
+  :group 'evil
+  :set #'(lambda (sym value)
+           (set-default sym value)
+           (when (boundp 'evil-insert-state-map)
+             (cond
+              ((and (not value)
+                    (eq (lookup-key evil-insert-state-map (kbd "C-u"))
+                        'evil-delete-back-to-indentation))
+               (define-key evil-insert-state-map (kbd "C-u") nil))
+              ((and value
+                    (not (lookup-key evil-insert-state-map (kbd "C-u"))))
+               (define-key evil-insert-state-map (kbd "C-u") 'evil-delete-back-to-indentation))))))
+
 (defcustom evil-want-C-w-delete t
   "Whether \"C-w\" deletes a word in Insert state."
   :type 'boolean
