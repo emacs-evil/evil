@@ -3842,9 +3842,10 @@ The 'bang' argument means to sort in reverse order."
                         (window-with-parameter 'window-side))))
        (when ,sides
          (window-toggle-side-windows))
-       ,@body
-       (when ,sides
-         (window-toggle-side-windows)))))
+       (unwind-protect
+           (progn ,@body)
+         (when ,sides
+           (window-toggle-side-windows))))))
 
 (defun evil-resize-window (new-size &optional horizontal)
   "Set the current window's width or height to NEW-SIZE.
