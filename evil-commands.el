@@ -2673,8 +2673,18 @@ The search is unbounded, i.e., the pattern is not wrapped in
   (dotimes (var (or count 1))
     (evil-search-word t t symbol)))
 
+;;;###autoload
+(defvar evil-goto-definition-function nil
+  "The function jump to the local defintion of the symbol under cursor.
+
+It should be a function that takes no arguments and returns t or nil.
+It returns nil if no local definition is found so `evil-goto-definition' can
+use less precise way (e.g. search text from top) to find definition.")
+;;;###autoload
+(make-variable-buffer-local 'evil-goto-definition-function)
+
 (evil-define-motion evil-goto-definition ()
-  "Go to definition or first occurrence of symbol under point."
+  "Go to definition or first occurrence of symbol under point in current buffer."
   :jump t
   :type exclusive
   (let* ((string (evil-find-symbol t))
@@ -2690,6 +2700,9 @@ The search is unbounded, i.e., the pattern is not wrapped in
       (setq isearch-forward t)
       ;; if imenu is available, try it
       (cond
+       ((and evil-goto-definition-function
+             (funcall evil-goto-definition-function)))
+       ;; use imenu to find local tag
        ((fboundp 'imenu--make-index-alist)
         (condition-case nil
             (setq ientry (imenu--make-index-alist))
@@ -2697,21 +2710,15 @@ The search is unbounded, i.e., the pattern is not wrapped in
         (setq ientry (assoc string ientry))
         (setq ipos (cdr ientry))
         (when (and (markerp ipos)
-                   (eq (marker-buffer ipos) (current-buffer)))
-          (setq ipos (marker-position ipos)))
-        (cond
-         ;; imenu found a position, so go there and
-         ;; highlight the occurrence
-         ((numberp ipos)
-          (evil-search search t t ipos))
-         ;; imenu failed, try semantic
-         ((and (fboundp 'semantic-ia-fast-jump)
-               (ignore-errors (semantic-ia-fast-jump ipos)))
-          ()) ;; noop, already jumped
-         ((fboundp 'xref-find-definitions) ;; semantic failed, try the generic func
-          (xref-find-definitions string))))
-       ;; otherwise just go to first occurrence in buffer
+                   (eq (marker-buffer ipos) (current-buffer))
+                   (numberp (setq ipos (marker-position ipos))))
+          ;; imenu found a position, so go there and
+          ;; highlight the occurrence
+          (evil-search search t t ipos)))
+       ;; Vim help said this command "Goto local Declaration". So xref should not
+       ;; be used because xref could jump to other buffers.
        (t
+        ;; otherwise just go to first occurrence in buffer
         (evil-search search t t (point-min)))))))
 
 ;;; Folding
