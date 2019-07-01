@@ -1210,9 +1210,10 @@ This handler highlights the pattern of the current substitution."
 
 (defun evil-ex-parse-global (string)
   "Parse STRING as a global argument."
-  (let* ((args (evil-delimited-arguments string 2))
-         (pattern (nth 0 args))
-         (command (nth 1 args)))
+  (let* ((pattern (nth 0 (evil-delimited-arguments string 2)))
+         (command (and pattern
+                       (>= (- (length string) (length pattern)) 2)
+                       (substring string (+ (length pattern) 2)))))
     ;; use last pattern if none given
     (when (zerop (length pattern))
       (setq pattern

@@ -7333,6 +7333,13 @@ maybe we need one line more with some text\n")
       "no 1\nno 2\nno x\nyes 4\nno x\nno x\n[n]o 7\n"
       ("u")
      "no 1\nno 2\nno [3]\nyes 4\nno 5\nno 6\nno 7\n"))
+  (ert-info ("global substitute with trailing slash")
+    (evil-test-buffer
+      "[n]o 1\nno 2\nno 3\nyes 4\nno 5\nno 6\nno 7\n"
+      (":g/no/s/[3-6]/x/" [return])
+      "no 1\nno 2\nno x\nyes 4\nno x\nno x\n[n]o 7\n"
+      ("u")
+      "no 1\nno 2\nno [3]\nyes 4\nno 5\nno 6\nno 7\n"))
   (evil-select-search-module 'evil-search-module 'evil-search)
   (ert-info ("global use last match if none given, with evil-search")
     (evil-test-buffer
