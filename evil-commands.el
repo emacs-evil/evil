@@ -3816,25 +3816,7 @@ The 'bang' argument means to sort in reverse order."
 If HORIZONTAL is non-nil the width of the window is changed,
 otherwise its height is changed."
   (let ((count (- new-size (if horizontal (window-width) (window-height)))))
-    (if (>= emacs-major-version 24)
-        (enlarge-window count horizontal)
-      (let ((wincfg (current-window-configuration))
-            (nwins (length (window-list)))
-            (inhibit-redisplay t))
-        (catch 'done
-          (save-window-excursion
-            (while (not (zerop count))
-              (if (> count 0)
-                  (progn
-                    (enlarge-window 1 horizontal)
-                    (setq count (1- count)))
-                (progn
-                  (shrink-window 1 horizontal)
-                  (setq count (1+ count))))
-              (if (= nwins (length (window-list)))
-                  (setq wincfg (current-window-configuration))
-                (throw 'done t)))))
-        (set-window-configuration wincfg)))))
+    (enlarge-window count horizontal)))
 
 (defun evil-get-buffer-tree (wintree)
   "Extracts the buffer tree from a given window tree WINTREE."

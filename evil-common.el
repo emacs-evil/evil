@@ -881,18 +881,15 @@ If there is no header line, return nil."
   "Return the x and y coordinates in POSITION.
 
 This function returns y offset from the top of the buffer area including
-the header line.  This definition could be changed in future.
-Note: On Emacs 22 and 23, y offset, returned by `posn-at-point' and taken
-by `posn-at-x-y', is relative to the top of the buffer area including
 the header line.
-However, on Emacs 24, y offset returned by `posn-at-point' is relative to
-the text area excluding the header line, while y offset taken by
-`posn-at-x-y' is relative to the buffer area including the header line.
+on Emacs 24 and later versions, y offset returned by `posn-at-point' is
+relative to the text area excluding the header line, while y offset taken
+by `posn-at-x-y' is relative to the buffer area including the header line.
 This asymmetry is by design according to GNU Emacs team.
-This function fixes the asymmetry between them on Emacs 24 and later versions.
-Borrowed from mozc.el."
+This function fixes the asymmetry between them.
+Learned from mozc.el."
   (let ((xy (posn-x-y position)))
-    (when (and (> emacs-major-version 24) header-line-format)
+    (when header-line-format
       (setcdr xy (+ (cdr xy)
                     (or evil-cached-header-line-height
                         (setq evil-cached-header-line-height (evil-header-line-height))
