@@ -1893,7 +1893,9 @@ The return value is the yanked text."
             (evil-set-marker ?\] (1- (point)))
             (when (and evil-move-cursor-back
                        (> (length text) 0))
-              (backward-char))))
+              (backward-char))
+            (if (evil-normal-state-p)
+                (evil-exchange-point-and-mark))))
         ;; no paste-pop after pasting from a register
         (when register
           (setq evil-last-paste nil))
@@ -1944,7 +1946,8 @@ The return value is the yanked text."
               (evil-set-marker ?\[ beg)
               (evil-set-marker ?\] (1- (point)))
               (when (evil-normal-state-p)
-                (evil-move-cursor-back)))))
+                (evil-move-cursor-back)
+                (evil-exchange-point-and-mark)))))
         (when register
           (setq evil-last-paste nil))
         (and (> (length text) 0) text)))))
