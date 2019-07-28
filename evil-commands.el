@@ -660,7 +660,8 @@ Movement is restricted to the current line unless `evil-cross-lines' is non-nil.
     (let ((case-fold-search nil))
       (unless (prog1
                   (search-forward (char-to-string char)
-                                  (cond (evil-cross-lines)
+                                  (cond (evil-cross-lines
+                                         nil)
                                         ((and fwd visual)
                                          (save-excursion
                                            (end-of-visual-line)
