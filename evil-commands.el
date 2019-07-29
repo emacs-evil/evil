@@ -652,16 +652,28 @@ Movement is restricted to the current line unless `evil-cross-lines' is non-nil.
   :type inclusive
   (interactive "<c><C>")
   (setq count (or count 1))
-  (let ((fwd (> count 0)))
+  (let ((fwd (> count 0))
+        (visual (and evil-respect-visual-line-mode
+                     visual-line-mode)))
     (setq evil-last-find (list #'evil-find-char char fwd))
     (when fwd (forward-char))
     (let ((case-fold-search nil))
       (unless (prog1
                   (search-forward (char-to-string char)
-                                  (unless evil-cross-lines
-                                    (if fwd
-                                        (line-end-position)
-                                      (line-beginning-position)))
+                                  (cond (evil-cross-lines
+                                         nil)
+                                        ((and fwd visual)
+                                         (save-excursion
+                                           (end-of-visual-line)
+                                           (point)))
+                                        (fwd
+                                         (line-end-position))
+                                        (visual
+                                         (save-excursion
+                                           (beginning-of-visual-line)
+                                           (point)))
+                                        (t
+                                         (line-beginning-position)))
                                   t count)
                 (when fwd (backward-char)))
         (user-error "Can't find %c" char)))))
@@ -2354,7 +2366,16 @@ non nil it should be number > 0. The insertion will be repeated
 in the next VCOUNT - 1 lines below the current one."
   (interactive "p")
   (push (point) buffer-undo-list)
-  (back-to-indentation)
+  (if (and visual-line-mode
+           evil-respect-visual-line-mode)
+      (goto-char
+       (max (save-excursion
+              (back-to-indentation)
+              (point))
+            (save-excursion
+              (beginning-of-visual-line)
+              (point))))
+    (back-to-indentation))
   (setq evil-insert-count count
         evil-insert-lines nil
         evil-insert-vcount
@@ -2371,7 +2392,10 @@ The insertion will be repeated COUNT times.  If VCOUNT is non nil
 it should be number > 0. The insertion will be repeated in the
 next VCOUNT - 1 lines below the current one."
   (interactive "p")
-  (evil-move-end-of-line)
+  (if (and visual-line-mode
+           evil-respect-visual-line-mode)
+      (evil-end-of-visual-line)
+    (evil-move-end-of-line))
   (setq evil-insert-count count
         evil-insert-lines nil
         evil-insert-vcount
