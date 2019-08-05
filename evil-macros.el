@@ -557,8 +557,12 @@ RETURN-TYPE is non-nil."
             (let ((keys (nth 2 (evil-extract-count (this-command-keys)))))
               (setq keys (listify-key-sequence keys))
               (dotimes (var (length keys))
-                (define-key evil-operator-shortcut-map
-                  (vconcat (nthcdr var keys)) 'evil-line)))
+                (if (and evil-respect-visual-line-mode
+                         visual-line-mode)
+                    (define-key evil-operator-shortcut-map
+                      (vconcat (nthcdr var keys)) 'evil-screen-line)
+                  (define-key evil-operator-shortcut-map
+                    (vconcat (nthcdr var keys)) 'evil-line))))
             ;; read motion from keyboard
             (setq command (evil-read-motion motion)
                   motion (nth 0 command)

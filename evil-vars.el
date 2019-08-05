@@ -226,13 +226,29 @@ This variable must be set before Evil is loaded. When
 `evil-beginning-of-line' <-> `evil-beginning-of-visual-line'
 `evil-end-of-line'       <-> `evil-end-of-visual-line'
 
-The commands `evil-insert-line', `evil-append-line',
-`evil-find-char', `evil-find-char-backward', `evil-find-char-to'
-and `evil-find-char-to-backward' are also made aware of visual
-lines."
+These commands are remapped in `visual-line-mode'
+
+`evil-visual-line'        -> `evil-visual-screen-line'
+`evil-change-line'        -> `evil-change-visual-line'
+`evil-change-whole-line'  -> `evil-change-whole-visual-line'
+`evil-yank-line'          -> `evil-yank-visual-line'
+
+In addition, the following commands are made to act on visual
+lines (also called screen lines to avoid naming conflicts with
+visual state).
+
+`evil-insert-line'
+`evil-append-line'
+`evil-find-char'
+`evil-find-char-backward'
+`evil-find-char-to'
+`evil-find-char-to-backward'
+`evil-delete-line'
+
+Note that block selection is not aware of visual lines in
+`visual-line-mode'."
   :type 'boolean
   :group 'evil)
-
 
 (defcustom evil-repeat-find-to-skip-next t
   "Whether a repeat of t or T should skip an adjacent character."

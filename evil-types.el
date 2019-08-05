@@ -141,6 +141,31 @@ line and `evil-want-visual-char-semi-exclusive', then:
               (format "%s line%s" height
                       (if (= height 1) "" "s")))))
 
+(evil-define-type screen-line
+  "Include whole visual lines."
+  :one-to-one nil
+  :expand (lambda (beg end)
+            (evil-range
+             (progn
+               (goto-char beg)
+               (beginning-of-visual-line))
+             (progn
+               (goto-char end)
+               (save-excursion
+                 ;; `beginning-of-visual-line' reverts to the beginning of the
+                 ;; last visual line if the end of the last line is the end of
+                 ;; the buffer. This would prevent selecting the last screen
+                 ;; line.
+                 (if (= (line-beginning-position 2) (point-max))
+                     (point-max)
+                   (beginning-of-visual-line 2))))))
+  :contract (lambda (beg end)
+              (evil-range beg (max beg (1- end))))
+  :string (lambda (beg end)
+            (let ((height (count-screen-lines beg end)))
+              (format "%s visual line%s" height
+                      (if (= height 1) "" "s")))))
+
 (evil-define-type block
   "Like `inclusive', but for rectangles:
 the last column is included."

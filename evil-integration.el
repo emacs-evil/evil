@@ -490,13 +490,57 @@ Based on `evil-enclose-ace-jump-for-motion'."
 
 ;; visual-line-mode integration
 (when evil-respect-visual-line-mode
-  (let ((swaps '((evil-next-line . evil-next-visual-line)
-                 (evil-previous-line . evil-previous-visual-line)
-                 (evil-beginning-of-line . evil-beginning-of-visual-line)
-                 (evil-end-of-line . evil-end-of-visual-line))))
-    (dolist (swap swaps)
-      (define-key visual-line-mode-map (vector 'remap (car swap)) (cdr swap))
-      (define-key visual-line-mode-map (vector 'remap (cdr swap)) (car swap)))))
+  (when evil-want-Y-yank-to-eol
+    (evil-add-command-properties
+     'evil-yank-visual-line :motion 'evil-end-of-visual-line))
+
+  (evil-define-command evil-digit-argument-or-evil-beginning-of-visual-line ()
+    :digit-argument-redirection evil-beginning-of-line
+    :keep-visual t
+    :repeat nil
+    (interactive)
+    (cond
+     (current-prefix-arg
+      (setq this-command
+            #'digit-argument)
+      (call-interactively
+       #'digit-argument))
+     (t
+      (let
+          ((target
+            (or
+             (command-remapping
+              #'evil-beginning-of-visual-line)
+             #'evil-beginning-of-visual-line)))
+        (setq this-command target)
+        (call-interactively target)))))
+
+  (defun evil-visual-block-warning ()
+    "Warn that `evil-visual-block' won't work properly in
+`visual-line-mode'."
+    (interactive)
+    (when (and evil-respect-visual-line-mode
+               visual-line-mode)
+      (user-error "Visual block selection is not aware of visual-line-mode.")))
+
+  (when (fboundp 'advice-add)
+    (advice-add 'evil-visual-block :before #'evil-visual-block-warning))
+
+  (evil-define-minor-mode-key '(motion normal) 'visual-line-mode
+    "j" 'evil-next-visual-line
+    "gj" 'evil-next-line
+    "k" 'evil-previous-visual-line
+    "gk" 'evil-previous-line
+    "0" 'evil-digit-argument-or-evil-beginning-of-visual-line
+    "g0" 'evil-beginning-of-line
+    "$" 'evil-end-of-visual-line
+    "g$" 'evil-end-of-line
+    "V" 'evil-visual-screen-line)
+
+  (evil-define-minor-mode-key '(normal visual) 'visual-line-mode
+    "C" 'evil-change-visual-line
+    "S" 'evil-change-whole-visual-line
+    "Y" 'evil-yank-visual-line))
 
 ;;; abbrev.el
 (when evil-want-abbrev-expand-on-insert-exit
