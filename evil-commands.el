@@ -163,6 +163,18 @@ of the line or the buffer; just return nil."
         (evil-line-move (1- (or count 1)))
       ((beginning-of-buffer end-of-buffer)))))
 
+(evil-define-motion evil-line-or-visual-line (count)
+  "Move COUNT - 1 lines down."
+  :type screen-line
+  (let ((line-move-visual (and evil-respect-visual-line-mode
+                               visual-line-mode)))
+    ;; Catch bob and eob errors. These are caused when not moving
+    ;; point starting in the first or last line, respectively. In this
+    ;; case the current line should be selected.
+    (condition-case err
+        (evil-line-move (1- (or count 1)))
+      ((beginning-of-buffer end-of-buffer)))))
+
 (evil-define-motion evil-beginning-of-line ()
   "Move the cursor to the beginning of the current line."
   :type exclusive
@@ -196,6 +208,18 @@ If COUNT is given, move COUNT - 1 screen lines downward first."
   (if (fboundp 'end-of-visual-line)
       (end-of-visual-line count)
     (end-of-line count)))
+
+(evil-define-motion evil-end-of-line-or-visual-line (count)
+  "Move the cursor to the last character of the current screen
+line if `visual-line-mode' is active and
+`evil-respect-visual-line-mode' is non-nil.  If COUNT is given,
+move COUNT - 1 screen lines downward first."
+  :type inclusive
+  (if (and (fboundp 'end-of-visual-line)
+           evil-respect-visual-line-mode
+           visual-line-mode)
+      (end-of-visual-line count)
+    (evil-end-of-line count)))
 
 (evil-define-motion evil-middle-of-visual-line ()
   "Move the cursor to the middle of the current visual line."
@@ -1345,12 +1369,16 @@ or line COUNT to the top of the window."
 
 (evil-define-operator evil-yank-line (beg end type register)
   "Saves whole lines into the kill-ring."
-  :motion evil-line
+  :motion evil-line-or-visual-line
   :move-point nil
   (interactive "<R><x>")
   (when (evil-visual-state-p)
-    (unless (memq type '(line block))
-      (let ((range (evil-expand beg end 'line)))
+    (unless (memq type '(line block screen-line))
+      (let ((range (evil-expand beg end
+                                (if (and evil-respect-visual-line-mode
+                                         visual-line-mode)
+                                    'screen-line
+                                  'line))))
         (setq beg (evil-range-beginning range)
               end (evil-range-end range)
               type (evil-type range))))
@@ -1392,10 +1420,20 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (interactive "<R><x>")
   ;; act linewise in Visual state
   (let* ((beg (or beg (point)))
-         (end (or end beg)))
+         (end (or end beg))
+         (visual-line-mode (and evil-respect-visual-line-mode
+                                visual-line-mode))
+         (line-end (if visual-line-mode
+                       (save-excursion
+                         (end-of-visual-line)
+                         (point))
+                     (line-end-position))))
     (when (evil-visual-state-p)
-      (unless (memq type '(line block))
-        (let ((range (evil-expand beg end 'line)))
+      (unless (memq type '(line screen-line block))
+        (let ((range (evil-expand beg end
+                                  (if visual-line-mode
+                                      'screen-line
+                                    'line))))
           (setq beg (evil-range-beginning range)
                 end (evil-range-end range)
                 type (evil-type range))))
@@ -1409,15 +1447,15 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
       (let ((temporary-goal-column most-positive-fixnum)
             (last-command 'next-line))
         (evil-delete beg end 'block register yank-handler)))
-     ((eq type 'line)
+     ((memq type '(line screen-line))
       (evil-delete beg end type register yank-handler))
      (t
-      (evil-delete beg (line-end-position) type register yank-handler)))))
+      (evil-delete beg line-end type register yank-handler)))))
 
 (evil-define-operator evil-delete-whole-line
   (beg end type register yank-handler)
   "Delete whole line."
-  :motion evil-line
+  :motion evil-line-or-visual-line
   (interactive "<R><x>")
   (evil-delete beg end type register yank-handler))
 
@@ -1516,20 +1554,20 @@ of the block."
 
 (evil-define-operator evil-change-line (beg end type register yank-handler)
   "Change to end of line."
-  :motion evil-end-of-line
+  :motion evil-end-of-line-or-visual-line
   (interactive "<R><x><y>")
   (evil-change beg end type register yank-handler #'evil-delete-line))
 
 (evil-define-operator evil-change-whole-line
   (beg end type register yank-handler)
   "Change whole line."
-  :motion evil-line
+  :motion evil-line-or-visual-line
   (interactive "<R><x>")
   (evil-change beg end type register yank-handler #'evil-delete-whole-line))
 
 (evil-define-command evil-copy (beg end address)
   "Copy lines in BEG END below line given by ADDRESS."
-  :motion evil-line
+  :motion evil-line-or-visual-line
   (interactive "<r><addr>")
   (goto-char (point-min))
   (forward-line address)
@@ -1544,7 +1582,7 @@ of the block."
 
 (evil-define-command evil-move (beg end address)
   "Move lines in BEG END below line given by ADDRESS."
-  :motion evil-line
+  :motion evil-line-or-visual-line
   (interactive "<r><addr>")
   (goto-char (point-min))
   (forward-line address)

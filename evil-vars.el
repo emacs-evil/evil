@@ -218,18 +218,7 @@ a line."
 
 (defcustom evil-respect-visual-line-mode nil
   "Whether movement commands respect `visual-line-mode'.
-This variable must be set before Evil is loaded. When
-`visual-line-mode' is active, the following commands are swapped
-
-`evil-next-line'         <-> `evil-next-visual-line'
-`evil-previous-line'     <-> `evil-previous-visual-line'
-`evil-beginning-of-line' <-> `evil-beginning-of-visual-line'
-`evil-end-of-line'       <-> `evil-end-of-visual-line'
-
-The commands `evil-insert-line', `evil-append-line',
-`evil-find-char', `evil-find-char-backward', `evil-find-char-to'
-and `evil-find-char-to-backward' are also made aware of visual
-lines."
+This variable must be set before Evil is loaded."
   :type 'boolean
   :group 'evil)
 
@@ -506,7 +495,9 @@ The default behavior is to yank the whole line."
   :set #'(lambda (sym value)
            (evil-add-command-properties
             'evil-yank-line
-            :motion (if value 'evil-end-of-line 'evil-line))))
+            :motion (if value
+                        'evil-end-of-line-or-visual-line
+                      'evil-line-or-visual-line))))
 
 (defcustom evil-disable-insert-state-bindings nil
   "Whether insert state bindings should be used. Excludes
