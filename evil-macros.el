@@ -168,8 +168,7 @@ upon reaching the beginning or end of the current line.
      (when (save-excursion (goto-char end) (bolp))
        (setq end (max beg (1- end))))
      ;; don't include the newline in Normal state
-     (when (and evil-move-cursor-back
-                (not evil-move-beyond-eol)
+     (when (and (not evil-move-beyond-eol)
                 (not (evil-visual-state-p))
                 (not (evil-operator-state-p)))
        (setq end (max beg (1- end))))

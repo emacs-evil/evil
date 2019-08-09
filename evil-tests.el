@@ -2694,7 +2694,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       ";[;] This buffer is for notes."))
   (ert-info ("End of line")
     (let ((evil-cross-lines t)
-          (evil-move-cursor-back t))
+          (evil-move-beyond-eol nil))
       (evil-test-buffer
         ";; This buffer is for notes[,]
 ;; and for Lisp evaluation."

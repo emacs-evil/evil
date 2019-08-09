@@ -774,7 +774,7 @@ the direcion is determined by `evil-ex-search-direction'."
       (when (eq evil-ex-search-direction 'forward)
         (unless (eobp) (forward-char))
         ;; maybe skip end-of-line
-        (when (and evil-move-cursor-back (eolp) (not (eobp)))
+        (when (and (not evil-move-beyond-eol) (eolp) (not (eobp)))
           (forward-char)))
       (let ((res (evil-ex-find-next nil nil (not evil-search-wrap))))
         (cond

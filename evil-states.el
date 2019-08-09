@@ -128,10 +128,10 @@ commands opening a new line."
     (evil-set-marker ?^ nil t)
     (unless (eq evil-want-fine-undo t)
       (evil-end-undo-step))
-    (when evil-move-cursor-back
-      (when (or (evil-normal-state-p evil-next-state)
-                (evil-motion-state-p evil-next-state))
-        (evil-move-cursor-back))))))
+    (when (or (evil-normal-state-p evil-next-state)
+              (evil-motion-state-p evil-next-state))
+      (evil-move-cursor-back
+       (and (eolp) (not evil-move-beyond-eol)))))))
 
 (defun evil-insert-repeat-hook ()
   "Record insertion keys in `evil-insert-repeat-info'."
@@ -856,8 +856,7 @@ CORNER defaults to `upper-left'."
     (remove-hook 'pre-command-hook #'evil-replace-pre-command t)
     (unless (eq evil-want-fine-undo t)
       (evil-end-undo-step))
-    (when evil-move-cursor-back
-      (evil-move-cursor-back))))
+    (evil-move-cursor-back)))
   (setq evil-replace-alist nil))
 
 (defun evil-replace-pre-command ()
