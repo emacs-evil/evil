@@ -258,6 +258,10 @@ the selection is enabled.
   "Linewise selection."
   :message "-- VISUAL LINE --")
 
+(evil-define-visual-selection screen-line
+  "Linewise selection in `visual-line-mode'."
+  :message "-- SCREEN LINE --")
+
 (evil-define-visual-selection block
   "Blockwise selection."
   :message "-- VISUAL BLOCK --"

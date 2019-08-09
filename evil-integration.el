@@ -490,13 +490,31 @@ Based on `evil-enclose-ace-jump-for-motion'."
 
 ;; visual-line-mode integration
 (when evil-respect-visual-line-mode
-  (let ((swaps '((evil-next-line . evil-next-visual-line)
-                 (evil-previous-line . evil-previous-visual-line)
-                 (evil-beginning-of-line . evil-beginning-of-visual-line)
-                 (evil-end-of-line . evil-end-of-visual-line))))
-    (dolist (swap swaps)
-      (define-key visual-line-mode-map (vector 'remap (car swap)) (cdr swap))
-      (define-key visual-line-mode-map (vector 'remap (cdr swap)) (car swap)))))
+  (evil-define-command evil-digit-argument-or-beginning-of-visual-line ()
+    :digit-argument-redirection evil-beginning-of-visual-line
+    :keep-visual t
+    :repeat nil
+    (interactive)
+    (cond
+     (current-prefix-arg
+      (setq this-command #'digit-argument)
+      (call-interactively #'digit-argument))
+     (t
+      (let ((target (or (command-remapping #'evil-beginning-of-visual-line)
+                        #'evil-beginning-of-visual-line)))
+        (setq this-command 'evil-beginning-of-visual-line)
+        (call-interactively 'evil-beginning-of-visual-line)))))
+
+  (evil-define-minor-mode-key 'motion 'visual-line-mode
+    "j" 'evil-next-visual-line
+    "gj" 'evil-next-line
+    "k" 'evil-previous-visual-line
+    "gk" 'evil-previous-line
+    "0" 'evil-digit-argument-or-evil-beginning-of-visual-line
+    "g0" 'evil-beginning-of-line
+    "$" 'evil-end-of-visual-line
+    "g$" 'evil-end-of-line
+    "V" 'evil-visual-screen-line))
 
 ;;; abbrev.el
 (when evil-want-abbrev-expand-on-insert-exit
