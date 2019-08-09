@@ -1127,13 +1127,13 @@ This function should be used in forward motions. If `point' is close
 to eob so that no further forward motion is possible the error
 'end-of-buffer is raised. This is the case if `point' is at
 `point-max' or if is one position before `point-max',
-`evil-move-cursor-back' is non-nil and `point' is not at the end
+`evil-move-beyond-eol' is nil and `point' is not at the end
 of a line. The latter is necessary because `point' cannot be
-moved to `point-max' if `evil-move-cursor-back' is non-nil and
+moved to `point-max' if `evil-move-beyond-eol' is nil and
 the last line in the buffer is not empty."
   (when (or (eobp)
             (and (not (eolp))
-                 evil-move-cursor-back
+                 (not evil-move-beyond-eol)
                  (save-excursion (forward-char) (eobp))))
     (signal 'end-of-buffer nil)))
 
