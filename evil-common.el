@@ -973,10 +973,9 @@ Like `move-end-of-line', but retains the goal column."
     (move-end-of-line arg)
     (end-of-line)))
 
-(defun evil-adjust-cursor (&optional force)
+(defun evil-adjust-cursor (&optional _)
   "Move point one character back if at the end of a non-empty line.
-This behavior is contingent on the variable `evil-move-cursor-back';
-use the FORCE parameter to override it."
+This behavior is controled by `evil-move-beyond-eol'."
   (when (and (eolp)
              (not evil-move-beyond-eol)
              (not (bolp))
@@ -984,7 +983,7 @@ use the FORCE parameter to override it."
                 (save-excursion
                   (evil-move-end-of-line)
                   (point))))
-    (evil-move-cursor-back force)))
+    (evil-move-cursor-back t)))
 
 (defun evil-move-cursor-back (&optional force)
   "Move point one character back within the current line.

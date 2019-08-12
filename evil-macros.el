@@ -295,7 +295,7 @@ of the object; otherwise it is placed at the end of the object."
             (unless (bobp) (backward-char)))
           (when (or (evil-normal-state-p)
                     (evil-motion-state-p))
-            (evil-adjust-cursor t)))))
+            (evil-adjust-cursor)))))
      ((> count 0)
       (when (evil-eobp)
         (signal 'end-of-buffer nil))
@@ -310,7 +310,7 @@ of the object; otherwise it is placed at the end of the object."
             (unless (bobp) (backward-char)))
           (when (or (evil-normal-state-p)
                     (evil-motion-state-p))
-            (evil-adjust-cursor t)))))
+            (evil-adjust-cursor)))))
      (t
       count))))
 
