@@ -3845,7 +3845,7 @@ should be left-aligned for left justification."
            (entry (elt tabulated-list-entries (1- line))))
       (funcall evil-list-view-select-action (nth 1 entry)))))
 
-(define-key evil-list-view-mode-map (kbd "q") #'kill-this-buffer)
+(define-key evil-list-view-mode-map (kbd "q") #'quit-window)
 (define-key evil-list-view-mode-map [follow-link] nil) ;; allows mouse-1 to be activated
 (define-key evil-list-view-mode-map [mouse-1] #'evil-list-view-goto-entry)
 (define-key evil-list-view-mode-map [return] #'evil-list-view-goto-entry)
