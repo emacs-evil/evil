@@ -1362,7 +1362,7 @@ or line COUNT to the top of the window."
       (cua-copy-region-to-global-mark beg end))
      ((eq type 'block)
       (evil-yank-rectangle beg end register yank-handler))
-     ((eq type 'line)
+     ((memq type '(line screen-line))
       (evil-yank-lines beg end register yank-handler))
      (t
       (evil-yank-characters beg end register yank-handler)))))
