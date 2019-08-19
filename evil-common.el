@@ -1952,8 +1952,9 @@ or a marker object pointing nowhere."
         (when (and (symbolp marker) (boundp marker))
           (setq marker (symbol-value marker)))
         (when (functionp marker)
-          (funcall marker)
-          (setq marker (point)))
+          (save-window-excursion
+            (funcall marker)
+            (setq marker (move-marker (make-marker) (point)))))
         (when (markerp marker)
           (if (eq (marker-buffer marker) (current-buffer))
               (setq marker (marker-position marker))
