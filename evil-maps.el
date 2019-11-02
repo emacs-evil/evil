@@ -62,6 +62,8 @@
 (define-key evil-normal-state-map "y" 'evil-yank)
 (define-key evil-normal-state-map "Y" 'evil-yank-line)
 (define-key evil-normal-state-map "&" 'evil-ex-repeat-substitute)
+(define-key evil-normal-state-map "gt" 'tab-bar-switch-to-next-tab)
+(define-key evil-normal-state-map "gT" 'tab-bar-switch-to-prev-tab)
 (define-key evil-normal-state-map "g&" 'evil-ex-repeat-global-substitute)
 (define-key evil-normal-state-map "g8" 'what-cursor-position)
 (define-key evil-normal-state-map "ga" 'what-cursor-position)
@@ -508,6 +510,9 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "show-digraphs" 'evil-ex-show-digraphs)
 (evil-ex-define-cmd "sor[t]" 'evil-ex-sort)
 (evil-ex-define-cmd "res[ize]" 'evil-ex-resize)
+(evil-ex-define-cmd "tabnew" 'tab-bar-new-tab)
+(evil-ex-define-cmd "tabn[ext]" 'tab-bar-switch-to-next-tab)
+(evil-ex-define-cmd "tabp[revious]" 'tab-bar-switch-to-prev-tab)
 
 ;; search command line
 (define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
