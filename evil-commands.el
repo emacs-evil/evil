@@ -1324,23 +1324,23 @@ or line COUNT to the top of the window."
 ;;; Operator commands
 
 (evil-define-operator evil-yank (beg end type register yank-handler)
-  "Saves the characters in motion into the kill-ring."
+  "Save text from BEG to END with TYPE.
+Save in REGISTER or in the `kill-ring' with YANK-HANDLER using
+`evil-kill-new'."
   :move-point nil
   :repeat nil
   (interactive "<R><x><y>")
-  (let ((evil-was-yanked-without-register
-         (and evil-was-yanked-without-register (not register))))
-    (cond
-     ((and (fboundp 'cua--global-mark-active)
-           (fboundp 'cua-copy-region-to-global-mark)
-           (cua--global-mark-active))
-      (cua-copy-region-to-global-mark beg end))
-     ((eq type 'block)
-      (evil-yank-rectangle beg end register yank-handler))
-     ((eq type 'line)
-      (evil-yank-lines beg end register yank-handler))
-     (t
-      (evil-yank-characters beg end register yank-handler)))))
+  (cond
+   ((and (fboundp 'cua--global-mark-active)
+         (fboundp 'cua-copy-region-to-global-mark)
+         (cua--global-mark-active))
+    (cua-copy-region-to-global-mark beg end))
+   ((eq type 'block)
+    (evil-yank-rectangle beg end register yank-handler))
+   ((eq type 'line)
+    (evil-yank-lines beg end register yank-handler))
+   (t
+    (evil-yank-characters beg end register yank-handler))))
 
 (evil-define-operator evil-yank-line (beg end type register)
   "Saves whole lines into the kill-ring."
@@ -1358,14 +1358,10 @@ or line COUNT to the top of the window."
 
 (evil-define-operator evil-delete (beg end type register yank-handler)
   "Delete text from BEG to END with TYPE.
-Save in REGISTER or in the kill-ring with YANK-HANDLER."
+Save in REGISTER or in the `kill-ring' with YANK-HANDLER using
+`evil-kill-new'."
   (interactive "<R><x><y>")
-  (unless register
-    (let ((text (filter-buffer-substring beg end)))
-      (unless (string-match-p "\n" text)
-        ;; set the small delete register
-        (evil-set-register ?- text))))
-  (let ((evil-was-yanked-without-register nil))
+  (let ((this-command 'evil-delete))
     (evil-yank beg end type register yank-handler))
   (cond
    ((eq type 'block)

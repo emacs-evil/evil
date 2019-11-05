@@ -2598,6 +2598,59 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       ("Vp\C-p\C-p")
       "word1a word1b word1c\nword1[a]word3a word3b word3c word3d\n")))
 
+(ert-deftest evil-test-kill-new ()
+  "Test `evil-kill-new'"
+  :tags '(evil yank paste)
+  (ert-info ("black hole register")
+    ;; Ensure a kill is present
+    (kill-new "qqqqq")
+    (let ((current (current-kill 0 t))
+          (del (evil-get-register ?1))
+          (small-del (evil-get-register ?-))
+          (yank (evil-get-register ?0)))
+      (evil-test-buffer
+        "[f]oo\n"
+        ("\"_vly")
+        (should-not (equal "fo" (evil-get-register ?_)))
+        (should (eq current (current-kill 0 t)))
+        (should (eq del (evil-get-register ?1)))
+        (should (eq small-del (evil-get-register ?-)))
+        (should (eq yank (evil-get-register ?0))))))
+  (ert-info ("yank commands")
+    (evil-test-buffer
+      "[b]ar\n"
+      ("vly")
+      (should (equal "ba" (current-kill 0 t)))
+      (should (equal "ba" (evil-get-register ?0))))
+    (evil-test-buffer
+      "[f]oo\n"
+      ("\"avly")
+      (should (equal "fo" (current-kill 0 t)))
+      (should (equal "fo" (evil-get-register ?a)))
+      (should (equal "ba" (evil-get-register ?0)))))
+  (ert-info ("delete commands")
+    (evil-test-buffer
+      ;; small delete register
+      "[x]xxx\n"
+      ("dw")
+      (should (equal "xxxx" (current-kill 0 t)))
+      (should (equal "xxxx" (evil-get-register ?-)))
+      (should-not (equal "xxxx" (evil-get-register ?1))))
+    (evil-test-buffer
+      "[z]zzz\n"
+      ("dd")
+      (should (equal "zzzz\n" (current-kill 0 t)))
+      (should (equal "xxxx" (evil-get-register ?-)))
+      (should (equal "zzzz\n" (evil-get-register ?1)))))
+  (ert-info ("special delete commands")
+    (evil-test-buffer
+      "[ ] aba b\n"
+      ("/a" [return] "\"adn")
+      (should (equal "ab" (current-kill 0 t)))
+      (should (equal "ab" (evil-get-register ?a)))
+      (should (equal "ab" (evil-get-register ?-)))
+      (should (equal "ab" (evil-get-register ?1))))))
+
 (ert-deftest evil-test-register ()
   "Test yanking and pasting to and from register."
   :tags '(evil yank paste)
