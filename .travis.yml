@@ -1,34 +1,29 @@
-language: generic
-sudo: true
+language: nix
+
+os:
+  - linux
 
 env:
-  global:
-    - CURL="curl -fsSkL --retry 9 --retry-delay 9"
-  matrix:
-  - EMACS_VERSION=24.5
-  - EMACS_VERSION=25.3
-  - EMACS_VERSION=26.3
-  - EMACS_VERSION=master
+  - EMACS_CI=emacs-24-5
+  - EMACS_CI=emacs-25-3
+  - EMACS_CI=emacs-26-3
+  - EMACS_CI=emacs-snapshot
 
 matrix:
   allow_failures:
-    - env: EMACS_VERSION=master
-
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install -y aspell aspell-en # required for flyspell test
+    - env: EMACS_CI=emacs-snapshot
 
 install:
-  - $CURL -O https://github.com/npostavs/emacs-travis/releases/download/bins/emacs-bin-${EMACS_VERSION}.tar.gz
-  - tar -xaf emacs-bin-${EMACS_VERSION}.tar.gz -C /
-  - export EMACS=/tmp/emacs/bin/emacs
+  - bash <(curl https://raw.githubusercontent.com/purcell/nix-emacs-ci/master/travis-install)
 
 script:
-  - $EMACS --version
-  - emacs=$EMACS make test
+  - emacs --version
+  - script -eqc 'make test' > /dev/null
+
+after_script:
+  - cat test-results.txt
 
 notifications:
   email:
-    # Default is change, but that includes a new branch's 1st success.
     on_success: never
-    on_failure: never
+    on_failure: always
