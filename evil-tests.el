@@ -5147,6 +5147,7 @@ Below some empty line."))
 (ert-deftest evil-test-flyspell-motions ()
   "Test flyspell motions"
   :tags '(evil motion)
+  (skip-unless (executable-find "aspell"))
   (ert-info ("Simple")
     (evil-test-buffer
       "[I] cannt tpye for lyfe"
