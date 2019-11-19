@@ -13,3 +13,5 @@
 *.vrs
 .depend
 evil-autoloads.el
+test-results.txt
+typescript
