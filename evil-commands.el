@@ -1926,7 +1926,7 @@ The return value is the yanked text."
                 (insert-for-yank text))
             ;; no yank-handler, default
             (when (vectorp text)
-              (setq text (evil-vector-to-string text)))
+              (setq text (edmacro-format-keys text)))
             (set-text-properties 0 (length text) nil text)
             (push-mark opoint t)
             (dotimes (i (or count 1))
@@ -1972,7 +1972,7 @@ The return value is the yanked text."
                 (insert-for-yank text))
             ;; no yank-handler, default
             (when (vectorp text)
-              (setq text (evil-vector-to-string text)))
+              (setq text (edmacro-format-keys text)))
             (set-text-properties 0 (length text) nil text)
             (unless (eolp) (forward-char))
             (push-mark (point) t)
@@ -3144,11 +3144,12 @@ If ARG is nil this function calls `recompile', otherwise it calls
     :entries
     (cl-loop for (key . val) in (evil-register-list)
              collect `(nil [,(char-to-string key)
-                            ,(cond ((stringp val)
-                                    (replace-regexp-in-string "\n" "^J" val))
-				   ((vectorp val)
-				    (key-description val))
-				   (t ""))]))))
+                            ,(cond
+                              ((stringp val)
+                               (replace-regexp-in-string "\n" "^J" val))
+                              ((vectorp val)
+                               (edmacro-format-keys val))
+                              (t ""))]))))
 
 (evil-define-command evil-show-marks (mrks)
   "Shows all marks.

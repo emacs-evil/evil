@@ -8135,20 +8135,17 @@ maybe we need one line more with some text\n")
       "This region is a keepe[r]")))
 
 (ert-deftest evil-test-pasteable-macros ()
-  "Test if we can yank and paste macros containing
-                  <escape>"
+  "Test if we can paste macros containing unprintables and restore them"
   :tags '(evil)
-  (ert-info ("Execute yanked macro")
+  (ert-info ("Record, paste and restore macro")
     (evil-test-buffer
-      "[i]foo\e"
-      ("\"qd$@q\"qp"
-       "fooifoo\e")))
-  (ert-info ("Paste recorded marco")
-    (evil-test-buffer
-      ""
-      (evil-set-register ?q (vconcat "ifoo" [escape]))
-      ("@q\"qp")
-      "fooifoo\e")))
+      "[f]oobar\n\n"
+      ([?q ?d right right ?x ?q ?j ?\" ?d ?p])
+      (let ((macro [right right ?x])
+            (representation (buffer-substring (line-beginning-position)
+                                              (line-end-position))))
+        (should (equal (edmacro-parse-keys representation) macro))
+        (should (equal (edmacro-format-keys macro) representation))))))
 
 (ert-deftest evil-test-forward-symbol ()
   :tags '(evil)

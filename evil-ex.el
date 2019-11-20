@@ -593,7 +593,8 @@ argument handler that requires shell completion."
 
 (define-obsolete-function-alias
   'evil-ex-shell-command-completion-at-point
-  'comint-completion-at-point)
+  'comint-completion-at-point
+  "1.2.14")
 
 (evil-ex-define-argument-type shell
   "Shell argument type, supports completion."
