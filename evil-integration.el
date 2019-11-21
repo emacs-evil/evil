@@ -490,7 +490,7 @@ Based on `evil-enclose-ace-jump-for-motion'."
 
 ;; visual-line-mode integration
 (when evil-respect-visual-line-mode
-  (evil-define-command evil-digit-argument-or-beginning-of-visual-line ()
+  (evil-define-command evil-digit-argument-or-evil-beginning-of-visual-line ()
     :digit-argument-redirection evil-beginning-of-visual-line
     :keep-visual t
     :repeat nil
