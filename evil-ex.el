@@ -379,15 +379,10 @@ in case of incomplete or unknown commands."
     (remove-text-properties (minibuffer-prompt-end) (point-max) '(face nil evil))))
 
 (defun evil-ex-command-completion-at-point ()
-  (let ((context (evil-ex-syntactic-context (1- (point)))))
-    (when (memq 'command context)
-      (let ((beg (or (get-text-property 0 'ex-index evil-ex-cmd)
-                     (point)))
-            (end (1+ (or (get-text-property (1- (length evil-ex-cmd))
-                                            'ex-index
-                                            evil-ex-cmd)
-                         (1- (point))))))
-        (list beg end (evil-ex-completion-table))))))
+  (let ((beg (or (get-text-property 0 'ex-index evil-ex-cmd)
+                 (point)))
+        (end (point)))
+    (list beg end (evil-ex-completion-table) :exclusive 'no)))
 
 (defun evil-ex-completion-table ()
   (cond
