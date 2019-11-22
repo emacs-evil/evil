@@ -6646,7 +6646,9 @@ if no previous selection")
   (should (equal (evil-ex-parse "yas/reload-all")
                  '(evil-ex-call-command nil "yas/reload-all" nil)))
   (should (equal (evil-ex-parse "mu4e")
-                 '(evil-ex-call-command nil "mu4e" nil))))
+                 '(evil-ex-call-command nil "mu4e" nil)))
+  (should (equal (evil-ex-parse "make-frame")
+                 '(evil-ex-call-command nil "make-frame" nil))))
 
 (ert-deftest evil-text-ex-search-offset ()
   "Test for addresses like /base//pattern/"

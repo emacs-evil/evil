@@ -853,12 +853,12 @@ START is the start symbol, which defaults to `expression'."
       (setq command (car-safe result)
             string (cdr-safe result))
       ;; check whether the parsed command is followed by a slash, dash
-      ;; or number and the part before it is not a known ex binding
+      ;; or number and either the part before is NOT known to be a binding,
+      ;; or the complete string IS known to be a binding
       (when (and (> (length string) 0)
                  (string-match-p "^[-/[:digit:]]" string)
-                 (not (evil-ex-binding command t)))
-        ;; if this is the case, assume the slash, dash or number and
-        ;; all following symbol characters form an (Emacs-)command
+                 (or (evil-ex-binding (concat command string) t)
+                     (not (evil-ex-binding command t))))
         (setq result (evil-parser (concat command string)
                                   'emacs-binding
                                   evil-ex-grammar)
