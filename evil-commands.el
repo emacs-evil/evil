@@ -2729,11 +2729,14 @@ The search is unbounded, i.e., the pattern is not wrapped in
   (and (fboundp 'semantic-ia-fast-jump)
        (ignore-errors (semantic-ia-fast-jump position))))
 
-(defun evil-goto-definition-xref (string _position)
-  "Find definition for STRING with xref."
+(defun evil-goto-definition-xref (_string position)
+  "Find definition at POSITION with xref."
   (when (fboundp 'xref-find-definitions)
-    (ignore-error user-error
-      (xref-find-definitions string))))
+    (let ((identifier (save-excursion
+                        (goto-char position)
+                        (xref-backend-identifier-at-point (xref-find-backend)))))
+      (ignore-error user-error
+        (xref-find-definitions identifier)))))
 
 (defun evil-goto-definition-search (string _position)
   "Find definition for STRING with evil-search."
