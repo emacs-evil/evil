@@ -2735,8 +2735,7 @@ The search is unbounded, i.e., the pattern is not wrapped in
     (let ((identifier (save-excursion
                         (goto-char position)
                         (xref-backend-identifier-at-point (xref-find-backend)))))
-      (ignore-error user-error
-        (xref-find-definitions identifier)))))
+      (ignore-errors (xref-find-definitions identifier)))))
 
 (defun evil-goto-definition-search (string _position)
   "Find definition for STRING with evil-search."
