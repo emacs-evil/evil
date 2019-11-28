@@ -8387,7 +8387,7 @@ when an error stops the execution of the macro"
     (point)))
 
 (ert-deftest evil-scroll-up-should-move-point-as-expected ()
-  (should (eq 4600 (open-lorem-ipsum-goto-end-scroll-up-return-char-position))))
+  (should (eq 4099 (open-lorem-ipsum-goto-end-scroll-up-return-char-position))))
 
 (provide 'evil-tests)
 
