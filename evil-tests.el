@@ -126,6 +126,7 @@ with `M-x evil-tests-run'"))
       (trace-function 'evil-scroll-up)
       (unwind-protect
           (progn
+            (ert-run-tests-interactively ".*evil-scroll-up.*") ;; first run of this always fails
             (ert-run-tests-interactively tests)
             (with-current-buffer "*trace-output*"
               (append-to-file (point-min) (point-max) "trace-evil-scroll-up-results.txt"))
