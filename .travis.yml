@@ -22,6 +22,7 @@ script:
 
 after_script:
   - cat test-results.txt
+  - cat trace-evil-scroll-up-results.txt
 
 notifications:
   email:
