@@ -123,9 +123,12 @@ with `M-x evil-tests-run'"))
       ;; text file, and then exit with an appropriate code.
       (setq attempt-stack-overflow-recovery nil
             attempt-orderly-shutdown-on-fatal-signal nil)
+      (trace-function 'evil-scroll-up)
       (unwind-protect
           (progn
             (ert-run-tests-interactively tests)
+            (with-current-buffer "*trace-output*"
+              (append-to-file (point-min) (point-max) "trace-evil-scroll-up-results.txt"))
             (with-current-buffer "*ert*"
               (append-to-file (point-min) (point-max) "test-results.txt")
               (kill-emacs (if (zerop (ert-stats-completed-unexpected ert--results-stats)) 0 1))))
