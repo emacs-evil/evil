@@ -28,6 +28,7 @@
 (require 'evil-digraphs)
 (require 'rect)
 (require 'thingatpt)
+(require 'cl-lib)
 
 ;;; Code:
 
@@ -2150,7 +2151,7 @@ to keep Vim compatibility with register jumps."
                             (cons reg (evil-get-register reg t)))
                         '(?\" ?* ?+ ?% ?# ?/ ?: ?. ?-
                               ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-                (cl-remove-if-not #'(lambda (reg) (number-or-marker-p reg)) register-alist)
+                (cl-remove-if-not #'number-or-marker-p register-alist)
                 nil)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
 
