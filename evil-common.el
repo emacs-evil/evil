@@ -2143,12 +2143,15 @@ register instead of replacing its content."
     (set-register register text))))
 
 (defun evil-register-list ()
-  "Returns an alist of all registers"
+  "Returns an alist of all registers, but only those named
+with number or character. Registers with symbol or string in names are ignored
+to keep Vim compatibility with register jumps."
   (sort (append (mapcar #'(lambda (reg)
                             (cons reg (evil-get-register reg t)))
                         '(?\" ?* ?+ ?% ?# ?/ ?: ?. ?-
                               ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-                register-alist nil)
+                (cl-remove-if-not (lambda (x) (number-or-marker-p x)) register-alist)
+                nil)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
 
 (defsubst evil-kbd-macro-suppress-motion-error ()
