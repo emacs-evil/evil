@@ -1812,6 +1812,12 @@ See also `evil-shift-left'."
             (indent-to new-indent 0))
           (delete-region (point) (progn (skip-chars-forward " \t") (point)))
           (forward-line 1))))
+    ;; in case we're in an empty buffer first-shift is still unchanged
+    (unless first-shift
+      (if (< count 0)
+          (setq first-shift 0)
+        (setq first-shift (* count evil-shift-width))
+        (indent-to first-shift)))
     ;; assuming that point is in the first line, adjust its position
     (if (called-interactively-p 'any)
         (evil-first-non-blank)
