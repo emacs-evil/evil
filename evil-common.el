@@ -867,9 +867,35 @@ Inhibits echo area messages, mode line updates and cursor changes."
   `(let ((evil-no-display t))
      ,@body))
 
-(defun evil-num-visible-lines ()
-  "Returns the number of currently visible lines."
-  (- (window-height) 1))
+(defvar evil-cached-header-line-height nil
+  "Cached height of the header line.")
+
+(defun evil-header-line-height ()
+  "Return the height of the header line.
+If there is no header line, return nil."
+  (let ((posn (posn-at-x-y 0 0)))
+    (when (eq (posn-area posn) 'header-line)
+      (cdr (posn-object-width-height posn)))))
+
+(defun evil-posn-x-y (position)
+  "Return the x and y coordinates in POSITION.
+This function returns y offset from the top of the buffer area including
+the header line.
+
+On Emacs 24 and later versions, the y-offset returned by
+`posn-at-point' is relative to the text area excluding the header
+line, while y offset taken by `posn-at-x-y' is relative to the buffer
+area including the header line.  This asymmetry is by design according
+to GNU Emacs team.  This function fixes the asymmetry between them.
+
+Learned from mozc.el."
+  (let ((xy (posn-x-y position)))
+    (when header-line-format
+      (setcdr xy (+ (cdr xy)
+                    (or evil-cached-header-line-height
+                        (setq evil-cached-header-line-height (evil-header-line-height))
+                        0))))
+    xy))
 
 (defun evil-count-lines (beg end)
   "Return absolute line-number-difference betweeen `beg` and `end`.

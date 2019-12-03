@@ -955,8 +955,8 @@ If the scroll count is zero the command scrolls half the screen."
     (when (= (point-min) (line-beginning-position))
       (signal 'beginning-of-buffer nil))
     (when (zerop count)
-      (setq count (/ (1- (window-height)) 2)))
-    (let ((xy (posn-x-y (posn-at-point))))
+      (setq count (/ (window-body-height) 2)))
+    (let ((xy (evil-posn-x-y (posn-at-point))))
       (condition-case nil
           (progn
             (scroll-down count)
@@ -979,12 +979,12 @@ If the scroll count is zero the command scrolls half the screen."
     (setq evil-scroll-count count)
     (when (eobp) (signal 'end-of-buffer nil))
     (when (zerop count)
-      (setq count (/ (1- (window-height)) 2)))
+      (setq count (/ (window-body-height) 2)))
     ;; BUG #660: First check whether the eob is visible.
     ;; In that case we do not scroll but merely move point.
     (if (<= (point-max) (window-end))
         (with-no-warnings (next-line count nil))
-      (let ((xy (posn-x-y (posn-at-point))))
+      (let ((xy (evil-posn-x-y (posn-at-point))))
         (condition-case nil
             (progn
               (scroll-up count)
@@ -3816,25 +3816,7 @@ The 'bang' argument means to sort in reverse order."
 If HORIZONTAL is non-nil the width of the window is changed,
 otherwise its height is changed."
   (let ((count (- new-size (if horizontal (window-width) (window-height)))))
-    (if (>= emacs-major-version 24)
-        (enlarge-window count horizontal)
-      (let ((wincfg (current-window-configuration))
-            (nwins (length (window-list)))
-            (inhibit-redisplay t))
-        (catch 'done
-          (save-window-excursion
-            (while (not (zerop count))
-              (if (> count 0)
-                  (progn
-                    (enlarge-window 1 horizontal)
-                    (setq count (1- count)))
-                (progn
-                  (shrink-window 1 horizontal)
-                  (setq count (1+ count))))
-              (if (= nwins (length (window-list)))
-                  (setq wincfg (current-window-configuration))
-                (throw 'done t)))))
-        (set-window-configuration wincfg)))))
+    (enlarge-window count horizontal)))
 
 (defun evil-get-buffer-tree (wintree)
   "Extracts the buffer tree from a given window tree WINTREE."
