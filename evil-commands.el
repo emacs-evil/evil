@@ -2735,6 +2735,8 @@ The search is unbounded, i.e., the pattern is not wrapped in
   (and (fboundp 'semantic-ia-fast-jump)
        (ignore-errors (semantic-ia-fast-jump position))))
 
+(declare-function xref-backend-identifier-at-point "xref")
+
 (defun evil-goto-definition-xref (_string position)
   "Find definition at POSITION with xref."
   (when (fboundp 'xref-find-definitions)
