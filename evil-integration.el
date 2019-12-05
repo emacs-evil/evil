@@ -288,9 +288,9 @@ activated."
   (evil-with-state emacs ad-do-it))
 
 ;; ace-jump-mode
-(declare-function 'ace-jump-char-mode "ace-jump-mode")
-(declare-function 'ace-jump-word-mode "ace-jump-mode")
-(declare-function 'ace-jump-line-mode "ace-jump-mode")
+(declare-function ace-jump-char-mode "ext:ace-jump-mode")
+(declare-function ace-jump-word-mode "ext:ace-jump-mode")
+(declare-function ace-jump-line-mode "ext:ace-jump-mode")
 
 (defvar evil-ace-jump-active nil)
 
@@ -398,20 +398,20 @@ the mark and entering `recursive-edit'."
 (define-key evil-motion-state-map [remap ace-jump-word-mode] #'evil-ace-jump-word-mode)
 
 ;;; avy
-(declare-function 'avy-goto-word-or-subword-1 "avy")
-(declare-function 'avy-goto-line "avy")
-(declare-function 'avy-goto-char "avy")
-(declare-function 'avy-goto-char-2 "avy")
-(declare-function 'avy-goto-char-2-above "avy")
-(declare-function 'avy-goto-char-2-below "avy")
-(declare-function 'avy-goto-char-in-line "avy")
-(declare-function 'avy-goto-word-0 "avy")
-(declare-function 'avy-goto-word-1 "avy")
-(declare-function 'avy-goto-word-1-above "avy")
-(declare-function 'avy-goto-word-1-below "avy")
-(declare-function 'avy-goto-subword-0 "avy")
-(declare-function 'avy-goto-subword-1 "avy")
-(declare-function 'avy-goto-char-timer "avy")
+(declare-function avy-goto-word-or-subword-1 "ext:avy")
+(declare-function avy-goto-line "ext:avy")
+(declare-function avy-goto-char "ext:avy")
+(declare-function avy-goto-char-2 "ext:avy")
+(declare-function avy-goto-char-2-above "ext:avy")
+(declare-function avy-goto-char-2-below "ext:avy")
+(declare-function avy-goto-char-in-line "ext:avy")
+(declare-function avy-goto-word-0 "ext:avy")
+(declare-function avy-goto-word-1 "ext:avy")
+(declare-function avy-goto-word-1-above "ext:avy")
+(declare-function avy-goto-word-1-below "ext:avy")
+(declare-function avy-goto-subword-0 "ext:avy")
+(declare-function avy-goto-subword-1 "ext:avy")
+(declare-function avy-goto-char-timer "ext:avy")
 
 (defmacro evil-enclose-avy-for-motion (&rest body)
   "Enclose avy to make it suitable for motions.
