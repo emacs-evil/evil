@@ -2,7 +2,7 @@
 ;; Author: Emanuel Evans <emanuel.evans at gmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.15
+;; Version: 1.3.0-snapshot
 
 ;;
 ;; This file is NOT part of GNU Emacs.
