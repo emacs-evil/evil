@@ -231,7 +231,6 @@ This variable must be set before Evil is loaded."
   :type 'boolean
   :group 'evil)
 
-
 (defcustom evil-repeat-find-to-skip-next t
   "Whether a repeat of t or T should skip an adjacent character."
   :type 'boolean

@@ -3162,9 +3162,9 @@ If ARG is nil this function calls `recompile', otherwise it calls
              collect `(nil [,(char-to-string key)
                             ,(cond ((stringp val)
                                     (replace-regexp-in-string "\n" "^J" val))
-				   ((vectorp val)
-				    (key-description val))
-				   (t ""))]))))
+                                   ((vectorp val)
+                                    (key-description val))
+                                   (t ""))]))))
 
 (evil-define-command evil-show-marks (mrks)
   "Shows all marks.

@@ -20,7 +20,7 @@ compile: $(ELCFILES)
 	@echo Compute dependencies
 	@rm -f .depend
 	@for f in $(FILES); do \
-	    sed -n "s/ *(require '\(evil-[^)]*\).*)/$${f}c: \1.elc/p" $$f >> .depend;\
+		sed -n "s/ *(require '\(evil-[^)]*\).*)/$${f}c: \1.elc/p" $$f >> .depend;\
 	done
 
 -include .depend
@@ -56,50 +56,50 @@ clean:
 # This will only run tests pertaining to the repeat system.
 test:
 	$(EMACS) -nw -Q -L . $(LIBS) -l evil-tests.el \
---eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
+		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
 
 # Byte-compile Evil and run all tests.
 tests: compile
 	$(EMACS) -nw -Q -L . $(LIBS) -l evil-tests.el \
---eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
+		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
 	rm -f *.elc .depend
 
 # Load Evil in a fresh instance of Emacs and run all tests.
 emacs:
 	$(EMACS) -Q -L . $(LIBS) -l goto-chg.el -l evil-tests.el \
---eval "(evil-mode 1)" \
---eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)"
+		--eval "(evil-mode 1)" \
+		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)"
 
 # Load Evil in a terminal Emacs and run all tests.
 term: terminal
 terminal:
 	$(EMACS) -nw -Q -L . $(LIBS) -l goto-chg.el -l evil-tests.el \
---eval "(evil-mode 1)" \
---eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)"
+		--eval "(evil-mode 1)" \
+		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)"
 
 # Run all tests with profiler.
 profiler:
 	$(EMACS) --batch -Q -L . $(LIBS) -l goto-chg.el -l evil-tests.el \
---eval "(evil-tests-initialize '(${TAG}) (or '(${PROFILER}) t))"
+		--eval "(evil-tests-initialize '(${TAG}) (or '(${PROFILER}) t))"
 
 # Re-indent all Evil code.
 # Loads Evil into memory in order to indent macros properly.
 # Also removes trailing whitespace, tabs and extraneous blank lines.
 indent: clean
 	$(EMACS) --batch --eval '(setq vc-handled-backends nil)' ${FILES} evil-tests.el -Q -L . $(LIBS) -l evil-tests.el \
---eval "(dolist (buffer (reverse (buffer-list))) \
-(when (buffer-file-name buffer) \
-(set-buffer buffer) \
-(message \"Indenting %s\" (current-buffer)) \
-(setq-default indent-tabs-mode nil) \
-(untabify (point-min) (point-max)) \
-(indent-region (point-min) (point-max)) \
-(delete-trailing-whitespace) \
-(untabify (point-min) (point-max)) \
-(goto-char (point-min)) \
-(while (re-search-forward \"\\n\\\\{3,\\\\}\" nil t) \
-(replace-match \"\\n\\n\")) \
-(when (buffer-modified-p) (save-buffer 0))))"
+		--eval "(dolist (buffer (reverse (buffer-list))) \
+		(when (buffer-file-name buffer) \
+		(set-buffer buffer) \
+		(message \"Indenting %s\" (current-buffer)) \
+		(setq-default indent-tabs-mode nil) \
+		(untabify (point-min) (point-max)) \
+		(indent-region (point-min) (point-max)) \
+		(delete-trailing-whitespace) \
+		(untabify (point-min) (point-max)) \
+		(goto-char (point-min)) \
+		(while (re-search-forward \"\\n\\\\{3,\\\\}\" nil t) \
+		(replace-match \"\\n\\n\")) \
+		(when (buffer-modified-p) (save-buffer 0))))"
 
 # Create an ELPA package.
 elpa:
