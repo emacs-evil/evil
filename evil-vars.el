@@ -1626,12 +1626,12 @@ Elements have the form (NAME . FUNCTION).")
 (defvar evil-visual-x-select-timeout 0.1
   "Time in seconds for the update of the X selection.")
 
-(declare-function origami-open-all-nodes "origami.el")
-(declare-function origami-close-all-nodes "origami.el")
-(declare-function origami-toggle-node "origami.el")
-(declare-function origami-open-node "origami.el")
-(declare-function origami-open-node-recursively "origami.el")
-(declare-function origami-close-node "origami.el")
+(declare-function origami-open-all-nodes "ext:origami.el")
+(declare-function origami-close-all-nodes "ext:origami.el")
+(declare-function origami-toggle-node "ext:origami.el")
+(declare-function origami-open-node "ext:origami.el")
+(declare-function origami-open-node-recursively "ext:origami.el")
+(declare-function origami-close-node "ext:origami.el")
 
 (defvar evil-fold-list
   `(((vdiff-mode)
