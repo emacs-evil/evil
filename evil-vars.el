@@ -327,11 +327,6 @@ consistently."
   :type  'number
   :group 'evil)
 
-(defcustom evil-fold-level 0
-  "Default fold level."
-  :type  'integer
-  :group 'evil)
-
 (defcustom evil-auto-balance-windows t
   "If non-nil creating/deleting a window causes a rebalance."
   :type 'boolean
