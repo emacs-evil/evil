@@ -37,10 +37,10 @@ compile-batch: clean
 doc: info pdf
 
 info: clean
-	cd $(DOC) && makeinfo evil.texi
+	@$(MAKE) -C doc evil.info
 
 pdf: clean
-	cd $(DOC) && texi2pdf evil.texi
+	@$(MAKE) -C doc evil.pdf
 
 # Delete byte-compiled files etc.
 clean:
@@ -48,7 +48,7 @@ clean:
 	rm -f \#*\#
 	rm -f *.elc
 	rm -f .depend
-	cd $(DOC) && rm -f *.aux *.cp *.fn *.fns *.info *.ky *.log *.pg *.toc *.tp *.vr *.vrs
+	@$(MAKE) -C doc clean
 
 # Run tests.
 # The TAG variable may specify a test tag or a test name:
