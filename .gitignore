@@ -17,3 +17,5 @@ typescript
 /doc/*.toc
 /doc/*.vr
 /doc/*.vrs
+/doc/build/
+*.pyc
