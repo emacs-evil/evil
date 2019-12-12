@@ -110,7 +110,17 @@ The return value is a list (BEG END TYPE)."
           (move-marker evil-motion-marker nil))))))
 
 (defmacro evil-define-motion (motion args &rest body)
-  "Define an motion command MOTION.
+  "Define a motion command MOTION.
+ARGS is a list of arguments.  Motions can have any number of
+arguments, but the first (if any) has the predefined meaning of
+count.  BODY must execute the motion by moving point.
+
+Optional keyword arguments are:
+- `:type' - determines how the motion works after an operator (one of
+  `inclusive', `line', `block' and `exclusive', or a self-defined
+  motion type)
+- `:jump' - if non-nil, the previous position is stored in the jump
+  list, so that it can be restored with \\[C-o]
 
 \(fn MOTION (COUNT ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
@@ -147,7 +157,7 @@ The return value is a list (BEG END TYPE)."
            '(and (fboundp 'eldoc-add-command)
                  (eldoc-add-command ',motion))))
        (evil-define-command ,motion (,@args)
-         ,@(when doc `(,doc))          ; avoid nil before `interactive'
+         ,@(when doc `(,doc))         ; avoid nil before `interactive'
          ,@keys
          :keep-visual t
          (interactive ,@interactive)
@@ -356,6 +366,14 @@ the new range."
 BODY should return a range (BEG END) to the right of point
 if COUNT is positive, and to the left of it if negative.
 
+Optional keyword arguments:
+- `:type' - determines how the range applies after an operator
+  (`inclusive', `line', `block', and `exclusive', or a self-defined
+  motion type).
+- `:extend-selection' - if non-nil (default), the text object always
+  enlarges the current selection.  Otherwise, it replaces the current
+  selection.
+
 \(fn OBJECT (COUNT) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
            (doc-string 3)
@@ -444,6 +462,23 @@ if COUNT is positive, and to the left of it if negative.
 
 (defmacro evil-define-operator (operator args &rest body)
   "Define an operator command OPERATOR.
+The operator acts on the range of characters BEG through
+END. BODY must execute the operator by potentially manipulating
+the buffer contents, or otherwise causing side effects to happen.
+
+Optional keyword arguments are:
+- `:type' - force the input range to be of a given type (`inclusive',
+  `line', `block', and `exclusive', or a self-defined motion type).
+- `:motion' - use a predetermined motion instead of waiting for one
+  from the keyboard.  This does not affect the behavior in visual
+  state, where selection boundaries are always used.
+- `:repeat' - if non-nil (default), then \\[.] will repeat the
+  operator.
+- `:move-point' - if non-nil (default), the cursor will be moved to
+  the beginning of the range before the body executes
+- `:keep-visual' - if non-nil, the selection is not disabled when the
+  operator is executed in visual state.  By default, visual state is
+  exited automatically.
 
 \(fn OPERATOR (BEG END ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
@@ -614,24 +649,22 @@ RETURN-TYPE is non-nil."
 (defmacro evil-define-type (type doc &rest body)
   "Define type TYPE.
 DOC is a general description and shows up in all docstrings.
-It is followed by a list of keywords and functions:
 
-:expand FUNC     Expansion function. This function should accept
-                 two positions in the current buffer, BEG and END,
-                 and return a pair of expanded buffer positions.
-:contract FUNC   The opposite of :expand, optional.
-:one-to-one BOOL Whether expansion is one-to-one. This means that
-                 :expand followed by :contract always returns the
-                 original range.
-:normalize FUNC  Normalization function, optional. This function should
-                 accept two unexpanded positions and adjust them before
-                 expansion. May be used to deal with buffer boundaries.
-:string FUNC     Description function. This takes two buffer positions
-                 and returns a human-readable string, for example,
-                 \"2 lines\".
+Optional keyword arguments:
+- `:expand' - expansion function.  This function should accept two
+  positions in the current buffer, BEG and END,and return a pair of
+  expanded buffer positions.
+- `:contract' - the opposite of `:expand'.  Optional.
+- `:one-to-one' - non-nil if expansion is one-to-one.  This means that
+  `:expand' followed by `:contract' always return the original range.
+- `:normalize' - normalization function.  This function should accept
+  two unexpanded positions and adjust them before expansion.  May be
+  used to deal with buffer boundaries.
+- `:string' - description function.  Takes two buffer positions and
+  returns a human-readable string.  For example \"2 lines\"
 
 If further keywords and functions are specified, they are assumed to
-be transformations on buffer positions, like :expand and :contract.
+be transformations on buffer positions, like `:expand' and `:contract'.
 
 \(fn TYPE DOC [[KEY FUNC]...])"
   (declare (indent defun)
@@ -646,7 +679,7 @@ be transformations on buffer positions, like :expand and :contract.
     (while (keywordp (car-safe body))
       (setq key (pop body)
             val (pop body))
-      (if (plist-member plist key) ; not a function
+      (if (plist-member plist key)      ; not a function
           (setq plist (plist-put plist key val))
         (setq func val
               sym (intern (replace-regexp-in-string

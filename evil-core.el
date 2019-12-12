@@ -1004,20 +1004,19 @@ the above. If LOCAL is non-nil, set localleader instead."
 
 (defmacro evil-define-key (state keymap key def &rest bindings)
   "Create a STATE binding from KEY to DEF for KEYMAP.
-STATE is one of normal, insert, visual, replace, operator,
-motion, emacs, or a list of one or more of these. Omitting a
-state by using nil corresponds to a standard Emacs binding using
-`define-key'. The remaining arguments are like those of
-`define-key'. For example:
+STATE is one of `normal', `insert', `visual', `replace',
+`operator', `motion', `emacs', or a list of one or more of
+these. Omitting a state by using `nil' corresponds to a standard
+Emacs binding using `define-key'. The remaining arguments are
+like those of `define-key'. For example:
 
     (evil-define-key 'normal foo-map \"a\" 'bar)
 
-This creates a binding from \"a\" to bar in Normal state, which
-is active whenever foo-map is active. Using nil for the state,
+This creates a binding from \\[a] to `bar' in normal state, which
+is active whenever `foo-map' is active. Using `nil' for the state,
 the following lead to identical bindings:
 
     (evil-define-key nil foo-map \"a\" 'bar)
-
     (define-key foo-map \"a\" 'bar)
 
 It is possible to specify multiple states and/or bindings at
@@ -1027,21 +1026,20 @@ once:
       \"a\" 'bar
       \"b\" 'foo)
 
-If foo-map has not been initialized yet, this macro adds an entry
-to `after-load-functions', delaying execution as necessary.
+If `foo-map' has not been initialized yet, this macro adds an
+entry to `after-load-functions', delaying execution as necessary.
 
-KEYMAP may also be a quoted symbol. If the symbol is global, the
+KEYMAP may also be a quoted symbol. If the symbol is `global', the
 global evil keymap corresponding to the state(s) is used, meaning
 the following lead to identical bindings:
 
     (evil-define-key 'normal 'global \"a\" 'bar)
-
     (evil-global-set-key 'normal \"a\" 'bar)
 
-The symbol local may also be used, which corresponds to using
+The symbol `local' may also be used, which corresponds to using
 `evil-local-set-key'. If a quoted symbol is used that is not
-global or local, it is assumed to be the name of a minor mode, in
-which case `evil-define-minor-mode-key' is used."
+`global' or `local', it is assumed to be the name of a minor
+mode, in which case `evil-define-minor-mode-key' is used."
   (declare (indent defun))
   (cond ((member keymap '('global 'local))
          `(evil-define-key* ,state ,keymap ,key ,def ,@bindings))
@@ -1194,26 +1192,21 @@ Add additional BINDINGS if specified."
   "Define an Evil state STATE.
 DOC is a general description and shows up in all docstrings;
 the first line of the string should be the full name of the state.
-Then follows one or more optional keywords:
 
-:tag STRING             Mode line indicator.
-:message STRING         Echo area message when changing to STATE.
-:cursor SPEC            Cursor to use in STATE.
-:entry-hook LIST        Hooks run when changing to STATE.
-:exit-hook LIST         Hooks run when changing from STATE.
-:enable LIST            List of other states and modes enabled by STATE.
-:suppress-keymap FLAG   If FLAG is non-nil, makes `evil-suppress-map'
-                        the parent of the global map of STATE,
-                        effectively disabling bindings to
-                        `self-insert-command'.
+BODY is executed each time the state is enabled or disabled.
 
-Following the keywords is optional code to be executed each time
-the state is enabled or disabled. For example:
-
-    (evil-define-state test
-      \"Test state.\"
-      :tag \"<T> \"
-      (setq test-var t))
+Optional keyword arguments:
+- `:tag' - the mode line indicator, e.g. \"<T>\".
+- `:message' - string shown in the echo area when the state is
+  activated.
+- `:cursor' - default cursor specification.
+- `:enable' - list of other state keymaps to enable when in this
+  state.
+- `:entry-hook' - list of functions to run when entering this state.
+- `:exit-hook' - list of functions to run when exiting this state.
+- `:suppress-keymap' - if non-nil, effectively disables bindings to
+  `self-insert-command' by making `evil-suppress-map' the parent of
+  the global state keymap.
 
 The global keymap of this state will be `evil-test-state-map',
 the local keymap will be `evil-test-state-local-map', and so on.
