@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.15
+;; Version: 1.2.16
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -2734,6 +2734,8 @@ The search is unbounded, i.e., the pattern is not wrapped in
   "Find definition for POSITION with semantic."
   (and (fboundp 'semantic-ia-fast-jump)
        (ignore-errors (semantic-ia-fast-jump position))))
+
+(declare-function xref-backend-identifier-at-point "xref")
 
 (defun evil-goto-definition-xref (_string position)
   "Find definition at POSITION with xref."

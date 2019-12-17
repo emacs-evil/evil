@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.15
+;; Version: 1.2.16
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -1626,12 +1626,12 @@ Elements have the form (NAME . FUNCTION).")
 (defvar evil-visual-x-select-timeout 0.1
   "Time in seconds for the update of the X selection.")
 
-(declare-function origami-open-all-nodes "origami.el")
-(declare-function origami-close-all-nodes "origami.el")
-(declare-function origami-toggle-node "origami.el")
-(declare-function origami-open-node "origami.el")
-(declare-function origami-open-node-recursively "origami.el")
-(declare-function origami-close-node "origami.el")
+(declare-function origami-open-all-nodes "ext:origami.el")
+(declare-function origami-close-all-nodes "ext:origami.el")
+(declare-function origami-toggle-node "ext:origami.el")
+(declare-function origami-open-node "ext:origami.el")
+(declare-function origami-open-node-recursively "ext:origami.el")
+(declare-function origami-close-node "ext:origami.el")
 
 (defvar evil-fold-list
   `(((vdiff-mode)
@@ -1875,7 +1875,7 @@ Otherwise the previous command is assumed as substitute.")
                       (buffer-substring (point-min)
                                         (line-end-position))))
           ;; no repo, use plain version
-          "1.2.15"))))
+          "1.2.16"))))
   "The current version of Evil")
 
 (defcustom evil-want-integration t
