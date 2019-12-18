@@ -2,8 +2,8 @@
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
-;; Package-Requires: ((evil "1.3.0-snapshot"))
-;; Version: 1.3.0-snapshot
+;; Package-Requires: ((evil "1.13.0"))
+;; Version: 1.13.0
 
 ;; This file is NOT part of GNU Emacs.
 
