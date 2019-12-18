@@ -17,5 +17,6 @@ typescript
 /doc/*.toc
 /doc/*.vr
 /doc/*.vrs
-/doc/build/
+/doc/build/*/
+!/doc/build/texinfo/evil.texi
 *.pyc

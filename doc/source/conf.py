@@ -53,6 +53,12 @@ latex_elements = {
 }
 
 
+texinfo_documents = [
+    (master_doc, 'evil', 'Evil documentation', author, 'evil',
+     'Extensible vi layer for Emacs', 'Emacs'),
+]
+
+
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
