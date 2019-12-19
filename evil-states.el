@@ -217,7 +217,9 @@ the selection is enabled.
                            def-body)))
   (let* ((name (intern (format "evil-visual-%s" selection)))
          (message (intern (format "%s-message" name)))
+         (tagvar (intern (format "%s-tag" name)))
          (type selection)
+         (tag " <V> ")
          arg key string)
     ;; collect keywords
     (while (keywordp (car-safe body))
@@ -227,12 +229,15 @@ the selection is enabled.
        ((eq key :message)
         (setq string arg))
        ((eq key :type)
-        (setq type arg))))
+        (setq type arg))
+       ((eq key :tag)
+        (setq tag arg))))
     ;; macro expansion
     `(progn
        (add-to-list 'evil-visual-alist (cons ',selection ',name))
        (defvar ,name ',type ,(format "*%s" doc))
        (defvar ,message ,string ,doc)
+       (defvar ,tagvar ,tag ,doc)
        (evil-define-command ,name (&optional mark point type message)
          ,@(when doc `(,doc))
          :keep-visual t
@@ -253,19 +258,23 @@ the selection is enabled.
 (evil-define-visual-selection char
   "Characterwise selection."
   :type inclusive
-  :message "-- VISUAL --")
+  :message "-- VISUAL --"
+  :tag " <V> ")
 
 (evil-define-visual-selection line
   "Linewise selection."
-  :message "-- VISUAL LINE --")
+  :message "-- VISUAL LINE --"
+  :tag " <Vl> ")
 
 (evil-define-visual-selection screen-line
   "Linewise selection in `visual-line-mode'."
-  :message "-- SCREEN LINE --")
+  :message "-- SCREEN LINE --"
+  :tag " <Vs> ")
 
 (evil-define-visual-selection block
   "Blockwise selection."
   :message "-- VISUAL BLOCK --"
+  :tag " <Vb> "
   (evil-transient-mark -1)
   ;; refresh the :corner property
   (setq evil-visual-properties
@@ -274,7 +283,7 @@ the selection is enabled.
 
 (evil-define-state visual
   "Visual state."
-  :tag " <V> "
+  :tag 'evil-visual-tag
   :enable (motion normal)
   :message 'evil-visual-message
   (cond
@@ -410,6 +419,15 @@ If LATER is non-nil, exit after the current command."
         (when evil-visual-region-expanded
           (evil-visual-contract-region))
         (evil-change-to-previous-state)))))
+
+(defun evil-visual-tag (&optional selection)
+  "Return a mode-line tag for SELECTION.
+SELECTION is a kind of selection as defined by
+`evil-define-visual-selection', such as `char', `line'
+or `block'."
+  (setq selection (or selection evil-visual-selection))
+  (when selection
+    (symbol-value (intern (format "evil-visual-%s-tag" selection)))))
 
 (defun evil-visual-message (&optional selection)
   "Create an echo area message for SELECTION.
