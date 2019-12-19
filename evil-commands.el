@@ -1494,9 +1494,11 @@ be joined with the previous line if and only if
                    (point))))
 
 (evil-define-command evil-delete-back-to-indentation ()
-  "Delete from the cursor to the first non-whitespace character of the current line.
-If point is before the first non-whitespace character of a current line then
-delete from the point to the beginning of the current line."
+  "Delete back to the first non-whitespace character.
+If point is before the first non-whitespace character of a
+current line then delete from the point to the beginning of the
+current line.  If point is on the beginning of the line, behave
+according to `evil-backspace-join-lines'."
   (if (bolp)
       (evil-delete-backward-char-and-join 1)
     (delete-region (if (<= (current-column) (current-indentation))

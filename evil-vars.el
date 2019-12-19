@@ -457,7 +457,7 @@ replicates the default vim behavior."
                (define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down))))))
 
 (defcustom evil-want-C-u-delete nil
-  "Whether \"C-u\" deletes back to indentation in Insert state."
+  "Whether \\[C-u] deletes back to indentation in insert state."
   :type 'boolean
   :group 'evil
   :set #'(lambda (sym value)
