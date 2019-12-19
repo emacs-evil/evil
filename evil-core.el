@@ -381,6 +381,8 @@ then this function does nothing."
 (defun evil-generate-mode-line-tag (&optional state)
   "Generate the evil mode-line tag for STATE."
   (let ((tag (evil-state-property state :tag t)))
+    (when (functionp tag)
+      (setq tag (funcall tag)))
     ;; prepare mode-line: add tooltip
     (if (stringp tag)
         (propertize tag
