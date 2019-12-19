@@ -1933,6 +1933,28 @@ ine3 line3      line3 l\n")))
       (should-error (execute-kbd-macro (concat "i" (kbd "C-w"))))
       "abc def\n[k]l\n")))
 
+(ert-deftest evil-test-delete-back-to-indentation ()
+  "Test `evil-delete-back-to-indentation' in insert state."
+  :tags '(evil)
+  (let ((evil-backspace-join-lines t))
+    (evil-test-buffer
+      "abc def\n   ghi j[k]l\n"
+      ("i" (call-interactively #'evil-delete-back-to-indentation))
+      "abc def\n   [k]l\n"
+      (execute-kbd-macro (concat (kbd "C-o") "2h"))
+      "abc def\n [ ] kl\n"
+      (call-interactively #'evil-delete-back-to-indentation)
+      "abc def\n[ ] kl\n"
+      (call-interactively #'evil-delete-back-to-indentation)
+      "abc def[ ] kl\n"))
+  (let (evil-backspace-join-lines)
+    (evil-test-buffer
+      "abc def\n[k]l\n"
+      (should-error
+       (progn (execute-kbd-macro "i")
+              (call-interactively #'evil-delete-back-to-indentation)))
+      "abc def\n[k]l\n")))
+
 (ert-deftest evil-test-change ()
   "Test `evil-change'"
   :tags '(evil operator)
