@@ -1926,7 +1926,7 @@ The default for width is the value of `fill-column'."
   "Pastes the latest yanked text before the cursor position.
 The return value is the yanked text."
   :suppress-operator t
-  (interactive "P<x>")
+  (interactive "p<x>")
   (if (evil-visual-state-p)
       (evil-visual-paste count register)
     (evil-with-undo
@@ -1973,7 +1973,7 @@ The return value is the yanked text."
   "Pastes the latest yanked text behind point.
 The return value is the yanked text."
   :suppress-operator t
-  (interactive "P<x>")
+  (interactive "p<x>")
   (if (evil-visual-state-p)
       (evil-visual-paste count register)
     (evil-with-undo
@@ -2021,7 +2021,7 @@ The return value is the yanked text."
 (evil-define-command evil-visual-paste (count &optional register)
   "Paste over Visual selection."
   :suppress-operator t
-  (interactive "P<x>")
+  (interactive "p<x>")
   ;; evil-visual-paste is typically called from evil-paste-before or
   ;; evil-paste-after, but we have to mark that the paste was from
   ;; visual state
