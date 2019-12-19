@@ -10,7 +10,7 @@ LIBS = -L lib
 
 ELCFILES = $(FILES:.el=.elc)
 
-.PHONY: all compile compile-batch info pdf clean tests test emacs term terminal profiler indent elpa version
+.PHONY: all compile compile-batch docstrings doc clean tests test emacs term terminal profiler indent elpa version
 
 # Byte-compile Evil.
 all: compile
@@ -34,13 +34,11 @@ compile-batch: clean
 	$(EMACS) --batch -Q -L . $(LIBS) -f batch-byte-compile ${FILES}
 
 # Documentation.
-doc: info pdf
+docstrings:
+	@$(EMACS) --script scripts/evil-extract-docstrings
 
-info: clean
-	@$(MAKE) -C doc evil.info
-
-pdf: clean
-	@$(MAKE) -C doc evil.pdf
+doc: docstrings
+	@$(MAKE) -C doc texinfo
 
 # Delete byte-compiled files etc.
 clean:
