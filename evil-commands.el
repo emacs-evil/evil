@@ -1477,7 +1477,7 @@ be joined with the previous line if and only if
 `evil-backspace-join-lines'."
   (interactive "p")
   (if (or evil-backspace-join-lines (not (bolp)))
-      (call-interactively 'delete-backward-char)
+      (delete-char -1)
     (user-error "Beginning of line")))
 
 (evil-define-command evil-delete-backward-word ()
@@ -1498,9 +1498,7 @@ be joined with the previous line if and only if
 If point is before the first non-whitespace character of a current line then
 delete from the point to the beginning of the current line."
   (if (bolp)
-      (progn
-        (unless evil-backspace-join-lines (user-error "Beginning of line"))
-        (delete-char -1))
+      (evil-delete-backward-char-and-join 1)
     (delete-region (if (<= (current-column) (current-indentation))
                        (line-beginning-position)
                      (save-excursion
