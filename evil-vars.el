@@ -1699,6 +1699,14 @@ buffer-region of the newly inserted text.")
   "The last piece of deleted text.
 The text should be less than a line.")
 
+(defvar evil-was-yanked-without-register t
+  "Whether text being saved to the numbered-register ring was
+not deleted and not yanked to a specific register.")
+(make-obsolete-variable
+ 'evil-was-yanked-without-register
+ "This variable is no longer used and will be removed in future versions of Evil."
+ "1.15")
+
 (defvar evil-delete-kill-ring (make-list 9 "")
   "The kill ring that stores text for the 1-9 registers.")
 
