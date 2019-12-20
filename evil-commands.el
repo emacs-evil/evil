@@ -1833,10 +1833,11 @@ See also `evil-shift-left'."
           (setq first-shift 0)
         (setq first-shift (* count evil-shift-width))
         (indent-to first-shift)))
-    ;; assuming that point is in the first line, adjust its position
-    (if (called-interactively-p 'any)
-        (evil-first-non-blank)
-      (move-to-column (max 0 (+ pnt-indent first-shift))))))
+    ;; When called from insert state (C-t or C-d) the cursor should shift with the line,
+    ;; otherwise (normal state) it should end up on the first non-whitespace character
+    (if (evil-insert-state-p)
+        (move-to-column (max 0 (+ pnt-indent first-shift)))
+      (evil-first-non-blank))))
 
 (evil-define-command evil-shift-right-line (count)
   "Shift the current line COUNT times to the right.
