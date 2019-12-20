@@ -8262,20 +8262,30 @@ maybe we need one line more with some text\n")
   :tags '(evil abbrev)
   (ert-info ("Test abbrev expansion on insert state exit")
     (define-abbrev-table 'global-abbrev-table
-      '(("undef" "undefined"))) ;; add global abbrev
+      '(("undef" "undefined")))         ; add global abbrev
+    (evil-test-buffer
+      "foo unde[f] bar"
+      (abbrev-mode)
+      ("a" [escape])
+      "foo undefine[d] bar")            ; 'undef' should be expanded
     (evil-test-buffer
       "foo unde[f] bar"
       ("a" [escape])
-      "foo undefine[d] bar") ;; 'undef' should be expanded
+      "foo unde[f] bar")                ; 'undef' shouldn't be expanded,
+                                        ; abbrev-mode is not enabled
     (evil-test-buffer
       "fo[o] undef bar"
+      (abbrev-mode)
       ("a" [escape])
-      "fo[o] undef bar") ;; 'foo' shouldn't be expanded, it's not an abbrev
-    (kill-all-abbrevs) ;; remove abbrevs
+      "fo[o] undef bar")                ; 'foo' shouldn't be expanded,
+                                        ; it's not an abbrev
+    (kill-all-abbrevs)                  ; remove all abbrevs
     (evil-test-buffer
       "foo unde[f] bar"
+      (abbrev-mode)
       ("a" [escape])
-      "foo unde[f] bar") ;; 'undef' is not an abbrev, shouldn't be expanded
+      "foo unde[f] bar")                ; 'undef' shouldn't be expanded,
+                                        ; it's not an abbrev
     (setq abbrevs-changed nil)))
 
 (ert-deftest evil-test-text-object-macro ()

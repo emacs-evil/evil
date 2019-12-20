@@ -1232,8 +1232,8 @@ command is non-zero."
   :group 'evil)
 
 (defcustom evil-want-abbrev-expand-on-insert-exit t
-  "If non-nil abbrevs will be expanded when leaving Insert state
-like in Vim. This variable is read only on load."
+  "If non-nil abbrevs will be expanded when leaving insert state
+like in Vim, if `abbrev-mode' is on."
   :type 'boolean
   :group 'evil)
 
