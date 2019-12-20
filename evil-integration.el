@@ -516,9 +516,12 @@ Based on `evil-enclose-ace-jump-for-motion'."
     "V" 'evil-visual-screen-line))
 
 ;;; abbrev.el
-(when evil-want-abbrev-expand-on-insert-exit
-  (eval-after-load 'abbrev
-    '(add-hook 'evil-insert-state-exit-hook 'expand-abbrev)))
+(defun evil-maybe-expand-abbrev ()
+  (when (and abbrev-mode evil-want-abbrev-expand-on-insert-exit)
+    (expand-abbrev)))
+
+(eval-after-load 'abbrev
+  '(add-hook 'evil-insert-state-exit-hook 'evil-maybe-expand-abbrev))
 
 ;;; ElDoc
 (eval-after-load 'eldoc
