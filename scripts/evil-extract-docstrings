@@ -1,0 +1,30 @@
+#!/usr/bin/emacs --script
+
+(setq cur-path (file-name-directory load-file-name))
+
+(add-to-list 'load-path (format "%s.." cur-path))
+(require 'evil)
+(require 'json)
+(require 'help)
+
+(with-temp-file (format "%s../doc/docstringdb.json" cur-path)
+  (let (vars)
+    (mapatoms
+     (lambda (sym)
+       (when (string-prefix-p "evil-" (symbol-name sym))
+         (let ((default (car (get sym 'standard-value))))
+           (while (and (consp default) (memq (car default) '(function quote)))
+             (setq default (cadr default)))
+           (push `(,sym (default . ,(cond
+                                     ((consp default) (format "%S" default))
+                                     ((symbolp default) (symbol-name default))
+                                     (t default)))
+                        (local . ,(local-variable-if-set-p sym))
+                        (default-type . ,(type-of default))
+                        (var-docstring . ,(documentation-property sym 'variable-documentation 'raw))
+                        (fn-docstring . ,(ignore-errors (documentation sym 'raw)))
+                        (arglist . ,(help-function-arglist sym))
+                        (functionp . ,(functionp sym))
+                        (macrop . ,(macrop sym)))
+                 vars)))))
+    (insert (json-encode vars))))
