@@ -123,3 +123,23 @@ bindings are desired:
 .. code-block:: elisp
 
    (add-hook 'text-mode-hook 'foo-mode)  ; enable alongside text-mode
+
+
+Leader keys
+-----------
+
+Evil supports a simple implementation of Vim's *leader* keys.  To bind
+a function to a leader key you can use the expression ``<leader>`` in
+a key mapping, e.g.
+
+.. code-block:: elisp
+
+   (evil-define-key 'normal 'global (kbd "<leader>fs") 'save-buffer)
+
+Likewise, you can use the expression ``<localleader>`` to mimic Vim's
+local leader, which is designed for mode-specific key bindings.
+
+You can use the function :elisp:ref:`evil-set-leader` to designate
+which function as the leader and the local leader.
+
+.. elisp:autofunction:: evil-set-leader

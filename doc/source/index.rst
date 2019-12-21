@@ -15,6 +15,7 @@ Evil
    keymaps
    hooks
    extension
+   faq
    internals
    license
    indices
