@@ -713,7 +713,6 @@ expression matching the buffer's name and STATE is one of `normal',
     gdb-registers-mode
     gdb-threads-mode
     gist-list-mode
-    git-commit-mode
     git-rebase-mode
     gnus-article-mode
     gnus-browse-mode
