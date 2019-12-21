@@ -987,11 +987,12 @@ A return value of t means all states."
   (push '(t. localleader) unread-command-events))
 
 (defun evil-set-leader (state key &optional localleader)
-  "Set KEY to trigger <leader> bindings in STATE.
+  "Set KEY to trigger leader bindings in STATE.
 KEY should be in the form produced by `kbd'. STATE is one of
 `normal', `insert', `visual', `replace', `operator', `motion',
-`emacs', a list of one or more of these, or nil. nil means all of
-the above. If LOCAL is non-nil, set localleader instead."
+`emacs', a list of one or more of these, or `nil', which means
+all of the above. If LOCALLEADER is non-nil, set the local leader
+instead."
   (let* ((all-states '(normal insert visual replace operator motion emacs))
          (states (cond ((listp state) state)
                        ((member state all-states) (list state))

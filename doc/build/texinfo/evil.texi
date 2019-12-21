@@ -21,7 +21,7 @@
 
 @copying
 @quotation
-Evil 1.13.0, Dec 19, 2019
+Evil 1.13.0, Dec 21, 2019
 
 Eivind Fonn, Frank Fischer, Vegard Øye
 
@@ -47,7 +47,7 @@ Copyright @copyright{} 2011-2019, Eivind Fonn, Frank Fischer, Vegard Øye
 @end ifnottex
 
 @c %**start of body
-@anchor{index doc}@anchor{3f}
+@anchor{index doc}@anchor{40}
 @c Evil documentation master file, created by
 @c sphinx-quickstart on Thu Dec 12 10:34:49 2019.
 @c You can adapt this file completely to your liking, but it should at least
@@ -87,6 +87,7 @@ Settings
 Keymaps
 
 * evil-define-key:: 
+* Leader keys:: 
 
 Extension
 
@@ -104,7 +105,7 @@ Internals
 @end menu
 
 @node Overview,Settings,Top,Top
-@anchor{overview doc}@anchor{40}@anchor{overview evil}@anchor{41}@anchor{overview overview}@anchor{42}
+@anchor{overview doc}@anchor{41}@anchor{overview evil}@anchor{42}@anchor{overview overview}@anchor{43}
 @chapter Overview
 
 
@@ -125,7 +126,7 @@ general, Evil is extensible in Emacs Lisp.
 @end menu
 
 @node Installation via package el,Manual installation,,Overview
-@anchor{overview installation-via-package-el}@anchor{43}
+@anchor{overview installation-via-package-el}@anchor{44}
 @section Installation via package.el
 
 
@@ -151,7 +152,7 @@ Finally, add the following lines to your Emacs init file:
 @end example
 
 @node Manual installation,Modes and states,Installation via package el,Overview
-@anchor{overview manual-installation}@anchor{44}
+@anchor{overview manual-installation}@anchor{45}
 @section Manual installation
 
 
@@ -176,7 +177,7 @@ Ensure that your replace @code{path/to/evil} with the actual path to
 where you cloned Evil.
 
 @node Modes and states,,Manual installation,Overview
-@anchor{overview modes-and-states}@anchor{45}
+@anchor{overview modes-and-states}@anchor{46}
 @section Modes and states
 
 
@@ -241,7 +242,7 @@ normal state.
 @end table
 
 @node Settings,Keymaps,Overview,Top
-@anchor{settings doc}@anchor{46}@anchor{settings settings}@anchor{47}
+@anchor{settings doc}@anchor{47}@anchor{settings settings}@anchor{48}
 @chapter Settings
 
 
@@ -284,7 +285,7 @@ customization options.
 @end menu
 
 @node The initial state,Keybindings and other behaviour,,Settings
-@anchor{settings the-initial-state}@anchor{48}
+@anchor{settings the-initial-state}@anchor{49}
 @section The initial state
 
 
@@ -331,15 +332,15 @@ Default: @code{(("^ \\*load\\*"))}
 @end deffn
 
 @node Keybindings and other behaviour,Search,The initial state,Settings
-@anchor{settings keybindings-and-other-behaviour}@anchor{49}
+@anchor{settings keybindings-and-other-behaviour}@anchor{4a}
 @section Keybindings and other behaviour
 
 
 Evil comes with a rich system for modifying its key bindings
-@ref{4a,,Keymaps}.  For the most common tweaks, the following
+@ref{4b,,Keymaps}.  For the most common tweaks, the following
 variables are available.
 
-@anchor{settings elispobj-evil-toggle-key}@anchor{34}
+@anchor{settings elispobj-evil-toggle-key}@anchor{35}
 @deffn {Emacs Lisp Autovariable} evil@w{-}toggle@w{-}key
 
 The key used to change to and from Emacs state.
@@ -348,7 +349,7 @@ Must be readable by @code{read-kbd-macro}. For example: “C-z”.
 Default: @code{"C-z"}
 @end deffn
 
-@anchor{settings elispobj-evil-want-C-i-jump}@anchor{38}
+@anchor{settings elispobj-evil-want-C-i-jump}@anchor{39}
 @deffn {Emacs Lisp Autovariable} evil@w{-}want@w{-}C@w{-}i@w{-}jump
 
 Whether @code{C-i} jumps forward in the jump list (like Vim).
@@ -357,7 +358,7 @@ Otherwise, @code{C-i} inserts a tab character.
 Default: @code{t}
 @end deffn
 
-@anchor{settings elispobj-evil-want-C-u-delete}@anchor{39}
+@anchor{settings elispobj-evil-want-C-u-delete}@anchor{3a}
 @deffn {Emacs Lisp Autovariable} evil@w{-}want@w{-}C@w{-}u@w{-}delete
 
 Whether @code{C-u} deletes back to indentation in insert state.
@@ -368,7 +369,7 @@ ubiquity of prefix arguments.
 Default: @code{nil}
 @end deffn
 
-@anchor{settings elispobj-evil-want-C-u-scroll}@anchor{3a}
+@anchor{settings elispobj-evil-want-C-u-scroll}@anchor{3b}
 @deffn {Emacs Lisp Autovariable} evil@w{-}want@w{-}C@w{-}u@w{-}scroll
 
 Whether @code{C-u} scrolls up (like Vim).
@@ -379,7 +380,7 @@ ubiquity of prefix arguments.
 Default: @code{nil}
 @end deffn
 
-@anchor{settings elispobj-evil-want-C-d-scroll}@anchor{37}
+@anchor{settings elispobj-evil-want-C-d-scroll}@anchor{38}
 @deffn {Emacs Lisp Autovariable} evil@w{-}want@w{-}C@w{-}d@w{-}scroll
 
 Whether @code{C-d} scrolls down (like Vim).
@@ -387,7 +388,7 @@ Whether @code{C-d} scrolls down (like Vim).
 Default: @code{t}
 @end deffn
 
-@anchor{settings elispobj-evil-want-C-w-delete}@anchor{3b}
+@anchor{settings elispobj-evil-want-C-w-delete}@anchor{3c}
 @deffn {Emacs Lisp Autovariable} evil@w{-}want@w{-}C@w{-}w@w{-}delete
 
 Whether @code{C-w} deletes a word in Insert state.
@@ -395,7 +396,7 @@ Whether @code{C-w} deletes a word in Insert state.
 Default: @code{t}
 @end deffn
 
-@anchor{settings elispobj-evil-want-C-w-in-emacs-state}@anchor{3c}
+@anchor{settings elispobj-evil-want-C-w-in-emacs-state}@anchor{3d}
 @deffn {Emacs Lisp Autovariable} evil@w{-}want@w{-}C@w{-}w@w{-}in@w{-}emacs@w{-}state
 
 Whether @code{C-w} prefixes windows commands in Emacs state.
@@ -403,7 +404,7 @@ Whether @code{C-w} prefixes windows commands in Emacs state.
 Default: @code{nil}
 @end deffn
 
-@anchor{settings elispobj-evil-want-Y-yank-to-eol}@anchor{3e}
+@anchor{settings elispobj-evil-want-Y-yank-to-eol}@anchor{3f}
 @deffn {Emacs Lisp Autovariable} evil@w{-}want@w{-}Y@w{-}yank@w{-}to@w{-}eol
 
 Whether @code{Y} yanks to the end of the line.
@@ -416,7 +417,7 @@ Default: @code{nil}
 @deffn {Emacs Lisp Autovariable} evil@w{-}disable@w{-}insert@w{-}state@w{-}bindings
 
 Whether insert state bindings should be used.
-Bindings for escape, delete and @ref{34,,evil-toggle-key} are always
+Bindings for escape, delete and @ref{35,,evil-toggle-key} are always
 available. If this is non-nil, default Emacs bindings are by and
 large accessible in insert state.
 
@@ -424,7 +425,7 @@ Default: @code{nil}
 @end deffn
 
 @node Search,Indentation,Keybindings and other behaviour,Settings
-@anchor{settings search}@anchor{4b}
+@anchor{settings search}@anchor{4c}
 @section Search
 
 
@@ -464,7 +465,7 @@ Default: @code{0.02}
 @end deffn
 
 @node Indentation,Cursor movement,Search,Settings
-@anchor{settings indentation}@anchor{4c}
+@anchor{settings indentation}@anchor{4d}
 @section Indentation
 
 
@@ -476,7 +477,7 @@ Whether to auto-indent when opening lines with @code{o} and @code{O}.
 Default: @code{t}, buffer-local
 @end deffn
 
-@anchor{settings elispobj-evil-shift-width}@anchor{31}
+@anchor{settings elispobj-evil-shift-width}@anchor{32}
 @deffn {Emacs Lisp Autovariable} evil@w{-}shift@w{-}width
 
 The number of columns by which a line is shifted.
@@ -485,12 +486,12 @@ This applies to the shifting operators @code{>} and @code{<}.
 Default: @code{4}, buffer-local
 @end deffn
 
-@anchor{settings elispobj-evil-shift-round}@anchor{30}
+@anchor{settings elispobj-evil-shift-round}@anchor{31}
 @deffn {Emacs Lisp Autovariable} evil@w{-}shift@w{-}round
 
 Whether shifting rounds to the nearest multiple.
 If non-nil, @code{>} and @code{<} adjust line indentation to the
-nearest multiple of @ref{31,,evil-shift-width}.
+nearest multiple of @ref{32,,evil-shift-width}.
 
 Default: @code{t}, buffer-local
 @end deffn
@@ -506,7 +507,7 @@ Default: @code{t}
 @end deffn
 
 @node Cursor movement,Cursor display,Indentation,Settings
-@anchor{settings cursor-movement}@anchor{4d}
+@anchor{settings cursor-movement}@anchor{4e}
 @section Cursor movement
 
 
@@ -579,7 +580,7 @@ This variable must be set before Evil is loaded.
 Default: @code{nil}
 @end deffn
 
-@anchor{settings elispobj-evil-track-eol}@anchor{35}
+@anchor{settings elispobj-evil-track-eol}@anchor{36}
 @deffn {Emacs Lisp Autovariable} evil@w{-}track@w{-}eol
 
 Whether @code{$} “sticks” the cursor to the end of the line.
@@ -591,7 +592,7 @@ Default: @code{t}
 @end deffn
 
 @node Cursor display,Window management,Cursor movement,Settings
-@anchor{settings cursor-display}@anchor{4e}
+@anchor{settings cursor-display}@anchor{4f}
 @section Cursor display
 
 
@@ -613,7 +614,7 @@ Default: @code{t}
 @end deffn
 
 @node Window management,Parenthesis highlighting,Cursor display,Settings
-@anchor{settings window-management}@anchor{4f}
+@anchor{settings window-management}@anchor{50}
 @section Window management
 
 
@@ -625,7 +626,7 @@ If non-nil window creation and deletion trigger rebalancing.
 Default: @code{t}
 @end deffn
 
-@anchor{settings elispobj-evil-split-window-below}@anchor{33}
+@anchor{settings elispobj-evil-split-window-below}@anchor{34}
 @deffn {Emacs Lisp Autovariable} evil@w{-}split@w{-}window@w{-}below
 
 If non-nil split windows @code{:split} are created below.
@@ -633,7 +634,7 @@ If non-nil split windows @code{:split} are created below.
 Default: @code{nil}
 @end deffn
 
-@anchor{settings elispobj-evil-vsplit-window-right}@anchor{36}
+@anchor{settings elispobj-evil-vsplit-window-right}@anchor{37}
 @deffn {Emacs Lisp Autovariable} evil@w{-}vsplit@w{-}window@w{-}right
 
 If non-nil vertically split windows with @code{:vsplit} are
@@ -643,14 +644,14 @@ Default: @code{nil}
 @end deffn
 
 @node Parenthesis highlighting,Miscellaneous,Window management,Settings
-@anchor{settings parenthesis-highlighting}@anchor{50}
+@anchor{settings parenthesis-highlighting}@anchor{51}
 @section Parenthesis highlighting
 
 
 These settings concern the integration between Evil and
 @code{show-paren-mode}.  They take no effect if this mode is not enabled.
 
-@anchor{settings elispobj-evil-show-paren-range}@anchor{32}
+@anchor{settings elispobj-evil-show-paren-range}@anchor{33}
 @deffn {Emacs Lisp Autovariable} evil@w{-}show@w{-}paren@w{-}range
 
 The minimal distance between point and a parenthesis
@@ -674,11 +675,11 @@ Default: @code{(not emacs insert replace)}
 @end deffn
 
 @node Miscellaneous,,Parenthesis highlighting,Settings
-@anchor{settings miscellaneous}@anchor{51}
+@anchor{settings miscellaneous}@anchor{52}
 @section Miscellaneous
 
 
-@anchor{settings elispobj-evil-want-fine-undo}@anchor{3d}
+@anchor{settings elispobj-evil-want-fine-undo}@anchor{3e}
 @deffn {Emacs Lisp Autovariable} evil@w{-}want@w{-}fine@w{-}undo
 
 Whether actions like @code{cw} are undone in several steps.
@@ -824,7 +825,7 @@ Default: @code{t}
 @end deffn
 
 @node Keymaps,Hooks,Settings,Top
-@anchor{keymaps doc}@anchor{52}@anchor{keymaps chapter-keymaps}@anchor{4a}@anchor{keymaps keymaps}@anchor{53}
+@anchor{keymaps doc}@anchor{53}@anchor{keymaps chapter-keymaps}@anchor{4b}@anchor{keymaps keymaps}@anchor{54}
 @chapter Keymaps
 
 
@@ -893,11 +894,12 @@ The above examples could therefore have been written as follows:
 
 @menu
 * evil-define-key:: 
+* Leader keys:: 
 
 @end menu
 
-@node evil-define-key,,,Keymaps
-@anchor{keymaps evil-define-key}@anchor{54}
+@node evil-define-key,Leader keys,,Keymaps
+@anchor{keymaps evil-define-key}@anchor{55}
 @section evil-define-key
 
 
@@ -1018,8 +1020,38 @@ bindings are desired:
 (add-hook 'text-mode-hook 'foo-mode)  ; enable alongside text-mode
 @end example
 
+@node Leader keys,,evil-define-key,Keymaps
+@anchor{keymaps leader-keys}@anchor{56}
+@section Leader keys
+
+
+Evil supports a simple implementation of Vim’s @emph{leader} keys.  To bind
+a function to a leader key you can use the expression @code{<leader>} in
+a key mapping, e.g.
+
+@example
+(evil-define-key 'normal 'global (kbd "<leader>fs") 'save-buffer)
+@end example
+
+Likewise, you can use the expression @code{<localleader>} to mimic Vim’s
+local leader, which is designed for mode-specific key bindings.
+
+You can use the function @ref{30,,evil-set-leader} to designate
+which function as the leader and the local leader.
+
+@anchor{keymaps elispobj-evil-set-leader}@anchor{30}
+@deffn {Emacs Lisp Autofunction} (evil@w{-}set@w{-}leader  STATE KEY [LOCALLEADER])
+
+Set @emph{KEY} to trigger leader bindings in @emph{STATE}.
+@emph{KEY} should be in the form produced by @code{kbd}. @emph{STATE} is one of
+@code{normal}, @code{insert}, @code{visual}, @code{replace}, @code{operator}, @code{motion},
+@code{emacs}, a list of one or more of these, or @code{nil}, which means
+all of the above. If @emph{LOCALLEADER} is non-nil, set the local leader
+instead.
+@end deffn
+
 @node Hooks,Extension,Keymaps,Top
-@anchor{hooks doc}@anchor{55}@anchor{hooks hooks}@anchor{56}
+@anchor{hooks doc}@anchor{57}@anchor{hooks hooks}@anchor{58}
 @chapter Hooks
 
 
@@ -1038,7 +1070,7 @@ During the hook execution, the variables @code{evil-next-state} and
 switched to and from, respectively.
 
 @node Extension,Internals,Hooks,Top
-@anchor{extension doc}@anchor{57}@anchor{extension extension}@anchor{58}
+@anchor{extension doc}@anchor{59}@anchor{extension extension}@anchor{5a}
 @chapter Extension
 
 
@@ -1055,7 +1087,7 @@ macros.  Package writers can use these to define new commands.
 @end menu
 
 @node Motions,Operators,,Extension
-@anchor{extension motions}@anchor{59}
+@anchor{extension motions}@anchor{5b}
 @section Motions
 
 
@@ -1114,7 +1146,7 @@ behave as a “rectangle” on screen rather than a contiguous range of
 characters.
 
 @node Operators,Text objects,Motions,Extension
-@anchor{extension operators}@anchor{5a}
+@anchor{extension operators}@anchor{5c}
 @section Operators
 
 
@@ -1174,7 +1206,7 @@ sequence such as @code{g?w} to encrypt from the current cursor to the
 end of the word.
 
 @node Text objects,Range types,Operators,Extension
-@anchor{extension text-objects}@anchor{5b}
+@anchor{extension text-objects}@anchor{5d}
 @section Text objects
 
 
@@ -1285,7 +1317,7 @@ is ignored.
 @end deffn
 
 @node Range types,States,Text objects,Extension
-@anchor{extension range-types}@anchor{5c}
+@anchor{extension range-types}@anchor{5e}
 @section Range types
 
 
@@ -1332,7 +1364,7 @@ be transformations on buffer positions, like @code{:expand} and @code{:contract}
 @end deffn
 
 @node States,,Range types,Extension
-@anchor{extension states}@anchor{5d}
+@anchor{extension states}@anchor{5f}
 @section States
 
 
@@ -1398,7 +1430,7 @@ For example:
 @end example
 
 @node Internals,The GNU Free Documentation License,Extension,Top
-@anchor{internals doc}@anchor{5e}@anchor{internals internals}@anchor{5f}
+@anchor{internals doc}@anchor{60}@anchor{internals internals}@anchor{61}
 @chapter Internals
 
 
@@ -1408,7 +1440,7 @@ For example:
 @end menu
 
 @node Command properties,,,Internals
-@anchor{internals command-properties}@anchor{60}
+@anchor{internals command-properties}@anchor{62}
 @section Command properties
 
 
@@ -1481,7 +1513,7 @@ keystrokes.
 @end deffn
 
 @node The GNU Free Documentation License,Emacs lisp functions and variables,Internals,Top
-@anchor{license doc}@anchor{61}@anchor{license the-gnu-free-documentation-license}@anchor{62}
+@anchor{license doc}@anchor{63}@anchor{license the-gnu-free-documentation-license}@anchor{64}
 @chapter The GNU Free Documentation License
 
 
@@ -2031,21 +2063,22 @@ site under CC-BY-SA on the same site at any time before August 1,
 * evil-select-paren: 2d. 
 * evil-set-command-properties: 2e. 
 * evil-set-initial-state: 2f. 
-* evil-shift-round: 30. 
-* evil-shift-width: 31. 
-* evil-show-paren-range: 32. 
-* evil-split-window-below: 33. 
-* evil-toggle-key: 34. 
-* evil-track-eol: 35. 
-* evil-vsplit-window-right: 36. 
-* evil-want-C-d-scroll: 37. 
-* evil-want-C-i-jump: 38. 
-* evil-want-C-u-delete: 39. 
-* evil-want-C-u-scroll: 3a. 
-* evil-want-C-w-delete: 3b. 
-* evil-want-C-w-in-emacs-state: 3c. 
-* evil-want-fine-undo: 3d. 
-* evil-want-Y-yank-to-eol: 3e. 
+* evil-set-leader: 30. 
+* evil-shift-round: 31. 
+* evil-shift-width: 32. 
+* evil-show-paren-range: 33. 
+* evil-split-window-below: 34. 
+* evil-toggle-key: 35. 
+* evil-track-eol: 36. 
+* evil-vsplit-window-right: 37. 
+* evil-want-C-d-scroll: 38. 
+* evil-want-C-i-jump: 39. 
+* evil-want-C-u-delete: 3a. 
+* evil-want-C-u-scroll: 3b. 
+* evil-want-C-w-delete: 3c. 
+* evil-want-C-w-in-emacs-state: 3d. 
+* evil-want-fine-undo: 3e. 
+* evil-want-Y-yank-to-eol: 3f. 
 @end menu
 
 
