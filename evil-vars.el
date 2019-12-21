@@ -737,14 +737,6 @@ expression matching the buffer's name and STATE is one of `normal',
     magit-stash-mode
     magit-stashes-mode
     magit-status-mode
-    ;; Obsolete as of Magit v2.1.0
-    magit-mode
-    magit-branch-manager-mode
-    magit-commit-mode
-    magit-key-mode
-    magit-rebase-mode
-    magit-wazzup-mode
-    ;; end obsolete
     mh-folder-mode
     monky-mode
     mpuz-mode
