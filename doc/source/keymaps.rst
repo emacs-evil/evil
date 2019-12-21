@@ -140,6 +140,6 @@ Likewise, you can use the expression ``<localleader>`` to mimic Vim's
 local leader, which is designed for mode-specific key bindings.
 
 You can use the function :elisp:ref:`evil-set-leader` to designate
-which function as the leader and the local leader.
+which key acts as the leader and the local leader.
 
 .. elisp:autofunction:: evil-set-leader
