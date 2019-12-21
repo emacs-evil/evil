@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/emacs-evil/evil.svg?branch=master)](https://travis-ci.org/emacs-evil/evil)
 [![MELPA](https://melpa.org/packages/evil-badge.svg)](https://melpa.org/#/evil)
 [![MELPA Stable](https://stable.melpa.org/packages/evil-badge.svg)](https://stable.melpa.org/#/evil)
+[![Documentation Status](https://readthedocs.org/projects/evil/badge/?version=latest)](https://evil.readthedocs.io/en/latest/?badge=latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Evil is an **e**xtensible **vi** **l**ayer
@@ -10,25 +11,35 @@ for [Emacs](http://www.gnu.org/software/emacs/). It emulates the main features
 of [Vim](http://www.vim.org/), and provides facilities for writing custom
 extensions. Also see our page on [EmacsWiki](http://emacswiki.org/emacs/Evil).
 
-# Download
+# Installation
 
-Evil lives in a git repository. To download Evil, do
+See the 
+[official documentation](https://evil.readthedocs.io/en/latest/overview.html#installation-via-package-el)
+for installation instructions. We recommend using *package.el*.
 
-```
-git clone --depth 1 https://github.com/emacs-evil/evil ~/.emacs.d/evil
-```
-
-# Install
-
-After the download step, add the following lines to `~/.emacs`:
+As a quickstart, you can add the following code to your Emacs init
+file.
 
 ```elisp
-(add-to-list 'load-path "~/.emacs.d/evil")
+;; Set up package.el to work with MELPA
+(require 'package)
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages"))
+(package-initialize)
+(package-refresh-contents)
+
+;; Download Evil
+(unless (package-installed-p 'evil)
+  (package-install 'evil))
+
+;; Enable Evil
 (require 'evil)
 (evil-mode 1)
 ```
 
 ## Dependencies
+
+* Evil requires Emacs 24.1 or later.
 
 * Evil requires [undo-tree.el](http://www.emacswiki.org/emacs/UndoTree) in the
 `load-path` for linear undo and undo branches.
@@ -37,11 +48,16 @@ After the download step, add the following lines to `~/.emacs`:
 [goto-chg.el](https://github.com/emacs-evil/goto-chg) package,
 which provides the functions `goto-last-change` and `goto-last-change-reverse`.
 
+* For Emacs 24.1 and 24.2 Evil also requires
+  [cl-lib](https://elpa.gnu.org/packages/cl-lib.html).
+
 # Documentation
 
-A brief
-[PDF manual](https://raw.githubusercontent.com/emacs-evil/evil/master/doc/evil.pdf) is
-available.
+The latest version of the documentation is readable online
+[here](https://evil.readthedocs.io/en/latest/index.html). It is also
+available as
+[PDF](https://readthedocs.org/projects/evil/downloads/pdf/latest/) and
+as [EPUB](https://readthedocs.org/projects/evil/downloads/epub/latest/).
 
 # Mailing list
 
