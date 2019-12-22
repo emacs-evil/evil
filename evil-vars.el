@@ -344,6 +344,12 @@ work consistently."
                 (const :tag "Yes" :value t))
   :group 'evil)
 
+(defcustom evil-undo-provider 'undo-tree
+  "Which package should provide undo functionality.
+Should be either `undo-tree' or `undo-fu'."
+  :type '(radio (const :tag "Undo-tree" :value undo-tree)
+                (const :tag "Undo-fu" :value undo-fu)))
+
 (defcustom evil-regexp-search t
   "\\<evil-motion-state-map>
 Whether to use regular expressions for searching in \

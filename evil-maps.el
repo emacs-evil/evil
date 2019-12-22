@@ -102,6 +102,7 @@
 (define-key evil-normal-state-map [remap cua-paste-pop] 'evil-paste-pop)
 (define-key evil-normal-state-map [remap yank-pop] 'evil-paste-pop)
 
+
 (when (featurep 'tab-bar)
   (define-key evil-normal-state-map "gt" 'tab-bar-switch-to-next-tab)
   (define-key evil-normal-state-map "gT" 'tab-bar-switch-to-prev-tab))
@@ -111,8 +112,13 @@
 (define-key evil-normal-state-map "g," 'goto-last-change-reverse)
 
 ;; undo
-(define-key evil-normal-state-map "u" 'undo)
-(define-key evil-normal-state-map "\C-r" 'redo)
+(if (eq 'undo-fu evil-undo-provider)
+    (progn
+      (require 'undo-fu)
+      (define-key evil-normal-state-map "u" 'undo-fu-only-undo)
+      (define-key evil-normal-state-map (kbd "C-r") 'undo-fu-only-redo))
+  (define-key evil-normal-state-map "u" 'undo)
+  (define-key evil-normal-state-map "\C-r" 'redo))
 
 ;; window commands
 (define-prefix-command 'evil-window-map)
