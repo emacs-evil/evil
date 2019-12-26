@@ -3792,13 +3792,22 @@ Default position is the beginning of the buffer."
         (message "\"%s\" %d %slines --%s--" file nlines readonly perc)
       (message "%d lines --%s--" nlines perc))))
 
-(evil-define-operator evil-ex-sort (beg end &optional options reverse)
+(evil-define-operator evil-ex-sort (beg end &optional args reverse)
   "The Ex sort command.
-\[BEG,END]sort[!] [i][u]
+\[BEG,END]sort[!] [/PATTERN/] [i][u][r][n][x][o]
 The following additional options are supported:
 
   * i   ignore case
   * u   remove duplicate lines
+  * r   sort the contents of pattern
+  * n   sort by the first decimal number
+  * x   sort by the first hexadecimal number (with optional '0x' prefix)
+  * o   sort by the first octal number
+
+If a pattern is supplied without supplying the 'r' option, sort
+the contents of the lines after skipping the pattern.
+
+If the pattern is empty, the last search pattern is used instead.
 
 The 'bang' argument means to sort in reverse order."
   :motion mark-whole-buffer
@@ -3806,13 +3815,76 @@ The 'bang' argument means to sort in reverse order."
   (interactive "<r><a><!>")
   (let ((beg (copy-marker beg))
         (end (copy-marker end))
-        sort-fold-case uniq)
+        options sort-fold-case uniq numeric-base sort-pat pat)
+    (when args
+      ;; Handle arguments like
+      ;;     /[^,]*,/ n
+      ;; and
+      ;;     nu
+      (if (memq (aref args 0) '(?i ?n ?x ?o ?u ?r))
+          (setq options args)
+        (setq args (evil-delimited-arguments args 2))
+        ;; Use the last search pattern when a pattern is provided, but is empty
+        (setq pat (if (string= (car args) "")
+                      (evil-ex-pattern-regex evil-ex-search-pattern)
+                    (car args))
+              options (cadr args))))
     (dolist (opt (append options nil))
       (cond
        ((eq opt ?i) (setq sort-fold-case t))
+       ((eq opt ?o) (setq numeric-base 8))
+       ((eq opt ?n) (setq numeric-base 10))
+       ((eq opt ?x) (setq numeric-base 16))
+       ((eq opt ?r) (setq sort-pat t))
        ((eq opt ?u) (setq uniq t))
+       ((eq opt ? ) nil)
        (t (user-error "Unsupported sort option: %c" opt))))
-    (sort-lines reverse beg end)
+    (evil-with-restriction beg end
+      (goto-char beg)
+      (let ((num-re (when numeric-base
+                      (cond
+                       ((= numeric-base 8)
+                        "\\([0-7]\\)")
+                       ((= numeric-base 10)
+                        "\\(-?[0-9]\\)")
+                       ((= numeric-base 16)
+                        "\\(-\\)?\\(?:0x\\)?\\([0-9a-f]\\)"))))
+            (inhibit-field-text-motion t)
+            key-end)
+        (sort-subr
+         reverse
+         'forward-line
+         'end-of-line
+         (lambda ()
+           ;; Find the boundary of the key to match on the line
+           (setq key-end (point-at-eol))
+           (when (> (length pat) 0)
+             (if (not (re-search-forward pat key-end t))
+                 ;; When matching a pattern and one doesn't exist on the line,
+                 ;; skip the line
+                 (goto-char key-end)
+               ;; Otherwise go to the start of the key
+               (when sort-pat
+                 (setq key-end (point))
+                 (goto-char (match-beginning 0)))))
+           ;; Return the key for the line when sorting numbers, otherwise let
+           ;; `sort-subr' extract the key
+           (when numeric-base
+             (let ((case-fold-search t))
+               (if (not (re-search-forward num-re key-end t))
+                   ;; When sorting numbers and a number doesn't exist on the
+                   ;; line, place it above all the numeric lines
+                   most-negative-fixnum
+                 (if (= numeric-base 16)
+                     (goto-char (match-beginning 2))
+                   (goto-char (match-beginning 1)))
+                 (let ((num (string-to-number
+                             (buffer-substring (point) key-end) numeric-base)))
+                   (if (and (= numeric-base 16) (match-beginning 1))
+                       (- num)
+                     num))))))
+         ;; Only called when sorting lexicographically
+         (lambda () (goto-char key-end)))))
     (when uniq
       (let (line prev-line)
         (goto-char beg)
