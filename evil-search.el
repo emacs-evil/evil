@@ -191,16 +191,10 @@ of the buffer."
            result)
        (setq result (funcall search-fun string bound
                              ,(if wrap t 'noerror) count))
-       ;; Wrap the search only if a result was not found, and a bound not set
-       (when (and ,wrap (null result) (null bound))
+       (when (and ,wrap (null result))
          (goto-char ,(if forward '(point-min) '(point-max)))
          (unwind-protect
-             ;; The wrapped search is bounded by the original starting point
-             (setq result (funcall search-fun string
-                                   ,(if forward
-                                        '(max (point-min) (1- start))
-                                      '(min (point-max) (1+ start)))
-                                   noerror count))
+             (setq result (funcall search-fun string bound noerror count))
            (unless result
              (goto-char start))))
        result)))
