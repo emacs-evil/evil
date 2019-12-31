@@ -120,7 +120,8 @@ Optional keyword arguments are:
   `inclusive', `line', `block' and `exclusive', or a self-defined
   motion type)
 - `:jump' - if non-nil, the previous position is stored in the jump
-  list, so that it can be restored with \\[C-o]
+  list, so that it can be restored with \
+\\<evil-motion-state-map>\\[evil-jump-backward]
 
 \(fn MOTION (COUNT ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
@@ -472,7 +473,8 @@ Optional keyword arguments are:
 - `:motion' - use a predetermined motion instead of waiting for one
   from the keyboard.  This does not affect the behavior in visual
   state, where selection boundaries are always used.
-- `:repeat' - if non-nil (default), then \\[.] will repeat the
+- `:repeat' - if non-nil (default), then \
+  \\<evil-normal-state-map>\\[evil-repeat] will repeat the
   operator.
 - `:move-point' - if non-nil (default), the cursor will be moved to
   the beginning of the range before the body executes

@@ -1015,8 +1015,8 @@ like those of `define-key'. For example:
 
     (evil-define-key 'normal foo-map \"a\" 'bar)
 
-This creates a binding from \\[a] to `bar' in normal state, which
-is active whenever `foo-map' is active. Using `nil' for the state,
+This creates a binding from `a' to `bar' in normal state, which
+is active whenever `foo-map' is active. Using nil for the state,
 the following lead to identical bindings:
 
     (evil-define-key nil foo-map \"a\" 'bar)
