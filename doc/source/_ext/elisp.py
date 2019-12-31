@@ -21,12 +21,12 @@ with open(path.join(path.dirname(__file__), '..', '..', 'docstringdb.json')) as 
 re_evilcode = re.compile(r"`(evil-[^']*)'")
 re_code = re.compile(r"`([^:][^ ']*)'")
 re_kwd = re.compile(r"`(:[^']*)'")
-re_kbd = re.compile(r"\\\[([^\]]*)\]")
 re_item = re.compile(r"([^\n])\n- ")
 re_sexp = re.compile(r"\([A-Z \-\.'`\[\]]+\)|[A-Z\-]+")
 re_capitals = re.compile(r"[A-Z\-]+")
 re_nonspace = re.compile(r"[^ ]")
 re_signature = re.compile(r'\(fn (.*)\)')
+re_keymap_or_kbd = re.compile(r"\\[\[<]([^\]>]*)[\]>]")
 
 emphasis = [
     'thing-at-point',
@@ -73,8 +73,20 @@ def process_docstring(docstring, capitals=None):
     # Substitute `:alpha' with ``alpha``
     docstring = re_kwd.sub(r'``\1``', docstring)
 
-    # Substitute \[C-z] with :kbd:`C-z`
-    docstring = re_kbd.sub(r':kbd:`\1`', docstring)
+    # Translate key bindings
+    keymap = None
+    def substitute_binding(match):
+        nonlocal keymap
+        if match.group(0)[1] == '<':
+            keymap = match.group(1)
+            return ''
+        if keymap is None:
+            print(docstring)
+            assert False
+            return '???'
+        key = DATA[keymap]['keymap-inv'][match.group(1)]
+        return f':kbd:`{key}`'
+    docstring = re_keymap_or_kbd.sub(substitute_binding, docstring)
 
     # Add empty line between list items
     docstring = re_item.sub(r'\1\n\n- ', docstring)

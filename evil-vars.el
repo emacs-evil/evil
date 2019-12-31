@@ -160,28 +160,34 @@ commands."
   :prefix 'evil-)
 
 (defcustom evil-auto-indent t
-  "Whether to auto-indent when opening lines with \\[o] and \\[O]."
+  "\\<evil-normal-state-map>
+Whether to auto-indent when opening lines with \\[evil-open-below] \
+and \\[evil-open-above]."
   :type  'boolean
   :group 'evil)
 (make-variable-buffer-local 'evil-auto-indent)
 
 (defcustom evil-shift-width 4
-  "The number of columns by which a line is shifted.
-This applies to the shifting operators \\[>] and \\[<]."
+  "\\<evil-normal-state-map>
+The number of columns by which a line is shifted.
+This applies to the shifting operators \\[evil-shift-right] and \
+\\[evil-shift-left]."
   :type 'integer
   :group 'evil)
 (make-variable-buffer-local 'evil-shift-width)
 
 (defcustom evil-shift-round t
-  "Whether shifting rounds to the nearest multiple.
-If non-nil, \\[>] and \\[<] adjust line indentation to the
-nearest multiple of `evil-shift-width'."
+  "\\<evil-normal-state-map>
+Whether shifting rounds to the nearest multiple.
+If non-nil, \\[evil-shift-right] and \\[evil-shift-left] adjust line
+indentation to the nearest multiple of `evil-shift-width'."
   :type 'boolean
   :group 'evil)
 (make-variable-buffer-local 'evil-shift-round)
 
 (defcustom evil-indent-convert-tabs t
-  "If non-nil, the \\[=] operator converts between leading tabs and spaces.
+  "\\<evil-normal-state-map>
+If non-nil, the \\[evil-indent] operator converts between leading tabs and spaces.
 Whether tabs are converted to spaces or vice versa depends on the
 value of `indent-tabs-mode'."
   :type 'boolean
@@ -199,18 +205,23 @@ cursor, or a list of the above."
   "Overwrite the current states default cursor.")
 
 (defcustom evil-repeat-move-cursor t
-  "Whether repeating commands with \\[.] may move the cursor.
+  "\\<evil-normal-state-map>
+Whether repeating commands with \\[evil-repeat] may move the cursor.
 If nil, the original cursor position is preserved, even if the command
 normally would have moved the cursor."
   :type 'boolean
   :group 'evil)
 
 (defcustom evil-cross-lines nil
-  "Whether horizontal motions may move to other lines.
-If non-nil, certain motions that conventionally operate in a single
-line may move the cursor to other lines.  Otherwise, they are
-restricted to the current line.  This applies to \\[h], \\[l], \\[f],
-\\[F], \\[t], \\[T], \\[~]."
+  "\\<evil-motion-state-map>
+Whether horizontal motions may move to other lines.  If non-nil,
+certain motions that conventionally operate in a single line may move
+the cursor to other lines.  Otherwise, they are restricted to the
+current line.  This applies to \\[evil-backward-char], \
+\\[evil-forward-char], \\[evil-find-char], \
+\\[evil-find-char-backward], \\[evil-find-char-to], \
+\\[evil-find-char-to-backward], \
+\\<evil-normal-state-map>\\[evil-invert-char]."
   :type 'boolean
   :group 'evil)
 
@@ -235,12 +246,13 @@ end of the line, as in Emacs."
   :group 'evil)
 
 (defcustom evil-respect-visual-line-mode nil
-  "Whether movement commands respect `visual-line-mode'.
+  "\\<evil-motion-state-map>
+Whether movement commands respect `visual-line-mode'.
 If non-nil, `visual-line-mode' is generally respected when it is
-on.  In this case, motions such as \\[j] and \\[k] navigate by
-visual lines (on the screen) rather than \"physical\"
-lines (defined by newline characters).  If `nil', the setting of
-`visual-line-mode' is ignored.
+on.  In this case, motions such as \\[evil-next-line] and
+\\[evil-previous-line] navigate by visual lines (on the screen) rather
+than \"physical\" lines (defined by newline characters).  If nil,
+the setting of `visual-line-mode' is ignored.
 
 This variable must be set before Evil is loaded."
   :type 'boolean
@@ -252,11 +264,13 @@ This variable must be set before Evil is loaded."
   :group 'evil)
 
 (defcustom evil-kbd-macro-suppress-motion-error nil
-  "Whether left/right motions signal errors in keyboard macros.
+  "\\<evil-motion-state-map>
+Whether left/right motions signal errors in keyboard macros.
 This variable only affects beginning-of-line or end-of-line errors
-regarding the motions \\[h] and \\[l] respectively.  This may be
-desired since such errors cause macro definition or execution to be
-terminated.  There are four possibilities:
+regarding the motions \\[evil-backward-char] and \\[evil-forward-char]
+respectively.  This may be desired since such errors cause macro
+definition or execution to be terminated.  There are four
+possibilities:
 
 - `record': errors are suppressed when recording macros, but not when
   replaying them.
@@ -271,8 +285,9 @@ terminated.  There are four possibilities:
   :group 'evil)
 
 (defcustom evil-track-eol t
-  "Whether \\[$] \"sticks\" the cursor to the end of the line.
-If non-nil, vertical motions after \\[$] maintain the cursor at the
+  "\\<evil-motion-state-map>
+Whether \\[evil-end-of-line] \"sticks\" the cursor to the end of the line.
+If non-nil, vertical motions after \\[evil-end-of-line] maintain the cursor at the
 end of the line, even if the target line is longer.  This is analogous
 to `track-eol', but respects Evil's interpretation of end-of-line."
   :type 'boolean
@@ -281,7 +296,7 @@ to `track-eol', but respects Evil's interpretation of end-of-line."
 (defcustom evil-mode-line-format 'before
   "The position of the state tag in the mode line.
 If set to `before' or `after', the tag is placed at the beginning
-or the end of the mode-line, respectively.  If `nil', there is no
+or the end of the mode-line, respectively.  If nil, there is no
 tag.  Otherwise it should be a cons cell (WHERE . WHICH), where
 WHERE is either `before' or `after', and WHICH is a symbol in
 `mode-line-format'.  The tag is then placed before or after that
@@ -314,8 +329,8 @@ WORD boundaries."
 (make-variable-buffer-local 'evil-bigword)
 
 (defcustom evil-want-fine-undo nil
-  "Whether actions like \\[cw] are undone in several steps.
-There are two possible choices.  `nil' (\"no\") means that all
+  "Whether actions are undone in several steps.
+There are two possible choices: nil (\"no\") means that all
 changes made during insert state, including a possible delete
 after a change operation, are collected in a single undo step.
 Non-nil (\"yes\") means that undo steps are determined according
@@ -330,18 +345,24 @@ work consistently."
   :group 'evil)
 
 (defcustom evil-regexp-search t
-  "Whether to use regular expressions for searching in \\[/] and \\[?]."
+  "\\<evil-motion-state-map>
+Whether to use regular expressions for searching in \
+\\[evil-search-forward] and \\[evil-search-backward]."
   :type  'boolean
   :group 'evil)
 
 (defcustom evil-search-wrap t
-  "Whether search with \\[/] and \\[?] wraps around the buffer.
+  "\\<evil-motion-state-map>
+Whether search with \\[evil-search-forward] and \
+\\[evil-search-backward] wraps around the buffer.
 If this is non-nil, search stops at the buffer boundaries."
   :type  'boolean
   :group 'evil)
 
 (defcustom evil-flash-delay 2
-  "Time in seconds to flash search matches after \\[n] and \\[N]."
+  "\\<evil-motion-state-map>
+Time in seconds to flash search matches after \\[evil-search-next] and \
+\\[evil-search-previous]."
   :type  'number
   :group 'evil)
 
@@ -351,20 +372,19 @@ If this is non-nil, search stops at the buffer boundaries."
   :group 'evil)
 
 (defcustom evil-split-window-below nil
-  "If non-nil split windows \\[:split] are created below."
+  "If non-nil split windows are created below."
   :type 'boolean
   :group 'evil)
 
 (defcustom evil-vsplit-window-right nil
-  "If non-nil vertically split windows with \\[:vsplit] are
-created to the right."
+  "If non-nil vertically split windows with are created to the right."
   :type 'boolean
   :group 'evil)
 
 (defcustom evil-esc-delay 0.01
   "The time, in seconds, to wait for another key after escape.
 If no further event arrives during this time, the event is
-translated to \\[ESC].  Otherwise, it is translated according to
+translated to `ESC'.  Otherwise, it is translated according to
 `input-decode-map'.  This does not apply in Emacs state, and may
 also be inhibited by setting `evil-inhibit-esc'."
   :type 'number
@@ -381,14 +401,14 @@ Used by `evil-esc-mode'.")
   "If non-nil, the \\e event will never be translated to 'escape.")
 
 (defcustom evil-intercept-esc 'always
-  "Whether Evil should intercept the \\[ESC] key.
+  "Whether Evil should intercept the escape key.
 In the terminal, escape and a meta key sequence both generate the
 same event.  In order to distingush these, Evil uses
 `input-decode-map'.  It is not necessary to do this in a graphical
-Emacs session.  However, if you prefer to use \\[C-[] as escape (which
+Emacs session.  However, if you prefer to use `C-[' as escape (which
 is identical to the terminal escape key code), this interception must
 also happen in graphical Emacs sessions.  Set this variable to
-`always', `t' (only in the terminal) or `nil' (never intercept)."
+`always', t (only in the terminal) or nil (never intercept)."
   :type '(radio (const :tag "Never" :value nil)
                 (const :tag "In terminal only" :value t)
                 (const :tag "Always" :value always))
@@ -427,8 +447,8 @@ replicates the default Vim behavior."
   :group 'evil)
 
 (defcustom evil-want-C-i-jump t
-  "Whether \\[C-i] jumps forward in the jump list (like Vim).
-Otherwise, \\[C-i] inserts a tab character."
+  "Whether `C-i' jumps forward in the jump list (like Vim).
+Otherwise, `C-i' inserts a tab character."
   :type 'boolean
   :group 'evil
   :set #'(lambda (sym value)
@@ -444,9 +464,9 @@ Otherwise, \\[C-i] inserts a tab character."
                (define-key evil-motion-state-map (kbd "C-i") 'evil-jump-forward))))))
 
 (defcustom evil-want-C-u-scroll nil
-  "Whether \\[C-u] scrolls up (like Vim).
-Otherwise, \\[C-u] applies a prefix argument.  The binding of
-\\[C-u] mirrors Emacs behaviour by default due to the relative
+  "Whether `C-u' scrolls up (like Vim).
+Otherwise, `C-u' applies a prefix argument.  The binding of
+`C-u' mirrors Emacs behaviour by default due to the relative
 ubiquity of prefix arguments."
   :type 'boolean
   :group 'evil
@@ -463,7 +483,7 @@ ubiquity of prefix arguments."
                (define-key evil-motion-state-map (kbd "C-u") 'evil-scroll-up))))))
 
 (defcustom evil-want-C-d-scroll t
-  "Whether \\[C-d] scrolls down (like Vim)."
+  "Whether `C-d' scrolls down (like Vim)."
   :type 'boolean
   :group 'evil
   :set #'(lambda (sym value)
@@ -479,9 +499,9 @@ ubiquity of prefix arguments."
                (define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down))))))
 
 (defcustom evil-want-C-u-delete nil
-  "Whether \\[C-u] deletes back to indentation in insert state.
-Otherwise, \\[C-u] applies a prefix argument.  The binding of
-\\[C-u] mirrors Emacs behaviour by default due to the relative
+  "Whether `C-u' deletes back to indentation in insert state.
+Otherwise, `C-u' applies a prefix argument.  The binding of
+`C-u' mirrors Emacs behaviour by default due to the relative
 ubiquity of prefix arguments."
   :type 'boolean
   :group 'evil
@@ -498,7 +518,7 @@ ubiquity of prefix arguments."
                (define-key evil-insert-state-map (kbd "C-u") 'evil-delete-back-to-indentation))))))
 
 (defcustom evil-want-C-w-delete t
-  "Whether \\[C-w] deletes a word in Insert state."
+  "Whether `C-w' deletes a word in Insert state."
   :type 'boolean
   :group 'evil
   :set #'(lambda (sym value)
@@ -515,7 +535,7 @@ ubiquity of prefix arguments."
                (define-key evil-insert-state-map (kbd "C-w") 'evil-delete-backward-word))))))
 
 (defcustom evil-want-C-w-in-emacs-state nil
-  "Whether \\[C-w] prefixes windows commands in Emacs state."
+  "Whether `C-w' prefixes windows commands in Emacs state."
   :type 'boolean
   :group 'evil
   :set #'(lambda (sym value)
@@ -531,12 +551,12 @@ ubiquity of prefix arguments."
                (define-key evil-emacs-state-map (kbd "C-w") 'evil-window-map))))))
 
 (defcustom evil-want-change-word-to-end t
-  "Whether \\[cw] behaves like \\[ce]."
+  "Whether `cw' behaves like `ce'."
   :type 'boolean
   :group 'evil)
 
 (defcustom evil-want-Y-yank-to-eol nil
-  "Whether \\[Y] yanks to the end of the line.
+  "Whether `Y' yanks to the end of the line.
 The default behavior is to yank the whole line, like Vim."
   :group 'evil
   :type 'boolean
@@ -564,8 +584,10 @@ large accessible in insert state."
   :group 'evil)
 
 (defcustom evil-complete-all-buffers t
-  "Whether completion looks for matches in all buffers.
-This applies to \\[C-n] and \\[C-p] in insert state."
+  "\\<evil-insert-state-map>
+Whether completion looks for matches in all buffers.
+This applies to \\[evil-complete-next] and \\[evil-complete-previous] \
+in insert state."
   :type 'boolean
   :group 'evil)
 

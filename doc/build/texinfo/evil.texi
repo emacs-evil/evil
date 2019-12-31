@@ -21,7 +21,7 @@
 
 @copying
 @quotation
-Evil 1.13.0, Dec 21, 2019
+Evil 1.13.0, Dec 31, 2019
 
 Eivind Fonn, Frank Fischer, Vegard Øye
 
@@ -447,7 +447,7 @@ Default: @code{t}
 @deffn {Emacs Lisp Autovariable} evil@w{-}search@w{-}wrap
 
 Whether search with @code{/} and @code{?} wraps around the buffer.
-If this is non-nil, search stops at the buffer boundaries.
+If this is non-nil,search stops at the buffer boundaries.
 
 Default: @code{t}
 @end deffn
@@ -496,8 +496,8 @@ Default: @code{4}, buffer-local
 @deffn {Emacs Lisp Autovariable} evil@w{-}shift@w{-}round
 
 Whether shifting rounds to the nearest multiple.
-If non-nil, @code{>} and @code{<} adjust line indentation to the
-nearest multiple of @ref{32,,evil-shift-width}.
+If non-nil, @code{>} and @code{<} adjust line
+indentation to the nearest multiple of @ref{32,,evil-shift-width}.
 
 Default: @code{t}, buffer-local
 @end deffn
@@ -562,11 +562,10 @@ Default: @code{nil}
 @anchor{settings elispobj-evil-cross-lines}@anchor{7}
 @deffn {Emacs Lisp Autovariable} evil@w{-}cross@w{-}lines
 
-Whether horizontal motions may move to other lines.
-If non-nil, certain motions that conventionally operate in a single
-line may move the cursor to other lines.  Otherwise, they are
-restricted to the current line.  This applies to @code{h}, @code{l}, @code{f},
-@code{F}, @code{t}, @code{T}, @code{~}.
+Whether horizontal motions may move to other lines.  If non-nil,
+certain motions that conventionally operate in a single line may move
+the cursor to other lines.  Otherwise, they are restricted to the
+current line.  This applies to @code{h}, @code{SPC}, @code{f}, @code{F}, @code{t}, @code{T}, @code{~}.
 
 Default: @code{nil}
 @end deffn
@@ -576,10 +575,10 @@ Default: @code{nil}
 
 Whether movement commands respect @code{visual-line-mode}.
 If non-nil, @code{visual-line-mode} is generally respected when it is
-on.  In this case, motions such as @code{j} and @code{k} navigate by
-visual lines (on the screen) rather than “physical”
-lines (defined by newline characters).  If @code{nil}, the setting of
-@code{visual-line-mode} is ignored.
+on.  In this case, motions such as @code{j} and
+@code{k} navigate by visual lines (on the screen) rather
+than “physical” lines (defined by newline characters).  If nil,
+the setting of @code{visual-line-mode} is ignored.
 
 This variable must be set before Evil is loaded.
 
@@ -635,7 +634,7 @@ Default: @code{t}
 @anchor{settings elispobj-evil-split-window-below}@anchor{34}
 @deffn {Emacs Lisp Autovariable} evil@w{-}split@w{-}window@w{-}below
 
-If non-nil split windows @code{:split} are created below.
+If non-nil split windows are created below.
 
 Default: @code{nil}
 @end deffn
@@ -643,8 +642,7 @@ Default: @code{nil}
 @anchor{settings elispobj-evil-vsplit-window-right}@anchor{37}
 @deffn {Emacs Lisp Autovariable} evil@w{-}vsplit@w{-}window@w{-}right
 
-If non-nil vertically split windows with @code{:vsplit} are
-created to the right.
+If non-nil vertically split windows with are created to the right.
 
 Default: @code{nil}
 @end deffn
@@ -688,8 +686,8 @@ Default: @code{(not emacs insert replace)}
 @anchor{settings elispobj-evil-want-fine-undo}@anchor{3e}
 @deffn {Emacs Lisp Autovariable} evil@w{-}want@w{-}fine@w{-}undo
 
-Whether actions like @code{cw} are undone in several steps.
-There are two possible choices.  @code{nil} (“no”) means that all
+Whether actions are undone in several steps.
+There are two possible choices: nil (“no”) means that all
 changes made during insert state, including a possible delete
 after a change operation, are collected in a single undo step.
 Non-nil (“yes”) means that undo steps are determined according
@@ -715,9 +713,10 @@ Default: @code{t}
 
 Whether left/right motions signal errors in keyboard macros.
 This variable only affects beginning-of-line or end-of-line errors
-regarding the motions @code{h} and @code{l} respectively.  This may be
-desired since such errors cause macro definition or execution to be
-terminated.  There are four possibilities:
+regarding the motions @code{h} and @code{SPC}
+respectively.  This may be desired since such errors cause macro
+definition or execution to be terminated.  There are four
+possibilities:
 
 
 @itemize -
@@ -745,7 +744,7 @@ Default: @code{nil}
 
 The position of the state tag in the mode line.
 If set to @code{before} or @code{after}, the tag is placed at the beginning
-or the end of the mode-line, respectively.  If @code{nil}, there is no
+or the end of the mode-line, respectively.  If nil, there is no
 tag.  Otherwise it should be a cons cell @code{(WHERE . WHICH)}, where
 @emph{WHERE} is either @code{before} or @code{after}, and @emph{WHICH} is a symbol in
 @code{mode-line-format}.  The tag is then placed before or after that
@@ -791,14 +790,14 @@ Default: @code{0.01}
 @anchor{settings elispobj-evil-intercept-esc}@anchor{1f}
 @deffn {Emacs Lisp Autovariable} evil@w{-}intercept@w{-}esc
 
-Whether Evil should intercept the @code{ESC} key.
+Whether Evil should intercept the escape key.
 In the terminal, escape and a meta key sequence both generate the
 same event.  In order to distingush these, Evil uses
 @code{input-decode-map}.  It is not necessary to do this in a graphical
 Emacs session.  However, if you prefer to use @code{C-[} as escape (which
 is identical to the terminal escape key code), this interception must
 also happen in graphical Emacs sessions.  Set this variable to
-@code{always}, @code{t} (only in the terminal) or @code{nil} (never intercept).
+@code{always}, t (only in the terminal) or nil (never intercept).
 
 Default: @code{always}
 @end deffn
@@ -929,7 +928,7 @@ like those of @code{define-key}. For example:
 @end example
 
 This creates a binding from @code{a} to @code{bar} in normal state, which
-is active whenever @code{foo-map} is active. Using @code{nil} for the state,
+is active whenever @code{foo-map} is active. Using nil for the state,
 the following lead to identical bindings:
 
 @example
@@ -1043,7 +1042,7 @@ Likewise, you can use the expression @code{<localleader>} to mimic Vim’s
 local leader, which is designed for mode-specific key bindings.
 
 You can use the function @ref{30,,evil-set-leader} to designate
-which function as the leader and the local leader.
+which key acts as the leader and the local leader.
 
 @anchor{keymaps elispobj-evil-set-leader}@anchor{30}
 @deffn {Emacs Lisp Autofunction} (evil@w{-}set@w{-}leader  STATE KEY [LOCALLEADER])
@@ -1184,7 +1183,7 @@ from the keyboard.  This does not affect the behavior in visual
 state, where selection boundaries are always used.
 
 @item 
-@code{:repeat} - if non-nil (default), then @code{.} will repeat the
+@code{:repeat} - if non-nil (default), then   @code{.} will repeat the
 operator.
 
 @item 
