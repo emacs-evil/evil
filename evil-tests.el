@@ -7602,6 +7602,7 @@ maybe we need one line more with some text\n")
 
 (ert-deftest evil-test-command-window-ex ()
   "Test command line window for ex commands"
+  (skip-unless (not noninteractive))
   (let (evil-ex-history)
     (evil-test-buffer
       "[f]oo foo foo"
@@ -7622,6 +7623,7 @@ maybe we need one line more with some text\n")
 
 (ert-deftest evil-test-command-window-recursive ()
   "Test that recursive command windows shouldn't be allowed"
+  (skip-unless (not noninteractive))
   (let ((evil-command-window-height 0))
     (evil-test-buffer
       "[f]oo foo foo"
@@ -7631,6 +7633,7 @@ maybe we need one line more with some text\n")
 
 (ert-deftest evil-test-command-window-noop ()
   "Test that executing a blank command does nothing"
+  (skip-unless (not noninteractive))
   (evil-test-buffer
     "[f]oo foo foo"
     ("q:")
@@ -7640,6 +7643,7 @@ maybe we need one line more with some text\n")
 
 (ert-deftest evil-test-command-window-multiple ()
   "Test that multiple command line windows can't be visible at the same time"
+  (skip-unless (not noninteractive))
   (let ((evil-command-window-height 0))
     (evil-test-buffer
       "[f]oo foo foo"
@@ -7660,6 +7664,7 @@ maybe we need one line more with some text\n")
 
 (ert-deftest evil-test-command-window-search-history ()
   "Test command window with forward and backward search history"
+  (skip-unless (not noninteractive))
   (let ((evil-search-module 'isearch))
     (evil-test-buffer
       "[f]oo bar baz qux one two three four"
@@ -7690,6 +7695,7 @@ maybe we need one line more with some text\n")
 
 (ert-deftest evil-test-command-window-search-word ()
   "Test command window history when searching for word under cursor"
+  (skip-unless (not noninteractive))
   (let ((evil-search-module 'isearch))
     (evil-test-buffer
       "[f]oo bar foo bar foo"
