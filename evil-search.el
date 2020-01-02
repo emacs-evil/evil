@@ -257,13 +257,6 @@ one more than the current position."
          (goto-char orig)
          (user-error "\"%s\": %s not found"
                      string (if regexp-p "pattern" "string"))))
-      ;; handle opening and closing of invisible area
-      (cond
-       ((boundp 'isearch-filter-predicates)
-        (dolist (pred isearch-filter-predicates)
-          (funcall pred (match-beginning 0) (match-end 0))))
-       ((boundp 'isearch-filter-predicate)
-        (funcall isearch-filter-predicate (match-beginning 0) (match-end 0))))
       ;; always position point at the beginning of the match
       (goto-char (match-beginning 0))
       ;; determine message for echo area
