@@ -873,10 +873,13 @@ Inhibits echo area messages, mode line updates and cursor changes."
 
 (defun evil-header-line-height ()
   "Return the height of the header line.
-If there is no header line, return nil."
-  (let ((posn (posn-at-x-y 0 0)))
-    (when (eq (posn-area posn) 'header-line)
-      (cdr (posn-object-width-height posn)))))
+If there is no header line, return 0."
+  (if (fboundp 'window-header-line-height)
+      (window-header-line-height)
+      (let ((posn (posn-at-x-y 0 0)))
+        (or (when (eq (posn-area posn) 'header-line)
+              (cdr (posn-object-width-height posn)))
+            0))))
 
 (defun evil-posn-x-y (position)
   "Return the x and y coordinates in POSITION.
@@ -894,8 +897,7 @@ Learned from mozc.el."
     (when header-line-format
       (setcdr xy (+ (cdr xy)
                     (or evil-cached-header-line-height
-                        (setq evil-cached-header-line-height (evil-header-line-height))
-                        0))))
+                        (setq evil-cached-header-line-height (evil-header-line-height))))))
     xy))
 
 (defun evil-count-lines (beg end)
