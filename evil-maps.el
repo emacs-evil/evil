@@ -522,6 +522,7 @@ included in `evil-insert-state-bindings' by default."
 
 ;; search command line
 (define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
+(define-key evil-ex-search-keymap "\C-f" 'evil-ex-search-command-window)
 (define-key evil-ex-search-keymap "\C-r" 'evil-paste-from-register)
 (define-key evil-ex-search-keymap "\C-n" 'next-history-element)
 (define-key evil-ex-search-keymap "\C-p" 'previous-history-element)
@@ -535,6 +536,7 @@ included in `evil-insert-state-bindings' by default."
 (define-key evil-ex-completion-map "\C-b" 'move-beginning-of-line)
 (define-key evil-ex-completion-map "\C-c" 'abort-recursive-edit)
 (define-key evil-ex-completion-map "\C-d" 'evil-ex-completion)
+(define-key evil-ex-completion-map "\C-f" 'evil-ex-command-window)
 (define-key evil-ex-completion-map "\C-g" 'abort-recursive-edit)
 (define-key evil-ex-completion-map "\C-k" 'evil-insert-digraph)
 (define-key evil-ex-completion-map "\C-l" 'evil-ex-completion)
