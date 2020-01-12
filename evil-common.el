@@ -555,6 +555,8 @@ Translates it according to the input method."
             (progn
               (define-key new-global-map [menu-bar]
                 (lookup-key global-map [menu-bar]))
+              (define-key new-global-map [tab-bar]
+                (lookup-key global-map [tab-bar]))
               (define-key new-global-map [tool-bar]
                 (lookup-key global-map [tool-bar]))
               (add-to-list 'new-global-map
