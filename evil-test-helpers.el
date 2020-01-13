@@ -135,7 +135,6 @@ raised.  Remaining forms are evaluated as-is.
                ;; necessary for keyboard macros to work
                (switch-to-buffer-other-window (current-buffer))
                (buffer-enable-undo)
-               (undo-tree-mode 1)
                ;; parse remaining forms
                ,@(mapcar
                   #'(lambda (form)
