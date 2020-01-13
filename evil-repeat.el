@@ -3,7 +3,7 @@
 ;; Author: Frank Fischer <frank.fischer at mathematik.tu-chemnitz.de>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.12.16
+;; Version: 1.12.17
 
 ;;
 ;; This file is NOT part of GNU Emacs.
