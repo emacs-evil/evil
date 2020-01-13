@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.12.16
+;; Version: 1.12.17
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -604,12 +604,13 @@ The following properties are supported:
                                  'all-windows)
                              (get-buffer-window-list (current-buffer) nil t)
                            (list (evil-ex-hl-window hl))))
-              (let ((beg (max (window-start win)
-                              (or (evil-ex-hl-min hl) (point-min))))
-                    (end (min (window-end win)
-                              (or (evil-ex-hl-max hl) (point-max)))))
-                (when (< beg end)
-                  (push (cons beg end) ranges))))
+              (when (window-live-p win)
+                (let ((beg (max (window-start win)
+                                (or (evil-ex-hl-min hl) (point-min))))
+                      (end (min (window-end win)
+                                (or (evil-ex-hl-max hl) (point-max)))))
+                  (when (< beg end)
+                    (push (cons beg end) ranges)))))
             (setq ranges
                   (sort ranges #'(lambda (r1 r2) (< (car r1) (car r2)))))
             (while ranges

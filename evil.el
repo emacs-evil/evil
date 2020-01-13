@@ -55,7 +55,7 @@
 ;;      To get in touch, please use the bug tracker or the
 ;;      mailing list (see below).
 ;; Created: 2011-03-01
-;; Version: 1.12.16
+;; Version: 1.12.17
 ;; Keywords: emulation, vim
 ;; URL: https://github.com/emacs-evil/evil
 ;;      Repository: https://github.com/emacs-evil/evil.git

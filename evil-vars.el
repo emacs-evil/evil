@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.12.16
+;; Version: 1.12.17
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -1875,7 +1875,7 @@ Otherwise the previous command is assumed as substitute.")
                       (buffer-substring (point-min)
                                         (line-end-position))))
           ;; no repo, use plain version
-          "1.12.16"))))
+          "1.12.17"))))
   "The current version of Evil")
 
 (defcustom evil-want-integration t
