@@ -179,13 +179,7 @@ To enable Evil globally, do (evil-mode 1)."
 
 ;;;###autoload (autoload 'evil-mode "evil" nil t)
 (define-globalized-minor-mode evil-mode
-  evil-local-mode evil-initialize
-
-  ;; Turn on undo-tree-mode when evil-mode is enabled
-  (when (and evil-mode
-             (require 'undo-tree nil 'noerror)
-             (fboundp 'global-undo-tree-mode))
-    (global-undo-tree-mode 1)))
+  evil-local-mode evil-initialize)
 
 ;; No hooks are run in Fundamental buffers, so other measures are
 ;; necessary to initialize Evil in these buffers. When Evil is
