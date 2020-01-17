@@ -173,12 +173,30 @@ Disable anyway if FORCE is t."
   (remove-hook 'evil-operator-state-exit-hook #'evil-flash-hook t))
 (put 'evil-flash-hook 'permanent-local-hook t)
 
-(defun evil-search-function (&optional forward regexp-p wrap)
+(defun evil-search-with-predicate (search-fun pred string bound noerror count)
+  "Execute a search with a predicate function.
+SEARCH-FUN is a search function (e.g. `re-search-forward') and
+PREDICATE is a two-argument function satisfying the interface of
+`isearch-filter-predicate', or `nil'.  STRING, BOUND, NOERROR and
+COUNT are passed unchanged to SEARCH-FUN.  The first match
+satisfying the predicate (or `nil') is returned."
+  (catch 'done
+    (while t
+      (let ((result (funcall search-fun string bound noerror count)))
+        (cond
+         ((not result) (throw 'done nil))
+         ((not pred) (throw 'done result))
+         ((funcall pred (match-beginning 0) (match-end 0)) (throw 'done result)))))))
+
+(defun evil-search-function (&optional forward regexp-p wrap predicate)
   "Return a search function.
 If FORWARD is nil, search backward, otherwise forward.
 If REGEXP-P is non-nil, the input is a regular expression.
 If WRAP is non-nil, the search wraps around the top or bottom
-of the buffer."
+of the buffer.
+If PREDICATE is non-nil, it must be a function accepting two
+arguments: the bounds of a match, returning non-nil if that match is
+acceptable."
   `(lambda (string &optional bound noerror count)
      (let ((start (point))
            (search-fun ',(if regexp-p
@@ -189,18 +207,14 @@ of the buffer."
                                'search-forward
                              'search-backward)))
            result)
-       (setq result (funcall search-fun string bound
-                             ,(if wrap t 'noerror) count))
-       ;; Wrap the search only if a result was not found, and a bound not set
-       (when (and ,wrap (null result) (null bound))
+       (setq result (evil-search-with-predicate
+                     search-fun ,predicate string
+                     bound ,(if wrap t 'noerror) count))
+       (when (and ,wrap (null result))
          (goto-char ,(if forward '(point-min) '(point-max)))
          (unwind-protect
-             ;; The wrapped search is bounded by the original starting point
-             (setq result (funcall search-fun string
-                                   ,(if forward
-                                        '(max (point-min) (1- start))
-                                      '(min (point-max) (1+ start)))
-                                   noerror count))
+             (setq result (evil-search-with-predicate
+                           search-fun ,predicate string bound noerror count))
            (unless result
              (goto-char start))))
        result)))
@@ -208,7 +222,7 @@ of the buffer."
 (defun evil-isearch-function ()
   "Return a search function for use with isearch.
 Based on `isearch-regexp' and `isearch-forward'."
-  (evil-search-function isearch-forward evil-regexp-search evil-search-wrap))
+  (evil-search-function isearch-forward evil-regexp-search evil-search-wrap 'isearch-filter-predicate))
 
 (defun evil-search (string forward &optional regexp-p start)
   "Search for STRING and highlight matches.
@@ -230,7 +244,7 @@ one more than the current position."
                          (not (isearch-no-upper-case-p string nil)))
               case-fold-search))
            (search-func (evil-search-function
-                         forward regexp-p evil-search-wrap)))
+                         forward regexp-p evil-search-wrap 'isearch-filter-predicate)))
       ;; no text properties, thank you very much
       (set-text-properties 0 (length string) nil string)
       ;; position to search from
@@ -243,13 +257,6 @@ one more than the current position."
          (goto-char orig)
          (user-error "\"%s\": %s not found"
                      string (if regexp-p "pattern" "string"))))
-      ;; handle opening and closing of invisible area
-      (cond
-       ((boundp 'isearch-filter-predicates)
-        (dolist (pred isearch-filter-predicates)
-          (funcall pred (match-beginning 0) (match-end 0))))
-       ((boundp 'isearch-filter-predicate)
-        (funcall isearch-filter-predicate (match-beginning 0) (match-end 0))))
       ;; always position point at the beginning of the match
       (goto-char (match-beginning 0))
       ;; determine message for echo area
