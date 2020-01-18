@@ -2737,7 +2737,7 @@ The search is unbounded, i.e., the pattern is not wrapped in
   (let (ientry ipos)
     (when (fboundp 'imenu--make-index-alist)
       (ignore-errors (setq ientry (imenu--make-index-alist)))
-      (setq ientry (assoc string ientry))
+      (setq ientry (imenu--in-alist string ientry))
       (setq ipos (cdr ientry))
       (when (and (markerp ipos)
                  (eq (marker-buffer ipos) (current-buffer)))
