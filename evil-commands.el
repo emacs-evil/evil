@@ -35,6 +35,8 @@
 (require 'cl-lib)
 (require 'reveal)
 
+(declare-function imenu--in-alist "imenu")
+
 ;;; Motions
 
 ;; Movement commands, or motions, are defined with the macro
