@@ -1479,7 +1479,7 @@ be joined with the previous line if and only if
 `evil-backspace-join-lines'."
   (interactive "p")
   (if (or evil-backspace-join-lines (not (bolp)))
-      (delete-char -1)
+      (call-interactively 'delete-backward-char)
     (user-error "Beginning of line")))
 
 (evil-define-command evil-delete-backward-word ()

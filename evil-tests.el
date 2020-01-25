@@ -1943,7 +1943,7 @@ ine3 line3      line3 l\n")))
       "abc def\n   ghi j[k]l\n"
       ("i" (call-interactively #'evil-delete-back-to-indentation))
       "abc def\n   [k]l\n"
-      (execute-kbd-macro (concat (kbd "C-o") "2h"))
+      (left-char 2)
       "abc def\n [ ] kl\n"
       (call-interactively #'evil-delete-back-to-indentation)
       "abc def\n[ ] kl\n"
@@ -1953,8 +1953,9 @@ ine3 line3      line3 l\n")))
     (evil-test-buffer
       "abc def\n[k]l\n"
       (should-error
-       (progn (execute-kbd-macro "i")
-              (call-interactively #'evil-delete-back-to-indentation)))
+       (progn
+         (execute-kbd-macro "i")
+         (call-interactively #'evil-delete-back-to-indentation)))
       "abc def\n[k]l\n")))
 
 (ert-deftest evil-test-change ()
