@@ -778,7 +778,7 @@ This function does nothing if `evil-ex-search-interactive' or
     (with-current-buffer (or evil-ex-current-buffer (current-buffer))
       (unless (evil-ex-hl-active-p 'evil-ex-search)
         (evil-ex-make-hl 'evil-ex-search
-                         :win (minibuffer-selected-window)))
+                         :win (or (minibuffer-selected-window) (selected-window))))
       (if pattern
           (evil-ex-hl-change 'evil-ex-search pattern)))))
 
