@@ -1,4 +1,4 @@
-;;; evil-core.el --- Core functionality
+;;; evil-core.el --- Core functionality -*- lexical-binding: t -*-
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 

@@ -1,4 +1,4 @@
-;;; evil-search.el --- Search and substitute
+;;; evil-search.el --- Search and substitute -*- lexical-binding: t -*-
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>

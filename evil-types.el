@@ -1,4 +1,4 @@
-;;; evil-types.el --- Type system
+;;; evil-types.el --- Type system -*- lexical-binding: t -*-
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
