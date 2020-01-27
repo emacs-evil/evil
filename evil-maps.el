@@ -1,4 +1,4 @@
-;;; evil-maps.el --- Default keymaps
+;;; evil-maps.el --- Default keymaps -*- lexical-binding: t -*-
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>

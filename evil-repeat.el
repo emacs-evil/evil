@@ -1,4 +1,4 @@
-;;; evil-repeat.el --- Repeat system
+;;; evil-repeat.el --- Repeat system -*- lexical-binding: t -*-
 
 ;; Author: Frank Fischer <frank.fischer at mathematik.tu-chemnitz.de>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>

@@ -1,4 +1,4 @@
-;;; evil-commands.el --- Evil commands and operators
+;;; evil-commands.el --- Evil commands and operators -*- lexical-binding: t -*-
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 

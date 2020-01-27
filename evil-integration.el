@@ -1,4 +1,4 @@
-;;; evil-integration.el --- Integrate Evil with other modules
+;;; evil-integration.el --- Integrate Evil with other modules -*- lexical-binding: t -*-
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
