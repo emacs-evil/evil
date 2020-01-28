@@ -226,12 +226,12 @@ Otherwise behaves like `delete-backward-char'."
   "Start command window with ex history and current minibuffer content."
   (interactive)
   (let ((current (minibuffer-contents))
-		  (config  (current-window-configuration)))
-	  (evil-ex-teardown)
-	  (select-window (minibuffer-selected-window) t)
-	  (evil-command-window (cons current evil-ex-history)
-						             ":"
-						             (apply-partially 'evil-ex-command-window-execute config))))
+        (config (current-window-configuration)))
+    (evil-ex-teardown)
+    (select-window (minibuffer-selected-window) t)
+    (evil-command-window (cons current evil-ex-history)
+                         ":"
+                         (apply-partially 'evil-ex-command-window-execute config))))
 
 (defun evil-ex-command-window-execute (config result)
   (select-window (active-minibuffer-window) t)
