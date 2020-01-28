@@ -1043,6 +1043,16 @@ any error conditions."
   (evil-ex-delete-hl 'evil-ex-search)
   (abort-recursive-edit))
 
+(defun evil-ex-search-command-window ()
+  "Start command window with search history and current minibuffer content."
+  (interactive)
+  (let ((current (minibuffer-contents))
+        (config (current-window-configuration)))
+    (select-window (minibuffer-selected-window) t)
+    (evil-command-window (cons current evil-ex-search-history)
+                         (evil-search-prompt (eq evil-ex-search-direction 'forward))
+                         (apply-partially 'evil-ex-command-window-execute config))))
+
 (defun evil-ex-search-goto-offset (offset)
   "Move point according to search OFFSET and set `evil-this-type' accordingly.
 This function assumes that the current match data represents the
