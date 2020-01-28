@@ -1,4 +1,4 @@
-;;; evil-development.el --- Useful features for Evil developers -*- lexical-binding: t -*-
+;;; evil-development.el --- Useful features for Evil developers
 
 ;; Author: Justin Burkett <justin at burkett dot cc>
 
