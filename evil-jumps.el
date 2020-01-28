@@ -1,4 +1,4 @@
-;;; evil-jumps.el --- Jump list implementation -*- lexical-binding: t -*-
+;;; evil-jumps.el --- Jump list implementation
 
 ;; Author: Bailey Ling <bling at live.ca>
 

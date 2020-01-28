@@ -1,4 +1,4 @@
-;;; evil-states.el --- States -*- lexical-binding: t -*-
+;;; evil-states.el --- States
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>

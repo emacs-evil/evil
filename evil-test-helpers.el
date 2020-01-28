@@ -1,4 +1,4 @@
-;;; evil-test-helpers.el --- unit test helpers for Evil -*- coding: utf-8; lexical-binding: t -*-
+;;; evil-test-helpers.el --- unit test helpers for Evil -*- coding: utf-8 -*-
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>

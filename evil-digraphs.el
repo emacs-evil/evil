@@ -1,4 +1,4 @@
-;;; evil-digraphs.el --- Digraphs -*- lexical-binding: t -*-
+;;; evil-digraphs.el --- Digraphs
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>

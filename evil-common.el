@@ -1,4 +1,4 @@
-;;; evil-common.el --- Common functions and utilities -*- lexical-binding: t -*-
+;;; evil-common.el --- Common functions and utilities
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
