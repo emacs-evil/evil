@@ -1,4 +1,4 @@
-;;; evil-vars.el --- Settings and variables
+;;; evil-vars.el --- Settings and variables -*- lexical-binding: t -*-
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>

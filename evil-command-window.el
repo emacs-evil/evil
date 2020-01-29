@@ -1,4 +1,4 @@
-;;; evil-command-window.el --- Evil command line window implementation
+;;; evil-command-window.el --- Evil command line window implementation -*- lexical-binding: t -*-
 ;; Author: Emanuel Evans <emanuel.evans at gmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 

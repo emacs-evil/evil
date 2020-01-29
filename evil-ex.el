@@ -1,4 +1,4 @@
-;;; evil-ex.el --- Ex-mode
+;;; evil-ex.el --- Ex-mode -*- lexical-binding: nil -*-
 
 ;; Author: Frank Fischer <frank fischer at mathematik.tu-chemnitz.de>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
@@ -923,6 +923,33 @@ POS defaults to the current position of point."
     (when contexts
       (nth pos contexts))))
 
+(defun evil-parser--dexp (obj)
+  "Parse a numerical dollar-sign symbol.
+Given e.g. $4, return 4."
+  (when (symbolp obj)
+    (let ((str (symbol-name obj)))
+      (save-match-data
+        (when (string-match "\\$\\([0-9]+\\)" str)
+          (string-to-number (match-string 1 str)))))))
+
+(defun evil-parser--dval (obj result)
+  "Substitute all dollar-sign symbols in OBJ.
+Each dollar-sign symbol is replaced with the corresponding
+element in RESULT, so that $1 becomes the first element, etc.
+The special value $0 is substituted with the whole list RESULT.
+If RESULT is not a list, all dollar-sign symbols are substituted with
+RESULT."
+  (if (listp obj)
+      (mapcar (lambda (obj) (evil-parser--dval obj result)) obj)
+    (let ((num (evil-parser--dexp obj)))
+      (if num
+          (if (not (listp result))
+              result
+            (if (eq num 0)
+                `(list ,@result)
+              (nth (1- num) result)))
+        obj))))
+
 (defun evil-parser (string symbol grammar &optional greedy syntax)
   "Parse STRING as a SYMBOL in GRAMMAR.
 If GREEDY is non-nil, the whole of STRING must match.
@@ -1120,54 +1147,33 @@ The following symbols have reserved meanings within a grammar:
       ;; semantic action
       (when (and pair func (not syntax))
         (setq result (car pair))
-        (let* ((dexp
-                #'(lambda (obj)
-                    (when (symbolp obj)
-                      (let ((str (symbol-name obj)))
-                        (save-match-data
-                          (when (string-match "\\$\\([0-9]+\\)" str)
-                            (string-to-number (match-string 1 str))))))))
-               ;; traverse a tree for dollar expressions
-               (dval nil)
-               (dval
-                #'(lambda (obj)
-                    (if (listp obj)
-                        (mapcar dval obj)
-                      (let ((num (funcall dexp obj)))
-                        (if num
-                            (if (not (listp result))
-                                result
-                              (if (eq num 0)
-                                  `(list ,@result)
-                                (nth (1- num) result)))
-                          obj))))))
-          (cond
-           ((null func)
-            (setq result nil))
-           ;; lambda function
-           ((eq (car-safe func) 'lambda)
-            (if (memq symbol '(+ seq))
-                (setq result `(funcall ,func ,@result))
-              (setq result `(funcall ,func ,result))))
-           ;; string replacement
-           ((or (stringp func) (stringp (car-safe func)))
-            (let* ((symbol (or (car-safe (cdr-safe func))
-                               (and (boundp 'context) context)
-                               (car-safe (car-safe grammar))))
-                   (string (if (stringp func) func (car-safe func))))
-              (setq result (car-safe (evil-parser string symbol grammar
-                                                  greedy syntax)))))
-           ;; dollar expression
-           ((funcall dexp func)
-            (setq result (funcall dval func)))
-           ;; function call
-           ((listp func)
-            (setq result (funcall dval func)))
-           ;; symbol
-           (t
-            (if (memq symbol '(+ seq))
-                (setq result `(,func ,@result))
-              (setq result `(,func ,result))))))
+        (cond
+         ((null func)
+          (setq result nil))
+         ;; lambda function
+         ((eq (car-safe func) 'lambda)
+          (if (memq symbol '(+ seq))
+              (setq result `(funcall ,func ,@result))
+            (setq result `(funcall ,func ,result))))
+         ;; string replacement
+         ((or (stringp func) (stringp (car-safe func)))
+          (let* ((symbol (or (car-safe (cdr-safe func))
+                             (and (boundp 'context) context)
+                             (car-safe (car-safe grammar))))
+                 (string (if (stringp func) func (car-safe func))))
+            (setq result (car-safe (evil-parser string symbol grammar
+                                                greedy syntax)))))
+         ;; dollar expression
+         ((evil-parser--dexp func)
+          (setq result (evil-parser--dval func result)))
+         ;; function call
+         ((listp func)
+          (setq result (evil-parser--dval func result)))
+         ;; symbol
+         (t
+          (if (memq symbol '(+ seq))
+              (setq result `(,func ,@result))
+            (setq result `(,func ,result)))))
         (setcar pair result))))
     ;; weed out incomplete matches
     (when pair
