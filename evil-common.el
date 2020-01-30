@@ -2120,6 +2120,33 @@ The following special registers are supported.
             (user-error "Register `%c' is empty" register)))
     (error (unless err (signal (car err) (cdr err))))))
 
+(defun evil-append-register (register text)
+  "Append TEXT to the contents of register REGISTER."
+  (let ((content (get-register register)))
+    (cond
+     ((not content)
+      (set-register register text))
+     ((or (text-property-not-all 0 (length content)
+                                 'yank-handler nil
+                                 content)
+          (text-property-not-all 0 (length text)
+                                 'yank-handler nil
+                                 text))
+      ;; some non-trivial yank-handler -> always switch to line handler
+      ;; ensure complete lines
+      (when (and (> (length content) 0)
+                 (/= (aref content (1- (length content))) ?\n))
+        (setq content (concat content "\n")))
+      (when (and (> (length text) 0)
+                 (/= (aref text (1- (length text))) ?\n))
+        (setq text (concat text "\n")))
+      (setq text (concat content text))
+      (remove-list-of-text-properties 0 (length text) '(yank-handler) text)
+      (setq text (propertize text 'yank-handler '(evil-yank-line-handler)))
+      (set-register register text))
+     (t
+      (set-register register (concat content text))))))
+
 (defun evil-set-register (register text)
   "Set the contents of register REGISTER to TEXT.
 If REGISTER is an upcase character then text is appended to that
@@ -2149,31 +2176,7 @@ register instead of replacing its content."
    ((eq register ?_) ; the black hole register
     nil)
    ((and (<= ?A register) (<= register ?Z))
-    (setq register (downcase register))
-    (let ((content (get-register register)))
-      (cond
-       ((not content)
-        (set-register register text))
-       ((or (text-property-not-all 0 (length content)
-                                   'yank-handler nil
-                                   content)
-            (text-property-not-all 0 (length text)
-                                   'yank-handler nil
-                                   text))
-        ;; some non-trivial yank-handler -> always switch to line handler
-        ;; ensure complete lines
-        (when (and (> (length content) 0)
-                   (/= (aref content (1- (length content))) ?\n))
-          (setq content (concat content "\n")))
-        (when (and (> (length text) 0)
-                   (/= (aref text (1- (length text))) ?\n))
-          (setq text (concat text "\n")))
-        (setq text (concat content text))
-        (remove-list-of-text-properties 0 (length text) '(yank-handler) text)
-        (setq text (propertize text 'yank-handler '(evil-yank-line-handler)))
-        (set-register register text))
-       (t
-        (set-register register (concat content text))))))
+    (evil-append-register (downcase register) text))
    (t
     (set-register register text))))
 
