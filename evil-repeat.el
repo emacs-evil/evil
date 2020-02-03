@@ -407,7 +407,7 @@ buffer between (point) and (mark)."
    ((eq flag 'post)
     (remove-hook 'after-change-functions #'evil-repeat-insert-at-point-hook t))))
 
-(defun evil-repeat-insert-at-point-hook (beg end length)
+(defun evil-repeat-insert-at-point-hook (beg end _length)
   (let ((repeat-type (evil-repeat-type this-command t)))
     (when (and (evil-repeat-recording-p)
                (eq repeat-type 'evil-repeat-insert-at-point)

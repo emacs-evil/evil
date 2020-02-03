@@ -290,6 +290,7 @@ activated."
 (declare-function ace-jump-char-mode "ext:ace-jump-mode")
 (declare-function ace-jump-word-mode "ext:ace-jump-mode")
 (declare-function ace-jump-line-mode "ext:ace-jump-mode")
+(defvar ace-jump-mode-scope)
 
 (defvar evil-ace-jump-active nil)
 
@@ -411,6 +412,7 @@ the mark and entering `recursive-edit'."
 (declare-function avy-goto-subword-0 "ext:avy")
 (declare-function avy-goto-subword-1 "ext:avy")
 (declare-function avy-goto-char-timer "ext:avy")
+(defvar avy-all-windows)
 
 (defmacro evil-enclose-avy-for-motion (&rest body)
   "Enclose avy to make it suitable for motions.
@@ -428,7 +430,7 @@ Based on `evil-enclose-ace-jump-for-motion'."
   (declare (indent defun)
            (debug t))
   (let ((name (intern (format "evil-%s" command))))
-    `(evil-define-motion ,name (_count)
+    `(evil-define-motion ,name (count)
        ,(format "Evil motion for `%s'." command)
        :type ,type
        :jump t
@@ -499,10 +501,8 @@ Based on `evil-enclose-ace-jump-for-motion'."
       (setq this-command #'digit-argument)
       (call-interactively #'digit-argument))
      (t
-      (let ((target (or (command-remapping #'evil-beginning-of-visual-line)
-                        #'evil-beginning-of-visual-line)))
-        (setq this-command 'evil-beginning-of-visual-line)
-        (call-interactively 'evil-beginning-of-visual-line)))))
+      (setq this-command 'evil-beginning-of-visual-line)
+      (call-interactively 'evil-beginning-of-visual-line))))
 
   (evil-define-minor-mode-key 'motion 'visual-line-mode
     "j" 'evil-next-visual-line

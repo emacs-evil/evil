@@ -143,7 +143,7 @@ commands opening a new line."
   "Called when Insert state is about to be exited.
 Handles the repeat-count of the insertion command."
   (when evil-insert-count
-    (dotimes (i (1- evil-insert-count))
+    (dotimes (_ (1- evil-insert-count))
       (when evil-insert-lines
         (evil-insert-newline-below)
         (when evil-auto-indent
@@ -176,7 +176,7 @@ Handles the repeat-count of the insertion command."
               (if (integerp col)
                   (move-to-column col t)
                 (funcall col))
-              (dotimes (i (or evil-insert-count 1))
+              (dotimes (_ (or evil-insert-count 1))
                 (when (fboundp 'evil-execute-repeat-info)
                   (evil-execute-repeat-info
                    (cdr evil-insert-repeat-info)))))))))))
@@ -374,7 +374,7 @@ otherwise exit Visual state."
                                         evil-visual-beginning
                                         evil-visual-end)))))))
 
-(defun evil-visual-activate-hook (&optional command)
+(defun evil-visual-activate-hook (&optional _command)
   "Enable Visual state if the region is activated."
   (unless (evil-visual-state-p)
     (evil-delay nil
@@ -629,7 +629,6 @@ Do this by putting an overlay on each line within the rectangle.
 Each overlay extends across all the columns of the rectangle.
 Reuse overlays where possible to prevent flicker."
   (let* ((point (point))
-         (mark (or (mark t) point))
          (overlays (or overlays 'evil-visual-block-overlays))
          (old (symbol-value overlays))
          (eol-col (and (memq this-command '(next-line previous-line))
@@ -666,7 +665,7 @@ Reuse overlays where possible to prevent flicker."
       ;; iterate over those lines of the rectangle which are
       ;; visible in the currently selected window
       (goto-char window-beg)
-      (dotimes (i nlines)
+      (dotimes (_ nlines)
         (let (before after row-beg row-end)
           ;; beginning of row
           (evil-move-to-column beg-col)

@@ -44,7 +44,6 @@
 The return value is a list (BEG END TYPE)."
   (let ((opoint   (point))
         (omark    (mark t))
-        (omactive (and (boundp 'mark-active) mark-active))
         (obuffer  (current-buffer))
         (evil-motion-marker (move-marker (make-marker) (point)))
         range)
@@ -131,7 +130,7 @@ Optional keyword arguments are:
                            [&rest keywordp sexp]
                            [&optional ("interactive" [&rest form])]
                            def-body)))
-  (let (arg doc interactive key keys type)
+  (let (arg doc interactive key keys)
     (when args
       (setq args `(&optional ,@(delq '&optional args))
             ;; the count is either numerical or nil
@@ -571,7 +570,7 @@ RETURN-TYPE is non-nil."
                      (when evil-ex-p 'evil-line)))
          (type evil-operator-range-type)
          (range (evil-range (point) (point)))
-         command count modifier)
+         command count)
     (setq evil-this-type-modified nil)
     (evil-save-echo-area
       (cond
@@ -692,8 +691,7 @@ be transformations on buffer positions, like `:expand' and `:contract'.
               string (if (stringp string)
                          (format "%s\n\n" string) "")
               plist (plist-put plist key `',name))
-        (add-to-list
-         'defun-forms
+        (push
          (cond
           ((eq key :string)
            `(defun ,name (beg end &rest properties)
@@ -747,7 +745,7 @@ with PROPERTIES.\n\n%s%s" sym type string doc)
                     (setq properties
                           (evil-concat-plists properties plist))
                     (apply #'evil-range beg end type properties)))))))
-         t)))
+         defun-forms)))
     ;; :one-to-one requires both or neither of :expand and :contract
     (when (plist-get plist :expand)
       (setq plist (plist-put plist :one-to-one
