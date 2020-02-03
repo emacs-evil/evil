@@ -481,8 +481,7 @@ This allows input methods to be used in normal-state."
   "Initialize a buffer-local value for local keymaps as necessary.
 The initial value is that of `make-sparse-keymap'."
   (dolist (entry evil-local-keymaps-alist)
-    (let ((mode (car entry))
-          (map  (cdr entry)))
+    (let ((map  (cdr entry)))
       (unless (and (keymapp (symbol-value map))
                    (local-variable-p map))
         (set map (make-sparse-keymap))))))

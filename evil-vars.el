@@ -91,7 +91,7 @@ KEY must be readable by `read-kbd-macro'."
               (define-key map key fun)
               (define-key map old-key nil))))))))
 
-(defun evil-set-custom-state-maps (var pending-var key make newlist)
+(defun evil-set-custom-state-maps (var pending-var key _make newlist)
   "Changes the list of special keymaps.
 VAR         is the variable containing the list of keymaps.
 PENDING-VAR is the variable containing the list of the currently pending
@@ -108,7 +108,7 @@ NEWLIST     the list of new special keymaps."
   (set-default var newlist)
   (evil-update-pending-maps))
 
-(defun evil-update-pending-maps (&optional file)
+(defun evil-update-pending-maps (&optional _file)
   "Tries to set pending special keymaps.
 This function should be called from an `after-load-functions'
 hook."
@@ -561,7 +561,7 @@ The default behavior is to yank the whole line, like Vim."
   :group 'evil
   :type 'boolean
   :initialize #'evil-custom-initialize-pending-reset
-  :set #'(lambda (sym value)
+  :set #'(lambda (_sym value)
            (evil-add-command-properties
             'evil-yank-line
             :motion (if value
@@ -591,6 +591,8 @@ in insert state."
   :type 'boolean
   :group 'evil)
 
+(defvar dabbrev-search-these-buffers-only)
+(defvar dabbrev-case-distinction)
 (defcustom evil-complete-next-func
   #'(lambda (arg)
       (require 'dabbrev)
@@ -902,7 +904,7 @@ should be overridden. If STATE is nil, all states are
 overridden."
   :type '(alist :key-type symbol :value-type symbol)
   :group 'evil
-  :set #'(lambda (var values)
+  :set #'(lambda (_var values)
            (evil-set-custom-state-maps 'evil-overriding-maps
                                        'evil-pending-overriding-maps
                                        'override-state
@@ -921,7 +923,7 @@ should be intercepted. If STATE is nil, all states are
 intercepted."
   :type '(alist :key-type symbol :value-type symbol)
   :group 'evil
-  :set #'(lambda (var values)
+  :set #'(lambda (_var values)
            (evil-set-custom-state-maps 'evil-intercept-maps
                                        'evil-pending-intercept-maps
                                        'intercept-state

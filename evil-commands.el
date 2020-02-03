@@ -160,7 +160,7 @@ of the line or the buffer; just return nil."
     ;; Catch bob and eob errors. These are caused when not moving
     ;; point starting in the first or last line, respectively. In this
     ;; case the current line should be selected.
-    (condition-case err
+    (condition-case _err
         (evil-line-move (1- (or count 1)))
       ((beginning-of-buffer end-of-buffer)))))
 
@@ -172,7 +172,7 @@ of the line or the buffer; just return nil."
     ;; Catch bob and eob errors. These are caused when not moving
     ;; point starting in the first or last line, respectively. In this
     ;; case the current line should be selected.
-    (condition-case err
+    (condition-case _err
         (evil-line-move (1- (or count 1)))
       ((beginning-of-buffer end-of-buffer)))))
 
@@ -450,7 +450,7 @@ If BIGWORD is non-nil, move by WORDS."
   :type exclusive
   (evil-signal-at-bob-or-eob count)
   (evil-forward-nearest count
-                        #'(lambda (cnt)
+                        #'(lambda (_cnt)
                             (evil-forward-beginning 'evil-sentence))
                         #'evil-forward-paragraph))
 
@@ -460,9 +460,9 @@ If BIGWORD is non-nil, move by WORDS."
   :type exclusive
   (evil-signal-at-bob-or-eob (- (or count 1)))
   (evil-forward-nearest (- (or count 1))
-                        #'(lambda (cnt)
+                        #'(lambda (_cnt)
                             (evil-backward-beginning 'evil-sentence))
-                        #'(lambda (cnt)
+                        #'(lambda (_cnt)
                             (evil-backward-paragraph))))
 
 (evil-define-motion evil-forward-paragraph (count)
@@ -482,6 +482,7 @@ If BIGWORD is non-nil, move by WORDS."
   (evil-backward-beginning 'evil-paragraph count)
   (unless (bobp) (forward-line -1)))
 
+(defvar hif-ifx-else-endif-regexp)
 (evil-define-motion evil-jump-item (count)
   "Find the next item in this line after or under the cursor
 and jump to the corresponding one."
@@ -555,7 +556,6 @@ and jump to the corresponding one."
        ((not (or open-pair close-pair))
         ;; nothing found, check if we are inside a string
         (let ((pnt (point))
-              (state (syntax-ppss (point)))
               (bnd (bounds-of-thing-at-point 'evil-string)))
           (if (not (and bnd (< (point) (cdr bnd))))
               ;; no, then we really failed
@@ -818,6 +818,7 @@ The current position is placed in the jump list."
     (evil--jump-backward 1)
     (evil-set-jump pnt)))
 
+(defvar xref-prompt-for-identifier)
 (evil-define-motion evil-jump-to-tag (arg)
   "Jump to tag under point.
 If called with a prefix argument, provide a prompt
@@ -1680,7 +1681,7 @@ of the block."
     (when (> count 1)
       (setq count (1- count)))
     (goto-char beg)
-    (dotimes (var count)
+    (dotimes (_ count)
       (join-line 1))))
 
 (evil-define-operator evil-join-whitespace (beg end)
@@ -1692,7 +1693,7 @@ but doesn't insert or remove any spaces."
     (when (> count 1)
       (setq count (1- count)))
     (goto-char beg)
-    (dotimes (var count)
+    (dotimes (_ count)
       (evil-move-end-of-line 1)
       (unless (eobp)
         (delete-char 1)))))
@@ -1954,7 +1955,7 @@ The return value is the yanked text."
               (setq text (evil-vector-to-string text)))
             (set-text-properties 0 (length text) nil text)
             (push-mark opoint t)
-            (dotimes (i (or count 1))
+            (dotimes (_ (or count 1))
               (insert-for-yank text))
             (setq evil-last-paste
                   (list #'evil-paste-before
@@ -2007,7 +2008,7 @@ The return value is the yanked text."
             ;; The reason is that this yanking could very well use
             ;; `yank-handler'.
             (let ((beg (point)))
-              (dotimes (i (or count 1))
+              (dotimes (_ (or count 1))
                 (insert-for-yank text))
               (setq evil-last-paste
                     (list #'evil-paste-after
@@ -2175,7 +2176,7 @@ when called interactively."
   (cond
    ((functionp macro)
     (evil-repeat-abort)
-    (dotimes (i (or count 1))
+    (dotimes (_ (or count 1))
       (funcall macro)))
    ((or (and (not (stringp macro))
              (not (vectorp macro)))
@@ -2683,14 +2684,14 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
          (evil-search search-string isearch-forward evil-regexp-search))
        (point)))
     (when (and count (> count 1))
-      (dotimes (var (1- count))
+      (dotimes (_ (1- count))
         (evil-search search-string isearch-forward evil-regexp-search)))))
 
 (evil-define-motion evil-search-previous (count)
   "Repeat the last search in the opposite direction."
   :jump t
   :type exclusive
-  (dotimes (var (or count 1))
+  (dotimes (_ (or count 1))
     (evil-search (if evil-regexp-search
                      (car-safe regexp-search-ring)
                    (car-safe search-ring))
@@ -2702,7 +2703,7 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
   :type exclusive
   (interactive (list (prefix-numeric-value current-prefix-arg)
                      evil-symbol-word-search))
-  (dotimes (var (or count 1))
+  (dotimes (_ (or count 1))
     (evil-search-word nil nil symbol)))
 
 (evil-define-motion evil-search-word-forward (count &optional symbol)
@@ -2711,7 +2712,7 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
   :type exclusive
   (interactive (list (prefix-numeric-value current-prefix-arg)
                      evil-symbol-word-search))
-  (dotimes (var (or count 1))
+  (dotimes (_ (or count 1))
     (evil-search-word t nil symbol)))
 
 (evil-define-motion evil-search-unbounded-word-backward (count &optional symbol)
@@ -2722,7 +2723,7 @@ The search is unbounded, i.e., the pattern is not wrapped in
   :type exclusive
   (interactive (list (prefix-numeric-value current-prefix-arg)
                      evil-symbol-word-search))
-  (dotimes (var (or count 1))
+  (dotimes (_ (or count 1))
     (evil-search-word nil t symbol)))
 
 (evil-define-motion evil-search-unbounded-word-forward (count &optional symbol)
@@ -2733,7 +2734,7 @@ The search is unbounded, i.e., the pattern is not wrapped in
   :type exclusive
   (interactive (list (prefix-numeric-value current-prefix-arg)
                      evil-symbol-word-search))
-  (dotimes (var (or count 1))
+  (dotimes (_ (or count 1))
     (evil-search-word t t symbol)))
 
 (defun evil-goto-definition-imenu (string _position)
@@ -2992,14 +2993,14 @@ command."
   "Goes to the `count'-th next buffer in the buffer list."
   :repeat nil
   (interactive "p")
-  (dotimes (i (or count 1))
+  (dotimes (_ (or count 1))
     (next-buffer)))
 
 (evil-define-command evil-prev-buffer (&optional count)
   "Goes to the `count'-th prev buffer in the buffer list."
   :repeat nil
   (interactive "p")
-  (dotimes (i (or count 1))
+  (dotimes (_ (or count 1))
     (previous-buffer)))
 
 (evil-define-command evil-delete-buffer (buffer &optional bang)
@@ -3495,7 +3496,6 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
          (evil-ex-substitute-last-point (point))
          (whole-line (evil-ex-pattern-whole-line pattern))
          (evil-ex-substitute-overlay (make-overlay (point) (point)))
-         (evil-ex-substitute-hl (evil-ex-make-hl 'evil-ex-substitute))
          (orig-point-marker (move-marker (make-marker) (point)))
          (end-marker (move-marker (make-marker) end))
          (use-reveal confirm)
@@ -3798,6 +3798,7 @@ Default position is the beginning of the buffer."
         (message "\"%s\" %d %slines --%s--" file nlines readonly perc)
       (message "%d lines --%s--" nlines perc))))
 
+(defvar sort-fold-case)
 (evil-define-operator evil-ex-sort (beg end &optional options reverse)
   "The Ex sort command.
 \[BEG,END]sort[!] [i][u]
@@ -3981,28 +3982,28 @@ of the parent of the splitted window are rebalanced."
   "Move the cursor to new COUNT-th window left of the current one."
   :repeat nil
   (interactive "p")
-  (dotimes (i count)
+  (dotimes (_ count)
     (windmove-left)))
 
 (evil-define-command evil-window-right (count)
   "Move the cursor to new COUNT-th window right of the current one."
   :repeat nil
   (interactive "p")
-  (dotimes (i count)
+  (dotimes (_ count)
     (windmove-right)))
 
 (evil-define-command evil-window-up (count)
   "Move the cursor to new COUNT-th window above the current one."
   :repeat nil
   (interactive "p")
-  (dotimes (i (or count 1))
+  (dotimes (_ (or count 1))
     (windmove-up)))
 
 (evil-define-command evil-window-down (count)
   "Move the cursor to new COUNT-th window below the current one."
   :repeat nil
   (interactive "p")
-  (dotimes (i (or count 1))
+  (dotimes (_ (or count 1))
     (windmove-down)))
 
 (evil-define-command evil-window-bottom-right ()

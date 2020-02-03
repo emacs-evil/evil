@@ -156,8 +156,8 @@ Elements are compared with `eq'."
   (let (result)
     (dolist (sequence sequences)
       (dolist (elt sequence)
-        (add-to-list 'result elt nil #'eq)))
-    (nreverse result)))
+        (push elt result)))
+    (nreverse (cl-remove-duplicates result :test #'eq))))
 
 (defun evil-concat-alists (&rest sequences)
   "Concatenate association lists, removing duplicates.
@@ -341,6 +341,7 @@ sorting in between."
           `(defun ,command ,args
              ,@(when doc `(,doc))
              ,interactive
+             (ignore ,@(remq '&optional args))
              ,@body))
        ,(when (and command doc-form)
           `(put ',command 'function-documentation ,doc-form))
@@ -480,7 +481,7 @@ an empty string."
                        (zerop (length (substring string idx))))
             (push match result))))
       (when (and num (< (length result) num))
-        (dotimes (i (- num (length result)))
+        (dotimes (_ (- num (length result)))
           (push nil result)))
       (nreverse result))))
 
@@ -560,9 +561,10 @@ Translates it according to the input method."
                 (lookup-key global-map [tab-bar]))
               (define-key new-global-map [tool-bar]
                 (lookup-key global-map [tool-bar]))
-              (add-to-list 'new-global-map
-                           (make-char-table 'display-table
-                                            'self-insert-command) t)
+              (setq new-global-map
+                    (append new-global-map
+                            (list (make-char-table 'display-table
+                                                   'self-insert-command))))
               (use-global-map new-global-map)
               (setq seq (read-key-sequence prompt nil t)
                     char (aref seq 0)
@@ -625,10 +627,7 @@ HIDE-CHARS characters. HIDE-CHARS defaults to 1."
 The type may be overridden with MODIFIER, which may be a type
 or a Visual selection as defined by `evil-define-visual-selection'.
 Return a list (MOTION COUNT [TYPE])."
-  (let ((modifiers '((evil-visual-char . char)
-                     (evil-visual-line . line)
-                     (evil-visual-block . block)))
-        command prefix)
+  (let (command prefix)
     (setq evil-this-type-modified nil)
     (unless motion
       (while (progn
@@ -1494,7 +1493,6 @@ motion stops when COUNT reaches zero. The match-data reflects the
 last successful match (that caused COUNT to reach zero)."
   (let* ((dir (if (> (or count 1) 0) +1 -1))
          (count (abs (or count 1)))
-         (match (> count 0))
          (op (if (> dir 0) 1 2))
          (cl (if (> dir 0) 2 1))
          (orig (point))
@@ -2012,7 +2010,7 @@ or a marker object pointing nowhere."
                                   (marker-position (cdr entry))))))))
 (put 'evil-swap-out-markers 'permanent-local-hook t)
 
-(defun evil-get-register (register &optional noerror)
+(defun evil-get-register (register &optional _noerror)
   "Return contents of REGISTER.
 Signal an error if empty, unless NOERROR is non-nil.
 
@@ -2627,7 +2625,7 @@ The tracked insertion is set to `evil-last-insertion'."
         (col (if (eq last-command 'evil-paste-after)
                  (1+ (current-column))
                (current-column))))
-    (dotimes (i nrows)
+    (dotimes (_ nrows)
       (delete-region (save-excursion
                        (move-to-column col)
                        (point))
@@ -3083,7 +3081,7 @@ linewise, otherwise it is character wise."
     ;; possibly count current object as selection
     (if addcurrent (setq count (1- count)))
     ;; move
-    (dotimes (var count)
+    (dotimes (_ count)
       (let ((wsend (evil-bounds-of-not-thing-at-point thing dir)))
         (if (and wsend (/= wsend (point)))
             ;; start with whitespace
@@ -3296,7 +3294,7 @@ is ignored."
                            (evil-up-block open close cnt))
                        beg end type count inclusive))))
 
-(defun evil-select-quote-thing (thing beg end type count &optional inclusive)
+(defun evil-select-quote-thing (thing beg end _type count &optional inclusive)
   "Selection THING as if it described a quoted object.
 THING is typically either 'evil-quote or 'evil-chars. This
 function is called from `evil-select-quote'."
@@ -3305,7 +3303,6 @@ function is called from `evil-select-quote'."
            (dir (if (> count 0) 1 -1))
            (bnd (let ((b (bounds-of-thing-at-point thing)))
                   (and b (< (point) (cdr b)) b)))
-           contains-string
            addcurrent
            wsboth)
       (if inclusive (setq inclusive t)
@@ -3557,21 +3554,20 @@ in `evil-temporary-undo' instead."
 
 ;;; Search
 (defun evil-transform-regexp (regexp replacements-alist)
-  (let ((pos 0) result)
-    (replace-regexp-in-string
-     "\\\\+[^\\\\]"
-     #'(lambda (txt)
-         (let* ((b (match-beginning 0))
-                (e (match-end 0))
-                (ch (aref txt (1- e)))
-                (repl (assoc ch replacements-alist)))
-           (if (and repl (zerop (mod (length txt) 2)))
-               (concat (substring txt b (- e 2))
-                       (cdr repl))
-             txt)))
-     regexp nil t)))
+  (replace-regexp-in-string
+   "\\\\+[^\\\\]"
+   #'(lambda (txt)
+       (let* ((b (match-beginning 0))
+              (e (match-end 0))
+              (ch (aref txt (1- e)))
+              (repl (assoc ch replacements-alist)))
+         (if (and repl (zerop (mod (length txt) 2)))
+             (concat (substring txt b (- e 2))
+                     (cdr repl))
+           txt)))
+   regexp nil t))
 
-(defun evil-transform-magic (str magic quote transform &optional start)
+(defun evil-transform-magic (str magic quote transform &optional _start)
   "Transforms STR with magic characters.
 MAGIC is a regexp that matches all potential magic
 characters. Each occurence of CHAR as magic character within str

@@ -116,7 +116,7 @@ to display in the echo area."
   (let ((lazy-highlight-initial-delay 0)
         (isearch-search-fun-function 'evil-isearch-function)
         (isearch-case-fold-search case-fold-search)
-        (disable #'(lambda (&optional arg) (evil-flash-hook t))))
+        (disable #'(lambda (&optional _arg) (evil-flash-hook t))))
     (when evil-flash-timer
       (cancel-timer evil-flash-timer))
     (unless (or (null string)
@@ -274,9 +274,7 @@ one more than the current position."
 If FORWARD is nil, search backward, otherwise forward. If SYMBOL
 is non-nil then the functions searches for the symbol at point,
 otherwise for the word at point."
-  (let ((string (car-safe regexp-search-ring))
-        (move (if forward #'forward-char #'backward-char))
-        (end (if forward #'eobp #'bobp)))
+  (let ((string (car-safe regexp-search-ring)))
     (setq isearch-forward forward)
     (cond
      ((and (memq last-command
@@ -586,7 +584,7 @@ The following properties are supported:
                                 pattern))
       (evil-ex-hl-idle-update))))
 
-(defun evil-ex-hl-set-region (name beg end &optional type)
+(defun evil-ex-hl-set-region (name beg end &optional _type)
   "Set minimal and maximal position of highlight NAME to BEG and END."
   (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
     (when hl
@@ -755,7 +753,7 @@ Note that this function ignores the whole-line property of PATTERN."
       (evil-ex-hl-update-highlights)))
   (setq evil-ex-hl-update-timer nil))
 
-(defun evil-ex-hl-update-highlights-scroll (win beg)
+(defun evil-ex-hl-update-highlights-scroll (win _beg)
   "Update highlights after scrolling in some window."
   (with-current-buffer (window-buffer win)
     (evil-ex-hl-idle-update)))
@@ -791,7 +789,7 @@ the direcion is determined by `evil-ex-search-direction'."
         count (or count 1))
   (let ((orig (point))
         wrapped)
-    (dotimes (i (or count 1))
+    (dotimes (_ (or count 1))
       (when (eq evil-ex-search-direction 'forward)
         (unless (eobp) (forward-char))
         ;; maybe skip end-of-line
@@ -995,7 +993,7 @@ any error conditions."
                                 'forward
                               'backward)))))))))
 
-(defun evil-ex-search-update-pattern (beg end range)
+(defun evil-ex-search-update-pattern (_beg _end _range)
   "Update the current search pattern."
   (save-match-data
     (let ((pattern-string (minibuffer-contents)))
@@ -1042,16 +1040,6 @@ any error conditions."
   (evil-ex-search-stop-session)
   (evil-ex-delete-hl 'evil-ex-search)
   (abort-recursive-edit))
-
-(defun evil-ex-search-command-window ()
-  "Start command window with search history and current minibuffer content."
-  (interactive)
-  (let ((current (minibuffer-contents))
-        (config (current-window-configuration)))
-    (select-window (minibuffer-selected-window) t)
-    (evil-command-window (cons current evil-ex-search-history)
-                         (evil-search-prompt (eq evil-ex-search-direction 'forward))
-                         (apply-partially 'evil-ex-command-window-execute config))))
 
 (defun evil-ex-search-goto-offset (offset)
   "Move point according to search OFFSET and set `evil-this-type' accordingly.
@@ -1219,12 +1207,12 @@ This handler highlights the pattern of the current substitution."
            (evil-ex-pattern-update-ex-info nil
                                            (format "%s" lossage))))))))
 
-(defun evil-ex-pattern-update-ex-info (hl result)
+(defun evil-ex-pattern-update-ex-info (_hl result)
   "Update the Ex info string."
   (when (stringp result)
     (evil-ex-echo "%s" result)))
 
-(defun evil-ex-pattern-update-replacement (hl overlay)
+(defun evil-ex-pattern-update-replacement (_hl overlay)
   "Update the replacement display."
   (when (fboundp 'match-substitute-replacement)
     (let ((fixedcase (not case-replace))
