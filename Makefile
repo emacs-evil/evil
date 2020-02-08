@@ -40,6 +40,9 @@ docstrings:
 doc: docstrings
 	@$(MAKE) -C doc texinfo
 
+info: doc
+	@$(MAKE) -C doc info
+
 # Delete byte-compiled files etc.
 clean:
 	rm -f *~
