@@ -103,7 +103,7 @@ There follows a brief overview of the main functions of this macro.
 
 
 The macro :elisp:ref:`evil-define-key` can be used to augment existing
-modes with state bindings, as well as creating packages with customg
+modes with state bindings, as well as creating packages with custom
 bindings.  For example, the following will create a minor mode
 ``foo-mode`` with normal state bindings for the keys :kbd:`w` and
 :kbd:`e`:
