@@ -2045,7 +2045,7 @@ The following special registers are supported.
               (let ((what (if (eq register ?*) 'PRIMARY 'CLIPBOARD))
                     (request-type (or (and (boundp 'x-select-request-type)
                                            x-select-request-type)
-                                      '(UTF8_STRING COMPOUNT_TEXT STRING)))
+                                      '(UTF8_STRING COMPOUND_TEXT STRING)))
                     text)
                 (unless (consp request-type)
                   (setq request-type (list request-type)))
