@@ -569,11 +569,11 @@ may be specified before the body code:
        ,@(if local
              `((make-variable-buffer-local ',keymap)
                (put ',keymap 'permanent-local t)
-               (evil-add-to-alist 'evil-local-keymaps-alist
+               (evil--add-to-alist 'evil-local-keymaps-alist
                                   ',mode ',keymap))
-           `((evil-add-to-alist 'evil-global-keymaps-alist
+           `((evil--add-to-alist 'evil-global-keymaps-alist
                                 ',mode ',keymap)
-             (evil-add-to-alist 'evil-mode-map-alist
+             (evil--add-to-alist 'evil-mode-map-alist
                                 ',mode ,keymap)))
        ,(when (or body func)
           `(defun ,mode (&optional arg)
@@ -1347,7 +1347,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                  input-method-deactivate-hook)
              (evil-change-state nil)
              (setq evil-state ',state)
-             (evil-add-to-alist 'evil-previous-state-alist
+             (evil--add-to-alist 'evil-previous-state-alist
                                 ',state evil-previous-state)
              (let ((evil-state ',state))
                (evil-normalize-keymaps)
