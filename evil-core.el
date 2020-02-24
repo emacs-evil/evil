@@ -1259,7 +1259,7 @@ the local keymap will be `evil-test-state-local-map', and so on.
        ((eq key :exit-hook)
         (setq exit-hook-value arg)
         (unless (listp exit-hook-value)
-          (setq exit-hook-value (list entry-hook-value))))
+          (setq exit-hook-value (list exit-hook-value))))
        ((eq key :enable)
         (setq enable arg))
        ((eq key :input-method)
