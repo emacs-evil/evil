@@ -87,7 +87,7 @@ it will be used as the function to execute instead of
         (config (current-window-configuration)))
     (evil-ex-teardown)
     (select-window (minibuffer-selected-window) t)
-    (evil-ex-command-window current (apply-partially 'evil-ex-command-window-execute config))))
+    (evil-command-window-ex current (apply-partially 'evil-ex-command-window-execute config))))
 
 (defun evil-ex-search-command-window ()
   "Start command window with search history and current minibuffer content."
