@@ -561,7 +561,8 @@ The default behavior is to yank the whole line, like Vim."
   :group 'evil
   :type 'boolean
   :initialize #'evil-custom-initialize-pending-reset
-  :set #'(lambda (_sym value)
+  :set #'(lambda (sym value)
+           (set-default sym value)
            (evil-add-command-properties
             'evil-yank-line
             :motion (if value
@@ -576,7 +577,9 @@ large accessible in insert state."
   :group 'evil
   :type 'boolean
   :initialize #'evil-custom-initialize-pending-reset
-  :set #'evil-update-insert-state-bindings)
+  :set #'(lambda (sym value)
+           (set-default sym value)
+           (evil-update-insert-state-bindings sym value)))
 
 (defcustom evil-echo-state t
   "Whether to signal the current state in the echo area."
@@ -904,7 +907,8 @@ should be overridden. If STATE is nil, all states are
 overridden."
   :type '(alist :key-type symbol :value-type symbol)
   :group 'evil
-  :set #'(lambda (_var values)
+  :set #'(lambda (var values)
+           (set-default var values)
            (evil-set-custom-state-maps 'evil-overriding-maps
                                        'evil-pending-overriding-maps
                                        'override-state
@@ -923,7 +927,8 @@ should be intercepted. If STATE is nil, all states are
 intercepted."
   :type '(alist :key-type symbol :value-type symbol)
   :group 'evil
-  :set #'(lambda (_var values)
+  :set #'(lambda (var values)
+           (set-default var values)
            (evil-set-custom-state-maps 'evil-intercept-maps
                                        'evil-pending-intercept-maps
                                        'intercept-state
