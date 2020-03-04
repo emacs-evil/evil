@@ -36,6 +36,8 @@
          (let ((default (car (get sym 'standard-value))))
            (while (and (consp default) (memq (car default) '(function quote)))
              (setq default (cadr default)))
+           (when (eq 'funcall (car-safe default))
+             (setq default (eval default)))
            ;; (when (and (boundp sym) (keymapp (symbol-value sym)))
            ;;   (message (format "%S" sym)))
            (push `(,sym (default . ,(cond
