@@ -25,7 +25,7 @@ copyright = '2011-2019, Eivind Fonn, Frank Fischer, Vegard Øye'
 author = 'Eivind Fonn, Frank Fischer, Vegard Øye'
 
 # The full version, including alpha/beta/rc tags
-release = '1.13.0'
+release = '1.14.0'
 
 master_doc = 'index'
 

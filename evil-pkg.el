@@ -1,6 +1,6 @@
 (define-package
   "evil"
-  "1.13.0"
+  "1.14.0"
   "Extensible Vi layer for Emacs."
   '((emacs "24.1")
     (undo-tree "0.6.3")
