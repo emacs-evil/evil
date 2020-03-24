@@ -2766,7 +2766,9 @@ The search is unbounded, i.e., the pattern is not wrapped in
                         (goto-char position)
                         (xref-backend-identifier-at-point (xref-find-backend)))))
       (condition-case ()
-          (xref-find-definitions identifier)
+          (progn
+            (xref-find-definitions identifier)
+            t)
         (user-error nil)))))
 
 (defun evil-goto-definition-search (string _position)
