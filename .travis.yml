@@ -19,10 +19,10 @@ install:
 script:
   - emacs --version
   - make test
-  # - script -eqc 'make test' > /dev/null
+  - script -eqc 'make test' > /dev/null
 
-# after_script:
-#   - cat test-results.txt
+after_script:
+  - cat test-results.txt
 
 notifications:
   email:
