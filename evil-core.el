@@ -985,7 +985,7 @@ A return value of t means all states."
 <localleader> bindings."
   (interactive)
   (setq prefix-arg current-prefix-arg)
-  (push '(t. localleader) unread-command-events))
+  (push '(t . localleader) unread-command-events))
 
 (defun evil-set-leader (state key &optional localleader)
   "Set KEY to trigger leader bindings in STATE.
