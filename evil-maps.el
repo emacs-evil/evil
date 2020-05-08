@@ -336,6 +336,9 @@
 (when evil-want-C-d-scroll
   (define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down))
 
+(when evil-want-C-g-bindings
+  (define-key evil-motion-state-map "g\C-g" 'count-words))
+
 ;;; Visual state
 
 (define-key evil-visual-state-map "A" 'evil-append)

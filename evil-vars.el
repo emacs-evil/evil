@@ -534,6 +534,11 @@ ubiquity of prefix arguments."
                         'evil-window-map))
                (define-key evil-insert-state-map (kbd "C-w") 'evil-delete-backward-word))))))
 
+(defcustom evil-want-C-g-bindings nil
+  "Whether `C-g' postfix can be used in bindings."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-want-C-w-in-emacs-state nil
   "Whether `C-w' prefixes windows commands in Emacs state."
   :type 'boolean
