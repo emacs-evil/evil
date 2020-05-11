@@ -2592,7 +2592,20 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
 ;; [I]f you want to create a file, visit that file with C-x C-f."
     ("Vp")
     ";; This buffer is for notes you don't want to save.
-\[;]; This buffer is for notes you don't want to save."))
+\[;]; This buffer is for notes you don't want to save.")
+  (ert-info ("Visual-paste from register 3")
+    ;; This behaviour deviates from vim, which populates registers 1-9 with
+    ;; deleted text only, not yanked text. This is an aspect of `evil-yank's
+    ;; use of the emacs kill-ring, so is consistent with non-visual paste.
+    (evil-test-buffer
+     "[w]ord1a word1b word1c word1d
+word2a word2b word2c word2d"
+     ("yiwwyiwwyiw")
+     "word1a word1b [w]ord1c word1d
+word2a word2b word2c word2d"
+     ("+viw\"3p")
+     "word1a word1b word1c word1d
+word1[a] word2b word2c word2d")))
 
 (ert-deftest evil-test-visual-paste-pop ()
   "Test `evil-paste-pop' after visual paste."

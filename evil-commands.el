@@ -2041,8 +2041,7 @@ The return value is the yanked text."
          new-kill
          paste-eob)
     (evil-with-undo
-      (let* ((kill-ring (list (current-kill 0)))
-             (kill-ring-yank-pointer kill-ring))
+      (let ((kill-ring-yank-pointer (list (current-kill 0))))
         (when (evil-visual-state-p)
           (evil-visual-rotate 'upper-left)
           ;; if we replace the last buffer line that does not end in a
@@ -2058,13 +2057,12 @@ The return value is the yanked text."
                      (not (= evil-visual-end (point-max))))
             (insert "\n"))
           (evil-normal-state)
-          (setq new-kill (current-kill 0))
           (current-kill 1))
         (if paste-eob
             (evil-paste-after count register)
           (evil-paste-before count register)))
       (when evil-kill-on-visual-paste
-        (kill-new new-kill))
+        (current-kill -1))
       ;; mark the last paste as visual-paste
       (setq evil-last-paste
             (list (nth 0 evil-last-paste)
