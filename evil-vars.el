@@ -735,6 +735,7 @@ expression matching the buffer's name and STATE is one of `normal',
     emms-playlist-mode
     ess-help-mode
     etags-select-mode
+    exwm-mode
     fj-mode
     gc-issues-mode
     gdb-breakpoints-mode
