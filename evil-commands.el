@@ -3173,20 +3173,21 @@ If ARG is nil this function calls `recompile', otherwise it calls
 (evil-define-command evil-show-registers ()
   "Shows the contents of all registers."
   :repeat nil
-  (evil-with-view-list
-    :name "evil-registers"
-    :mode-name "Evil Registers"
-    :format
-    [("Register" 10 nil)
-     ("Value" 1000 nil)]
-    :entries
-    (cl-loop for (key . val) in (evil-register-list)
-             collect `(nil [,(char-to-string key)
-                            ,(cond ((stringp val)
-                                    (replace-regexp-in-string "\n" "^J" val))
-                                   ((vectorp val)
-                                    (key-description val))
-                                   (t ""))]))))
+  (let ((all-registers (evil-register-list)))
+    (evil-with-view-list
+      :name "evil-registers"
+      :mode-name "Evil Registers"
+      :format
+      [("Register" 10 nil)
+       ("Value" 1000 nil)]
+      :entries
+      (cl-loop for (key . val) in all-registers
+               collect `(nil [,(char-to-string key)
+                              ,(cond ((stringp val)
+                                      (replace-regexp-in-string "\n" "^J" val))
+                                     ((vectorp val)
+                                      (key-description val))
+                                     (t ""))])))))
 
 (evil-define-command evil-show-marks (mrks)
   "Shows all marks.
