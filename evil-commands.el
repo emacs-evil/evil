@@ -1465,7 +1465,7 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   "Delete next character."
   :motion evil-forward-char
   (interactive "<R><x>")
-  (evil-delete beg end type (or register ?_)))
+  (evil-delete beg end type register))
 
 (evil-define-operator evil-delete-backward-char (beg end type register)
   "Delete previous character."
