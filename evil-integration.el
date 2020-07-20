@@ -523,6 +523,10 @@ Based on `evil-enclose-ace-jump-for-motion'."
 (eval-after-load 'abbrev
   '(add-hook 'evil-insert-state-exit-hook 'evil-maybe-expand-abbrev))
 
+;;; go-mode
+(eval-after-load 'go-mode
+  '(evil-set-command-property 'godef-jump :jump t))
+
 ;;; ElDoc
 (eval-after-load 'eldoc
   '(when (fboundp 'eldoc-add-command-completions)
