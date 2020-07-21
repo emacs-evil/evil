@@ -2230,6 +2230,9 @@ The following special registers are supported.
     (cond
      ((not content)
       (set-register register text))
+     ((not (stringp content))
+      ;; if the register does not contain a string treat it as a vector
+      (set-register register (vconcat content text)))
      ((or (text-property-not-all 0 (length content)
                                  'yank-handler nil
                                  content)

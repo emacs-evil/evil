@@ -9355,6 +9355,16 @@ when an error stops the execution of the macro"
       ;; should not raise an "Selecting deleted buffer" error
       (evil-visual-update-x-selection buf))))
 
+(ert-deftest evil-test-append-to-kbd-macro ()
+  "Test if evil can append to a keyboard macro."
+  :tags '(evil append to kbd-macro)
+  (ert-info ("When kbd-macro ends in <escape>")
+    (evil-test-buffer
+     (evil-set-register ?a (vconcat "ainserted text" [escape]))
+     (evil-set-register ?A (vconcat "a appended text" [escape]))
+     ("@a")
+     "inserted text appended tex[t]")))
+
 ;;; Core
 
 (ert-deftest evil-test-initial-state ()
