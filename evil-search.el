@@ -1160,7 +1160,8 @@ point."
         (setq evil-ex-search-count count
               evil-ex-search-direction direction
               evil-ex-search-pattern
-              (evil-ex-make-search-pattern regex)
+              (let (evil-ex-search-vim-style-regexp)
+                (evil-ex-make-search-pattern regex))
               evil-ex-search-offset nil
               evil-ex-last-was-search t)
         ;; update search history unless this pattern equals the
