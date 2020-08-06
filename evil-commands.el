@@ -2038,7 +2038,6 @@ The return value is the yanked text."
                  (current-kill 0)))
          (yank-handler (car-safe (get-text-property
                                   0 'yank-handler text)))
-         new-kill
          paste-eob)
     (evil-with-undo
       (let ((kill-ring-yank-pointer (list (current-kill 0))))
