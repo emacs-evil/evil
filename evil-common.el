@@ -125,7 +125,8 @@ otherwise add at the end of the list."
       (set list-var (append (symbol-value list-var)
                             (list (cons key val)))))
     (if elements
-        (apply #'evil-add-to-alist list-var elements)
+        (with-no-warnings
+          (apply #'evil-add-to-alist list-var elements))
       (symbol-value list-var))))
 
 (make-obsolete 'evil-add-to-alist
