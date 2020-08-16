@@ -273,7 +273,8 @@ POS defaults to point."
                (> (length window-list) 1))
       (let* ((target-jump-struct (evil--jumps-get-current new-window)))
         (if (not (ring-empty-p (evil--jumps-get-jumps target-jump-struct)))
-            (evil--jumps-message "target window %s already has %s jumps" new-window target-jump-count)
+            (evil--jumps-message "target window %s already has %s jumps" new-window
+                                 (ring-length (evil--jumps-get-jumps target-jump-struct)))
           (evil--jumps-message "new target window detected; copying %s to %s" existing-window new-window)
           (let* ((source-jump-struct (evil--jumps-get-current existing-window))
                  (source-list (evil--jumps-get-jumps source-jump-struct)))
