@@ -66,6 +66,10 @@
 
 (defvar evil--jumps-jumping nil)
 
+(defvar evil--jumps-jumping-backward nil
+  "Set by `evil--jump-backward', used and cleared in the
+`post-command-hook' by `evil--jump-handle-buffer-crossing'")
+
 (eval-when-compile (defvar evil--jumps-debug nil))
 
 (defvar evil--jumps-buffer-targets "\\*\\(new\\|scratch\\)\\*"
@@ -79,13 +83,15 @@
 
 (cl-defstruct evil-jumps-struct
   ring
-  (idx -1))
+  (idx -1)
+  previous-pos)
 
-(defmacro evil--jumps-message (format &rest args)
-  (when evil--jumps-debug
-    `(with-current-buffer (get-buffer-create "*evil-jumps*")
+;; Is inlining this really worth it?
+(defsubst evil--jumps-message (format &rest args)
+  (when (eval-when-compile evil--jumps-debug)
+    (with-current-buffer (get-buffer-create "*evil-jumps*")
        (goto-char (point-max))
-       (insert (apply #'format ,format ',args) "\n"))))
+       (insert (apply #'format format args) "\n"))))
 
 (defun evil--jumps-get-current (&optional window)
   (unless window
@@ -216,23 +222,27 @@
 (defun evil-set-jump (&optional pos)
   "Set jump point at POS.
 POS defaults to point."
-  (unless (or (region-active-p) (evil-visual-state-p))
-    (push-mark pos t))
+  (save-excursion
+    (when (markerp pos)
+      (set-buffer (marker-buffer pos)))
 
-  (unless evil--jumps-jumping
-    ;; clear out intermediary jumps when a new one is set
-    (let* ((struct (evil--jumps-get-current))
-           (target-list (evil--jumps-get-jumps struct))
-           (idx (evil-jumps-struct-idx struct)))
-      (cl-loop repeat idx
-               do (ring-remove target-list))
-      (setf (evil-jumps-struct-idx struct) -1))
-    (save-excursion
+    (unless (or (region-active-p) (evil-visual-state-p))
+      (push-mark pos t))
+
+    (unless evil--jumps-jumping
+      ;; clear out intermediary jumps when a new one is set
+      (let* ((struct (evil--jumps-get-current))
+             (target-list (evil--jumps-get-jumps struct))
+             (idx (evil-jumps-struct-idx struct)))
+        (cl-loop repeat idx
+                 do (ring-remove target-list))
+        (setf (evil-jumps-struct-idx struct) -1))
       (when pos
         (goto-char pos))
       (evil--jumps-push))))
 
 (defun evil--jump-backward (count)
+  (setq evil--jumps-jumping-backward t)
   (let ((count (or count 1)))
     (evil-motion-loop (nil count)
       (let* ((struct (evil--jumps-get-current))
@@ -263,11 +273,13 @@ POS defaults to point."
                (> (length window-list) 1))
       (let* ((target-jump-struct (evil--jumps-get-current new-window)))
         (if (not (ring-empty-p (evil--jumps-get-jumps target-jump-struct)))
-            (evil--jumps-message "target window %s already has %s jumps" new-window target-jump-count)
+            (evil--jumps-message "target window %s already has %s jumps" new-window
+                                 (ring-length (evil--jumps-get-jumps target-jump-struct)))
           (evil--jumps-message "new target window detected; copying %s to %s" existing-window new-window)
           (let* ((source-jump-struct (evil--jumps-get-current existing-window))
                  (source-list (evil--jumps-get-jumps source-jump-struct)))
             (when (= (ring-length (evil--jumps-get-jumps target-jump-struct)) 0)
+              (setf (evil-jumps-struct-previous-pos target-jump-struct) (evil-jumps-struct-previous-pos source-jump-struct))
               (setf (evil-jumps-struct-idx target-jump-struct) (evil-jumps-struct-idx source-jump-struct))
               (setf (evil-jumps-struct-ring target-jump-struct) (ring-copy source-list)))))))
     ;; delete obsolete windows
@@ -278,36 +290,65 @@ POS defaults to point."
              evil--jumps-window-jumps)))
 
 (defun evil--jump-hook (&optional command)
-  "Set jump point if COMMAND has a non-nil :jump property."
+  "`pre-command-hook' for evil-jumps.
+Set jump point if COMMAND has a non-nil `:jump' property. Otherwise,
+save the current position in case the command being executed will
+change the current buffer."
   (setq command (or command this-command))
-  (when (evil-get-command-property command :jump)
-    (evil-set-jump)))
+  (if (evil-get-command-property command :jump)
+      (evil-set-jump)
+    (setf (evil-jumps-struct-previous-pos (evil--jumps-get-current))
+          (point-marker))))
 
-(defadvice switch-to-buffer (before evil-jumps activate)
-  (evil-set-jump))
+(defun evil--jump-handle-buffer-crossing ()
+  (let ((jumping-backward evil--jumps-jumping-backward))
+    (setq evil--jumps-jumping-backward nil)
+    (dolist (frame (frame-list))
+      (dolist (window (window-list frame))
+        (let* ((struct (evil--jumps-get-current window))
+               (previous-pos (evil-jumps-struct-previous-pos struct)))
+          (when previous-pos
+            (setf (evil-jumps-struct-previous-pos struct) nil)
+            (if (and
+                 ;; `evil-jump-backward' (and other backward jumping
+                 ;; commands) needs to be handled specially. When
+                 ;; jumping backward multiple times, calling
+                 ;; `evil-set-jump' is always wrong: If you jump back
+                 ;; twice and we call `evil-set-jump' after the second
+                 ;; time, we clear the forward jump list and
+                 ;; `evil--jump-forward' won't work.
 
-(defadvice split-window-internal (before evil-jumps activate)
-  (evil-set-jump))
-
-(eval-after-load 'etags
-  '(defadvice find-tag-noselect (before evil-jumps activate)
-     (evil-set-jump)))
+                 ;; The first time you jump backward, setting a jump
+                 ;; point is sometimes correct. But we don't do it
+                 ;; here because this function is called after
+                 ;; `evil--jump-backward' has updated our position in
+                 ;; the jump list so, again, `evil-set-jump' would
+                 ;; break `evil--jump-forward'.
+                 (not jumping-backward)
+                 (let ((previous-buffer (marker-buffer previous-pos)))
+                   (and previous-buffer
+                        (not (eq previous-buffer (window-buffer window))))))
+                (evil-set-jump previous-pos)
+              (set-marker previous-pos nil))))))))
 
 (if (bound-and-true-p savehist-loaded)
     (evil--jumps-savehist-load)
   (add-hook 'savehist-mode-hook #'evil--jumps-savehist-load))
 
-(add-hook 'evil-local-mode-hook
-          (lambda ()
-            (if evil-local-mode
-                (progn
-                  (add-hook 'pre-command-hook #'evil--jump-hook nil t)
-                  (add-hook 'next-error-hook #'evil-set-jump nil t)
-                  (add-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook nil t))
-              (progn
-                (remove-hook 'pre-command-hook #'evil--jump-hook t)
-                (remove-hook 'next-error-hook #'evil-set-jump t)
-                (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)))))
+(defun evil--jumps-install-or-uninstall ()
+  (if evil-local-mode
+      (progn
+        (add-hook 'pre-command-hook #'evil--jump-hook nil t)
+        (add-hook 'post-command-hook #'evil--jump-handle-buffer-crossing nil t)
+        (add-hook 'next-error-hook #'evil-set-jump nil t)
+        (add-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook nil t))
+    (remove-hook 'pre-command-hook #'evil--jump-hook t)
+    (remove-hook 'post-command-hook #'evil--jump-handle-buffer-crossing t)
+    (remove-hook 'next-error-hook #'evil-set-jump t)
+    (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)
+    (evil--jump-handle-buffer-crossing)))
+
+(add-hook 'evil-local-mode-hook #'evil--jumps-install-or-uninstall)
 
 (provide 'evil-jumps)
 
