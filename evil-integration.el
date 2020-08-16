@@ -528,6 +528,38 @@ Based on `evil-enclose-ace-jump-for-motion'."
   '(when (fboundp 'eldoc-add-command-completions)
      (eldoc-add-command-completions "evil-window-")))
 
+;;; Tempo
+(declare-function tempo-forward-mark "tempo" ())
+(declare-function tempo-backward-mark "tempo" ())
+(eval-after-load 'tempo
+  '(progn
+     (defadvice tempo-forward-mark (before evil activate)
+       (when (and (not evil-move-beyond-eol)
+                  (cl-notany (apply-partially #'= (point))
+                             tempo-marks)
+                  (= (point)
+                     (1-
+                      (save-excursion
+                        (evil-move-end-of-line)
+                        (point)))))
+         (forward-char 1)))
+
+    (evil-declare-motion 'tempo-forward-mark)
+    (evil-declare-motion 'tempo-backward-mark)
+
+    ;; The original tempo commands don't accept a count argument.
+    (evil-define-motion evil-tempo-forward-mark (count)
+      "Move the cursor to the COUNT-th next mark in `tempo-marks'."
+      :jump t
+      (evil-motion-loop (_ count)
+        (tempo-forward-mark)))
+
+    (evil-define-motion evil-tempo-backward-mark (count)
+      "Move the cursor to the COUNT-th previous mark in `tempo-marks'."
+      :jump t
+      (evil-motion-loop (_ count)
+        (tempo-backward-mark)))))
+
 (provide 'evil-integration)
 
 ;;; evil-integration.el ends here
