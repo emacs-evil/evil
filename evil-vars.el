@@ -896,11 +896,13 @@ expression matching the buffer's name and STATE is one of `normal',
     inferior-scheme-mode
     inferior-sml-mode
     internal-ange-ftp-mode
+    haskell-interactive-mode
     prolog-inferior-mode
     reb-mode
     shell-mode
     slime-repl-mode
     term-mode
+    utop-mode
     wdired-mode)
   "Modes that should come up in Insert state."
   :type  '(repeat symbol)
