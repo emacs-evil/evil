@@ -530,7 +530,8 @@ Based on `evil-enclose-ace-jump-for-motion'."
 
 ;;; XRef
 (eval-after-load 'xref
-  (evil-set-command-property 'xref-find-definitions :jump t))
+  (evil-set-command-property 'xref-find-definitions :jump t)
+  (evil-set-command-property 'xref-find-references :jump t))
 
 (provide 'evil-integration)
 
