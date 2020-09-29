@@ -528,6 +528,10 @@ Based on `evil-enclose-ace-jump-for-motion'."
   '(when (fboundp 'eldoc-add-command-completions)
      (eldoc-add-command-completions "evil-window-")))
 
+;;; XRef
+(eval-after-load 'xref
+  (evil-set-command-property 'xref-find-definitions :jump t))
+
 (provide 'evil-integration)
 
 ;;; evil-integration.el ends here
