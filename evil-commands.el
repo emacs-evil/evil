@@ -31,6 +31,7 @@
 (require 'evil-types)
 (require 'evil-command-window)
 (require 'evil-jumps)
+(require 'evil-vars)
 (require 'flyspell)
 (require 'cl-lib)
 (require 'reveal)
@@ -1619,6 +1620,16 @@ of the block."
     (forward-line -1)
     (when (evil-visual-state-p)
       (move-marker evil-visual-point (point)))))
+
+(evil-define-command evil-undo (count)
+  "Undo COUNT changes in buffer using `evil-undo-function'."
+  (interactive "<c>")
+  (funcall evil-undo-function count))
+
+(evil-define-command evil-redo (count)
+  "Undo COUNT changes in buffer using `evil-redo-function'."
+  (interactive "<c>")
+  (funcall evil-redo-function count))
 
 (evil-define-operator evil-substitute (beg end type register)
   "Change a character."
