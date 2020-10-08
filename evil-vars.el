@@ -2008,8 +2008,8 @@ Customized via `evil-undo-system'.")
                  (const undo-fu))
   :group 'evil
   :set #'(lambda (sym value)
-           (set-default sym value)
-           (evil-set-undo-system value)))
+           (evil-set-undo-system value)
+           (set-default sym value)))
 
 (defun evil-version ()
   (interactive)
