@@ -139,23 +139,8 @@
             (when (overlayp ov) (delete-overlay ov))))))))
 
 ;;; Undo tree
-(when (and (require 'undo-tree nil t)
-           (fboundp 'global-undo-tree-mode))
-  (global-undo-tree-mode 1))
-
 (eval-after-load 'undo-tree
   '(with-no-warnings
-     (defun evil-turn-on-undo-tree-mode ()
-       "Enable `undo-tree-mode' if evil is enabled.
-This function enables `undo-tree-mode' when Evil is activated in
-some buffer, but only if `global-undo-tree-mode' is also
-activated."
-       (when (and (boundp 'global-undo-tree-mode)
-                  global-undo-tree-mode)
-         (turn-on-undo-tree-mode)))
-
-     (add-hook 'evil-local-mode-hook #'evil-turn-on-undo-tree-mode)
-
      (defadvice undo-tree-visualize (after evil activate)
        "Initialize Evil in the visualization buffer."
        (when evil-local-mode

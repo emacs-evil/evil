@@ -111,8 +111,8 @@
 (define-key evil-normal-state-map "g," 'goto-last-change-reverse)
 
 ;; undo
-(define-key evil-normal-state-map "u" 'undo)
-(define-key evil-normal-state-map "\C-r" 'redo)
+(define-key evil-normal-state-map "u" 'evil-undo)
+(define-key evil-normal-state-map "\C-r" 'evil-redo)
 
 ;; window commands
 (define-prefix-command 'evil-window-map)
@@ -517,6 +517,8 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "show-digraphs" 'evil-ex-show-digraphs)
 (evil-ex-define-cmd "sor[t]" 'evil-ex-sort)
 (evil-ex-define-cmd "res[ize]" 'evil-ex-resize)
+(evil-ex-define-cmd "u[ndo]" 'evil-undo)
+(evil-ex-define-cmd "red[o]" 'evil-redo)
 
 (when (featurep 'tab-bar)
   (evil-ex-define-cmd "tabnew" 'tab-bar-new-tab)

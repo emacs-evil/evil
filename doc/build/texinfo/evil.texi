@@ -162,7 +162,7 @@ Finally, add the following lines to your Emacs init file:
 @section Manual installation
 
 
-First, install @cite{undo-tree}, @cite{goto-chg} and @cite{cl-lib}.  If you have an
+First, install @cite{goto-chg} and @cite{cl-lib}.  If you have an
 Emacs version of 24.3 or newer, you should already have @cite{cl-lib}.
 
 Evil lives in a git repository.  To download Evil, do:

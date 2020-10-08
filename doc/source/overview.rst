@@ -32,8 +32,8 @@ Finally, add the following lines to your Emacs init file:
 Manual installation
 -------------------
 
-First, install `undo-tree`, `goto-chg` and `cl-lib`.  If you have an
-Emacs version of 24.3 or newer, you should already have `cl-lib`.
+First, install `goto-chg` and `cl-lib`.  If you have an Emacs version
+of 24.3 or newer, you should already have `cl-lib`.
 
 Evil lives in a git repository.  To download Evil, do::
 
