@@ -1623,12 +1623,12 @@ of the block."
 
 (evil-define-command evil-undo (count)
   "Undo COUNT changes in buffer using `evil-undo-function'."
-  (interactive "p")
+  (interactive "*p")
   (funcall evil-undo-function count))
 
 (evil-define-command evil-redo (count)
   "Undo COUNT changes in buffer using `evil-redo-function'."
-  (interactive "p")
+  (interactive "*p")
   (funcall evil-redo-function count))
 
 (evil-define-operator evil-substitute (beg end type register)
