@@ -139,10 +139,6 @@
             (when (overlayp ov) (delete-overlay ov))))))))
 
 ;;; Undo tree
-(when (and (require 'undo-tree nil t)
-           (fboundp 'global-undo-tree-mode))
-  (global-undo-tree-mode 1))
-
 (eval-after-load 'undo-tree
   '(with-no-warnings
      (defadvice undo-tree-visualize (after evil activate)
