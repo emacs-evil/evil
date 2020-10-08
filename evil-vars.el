@@ -2005,7 +2005,7 @@ Customized via `evil-undo-system'.")
   :type '(choice (const :tag "Vanilla undo" nil)
                  (const undo-redo)
                  (const undo-tree)
-                 (const undo-foo))
+                 (const undo-fu))
   :group 'evil
   :set #'(lambda (sym value)
            (set-default sym value)
