@@ -1621,14 +1621,21 @@ of the block."
     (when (evil-visual-state-p)
       (move-marker evil-visual-point (point)))))
 
+(defun evil--check-undo-system ()
+  (when (and (eq evil-undo-system 'undo-tree)
+             (not (bound-and-true-p undo-tree-mode)))
+    (user-error "Enable `global-undo-tree-mode' to use undo-tree commands.")))
+
 (evil-define-command evil-undo (count)
   "Undo COUNT changes in buffer using `evil-undo-function'."
   (interactive "*p")
+  (evil--check-undo-system)
   (funcall evil-undo-function count))
 
 (evil-define-command evil-redo (count)
   "Undo COUNT changes in buffer using `evil-redo-function'."
   (interactive "*p")
+  (evil--check-undo-system)
   (funcall evil-redo-function count))
 
 (evil-define-operator evil-substitute (beg end type register)
