@@ -5202,6 +5202,44 @@ Below some empty line."))
       ("2])")
       "foo ( { ( bar ) baz } [)]")))
 
+(ert-deftest evil-test-next-mark ()
+  "Test `evil-next-mark', `evil-previous-mark'"
+  :tags '(evil motion)
+  (ert-info ("Can move to next mark and next mark line")
+    (evil-test-buffer
+     "line 1
+lin[e] 2
+line 3"
+     ("majmbgg")
+     "[l]ine 1
+line 2
+line 3"
+     ("]`")
+     "line 1
+lin[e] 2
+line 3"
+     ("]'")
+     "line 1
+line 2
+[l]ine 3"))
+  (ert-info ("Can move to previous mark and previous mark line")
+    (evil-test-buffer
+     "li[n]e 1
+line 2
+line 3"
+     ("mcjmdG")
+     "line 1
+line 2
+[l]ine 3"
+     ("[`")
+     "line 1
+li[n]e 2
+line 3"
+     ("2['")
+     "line 1
+[l]ine 2
+line 3")))
+
 (ert-deftest evil-test-flyspell-motions ()
   "Test flyspell motions"
   :tags '(evil motion)

@@ -672,6 +672,69 @@ and jump to the corresponding one."
   (evil-up-paren ?{ ?} (or count 1))
   (backward-char))
 
+(defun evil--next-mark (forwardp)
+  (let* ((pos (point))
+         (markers (cl-remove-if-not
+                   (lambda (x) (or (markerp (cdr x))
+                                   (<= ?a (car x) ?z)))
+                   evil-markers-alist))
+         (sorted-markers (sort markers
+                               (lambda (a b) (< (cdr a) (cdr b))))))
+    (cond
+     ((null markers)
+      (user-error "No marks in this buffer"))
+     (forwardp
+      (let ((next-marker (cl-some (lambda (x) (and (< pos (cdr x)) (cdr x)))
+                                  sorted-markers)))
+        (if next-marker
+            (goto-char (marker-position next-marker))
+          (goto-char (marker-position (cdar sorted-markers))))))
+     (t
+      (let* ((descending-markers (reverse sorted-markers))
+             (prev-marker (cl-some (lambda (x) (and (> pos (cdr x)) (cdr x)))
+                                   descending-markers)))
+        (if prev-marker
+            (goto-char (marker-position prev-marker))
+          (goto-char (marker-position (cdar descending-markers)))))))))
+
+(evil-define-motion evil-next-mark (count)
+  "Go to [count] next mark."
+  :keep-visual t
+  :repeat nil
+  :type exclusive
+  :jump t
+  (dotimes (_ (or count 1))
+    (evil--next-mark t)))
+
+(evil-define-motion evil-next-mark-line (count)
+  "Go to [count] line of next mark."
+  :keep-visual t
+  :repeat nil
+  :type exclusive
+  :jump t
+  (dotimes (_ (or count 1))
+    (evil--next-mark t)
+    (evil-first-non-blank)))
+
+(evil-define-motion evil-previous-mark (count)
+  "Go to [count] previous mark."
+  :keep-visual t
+  :repeat nil
+  :type exclusive
+  :jump t
+  (dotimes (_ (or count 1))
+    (evil--next-mark nil)))
+
+(evil-define-motion evil-previous-mark-line (count)
+  "Go to [count] line of previous mark."
+  :keep-visual t
+  :repeat nil
+  :type exclusive
+  :jump t
+  (dotimes (_ (or count 1))
+    (evil--next-mark nil)
+    (evil-first-non-blank)))
+
 (evil-define-motion evil-find-char (count char)
   "Move to the next COUNT'th occurrence of CHAR.
 Movement is restricted to the current line unless `evil-cross-lines' is non-nil."
