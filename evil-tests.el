@@ -2605,7 +2605,28 @@ word2a word2b word2c word2d"
 word2a word2b word2c word2d"
      ("+viw\"3p")
      "word1a word1b word1c word1d
-word1[a] word2b word2c word2d")))
+word1[a] word2b word2c word2d"))
+  (ert-info ("Visual-paste respects `evil-kill-on-visual-paste'")
+    (evil-test-buffer
+     "[w]ord1 word2 word3"
+     (setq evil-kill-on-visual-paste nil)
+     ("yewyew")
+     "word1 word2 [w]ord3"
+     ("ve\"2p")
+     "word1 word2 word[1]"
+     ("o\C-r\"")
+     "word1 word2 word1
+word2[]")
+    (evil-test-buffer
+     "[w]ord1 word2 word3"
+     (setq evil-kill-on-visual-paste t)
+     ("yewyew")
+     "word1 word2 [w]ord3"
+     ("ve\"2p")
+     "word1 word2 word[1]"
+     ("o\C-r\"")
+     "word1 word2 word1
+word3[]")))
 
 (ert-deftest evil-test-visual-paste-pop ()
   "Test `evil-paste-pop' after visual paste."
