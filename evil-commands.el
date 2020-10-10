@@ -2067,8 +2067,10 @@ The return value is the yanked text."
           (when (and (= evil-visual-end (point-max))
                      (/= (char-before (point-max)) ?\n))
             (setq paste-eob t))
-          (evil-delete evil-visual-beginning evil-visual-end
-                       (evil-visual-type) ?_)
+          (evil-delete evil-visual-beginning
+                       evil-visual-end
+                       (evil-visual-type)
+                       (unless evil-kill-on-visual-paste ?_))
           (when (and (eq yank-handler #'evil-yank-line-handler)
                      (not (eq (evil-visual-type) 'line))
                      (not (= evil-visual-end (point-max))))
