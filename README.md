@@ -42,9 +42,9 @@ file.
 * Evil requires Emacs 24.1 or later.
 
 * Evil requires any of the following for `C-r`:
-** `undo-redo` from Emacs 28
-** The [undo-tree](http://www.emacswiki.org/emacs/UndoTree) package
-** The [undo-fu](https://gitlab.com/ideasman42/emacs-undo-fu) package
+  * `undo-redo` from Emacs 28
+  * The [undo-tree](http://www.emacswiki.org/emacs/UndoTree) package
+  * The [undo-fu](https://gitlab.com/ideasman42/emacs-undo-fu) package
 
 * For the motions `g;` `g,` and for the last-change-register `.`, Evil requires the
 [goto-chg.el](https://github.com/emacs-evil/goto-chg) package,
