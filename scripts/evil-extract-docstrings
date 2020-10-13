@@ -55,4 +55,5 @@
                                             (keymapp (symbol-value sym))
                                             (keymap-bindings (symbol-value sym)))))
                  vars)))))
-    (insert (json-encode vars))))
+    (let ((json-encoding-pretty-print t))
+      (insert (json-encode vars)))))
