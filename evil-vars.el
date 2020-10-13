@@ -2004,8 +2004,7 @@ Customized via `evil-undo-system'.")
   "Undo system Evil should use.  If equal to `undo-tree' or
 `undo-fu', those packages must be installed.  If equal to
 `undo-tree', `undo-tree-mode' must also be activated.  If equal
-to `undo-redo' on Emacs 28 or later, Emacs' own undo system is
-used."
+to `undo-redo', Evil uses commands natively available in Emacs 28."
   :type '(choice (const :tag "Vanilla undo" nil)
                  (const undo-redo)
                  (const undo-tree)
