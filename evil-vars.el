@@ -2001,7 +2001,10 @@ Customized via `evil-undo-system'.")
     (error "Unknown undo system %s" system))))
 
 (defcustom evil-undo-system nil
-  "Undo system Evil should use."
+  "Undo system Evil should use.  If equal to `undo-tree' or
+`undo-fu', those packages must be installed.  If equal to
+`undo-tree', `undo-tree-mode' must also be activated.  If equal
+to `undo-redo', Evil uses commands natively available in Emacs 28."
   :type '(choice (const :tag "Vanilla undo" nil)
                  (const undo-redo)
                  (const undo-tree)

@@ -71,6 +71,8 @@ variables are available.
 Search
 ------
 
+.. elisp:autovariable:: evil-search-module
+
 .. elisp:autovariable:: evil-regexp-search
 
 .. elisp:autovariable:: evil-search-wrap
@@ -156,6 +158,8 @@ Miscellaneous
 -------------
 
 .. elisp:autovariable:: evil-want-fine-undo
+
+.. elisp:autovariable:: evil-undo-system
 
 .. elisp:autovariable:: evil-backspace-join-lines
 
