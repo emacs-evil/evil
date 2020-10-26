@@ -421,7 +421,7 @@ also happen in graphical Emacs sessions.  Set this variable to
   :group 'evil)
 
 (defcustom evil-show-paren-range 0
-  "The minimal distance between point and a parenthesis
+  "The maximum distance between point and a parenthesis
 which causes the parenthesis to be highlighted."
   :type 'integer
   :group 'evil)
