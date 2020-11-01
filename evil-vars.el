@@ -234,7 +234,9 @@ current line.  This applies to \\[evil-backward-char], \
   "Whether the cursor is moved backwards when exiting insert state.
 If non-nil, the cursor moves \"backwards\" when exiting insert state,
 so that it ends up on the character to the left.  Otherwise it remains
-in place, on the character to the right."
+in place, on the character to the right.
+
+See also `evil-move-beyond-eol'."
   :type 'boolean
   :group 'evil)
 
