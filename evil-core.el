@@ -1104,6 +1104,7 @@ consequences). `evil-define-key*' also does not defer any
 bindings like `evil-define-key' does using `evil-delay'. This
 allows errors in the bindings to be caught immediately, and makes
 its behavior more predictable."
+  (declare (indent defun))
   (let ((maps
          (if state
              (mapcar
