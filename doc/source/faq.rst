@@ -83,9 +83,21 @@ e.g.:
 
 This gives the underscore the word syntax-class in all C-like buffers.
 
-Alternatively, many find that motion by *symbols* is more convenient
-than motion by *words*.  One way to make word motions operate as
-symbol motions is to alias the ``evil-word`` *thing* [#thingatpt]_ to
+Similarly to Emacs' definition of a word, the definition of a "symbol" is also
+dependent on the syntax-class of the buffer, which often includes the
+underscore. The default text objects keymap associates kbd::`o` with the symbol
+object, making kbd::`cio` a good alternative to Vim's kbd::`ciw`, for example.
+The following will swap between the word and symbol objects in the keymap:
+
+.. code-block:: elisp
+
+   (define-key evil-outer-text-objects-map "w" 'evil-a-symbol)
+   (define-key evil-inner-text-objects-map "w" 'evil-inner-symbol)
+   (define-key evil-outer-text-objects-map "o" 'evil-a-word)
+   (define-key evil-inner-text-objects-map "o" 'evil-inner-word)
+
+This will not change the motion keys, however. One way to make word motions
+operate as symbol motions is to alias the ``evil-word`` *thing* [#thingatpt]_ to
 the ``evil-symbol`` thing:
 
 .. code-block:: elisp
