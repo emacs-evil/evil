@@ -257,12 +257,10 @@ interactive actions during ex state."
   (when evil-ex-previous-command
     (add-hook 'pre-command-hook #'evil-ex-remove-default))
   (remove-hook 'minibuffer-setup-hook #'evil-ex-setup)
-  (with-no-warnings
-    (make-variable-buffer-local 'completion-at-point-functions))
-  (setq completion-at-point-functions
-        '(evil-ex-elisp-completion-at-point
-          evil-ex-command-completion-at-point
-          evil-ex-argument-completion-at-point))
+  (set (make-local-variable 'completion-at-point-functions)
+       '(evil-ex-elisp-completion-at-point
+         evil-ex-command-completion-at-point
+         evil-ex-argument-completion-at-point))
   (add-function :before-until (local 'eldoc-documentation-function)
                 #'evil-ex-elisp-eldoc-function)
   (eldoc-mode 1))
