@@ -1861,6 +1861,7 @@ won't be considered as comment starters inside a string or
 possibly another comment. Point is moved to the first character
 of the comment opener if MOVE is non-nil."
   (cond
+   ((= (point) (point-max)) nil)
    ;; one character opener
    ((= (char-syntax (char-after)) ?<)
     (equal (point) (evil-in-comment-p (1+ (point)))))
