@@ -920,7 +920,8 @@ message to be shown. This function does nothing if
   (remove-hook 'after-change-functions #'evil-ex-search-update-pattern t)
   (when evil-ex-search-overlay
     (delete-overlay evil-ex-search-overlay)
-    (setq evil-ex-search-overlay nil)))
+    (setq evil-ex-search-overlay nil))
+  (setq evil-ex-search-yank-point nil))
 (put 'evil-ex-search-stop-session 'permanent-local-hook t)
 
 (defun evil-ex-split-search-pattern (pattern direction)
@@ -1331,6 +1332,37 @@ a :substitute command with arguments."
   (interactive)
   (evil-ex-delete-hl 'evil-ex-substitute)
   (evil-ex-delete-hl 'evil-ex-search))
+
+;; Yank text at point.
+(defvar evil-ex-search-yank-point nil)
+
+(defun evil-search-yank-word (&optional arg)
+  "Pull next word from buffer into search string."
+  (interactive)
+  (let ((fwd-fn #'forward-word)
+        (minibuf-content (minibuffer-contents-no-properties))
+        (word "") start)
+    (with-current-buffer evil-ex-current-buffer
+      ;; Start to initial point if C-w have never been hit.
+      (unless evil-ex-search-yank-point
+        (if (string-empty-p minibuf-content)
+            (setq evil-ex-search-yank-point evil-ex-search-start-point)
+          (setq evil-ex-search-yank-point (point))))
+      (save-excursion
+        (goto-char evil-ex-search-yank-point)
+        (setq start (point))
+        (when (looking-at-p (regexp-quote minibuf-content))
+          (forward-char (length minibuf-content))
+          (setq start (point))
+          (funcall fwd-fn 1))
+        (setq word (buffer-substring-no-properties start (point)))))
+    (when (equal evil-ex-search-case 'smart)
+      (let ((case-fold-search nil))
+        (unless (string-match-p "[A-Z]" minibuf-content)
+          (setq word (downcase word)))))
+    (evil-set-register ?s word)
+    (evil-paste-from-register ?s)))
+
 
 (provide 'evil-search)
 
