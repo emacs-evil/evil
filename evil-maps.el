@@ -531,6 +531,7 @@ included in `evil-insert-state-bindings' by default."
 (define-key evil-ex-search-keymap "\C-r" 'evil-paste-from-register)
 (define-key evil-ex-search-keymap "\C-n" 'next-history-element)
 (define-key evil-ex-search-keymap "\C-p" 'previous-history-element)
+(define-key evil-ex-search-keymap "\C-w" 'evil-search-yank-word)
 
 ;; ex command line
 (define-key evil-ex-completion-map "\d" #'evil-ex-delete-backward-char)
