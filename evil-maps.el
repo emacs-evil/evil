@@ -592,7 +592,7 @@ included in `evil-insert-state-bindings' by default."
 (define-key evil-ex-search-keymap "\C-p" 'previous-history-element)
 (define-key evil-ex-search-keymap "\C-u" 'evil-delete-whole-line)
 (define-key evil-ex-search-keymap "\C-v" #'quoted-insert)
-(define-key evil-ex-search-keymap "\C-w" 'backward-kill-word)
+(define-key evil-ex-search-keymap "\C-w" 'evil-search-yank-word)
 
 ;; ex command line
 (define-key evil-ex-completion-map "\d" #'evil-ex-delete-backward-char)
