@@ -1002,6 +1002,9 @@ any error conditions."
       (with-current-buffer evil-ex-current-buffer
         (with-selected-window (minibuffer-selected-window)
           (goto-char (1+ evil-ex-search-start-point))
+          (when (and (eq evil-ex-search-direction 'forward)
+                     (not evil-ex-search-skip-matches-under-point))
+            (forward-char -1))
           (condition-case err
               (let* ((result (evil-ex-search-full-pattern pattern-string
                                                           (or evil-ex-search-count 1)
@@ -1108,6 +1111,10 @@ current search result."
                  (signal (car err) (cdr err))))))
         ;; pattern entered successful
         (goto-char (1+ evil-ex-search-start-point))
+        (when (and (eq evil-ex-search-direction 'forward)
+                     (not evil-ex-search-skip-matches-under-point))
+          (forward-char -1))
+
         (let* ((result
                 (evil-ex-search-full-pattern search-string
                                              evil-ex-search-count
