@@ -247,6 +247,21 @@ an elisp expression."
              (evil-ex--elisp-p))
     (elisp-eldoc-documentation-function)))
 
+(defmacro evil-ex--eldoc-add (fn)
+  "Add FN to `eldoc'.
+Handles older Emacsen that don't have `add-function'."
+  (if (fboundp 'add-function)
+      `(add-function :before-until (local 'eldoc-documentation-function) ,fn)
+    `(add-to-list (make-local-variable 'eldoc-documentation-functions) ,fn)))
+
+(defmacro evil-ex--eldoc-remove (fn)
+  "Remove FN from `eldoc'.
+See `evil-ex--eldoc-add'. FN must be a symbol."
+  (if (fboundp 'remove-function)
+      `(remove-function (local 'eldoc-documentation-function) ,fn)
+    `(set (make-local-variable 'eldoc-documentation-functions)
+          (delq ,fn eldoc-documentation-functions))))
+
 (defun evil-ex-setup ()
   "Initialize Ex minibuffer.
 This function registers several hooks that are used for the
@@ -261,8 +276,7 @@ interactive actions during ex state."
        '(evil-ex-elisp-completion-at-point
          evil-ex-command-completion-at-point
          evil-ex-argument-completion-at-point))
-  (add-function :before-until (local 'eldoc-documentation-function)
-                #'evil-ex-elisp-eldoc-function)
+  (evil-ex--eldoc-add #'evil-ex-elisp-eldoc-function)
   (eldoc-mode 1))
 (put 'evil-ex-setup 'permanent-local-hook t)
 
@@ -282,7 +296,7 @@ Clean up everything set up by `evil-ex-setup'."
                    evil-ex-argument-handler)))
       (when runner
         (funcall runner 'stop))))
-  (remove-function (local 'eldoc-documentation-function) #'evil-ex-elisp-eldoc-function)
+  (evil-ex--eldoc-remove #'evil-ex-elisp-eldoc-function)
   (eldoc-mode -1))
 (put 'evil-ex-teardown 'permanent-local-hook t)
 
