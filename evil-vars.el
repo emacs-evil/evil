@@ -591,6 +591,13 @@ large accessible in insert state."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-mark-goto-buffer-not-line t
+  "Behavior of goto mark with `''.
+When `t', `'' jumps to last cursor position of the marked buffer
+instead of jumping to the mark its line number."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-complete-all-buffers t
   "\\<evil-insert-state-map>
 Whether completion looks for matches in all buffers.

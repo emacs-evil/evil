@@ -765,6 +765,9 @@ Columns are counted from zero."
   :type exclusive
   (move-to-column (or count 0)))
 
+(defun evil--goto-mark-globalp (marker)
+  (not (equal (current-buffer) (marker-buffer marker))))
+
 (evil-define-command evil-goto-mark (char &optional noerror)
   "Go to the marker specified by CHAR."
   :keep-visual t
@@ -775,8 +778,11 @@ Columns are counted from zero."
   (let ((marker (evil-get-marker char)))
     (cond
      ((markerp marker)
-      (switch-to-buffer (marker-buffer marker))
-      (goto-char (marker-position marker)))
+      (let ((goto-is-global (evil--goto-mark-globalp marker)))
+        (switch-to-buffer (marker-buffer marker))
+        (unless (and evil-mark-goto-buffer-not-line
+                     goto-is-global)
+          (goto-char (marker-position marker)))))
      ((numberp marker)
       (goto-char marker))
      ((consp marker)
@@ -797,8 +803,8 @@ Columns are counted from zero."
   :type line
   :jump t
   (interactive (list (read-char)))
-  (evil-goto-mark char noerror)
-  (evil-first-non-blank))
+  (when (evil-goto-mark char noerror)
+    (evil-first-non-blank)))
 
 (evil-define-motion evil-jump-backward (count)
   "Go to older position in jump list.
