@@ -806,6 +806,61 @@ Columns are counted from zero."
   (when (evil-goto-mark char noerror)
     (evil-first-non-blank)))
 
+(defun evil--goto-mark-list (marks &optional line-or-buffer)
+  (let ((initial-buffer (current-buffer)))
+    (evil-show-marks marks)
+    (let* ((char (read-char))
+           (key (char-to-string char))
+           (entry (tabulated-list-get-entry)))
+      (while (and
+              entry
+              (not (string= (aref entry 0) key)))
+        (next-line)
+        (setq entry (tabulated-list-get-entry)))
+      (cond ((eobp) (message "Marker '%s' is not set in this buffer" key)
+             (evil-list-view-quit))
+            (t (evil-list-view-quit)
+               (switch-to-buffer (car (elt entry 3)))
+               (let ((same-buffer (equal initial-buffer (current-buffer))))
+                 (when (or same-buffer  
+                            (and (not same-buffer) (not line-or-buffer)))
+                   (evil-goto-mark (string-to-char (elt entry 0)))
+                   (when line-or-buffer
+                     (evil-first-non-blank)))))))))
+
+(evil-define-command evil-goto-mark-list (marks &optional line-or-buffer)
+  :keep-visual t
+  :repeat nil
+  :type exclusive
+  :jump t
+  (interactive "<a>")
+  (with-timeout (0.6
+                 (evil--goto-mark-list marks line-or-buffer))
+    (let* ((char (read-char)))
+      (when (and (evil-goto-mark char) line-or-buffer)
+          (evil-first-non-blank)))))
+
+(evil-define-command evil-goto-mark-line-list (marks)
+  :keep-visual t
+  :repeat nil
+  :type line
+  :jump t
+  (interactive "<a>")
+  (evil-goto-mark-list marks t))
+
+(defun evil-goto-mark-set ()
+  (if evil-mark-goto-buffer-not-line
+      'evil-goto-mark-list
+    'evil-goto-mark))
+
+(defun evil-goto-mark-line-set ()
+  (if evil-mark-goto-buffer-not-line
+      'evil-goto-mark-line-list
+    'evil-goto-mark-line))
+
+(setq evil-goto-mark-auto (evil-goto-mark-set))
+(setq evil-goto-mark-line-auto (evil-goto-mark-line-set))
+
 (evil-define-motion evil-jump-backward (count)
   "Go to older position in jump list.
 To go the other way, press \
