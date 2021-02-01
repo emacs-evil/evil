@@ -797,8 +797,12 @@ Columns are counted from zero."
   :type line
   :jump t
   (interactive (list (read-char)))
-  (evil-goto-mark char noerror)
-  (evil-first-non-blank))
+  (let ((is-global (string= "Lu"
+                            (get-char-code-property char 'general-category))))
+    (evil-goto-mark char noerror)
+    (unless (and evil-mark-goto-buffer-not-line
+                 is-global)
+      (evil-first-non-blank))))
 
 (evil-define-motion evil-jump-backward (count)
   "Go to older position in jump list.
