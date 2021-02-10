@@ -106,7 +106,7 @@ passed to `funcall' with no argument)."
            (fun (make-symbol name)))
       (when (booleanp condition)
         (setq condition (lambda () t)))
-      (fset fun (lambda (&rest args)
+      (fset fun (lambda (&rest _args)
                   (when (funcall condition)
                     (remove-hook hook fun local)
                     (funcall form))))

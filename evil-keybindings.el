@@ -50,6 +50,7 @@
 
 ;; dictionary.el
 
+(defvar dictionary-mode-map)
 (evil-add-hjkl-bindings dictionary-mode-map 'motion
   "?" 'dictionary-help        ; "h"
   "C-o" 'dictionary-previous) ; "l"
@@ -70,10 +71,12 @@
 
 ;;; ERT
 
+(defvar ert-results-mode-map)
 (evil-add-hjkl-bindings ert-results-mode-map 'motion)
 
 ;;; Info
 
+(defvar Info-mode-map)
 (evil-add-hjkl-bindings Info-mode-map 'motion
   "0" 'evil-digit-argument-or-evil-beginning-of-line
   (kbd "\M-h") 'Info-help   ; "h"
@@ -85,7 +88,8 @@
 
 ;;; Speedbar
 
-(evil-add-hjkl-bindings speedbar-key-map 'motion
+(defvar speedbar-mode-map)
+(evil-add-hjkl-bindings speedbar-mode-map 'motion
   "h" 'backward-char
   "j" 'speedbar-next
   "k" 'speedbar-prev
