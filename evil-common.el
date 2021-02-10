@@ -75,16 +75,41 @@ no arguments.  In Emacs 23.2 and newer, it takes one argument."
   "Execute FORM when CONDITION becomes true, checking with HOOK.
 NAME specifies the name of the entry added to HOOK. If APPEND is
 non-nil, the entry is appended to the hook. If LOCAL is non-nil,
-the buffer-local value of HOOK is modified."
-  (if (and (not (booleanp condition)) (eval condition))
-      (eval form)
+the buffer-local value of HOOK is modified.
+
+CONDITION and FORM can be Elisp expressions (in which case
+they're passed to `eval'), or functions (in which case they're
+passed to `funcall' with no argument)."
+  (declare (compiler-macro
+            (lambda (whole)
+              ;; Quote with lambda so the compiler can look inside.
+              (and (eq 'quote (car-safe condition))
+                   (not (booleanp (nth 1 condition)))
+                   (setq condition `(lambda () ,(nth 1 condition)))
+                   (setq whole nil))
+              (when (eq 'quote (car-safe form))
+                (setq form `(lambda () ,(nth 1 form)))
+                (setq whole nil))
+              (or whole
+                  `(evil-delay ,condition ,form ,hook
+                               ,append ,local ,name)))))
+
+  (or (functionp form)
+      (setq form (eval `(lambda () ,form) lexical-binding)))
+  (or (functionp condition)
+      (booleanp condition)
+      (setq condition (eval `(lambda () ,condition) lexical-binding)))
+
+  (if (and (functionp condition) (funcall condition))
+      (funcall form)
     (let* ((name (or name (format "evil-delay-form-in-%s" hook)))
-           (fun (make-symbol name))
-           (condition (or condition t)))
-      (fset fun `(lambda (&rest args)
-                   (when ,condition
-                     (remove-hook ',hook #',fun ',local)
-                     ,form)))
+           (fun (make-symbol name)))
+      (when (booleanp condition)
+        (setq condition (lambda () t)))
+      (fset fun (lambda (&rest args)
+                  (when (funcall condition)
+                    (remove-hook hook fun local)
+                    (funcall form))))
       (put fun 'permanent-local-hook t)
       (add-hook hook fun append local))))
 (put 'evil-delay 'lisp-indent-function 2)
