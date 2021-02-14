@@ -5202,6 +5202,45 @@ Below some empty line."))
       ("2])")
       "foo ( { ( bar ) baz } [)]")))
 
+(ert-deftest evil-test-next-mark ()
+  "Test `evil-next-mark', `evil-previous-mark'"
+  :tags '(evil motion)
+  (ert-info ("Can move to next mark, next mark line,
+previous mark and previous mark line")
+    (evil-test-buffer
+     "[a]lpha bravo
+charlie delta echo
+foxtrot golf hotel
+india juliet"
+     ("ma" "w" "mb" "w"
+      "mc" "w" "md" "w" "me" "w"
+      "mf" "w" "mg" "w" "mh" "w"
+      "mi" "w" "mj")
+     "alpha bravo
+charlie delta echo
+foxtrot golf hotel
+india [j]uliet"
+     ("3]`")
+     "alpha bravo
+[c]harlie delta echo
+foxtrot golf hotel
+india juliet"
+     ("]'")
+     "alpha bravo
+charlie delta echo
+[f]oxtrot golf hotel
+india juliet"
+     ("[`")
+     "alpha bravo
+charlie delta [e]cho
+foxtrot golf hotel
+india juliet"
+     ("2['")
+     "alpha bravo
+charlie delta echo
+foxtrot golf hotel
+[i]ndia juliet")))
+
 (ert-deftest evil-test-flyspell-motions ()
   "Test flyspell motions"
   :tags '(evil motion)
