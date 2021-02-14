@@ -673,10 +673,13 @@ and jump to the corresponding one."
   (backward-char))
 
 (defun evil--next-mark (forwardp)
+  "Move to next lowercase mark.
+Move forward if FORWARDP is truthy or backward if falsey.
+Loop back to the top of buffer if the end is reached."
   (let* ((pos (point))
          (markers (cl-remove-if-not
-                   (lambda (x) (or (markerp (cdr x))
-                                   (<= ?a (car x) ?z)))
+                   (lambda (x) (and (markerp (cdr x))
+                                    (<= ?a (car x) ?z)))
                    evil-markers-alist))
          (sorted-markers (sort markers
                                (lambda (a b) (< (cdr a) (cdr b))))))
@@ -698,7 +701,7 @@ and jump to the corresponding one."
           (goto-char (marker-position (cdar descending-markers)))))))))
 
 (evil-define-motion evil-next-mark (count)
-  "Go to [count] next mark."
+  "Go to [count] next lowercase mark."
   :keep-visual t
   :repeat nil
   :type exclusive
@@ -707,17 +710,18 @@ and jump to the corresponding one."
     (evil--next-mark t)))
 
 (evil-define-motion evil-next-mark-line (count)
-  "Go to [count] line of next mark."
+  "Go to [count] line of next lowercase mark after current line."
   :keep-visual t
   :repeat nil
   :type exclusive
   :jump t
   (dotimes (_ (or count 1))
+    (evil-end-of-line)
     (evil--next-mark t)
     (evil-first-non-blank)))
 
 (evil-define-motion evil-previous-mark (count)
-  "Go to [count] previous mark."
+  "Go to [count] previous lowercase mark."
   :keep-visual t
   :repeat nil
   :type exclusive
@@ -726,12 +730,13 @@ and jump to the corresponding one."
     (evil--next-mark nil)))
 
 (evil-define-motion evil-previous-mark-line (count)
-  "Go to [count] line of previous mark."
+  "Go to [count] line of previous lowercase mark before current line."
   :keep-visual t
   :repeat nil
   :type exclusive
   :jump t
   (dotimes (_ (or count 1))
+    (evil-beginning-of-line)
     (evil--next-mark nil)
     (evil-first-non-blank)))
 

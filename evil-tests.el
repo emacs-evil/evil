@@ -5205,40 +5205,41 @@ Below some empty line."))
 (ert-deftest evil-test-next-mark ()
   "Test `evil-next-mark', `evil-previous-mark'"
   :tags '(evil motion)
-  (ert-info ("Can move to next mark and next mark line")
+  (ert-info ("Can move to next mark, next mark line,
+previous mark and previous mark line")
     (evil-test-buffer
-     "line 1
-lin[e] 2
-line 3"
-     ("majmbgg")
-     "[l]ine 1
-line 2
-line 3"
-     ("]`")
-     "line 1
-lin[e] 2
-line 3"
+     "[a]lpha bravo
+charlie delta echo
+foxtrot golf hotel
+india juliet"
+     ("ma" "w" "mb" "w"
+      "mc" "w" "md" "w" "me" "w"
+      "mf" "w" "mg" "w" "mh" "w"
+      "mi" "w" "mj")
+     "alpha bravo
+charlie delta echo
+foxtrot golf hotel
+india [j]uliet"
+     ("3]`")
+     "alpha bravo
+[c]harlie delta echo
+foxtrot golf hotel
+india juliet"
      ("]'")
-     "line 1
-line 2
-[l]ine 3"))
-  (ert-info ("Can move to previous mark and previous mark line")
-    (evil-test-buffer
-     "li[n]e 1
-line 2
-line 3"
-     ("mcjmdG")
-     "line 1
-line 2
-[l]ine 3"
+     "alpha bravo
+charlie delta echo
+[f]oxtrot golf hotel
+india juliet"
      ("[`")
-     "line 1
-li[n]e 2
-line 3"
+     "alpha bravo
+charlie delta [e]cho
+foxtrot golf hotel
+india juliet"
      ("2['")
-     "line 1
-[l]ine 2
-line 3")))
+     "alpha bravo
+charlie delta echo
+foxtrot golf hotel
+[i]ndia juliet")))
 
 (ert-deftest evil-test-flyspell-motions ()
   "Test flyspell motions"
