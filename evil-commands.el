@@ -3326,7 +3326,7 @@ If FORCE is non-nil all local marks except 0-9 are removed.
                  (and (re-search-backward ":\\([0-9]+\\)\\="
                                           (line-beginning-position) t)
                       (string-to-number (match-string 1))))))
-          (with-no-warnings (ffap-other-window))
+          (with-no-warnings (ffap-other-window fname))
           (when line
             (goto-char (point-min))
             (forward-line (1- line))))
