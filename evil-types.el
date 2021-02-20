@@ -342,6 +342,14 @@ If visual state is inactive then those values are nil."
   :ex-arg t
   (list (when (evil-ex-p) evil-ex-argument)))
 
+(evil-define-interactive-code "<N>" (prompt)
+  "Prefix argument, ex-arg or minibuffer input, converted to number"
+  (list (cond
+         (current-prefix-arg (prefix-numeric-value current-prefix-arg))
+         ((and evil-ex-argument (evil-ex-p)) (string-to-number evil-ex-argument))
+         ((evil-ex-p) nil)
+         (t (string-to-number (read-string prompt))))))
+
 (evil-define-interactive-code "<f>"
   "Ex file argument."
   :ex-arg file

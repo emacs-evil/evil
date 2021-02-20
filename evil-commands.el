@@ -3859,7 +3859,8 @@ range. The given argument is passed straight to
 (evil-define-command evil-goto-char (position)
   "Go to POSITION in the buffer.
 Default position is the beginning of the buffer."
-  (interactive "p")
+  :jump t
+  (interactive "<N>Goto position: ")
   (let ((position (evil-normalize-position
                    (or position (point-min)))))
     (goto-char position)))

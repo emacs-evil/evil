@@ -3048,6 +3048,22 @@ Below some empty line")))
   return EXIT_SUCCESS;
 \[}]"))
 
+(ert-deftest evil-test-goto-char ()
+  "Test `evil-goto-char' motion and ex command."
+  :tags '(evil motion ex)
+  (evil-test-buffer
+   "[W]e only need a short buffer for this test"
+   (":goto 9")
+   "We only [n]eed a short buffer for this test"
+   (":goto")
+   "[W]e only need a short buffer for this test"
+   ("16go")
+   "We only need a [s]hort buffer for this test"
+   ("go18")
+   "We only need a sh[o]rt buffer for this test"
+   (evil-goto-char 24)
+   "We only need a short bu[f]fer for this test"))
+
 (ert-deftest evil-test-operator-0 ()
   "Test motion \"0\" with an operator."
   :tags '(evil motion)
