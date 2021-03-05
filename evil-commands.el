@@ -1702,12 +1702,14 @@ of the block."
 
 (evil-define-command evil-undo (count)
   "Undo COUNT changes in buffer using `evil-undo-function'."
+  :repeat abort
   (interactive "*p")
   (evil--check-undo-system)
   (funcall evil-undo-function count))
 
 (evil-define-command evil-redo (count)
   "Undo COUNT changes in buffer using `evil-redo-function'."
+  :repeat abort
   (interactive "*p")
   (evil--check-undo-system)
   (funcall evil-redo-function count))
