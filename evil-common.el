@@ -3629,6 +3629,14 @@ If no description is available, return the empty string."
 
 ;;; Undo
 
+(defvar buffer-undo-tree)
+(declare-function undo-tree-current "ext:undo-tree")
+(declare-function undo-tree-node-next "ext:undo-tree")
+(declare-function undo-tree-node-branch "ext:undo-tree")
+(declare-function undo-tree-node-branch "ext:undo-tree")
+(declare-function undo-tree-undo "ext:undo-tree")
+(declare-function undo-tree-snip-node "ext:undo-tree")
+
 (defun evil-start-undo-step (&optional continue)
   "Start a undo step.
 All following buffer modifications are grouped together as a
@@ -3667,46 +3675,49 @@ make the entries undoable as a single action. See
   "Execute BODY with enabled undo.
 If undo is disabled in the current buffer, the undo information
 is stored in `evil-temporary-undo' instead of `buffer-undo-list'."
-  (declare (indent defun)
-           (debug t))
-  `(unwind-protect
-       (let (buffer-undo-list)
-         (unwind-protect
-             (progn ,@body)
-           (setq evil-temporary-undo buffer-undo-list)
-           ;; ensure evil-temporary-undo starts with exactly one undo
-           ;; boundary marker, i.e. nil
-           (unless (null (car-safe evil-temporary-undo))
-             (push nil evil-temporary-undo))))
-     (unless (eq buffer-undo-list t)
-       ;; undo is enabled, so update the global buffer undo list
-       (setq buffer-undo-list
-             ;; prepend new undos (if there are any)
-             (if (cdr evil-temporary-undo)
-                 (nconc evil-temporary-undo buffer-undo-list)
-               buffer-undo-list)
-             evil-temporary-undo nil))))
+  (declare (debug t))
+  (let ((undo-list (make-symbol "undo-list")))
+    `(let ((,undo-list buffer-undo-list)
+           (evil-undo-system evil-undo-system))
+       (when (eq ,undo-list t) (setq buffer-undo-list nil
+                                     evil-undo-system nil))
+       (unwind-protect
+           (progn ,@body)
+         ;; ensure any new undo changes we've accumulated start with
+         ;; exactly one undo boundary marker, i.e. nil
+         (when (car-safe buffer-undo-list) (push nil buffer-undo-list))
+         (if (eq ,undo-list t)
+             ;; undo is disabled, so store undo information in
+             ;; evil-temporary-undo
+             (setq evil-temporary-undo buffer-undo-list
+                   buffer-undo-list t)
+           (setq evil-temporary-undo nil))))))
 
 (defmacro evil-with-single-undo (&rest body)
   "Execute BODY as a single undo step."
-  (declare (indent defun)
-           (debug t))
+  (declare (debug t))
   `(let (evil-undo-list-pointer)
      (evil-with-undo
+       (evil-start-undo-step)
        (unwind-protect
-           (progn
-             (evil-start-undo-step)
-             (let ((evil-in-single-undo t))
-               ,@body))
+           (let ((evil-in-single-undo t)) ,@body)
          (evil-end-undo-step)))))
 
 (defun evil-undo-pop ()
-  "Undo the last buffer change.
-Removes the last undo information from `buffer-undo-list'.
+  "Undo and forget the last buffer change.
 If undo is disabled in the current buffer, use the information
 in `evil-temporary-undo' instead."
-  (let ((paste-undo (list nil)))
-    (let ((undo-list (if (eq buffer-undo-list t)
+  (if (and (eq evil-undo-system 'undo-tree)
+           (not (eq buffer-undo-list t)))
+      (let (current)
+        (undo-tree-undo)
+        (setq current (undo-tree-current buffer-undo-tree)
+              current (nth (undo-tree-node-branch current)
+                           (undo-tree-node-next current)))
+        ;; Remove only if leaf to not have to adjust child buffer positions
+        (unless (undo-tree-node-next current) (undo-tree-snip-node current)))
+    (let ((paste-undo (list nil))
+          (undo-list (if (eq buffer-undo-list t)
                          evil-temporary-undo
                        buffer-undo-list)))
       (when (or (not undo-list) (car undo-list))
