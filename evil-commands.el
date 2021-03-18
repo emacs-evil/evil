@@ -1698,7 +1698,8 @@ of the block."
 (defun evil--check-undo-system ()
   (when (and (eq evil-undo-system 'undo-tree)
              (not (bound-and-true-p undo-tree-mode)))
-    (user-error "Enable `global-undo-tree-mode' to use undo-tree commands.")))
+    (user-error "Enable `global-undo-tree-mode' to use undo-tree commands.
+Add (add-hook 'evil-local-mode-hook 'turn-on-undo-tree-mode) to your init file for undo in non-file buffers.")))
 
 (evil-define-command evil-undo (count)
   "Undo COUNT changes in buffer using `evil-undo-function'."
