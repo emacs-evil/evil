@@ -1109,7 +1109,7 @@ current search result."
         ;; pattern entered successful
         (goto-char (if (eq evil-ex-search-direction 'forward)
                        (1+ evil-ex-search-start-point)
-                     (- evil-ex-search-start-point 1)))
+                     (1- evil-ex-search-start-point)))
         (let* ((result
                 (evil-ex-search-full-pattern search-string
                                              evil-ex-search-count
