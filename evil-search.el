@@ -1107,7 +1107,9 @@ current search result."
                  (goto-char evil-ex-search-start-point)
                  (signal (car err) (cdr err))))))
         ;; pattern entered successful
-        (goto-char (1+ evil-ex-search-start-point))
+        (goto-char (if (eq evil-ex-search-direction 'forward)
+                       (1+ evil-ex-search-start-point)
+                     (1- evil-ex-search-start-point)))
         (let* ((result
                 (evil-ex-search-full-pattern search-string
                                              evil-ex-search-count
