@@ -3342,19 +3342,20 @@ corresponding to the characters of this string are shown."
 
 (defun evil--parse-delmarks (to-be-parsed &optional parsed)
   "Where TO-BE-PARSED can contain ranges in the form `x-y'.
-PARSED is a list of characters whose marks should be deleted."
-  (let ((a (car to-be-parsed))
-        (b (or (nth 1 to-be-parsed) ?\s)) ; handle `-'
-        (c (or (nth 2 to-be-parsed) ?\s))) ; handle `x-'
+PARSED is a list of characters whose marks should be deleted.
+Like vim, on invalid input, preceeding valid input is still parsed."
+  (let ((a (car to-be-parsed)) (b (nth 1 to-be-parsed)) (c (nth 2 to-be-parsed)))
     (cond
-     ((eq ?- a) (user-error "Invalid argument: %s" (string a b)))
-     ((eq ?- b) (if (or (<= ?a a c ?z) (<= ?A a c ?Z) (<= ?0 a c ?9))
-                    (evil--parse-delmarks (nthcdr 3 to-be-parsed)
-                                          (append parsed (number-sequence a c)))
-                  (user-error "Invalid argument: %s" (string a b c))))
-     ((eq ?- c) (evil--parse-delmarks (cdr to-be-parsed) (push a parsed)))
-     ((>= 3 (length to-be-parsed)) (append parsed to-be-parsed))
-     (t (evil--parse-delmarks (nthcdr 2 to-be-parsed) (append parsed (list a b)))))))
+     ((null to-be-parsed) parsed)
+     ;; single mark...
+     ((and (not (eq ?- b)) (or (<= ?a a ?z) (<= ?A a ?Z) (<= ?0 a ?9)))
+      (evil--parse-delmarks (cdr to-be-parsed) (push a parsed)))
+     ;; range of marks...
+     ((and (eq ?- b) c (or (<= ?a a c ?z) (<= ?A a c ?Z) (<= ?0 a c ?9)))
+      (evil--parse-delmarks (nthcdr 3 to-be-parsed)
+                            (append parsed (number-sequence a c))))
+     (t (progn (message "Invalid input: %s" (apply #'string (remove nil to-be-parsed)))
+               parsed)))))
 
 (evil-define-command evil-delete-marks (marks &optional force)
   "Delete all marks.
