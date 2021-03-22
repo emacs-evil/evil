@@ -5273,7 +5273,8 @@ foxtrot golf hotel
      "One line [i]s enough if we use backtick to navigate"
      ("`4")
      "One line is enough if we use backtick to [n]avigate"
-     (error user-error ":delm h-m" [return] "`i")
+     (":delm h-m" [return])
+     (error user-error "`i")
      "One line is enough if we use backtick to [n]avigate")))
 
 (ert-deftest evil-test-flyspell-motions ()
