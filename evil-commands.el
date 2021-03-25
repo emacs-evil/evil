@@ -3340,56 +3340,45 @@ corresponding to the characters of this string are shown."
   (switch-to-buffer (car (elt entry 3)))
   (evil-goto-mark (string-to-char (elt entry 0))))
 
-(evil-define-command evil-delete-marks (marks &optional force)
-  "Delete all marks.
-MARKS is a string denoting all marks to be deleted. Mark names are
-either single characters or a range of characters in the form A-Z.
+(defun evil--parse-delmarks (to-be-parsed &optional parsed)
+  "Where TO-BE-PARSED can contain ranges in the form `x-y'.
+PARSED is a list of characters whose marks should be deleted.
+Like vim, on invalid input, preceeding valid input is still parsed."
+  (cl-destructuring-bind (&optional a b c &rest) to-be-parsed
+    (cond
+     ((null to-be-parsed) parsed)
+     ;; single mark...
+     ((and (not (eq ?- b)) (or (<= ?a a ?z) (<= ?A a ?Z) (<= ?0 a ?9)
+                               (memq a '(?\" ?^ ?. ?[ ?] ?< ?>))))
+      (evil--parse-delmarks (cdr to-be-parsed) (cons a parsed)))
+     ;; range of marks...
+     ((and (eq ?- b) c (or (<= ?a a c ?z) (<= ?A a c ?Z) (<= ?0 a c ?9)))
+      (evil--parse-delmarks (nthcdr 3 to-be-parsed)
+                            (append parsed (number-sequence a c))))
+     (t (progn (message "Invalid input: %s" (apply #'string (remove nil to-be-parsed)))
+               parsed)))))
 
-If FORCE is non-nil all local marks except 0-9 are removed.
-"
+(evil-define-command evil-delete-marks (marks &optional force)
+  "MARKS is a string denoting all marks to be deleted. Mark names are
+either single characters or a range of characters in the form `x-y'.
+If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
   (interactive "<a><!>")
-  (cond
-   ;; delete local marks except 0-9
-   (force
-    (setq evil-markers-alist
-          (cl-delete-if (lambda (m)
-                          (not (and (>= (car m) ?0) (<= (car m) ?9))))
-                        evil-markers-alist)))
-   (t
-    (let ((i 0)
-          (n (length marks))
-          delmarks)
-      (while (< i n)
-        (cond
-         ;; skip spaces
-         ((= (aref marks i) ?\s) (cl-incf i))
-         ;; ranges of marks
-         ((and (< (+ i 2) n)
-               (= (aref marks (1+ i)) ?-)
-               (or (and (>= (aref marks i) ?a)
-                        (<= (aref marks i) ?z)
-                        (>= (aref marks (+ 2 i)) ?a)
-                        (<= (aref marks (+ 2 i)) ?z))
-                   (and (>= (aref marks i) ?A)
-                        (<= (aref marks i) ?Z)
-                        (>= (aref marks (+ 2 i)) ?A)
-                        (<= (aref marks (+ 2 i)) ?Z))))
-          (let ((m (aref marks i)))
-            (while (<= m (aref marks (+ 2 i)))
-              (push m delmarks)
-              (cl-incf m)))
-          (cl-incf i 2))
-         ;; single marks
-         (t
-          (push (aref marks i) delmarks)
-          (cl-incf i))))
-      ;; now remove all marks
-      (setq evil-markers-alist
-            (cl-delete-if (lambda (m) (member (car m) delmarks))
-                          evil-markers-alist))
-      (set-default 'evil-markers-alist
-                   (cl-delete-if (lambda (m) (member (car m) delmarks))
-                                 (default-value 'evil-markers-alist)))))))
+  (let ((mark-chars (remove ?\s (append marks nil))))
+    (cond
+     ((and force mark-chars) (message "Invalid input"))
+     (mark-chars
+      (let* ((delmarks (evil--parse-delmarks mark-chars))
+             (delmarkp (lambda (m) (member (car m) delmarks))))
+        ;; delete all parsed marks...
+        (setq evil-markers-alist
+              (cl-remove-if delmarkp evil-markers-alist))
+        ;; ensure all parsed marks are deleted globally...
+        (set-default 'evil-markers-alist
+                     (cl-remove-if delmarkp (default-value 'evil-markers-alist)))))
+     ;; delete local marks except 0-9...
+     (force (setq evil-markers-alist
+                  (cl-remove-if-not (lambda (m) (<= ?0 (car m) ?9))
+                                    evil-markers-alist))))))
 
 (eval-when-compile (require 'ffap))
 (evil-define-command evil-find-file-at-point-with-line ()

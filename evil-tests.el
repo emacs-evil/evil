@@ -5257,6 +5257,26 @@ charlie delta echo
 foxtrot golf hotel
 [i]ndia juliet")))
 
+(ert-deftest evil-delete-marks-test ()
+  "Test `evil-delete-marks' ex command"
+  :tags '(evil ex)
+  (ert-info ("Can delete marks")
+    (evil-test-buffer
+     "[O]ne line is enough if we use backtick to navigate"
+     ("mO" "w" "ml" "w" "mi" "$b" "m4")
+     "One line is enough if we use backtick to [n]avigate"
+     ("`O")
+     "[O]ne line is enough if we use backtick to navigate"
+     (":delm O" [return] "`i")
+     "One line [i]s enough if we use backtick to navigate"
+     (error user-error "`O")
+     "One line [i]s enough if we use backtick to navigate"
+     ("`4")
+     "One line is enough if we use backtick to [n]avigate"
+     (":delm h-m" [return])
+     (error user-error "`i")
+     "One line is enough if we use backtick to [n]avigate")))
+
 (ert-deftest evil-test-flyspell-motions ()
   "Test flyspell motions"
   :tags '(evil motion)
