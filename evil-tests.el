@@ -8379,7 +8379,7 @@ maybe we need one line more with some text\n")
           (kill-buffer (get-file-buffer temp-file)))))))
 
 (ert-deftest evil-test-jump-buffers ()
-  :tags '(evil jums)
+  :tags '(evil jumps)
   (skip-unless nil)
   (ert-info ("Test jumping backward and forward across buffers")
     (evil-test-buffer
