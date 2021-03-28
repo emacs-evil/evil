@@ -360,6 +360,7 @@
 (define-key evil-visual-state-map (kbd "<insertchar>") 'undefined)
 (define-key evil-visual-state-map [remap evil-repeat] 'undefined)
 (define-key evil-visual-state-map [escape] 'evil-exit-visual-state)
+(define-key evil-visual-state-map "gf" 'evil-find-file-at-point-visual)
 
 ;;; Operator-Pending state
 

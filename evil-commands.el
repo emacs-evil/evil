@@ -3398,6 +3398,15 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
             (forward-line (1- line))))
       (user-error "File does not exist."))))
 
+(evil-define-command evil-find-file-at-point-visual ()
+  "Find the filename selected by the visual region.
+    Returns an error message if the file does not exist."
+  (require 'ffap)
+  (let ((region (buffer-substring (region-beginning) (region-end))))
+    (if (file-exists-p region)
+        (find-file-at-point region)
+      (user-error (format "Can't find file \"%s\" in path" region)))))
+
 (evil-ex-define-argument-type state
   "Defines an argument type which can take state names."
   :collection
