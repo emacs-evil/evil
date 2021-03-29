@@ -203,6 +203,18 @@ If COUNT is given, move COUNT - 1 lines downward first."
       (beginning-of-visual-line)
     (beginning-of-line)))
 
+(evil-define-motion evil-beginning-of-line-or-visual-line (count)
+  "Move the cursor to the first character of the current screen
+line if `visual-line-mode' is active and
+`evil-respect-visual-line-mode' is non-nil.  If COUNT is given,
+move COUNT - 1 screen lines forward first."
+  :type inclusive
+  (if (and (fboundp 'beginning-of-visual-line)
+           evil-respect-visual-line-mode
+           visual-line-mode)
+      (beginning-of-visual-line count)
+    (evil-beginning-of-line)))
+
 (evil-define-motion evil-end-of-visual-line (count)
   "Move the cursor to the last character of the current screen line.
 If COUNT is given, move COUNT - 1 screen lines downward first."
