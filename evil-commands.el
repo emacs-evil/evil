@@ -2154,9 +2154,13 @@ The return value is the yanked text."
             (insert "\n"))
           (evil-normal-state)
           (current-kill 1))
-        (if paste-eob
-            (evil-paste-after count register)
-          (evil-paste-before count register)))
+        ;; Effectively memoize `evil-get-register' because it can be
+        ;; side-effecting (e.g. for the `=' register)...
+        (cl-letf (((symbol-function 'evil-get-register)
+                   (lambda (&rest _args) text)))
+          (if paste-eob
+              (evil-paste-after count register)
+            (evil-paste-before count register))))
       (when evil-kill-on-visual-paste
         (current-kill -1))
       ;; mark the last paste as visual-paste
