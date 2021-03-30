@@ -2135,7 +2135,7 @@ The return value is the yanked text."
                                   0 'yank-handler text)))
          paste-eob)
     (evil-with-undo
-      (let ((kill-ring-yank-pointer (list (current-kill 0))))
+      (let ((kill-ring-yank-pointer (when kill-ring (list (current-kill 0)))))
         (when (evil-visual-state-p)
           (evil-visual-rotate 'upper-left)
           ;; if we replace the last buffer line that does not end in a
@@ -2153,11 +2153,11 @@ The return value is the yanked text."
                      (not (= evil-visual-end (point-max))))
             (insert "\n"))
           (evil-normal-state)
-          (current-kill 1))
+          (when kill-ring (current-kill 1)))
         ;; Effectively memoize `evil-get-register' because it can be
         ;; side-effecting (e.g. for the `=' register)...
         (cl-letf (((symbol-function 'evil-get-register)
-                   (lambda (&rest _args) text)))
+                   (lambda (&rest _) text)))
           (if paste-eob
               (evil-paste-after count register)
             (evil-paste-before count register))))
