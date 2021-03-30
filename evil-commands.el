@@ -3349,7 +3349,7 @@ Like vim, on invalid input, preceeding valid input is still parsed."
      ((null to-be-parsed) parsed)
      ;; single mark...
      ((and (not (eq ?- b)) (or (<= ?a a ?z) (<= ?A a ?Z) (<= ?0 a ?9)
-                               (memq a '(?\" ?^ ?. ?[ ?] ?< ?>))))
+                               (memq a '(?\" ?^ ?. ?\[ ?\] ?< ?>))))
       (evil--parse-delmarks (cdr to-be-parsed) (cons a parsed)))
      ;; range of marks...
      ((and (eq ?- b) c (or (<= ?a a c ?z) (<= ?A a c ?Z) (<= ?0 a c ?9)))
