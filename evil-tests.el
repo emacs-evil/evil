@@ -2626,7 +2626,12 @@ word2[]")
      "word1 word2 word[1]"
      ("o\C-r\"")
      "word1 word2 word1
-word3[]")))
+word3[]"))
+  (ert-info ("Visual-paste from `=' register")
+    (evil-test-buffer
+     "foo"
+     ("viw" "\"=p(* 6 7)" [return])
+     "4[2]")))
 
 (ert-deftest evil-test-visual-paste-pop ()
   "Test `evil-paste-pop' after visual paste."
