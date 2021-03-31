@@ -6586,7 +6586,23 @@ test hello <a href=\"/deed.zh\">Creative Commons</a>
     ("d")
     "This buffer is for notes you don't want to save.
 If you want to create a file, visit that file with C-x C-f,
-then enter the text in that file's own buffer."))
+then enter the text in that file's own buffer.")
+  (ert-info ("Visual block can select over lines of different length")
+    (evil-test-buffer
+     "Short [l]ine
+A much longer line
+A medium line
+Tiny ln"
+     ("\C-v$jd")
+     "Short[ ]
+A much
+A medium line
+Tiny ln"
+     ("jj\C-v" [end] "jd")
+     "Short 
+A much
+A me[d]
+Tiny ")))
 
 (ert-deftest evil-test-visual-restore ()
   "Test restoring a previous selection"
