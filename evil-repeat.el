@@ -568,7 +568,8 @@ If SAVE-POINT is non-nil, do not move point."
       (evil-repeat count)))
    (t
     (unwind-protect
-        (let ((confirm-kill-emacs t)
+        (let ((evil-last-find-temp evil-last-find)
+              (confirm-kill-emacs t)
               (kill-buffer-hook
                (cons #'(lambda ()
                          (user-error "Cannot delete buffer in repeat command"))
@@ -577,7 +578,8 @@ If SAVE-POINT is non-nil, do not move point."
           (evil-with-single-undo
             (setq evil-last-repeat (list (point) count undo-pointer))
             (evil-execute-repeat-info-with-count
-             count (ring-ref evil-repeat-ring 0))))
+             count (ring-ref evil-repeat-ring 0))
+            (setq evil-last-find evil-last-find-temp)))
       (evil-normal-state)))))
 
 ;; TODO: the same issue concering disabled undos as for `evil-paste-pop'
