@@ -1390,6 +1390,18 @@ the `evil-repeat' command")
         (".")
         ";; ABCABCAB[C]This buffer is for notes."))))
 
+(ert-deftest evil-test-repeat-with-find-char ()
+  "Ensure that repeating find-char commands doesn't change `evil-last-find'"
+  :tags '(evil repeat)
+  (evil-test-buffer
+   "[b]ar baz bat"
+   ("dfa" "fb")
+   "r [b]az bat"
+   (".")
+   "r [z] bat"
+   (";")
+   "r z [b]at"))
+
 (ert-deftest evil-test-repeat-visual-char ()
   "Test repeat of character visual mode command."
   :tags '(evil repeat)
