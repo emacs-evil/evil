@@ -1405,6 +1405,9 @@ type.")
 (evil-define-local-var evil-this-register nil
   "Current register.")
 
+(evil-define-local-var evil-last-=-register-result nil
+  "Most recent result from the `=' register. A string.")
+
 (defvar evil-this-macro nil
   "Current macro register.")
 
