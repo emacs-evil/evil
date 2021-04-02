@@ -2037,6 +2037,18 @@ or a marker object pointing nowhere."
                                   (marker-position (cdr entry))))))))
 (put 'evil-swap-out-markers 'permanent-local-hook t)
 
+(defun evil--eval-elisp-expr (input)
+  "Eval INPUT and return stringified result, if of a suitable type."
+  (let ((result (eval (car (read-from-string input)))))
+    (cond
+     ((or (stringp result)
+          (numberp result)
+          (symbolp result))
+      (prin1-to-string result))
+     ((sequencep result)
+      (mapconcat #'prin1-to-string result "\n"))
+     (t (user-error "Using %s as a string" (type-of result))))))
+
 (defun evil-get-register (register &optional _noerror)
   "Return contents of REGISTER.
 Signal an error if empty, unless NOERROR is non-nil.
@@ -2062,7 +2074,7 @@ The following special registers are supported.
         (or (cond
              ((eq register ?\")
               (current-kill 0))
-             ((and (<= ?1 register) (<= register ?9))
+             ((<= ?1 register ?9)
               (let ((reg (- register ?1)))
                 (and (< reg (length kill-ring))
                      (current-kill reg t))))
@@ -2128,15 +2140,11 @@ The following special registers are supported.
               evil-last-small-deletion)
              ((eq register ?=)
               (let* ((enable-recursive-minibuffers t)
-                     (result (eval (car (read-from-string (read-string "="))))))
-                (cond
-                 ((or (stringp result)
-                      (numberp result)
-                      (symbolp result))
-                  (prin1-to-string result))
-                 ((sequencep result)
-                  (mapconcat #'prin1-to-string result "\n"))
-                 (t (user-error "Using %s as a string" (type-of result))))))
+                     (eval-input (read-string "=")))
+                (if (remove ?\s (append eval-input nil))
+                    (setq evil-last-=-register-result
+                          (evil--eval-elisp-expr eval-input))
+                  evil-last-=-register-result)))
              ((eq register ?_) ; the black hole register
               "")
              (t

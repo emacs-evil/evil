@@ -2754,6 +2754,17 @@ word3[]"))
     ("kdd\"0p")
     "line 1\nline 1\nline 1\n[l]ine 1\n"))
 
+(ert-deftest evil-test-=-register ()
+  "\"= is not really a register . It inserts the result of evaluating some elisp"
+  (evil-test-buffer
+   :state insert
+   "8x8= []"
+   ("\C-r=(* 8 8)" [return])
+   "8x8= 64"
+   ([return] "16x4= \C-r=" [return])
+   "8x8= 64
+16x4= 64"))
+
 (ert-deftest evil-test-align ()
   "Test `evil-align-left', `evil-align-right' and `evil-align-center'."
   :tags '(evil operator)
