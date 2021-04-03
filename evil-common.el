@@ -2139,21 +2139,21 @@ The following special registers are supported.
              ((eq register ?-)
               evil-last-small-deletion)
              ((eq register ?=)
-              (let* ((enable-recursive-minibuffers t)
-                     (eval-input (minibuffer-with-setup-hook
-                                     (lambda ()
-                                       (when evil-last-=-register-result
-                                         (add-hook 'pre-command-hook #'evil-ex-remove-default)))
-                                   (read-from-minibuffer
-                                    "="
-                                    (and evil-last-=-register-result
-                                         (propertize evil-last-=-register-result 'face 'shadow))
-                                    evil-ex-completion-map
-                                    nil
-                                    'evil-eval-history
-                                    evil-last-=-register-result
-                                    t))))
-                (evil--eval-elisp-expr eval-input)))
+              (let ((enable-recursive-minibuffers t))
+                (setq evil-last-=-register-input
+                      (minibuffer-with-setup-hook
+                          (lambda () (when evil-last-=-register-input
+                                       (add-hook 'pre-command-hook #'evil-ex-remove-default)))
+                        (read-from-minibuffer
+                         "="
+                         (and evil-last-=-register-input
+                              (propertize evil-last-=-register-input 'face 'shadow))
+                         evil-eval-map
+                         nil
+                         'evil-eval-history
+                         evil-last-=-register-input
+                         t)))
+                (evil--eval-elisp-expr evil-last-=-register-input)))
              ((eq register ?_) ; the black hole register
               "")
              (t
