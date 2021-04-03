@@ -1861,6 +1861,10 @@ See `evil-ex-init-shell-argument-completion'.")
 (defvar evil-previous-shell-command nil
   "The last shell command.")
 
+;; Eval
+(defvar evil-eval-history nil
+  "History of eval commands, from the `=' register.")
+
 ;; Searching
 (defvar evil-ex-search-history nil
   "The history for the search command.")
