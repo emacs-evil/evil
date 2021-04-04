@@ -2037,10 +2037,16 @@ or a marker object pointing nowhere."
                                   (marker-position (cdr entry))))))))
 (put 'evil-swap-out-markers 'permanent-local-hook t)
 
-(defun evil--eval-elisp-expr (input)
-  "Eval INPUT and return stringified result, if of a suitable type."
-  (let ((result (eval (car (read-from-string input)))))
+(defun evil--eval-expr (input)
+  "Eval INPUT and return stringified result, if of a suitable type.
+If INPUT starts with a number, +, -, or . use `calc-eval' instead."
+  (let* ((first-char (string-to-char input))
+         (calcable-p (or (<= ?0 first-char ?9) (memq first-char '(?- ?+ ?.))))
+         (result (if calcable-p
+                     (calc-eval input)
+                   (eval (car (read-from-string input))))))
     (cond
+     (calcable-p result)
      ((or (stringp result)
           (numberp result)
           (symbolp result))
@@ -2153,7 +2159,7 @@ The following special registers are supported.
                          'evil-eval-history
                          evil-last-=-register-input
                          t)))
-                (evil--eval-elisp-expr evil-last-=-register-input)))
+                (evil--eval-expr evil-last-=-register-input)))
              ((eq register ?_) ; the black hole register
               "")
              (t
