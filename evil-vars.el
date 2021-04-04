@@ -1405,8 +1405,8 @@ type.")
 (evil-define-local-var evil-this-register nil
   "Current register.")
 
-(evil-define-local-var evil-last-=-register-result nil
-  "Most recent result from the `=' register. A string.")
+(defvar evil-last-=-register-input nil
+  "Most recent input from the `=' register. A string.")
 
 (defvar evil-this-macro nil
   "Current macro register.")
@@ -1860,6 +1860,13 @@ See `evil-ex-init-shell-argument-completion'.")
 
 (defvar evil-previous-shell-command nil
   "The last shell command.")
+
+;; Eval
+(defvar evil-eval-history nil
+  "History of eval input, from the `=' register.")
+
+(defvar evil-eval-map (make-sparse-keymap)
+  "Keymap for eval input.")
 
 ;; Searching
 (defvar evil-ex-search-history nil

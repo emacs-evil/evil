@@ -29,6 +29,7 @@
 (require 'rect)
 (require 'thingatpt)
 (require 'cl-lib)
+(require 'calc)
 
 ;;; Code:
 
@@ -2037,10 +2038,17 @@ or a marker object pointing nowhere."
                                   (marker-position (cdr entry))))))))
 (put 'evil-swap-out-markers 'permanent-local-hook t)
 
-(defun evil--eval-elisp-expr (input)
-  "Eval INPUT and return stringified result, if of a suitable type."
-  (let ((result (eval (car (read-from-string input)))))
+(defun evil--eval-expr (input)
+  "Eval INPUT and return stringified result, if of a suitable type.
+If INPUT starts with a number, +, -, or . use `calc-eval' instead."
+  (let* ((first-char (string-to-char input))
+         (calcable-p (or (<= ?0 first-char ?9) (memq first-char '(?- ?+ ?.))))
+         (result (if calcable-p
+                     (let ((calc-multiplication-has-precedence nil))
+                       (calc-eval input))
+                   (eval (car (read-from-string input))))))
     (cond
+     (calcable-p result)
      ((or (stringp result)
           (numberp result)
           (symbolp result))
@@ -2139,12 +2147,21 @@ The following special registers are supported.
              ((eq register ?-)
               evil-last-small-deletion)
              ((eq register ?=)
-              (let* ((enable-recursive-minibuffers t)
-                     (eval-input (read-string "=")))
-                (if (remove ?\s (append eval-input nil))
-                    (setq evil-last-=-register-result
-                          (evil--eval-elisp-expr eval-input))
-                  evil-last-=-register-result)))
+              (let ((enable-recursive-minibuffers t))
+                (setq evil-last-=-register-input
+                      (minibuffer-with-setup-hook
+                          (lambda () (when evil-last-=-register-input
+                                       (add-hook 'pre-command-hook #'evil-ex-remove-default)))
+                        (read-from-minibuffer
+                         "="
+                         (and evil-last-=-register-input
+                              (propertize evil-last-=-register-input 'face 'shadow))
+                         evil-eval-map
+                         nil
+                         'evil-eval-history
+                         evil-last-=-register-input
+                         t)))
+                (evil--eval-expr evil-last-=-register-input)))
              ((eq register ?_) ; the black hole register
               "")
              (t
@@ -2221,6 +2238,7 @@ to keep Vim compatibility with register jumps."
                             (cons reg (evil-get-register reg t)))
                         '(?\" ?* ?+ ?% ?# ?/ ?: ?. ?-
                               ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+                (list (cons ?= evil-last-=-register-input))
                 (cl-remove-if-not (lambda (reg) (number-or-marker-p (car reg))) register-alist)
                 nil)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))

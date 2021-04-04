@@ -2756,14 +2756,21 @@ word3[]"))
 
 (ert-deftest evil-test-=-register ()
   "\"= is not really a register . It inserts the result of evaluating some elisp"
-  (evil-test-buffer
-   :state insert
-   "8x8= []"
-   ("\C-r=(* 8 8)" [return])
-   "8x8= 64"
-   ([return] "16x4= \C-r=" [return])
-   "8x8= 64
+  (ert-info ("Can eval elisp, and can fetch default (last) result")
+    (evil-test-buffer
+     :state insert
+     "8x8= []"
+     ("\C-r=(* 8 8)" [return])
+     "8x8= 64"
+     ([return] "16x4= \C-r=" [return])
+     "8x8= 64
 16x4= 64"))
+
+  (ert-info ("Can eval infix math, and can use register at prompt")
+    (evil-test-buffer
+     "[5]0/10 * 100 = "
+     ("\"nyt=" "A\C-r=" "\C-rn" [return])
+     "50/10 * 100 = 500")))
 
 (ert-deftest evil-test-align ()
   "Test `evil-align-left', `evil-align-right' and `evil-align-center'."
