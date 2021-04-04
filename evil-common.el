@@ -29,6 +29,7 @@
 (require 'rect)
 (require 'thingatpt)
 (require 'cl-lib)
+(require 'calc)
 
 ;;; Code:
 
@@ -2043,7 +2044,8 @@ If INPUT starts with a number, +, -, or . use `calc-eval' instead."
   (let* ((first-char (string-to-char input))
          (calcable-p (or (<= ?0 first-char ?9) (memq first-char '(?- ?+ ?.))))
          (result (if calcable-p
-                     (calc-eval input)
+                     (let ((calc-multiplication-has-precedence nil))
+                       (calc-eval input))
                    (eval (car (read-from-string input))))))
     (cond
      (calcable-p result)
