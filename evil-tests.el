@@ -8422,6 +8422,23 @@ maybe we need one line more with some text\n")
             (set-buffer-modified-p nil))
           (kill-buffer (get-file-buffer temp-file)))))))
 
+(ert-deftest evil-test-find-file ()
+  :tags '(evil jumps)
+  (ert-info ("Normal mode find-file-at-point")
+    (evil-with-temp-file file-name ""
+      (evil-test-buffer
+        (vconcat "i" file-name [escape])
+        (should (not (equal file-name (buffer-file-name (current-buffer)))))
+        ("gf")
+        (should (equal file-name (buffer-file-name (current-buffer)))))))
+  (ert-info ("Visual mode evil-find-file-at-point-visual")
+    (evil-with-temp-file file-name ""
+      (evil-test-buffer
+        (vconcat "iuser@localhost:" file-name "$" [escape])
+        (should (not (equal file-name (buffer-file-name (current-buffer)))))
+        ("0f:lvt$gf")
+        (should (equal file-name (buffer-file-name (current-buffer))))))))
+
 (ert-deftest evil-test-jump-buffers ()
   :tags '(evil jums)
   (skip-unless nil)
