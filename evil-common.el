@@ -2236,6 +2236,7 @@ to keep Vim compatibility with register jumps."
                             (cons reg (evil-get-register reg t)))
                         '(?\" ?* ?+ ?% ?# ?/ ?: ?. ?-
                               ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+                (list (cons ?= evil-last-=-register-input))
                 (cl-remove-if-not (lambda (reg) (number-or-marker-p (car reg))) register-alist)
                 nil)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
