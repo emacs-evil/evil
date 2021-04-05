@@ -1620,26 +1620,23 @@ given."
 (evil-define-command evil-ex-put (_beg end _type ex-arg &optional force)
   (interactive "<R><a><!>")
   (let* ((arg-chars (remove ?\s (string-to-list ex-arg)))
-         (car-arg (car arg-chars)))
-    (when (and (< 1 (length arg-chars))
-               (not (eq ?= car-arg)))
-      (user-error "Trailing characters"))
-    ;; TODO "nothing in register x"
+         (car-arg (or (car arg-chars) ?\"))
+         (text (cond
+                ((and (< 1 (length arg-chars))
+                      (/= ?= car-arg))
+                 (user-error "Trailing characters"))
+                ((eq ?= car-arg) (evil--eval-expr (if (= 1 (length arg-chars))
+                                                      evil-last-=-register-input
+                                                    (substring ex-arg 1))))
+                (t (evil-get-register car-arg)))))
+    (unless text (user-error "Nothing in register %c" car-arg))
     (goto-char (1- end))
     (if force (evil-insert-newline-above) (evil-insert-newline-below))
     (when evil-auto-indent
       (indent-according-to-mode))
     (save-excursion ; not enough: should be first char of last pasted line
-      (if (null ex-arg)
-          (evil-paste-after 1)
-        (if (= 1 (length ex-arg))
-            (if (eq ?= car-arg)
-                (progn ; TODO set markers etc.
-                  (insert-for-yank (evil--eval-expr evil-last-=-register-input)))
-              (evil-paste-after 1 car-arg))
-          (when (eq ?= car-arg)
-            ;; TODO set markers etc.
-            (insert-for-yank (evil--eval-expr (substring ex-arg 1)))))))))
+      ;; TODO set markers etc.
+      (insert-for-yank text))))
 
 (evil-define-operator evil-change
   (beg end type register yank-handler delete-func)
