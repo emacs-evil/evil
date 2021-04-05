@@ -2041,7 +2041,7 @@ or a marker object pointing nowhere."
 (defun evil--eval-expr (input)
   "Eval INPUT and return stringified result, if of a suitable type.
 If INPUT starts with a number, +, -, or . use `calc-eval' instead."
-  (let* ((first-char (car (remove ?\s (string-to-list input)))) ;; TODO I don't think we need to remove spaces here
+  (let* ((first-char (car (remove ?\s (string-to-list input))))
          (calcable-p (or (<= ?0 first-char ?9) (memq first-char '(?- ?+ ?.))))
          (result (if calcable-p
                      (let ((calc-multiplication-has-precedence nil))
@@ -2618,15 +2618,11 @@ The tracked insertion is set to `evil-last-insertion'."
       (evil-move-mark (1+ (mark t)))
       (evil-exchange-point-and-mark)
       (back-to-indentation))
-     ((eq this-command 'evil-ex-put)
-      (insert text)
-      (delete-char -1))
      (t
       (insert text)))))
 
 (defun evil-yank-block-handler (lines)
   "Inserts the current text as block."
-  ;; TODO handle for ex-put?
   (let ((count (or evil-paste-count 1))
         (col (if (eq this-command 'evil-paste-after)
                  (1+ (current-column))
@@ -2677,7 +2673,8 @@ The tracked insertion is set to `evil-last-insertion'."
       (forward-char))))
 
 (defun evil-delete-yanked-rectangle (nrows ncols)
-  "Special function to delete the block yanked by a previous paste command."
+  "Special function to delete the block yanked by a previous paste command.
+Supplied as the `undo' element of a yank handler."
   (let ((opoint (point))
         (col (if (eq last-command 'evil-paste-after)
                  (1+ (current-column))

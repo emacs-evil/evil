@@ -1630,14 +1630,15 @@ given."
                                                     (substring ex-arg 1))))
                 (t (evil-get-register car-arg)))))
     (unless text (user-error "Nothing in register %c" car-arg))
-    (goto-char (1- end))
+    (goto-char (if (= (point-max) end) end (1- end)))
     (if force (evil-insert-newline-above) (evil-insert-newline-below))
-    (insert-for-yank text)
-    (when evil-auto-indent
-      (indent-according-to-mode))
-    (evil-first-non-blank)
-    ;; TODO set markers etc.
-    ))
+    (evil-set-marker ?\[ (point))
+    ;; `insert' rather than `insert-for-yank' as we want to ignore yank-handlers...
+    (insert (if (eq (aref text (1- (length text))) ?\n)
+                (substring text 0 (1- (length text)))
+              text))
+    (evil-set-marker ?\] (1- (point)))
+    (back-to-indentation)))
 
 (evil-define-operator evil-change
   (beg end type register yank-handler delete-func)
