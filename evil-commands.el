@@ -1617,6 +1617,30 @@ given."
   (interactive "<R><xc/><y>")
   (evil-ex-delete-or-yank nil beg end type register count yank-handler))
 
+(evil-define-command evil-ex-put (_beg end _type ex-arg &optional force)
+  (interactive "<R><a><!>")
+  (let* ((arg-chars (remove ?\s (string-to-list ex-arg)))
+         (car-arg (car arg-chars)))
+    (when (and (< 1 (length arg-chars))
+               (not (eq ?= car-arg)))
+      (user-error "Trailing characters"))
+    ;; TODO "nothing in register x"
+    (goto-char (1- end))
+    (if force (evil-insert-newline-above) (evil-insert-newline-below))
+    (when evil-auto-indent
+      (indent-according-to-mode))
+    (save-excursion ; not enough: should be first char of last pasted line
+      (if (null ex-arg)
+          (evil-paste-after 1)
+        (if (= 1 (length ex-arg))
+            (if (eq ?= car-arg)
+                (progn ; TODO set markers etc.
+                  (insert-for-yank (evil--eval-expr evil-last-=-register-input)))
+              (evil-paste-after 1 car-arg))
+          (when (eq ?= car-arg)
+            ;; TODO set markers etc.
+            (insert-for-yank (evil--eval-expr (substring ex-arg 1)))))))))
+
 (evil-define-operator evil-change
   (beg end type register yank-handler delete-func)
   "Change text from BEG to END with TYPE.
@@ -1636,7 +1660,7 @@ of the block."
     (funcall delete-func beg end type register yank-handler)
     (cond
      ((eq type 'line)
-      (if ( = opoint (point))
+      (if (= opoint (point))
           (evil-open-above 1)
         (evil-open-below 1)))
      ((eq type 'block)

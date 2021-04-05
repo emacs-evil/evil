@@ -2041,7 +2041,7 @@ or a marker object pointing nowhere."
 (defun evil--eval-expr (input)
   "Eval INPUT and return stringified result, if of a suitable type.
 If INPUT starts with a number, +, -, or . use `calc-eval' instead."
-  (let* ((first-char (string-to-char input))
+  (let* ((first-char (car (remove ?\s (string-to-list input))))
          (calcable-p (or (<= ?0 first-char ?9) (memq first-char '(?- ?+ ?.))))
          (result (if calcable-p
                      (let ((calc-multiplication-has-precedence nil))
