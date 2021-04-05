@@ -1632,11 +1632,12 @@ given."
     (unless text (user-error "Nothing in register %c" car-arg))
     (goto-char (1- end))
     (if force (evil-insert-newline-above) (evil-insert-newline-below))
+    (insert-for-yank text)
     (when evil-auto-indent
       (indent-according-to-mode))
-    (save-excursion ; not enough: should be first char of last pasted line
-      ;; TODO set markers etc.
-      (insert-for-yank text))))
+    (evil-first-non-blank)
+    ;; TODO set markers etc.
+    ))
 
 (evil-define-operator evil-change
   (beg end type register yank-handler delete-func)
