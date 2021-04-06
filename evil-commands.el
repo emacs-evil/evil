@@ -1620,16 +1620,16 @@ given."
 (evil-define-command evil-ex-put (_beg end _type ex-arg &optional force)
   (interactive "<R><a><!>")
   (let* ((arg-chars (remove ?\s (string-to-list ex-arg)))
-         (car-arg (or (car arg-chars) ?\"))
+         (reg (or (car arg-chars) ?\"))
          (text (cond
                 ((and (< 1 (length arg-chars))
-                      (/= ?= car-arg))
+                      (/= ?= reg))
                  (user-error "Trailing characters"))
-                ((eq ?= car-arg) (evil--eval-expr (if (= 1 (length arg-chars))
-                                                      evil-last-=-register-input
-                                                    (substring ex-arg 1))))
-                (t (evil-get-register car-arg)))))
-    (unless text (user-error "Nothing in register %c" car-arg))
+                ((eq ?= reg) (evil--eval-expr (if (= 1 (length arg-chars))
+                                                  evil-last-=-register-input
+                                                (substring ex-arg 1))))
+                (t (evil-get-register reg)))))
+    (unless text (user-error "Nothing in register %c" reg))
     (goto-char (if (= (point-max) end) end (1- end)))
     (if force (evil-insert-newline-above) (evil-insert-newline-below))
     (evil-set-marker ?\[ (point))
@@ -1638,7 +1638,8 @@ given."
                 (substring text 0 (1- (length text)))
               text))
     (evil-set-marker ?\] (1- (point)))
-    (back-to-indentation)))
+    (back-to-indentation)
+    (evil-normal-state)))
 
 (evil-define-operator evil-change
   (beg end type register yank-handler delete-func)
