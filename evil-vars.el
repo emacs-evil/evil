@@ -704,6 +704,7 @@ expression matching the buffer's name and STATE is one of `normal',
     bookmark-bmenu-mode
     bookmark-edit-annotation-mode
     browse-kill-ring-mode
+    bs-mode
     bubbles-mode
     bzr-annotate-mode
     calc-mode
