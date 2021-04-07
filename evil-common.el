@@ -1703,7 +1703,7 @@ WORD is a sequence of non-whitespace characters
 '[^\\n\\r\\t\\f ]', or an empty line matching ^$."
   (evil-forward-nearest count
                         #'(lambda (&optional cnt)
-                            (evil-forward-chars "^\n\r\t\f " cnt))
+                            (evil-forward-chars evil-bigword cnt))
                         #'forward-evil-empty-line))
 
 (defun forward-evil-symbol (&optional count)
