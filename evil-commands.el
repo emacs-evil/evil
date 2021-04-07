@@ -1625,9 +1625,10 @@ given."
                 ((and (< 1 (length arg-chars))
                       (/= ?= reg))
                  (user-error "Trailing characters"))
-                ((eq ?= reg) (evil--eval-expr (if (= 1 (length arg-chars))
-                                                  evil-last-=-register-input
-                                                (substring ex-arg 1))))
+                ((eq ?= reg)
+                 (evil--eval-expr (if (= 1 (length arg-chars))
+                                      evil-last-=-register-input
+                                    (setq evil-last-=-register-input (substring ex-arg 1)))))
                 (t (evil-get-register reg)))))
     (unless text (user-error "Nothing in register %c" reg))
     (evil-remove-yank-excluded-properties text)
