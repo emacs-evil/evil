@@ -2772,6 +2772,38 @@ word3[]"))
      ("\"nyt=" "A\C-r=" "\C-rn" [return])
      "50/10 * 100 = 500")))
 
+(ert-deftest evil-test-ex-put ()
+  "evil-ex-put inserts text linewise, regardless of yank-handler"
+  (ert-info ("Can put linewise text from default register, by line number")
+    (evil-test-buffer
+     "[L]orem ipsum dolor sit amet
+consectetur adipiscing elit
+sed do eiusmod tempor incididunt"
+     ("yy:2put" [return])
+     "Lorem ipsum dolor sit amet
+consectetur adipiscing elit
+[L]orem ipsum dolor sit amet
+sed do eiusmod tempor incididunt"))
+
+  (ert-info ("Can put blockwise text from letter register, backwards")
+    (evil-test-buffer
+     "Lorem ipsum [d]olor sit amet
+consectetur adipiscing elit
+sed do eiusmod tempor incididunt"
+     ("\C-vje\"xy" "bye" "Vj" ":put! x" [return])
+     "Lorem ipsum dolor sit amet
+dolor sit 
+[a]dipiscing
+consectetur adipiscing elit
+sed do eiusmod tempor incididunt"))
+
+  (ert-info ("Can supply args and put from = register")
+    (evil-test-buffer
+     "[L]ine one."
+     (":put = (* 6 7)" [return])
+     "Line one.
+[4]2")))
+
 (ert-deftest evil-test-align ()
   "Test `evil-align-left', `evil-align-right' and `evil-align-center'."
   :tags '(evil operator)

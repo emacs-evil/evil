@@ -1617,6 +1617,31 @@ given."
   (interactive "<R><xc/><y>")
   (evil-ex-delete-or-yank nil beg end type register count yank-handler))
 
+(evil-define-command evil-ex-put (_beg end _type ex-arg &optional force)
+  (interactive "<R><a><!>")
+  (let* ((arg-chars (remove ?\s (string-to-list ex-arg)))
+         (reg (or (car arg-chars) ?\"))
+         (text (cond
+                ((and (< 1 (length arg-chars))
+                      (/= ?= reg))
+                 (user-error "Trailing characters"))
+                ((eq ?= reg) (evil--eval-expr (if (= 1 (length arg-chars))
+                                                  evil-last-=-register-input
+                                                (substring ex-arg 1))))
+                (t (evil-get-register reg)))))
+    (unless text (user-error "Nothing in register %c" reg))
+    (evil-remove-yank-excluded-properties text)
+    (goto-char (if (= (point-max) end) end (1- end)))
+    (if force (evil-insert-newline-above) (evil-insert-newline-below))
+    (evil-set-marker ?\[ (point))
+    ;; `insert' rather than `insert-for-yank' as we want to ignore yank-handlers...
+    (insert (if (eq (aref text (1- (length text))) ?\n)
+                (substring text 0 (1- (length text)))
+              text))
+    (evil-set-marker ?\] (1- (point)))
+    (back-to-indentation)
+    (evil-normal-state)))
+
 (evil-define-operator evil-change
   (beg end type register yank-handler delete-func)
   "Change text from BEG to END with TYPE.
@@ -1636,7 +1661,7 @@ of the block."
     (funcall delete-func beg end type register yank-handler)
     (cond
      ((eq type 'line)
-      (if ( = opoint (point))
+      (if (= opoint (point))
           (evil-open-above 1)
         (evil-open-below 1)))
      ((eq type 'block)
