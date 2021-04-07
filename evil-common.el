@@ -2052,9 +2052,9 @@ If INPUT starts with a number, +, -, or . use `calc-eval' instead."
      ((or (stringp result)
           (numberp result)
           (symbolp result))
-      (prin1-to-string result))
+      (format "%s" result))
      ((sequencep result)
-      (mapconcat #'prin1-to-string result "\n"))
+      (mapconcat (lambda (x) (format "%s" x)) result "\n"))
      (t (user-error "Using %s as a string" (type-of result))))))
 
 (defun evil-get-register (register &optional _noerror)
