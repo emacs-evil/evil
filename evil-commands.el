@@ -1630,6 +1630,7 @@ given."
                                                 (substring ex-arg 1))))
                 (t (evil-get-register reg)))))
     (unless text (user-error "Nothing in register %c" reg))
+    (evil-remove-yank-excluded-properties text)
     (goto-char (if (= (point-max) end) end (1- end)))
     (if force (evil-insert-newline-above) (evil-insert-newline-below))
     (evil-set-marker ?\[ (point))
