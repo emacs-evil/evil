@@ -1636,7 +1636,8 @@ given."
     (if force (evil-insert-newline-above) (evil-insert-newline-below))
     (evil-set-marker ?\[ (point))
     ;; `insert' rather than `insert-for-yank' as we want to ignore yank-handlers...
-    (insert (if (eq (aref text (1- (length text))) ?\n)
+    (insert (if (and (< 0 (length text))
+                     (eq ?\n (aref text (1- (length text)))))
                 (substring text 0 (1- (length text)))
               text))
     (evil-set-marker ?\] (1- (point)))
