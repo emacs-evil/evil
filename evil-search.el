@@ -958,7 +958,7 @@ any error conditions."
              (pat (pop res))
              (offset (pop res))
              (next-pat (pop res)))
-        ;; use last pattern of no new pattern has been specified
+        ;; use last pattern if no new pattern has been specified
         (if (not (zerop (length pat)))
             (setq pat (evil-ex-make-search-pattern pat))
           (setq pat evil-ex-search-pattern

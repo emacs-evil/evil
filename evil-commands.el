@@ -2065,6 +2065,9 @@ The return value is the yanked text."
                                  (car-safe (get-text-property
                                             0 'yank-handler text)))))
              (opoint (point)))
+        (when evil-paste-clear-minibuffer-first
+          (delete-minibuffer-contents)
+          (setq evil-paste-clear-minibuffer-first nil))
         (when text
           (if (functionp yank-handler)
               (let ((evil-paste-count count)
