@@ -7287,7 +7287,16 @@ if no previous selection")
         ("n")
         "start\nline 2\nline [3]\n\n"
         ("n")
-        "start\nline 2\nline 3\n[]\n"))))
+        "start\nline 2\nline 3\n[]\n"))
+    (ert-info ("Can paste from register in ex-search")
+      (evil-test-buffer
+       "Alpha [b]ravo charlie alpha bravo delta bravo delta"
+       ("\"bye" "w")
+       "Alpha bravo [c]harlie alpha bravo delta bravo delta"
+       ("/\C-rb" [return])
+       "Alpha bravo charlie alpha [b]ravo delta bravo delta"
+       ("w/\C-r\C-o" [return])
+       "Alpha bravo charlie alpha bravo delta bravo [d]elta"))))
 
 (ert-deftest evil-test-ex-search-offset ()
   "Test search offsets."
