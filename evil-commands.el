@@ -3300,10 +3300,16 @@ If ARG is nil this function calls `recompile', otherwise it calls
 
 ;; TODO: escape special characters (currently only \n) ... perhaps
 ;; there is some Emacs function doing this?
-(evil-define-command evil-show-registers ()
-  "Shows the contents of all registers."
+(evil-define-command evil-show-registers (registers)
+  "Shows the contents of REGISTERS, or all registers, if none supplied."
   :repeat nil
-  (let ((all-registers (evil-register-list)))
+  (interactive "<a>")
+  (let* ((all-registers (evil-register-list))
+         (reg-chars (string-to-list registers))
+         (display-regs (if reg-chars
+                           (cl-remove-if-not (lambda (r) (memq (car r) reg-chars))
+                                             all-registers)
+                         all-registers)))
     (evil-with-view-list
       :name "evil-registers"
       :mode-name "Evil Registers"
@@ -3311,7 +3317,7 @@ If ARG is nil this function calls `recompile', otherwise it calls
       [("Register" 10 nil)
        ("Value" 1000 nil)]
       :entries
-      (cl-loop for (key . val) in all-registers
+      (cl-loop for (key . val) in display-regs
                collect `(nil [,(char-to-string key)
                               ,(cond ((stringp val)
                                       (replace-regexp-in-string "\n" "^J" val))
