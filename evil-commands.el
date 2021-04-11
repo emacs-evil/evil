@@ -746,6 +746,16 @@ Loop back to the top of buffer if the end is reached."
         (evil-first-non-blank))
     (user-error "No marks in this buffer")))
 
+(evil-define-command evil-set-col-0-mark (_beg end _type mark)
+  "Set MARK at column 0 of line of END. Default is cursor line."
+  (interactive "<R><a>")
+  (if (< 1 (length mark))
+      (user-error "Trailing characters")
+    (save-excursion
+      (goto-char (if (eobp) end (1- end)))
+      (evil-beginning-of-line)
+      (evil-set-marker (string-to-char mark)))))
+
 (evil-define-motion evil-find-char (count char)
   "Move to the next COUNT'th occurrence of CHAR.
 Movement is restricted to the current line unless `evil-cross-lines' is non-nil."
