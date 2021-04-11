@@ -5324,6 +5324,16 @@ charlie delta echo
 foxtrot golf hotel
 [i]ndia juliet")))
 
+(ert-deftest evil-set-col-0-mark-test ()
+  "Test `evil-set-col-0-mark' ex command"
+  :tags '(evil ex)
+  (evil-test-buffer
+   "Lin[e] 1
+Line 2"
+   (":mark k" [return] "G" "`k")
+   "[L]ine 1
+Line 2"))
+
 (ert-deftest evil-delete-marks-test ()
   "Test `evil-delete-marks' ex command"
   :tags '(evil ex)
