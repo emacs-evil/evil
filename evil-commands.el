@@ -1682,17 +1682,21 @@ of the block."
       (evil-insert 1)))))
 
 (evil-define-operator evil-change-line (beg end type register yank-handler)
-  "Change to end of line."
+  "Change to end of line, or change whole line if characterwise visual mode."
   :motion evil-end-of-line-or-visual-line
   (interactive "<R><x><y>")
-  (evil-change beg end type register yank-handler #'evil-delete-line))
+  (if (and (evil-visual-state-p) (eq 'inclusive type))
+      (cl-destructuring-bind (beg* end* &rest) (evil-line-expand beg end)
+          (evil-change-whole-line beg* end* register yank-handler))
+    (evil-change beg end type register yank-handler #'evil-delete-line)))
 
 (evil-define-operator evil-change-whole-line
-  (beg end type register yank-handler)
+  (beg end register yank-handler)
   "Change whole line."
   :motion evil-line-or-visual-line
-  (interactive "<R><x>")
-  (evil-change beg end type register yank-handler #'evil-delete-whole-line))
+  :type line
+  (interactive "<r><x>")
+  (evil-change beg end 'line register yank-handler #'evil-delete-whole-line))
 
 (evil-define-command evil-copy (beg end address)
   "Copy lines in BEG END below line given by ADDRESS."
