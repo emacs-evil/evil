@@ -2004,6 +2004,55 @@ DEFLINE
       ("2ccABC" [escape])
       ";; This buffer is for notes you don't want to save.
 AB[C]"))
+  (ert-info ("C changes whole line in visual characterwise and linewise states")
+    (evil-test-buffer
+     "Two lines [s]hould suffice
+for this test."
+     ("veC" "all gone!")
+     "all gone![]
+for this test.")
+    (evil-test-buffer
+     "Two lines [w]ill be fine
+for this test too."
+     ("VjC" "all gone!")
+     "all gone![]"))
+  (ert-info ("C clears the visual blockwise selection, and all text to the right")
+    (evil-test-buffer
+     "Two [l]ines will be fine for
+the tests here as well."
+     ("\C-vjeC")
+     "Two []
+the "))
+  (ert-info ("S clears the whole line in normal mode, and all lines touched by visual selection")
+    (evil-test-buffer
+     "Two lines [s]hould suffice
+for this test."
+     ("S" "all gone!")
+     "all gone![]
+for this test.")
+    (evil-test-buffer
+     "Two lines [s]hould suffice
+for this test."
+     ("vS" "all gone!")
+     "all gone![]
+for this test.")
+    (evil-test-buffer
+     "Two lines [s]hould suffice
+for this test."
+     ("VjS" "all gone!")
+     "all gone![]")
+    (evil-test-buffer
+     "Two lines [s]hould suffice
+for this test."
+     ("\C-VjS" "all gone!")
+     "all gone![]"))
+  (ert-info ("R behaves the same as S in visual modes")
+    (evil-test-buffer
+     "Two lines [s]hould suffice
+for this test."
+     ("vR" "all gone!")
+     "all gone![]
+for this test."))
   (ert-info ("Change rectangle")
     (evil-test-buffer
       "[;]; This buffer is for notes you don't want to save.
