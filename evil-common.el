@@ -2057,7 +2057,7 @@ If INPUT starts with a number, +, -, or . use `calc-eval' instead."
       (mapconcat (lambda (x) (format "%s" x)) result "\n"))
      (t (user-error "Using %s as a string" (type-of result))))))
 
-(defun evil-get-register (register &optional _noerror)
+(defun evil-get-register (register &optional noerror)
   "Return contents of REGISTER.
 Signal an error if empty, unless NOERROR is non-nil.
 
@@ -2168,7 +2168,7 @@ The following special registers are supported.
               (setq register (downcase register))
               (get-register register)))
             (user-error "Register `%c' is empty" register)))
-    (error (unless err (signal (car err) (cdr err))))))
+    (error (unless noerror (signal (car err) (cdr err))))))
 
 (defun evil-append-register (register text)
   "Append TEXT to the contents of register REGISTER."
