@@ -2168,7 +2168,7 @@ The following special registers are supported.
               (setq register (downcase register))
               (get-register register)))
             (user-error "Register `%c' is empty" register)))
-    (error (unless err (signal (car err) (cdr err))))))
+    (error (when err (signal (car err) (cdr err))))))
 
 (defun evil-append-register (register text)
   "Append TEXT to the contents of register REGISTER."
