@@ -306,7 +306,13 @@ with `M-x evil-tests-run'"))
       ("\C-oA")
       (ert-info ("Should return to insert state after insert state command")
         (should (evil-insert-state-p)))
-      ("bcdef[]\n"))))
+      ("bcdef[]\n"))
+    (ert-info ("Cursor is placed correctly afterwards")
+      (evil-test-buffer
+       :state insert
+       "abcdefg[]"
+       ("\C-o~")
+       "abcdefG[]"))))
 
 (defun evil-test-suppress-keymap (state)
   "Verify that `self-insert-command' is suppressed in STATE"
