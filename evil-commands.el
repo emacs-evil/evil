@@ -4650,10 +4650,12 @@ if the previous state was Emacs state."
       `(progn
          (with-current-buffer ,(current-buffer)
            (evil-change-state ',evil-state)
-           (setq evil-move-cursor-back ',evil-move-cursor-back)))
+           (setq evil-move-cursor-back ',evil-move-cursor-back
+                 evil-move-beyond-eol ',evil-move-beyond-eol)))
     'post-command-hook)
   (setq evil-move-cursor-back nil)
   (evil-normal-state)
+  (setq evil-move-beyond-eol t)
   (evil-echo "Switched to Normal state for the next command ..."))
 
 (defun evil-stop-execute-in-emacs-state ()
