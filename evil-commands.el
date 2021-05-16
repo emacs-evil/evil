@@ -4643,7 +4643,8 @@ This var stores the eol position, so it can be restored when necessary.")
   "Execute the next command in Normal state."
   (interactive)
   (evil-delay '(not (memq this-command
-                          '(evil-execute-in-normal-state
+                          '(nil
+                            evil-execute-in-normal-state
                             evil-replace-state
                             evil-use-register
                             digit-argument

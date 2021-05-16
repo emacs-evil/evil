@@ -50,9 +50,9 @@
 ;;                             \___/
 ;;
 ;; The recording of a repeat is started in one of two cases: Either a
-;; command is about being executed (in pre-command-hook) or normal
+;; command is about to be executed (in pre-command-hook) or normal
 ;; state is exited. The recording is stopped whenever a command has
-;; being completed and evil is in normal state afterwards. Therefore,
+;; been completed and evil is in normal state afterwards. Therefore,
 ;; a non-inserting command in normal-state is recorded as a single
 ;; repeat unit. In contrast, if the command leaves normal state and
 ;; starts insert-state, all commands that are executed until
@@ -63,7 +63,7 @@
 ;;
 ;; Not all commands are recorded. There are several commands that are
 ;; completely ignored and other commands that even abort the currently
-;; active recording, e.g., commands that change the current buffer.
+;; active recording, e.g., commands that switch buffer.
 ;;
 ;; During recording the repeat information is appended to the variable
 ;; `evil-repeat-info', which is cleared when the recording

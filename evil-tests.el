@@ -347,7 +347,13 @@ with `M-x evil-tests-run'"))
       (evil-test-buffer
         "[]"
         ("2i" "abcdef" "\C-o~" "g" [escape])
-        "abcdeF[g]"))))
+        "abcdeF[g]"))
+    (ert-info ("Can execute evil-repeat in normal state")
+      (evil-test-buffer
+        :state insert
+        "ab[]cdefg"
+        ("\C-o~\C-o.")
+        "abCD[]efg"))))
 
 (defun evil-test-suppress-keymap (state)
   "Verify that `self-insert-command' is suppressed in STATE"
