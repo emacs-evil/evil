@@ -4635,11 +4635,16 @@ if the previous state was Emacs state."
       (when (evil-emacs-state-p)
         (evil-normal-state (and message 1))))))
 
+(evil-define-local-var evil--execute-normal-eol-pos nil
+  "Vim has special behaviour for executing in normal state at eol.
+This var stores the eol position, so it can be restored when necessary.")
+
 (defun evil-execute-in-normal-state ()
   "Execute the next command in Normal state."
   (interactive)
   (evil-delay '(not (memq this-command
                           '(evil-execute-in-normal-state
+                            evil-replace-state
                             evil-use-register
                             digit-argument
                             negative-argument
@@ -4649,10 +4654,16 @@ if the previous state was Emacs state."
                             universal-argument-other-key)))
       `(progn
          (with-current-buffer ,(current-buffer)
-           (evil-change-state ',evil-state)
+           (when (and evil--execute-normal-eol-pos
+                      (>= (point) (1- evil--execute-normal-eol-pos))
+                      (not (eq this-command 'evil-insert)))
+             (goto-char evil--execute-normal-eol-pos))
+           (unless (eq 'replace evil-state)
+             (evil-change-state ',evil-state))
            (setq evil-move-cursor-back ',evil-move-cursor-back
                  evil-move-beyond-eol ',evil-move-beyond-eol)))
     'post-command-hook)
+  (setq evil--execute-normal-eol-pos (when (eolp) (point)))
   (setq evil-move-cursor-back nil)
   (evil-normal-state)
   (setq evil-move-beyond-eol t)
