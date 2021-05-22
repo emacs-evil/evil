@@ -4655,12 +4655,10 @@ This var stores the eol position, so it can be restored when necessary.")
       `(progn
          (with-current-buffer ,(current-buffer)
            (when (and evil--execute-normal-eol-pos
-                      (>= (point) (1- evil--execute-normal-eol-pos))
+                      (= (point) (1- evil--execute-normal-eol-pos))
                       (not (memq this-command '(evil-insert
-                                                evil-goto-mark
-                                                evil-goto-mark-line
-                                                evil-goto-line))))
-             (goto-char evil--execute-normal-eol-pos))
+                                                evil-goto-mark))))
+             (forward-char))
            (unless (eq 'replace evil-state)
              (evil-change-state ',evil-state))
            (setq evil-move-cursor-back ',evil-move-cursor-back
