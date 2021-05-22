@@ -332,7 +332,11 @@ with `M-x evil-tests-run'"))
         :state insert
         "abcdefg[]"
         ("\C-oi")
-        "abcdef[]g"))
+        "abcdef[]g")
+      (evil-test-buffer
+        "line1\nli[n]e2"
+        ("ma" "kA" "\C-o`a")
+        "line1\nli[]ne2"))
     (ert-info ("Can enter replace state and stay in it")
       (evil-test-buffer
         :state insert
