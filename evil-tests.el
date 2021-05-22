@@ -342,7 +342,12 @@ with `M-x evil-tests-run'"))
         :state insert
         "abc[]defg"
         ("\C-oRfoo")
-        "abcfoog"))))
+        "abcfoog"))
+    (ert-info ("Insert count is ignored")
+      (evil-test-buffer
+        "[]"
+        ("2i" "abcdef" "\C-o~" "g" [escape])
+        "abcdeF[g]"))))
 
 (defun evil-test-suppress-keymap (state)
   "Verify that `self-insert-command' is suppressed in STATE"

@@ -4664,6 +4664,7 @@ This var stores the eol position, so it can be restored when necessary.")
            (setq evil-move-cursor-back ',evil-move-cursor-back
                  evil-move-beyond-eol ',evil-move-beyond-eol)))
     'post-command-hook)
+  (setq evil-insert-count nil)
   (setq evil--execute-normal-eol-pos (when (eolp) (point)))
   (setq evil-move-cursor-back nil)
   (evil-normal-state)
