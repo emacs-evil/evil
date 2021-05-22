@@ -309,10 +309,40 @@ with `M-x evil-tests-run'"))
       ("bcdef[]\n"))
     (ert-info ("Cursor is placed correctly afterwards")
       (evil-test-buffer
-       :state insert
-       "abcdefg[]"
-       ("\C-o~")
-       "abcdefG[]"))))
+        :state insert
+        "abcdefg[]"
+        ("\C-o~")
+        "abcdefG[]")
+      (evil-test-buffer
+        :state insert
+        "abcdefg[]"
+        ("\C-ozz")
+        "abcdefg[]")
+      (evil-test-buffer
+        :state insert
+        "abc[]defg"
+        ("\C-o$")
+        "abcdefg[]")
+      (evil-test-buffer
+        :state insert
+        "abcdefg[]"
+        ("\C-o^")
+        "[]abcdefg")
+      (evil-test-buffer
+        :state insert
+        "abcdefg[]"
+        ("\C-oi")
+        "abcdef[]g")
+      (evil-test-buffer
+        "line1\nli[n]e2"
+        ("ma" "kA" "\C-o`a")
+        "line1\nli[]ne2"))
+    (ert-info ("Can enter replace state and stay in it")
+      (evil-test-buffer
+        :state insert
+        "abc[]defg"
+        ("\C-oRfoo")
+        "abcfoog"))))
 
 (defun evil-test-suppress-keymap (state)
   "Verify that `self-insert-command' is suppressed in STATE"
