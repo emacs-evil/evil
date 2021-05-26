@@ -399,8 +399,8 @@ If CHANGE is specified, it is added to `evil-repeat-changes'."
 
 (defun evil-repeat-insert-at-point (flag)
   "Repeation recording function for commands that insert text in region.
-This records text insertion when a command inserts some text in a
-buffer between (point) and (mark)."
+For example `mouse-yank-primary'. This records text insertion when a command
+inserts some text in a buffer between (point) and (mark)."
   (cond
    ((eq flag 'pre)
     (add-hook 'after-change-functions #'evil-repeat-insert-at-point-hook nil t))
@@ -580,7 +580,9 @@ If SAVE-POINT is non-nil, do not move point."
             (evil-execute-repeat-info-with-count
              count (ring-ref evil-repeat-ring 0))
             (setq evil-last-find evil-last-find-temp)))
-      (evil-normal-state)))))
+      (if (eq 'evil-execute-in-normal-state last-command)
+          (evil-change-state evil--execute-normal-return-state)
+        (evil-normal-state))))))
 
 ;; TODO: the same issue concering disabled undos as for `evil-paste-pop'
 (evil-define-command evil-repeat-pop (count &optional save-point)

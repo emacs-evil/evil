@@ -350,10 +350,13 @@ with `M-x evil-tests-run'"))
         "abcdeF[g]"))
     (ert-info ("Can execute evil-repeat in normal state")
       (evil-test-buffer
+        ;; Although this is the same in vim, text inserted after the temporary
+        ;; normal command is not recorded for repetition, which is a subtle
+        ;; (but arguably more useful) difference
         :state insert
-        "ab[]cdefg"
-        ("\C-o~\C-o.")
-        "abCD[]efg"))))
+        "ab[]cfg"
+        ("\C-o~de\C-o.")
+        "abCdeF[]g"))))
 
 (defun evil-test-suppress-keymap (state)
   "Verify that `self-insert-command' is suppressed in STATE"
