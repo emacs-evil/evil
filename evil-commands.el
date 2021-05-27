@@ -4639,11 +4639,23 @@ if the previous state was Emacs state."
   "Vim has special behaviour for executing in normal state at eol.
 This var stores the eol position, so it can be restored when necessary.")
 
+(defun evil--restore-repeat-hooks ()
+  "No insert-state repeat info is recorded after executing in normal state.
+Restore the disabled repeat hooks on insert-state exit."
+  (evil-repeat-stop)
+  (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
+  (add-hook 'post-command-hook 'evil-repeat-post-hook)
+  (remove-hook 'evil-insert-state-exit-hook 'evil--restore-repeat-hooks))
+
+(defvar evil--execute-normal-return-state nil
+  "The state to return to after executing in normal state.")
+
 (defun evil-execute-in-normal-state ()
   "Execute the next command in Normal state."
   (interactive)
   (evil-delay '(not (memq this-command
-                          '(evil-execute-in-normal-state
+                          '(nil
+                            evil-execute-in-normal-state
                             evil-replace-state
                             evil-use-register
                             digit-argument
@@ -4661,12 +4673,17 @@ This var stores the eol position, so it can be restored when necessary.")
              (forward-char))
            (unless (eq 'replace evil-state)
              (evil-change-state ',evil-state))
+           (when (eq 'insert evil-state)
+             (remove-hook 'pre-command-hook 'evil-repeat-pre-hook)
+             (remove-hook 'post-command-hook 'evil-repeat-post-hook)
+             (add-hook 'evil-insert-state-exit-hook 'evil--restore-repeat-hooks))
            (setq evil-move-cursor-back ',evil-move-cursor-back
                  evil-move-beyond-eol ',evil-move-beyond-eol)))
     'post-command-hook)
-  (setq evil-insert-count nil)
-  (setq evil--execute-normal-eol-pos (when (eolp) (point)))
-  (setq evil-move-cursor-back nil)
+  (setq evil-insert-count nil
+        evil--execute-normal-return-state evil-state
+        evil--execute-normal-eol-pos (when (eolp) (point))
+        evil-move-cursor-back nil)
   (evil-normal-state)
   (setq evil-move-beyond-eol t)
   (evil-echo "Switched to Normal state for the next command ..."))
