@@ -69,7 +69,7 @@ mailing list.
 
 # IRC
 
-Visit us on `irc.freenode.net #evil-mode`.
+Visit us on `irc.libera.chat #evil-mode`.
 
 # Contribution
 

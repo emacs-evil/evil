@@ -31,7 +31,7 @@
 
 ;; This is a small script to update Evil's version at certain places:
 ;;
-;;  - topic of the IRC channel #evil-mode in irc.freenode.net
+;;  - topic of the IRC channel #evil-mode in irc.libera.chat
 ;;  - EmacsWiki page
 ;;  - header of all source files
 ;;  - the ELPA package file
@@ -72,7 +72,7 @@
   (let ((erc-nick evilupdate-irc-nick)
         (erc-autojoin-channels-alist nil)
         (auth-sources nil))
-    (erc-tls :server "irc.freenode.net" :port "6697" :nick evilupdate-irc-nick)
+    (erc-tls :server "irc.libera.chat" :port "6697" :nick evilupdate-irc-nick)
     (add-hook 'erc-join-hook
               (lambda ()
                 (let (case-fold-search)
