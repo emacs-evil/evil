@@ -1373,6 +1373,9 @@ Signals an error at buffer boundaries unless NOERROR is non-nil."
         (evil-line-move count)
       (error nil)))
    (t
+    (when (and line-move-visual
+               (memq last-command `(next-line previous-line)))
+      (setq last-command nil))
     (evil-signal-without-movement
       (setq this-command (if (>= count 0)
                              #'next-line
