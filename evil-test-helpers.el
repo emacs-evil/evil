@@ -78,6 +78,7 @@
 The following optional keywords specify the buffer's properties:
 
 :state STATE            The initial state, defaults to `normal'.
+:window-width NUMBER    The width of the test buffer's window, defaults to `80'.
 :visual SELECTION       The Visual selection, defaults to `char'.
 :point-start STRING     String for matching beginning of point,
                         defaults to \"[\".
@@ -103,6 +104,7 @@ raised.  Remaining forms are evaluated as-is.
 \(fn [[KEY VALUE]...] FORMS...)"
   (declare (indent defun))
   (let ((state 'normal)
+        (window-width 80)
         arg key point-start point-end string
         visual visual-start visual-end)
     ;; collect keywords
@@ -110,6 +112,8 @@ raised.  Remaining forms are evaluated as-is.
       (setq key (pop body)
             arg (pop body))
       (cond
+       ((eq key :window-width)
+        (setq window-width arg))
        ((eq key :point-start)
         (setq point-start (or arg "")))
        ((eq key :point-end)
@@ -140,6 +144,8 @@ raised.  Remaining forms are evaluated as-is.
                ;; necessary for keyboard macros to work
                (switch-to-buffer-other-window (current-buffer))
                (buffer-enable-undo)
+               ;; set the window width for test buffer
+               (split-window (selected-window) (1+ ,window-width) 'right)
                ;; parse remaining forms
                ,@(mapcar
                   #'(lambda (form)
