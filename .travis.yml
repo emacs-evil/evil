@@ -18,6 +18,7 @@ install:
   - bash <(curl https://raw.githubusercontent.com/purcell/nix-emacs-ci/master/travis-install)
 
 script:
+  - tput cols
   - emacs --version
   - script -eqc 'make test' > /dev/null
 
