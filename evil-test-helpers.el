@@ -136,6 +136,7 @@ raised.  Remaining forms are evaluated as-is.
                     ',visual ,visual-start ,visual-end))
            (kill-ring kill-ring)
            (kill-ring-yank-pointer kill-ring-yank-pointer)
+           (current-window-width (window-width))
            evil-test-select-enable-clipboard
            message-log-max)
        (unwind-protect
@@ -145,7 +146,8 @@ raised.  Remaining forms are evaluated as-is.
                (switch-to-buffer-other-window (current-buffer))
                (buffer-enable-undo)
                ;; set the window width for test buffer
-               (split-window (selected-window) (1+ ,window-width) 'right)
+               (when (> current-window-width (+ 2 ,window-width))
+                 (split-window (selected-window) (1+ ,window-width) 'right))
                ;; parse remaining forms
                ,@(mapcar
                   #'(lambda (form)

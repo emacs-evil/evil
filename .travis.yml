@@ -18,7 +18,7 @@ install:
   - bash <(curl https://raw.githubusercontent.com/purcell/nix-emacs-ci/master/travis-install)
 
 script:
-  - tput cols
+  - stty cols 100 # Set to 100 so the default window-width of 80 can be set
   - emacs --version
   - script -eqc 'make test' > /dev/null
 
