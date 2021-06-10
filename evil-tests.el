@@ -3065,6 +3065,24 @@ Below some empty line"
       (should-error (execute-kbd-macro "j"))
       (should-error (execute-kbd-macro "42j")))))
 
+(ert-deftest evil-test-next-visual-line ()
+  "Test `evil-next-visual-line' motion"
+  :tags '(evil motion)
+  (evil-test-buffer
+   :window-width 20
+   "T[h]is text wraps around the end of the line"
+   ("gj")
+   "This text wraps arou[n]d the end of the line"))
+
+(ert-deftest evil-test-previous-visual-line ()
+  "Test `evil-previous-visual-line' motion"
+  :tags '(evil motion)
+  (evil-test-buffer
+   :window-width 20
+   "This text wraps arou[n]d the end of the line"
+   ("gk")
+   "T[h]is text wraps around the end of the line"))
+
 (ert-deftest evil-test-preserve-column ()
   "Test `evil-previous-line' and `evil-next-line' preserve the column."
   :tags '(evil motion)

@@ -147,7 +147,8 @@ raised.  Remaining forms are evaluated as-is.
                (buffer-enable-undo)
                ;; set the window width for test buffer
                (when (> current-window-width (+ 2 ,window-width))
-                 (split-window (selected-window) (1+ ,window-width) 'right))
+                 (split-window (selected-window) (1+ ,window-width) 'right)
+                 (setq truncate-partial-width-windows nil))
                ;; parse remaining forms
                ,@(mapcar
                   #'(lambda (form)
