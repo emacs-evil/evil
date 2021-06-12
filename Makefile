@@ -56,7 +56,7 @@ clean:
 #       make test TAG=repeat
 # This will only run tests pertaining to the repeat system.
 test:
-	$(EMACS) -nw -Q -L . $(LIBS) -l evil-tests.el \
+	$(EMACS) -nw -Q --batch -L . $(LIBS) -l evil-tests.el \
 		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
 
 # Byte-compile Evil and run all tests.
