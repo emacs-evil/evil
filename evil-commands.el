@@ -766,7 +766,7 @@ Movement is restricted to the current line unless `evil-cross-lines' is non-nil.
         (visual (and evil-respect-visual-line-mode
                      visual-line-mode)))
     (setq evil-last-find (list #'evil-find-char char fwd))
-    (when fwd (forward-char))
+    (when fwd (evil-forward-char 1 evil-cross-lines))
     (let ((case-fold-search nil))
       (unless (prog1
                   (search-forward (char-to-string char)
