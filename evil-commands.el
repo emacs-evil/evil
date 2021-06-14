@@ -1679,7 +1679,8 @@ of the block."
      ((eq type 'block)
       (evil-insert 1 nlines))
      (t
-      (evil-insert 1)))))
+      (evil-insert 1)))
+    (setq evil-this-register nil)))
 
 (evil-define-operator evil-change-line (beg end type register yank-handler)
   "Change to end of line, or change whole line if characterwise visual mode."

@@ -2831,7 +2831,12 @@ word3[]"))
   (ert-info ("special register :")
     (evil-test-buffer
       "[f]oo bar\n"
-      (":noh\ni\C-r:"))))
+      (":noh\ni\C-r:")))
+  (ert-info ("Paste from register during change to register")
+    (evil-test-buffer
+      "[a]lpha beta"
+      ("\"ayiw" "w" "\"bciw" "\C-ra")
+      "alpha alpha[]")))
 
 (ert-deftest evil-test-last-insert-register ()
   "Test last insertion register."
