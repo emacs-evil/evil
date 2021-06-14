@@ -1,6 +1,6 @@
 ![An extensible vi layer for Emacs](https://raw.githubusercontent.com/emacs-evil/evil/master/doc/logo.png)
 
-[![Build Status](https://travis-ci.org/emacs-evil/evil.svg?branch=master)](https://travis-ci.org/emacs-evil/evil)
+[![Build status](https://github.com/emacs-evil/evil/actions/workflows/test.yml/badge.svg)](https://github.com/emacs-evil/evil/actions/workflows/test.yml)
 [![MELPA](https://melpa.org/packages/evil-badge.svg)](https://melpa.org/#/evil)
 [![MELPA Stable](https://stable.melpa.org/packages/evil-badge.svg)](https://stable.melpa.org/#/evil)
 [![Documentation Status](https://readthedocs.org/projects/evil/badge/?version=latest)](https://evil.readthedocs.io/en/latest/?badge=latest)

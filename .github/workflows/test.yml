@@ -1,0 +1,35 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        emacs_version:
+          - 24.5
+          - 25.3
+          - 26.3
+          - 27.1
+          - snapshot
+    steps:
+    - uses: purcell/setup-emacs@master
+      with:
+        version: ${{ matrix.emacs_version }}
+
+    - uses: actions/checkout@v2
+
+    - name: Print emacs version
+      run: |
+        emacs --version
+
+    - name: Run tests
+      run: |
+        make test
+
+    - name: Print results
+      if: ${{ always() }}
+      run: |
+        cat test-results.txt
