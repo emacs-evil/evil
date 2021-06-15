@@ -5164,7 +5164,12 @@ Below some empty line."))
 ;; and for Lisp evaluation."
         ("fL")
         ";; This buffer is for notes,
-;; and for [L]isp evaluation."))))
+;; and for [L]isp evaluation.")))
+  (ert-info ("Empty line")
+    (evil-test-buffer
+     "[]
+This buffer is for notes."
+     (should-error (execute-kbd-macro "fT")))))
 
 (ert-deftest evil-test-find-char-backward ()
   "Test `evil-find-char-backward'"
