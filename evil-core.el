@@ -871,8 +871,7 @@ one already."
   (when state
     (let* ((key (vconcat (list (intern (format "%s-state" state)))))
            (parent-aux (when (and ignore-parent
-                                  (keymap-parent map)
-                                  state)
+                                  (keymap-parent map))
                          (lookup-key (keymap-parent map) key)))
            (aux (lookup-key map key)))
       (cond
