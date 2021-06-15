@@ -146,7 +146,7 @@
 (define-key evil-window-map "=" 'balance-windows)
 (define-key evil-window-map "|" 'evil-window-set-width)
 (define-key evil-window-map "\C-b" 'evil-window-bottom-right)
-(define-key evil-window-map "\C-c" 'evil-window-delete)
+(define-key evil-window-map "\C-c" 'ignore)
 (define-key evil-window-map (kbd "C-S-h") 'evil-window-move-far-left)
 (define-key evil-window-map (kbd "C-S-j") 'evil-window-move-very-bottom)
 (define-key evil-window-map (kbd "C-S-k") 'evil-window-move-very-top)
