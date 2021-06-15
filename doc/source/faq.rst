@@ -65,8 +65,12 @@ consistent with other Emacs functions. For example, word characters
 are exactly those characters that are matched by the regular
 expression character class ``[:word:]``.
 
-If you want the underscore to be recognised as word character, you can
-modify its entry in the syntax-table:
+If you would be satisfied by having the :kbd:`*` and :kbd:`#` searches
+use symbols instead of words, this can be achieved by setting the
+:elisp:ref:`evil-symbol-word-search` variable to ``t``.
+
+If you want the underscore to be recognised as word character for other
+motions, you can modify its entry in the syntax-table:
 
 .. code-block:: elisp
 
