@@ -2573,7 +2573,8 @@ The tracked insertion is set to `evil-last-insertion'."
       (when evil-was-yanked-without-register
         (evil-set-register ?0 text)) ; "0 register contains last yanked text
       (unless (eq register ?_)
-        (kill-new text)))))
+        (kill-new text))
+      text)))
 
 (defun evil-remove-yank-excluded-properties (text)
   "Removes `yank-excluded-properties' from TEXT."
