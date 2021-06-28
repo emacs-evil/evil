@@ -380,7 +380,7 @@ If visual state is inactive then those values are nil."
   "Ex line number."
   (list
    (and (evil-ex-p)
-        (let ((expr (evil-ex-parse  evil-ex-argument)))
+        (let ((expr (evil-ex-parse evil-ex-argument)))
           (if (eq (car expr) 'evil-goto-line)
               (save-excursion
                 (goto-char evil-ex-point)

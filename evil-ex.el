@@ -814,8 +814,11 @@ Returns the line number of the match."
         (save-excursion
           (set-text-properties 0 (length pattern) nil pattern)
           (evil-move-end-of-line)
-          (and (re-search-forward pattern nil t)
-               (line-number-at-pos (1- (match-end 0))))))
+          (if (re-search-forward pattern nil t)
+              (line-number-at-pos (1- (match-end 0)))
+            (goto-char (point-min))
+            (and (re-search-forward pattern nil t)
+                 (line-number-at-pos (1- (match-end 0)))))))
     (invalid-regexp
      (evil-ex-echo (cadr err))
      nil)))
@@ -828,8 +831,11 @@ Returns the line number of the match."
         (save-excursion
           (set-text-properties 0 (length pattern) nil pattern)
           (evil-move-beginning-of-line)
-          (and (re-search-backward pattern nil t)
-               (line-number-at-pos (match-beginning 0)))))
+          (if (re-search-backward pattern nil t)
+              (line-number-at-pos (match-beginning 0))
+            (goto-char (point-max))
+            (and (re-search-backward pattern nil t)
+                 (line-number-at-pos (match-beginning 0))))))
     (invalid-regexp
      (evil-ex-echo (cadr err))
      nil)))

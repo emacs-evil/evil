@@ -7846,7 +7846,33 @@ maybe we need one line more with some text\n")
     (evil-test-buffer
       "line1\nline2\nline3\nli[n]e4\nline5\n"
       (":2,4move.")
-      "line1\nline2\nline3\n[l]ine4\nline5\n")))
+      "line1\nline2\nline3\n[l]ine4\nline5\n"))
+  (ert-info ("Move to backwards line, searching forwards (wrapping around)")
+    (evil-test-buffer
+      "
+Target
+Other line
+[S]ource
+"
+      (":move/Target/")
+      "
+Target
+[S]ource
+Other line
+"))
+  (ert-info ("Move to forwards line, searching backwards (wrapping around)")
+    (evil-test-buffer
+      "
+Target
+[O]ther line
+Source
+"
+      (":move?Source?")
+      "
+Target
+Source
+[O]ther line
+")))
 
 (ert-deftest evil-test-write ()
   :tags '(evil ex)
