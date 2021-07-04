@@ -957,7 +957,8 @@ any error conditions."
       (let* ((res (evil-ex-split-search-pattern pattern-string direction))
              (pat (pop res))
              (offset (pop res))
-             (next-pat (pop res)))
+             (next-pat (pop res))
+             (orig-pat pat))
         ;; use last pattern if no new pattern has been specified
         (if (not (zerop (length pat)))
             (setq pat (evil-ex-make-search-pattern pat))
@@ -982,15 +983,21 @@ any error conditions."
            ((zerop (length next-pat))
             (evil-ex-search-goto-offset offset)
             (throw 'done (list search-result pat offset)))
-           ;; next pattern but empty
+           ;; single `?' or `/' means repeat last pattern and finish
            ((= 1 (length next-pat))
             (evil-ex-search-goto-offset offset)
-            (throw 'done (list 'empty-pattern pat offset)))
+            (setq count 1
+                  pattern-string orig-pat
+                  direction (if (string= "/" next-pat) 'forward 'backward)))
            ;; next non-empty pattern, next search iteration
            (t
             (evil-ex-search-goto-offset offset)
             (setq count 1
-                  pattern-string (substring next-pat 1)
+                  pattern-string (if (and (<= 2 (length next-pat))
+                                          (member (substring next-pat 0 2) '("//" "??")))
+                                     ;; double `?' or `/' means repeat last pattern
+                                     (concat orig-pat (substring next-pat 1))
+                                   (substring next-pat 1))
                   direction (if (= (aref next-pat 0) ?/)
                                 'forward
                               'backward)))))))))

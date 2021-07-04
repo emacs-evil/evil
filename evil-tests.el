@@ -7518,7 +7518,16 @@ if no previous selection")
       (evil-test-buffer
         "[f]oo foo\nbar bar\nbaz baz\nAnother line\nAnd yet another line"
         ("/bar/e" [return] "//b+1" [return])
-        "foo foo\nbar b[a]r\nbaz baz\nAnother line\nAnd yet another line"))))
+        "foo foo\nbar b[a]r\nbaz baz\nAnother line\nAnd yet another line"))
+    (ert-info ("Test repeat of pattern in the same search")
+      (evil-test-buffer
+        "[a]lpha bravo charlie delta charlie alpha bravo alpha"
+        ("/charlie/;/")
+        "alpha bravo charlie delta [c]harlie alpha bravo alpha"
+        ("/alpha/;//")
+        "alpha bravo charlie delta charlie alpha bravo [a]lpha"
+        ("?charlie?;?")
+        "alpha bravo [c]harlie delta charlie alpha bravo alpha"))))
 
 (ert-deftest evil-test-ex-search-word ()
   "Test search for word under point."
