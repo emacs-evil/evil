@@ -7527,7 +7527,14 @@ if no previous selection")
         ("/alpha/;//")
         "alpha bravo charlie delta charlie alpha bravo [a]lpha"
         ("?charlie?;?")
-        "alpha bravo [c]harlie delta charlie alpha bravo alpha"))))
+        "alpha bravo [c]harlie delta charlie alpha bravo alpha")
+      (ert-info ("including when switching direction")
+        (evil-test-buffer
+        "[a]lpha bravo charlie delta charlie alpha bravo alpha"
+        ("/bravo/;?")
+        "alpha bravo charlie delta charlie alpha [b]ravo alpha"
+        ("?alpha?;//")
+        "alpha bravo charlie delta charlie alpha bravo [a]lpha")))))
 
 (ert-deftest evil-test-ex-search-word ()
   "Test search for word under point."

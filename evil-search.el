@@ -966,7 +966,7 @@ any error conditions."
                 offset (or offset evil-ex-search-offset)))
         (when (zerop (length pat))
           (throw 'done (list 'empty-pattern pat offset)))
-        (let (search-result)
+        (let (new-dir repeat-last search-result)
           (while (> count 0)
             (let ((result (evil-ex-find-next pat direction
                                              (not evil-search-wrap))))
@@ -986,21 +986,21 @@ any error conditions."
            ;; single `?' or `/' means repeat last pattern and finish
            ((= 1 (length next-pat))
             (evil-ex-search-goto-offset offset)
-            (setq count 1
+            (setq new-dir (if (string= "/" next-pat) 'forward 'backward)
+                  count (if (eq direction new-dir) 1 2)
                   pattern-string orig-pat
-                  direction (if (string= "/" next-pat) 'forward 'backward)))
+                  direction new-dir))
            ;; next non-empty pattern, next search iteration
            (t
             (evil-ex-search-goto-offset offset)
-            (setq count 1
-                  pattern-string (if (and (<= 2 (length next-pat))
-                                          (member (substring next-pat 0 2) '("//" "??")))
-                                     ;; double `?' or `/' means repeat last pattern
+            (setq new-dir (if (= (aref next-pat 0) ?/) 'forward 'backward)
+                  repeat-last (and (<= 2 (length next-pat))
+                                   (member (substring next-pat 0 2) '("//" "??")))
+                  count (if (or (eq direction new-dir) (not repeat-last)) 1 2)
+                  pattern-string (if repeat-last
                                      (concat orig-pat (substring next-pat 1))
                                    (substring next-pat 1))
-                  direction (if (= (aref next-pat 0) ?/)
-                                'forward
-                              'backward)))))))))
+                  direction new-dir))))))))
 
 (defun evil-ex-search-update-pattern (_beg _end _range)
   "Update the current search pattern."
