@@ -229,6 +229,12 @@ Otherwise behaves like `delete-backward-char'."
   (insert result)
   (exit-minibuffer))
 
+(defun evil-ex-elisp-completion-at-point ()
+  "Complete an `evil-ex' Elisp expression."
+  (when (and (fboundp 'elisp-completion-at-point)
+             (string-prefix-p "(" (minibuffer-contents-no-properties)))
+    (elisp-completion-at-point)))
+
 (defun evil-ex-setup ()
   "Initialize Ex minibuffer.
 This function registers several hooks that are used for the
@@ -242,7 +248,8 @@ interactive actions during ex state."
   (with-no-warnings
     (make-variable-buffer-local 'completion-at-point-functions))
   (setq completion-at-point-functions
-        '(evil-ex-command-completion-at-point
+        '(evil-ex-elisp-completion-at-point
+          evil-ex-command-completion-at-point
           evil-ex-argument-completion-at-point)))
 (put 'evil-ex-setup 'permanent-local-hook t)
 
