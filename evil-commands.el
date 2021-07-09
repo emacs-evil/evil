@@ -33,6 +33,7 @@
 (require 'evil-jumps)
 (require 'evil-vars)
 (require 'flyspell)
+(require 'ispell)
 (require 'cl-lib)
 (require 'reveal)
 
@@ -635,6 +636,38 @@ and jump to the corresponding one."
                 ov (evil--flyspell-overlay-after pos limit forwardp))
           (when ov
             (goto-char (overlay-start ov))))))))
+
+(defun evil-ispell-mark-word-as-good (word)
+  "Add WORD under the cursor as a good word to the Ispell dictionary."
+  (interactive (list (thing-at-point 'word t)))
+  ;; accept and insert word into personal dictionary.
+  (ispell-send-string (concat "*" word "\n"))
+  ;; dictionary modified!
+  (setq ispell-pdict-modified-p '(t))
+  (ispell-pdict-save ispell-silently-savep)
+  (when (bound-and-true-p flyspell-mode)
+    (let ((start (car (bounds-of-thing-at-point 'word))))
+      (when start
+        (flyspell-unhighlight-at start))))
+  (message "Word '%s' added to personal dictionary" (upcase word)))
+
+(defun evil-ispell-mark-word-as-locally-good (word &optional buffer-local)
+  "Add WORD under the cursor to the session dictionary.
+If BUFFER-LOCAL is non-nil, the word will be added to current buffer."
+  (interactive (list (thing-at-point 'word t) current-prefix-arg))
+  ;; accept word without insertion
+  (ispell-send-string (concat "@" word "\n"))
+  (add-to-list 'ispell-buffer-session-localwords word)
+  ;; session localwords might conflict.
+  (unless ispell-buffer-local-name
+    (setq ispell-buffer-local-name (buffer-name)))
+  (when buffer-local
+    (ispell-add-per-file-word-list word))
+  (when (bound-and-true-p flyspell-mode)
+    (let ((start (car (bounds-of-thing-at-point 'word))))
+      (when start
+        (flyspell-unhighlight-at start))))
+  (message "Word '%s' added to local dictionary" (upcase word)))
 
 (evil-define-motion evil-next-flyspell-error (count)
   "Go to the COUNT'th spelling mistake after point."
