@@ -101,6 +101,7 @@ commands opening a new line."
                  evil-append-line
                  evil-change
                  evil-change-line
+                 evil-change-whole-line
                  newline
                  newline-and-indent
                  indent-and-newline)))
