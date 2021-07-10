@@ -8649,7 +8649,7 @@ Source
         (should (equal file-name (buffer-file-name (current-buffer))))))))
 
 (ert-deftest evil-test-jump-buffers ()
-  :tags '(evil jums)
+  :tags '(evil jumps)
   (skip-unless nil)
   (ert-info ("Test jumping backward and forward across buffers")
     (evil-test-buffer
