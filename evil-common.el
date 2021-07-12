@@ -914,13 +914,14 @@ older Emacsen."
 (defun evil-posn-x-y (position)
   "Return the x and y coordinates in POSITION.
 This function returns y offset from the top of the buffer area including
-the header line.
+the header line and the tab line (on Emacs 27 and later versions).
 
 On Emacs 24 and later versions, the y-offset returned by
 `posn-at-point' is relative to the text area excluding the header
-line, while y offset taken by `posn-at-x-y' is relative to the buffer
-area including the header line.  This asymmetry is by design according
-to GNU Emacs team.  This function fixes the asymmetry between them.
+line and the tab line, while y offset taken by `posn-at-x-y' is relative to
+the buffer area including the header line and the tab line.
+This asymmetry is by design according to GNU Emacs team.
+This function fixes the asymmetry between them.
 
 Learned from mozc.el."
   (let ((xy (posn-x-y position)))
@@ -930,6 +931,8 @@ Learned from mozc.el."
                              (window-header-line-height))
                         evil-cached-header-line-height
                         (setq evil-cached-header-line-height (evil-header-line-height))))))
+    (when (fboundp 'window-tab-line-height)
+      (setcdr xy (+ (cdr xy) (window-tab-line-height))))
     xy))
 
 (defun evil-count-lines (beg end)
