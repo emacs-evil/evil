@@ -2114,6 +2114,28 @@ for this test."))
 ABCIf you want to create a file, visit that file with C-x C-f,
 ABCthen enter the text in that file's own buffer.")))
 
+(ert-deftest evil-maybe-remove-spaces-test ()
+  "Test maybe removing (indentation) spaces after some commands when making a clear line."
+  :tags '(evil operator)
+  (ert-info ("changing the line and returning to normal mode removes spaces")
+    (evil-test-buffer
+      (emacs-lisp-mode)
+      ("i(one two" [return] "three" [return] "four" [return] "five" [escape] "?three" [return])
+      "(one two
+     [t]hree
+     four
+     five"
+      ("cc" "new line" [escape] "+")
+      "(one two
+     new line
+     [f]our
+     five"
+      ("cc" [escape])
+      "(one two
+     new line
+[]
+     five")))
+
 (ert-deftest evil-test-change-word ()
   "Test changing words"
   :tags '(evil operator)
