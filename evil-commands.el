@@ -2265,7 +2265,7 @@ will be opened instead."
    ((and evil-this-macro defining-kbd-macro)
     (setq evil-macro-buffer nil)
     (condition-case nil
-        (end-kbd-macro)
+        (kmacro-end-macro nil)
       (error nil))
     (when last-kbd-macro
       (when (member last-kbd-macro '("" []))
@@ -2284,7 +2284,7 @@ will be opened instead."
     (when defining-kbd-macro (end-kbd-macro))
     (setq evil-this-macro register)
     (evil-set-register evil-this-macro nil)
-    (start-kbd-macro nil)
+    (kmacro-start-macro nil)
     (setq evil-macro-buffer (current-buffer)))
    (t (error "Invalid register"))))
 
