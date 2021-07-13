@@ -99,6 +99,7 @@ commands opening a new line."
                  evil-open-below
                  evil-append
                  evil-append-line
+                 evil-change-whole-line
                  newline
                  newline-and-indent
                  indent-and-newline)))

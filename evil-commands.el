@@ -1673,6 +1673,7 @@ of the block."
     (funcall delete-func beg end type register yank-handler)
     (cond
      ((eq type 'line)
+      (setq this-command 'evil-change-whole-line) ; for evil-maybe-remove-spaces
       (if (= opoint (point))
           (evil-open-above 1)
         (evil-open-below 1)))
