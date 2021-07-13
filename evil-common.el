@@ -3983,7 +3983,6 @@ PROPERTIES is a property-list which supports the following properties:
   "The visible height of WINDOW in lines.
 
 If no WINDOW is specified, use the selected one."
-  (interactive)
   (let ((window (or window (selected-window))))
     (save-window-excursion
       (select-window window)
