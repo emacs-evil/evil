@@ -630,13 +630,19 @@ If COUNT is negative, this is a more recent kill."
                      (not evil-repeat-move-cursor)))
   (evil-repeat-pop (- count) save-point))
 
-(defadvice read-key-sequence (before evil activate)
+(defun evil--read-key-advice ()
   "Record `this-command-keys' before it is reset."
   (when (and (evil-repeat-recording-p)
              evil-recording-current-command)
     (let ((repeat-type (evil-repeat-type this-command t)))
       (if (functionp repeat-type)
           (funcall repeat-type 'post)))))
+
+(defadvice read-key-sequence (before evil activate)
+  (evil--read-key-advice))
+
+(defadvice read-key (before evil activate)
+  (evil--read-key-advice))
 
 (provide 'evil-repeat)
 

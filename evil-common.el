@@ -639,12 +639,14 @@ HIDE-CHARS characters. HIDE-CHARS defaults to 1."
           ;; put cursor at (i.e., right before) the prompt
           (put-text-property 0 1 'cursor t string)
           (overlay-put overlay 'after-string string)
-          (setq char1 (read-key))
+          (setq char1 (let ((evil-recording-current-command nil))
+                        (read-key)))
           (setq string (string char1))
           (put-text-property 0 1 'face 'minibuffer-prompt string)
           (put-text-property 0 1 'cursor t string)
           (overlay-put overlay 'after-string string)
-          (setq char2 (read-key)))
+          (setq char2 (let ((evil-recording-current-command nil))
+                        (read-key))))
       (delete-overlay overlay))
     (or (evil-digraph (list char1 char2))
         ;; use the last character if undefined
