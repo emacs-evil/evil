@@ -894,18 +894,7 @@ expression matching the buffer's name and STATE is one of `normal',
 (defvar evil-pending-intercept-maps nil
   "An alist of pending intercept maps.")
 
-(defcustom evil-overriding-maps
-  '((Buffer-menu-mode-map . nil)
-    (color-theme-mode-map . nil)
-    (comint-mode-map . nil)
-    (compilation-mode-map . nil)
-    (grep-mode-map . nil)
-    (dictionary-mode-map . nil)
-    (ert-results-mode-map . motion)
-    (Info-mode-map . motion)
-    (speedbar-key-map . nil)
-    (speedbar-file-key-map . nil)
-    (speedbar-buffers-key-map . nil))
+(defcustom evil-overriding-maps '()
   "Keymaps that should override Evil maps.
 Entries have the form (MAP-VAR . STATE), where MAP-VAR is
 a keymap variable and STATE is the state whose bindings
