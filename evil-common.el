@@ -3980,6 +3980,21 @@ PROPERTIES is a property-list which supports the following properties:
          (evil-motion-state))
        (switch-to-buffer-other-window buf))))
 
+;;; Window
+
+(defun evil-window-visible-height (&optional window)
+  "The visible height of WINDOW in lines.
+
+If no WINDOW is specified, use the selected one."
+  (let ((window (or window (selected-window))))
+    (save-window-excursion
+      (select-window window)
+      (let ((window-top (save-excursion (move-to-window-line 0)
+                                        (line-number-at-pos)))
+            (window-bottom (save-excursion (move-to-window-line -1)
+                                           (line-number-at-pos))))
+        (- window-bottom window-top)))))
+
 (provide 'evil-common)
 
 ;;; evil-common.el ends here
