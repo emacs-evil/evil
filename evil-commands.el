@@ -3547,12 +3547,13 @@ resp.  after executing the command."
     (evil-repeat-record (this-command-keys))
     (evil-clear-command-keys))
    ((and (evil-operator-state-p) (eq flag 'post))
-    ;; The value of (this-command-keys) at this point should be the
-    ;; key-sequence that called the last command that finished the
-    ;; search, usually RET. Therefore this key-sequence will be
-    ;; recorded in the post-command of the operator. Alternatively we
-    ;; could do it here.
-    (evil-repeat-record (evil-ex-pattern-regex evil-ex-search-pattern)))
+    (evil-repeat-record (evil-ex-pattern-regex evil-ex-search-pattern))
+    ;; If it weren't for the fact that `exit-minibuffer' throws an `exit'
+    ;; tag, which bypasses the source of `this-command-keys', we'd be able
+    ;; to capture the key(s) in the post-command of the operator as usual.
+    ;; Fortunately however, `last-input-event' can see the key (by default, `return')
+    (unless (append (this-command-keys) nil)
+      (evil-repeat-record (vector last-input-event))))
    (t (evil-repeat-motion flag))))
 
 (evil-define-motion evil-ex-search-forward (count)

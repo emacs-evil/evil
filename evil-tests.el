@@ -7608,6 +7608,16 @@ maybe we need one line more with some text\n"
         ("n")
         "(defun my-symbol-func ())\n(defvar my-symbol-var)\n(my-symbol-func)\n(setq my-symbol-func2 ([m]y-symbol-func))\n"))))
 
+(ert-deftest evil-test-ex-search-motion ()
+  :tags '(evil ex search)
+  (evil-without-display
+    (evil-select-search-module 'evil-search-module 'evil-search)
+    (ert-info ("Ex forward search, as a motion, can be repeated")
+      (evil-test-buffer
+        "alpha [b]ravo charlie delta golf hotel charlie india"
+        ("c/charlie" [return] "replacement " [escape] "4w.")
+        "alpha replacement charlie delta golf replacement[ ]charlie india"))))
+
 (ert-deftest evil-test-isearch-word ()
   "Test isearch for word under point."
   :tags '(evil isearch)
