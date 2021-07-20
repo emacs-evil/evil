@@ -7606,7 +7606,15 @@ maybe we need one line more with some text\n"
         ("*")
         "(defun my-symbol-func ())\n(defvar my-symbol-var)\n([m]y-symbol-func)\n(setq my-symbol-func2 (my-symbol-func))\n"
         ("n")
-        "(defun my-symbol-func ())\n(defvar my-symbol-var)\n(my-symbol-func)\n(setq my-symbol-func2 ([m]y-symbol-func))\n"))))
+        "(defun my-symbol-func ())\n(defvar my-symbol-var)\n(my-symbol-func)\n(setq my-symbol-func2 ([m]y-symbol-func))\n"))
+    (ert-info ("Test with non-nil `evil-ex-search-vim-style-regexp'")
+      (evil-select-search-module 'evil-search-module 'evil-search)
+      (let ((evil-ex-search-vim-style-regexp t)
+            (evil-magic 'very-magic))
+        (evil-test-buffer
+          "[a]lpha bravo alpha charlie"
+          ("*")
+          "alpha bravo [a]lpha charlie")))))
 
 (ert-deftest evil-test-ex-search-motion ()
   :tags '(evil ex search)
