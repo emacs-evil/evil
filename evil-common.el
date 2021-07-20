@@ -3558,23 +3558,24 @@ If undo is disabled in the current buffer, the undo information
 is stored in `evil-temporary-undo' instead of `buffer-undo-list'."
   (declare (indent defun)
            (debug t))
-  `(unwind-protect
-       (let (buffer-undo-list)
-         (unwind-protect
-             (progn ,@body)
-           (setq evil-temporary-undo buffer-undo-list)
-           ;; ensure evil-temporary-undo starts with exactly one undo
-           ;; boundary marker, i.e. nil
-           (unless (null (car-safe evil-temporary-undo))
-             (push nil evil-temporary-undo))))
-     (unless (eq buffer-undo-list t)
-       ;; undo is enabled, so update the global buffer undo list
-       (setq buffer-undo-list
-             ;; prepend new undos (if there are any)
-             (if (cdr evil-temporary-undo)
-                 (nconc evil-temporary-undo buffer-undo-list)
-               buffer-undo-list)
-             evil-temporary-undo nil))))
+  (let ((undo-list (make-symbol "undo-list")))
+    `(let ((,undo-list buffer-undo-list))
+       (when (eq ,undo-list t) (setq buffer-undo-list nil))
+       (unwind-protect
+           (unwind-protect
+               (progn ,@body)
+             ;; ensure any new undo changes we've accumulated start with
+             ;; exactly one undo boundary marker, i.e. nil
+             (unless (or (and (eq ,undo-list t) (null buffer-undo-list))
+                         (eq ,undo-list buffer-undo-list))
+               (push nil buffer-undo-list)))
+         (if (eq ,undo-list t)
+             ;; undo is disabled, so store undo information in
+             ;; evil-temporary-undo
+             (setq evil-temporary-undo buffer-undo-list
+                   buffer-undo-list t)
+           ;; undo is enabled, so ensure evil-temporary-undo is null
+           (setq evil-temporary-undo nil))))))
 
 (defmacro evil-with-single-undo (&rest body)
   "Execute BODY as a single undo step."
@@ -3594,22 +3595,25 @@ is stored in `evil-temporary-undo' instead of `buffer-undo-list'."
 Removes the last undo information from `buffer-undo-list'.
 If undo is disabled in the current buffer, use the information
 in `evil-temporary-undo' instead."
-  (let ((paste-undo (list nil)))
-    (let ((undo-list (if (eq buffer-undo-list t)
-                         evil-temporary-undo
-                       buffer-undo-list)))
-      (when (or (not undo-list) (car undo-list))
-        (user-error "Can't undo previous change"))
-      (while (and undo-list (null (car undo-list)))
-        (pop undo-list)) ; remove nil
-      (while (and undo-list (car undo-list))
-        (push (pop undo-list) paste-undo))
-      (let ((buffer-undo-list (nreverse paste-undo)))
-        (evil-save-echo-area
-          (undo)))
-      (if (eq buffer-undo-list t)
-          (setq evil-temporary-undo nil)
-        (setq buffer-undo-list undo-list)))))
+  (if (and (eq evil-undo-system 'undo-tree)
+           (not (eq buffer-undo-list t)))
+      (undo-tree-undo)
+    (let ((paste-undo (list nil)))
+      (let ((undo-list (if (eq buffer-undo-list t)
+                           evil-temporary-undo
+                         buffer-undo-list)))
+        (when (or (not undo-list) (car undo-list))
+          (user-error "Can't undo previous change"))
+        (while (and undo-list (null (car undo-list)))
+          (pop undo-list)) ; remove nil
+        (while (and undo-list (car undo-list))
+          (push (pop undo-list) paste-undo))
+        (let ((buffer-undo-list (nreverse paste-undo)))
+          (evil-save-echo-area
+            (undo)))
+        (if (eq buffer-undo-list t)
+            (setq evil-temporary-undo nil)
+          (setq buffer-undo-list undo-list))))))
 
 ;;; Search
 (defun evil-transform-regexp (regexp replacements-alist)
