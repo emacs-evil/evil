@@ -319,7 +319,7 @@ selected. Possible values are `evil-word' or `evil-WORD'."
   :type 'symbol
   :group 'evil)
 
-(defcustom evil-bigword "^ \t\r\n"
+(defcustom evil-bigword "^ \f\t\r\n"
   "The set of characters to be interpreted as WORD boundaries.
 This is enclosed with square brackets and used as a regular
 expression.  By default, whitespace characters are considered
