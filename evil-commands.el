@@ -2241,6 +2241,12 @@ The return value is the yanked text."
   (interactive)
   (evil-paste-from-register ?.))
 
+(defun evil-paste-last-insertion-and-stop-insert ()
+  "Past last insertion and change to normal state."
+  (interactive)
+  (evil-paste-last-insertion)
+  (evil-normal-state))
+
 (evil-define-command evil-use-register (register)
   "Use REGISTER for the next command."
   :keep-visual t
