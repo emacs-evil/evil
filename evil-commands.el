@@ -1043,7 +1043,7 @@ If the scroll count is zero the command scrolls half the screen."
     (when (= (point-min) (line-beginning-position))
       (signal 'beginning-of-buffer nil))
     (when (zerop count)
-      (setq count (/ (evil-window-visible-height) 2)))
+      (setq count (/ (window-body-height) 2)))
     (let ((xy (evil-posn-x-y (posn-at-point))))
       (condition-case nil
           (progn
@@ -1067,7 +1067,7 @@ If the scroll count is zero the command scrolls half the screen."
     (setq evil-scroll-count count)
     (when (eobp) (signal 'end-of-buffer nil))
     (when (zerop count)
-      (setq count (/ (evil-window-visible-height) 2)))
+      (setq count (/ (window-body-height) 2)))
     ;; BUG #660: First check whether the eob is visible.
     ;; In that case we do not scroll but merely move point.
     (if (<= (point-max) (window-end))
