@@ -386,6 +386,7 @@
     ("\C-t" . evil-shift-right-line)
     ("\C-d" . evil-shift-left-line)
     ("\C-a" . evil-paste-last-insertion)
+    ("\C-@" . evil-paste-last-insertion-and-stop-insert)
     ([remap delete-backward-char] . evil-delete-backward-char-and-join)
     ,(if evil-want-C-w-delete
          '("\C-w" . evil-delete-backward-word)
