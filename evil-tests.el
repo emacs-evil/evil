@@ -6921,6 +6921,8 @@ if no previous selection")
   :tags '(evil ex)
   (should (equal (evil-ex-parse "%" nil 'range)
                  '(evil-ex-full-range)))
+  (should (equal (evil-ex-parse "*" nil 'range)
+                 '(evil-ex-last-visual-range)))
   (should (equal (evil-ex-parse "5,27" nil 'range)
                  '(evil-ex-range
                    (evil-ex-line (string-to-number "5") nil)

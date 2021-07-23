@@ -65,6 +65,7 @@
      ((\? space) (\? "\\(?:.\\|\n\\)+") #'$2))
     (range
      ("%" #'(evil-ex-full-range))
+     ("*" #'(evil-ex-last-visual-range))
      (line ";" line #'(let ((tmp1 $1))
                         (save-excursion
                           (goto-line tmp1)
@@ -782,6 +783,10 @@ This function interprets special file names like # and %."
 (defun evil-ex-full-range ()
   "Return a range encompassing the whole buffer."
   (evil-range (point-min) (point-max) 'line))
+
+(defun evil-ex-last-visual-range ()
+  "Return a linewise range of the last visual selection."
+  (evil-line-expand evil-visual-mark evil-visual-point))
 
 (defun evil-ex-marker (marker)
   "Return MARKER's line number in the current buffer.
