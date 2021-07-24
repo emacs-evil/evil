@@ -928,6 +928,8 @@ If STATE is nil, it means any state."
       map)
      ((eq entry state)
       map)
+     ((and (listp entry) (member state entry))
+      map)
      ((eq entry 'all)
       map))))
 
@@ -944,6 +946,8 @@ If STATE is nil, it means any state."
      ((null state)
       map)
      ((eq entry state)
+      map)
+     ((and (listp entry) (member state entry))
       map)
      ((eq entry 'all)
       map))))
