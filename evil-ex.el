@@ -67,6 +67,7 @@
     (range
      ("%" #'(evil-ex-full-range))
      ("*" #'(evil-ex-last-visual-range))
+     ((alt "," ";") line #'(evil-ex-range (evil-ex-current-line) $2))
      (line ";" line #'(let ((tmp1 $1))
                         (save-excursion
                           (goto-line tmp1)
