@@ -2572,6 +2572,35 @@ The insertion will be repeated COUNT times."
   (when evil-auto-indent
     (indent-according-to-mode)))
 
+(defun evil--insert-line (count vcount non-blank-p)
+  "Switch to insert state at the beginning of the current line.
+If NON-BLANK-P is non-nil, point is placed at the first non-blank character
+on the current line.  If NON-BLANK-P is nil, point is placed at column 0,
+or the beginning of visual line.  The insertion will be repeated COUNT times.
+If VCOUNT is non nil it should be number > 0. The insertion will be repeated
+in the next VCOUNT - 1 lines below the current one."
+  (push (point) buffer-undo-list)
+  (let ((move-fn (if non-blank-p #'back-to-indentation #'evil-beginning-of-line)))
+    (if (and visual-line-mode
+             evil-respect-visual-line-mode)
+        (goto-char
+         (max (save-excursion
+                (funcall move-fn)
+                (point))
+              (save-excursion
+                (beginning-of-visual-line)
+                (point))))
+      (funcall move-fn)))
+  (setq evil-insert-count count
+        evil-insert-lines nil
+        evil-insert-vcount
+        (and vcount
+             (> vcount 1)
+             (list (line-number-at-pos)
+                   (if non-blank-p #'evil-first-non-blank #'evil-beginning-of-line)
+                   vcount)))
+  (evil-insert-state 1))
+
 (defun evil-insert-line (count &optional vcount)
   "Switch to insert state at beginning of current line.
 Point is placed at the first non-blank character on the current
@@ -2579,26 +2608,16 @@ line.  The insertion will be repeated COUNT times.  If VCOUNT is
 non nil it should be number > 0. The insertion will be repeated
 in the next VCOUNT - 1 lines below the current one."
   (interactive "p")
-  (push (point) buffer-undo-list)
-  (if (and visual-line-mode
-           evil-respect-visual-line-mode)
-      (goto-char
-       (max (save-excursion
-              (back-to-indentation)
-              (point))
-            (save-excursion
-              (beginning-of-visual-line)
-              (point))))
-    (back-to-indentation))
-  (setq evil-insert-count count
-        evil-insert-lines nil
-        evil-insert-vcount
-        (and vcount
-             (> vcount 1)
-             (list (line-number-at-pos)
-                   #'evil-first-non-blank
-                   vcount)))
-  (evil-insert-state 1))
+  (evil--insert-line count vcount t))
+
+(defun evil-insert-0-line (count &optional vcount)
+  "Switch to insert state at beginning of current line.
+Point is placed at column 0, or the beginning of the visual line.
+The insertion will be repeated COUNT times.  If VCOUNT is
+non nil it should be number > 0. The insertion will be repeated
+in the next VCOUNT - 1 lines below the current one."
+  (interactive "p")
+  (evil--insert-line count vcount nil))
 
 (defun evil-append-line (count &optional vcount)
   "Switch to Insert state at the end of the current line.
