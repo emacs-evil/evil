@@ -66,6 +66,7 @@
 (define-key evil-normal-state-map "g8" 'what-cursor-position)
 (define-key evil-normal-state-map "ga" 'what-cursor-position)
 (define-key evil-normal-state-map "gi" 'evil-insert-resume)
+(define-key evil-normal-state-map "gI" 'evil-insert-0-line)
 (define-key evil-normal-state-map "gJ" 'evil-join-whitespace)
 (define-key evil-normal-state-map "gq" 'evil-fill-and-move)
 (define-key evil-normal-state-map "gw" 'evil-fill)
