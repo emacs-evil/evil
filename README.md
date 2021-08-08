@@ -43,12 +43,15 @@ file.
 
 * Evil requires any of the following for `C-r`:
   * `undo-redo` from Emacs 28
-  * The [undo-tree](http://www.emacswiki.org/emacs/UndoTree) package
+  * The [undo-tree](https://gitlab.com/tsc25/undo-tree) package
+    (available via GNU ELPA)
   * The [undo-fu](https://gitlab.com/ideasman42/emacs-undo-fu) package
+    (available via MELPA)
 
-* For the motions `g;` `g,` and for the last-change-register `.`, Evil requires the
-[goto-chg.el](https://github.com/emacs-evil/goto-chg) package,
-which provides the functions `goto-last-change` and `goto-last-change-reverse`.
+* For the motions `g;` `g,` and for the last-change-register `.`, Evil
+  requires the [goto-chg.el](https://github.com/emacs-evil/goto-chg)
+  package (available via MELPA and NonGNU ELPA), which provides the
+  functions `goto-last-change` and `goto-last-change-reverse`.
 
 * For Emacs 24.1 and 24.2 Evil also requires
   [cl-lib](https://elpa.gnu.org/packages/cl-lib.html).
