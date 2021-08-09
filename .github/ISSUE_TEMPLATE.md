@@ -12,7 +12,7 @@
 Emacs version: <!-- M-x emacs-version -->
 Operating System: <!-- Name and version, e.g. Windows 10, macOS Sierra, Debian Jessie -->
 Evil version: <!-- M-x evil-version -->
-Evil installation type: <!-- MELPA, MELPA stable, Quelpa, El-Get, manual -->
+Evil installation type: <!-- MELPA, MELPA stable, NonGNU ELPA, Quelpa, El-Get, manual -->
 Graphical/Terminal: <!-- Whether you're running Emacs in a terminal emulator or under X -->
 Tested in a `make emacs` session (see [CONTRIBUTING.md](https://github.com/emacs-evil/evil/blob/master/CONTRIBUTING.md#bug-reports)): <!-- Yes / No -->
 

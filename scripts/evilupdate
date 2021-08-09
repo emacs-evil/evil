@@ -142,13 +142,14 @@ match group."
   (shell-command (concat "thunderbird -compose \"newsgroups=gmane.emacs.vim-emulation,preselectid=id2,subject='[ANN] Evil version " evilupdate-version " released',body='"
                          "Evil version " evilupdate-version " has been released.
 
-The stable version can be installed from MELPA stable [1].
-The latest development version is available from MELPA [2].
+The stable version can be installed from MELPA stable [1] and NonGNU ELPA [2].
+The latest development version is available from MELPA [3].
 
 The Evil developers.
 
 [1] http://stable.melpa.org
-[2] http://melpa.org
+[2] https://elpa.nongnu.org/nongnu/evil.html
+[3] http://melpa.org
 '\"")))
 
 (defun evilupdate-update (version nonews)
