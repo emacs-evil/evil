@@ -3,6 +3,7 @@
 [![Build status](https://github.com/emacs-evil/evil/actions/workflows/test.yml/badge.svg)](https://github.com/emacs-evil/evil/actions/workflows/test.yml)
 [![MELPA](https://melpa.org/packages/evil-badge.svg)](https://melpa.org/#/evil)
 [![MELPA Stable](https://stable.melpa.org/packages/evil-badge.svg)](https://stable.melpa.org/#/evil)
+[![NonGNU ELPA](http://elpa.nongnu.org/nongnu/evil.svg)](http://elpa.nongnu.org/nongnu/evil.html)
 [![Documentation Status](https://readthedocs.org/projects/evil/badge/?version=latest)](https://evil.readthedocs.io/en/latest/?badge=latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
