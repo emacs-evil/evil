@@ -599,6 +599,11 @@ in insert state."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-search-wrap-ring-bell nil
+  "Whether to ring the bell when search wraps around the buffer."
+  :type  'boolean
+  :group 'evil)
+
 (defvar dabbrev-search-these-buffers-only)
 (defvar dabbrev-case-distinction)
 (defcustom evil-complete-next-func

@@ -264,8 +264,10 @@ one more than the current position."
       ;; determine message for echo area
       (cond
        ((and forward (< (point) start))
+        (when evil-search-wrap-ring-bell (ding))
         (setq string "Search wrapped around BOTTOM of buffer"))
        ((and (not forward) (> (point) start))
+        (when evil-search-wrap-ring-bell (ding))
         (setq string "Search wrapped around TOP of buffer"))
        (t
         (setq string (evil-search-message string forward))))
