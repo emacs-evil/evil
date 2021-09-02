@@ -892,6 +892,7 @@ message to be shown. This function does nothing if
   (remove-hook 'minibuffer-setup-hook #'evil-ex-search-start-session)
   (add-hook 'after-change-functions #'evil-ex-search-update-pattern nil t)
   (add-hook 'minibuffer-exit-hook #'evil-ex-search-stop-session)
+  (add-hook 'mouse-leave-buffer-hook #'evil-ex-search-exit)
   (evil-ex-search-activate-highlight nil))
 (put 'evil-ex-search-start-session 'permanent-local-hook t)
 
@@ -908,6 +909,7 @@ message to be shown. This function does nothing if
     (setq isearch-opened-overlays (delete-dups isearch-opened-overlays))
     (isearch-clean-overlays))
   (remove-hook 'minibuffer-exit-hook #'evil-ex-search-stop-session)
+  (remove-hook 'mouse-leave-buffer-hook #'evil-ex-search-exit)
   (remove-hook 'after-change-functions #'evil-ex-search-update-pattern t)
   (when evil-ex-search-overlay
     (delete-overlay evil-ex-search-overlay)
