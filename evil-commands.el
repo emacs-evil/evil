@@ -4486,7 +4486,7 @@ top-left."
   :repeat nil
   (interactive "<c>")
   (if (not count)
-      (select-window (next-window))
+      (other-window +1)
     (evil-window-top-left)
     (other-window (1- (min count (length (window-list)))))))
 
@@ -4497,7 +4497,7 @@ top-left."
   :repeat nil
   (interactive "<c>")
   (if (not count)
-      (select-window (previous-window))
+      (other-window -1)
     (evil-window-top-left)
     (other-window (1- (min count (length (window-list)))))))
 

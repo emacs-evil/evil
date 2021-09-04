@@ -8881,6 +8881,26 @@ Source
       ("q?k" [return])
       "foo [b]ar foo bar foo")))
 
+;;; Window motions
+
+(ert-deftest evil-test-window-next-and-prev-respect-window-parameters ()
+  "Test that `evil-window-next' and `evil-window-prev' respect window parameters.
+E.g. they do not move to windows that have the `no-other-window'
+parameter set."
+  (save-window-excursion
+    ;; Make sure there is a single original window and open a second
+    ;; other window with `no-other-window' set.
+    (delete-other-windows)
+    (let* ((this-window (selected-window))
+           (other-window (split-window)))
+      (set-window-parameter other-window 'no-other-window t)
+      ;; `evil-window-next'/`evil-window-prev' should not switch to
+      ;; the window with `no-other-window' parameter set.
+      (evil-window-next nil)
+      (should (eq (selected-window) this-window))
+      (evil-window-prev nil)
+      (should (eq (selected-window) this-window)))))
+
 ;;; Utilities
 
 (ert-deftest evil-test-parser ()
