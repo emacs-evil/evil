@@ -645,7 +645,7 @@ Below some empty line"))
 
 Below some empty line"
       ("dV}")
-      "[B]elow some empty line")))
+      "Below [s]ome empty line")))
 
 ;;; Insertion
 
@@ -1723,51 +1723,101 @@ New Tex[t]
       ("2d2l")
       ";; [o]tes."))
   (ert-info ("Delete current line")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes you don't want to save,
+    (ert-info ("With `evil-start-of-line' `nil'")
+      (evil-test-buffer
+        ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
-      ("dd")
-      "[;]; and for Lisp evaluation.")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes you don't want to save,
+        ("dd")
+        ";; [a]nd for Lisp evaluation.")
+      (evil-test-buffer
+        ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
-      ("d1d")
-      "[;]; and for Lisp evaluation.")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes you don't want to save,
+        ("d1d")
+        ";; [a]nd for Lisp evaluation.")
+      (evil-test-buffer
+        ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
-      ("1dd")
-      "[;]; and for Lisp evaluation.")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes you don't want to save,
+        ("1dd")
+        ";; [a]nd for Lisp evaluation.")
+      (evil-test-buffer
+        ";; [T]his buffer is for notes you don't want to save,
 ;; and for Lisp evaluation."
-      ("1d1d")
-      "[;]; and for Lisp evaluation."))
+        ("1d1d")
+        ";; [a]nd for Lisp evaluation."))
+    (ert-info ("With `evil-start-of-line' `t'")
+      (let ((evil-start-of-line t))
+        (evil-test-buffer
+          ";; [T]his buffer is for notes you don't want to save,
+;; and for Lisp evaluation."
+          ("dd")
+          "[;]; and for Lisp evaluation.")
+        (evil-test-buffer
+          ";; [T]his buffer is for notes you don't want to save,
+;; and for Lisp evaluation."
+          ("d1d")
+          "[;]; and for Lisp evaluation.")
+        (evil-test-buffer
+          ";; [T]his buffer is for notes you don't want to save,
+;; and for Lisp evaluation."
+          ("1dd")
+          "[;]; and for Lisp evaluation.")
+        (evil-test-buffer
+          ";; [T]his buffer is for notes you don't want to save,
+;; and for Lisp evaluation."
+          ("1d1d")
+          "[;]; and for Lisp evaluation."))))
   (ert-info ("Delete two lines")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes you don't want to save.
+    (ert-info ("With `evil-start-of-line' `nil'")
+      (evil-test-buffer
+        ";; [T]his buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      ("d2d")
-      "[;]; then enter the text in that file's own buffer.")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes you don't want to save.
+        ("d2d")
+        ";; [t]hen enter the text in that file's own buffer.")
+      (evil-test-buffer
+        ";; [T]his buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      ("2dd")
-      "[;]; then enter the text in that file's own buffer.")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes you don't want to save.
+        ("2dd")
+        ";; [t]hen enter the text in that file's own buffer.")
+      (evil-test-buffer
+        ";; [T]his buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      ("dj")
-      "[;]; then enter the text in that file's own buffer.")
-    (evil-test-buffer
-      ";; This buffer is for notes you don't want to save.
+        ("dj")
+        ";; [t]hen enter the text in that file's own buffer.")
+      (evil-test-buffer
+        ";; This buffer is for notes you don't want to save.
 ;; [I]f you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      ("dk")
-      "[;]; then enter the text in that file's own buffer.")))
+        ("dk")
+        ";; [t]hen enter the text in that file's own buffer."))
+    (ert-info ("With `evil-start-of-line' `t'")
+      (let ((evil-start-of-line t))
+        (evil-test-buffer
+          ";; [T]his buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer."
+          ("d2d")
+          "[;]; then enter the text in that file's own buffer.")
+        (evil-test-buffer
+          ";; [T]his buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer."
+          ("2dd")
+          "[;]; then enter the text in that file's own buffer.")
+        (evil-test-buffer
+          ";; [T]his buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer."
+          ("dj")
+          "[;]; then enter the text in that file's own buffer.")
+        (evil-test-buffer
+          ";; This buffer is for notes you don't want to save.
+;; [I]f you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer."
+          ("dk")
+          "[;]; then enter the text in that file's own buffer.")))))
 
 (evil-define-motion evil-test-square-motion (count)
   "Test motion for selecting a square."
@@ -1865,23 +1915,36 @@ New Tex[t]
       ("P")
       ";; This buffe[r] is for notes you don't want to save"))
   (ert-info ("Delete lines")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes you don't want to save.
+    (ert-info ("With `evil-start-of-line' `nil'")
+      (evil-test-buffer
+        ";; [T]his buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      ("2dd")
-      "[;]; then enter the text in that file's own buffer."
-      ("P")
-      "[;]; This buffer is for notes you don't want to save.
+        ("2dd")
+        ";; [t]hen enter the text in that file's own buffer."
+        ("P")
+        "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."))
+    (ert-info ("With `evil-start-of-line' `t'")
+      (let ((evil-start-of-line t))
+        (evil-test-buffer
+          ";; [T]his buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer."
+          ("2dd")
+          "[;]; then enter the text in that file's own buffer."
+          ("P")
+          "[;]; This buffer is for notes you don't want to save.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer."))))
   (ert-info ("Delete last line")
     (evil-test-buffer
       ";; This buffer is for notes you don't want to save.
 ;; [I]f you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
       ("2dd")
-      "[;]; This buffer is for notes you don't want to save."))
+      ";; [T]his buffer is for notes you don't want to save."))
   (ert-info ("Delete last empty line")
     (evil-test-buffer
       "line 1\nline 2\n\n[]"
@@ -2249,22 +2312,45 @@ Below some empty line")))
   (let ((evil-shift-width 4)
         indent-tabs-mode)
     (ert-info ("Shift linewise")
-      (evil-test-buffer
-        "[l]ine 1\nline 2\nline 3\n"
-        ("Vj>")
-        "    [l]ine 1\n    line 2\nline 3\n"))
+      (ert-info ("With `evil-start-of-line' `nil'")
+        (evil-test-buffer
+          "[l]ine 1\nline 2\nline 3\n"
+          ("Vj>")
+          "[ ]   line 1\n    line 2\nline 3\n"))
+      (ert-info ("With `evil-start-of-line' `t'")
+        (let ((evil-start-of-line t))
+          (evil-test-buffer
+            "[l]ine 1\nline 2\nline 3\n"
+            ("Vj>")
+            "    [l]ine 1\n    line 2\nline 3\n"))))
     (ert-info ("Shift char selection on whole line")
-      (evil-test-buffer
-        "[l]ine 1\nline 2\nline 3\n"
-        ("v$>")
-        "    [l]ine 1\nline 2\nline 3\n"))
+      (ert-info ("With `evil-start-of-line' `nil'")
+        (evil-test-buffer
+          "[l]ine 1\nline 2\nline 3\n"
+          ("v$>")
+          "    line [1]\nline 2\nline 3\n"))
+      (ert-info ("With `evil-start-of-line' `t'")
+        (let ((evil-start-of-line t))
+          (evil-test-buffer
+            "[l]ine 1\nline 2\nline 3\n"
+            ("v$>")
+            "    [l]ine 1\nline 2\nline 3\n"))))
     (ert-info ("Shift visual with count")
-      (evil-test-buffer
-        "[l]ine 1\nline 2\nline 3\n"
-        ("Vj3>")
-        "            [l]ine 1\n            line 2\nline 3\n"
-        ("Vj2<")
-        "    [l]ine 1\n    line 2\nline 3\n"))
+      (ert-info ("With `evil-start-of-line' `nil'")
+        (evil-test-buffer
+          "[l]ine 1\nline 2\nline 3\n"
+          ("Vj3>")
+          "[ ]           line 1\n            line 2\nline 3\n"
+          ("Vj2<")
+          "[ ]   line 1\n    line 2\nline 3\n"))
+      (ert-info ("With `evil-start-of-line' `t'")
+        (let ((evil-start-of-line t))
+          (evil-test-buffer
+            "[l]ine 1\nline 2\nline 3\n"
+            ("Vj3>")
+            "            [l]ine 1\n            line 2\nline 3\n"
+            ("Vj2<")
+            "    [l]ine 1\n    line 2\nline 3\n"))))
     (ert-info ("Shift in insert state")
       (evil-test-buffer
         "line 1\nl[i]ne 2\nline 3\n"
@@ -2866,7 +2952,7 @@ word3[]"))
     "[l]ine 1\n"
     ("GiABC" [escape])
     "line 1\nAB[C]"
-    ("gg\".P")
+    ("go\".P")
     "AB[C]line 1\nABC"))
 
 (ert-deftest evil-test-zero-register ()
@@ -3188,58 +3274,112 @@ Below some empty line")))
 (ert-deftest evil-test-goto-first-line ()
   "Test `evil-goto-first-line' motion"
   :tags '(evil motion)
-  (evil-test-buffer
-    "[i]nt main(int argc, char** argv)
+  (ert-info ("With `evil-start-of-line' `nil'")
+    (evil-test-buffer
+      "[i]nt main(int argc, char** argv)
 {
   printf(\"Hello world\\n\");
   return EXIT_SUCCESS;
 }"
-    ("3gg")
-    "int main(int argc, char** argv)
+      ("3gg")
+      "int main(int argc, char** argv)
 {
-  [p]rintf(\"Hello world\\n\");
+[ ] printf(\"Hello world\\n\");
   return EXIT_SUCCESS;
 }"
-    ("gg")
-    "[i]nt main(int argc, char** argv)
+      ("gg")
+      "[i]nt main(int argc, char** argv)
 {
   printf(\"Hello world\\n\");
   return EXIT_SUCCESS;
 }"
-    ("100gg")
-    "int main(int argc, char** argv)
+      ("100gg")
+      "int main(int argc, char** argv)
 {
   printf(\"Hello world\\n\");
   return EXIT_SUCCESS;
 \[}]"))
+  (ert-info ("With `evil-start-of-line' `nil'")
+    (let ((evil-start-of-line t))
+      (evil-test-buffer
+        "[i]nt main(int argc, char** argv)
+{
+  printf(\"Hello world\\n\");
+  return EXIT_SUCCESS;
+}"
+        ("3gg")
+        "int main(int argc, char** argv)
+{
+  [p]rintf(\"Hello world\\n\");
+  return EXIT_SUCCESS;
+}"
+        ("gg")
+        "[i]nt main(int argc, char** argv)
+{
+  printf(\"Hello world\\n\");
+  return EXIT_SUCCESS;
+}"
+        ("100gg")
+        "int main(int argc, char** argv)
+{
+  printf(\"Hello world\\n\");
+  return EXIT_SUCCESS;
+\[}]"))))
 
 (ert-deftest evil-test-goto-line ()
   "Test `evil-goto-line' motion"
   :tags '(evil motion)
-  (evil-test-buffer
-    "[i]nt main(int argc, char** argv)
+  (ert-info ("With `evil-start-of-line' `t'")
+    (let ((evil-start-of-line t))
+      (evil-test-buffer
+        "[i]nt main(int argc, char** argv)
 {
   printf(\"Hello world\\n\");
   return EXIT_SUCCESS;
 }"
-    ("G")
-    "int main(int argc, char** argv)
+        ("G")
+        "int main(int argc, char** argv)
 {
   printf(\"Hello world\\n\");
   return EXIT_SUCCESS;
 \[}]"
-    ("3G")
-    "int main(int argc, char** argv)
+        ("3G")
+        "int main(int argc, char** argv)
 {
   [p]rintf(\"Hello world\\n\");
   return EXIT_SUCCESS;
 }"
-    ("100G")
-    "int main(int argc, char** argv)
+        ("100G")
+        "int main(int argc, char** argv)
 {
   printf(\"Hello world\\n\");
   return EXIT_SUCCESS;
-\[}]"))
+\[}]")))
+  (ert-info ("With `evil-start-of-line' `nil'")
+    (evil-test-buffer
+      "[i]nt main(int argc, char** argv)
+{
+  printf(\"Hello world\\n\");
+  return EXIT_SUCCESS;
+}"
+      ("G")
+      "int main(int argc, char** argv)
+{
+  printf(\"Hello world\\n\");
+  return EXIT_SUCCESS;
+\[}]"
+      ("3G")
+      "int main(int argc, char** argv)
+{
+[ ] printf(\"Hello world\\n\");
+  return EXIT_SUCCESS;
+}"
+      ("100G")
+      "int main(int argc, char** argv)
+{
+  printf(\"Hello world\\n\");
+  return EXIT_SUCCESS;
+\[}]")))
 
 (ert-deftest evil-test-goto-char ()
   "Test `evil-goto-char' motion and ex command."
@@ -3252,8 +3392,8 @@ Below some empty line")))
    "[W]e only need a short buffer for this test"
    ("16go")
    "We only need a [s]hort buffer for this test"
-   ("go18")
-   "We only need a sh[o]rt buffer for this test"
+   ("go")
+   "[W]e only need a short buffer for this test"
    (evil-goto-char 24)
    "We only need a short bu[f]fer for this test"))
 
@@ -6757,7 +6897,7 @@ test hello <a href=\"/deed.zh\">Creative Commons</a>
     "<;; [T]his buffer is for notes you don't want to save,\n>\
 ;; and for Lisp evaluation."
     ("d")
-    "[;]; and for Lisp evaluation."))
+    ";; [a]nd for Lisp evaluation."))
 
 (ert-deftest evil-test-visual-block ()
   "Test Visual block selection"
@@ -7037,13 +7177,14 @@ if no previous selection")
   "Test if :number moves point to a certain line"
   :tags '(evil ex)
   (ert-info ("Move to line")
-    (evil-test-buffer
-      :visual line
-      "1\n 2\n [ ]3\n   4\n    5\n"
-      (":4" [return])
-      "1\n 2\n  3\n   [4]\n    5\n"
-      (":2" [return])
-      "1\n [2]\n  3\n   4\n    5\n")))
+    (let ((evil-start-of-line t))
+      (evil-test-buffer
+        :visual line
+        "1\n 2\n [ ]3\n   4\n    5\n"
+        (":4" [return])
+        "1\n 2\n  3\n   [4]\n    5\n"
+        (":2" [return])
+        "1\n [2]\n  3\n   4\n    5\n"))))
 
 (ert-deftest evil-test-ex-repeat ()
   "Test :@: command."

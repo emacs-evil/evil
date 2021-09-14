@@ -538,6 +538,7 @@ Optional keyword arguments are:
                evil-inhibit-operator)
           (setq evil-inhibit-operator-value nil
                 evil-this-operator this-command)
+          (setq evil-operator-start-col (current-column))
           (prog1 ,interactive
             (setq orig (point)
                   evil-inhibit-operator-value evil-inhibit-operator)

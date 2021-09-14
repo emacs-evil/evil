@@ -293,19 +293,17 @@ of the current screen line."
   (evil-first-non-blank))
 
 (evil-define-motion evil-goto-line (count)
-  "Go to the first non-blank character of line COUNT.
-By default the last line."
+  "Go to line COUNT. By default the last line."
   :jump t
   :type line
-  (if (null count)
-      (with-no-warnings (end-of-buffer))
-    (goto-char (point-min))
-    (forward-line (1- count)))
-  (evil-first-non-blank))
+  (evil-ensure-column
+    (if (null count)
+        (with-no-warnings (end-of-buffer))
+      (goto-char (point-min))
+      (forward-line (1- count)))))
 
 (evil-define-motion evil-goto-first-line (count)
-  "Go to the first non-blank character of line COUNT.
-By default the first line."
+  "Go to line COUNT. By default the first line."
   :jump t
   :type line
   (evil-goto-line (or count 1)))
@@ -492,14 +490,14 @@ and jump to the corresponding one."
   (cond
    ;; COUNT% jumps to a line COUNT percentage down the file
    (count
-    (goto-char
-     (evil-normalize-position
-      (let ((size (- (point-max) (point-min))))
-        (+ (point-min)
-           (if (> size 80000)
-               (* count (/ size 100))
-             (/ (* count size) 100))))))
-    (back-to-indentation)
+    (evil-ensure-column
+      (goto-char
+       (evil-normalize-position
+        (let ((size (- (point-max) (point-min))))
+          (+ (point-min)
+             (if (> size 80000)
+                 (* count (/ size 100))
+               (/ (* count size) 100)))))))
     (setq evil-this-type 'line))
    ((and (evil-looking-at-start-comment t)
          (let ((pnt (point)))
@@ -976,32 +974,29 @@ In Insert state, insert a newline and indent."
   (evil-ret-gen count t))
 
 (evil-define-motion evil-window-top (count)
-  "Move the cursor to line COUNT from the top of the window
-on the first non-blank character."
+  "Move the cursor to line COUNT from the top of the window."
   :jump t
   :type line
-  (move-to-window-line (max (or count 0)
-                            (if (= (point-min) (window-start))
-                                0
-                              scroll-margin)))
-  (back-to-indentation))
+  (evil-ensure-column
+    (move-to-window-line (max (or count 0)
+                              (if (= (point-min) (window-start))
+                                  0
+                                scroll-margin)))))
 
 (evil-define-motion evil-window-middle ()
-  "Move the cursor to the middle line in the window
-on the first non-blank character."
+  "Move the cursor to the middle line in the window."
   :jump t
   :type line
-  (move-to-window-line
-   (/ (1+ (save-excursion (move-to-window-line -1))) 2))
-  (back-to-indentation))
+  (evil-ensure-column
+    (move-to-window-line
+     (/ (1+ (save-excursion (move-to-window-line -1))) 2))))
 
 (evil-define-motion evil-window-bottom (count)
-  "Move the cursor to line COUNT from the bottom of the window
-on the first non-blank character."
+  "Move the cursor to line COUNT from the bottom of the window."
   :jump t
   :type line
-  (move-to-window-line (- (max (or count 1) (1+ scroll-margin))))
-  (back-to-indentation))
+  (evil-ensure-column
+    (move-to-window-line (- (max (or count 1) (1+ scroll-margin))))))
 
 ;; scrolling
 (evil-define-command evil-scroll-line-up (count)
@@ -1037,7 +1032,7 @@ If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (evil-save-column
+  (evil-ensure-column
     (setq count (or count (max 0 evil-scroll-count)))
     (setq evil-scroll-count count)
     (when (= (point-min) (line-beginning-position))
@@ -1062,7 +1057,7 @@ If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (evil-save-column
+  (evil-ensure-column
     (setq count (or count (max 0 evil-scroll-count)))
     (setq evil-scroll-count count)
     (when (eobp) (signal 'end-of-buffer nil))
@@ -1098,7 +1093,7 @@ If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "p")
-  (evil-save-column
+  (evil-ensure-column
     (dotimes (i count)
       (condition-case err
           (scroll-down nil)
@@ -1112,7 +1107,7 @@ If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "p")
-  (evil-save-column
+  (evil-ensure-column
     (dotimes (i count)
       (condition-case err
           (scroll-up nil)
@@ -1495,10 +1490,15 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
     (delete-region (1- beg) end))
    (t
     (delete-region beg end)))
-  ;; place cursor on beginning of line
   (when (and (called-interactively-p 'any)
              (eq type 'line))
-    (evil-first-non-blank)))
+    (evil-first-non-blank)
+    (when (and (not evil-start-of-line)
+               evil-operator-start-col
+               ;; Special exceptions to ever saving column:
+               (not (memq evil-this-motion '(evil-forward-word-begin
+                                             evil-forward-WORD-begin))))
+      (move-to-column evil-operator-start-col))))
 
 (evil-define-operator evil-delete-line (beg end type register yank-handler)
   "Delete to end of line."
@@ -1918,10 +1918,9 @@ but doesn't insert or remove any spaces."
 The text is shifted to the nearest multiple of `evil-shift-width'
 \(the rounding can be disabled by setting `evil-shift-round').
 If PRESERVE-EMPTY is non-nil, lines that contain only spaces are
-indented, too, otherwise they are ignored.  The relative column
-of point is preserved if this function is not called
-interactively. Otherwise, if the function is called as an
-operator, point is moved to the first non-blank character.
+indented, too, otherwise they are ignored.  Location of point
+is preserved relative to text when called from insert state.
+Otherwise, it is determined by `evil-start-of-line' and/or `evil-track-eol'.
 See also `evil-shift-right'."
   :type line
   (interactive "<r><vc>")
@@ -1932,17 +1931,20 @@ See also `evil-shift-right'."
 The text is shifted to the nearest multiple of `evil-shift-width'
 \(the rounding can be disabled by setting `evil-shift-round').
 If PRESERVE-EMPTY is non-nil, lines that contain only spaces are
-indented, too, otherwise they are ignored.  The relative column
-of point is preserved if this function is not called
-interactively. Otherwise, if the function is called as an
-operator, point is moved to the first non-blank character.
+indented, too, otherwise they are ignored.  Location of point
+is preserved relative to text when called from insert state.
+Otherwise, it is determined by `evil-start-of-line' and/or `evil-track-eol'.
 See also `evil-shift-left'."
   :type line
+  :move-point nil ; point is moved according to `evil-start-of-line' and state
   (interactive "<r><vc>")
   (setq count (or count 1))
   (let ((beg (set-marker (make-marker) beg))
         (end (set-marker (make-marker) end))
-        (pnt-indent (current-column))
+        (col-for-insert (current-column))
+        (goal-col (if (consp temporary-goal-column)
+                      (car temporary-goal-column)
+                    temporary-goal-column))
         first-shift) ; shift of first line
     (save-excursion
       (goto-char beg)
@@ -1975,10 +1977,14 @@ See also `evil-shift-left'."
         (setq first-shift (* count evil-shift-width))
         (indent-to first-shift)))
     ;; When called from insert state (C-t or C-d) the cursor should shift with the line,
-    ;; otherwise (normal state) it should end up on the first non-whitespace character
-    (if (evil-insert-state-p)
-        (move-to-column (max 0 (+ pnt-indent first-shift)))
-      (evil-first-non-blank))))
+    ;; otherwise (normal state) its position is determined by `evil-start-of-line'.
+    (cond
+     ((evil-insert-state-p) (move-to-column (max 0 (+ col-for-insert first-shift))))
+     (evil-start-of-line (evil-first-non-blank))
+     (t (move-to-column (if (and evil-track-eol (= goal-col most-positive-fixnum))
+                            goal-col
+                          evil-operator-start-col))))
+    (setq temporary-goal-column 0)))
 
 (evil-define-command evil-shift-right-line (count)
   "Shift the current line COUNT times to the right.
@@ -3950,7 +3956,7 @@ range. The given argument is passed straight to
   "Go to POSITION in the buffer.
 Default position is the beginning of the buffer."
   :jump t
-  (interactive "<N>Goto position: ")
+  (interactive "<N>")
   (let ((position (evil-normalize-position
                    (or position (point-min)))))
     (goto-char position)))

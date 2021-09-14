@@ -986,6 +986,18 @@ See also `evil-save-goal-column'."
        ,@body
        (move-to-column col))))
 
+(defmacro evil-ensure-column (&rest body)
+  "Ensures appropriate column after exeution of BODY.
+Appropriate column is determined by `evil-start-of-line'."
+  (declare (indent defun)
+           (debug t))
+  `(let ((col (current-column)))
+     (evil-save-goal-column
+       ,@body
+       (if evil-start-of-line
+           (evil-first-non-blank)
+         (move-to-column col)))))
+
 (defun evil-narrow (beg end)
   "Restrict the buffer to BEG and END.
 BEG or END may be nil, specifying a one-sided restriction including
