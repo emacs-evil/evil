@@ -46,7 +46,15 @@
 
 ;;; Buffer-menu
 
-(evil-add-hjkl-bindings Buffer-menu-mode-map 'motion)
+(evil-add-hjkl-bindings Buffer-menu-mode-map 'motion
+  (kbd "RET") 'Buffer-menu-select)
+
+
+;;; completion-list
+
+(evil-add-hjkl-bindings completion-list-mode-map 'motion
+  (kbd "TAB") 'next-completion
+  (kbd "RET") 'choose-completion)
 
 ;; dictionary.el
 

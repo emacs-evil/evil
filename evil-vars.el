@@ -877,6 +877,7 @@ expression matching the buffer's name and STATE is one of `normal',
 (defcustom evil-motion-state-modes
   '(apropos-mode
     Buffer-menu-mode
+    completion-list-mode
     calendar-mode
     color-theme-mode
     command-history-mode
