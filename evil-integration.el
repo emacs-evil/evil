@@ -215,7 +215,8 @@
            '(company-complete-mouse
              company-complete-number
              company-complete-selection
-             company-complete-common))
+             company-complete-common
+             company-complete-common-or-cycle))
 
      (mapc #'evil-declare-ignore-repeat
            '(company-abort
