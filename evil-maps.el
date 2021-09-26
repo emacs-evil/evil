@@ -169,7 +169,7 @@
 ;;; Motion state
 
 ;; "0" is a special command when called first
-(evil-redirect-digit-argument evil-motion-state-map "0" 'evil-beginning-of-line)
+(define-key evil-motion-state-map "0" 'evil-beginning-of-line)
 (define-key evil-motion-state-map "1" 'digit-argument)
 (define-key evil-motion-state-map "2" 'digit-argument)
 (define-key evil-motion-state-map "3" 'digit-argument)

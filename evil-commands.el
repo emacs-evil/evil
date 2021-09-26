@@ -234,19 +234,6 @@ move COUNT - 1 screen lines downward first."
                        -1
                        (/ (with-no-warnings (window-body-width)) 2)))))
 
-(evil-define-motion evil-beginning-of-line-or-digit-argument ()
-  "Move the cursor to the beginning of the current line.
-This function passes its command to `digit-argument' (usually a 0)
-if it is not the first event."
-  :type exclusive
-  (cond
-   (current-prefix-arg
-    (setq this-command #'digit-argument)
-    (call-interactively #'digit-argument))
-   (t
-    (setq this-command #'evil-beginning-of-line)
-    (call-interactively #'evil-beginning-of-line))))
-
 (evil-define-motion evil-first-non-blank ()
   "Move the cursor to the first non-blank character of the current line."
   :type exclusive
