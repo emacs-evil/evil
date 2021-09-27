@@ -723,8 +723,7 @@ recursively."
            ((functionp cmd)
             (if (or (memq cmd '(digit-argument negative-argument))
                     (and found-prefix
-                         (evil-get-command-property
-                          cmd :digit-argument-redirection)))
+                         (memq cmd evil-digit-bound-motions)))
                 ;; skip those commands
                 (setq found-prefix t ; found at least one prefix argument
                       beg end
