@@ -42,6 +42,7 @@
 
 (require 'evil-common)
 (require 'evil-states)
+(require 'evil-types)
 (require 'shell)
 
 ;;; Code:
@@ -264,26 +265,6 @@ Clean up everything set up by `evil-ex-setup'."
       (when runner
         (funcall runner 'stop)))))
 (put 'evil-ex-teardown 'permanent-local-hook t)
-
-(defvar evil-paste-clear-minibuffer-first nil
-  "`evil-paste-before' cannot have `delete-minibuffer-contents' called
-before it fetches certain registers becuase this would trigger various ex-updates,
-sometimes moving point, so `C-a' `C-w' etc. would miss their intended target.")
-
-(defun evil-ex-remove-default ()
-  "Remove the default text shown in the ex minibuffer.
-When ex starts, the previous command is shown enclosed in
-parenthesis. This function removes this text when the first key
-is pressed."
-  (when (and (not (eq this-command 'exit-minibuffer))
-             (/= (minibuffer-prompt-end) (point-max)))
-    (if (eq this-command 'evil-ex-delete-backward-char)
-        (setq this-command 'ignore))
-    (if (eq this-original-command 'evil-paste-from-register)
-        (setq evil-paste-clear-minibuffer-first t)
-      (delete-minibuffer-contents)))
-  (remove-hook 'pre-command-hook #'evil-ex-remove-default))
-(put 'evil-ex-remove-default 'permanent-local-hook t)
 
 (defun evil-ex-update (&optional beg end len string)
   "Update Ex variables when the minibuffer changes.
