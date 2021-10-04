@@ -204,6 +204,13 @@ cursor, or a list of the above."
 (defvar evil-force-cursor nil
   "Overwrite the current states default cursor.")
 
+(defcustom evil-start-of-line nil
+  "Analogue of vim's `startofline'.
+If nil, preserve column when making relevant movements of the cursor.
+Otherwise, move the cursor to the start of the line."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-repeat-move-cursor t
   "\\<evil-normal-state-map>
 Whether repeating commands with \\[evil-repeat] may move the cursor.
@@ -1439,6 +1446,9 @@ of `evil-inhibit-operator' from one local scope to another.")
 
 (defvar evil-operator-range-motion nil
   "Motion of `evil-operator-range'.")
+
+(defvar evil-operator-start-col nil
+  "Used to restore column (where possible) after an operator has moved it.")
 
 (defvar evil-restriction-stack nil
   "List of previous restrictions.
