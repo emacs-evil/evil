@@ -2073,6 +2073,26 @@ If INPUT starts with a number, +, -, or . use `calc-eval' instead."
       (mapconcat (lambda (x) (format "%s" x)) result "\n"))
      (t (user-error "Using %s as a string" (type-of result))))))
 
+(defvar evil-paste-clear-minibuffer-first nil
+  "`evil-paste-before' cannot have `delete-minibuffer-contents' called before
+it fetches certain registers becuase this would trigger various ex-updates,
+sometimes moving point, so `C-a' `C-w' etc. would miss their intended target.")
+
+(defun evil-ex-remove-default ()
+  "Remove the default text shown in the ex minibuffer.
+When ex starts, the previous command is shown enclosed in
+parenthesis. This function removes this text when the first key
+is pressed."
+  (when (and (not (eq this-command 'exit-minibuffer))
+             (/= (minibuffer-prompt-end) (point-max)))
+    (if (eq this-command 'evil-ex-delete-backward-char)
+        (setq this-command 'ignore))
+    (if (eq this-original-command 'evil-paste-from-register)
+        (setq evil-paste-clear-minibuffer-first t)
+      (delete-minibuffer-contents)))
+  (remove-hook 'pre-command-hook #'evil-ex-remove-default))
+(put 'evil-ex-remove-default 'permanent-local-hook t)
+
 (defun evil-get-register (register &optional noerror)
   "Return contents of REGISTER.
 Signal an error if empty, unless NOERROR is non-nil.

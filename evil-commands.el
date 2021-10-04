@@ -744,7 +744,7 @@ Loop back to the top of buffer if the end is reached."
         (evil-first-non-blank))
     (user-error "No marks in this buffer")))
 
-(evil-define-command evil-set-col-0-mark (_beg end mark)
+(evil-define-command evil-set-col-0-mark (beg end mark)
   "Set MARK at column 0 of line of END. Default is cursor line."
   (interactive "<r><a>")
   (if (< 1 (length mark))
@@ -1627,7 +1627,7 @@ given."
   (interactive "<R><xc/><y>")
   (evil-ex-delete-or-yank nil beg end type register count yank-handler))
 
-(evil-define-command evil-ex-put (_beg end ex-arg &optional force)
+(evil-define-command evil-ex-put (beg end ex-arg &optional force)
   (interactive "<r><a><!>")
   (let* ((arg-chars (remove ?\s (string-to-list ex-arg)))
          (reg (or (car arg-chars) ?\"))

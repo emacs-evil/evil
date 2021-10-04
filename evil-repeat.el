@@ -553,6 +553,9 @@ and only if COUNT is non-nil."
      (t
       (evil-execute-repeat-info repeat-info)))))
 
+;; Keep the compiler happy - this is a buffer local var
+(defvar evil--execute-normal-return-state)
+
 (evil-define-command evil-repeat (count &optional save-point)
   "Repeat the last editing command with count replaced by COUNT.
 If SAVE-POINT is non-nil, do not move point."
