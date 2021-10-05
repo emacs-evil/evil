@@ -986,6 +986,15 @@ See also `evil-save-goal-column'."
        ,@body
        (move-to-column col))))
 
+(defun evil--stick-to-eol-p ()
+  "Called by vertical movement commands to help determine cursor position."
+  (let ((goal-col (if (consp temporary-goal-column)
+                      (car temporary-goal-column)
+                    temporary-goal-column)))
+    (and evil-track-eol
+         (= most-positive-fixnum goal-col)
+         (eq last-command 'next-line))))
+
 (defmacro evil-ensure-column (&rest body)
   "Ensures appropriate column after exeution of BODY.
 Appropriate column is determined by `evil-start-of-line'."
@@ -994,9 +1003,10 @@ Appropriate column is determined by `evil-start-of-line'."
   `(let ((col (current-column)))
      (evil-save-goal-column
        ,@body
-       (if evil-start-of-line
-           (evil-first-non-blank)
-         (move-to-column col)))))
+       (cond
+        (evil-start-of-line (evil-first-non-blank))
+        ((evil--stick-to-eol-p) (move-end-of-line 1))
+        (t (move-to-column col))))))
 
 (defun evil-narrow (beg end)
   "Restrict the buffer to BEG and END.

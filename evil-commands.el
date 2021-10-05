@@ -296,6 +296,7 @@ of the current screen line."
   "Go to line COUNT. By default the last line."
   :jump t
   :type line
+  (setq this-command 'next-line)
   (evil-ensure-column
     (if (null count)
         (with-no-warnings (end-of-buffer))
@@ -1033,8 +1034,9 @@ If the scroll count is zero the command scrolls half the screen."
   :keep-visual t
   (interactive "<c>")
   (evil-ensure-column
-    (setq count (or count (max 0 evil-scroll-count)))
-    (setq evil-scroll-count count)
+    (setq count (or count (max 0 evil-scroll-count))
+          evil-scroll-count count
+          this-command 'next-line)
     (when (= (point-min) (line-beginning-position))
       (signal 'beginning-of-buffer nil))
     (when (zerop count)
@@ -1058,8 +1060,9 @@ If the scroll count is zero the command scrolls half the screen."
   :keep-visual t
   (interactive "<c>")
   (evil-ensure-column
-    (setq count (or count (max 0 evil-scroll-count)))
-    (setq evil-scroll-count count)
+    (setq count (or count (max 0 evil-scroll-count))
+          evil-scroll-count count
+          this-command 'next-line)
     (when (eobp) (signal 'end-of-buffer nil))
     (when (zerop count)
       (setq count (/ (window-body-height) 2)))
