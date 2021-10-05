@@ -378,7 +378,8 @@
 ;;; Insert state
 
 (defvar evil-insert-state-bindings
-  `(("\C-v" . quoted-insert)
+  `(([insert] . evil-replace-state)
+    ("\C-v" . quoted-insert)
     ("\C-k" . evil-insert-digraph)
     ("\C-o" . evil-execute-in-normal-state)
     ("\C-r" . evil-paste-from-register)
@@ -438,6 +439,7 @@ included in `evil-insert-state-bindings' by default."
 
 (define-key evil-replace-state-map (kbd "DEL") 'evil-replace-backspace)
 (define-key evil-replace-state-map [escape] 'evil-normal-state)
+(define-key evil-replace-state-map [insert] 'evil-insert)
 
 ;;; Emacs state
 
