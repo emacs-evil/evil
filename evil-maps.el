@@ -439,7 +439,7 @@ included in `evil-insert-state-bindings' by default."
 
 (define-key evil-replace-state-map (kbd "DEL") 'evil-replace-backspace)
 (define-key evil-replace-state-map [escape] 'evil-normal-state)
-(define-key evil-replace-state-map [insert] 'evil-insert)
+(define-key evil-replace-state-map [insert] 'evil-append)
 
 ;;; Emacs state
 
