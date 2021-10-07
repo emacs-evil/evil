@@ -988,25 +988,37 @@ See also `evil-save-goal-column'."
 
 (defun evil--stick-to-eol-p ()
   "Called by vertical movement commands to help determine cursor position."
-  (let ((goal-col (if (consp temporary-goal-column)
-                      (car temporary-goal-column)
-                    temporary-goal-column)))
+  (let ((goal-col (or goal-column
+                      (if (consp temporary-goal-column)
+                          (car temporary-goal-column)
+                        temporary-goal-column))))
     (and evil-track-eol
          (= most-positive-fixnum goal-col)
          (eq last-command 'next-line))))
+
+(defun evil-eolp ()
+  "Like `eolp' but accounts for `evil-move-beyond-eol' being nil."
+  (ignore-errors
+    (save-excursion
+      (when (or (evil-insert-state-p) (not evil-move-beyond-eol))
+        (forward-char))
+      (eolp))))
 
 (defmacro evil-ensure-column (&rest body)
   "Ensures appropriate column after exeution of BODY.
 Appropriate column is determined by `evil-start-of-line'."
   (declare (indent defun)
            (debug t))
-  `(let ((col (current-column)))
-     (evil-save-goal-column
-       ,@body
-       (cond
-        (evil-start-of-line (evil-first-non-blank))
-        ((evil--stick-to-eol-p) (move-end-of-line 1))
-        (t (move-to-column col))))))
+  `(let ((col (current-column))
+         (goal-column goal-column)
+         (started-at-eol (evil-eolp)))
+     ,@body
+     (cond
+      (evil-start-of-line (evil-first-non-blank))
+      ((and started-at-eol (evil--stick-to-eol-p)) (move-end-of-line 1))
+      (t (move-to-column (or goal-column col))
+         (when (= most-positive-fixnum temporary-goal-column)
+           (setq temporary-goal-column 0))))))
 
 (defun evil-narrow (beg end)
   "Restrict the buffer to BEG and END.
@@ -1381,7 +1393,7 @@ If STATE is given it used a parsing state at point."
                       (point)))))))
 (put 'evil-comment 'bounds-of-thing-at-point #'bounds-of-evil-comment-at-point)
 
-;; The purpose of this function is the provide line motions which
+;; The purpose of this function is to provide line motions which
 ;; preserve the column. This is how `previous-line' and `next-line'
 ;; work, but unfortunately the behaviour is hard-coded: if and only if
 ;; the last command was `previous-line' or `next-line', the column is

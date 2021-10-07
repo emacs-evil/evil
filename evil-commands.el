@@ -292,16 +292,31 @@ of the current screen line."
     (evil-previous-line (or count 1)))
   (evil-first-non-blank))
 
+;; TODO - this low level column restoration code should be abstracted to `evil-ensure-column'
+
 (evil-define-motion evil-goto-line (count)
   "Go to line COUNT. By default the last line."
   :jump t
   :type line
   (setq this-command 'next-line)
-  (evil-ensure-column
-    (if (null count)
-        (with-no-warnings (end-of-buffer))
-      (goto-char (point-min))
-      (forward-line (1- count)))))
+  (if (consp temporary-goal-column)
+      (setq temporary-goal-column (+ (car temporary-goal-column)
+                                     (cdr temporary-goal-column))))
+  (if (not (memq last-command '(next-line previous-line)))
+      (setq temporary-goal-column
+            (if (and evil-track-eol (evil-eolp)
+                     ;; Don't count beg of empty line as end of line
+                     ;; unless we just did explicit end-of-line.
+                     (or (not (bolp)) (eq real-last-command 'evil-end-of-line)))
+                most-positive-fixnum
+              (current-column))))
+  (if (null count)
+      (with-no-warnings (end-of-buffer))
+    (goto-char (point-min))
+    (forward-line (1- count)))
+  (if evil-start-of-line
+      (evil-first-non-blank)
+    (line-move-to-column (truncate (or goal-column temporary-goal-column)))))
 
 (evil-define-motion evil-goto-first-line (count)
   "Go to line COUNT. By default the first line."
@@ -1982,7 +1997,7 @@ See also `evil-shift-left'."
      ((evil-insert-state-p) (move-to-column (max 0 (+ col-for-insert first-shift))))
      (evil-start-of-line (evil-first-non-blank))
      ((evil--stick-to-eol-p) (move-end-of-line 1))
-     (t (move-to-column evil-operator-start-col)))
+     (t (move-to-column (or goal-column evil-operator-start-col))))
     (setq temporary-goal-column 0)))
 
 (evil-define-command evil-shift-right-line (count)
