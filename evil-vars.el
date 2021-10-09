@@ -1249,6 +1249,12 @@ used."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-ex-search-incremental t
+  "If t, use incremental search. Note that this only affects the
+search command if `evil-search-module' is set to 'evil-search."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-ex-search-highlight-all t
   "If t and interactive search is enabled, all matches are
 highlighted."
