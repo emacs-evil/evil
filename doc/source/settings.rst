@@ -81,6 +81,8 @@ Search
 
 .. elisp:autovariable:: evil-ex-hl-update-delay
 
+.. elisp:autovariable:: evil-ex-search-incremental
+
 
 Indentation
 -----------
