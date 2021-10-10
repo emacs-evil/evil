@@ -292,31 +292,15 @@ of the current screen line."
     (evil-previous-line (or count 1)))
   (evil-first-non-blank))
 
-;; TODO - this low level column restoration code should be abstracted to `evil-ensure-column'
-
 (evil-define-motion evil-goto-line (count)
   "Go to line COUNT. By default the last line."
   :jump t
   :type line
-  (setq this-command 'next-line)
-  (if (consp temporary-goal-column)
-      (setq temporary-goal-column (+ (car temporary-goal-column)
-                                     (cdr temporary-goal-column))))
-  (if (not (memq last-command '(next-line previous-line)))
-      (setq temporary-goal-column
-            (if (and evil-track-eol (evil-eolp)
-                     ;; Don't count beg of empty line as end of line
-                     ;; unless we just did explicit end-of-line.
-                     (or (not (bolp)) (eq real-last-command 'evil-end-of-line)))
-                most-positive-fixnum
-              (current-column))))
-  (if (null count)
-      (with-no-warnings (end-of-buffer))
-    (goto-char (point-min))
-    (forward-line (1- count)))
-  (if evil-start-of-line
-      (evil-first-non-blank)
-    (line-move-to-column (truncate (or goal-column temporary-goal-column)))))
+  (evil-ensure-column
+    (if (null count)
+        (with-no-warnings (end-of-buffer))
+      (goto-char (point-min))
+      (forward-line (1- count)))))
 
 (evil-define-motion evil-goto-first-line (count)
   "Go to line COUNT. By default the first line."

@@ -1000,25 +1000,32 @@ See also `evil-save-goal-column'."
   "Like `eolp' but accounts for `evil-move-beyond-eol' being nil."
   (ignore-errors
     (save-excursion
-      (when (or (evil-insert-state-p) (not evil-move-beyond-eol))
+      (unless (or evil-move-beyond-eol (memq evil-state '(insert replace)))
         (forward-char))
       (eolp))))
 
 (defmacro evil-ensure-column (&rest body)
-  "Ensures appropriate column after exeution of BODY.
-Appropriate column is determined by `evil-start-of-line'."
+  "Execute BODY as if it is a `next-line' command, insofar as it tracks column.
+This mostly copies the approach of Emacs' `line-move-1', but is modified
+so it is more compatible with evil's notions of eol & tracking."
   (declare (indent defun)
            (debug t))
-  `(let ((col (current-column))
-         (goal-column goal-column)
-         (started-at-eol (evil-eolp)))
+  `(progn
+     (setq this-command 'next-line)
+     (if (consp temporary-goal-column)
+         (setq temporary-goal-column (+ (car temporary-goal-column)
+                                        (cdr temporary-goal-column))))
+     (if (not (memq last-command '(next-line previous-line)))
+         (setq temporary-goal-column
+               (if (and evil-track-eol
+                        (evil-eolp)
+                        (memq real-last-command '(move-end-of-line evil-end-of-line)))
+                   most-positive-fixnum
+                 (current-column))))
      ,@body
-     (cond
-      (evil-start-of-line (evil-first-non-blank))
-      ((and started-at-eol (evil--stick-to-eol-p)) (move-end-of-line 1))
-      (t (move-to-column (or goal-column col))
-         (when (= most-positive-fixnum temporary-goal-column)
-           (setq temporary-goal-column 0))))))
+     (if evil-start-of-line
+         (evil-first-non-blank)
+       (line-move-to-column (truncate (or goal-column temporary-goal-column))))))
 
 (defun evil-narrow (beg end)
   "Restrict the buffer to BEG and END.

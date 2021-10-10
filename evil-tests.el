@@ -3178,7 +3178,7 @@ Below some empty line"
       (should-error (execute-kbd-macro "j"))
       (should-error (execute-kbd-macro "42j")))))
 
-(ert-deftest evil-test-preserve-column ()
+(ert-deftest evil-test-next+previous-preserve-column ()
   "Test `evil-previous-line' and `evil-next-line' preserve the column."
   :tags '(evil motion)
   (ert-info ("Simple")
@@ -3202,6 +3202,43 @@ Below some empty line"
       "ab[c]\nabcdef\n\nabcd\n"
       ("jjjkk")
       "abc\nab[c]def\n\nabcd\n")))
+
+(ert-deftest evil-test-other-commands-preserve-column ()
+  "Test other comamnds preserve the column, when appropriate."
+  :tags '(evil motion)
+  (ert-info ("evil-goto-line can preserve column")
+    (let ((evil-start-of-line nil))
+      (evil-test-buffer
+        "Shor[t] line
+Average line
+The longest line"
+        ("2G")
+        "Short line
+Aver[a]ge line
+The longest line"
+        ("$G")
+        "Short line
+Average line
+The longest lin[e]"
+        ("hgg")
+        "Short lin[e]
+Average line
+The longest line")))
+
+  (ert-info ("N% (`evil-jump-item' with count) can preserve column")
+    (let ((evil-start-of-line nil))
+      (evil-test-buffer
+        "Short line
+Average line
+The lo[n]gest line"
+        ("5%")
+        "Short [l]ine
+Average line
+The longest line"
+        ("$90%")
+        "Short line
+Average line
+The longest lin[e]"))))
 
 (ert-deftest evil-test-beginning-of-line ()
   "Test `evil-beginning-of-line' motion"
