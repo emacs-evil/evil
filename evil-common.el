@@ -986,17 +986,46 @@ See also `evil-save-goal-column'."
        ,@body
        (move-to-column col))))
 
+(defun evil--stick-to-eol-p ()
+  "Called by vertical movement commands to help determine cursor position."
+  (let ((goal-col (or goal-column
+                      (if (consp temporary-goal-column)
+                          (car temporary-goal-column)
+                        temporary-goal-column))))
+    (and evil-track-eol
+         (= most-positive-fixnum goal-col)
+         (eq last-command 'next-line))))
+
+(defun evil-eolp ()
+  "Like `eolp' but accounts for `evil-move-beyond-eol' being nil."
+  (ignore-errors
+    (save-excursion
+      (unless (or evil-move-beyond-eol (memq evil-state '(insert replace)))
+        (forward-char))
+      (eolp))))
+
 (defmacro evil-ensure-column (&rest body)
-  "Ensures appropriate column after exeution of BODY.
-Appropriate column is determined by `evil-start-of-line'."
+  "Execute BODY as if it is a `next-line' command, insofar as it tracks column.
+This mostly copies the approach of Emacs' `line-move-1', but is modified
+so it is more compatible with evil's notions of eol & tracking."
   (declare (indent defun)
            (debug t))
-  `(let ((col (current-column)))
-     (evil-save-goal-column
-       ,@body
-       (if evil-start-of-line
-           (evil-first-non-blank)
-         (move-to-column col)))))
+  `(progn
+     (setq this-command 'next-line)
+     (if (consp temporary-goal-column)
+         (setq temporary-goal-column (+ (car temporary-goal-column)
+                                        (cdr temporary-goal-column))))
+     (if (not (memq last-command '(next-line previous-line)))
+         (setq temporary-goal-column
+               (if (and evil-track-eol
+                        (evil-eolp)
+                        (memq real-last-command '(move-end-of-line evil-end-of-line)))
+                   most-positive-fixnum
+                 (current-column))))
+     ,@body
+     (if evil-start-of-line
+         (evil-first-non-blank)
+       (line-move-to-column (truncate (or goal-column temporary-goal-column))))))
 
 (defun evil-narrow (beg end)
   "Restrict the buffer to BEG and END.
@@ -1371,7 +1400,7 @@ If STATE is given it used a parsing state at point."
                       (point)))))))
 (put 'evil-comment 'bounds-of-thing-at-point #'bounds-of-evil-comment-at-point)
 
-;; The purpose of this function is the provide line motions which
+;; The purpose of this function is to provide line motions which
 ;; preserve the column. This is how `previous-line' and `next-line'
 ;; work, but unfortunately the behaviour is hard-coded: if and only if
 ;; the last command was `previous-line' or `next-line', the column is

@@ -1033,8 +1033,9 @@ If the scroll count is zero the command scrolls half the screen."
   :keep-visual t
   (interactive "<c>")
   (evil-ensure-column
-    (setq count (or count (max 0 evil-scroll-count)))
-    (setq evil-scroll-count count)
+    (setq count (or count (max 0 evil-scroll-count))
+          evil-scroll-count count
+          this-command 'next-line)
     (when (= (point-min) (line-beginning-position))
       (signal 'beginning-of-buffer nil))
     (when (zerop count)
@@ -1058,8 +1059,9 @@ If the scroll count is zero the command scrolls half the screen."
   :keep-visual t
   (interactive "<c>")
   (evil-ensure-column
-    (setq count (or count (max 0 evil-scroll-count)))
-    (setq evil-scroll-count count)
+    (setq count (or count (max 0 evil-scroll-count))
+          evil-scroll-count count
+          this-command 'next-line)
     (when (eobp) (signal 'end-of-buffer nil))
     (when (zerop count)
       (setq count (/ (window-body-height) 2)))
@@ -1942,9 +1944,6 @@ See also `evil-shift-left'."
   (let ((beg (set-marker (make-marker) beg))
         (end (set-marker (make-marker) end))
         (col-for-insert (current-column))
-        (goal-col (if (consp temporary-goal-column)
-                      (car temporary-goal-column)
-                    temporary-goal-column))
         first-shift) ; shift of first line
     (save-excursion
       (goto-char beg)
@@ -1981,9 +1980,8 @@ See also `evil-shift-left'."
     (cond
      ((evil-insert-state-p) (move-to-column (max 0 (+ col-for-insert first-shift))))
      (evil-start-of-line (evil-first-non-blank))
-     (t (move-to-column (if (and evil-track-eol (= goal-col most-positive-fixnum))
-                            goal-col
-                          evil-operator-start-col))))
+     ((evil--stick-to-eol-p) (move-end-of-line 1))
+     (t (move-to-column (or goal-column evil-operator-start-col))))
     (setq temporary-goal-column 0)))
 
 (evil-define-command evil-shift-right-line (count)
