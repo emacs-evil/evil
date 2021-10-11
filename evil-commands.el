@@ -298,7 +298,7 @@ of the current screen line."
   :type line
   (evil-ensure-column
     (if (null count)
-        (with-no-warnings (end-of-buffer))
+        (goto-char (point-max))
       (goto-char (point-min))
       (forward-line (1- count)))))
 
