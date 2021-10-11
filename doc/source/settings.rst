@@ -120,6 +120,8 @@ of them can be tweaked using the following variables.
 
 .. elisp:autovariable:: evil-track-eol
 
+.. elisp:autovariable:: evil-start-of-line
+
 
 Cursor display
 --------------
