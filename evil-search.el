@@ -60,7 +60,8 @@ search module is used."
 (defcustom evil-search-module 'isearch
   "The search module to be used.  May be either `isearch', for
 Emacs' isearch module, or `evil-search', for Evil's own
-interactive search module."
+interactive search module.  N.b. changing this will not affect keybindings.
+To swap out relevant keybindings, see `evil-select-search-module' function."
   :type '(radio (const :tag "Emacs built-in isearch." :value isearch)
                 (const :tag "Evil interactive search." :value evil-search))
   :group 'evil
