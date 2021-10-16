@@ -1010,22 +1010,25 @@ This mostly copies the approach of Emacs' `line-move-1', but is modified
 so it is more compatible with evil's notions of eol & tracking."
   (declare (indent defun)
            (debug t))
-  `(progn
-     (setq this-command 'next-line)
-     (if (consp temporary-goal-column)
-         (setq temporary-goal-column (+ (car temporary-goal-column)
-                                        (cdr temporary-goal-column))))
-     (if (not (memq last-command '(next-line previous-line)))
-         (setq temporary-goal-column
-               (if (and evil-track-eol
-                        (evil-eolp)
-                        (memq real-last-command '(move-end-of-line evil-end-of-line)))
-                   most-positive-fixnum
-                 (current-column))))
-     ,@body
-     (if evil-start-of-line
-         (evil-first-non-blank)
-       (line-move-to-column (truncate (or goal-column temporary-goal-column))))))
+  (let ((normalize-temporary-goal-column
+         `(if (consp temporary-goal-column)
+              (setq temporary-goal-column (+ (car temporary-goal-column)
+                                             (cdr temporary-goal-column))))))
+    `(progn
+       (setq this-command 'next-line)
+       ,normalize-temporary-goal-column
+       (if (not (memq last-command '(next-line previous-line)))
+           (setq temporary-goal-column
+                 (if (and evil-track-eol
+                          (evil-eolp)
+                          (memq real-last-command '(move-end-of-line evil-end-of-line)))
+                     most-positive-fixnum
+                   (current-column))))
+       ,@body
+       (if evil-start-of-line
+           (evil-first-non-blank)
+         ,normalize-temporary-goal-column
+         (line-move-to-column (truncate (or goal-column temporary-goal-column)))))))
 
 (defun evil-narrow (beg end)
   "Restrict the buffer to BEG and END.
