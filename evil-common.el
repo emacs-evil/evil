@@ -555,7 +555,7 @@ Both COUNT and CMD may be nil."
                                    (list (car cmd) (* (or count 1)
                                                       (or (cadr cmd) 1))))))))
                ((or (eq cmd #'digit-argument)
-                    (and (eq cmd 'evil-digit-argument-or-evil-beginning-of-line)
+                    (and (memq cmd evil-digit-bound-motions)
                          count))
                 (let* ((event (aref seq (- (length seq) 1)))
                        (char (or (when (characterp event) event)
@@ -723,8 +723,7 @@ recursively."
            ((functionp cmd)
             (if (or (memq cmd '(digit-argument negative-argument))
                     (and found-prefix
-                         (evil-get-command-property
-                          cmd :digit-argument-redirection)))
+                         (memq cmd evil-digit-bound-motions)))
                 ;; skip those commands
                 (setq found-prefix t ; found at least one prefix argument
                       beg end
@@ -741,31 +740,6 @@ recursively."
            (t ; append a further event
             (setq end (1+ end))))))
       (user-error "Key sequence contains no complete binding"))))
-
-(defmacro evil-redirect-digit-argument (map keys target)
-  "Bind a wrapper function calling TARGET or `digit-argument'.
-MAP is a keymap for binding KEYS to the wrapper for TARGET.
-The wrapper only calls `digit-argument' if a prefix-argument
-has already been started; otherwise TARGET is called."
-  (let* ((target (eval target))
-         (wrapper (intern (format "evil-digit-argument-or-%s"
-                                  target))))
-    `(progn
-       (define-key ,map ,keys ',wrapper)
-       (evil-define-command ,wrapper ()
-         :digit-argument-redirection ,target
-         :keep-visual t
-         :repeat nil
-         (interactive)
-         (cond
-          (current-prefix-arg
-           (setq this-command #'digit-argument)
-           (call-interactively #'digit-argument))
-          (t
-           (let ((target (or (command-remapping #',target)
-                             #',target)))
-             (setq this-command target)
-             (call-interactively target))))))))
 
 (defun evil-extract-append (file-or-append)
   "Return an (APPEND . FILENAME) pair based on FILE-OR-APPEND.

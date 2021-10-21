@@ -611,6 +611,15 @@ in insert state."
   :type  'boolean
   :group 'evil)
 
+(defcustom evil-digit-bound-motions
+  '(evil-beginning-of-line)
+  "The motion commands that can be bound to some digit key (typically 0).
+While Evil is reading a motion command, functions in this list act as themselves
+if their corresponding key was the first digit in the key sequence, and behave
+like `digit-argument' for the purposes of `evil-keypress-parser' otherwise."
+  :type '(repeat function)
+  :group 'evil)
+
 (defvar dabbrev-search-these-buffers-only)
 (defvar dabbrev-case-distinction)
 (defcustom evil-complete-next-func

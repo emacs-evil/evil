@@ -1605,7 +1605,7 @@ New Tex[t]
     (ert-info ("Treat 0 as a motion")
       (should (equal
                (evil-keypress-parser '(?0))
-               '(evil-digit-argument-or-evil-beginning-of-line nil))))
+               '(evil-beginning-of-line nil))))
     (ert-info ("Handle keyboard macros")
       (evil-test-buffer
         (define-key evil-motion-state-local-map (kbd "W") (kbd "w"))
@@ -8633,12 +8633,12 @@ Source
 
     (ert-info ("Exact \"0\" count")
       (should (equal (evil-extract-count "0")
-                     (list nil 'evil-digit-argument-or-evil-beginning-of-line
+                     (list nil 'evil-beginning-of-line
                            "0" nil))))
 
     (ert-info ("Extra elements and \"0\"")
       (should (equal (evil-extract-count "0XY")
-                     (list nil 'evil-digit-argument-or-evil-beginning-of-line
+                     (list nil 'evil-beginning-of-line
                            "0" "XY"))))
 
     (ert-info ("Count only")
