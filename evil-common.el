@@ -555,7 +555,7 @@ Both COUNT and CMD may be nil."
                                    (list (car cmd) (* (or count 1)
                                                       (or (cadr cmd) 1))))))))
                ((or (eq cmd #'digit-argument)
-                    (and (memq cmd evil-digit-bound-motions)
+                    (and (equal seq "0")
                          count))
                 (let* ((event (aref seq (- (length seq) 1)))
                        (char (or (when (characterp event) event)
@@ -723,7 +723,8 @@ recursively."
            ((functionp cmd)
             (if (or (memq cmd '(digit-argument negative-argument))
                     (and found-prefix
-                         (memq cmd evil-digit-bound-motions)))
+                         (or (equal (substring keys beg end) "0")
+                             (equal (substring keys beg end) [48]))))
                 ;; skip those commands
                 (setq found-prefix t ; found at least one prefix argument
                       beg end
