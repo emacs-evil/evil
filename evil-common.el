@@ -710,10 +710,11 @@ recursively."
            (end 1)
            (found-prefix nil))
       (while (and (<= end len))
-        (let ((cmd (key-binding (substring keys beg end))))
+        (let* ((seq (substring keys beg end))
+               (cmd (key-binding seq)))
           (cond
            ((memq cmd '(undefined nil))
-            (user-error "No command bound to %s" (substring keys beg end)))
+            (user-error "No command bound to %s" seq))
            ((arrayp cmd) ; keyboard macro, replace command with macro
             (setq keys (vconcat (substring keys 0 beg)
                                 cmd
@@ -723,8 +724,7 @@ recursively."
            ((functionp cmd)
             (if (or (memq cmd '(digit-argument negative-argument))
                     (and found-prefix
-                         (or (equal (substring keys beg end) "0")
-                             (equal (substring keys beg end) [48]))))
+                         (equal (vconcat seq) [48])))
                 ;; skip those commands
                 (setq found-prefix t ; found at least one prefix argument
                       beg end
@@ -735,7 +735,7 @@ recursively."
                              (string-to-number
                               (concat (substring keys 0 beg))))
                            cmd
-                           (substring keys beg end)
+                           seq
                            (when (< end len)
                              (substring keys end))))))
            (t ; append a further event
