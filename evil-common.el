@@ -724,7 +724,7 @@ recursively."
            ((functionp cmd)
             (if (or (memq cmd '(digit-argument negative-argument))
                     (and found-prefix
-                         (equal (vconcat seq) [48])))
+                         (equal (vconcat seq) (vector ?0))))
                 ;; skip those commands
                 (setq found-prefix t ; found at least one prefix argument
                       beg end
