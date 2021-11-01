@@ -7806,6 +7806,89 @@ maybe we need one line more with some text\n"
         ("c/charlie" [return] "replacement " [escape] "4w.")
         "alpha replacement charlie delta golf replacement[ ]charlie india"))))
 
+(ert-deftest evil-test-ex-search-next+previous-match ()
+  :tags '(evil ex search)
+  (evil-without-display
+    (evil-select-search-module 'evil-search-module 'evil-search)
+    (ert-info ("evil-next-match in normal state")
+      (evil-test-buffer
+        "[b]ravo charlie delta charlie alpha charlie bravo"
+        ("/charlie" [return] "e")
+        "bravo charli[e] delta charlie alpha charlie bravo"
+        ("gn")
+        "bravo <charli[e]> delta charlie alpha charlie bravo"
+        ([escape] "b")
+        "bravo [c]harlie delta charlie alpha charlie bravo"
+        ("gn")
+        "bravo <charli[e]> delta charlie alpha charlie bravo"
+        ([escape] "w")
+        "bravo charlie [d]elta charlie alpha charlie bravo"
+        ("gn")
+        "bravo charlie delta <charli[e]> alpha charlie bravo"
+        ([escape] "^")
+        "[b]ravo charlie delta charlie alpha charlie bravo"
+        ("3gn")
+        "bravo charlie delta charlie alpha <charli[e]> bravo"))
+    (ert-info ("evil-previous-match in normal state")
+      (evil-test-buffer
+        "[b]ravo charlie delta charlie alpha charlie bravo"
+        ("/charlie" [return] "e")
+        "bravo charli[e] delta charlie alpha charlie bravo"
+        ("$gN")
+        "bravo charlie delta charlie alpha <[c]harlie> bravo"
+        ([escape] "gN")
+        "bravo charlie delta charlie alpha <[c]harlie> bravo"
+        ([escape] "e" "2gN")
+        "bravo charlie delta <[c]harlie> alpha charlie bravo"))
+    (ert-info ("evil-next-match in visual state")
+      (evil-test-buffer
+        "[b]ravo charlie delta charlie alpha charlie bravo"
+        ("/charlie" [return] "e")
+        "bravo charli[e] delta charlie alpha charlie bravo"
+        ("gn")
+        "bravo <charli[e]> delta charlie alpha charlie bravo"
+        ("gn")
+        "bravo <charlie delta charli[e]> alpha charlie bravo"
+        ("o")
+        "bravo <[c]harlie delta charlie> alpha charlie bravo"
+        ("gn")
+        "bravo charli<[e] delta charlie> alpha charlie bravo"
+        ([escape] "^v2gn")
+        "<bravo charlie delta charli[e]> alpha charlie bravo"))
+    (ert-info ("evil-previous-match in visual state")
+      (evil-test-buffer
+        "bravo charlie delta charlie alpha charlie brav[o]"
+        ("?charlie" [return])
+        "bravo charlie delta charlie alpha [c]harlie bravo"
+        ("gN")
+        "bravo charlie delta charlie alpha <[c]harlie> bravo"
+        ("gN")
+        "bravo charlie delta <[c]harlie alpha charlie> bravo"
+        ("o")
+        "bravo charlie delta <charlie alpha charli[e]> bravo"
+        ("gN")
+        "bravo charlie delta <charlie alpha [c]>harlie bravo"
+        ([escape] "$v2gN")
+        "bravo charlie delta <[c]harlie alpha charlie bravo>"))
+    (ert-info ("evil-match in operator state")
+      (evil-test-buffer
+        "[b]ravo charlie delta charlie alpha charlie bravo"
+        ("/charlie" [return])
+        "bravo [c]harlie delta charlie alpha charlie bravo"
+        ("cgn" "foo" [escape])
+        "bravo fo[o] delta charlie alpha charlie bravo"
+        (".")
+        "bravo foo delta fo[o] alpha charlie bravo"
+        ("$cgN" "bar" [escape])
+        "bravo foo delta foo alpha ba[r] bravo"))
+    (ert-info ("Unfound evil ex next match doesn't move cursor")
+      (evil-test-buffer
+       "[a]lpha bravo"
+       (should-error (execute-kbd-macro "/zulu"))
+       "[a]lpha bravo"
+       (should-error (execute-kbd-macro "gn"))
+       "[a]lpha bravo"))))
+
 (ert-deftest evil-test-isearch-word ()
   "Test isearch for word under point."
   :tags '(evil isearch)

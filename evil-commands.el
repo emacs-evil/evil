@@ -1383,39 +1383,57 @@ or line COUNT to the top of the window."
   :extend-selection nil
   (evil-select-xml-tag beg end type count))
 
+(defun evil-match (direction count)
+  "Find COUNTth next match in DIRECTION."
+  (unless (and (boundp 'evil-search-module)
+               (eq evil-search-module 'evil-search))
+    (user-error "Match text objects only work with Evil search module"))
+  (let ((pnt (point))
+        (count (abs count)) ;; Undo effect of evil-visual-direction
+        (evil-ex-search-direction 'backward)
+        (visual-state (evil-visual-state-p))
+        on-start-match in-match on-end-match)
+    (save-excursion
+      (unless (eobp) (forward-char)) ;; If on start of a match, stay there
+      (evil-ex-search 1)
+      (setq on-start-match (= evil-ex-search-match-beg pnt)
+            in-match (<= evil-ex-search-match-beg pnt (1- evil-ex-search-match-end))
+            on-end-match (= (1- evil-ex-search-match-end) pnt)
+            evil-ex-search-direction direction)
+      (cond
+       ((and visual-state on-start-match (eq 'backward direction))
+        (evil-ex-search count))
+       ((and visual-state on-end-match (eq 'forward direction))
+        (evil-ex-search count))
+       ((or in-match (eq 'backward direction))
+        (evil-ex-search (1- count)))
+       (t (evil-ex-search count)))
+      (setq pnt (point)))
+    (goto-char pnt)
+    (cond
+     ((evil-normal-state-p)
+      (evil-visual-select evil-ex-search-match-beg
+                          evil-ex-search-match-end
+                          'inclusive
+                          (cl-case direction ('forward +1) ('backward -1))
+                          t)
+      (list evil-ex-search-match-beg evil-ex-search-match-end))
+     ((and visual-state (eq 'forward direction))
+      (goto-char (1- evil-ex-search-match-end)))
+     ((and visual-state (eq 'backward direction))
+      (goto-char evil-ex-search-match-beg))
+     ;; e.g. operator pending...
+     (t (list evil-ex-search-match-beg evil-ex-search-match-end)))))
+
 (evil-define-text-object evil-next-match (count &optional beg end type)
   "Select next match."
-  (unless (and (boundp 'evil-search-module)
-               (eq evil-search-module 'evil-search))
-    (user-error "next-match text objects only work with Evil search module."))
-  (let ((pnt (point)))
-    (cond
-     ((eq evil-ex-search-direction 'forward)
-      (unless (eobp) (forward-char))
-      (evil-ex-search-previous 1)
-      (when (and (<= evil-ex-search-match-beg pnt)
-                 (> evil-ex-search-match-end pnt)
-                 (not (evil-visual-state-p)))
-        (setq count (1- count)))
-      (if (> count 0) (evil-ex-search-next count)))
-     (t
-      (unless (eobp) (forward-char))
-      (evil-ex-search-next count))))
-  ;; active visual state if command is executed in normal state
-  (when (evil-normal-state-p)
-    (evil-visual-select evil-ex-search-match-beg evil-ex-search-match-end 'inclusive +1 t))
-  (list evil-ex-search-match-beg evil-ex-search-match-end))
+  :extend-selection t
+  (evil-match 'forward count))
 
 (evil-define-text-object evil-previous-match (count &optional beg end type)
-  "Select next match."
-  (unless (and (boundp 'evil-search-module)
-               (eq evil-search-module 'evil-search))
-    (user-error "previous-match text objects only work with Evil search module."))
-  (let ((evil-ex-search-direction
-         (if (eq evil-ex-search-direction 'backward)
-             'forward
-           'backward)))
-    (evil-next-match count beg end type)))
+  "Select previous match."
+  :extend-selection t
+  (evil-match 'backward count))
 
 ;;; Operator commands
 
