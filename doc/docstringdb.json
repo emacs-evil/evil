@@ -17052,5 +17052,16 @@
     "functionp": true,
     "macrop": null,
     "keymap-inv": null
+  },
+  "evil-visual-update-x-selection-p": {
+    "default": "t",
+    "local": false,
+    "default-type": "symbol",
+    "var-docstring": "Whether to update the X PRIMARY selection with the current visual region automatically.",
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
+    "macrop": null,
+    "keymap-inv": null
   }
 }

@@ -364,16 +364,17 @@ otherwise exit Visual state."
 (put 'evil-visual-post-command 'permanent-local-hook t)
 
 (defun evil-visual-update-x-selection (&optional buffer)
-  "Update the X selection with the current visual region."
-  (let ((buf (or buffer (current-buffer))))
-    (when (buffer-live-p buf)
-      (with-current-buffer buf
-        (when (and (evil-visual-state-p)
-                   (display-selections-p)
-                   (not (eq evil-visual-selection 'block)))
-          (evil-set-selection 'PRIMARY (buffer-substring-no-properties
-                                        evil-visual-beginning
-                                        evil-visual-end)))))))
+  "Update the X selection with the current visual region of BUFFER."
+  (when evil-visual-update-x-selection-p
+    (let ((buf (or buffer (current-buffer))))
+      (when (buffer-live-p buf)
+        (with-current-buffer buf
+          (when (and (evil-visual-state-p)
+                     (display-selections-p)
+                     (not (eq evil-visual-selection 'block)))
+            (evil-set-selection 'PRIMARY (buffer-substring-no-properties
+                                          evil-visual-beginning
+                                          evil-visual-end))))))))
 
 (defun evil-visual-activate-hook (&optional _command)
   "Enable Visual state if the region is activated."
