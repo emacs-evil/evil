@@ -385,10 +385,10 @@
     ("\C-r" . evil-paste-from-register)
     ("\C-y" . evil-copy-from-above)
     ("\C-e" . evil-copy-from-below)
-    ("\C-n" . evil-complete-next)
-    ("\C-p" . evil-complete-previous)
-    ("\C-x\C-n" . evil-complete-next-line)
-    ("\C-x\C-p" . evil-complete-previous-line)
+    ("\C-n" . evil-complete-next)              ;; Completion commands
+    ("\C-p" . evil-complete-previous)          ;; don't yet behave correctly
+    ("\C-x\C-n" . evil-complete-next-line)     ;; in replace state
+    ("\C-x\C-p" . evil-complete-previous-line) ;; TODO - fix this
     ("\C-t" . evil-shift-right-line)
     ("\C-d" . evil-shift-left-line)
     ("\C-a" . evil-paste-last-insertion)
@@ -400,9 +400,9 @@
     ,@(when evil-want-C-u-delete
         '(("\C-u" . evil-delete-back-to-indentation)))
     ([mouse-2] . mouse-yank-primary))
-  "Evil's bindings for insert state (for
-`evil-insert-state-map'), excluding <delete>, <escape>, and
-`evil-toggle-key'.")
+  "Evil's bindings for insert & replace states.
+Used in `evil-insert-state-map' and `evil-replace-state-map',
+excluding <delete>, <escape>, and `evil-toggle-key'.")
 
 (defun evil-update-insert-state-bindings (&optional _option-name remove force)
   "Update bindings in `evil-insert-state-map'.
@@ -440,6 +440,8 @@ included in `evil-insert-state-bindings' by default."
 (define-key evil-replace-state-map (kbd "DEL") 'evil-replace-backspace)
 (define-key evil-replace-state-map [escape] 'evil-normal-state)
 (define-key evil-replace-state-map [insert] 'evil-append)
+(dolist (binding evil-insert-state-bindings)
+  (define-key evil-replace-state-map (car binding) (cdr binding)))
 
 ;;; Emacs state
 
