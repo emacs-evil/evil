@@ -987,6 +987,34 @@ This buffer is for notes")))
     ("^")
     "xxxline 1\nline 2\nyyyline 3\n[x]xxline 4"))
 
+(ert-deftest evil-test-quoted-insert ()
+  "Test evil-quoted-insert in replace state."
+  (ert-info ("Simple replace C-v")
+    (evil-test-buffer
+      "ab[c]defg"
+      ("R\C-vx")
+      "abx[d]efg"))
+  (ert-info ("Control char replace C-v")
+    (evil-test-buffer
+      "ab[c]defg"
+      ("R\C-v\C-g")
+      "ab[d]efg"))
+  (ert-info ("C-v with count")
+    (evil-test-buffer
+      "ab[c]defg"
+      ("R\C-u3\C-vx")
+      "abxxx[f]g"))
+  (ert-info ("C-v with count near eol")
+    (evil-test-buffer
+      "abcde[f]g"
+      ("R\C-u3\C-vx")
+      "abcdexxx[]"))
+  (ert-info ("C-v in replace can be backspaced")
+    (evil-test-buffer
+      "ab[c]defg"
+      ("R\C-u3\C-vx" [backspace])
+      "abxx[e]fg")))
+
 (ert-deftest evil-test-repeat-quoted-insert ()
   "Test whether `quoted-insert' can be repeated."
   (ert-info ("Insert C-v")

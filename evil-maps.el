@@ -379,7 +379,8 @@
 
 (defvar evil-insert-state-bindings
   `(([insert] . evil-replace-state)
-    ("\C-v" . quoted-insert)
+    ("\C-q" . evil-quoted-insert)
+    ("\C-v" . evil-quoted-insert)
     ("\C-k" . evil-insert-digraph)
     ("\C-o" . evil-execute-in-normal-state)
     ("\C-r" . evil-paste-from-register)

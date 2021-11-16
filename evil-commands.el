@@ -2573,6 +2573,32 @@ switch to insert state."
   (unless (evil-visual-state-p)
     (evil-insert count)))
 
+(defun evil-quoted-insert (count)
+  "Like `quoted-insert' but delete COUNT chars forward in replace state.
+Adds a `^' overlay as an input prompt."
+  (interactive "p")
+  (let* ((cnt (or count 1))
+         (pnt (point))
+         (chars-to-delete (min (- (point-at-eol) pnt) cnt))
+         (insert-prompt (make-overlay pnt (+ chars-to-delete pnt))))
+    (unwind-protect
+        (progn
+          (when (evil-replace-state-p)
+            (dotimes (c cnt)
+              (let ((pos (+ c pnt)))
+                (add-to-list 'evil-replace-alist
+                             (cons pos (when (< c chars-to-delete)
+                                         (char-after pos))))))
+            (overlay-put insert-prompt 'invisible t))
+          ;; The nature of the insert cursor means it has to be after
+          ;; the prompt rather than before (unlike vim).
+          (overlay-put insert-prompt
+                       'before-string (propertize "^" 'face 'escape-glyph))
+          (let (overwrite-mode) ;; Force `read-quoted-char'
+            (quoted-insert cnt))
+          (when (evil-replace-state-p) (delete-char chars-to-delete)))
+      (delete-overlay insert-prompt))))
+
 (defun evil-open-above (count)
   "Insert a new line above point and switch to Insert state.
 The insertion will be repeated COUNT times."
