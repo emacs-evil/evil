@@ -3483,7 +3483,7 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
                  (and (re-search-backward ":\\([0-9]+\\)\\="
                                           (line-beginning-position) t)
                       (string-to-number (match-string 1))))))
-          (with-no-warnings (ffap-other-window fname))
+          (with-no-warnings (find-file-at-point fname))
           (when line
             (goto-char (point-min))
             (forward-line (1- line))))
