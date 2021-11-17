@@ -260,6 +260,7 @@
       (apply command args)))
 
   (advice-add 'elisp--preceding-sexp :around 'evil--preceding-sexp '((name . evil)))
+  (advice-add 'kill-sexp             :around 'evil--preceding-sexp '((name . evil)))
   (advice-add 'pp-last-sexp          :around 'evil--preceding-sexp '((name . evil)))))
 
 ;; Show key
