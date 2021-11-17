@@ -555,7 +555,7 @@ Both COUNT and CMD may be nil."
                                    (list (car cmd) (* (or count 1)
                                                       (or (cadr cmd) 1))))))))
                ((or (eq cmd #'digit-argument)
-                    (and (memq cmd evil-digit-bound-motions)
+                    (and (equal seq "0")
                          count))
                 (let* ((event (aref seq (- (length seq) 1)))
                        (char (or (when (characterp event) event)
@@ -710,10 +710,11 @@ recursively."
            (end 1)
            (found-prefix nil))
       (while (and (<= end len))
-        (let ((cmd (key-binding (substring keys beg end))))
+        (let* ((seq (substring keys beg end))
+               (cmd (key-binding seq)))
           (cond
            ((memq cmd '(undefined nil))
-            (user-error "No command bound to %s" (substring keys beg end)))
+            (user-error "No command bound to %s" seq))
            ((arrayp cmd) ; keyboard macro, replace command with macro
             (setq keys (vconcat (substring keys 0 beg)
                                 cmd
@@ -723,7 +724,7 @@ recursively."
            ((functionp cmd)
             (if (or (memq cmd '(digit-argument negative-argument))
                     (and found-prefix
-                         (memq cmd evil-digit-bound-motions)))
+                         (equal (vconcat seq) (vector ?0))))
                 ;; skip those commands
                 (setq found-prefix t ; found at least one prefix argument
                       beg end
@@ -734,7 +735,7 @@ recursively."
                              (string-to-number
                               (concat (substring keys 0 beg))))
                            cmd
-                           (substring keys beg end)
+                           seq
                            (when (< end len)
                              (substring keys end))))))
            (t ; append a further event

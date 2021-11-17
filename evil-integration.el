@@ -476,7 +476,6 @@ Based on `evil-enclose-ace-jump-for-motion'."
 
 ;; visual-line-mode integration
 (when evil-respect-visual-line-mode
-  (customize-set-variable 'evil-digit-bound-motions '(evil-beginning-of-visual-line))
   (evil-define-minor-mode-key 'motion 'visual-line-mode
     "j" 'evil-next-visual-line
     "gj" 'evil-next-line
