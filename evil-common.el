@@ -30,6 +30,7 @@
 (require 'thingatpt)
 (require 'cl-lib)
 (require 'calc)
+(require 'face-remap)
 
 ;;; Code:
 
