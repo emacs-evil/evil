@@ -51,6 +51,9 @@
 ;;      Xiao Hanyu <xiaohanyu1988 at gmail.com>
 ;;      York Zhao <yzhao at telecor.com>
 
+;; The following line is included for NonGNU ELPA's build script:
+;; Maintainer: Tom Dalziel <tom.dalziel@gmail.com>
+
 ;; Maintainers: The emacs-evil team. <https://github.com/orgs/emacs-evil/people>
 ;;      To get in touch, please use the bug tracker or the
 ;;      mailing list (see below).
