@@ -1989,6 +1989,13 @@ See also `evil-shift-left'."
      (t (move-to-column (or goal-column evil-operator-start-col))))
     (setq temporary-goal-column 0)))
 
+(defun evil-delete-indentation ()
+  "Delete all indentation on current line."
+  (interactive)
+  (save-excursion
+    (evil-beginning-of-line)
+    (delete-region (point) (progn (skip-chars-forward " \t") (point)))))
+
 (evil-define-command evil-shift-right-line (count)
   "Shift the current line COUNT times to the right.
 The text is shifted to the nearest multiple of
@@ -2003,7 +2010,11 @@ The text is shifted to the nearest multiple of
 `evil-shift-width'. Like `evil-shift-left' but always works on
 the current line."
   (interactive "<c>")
-  (evil-shift-left (line-beginning-position) (line-beginning-position 2) count t))
+  (if (and (eq 'self-insert-command last-command)
+           (eq ?0 (char-before)))
+      (progn (backward-delete-char 1)
+             (evil-delete-indentation))
+    (evil-shift-left (line-beginning-position) (line-beginning-position 2) count t)))
 
 (evil-define-operator evil-align-left (beg end type &optional width)
   "Right-align lines in the region at WIDTH columns.
