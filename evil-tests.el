@@ -2357,7 +2357,12 @@ Below some empty line")))
         ("i\C-t\C-t")
         "line 1\n        l[i]ne 2\nline 3\n"
         ("\C-d")
-        "line 1\n    l[i]ne 2\nline 3\n"))))
+        "line 1\n    l[i]ne 2\nline 3\n"))
+    (ert-info ("Delete all indentation in insert state")
+      (evil-test-buffer
+        "line1\n      sometext[ ]"
+        ("a" "somemore" "0\C-d")
+        "line1\nsometext somemore[]"))))
 
 ;;; Paste
 
