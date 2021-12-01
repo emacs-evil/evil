@@ -765,7 +765,17 @@ de[f]
     (let ((evil-digraphs-table-user '(((?a ?o) . ?å))))
       (evil-test-buffer
         ("i\C-kao")
-        "å[]"))))
+        "å[]")))
+  (ert-info ("Digraph in replace state")
+    (evil-test-buffer
+      "ab[c]defgh"
+      ("R\C-kc,")
+      "abç[d]efgh")
+    (ert-info ("with count")
+      (evil-test-buffer
+      "abc[d]efgh"
+      ("R\C-u3\C-kd*")
+      "abcδδδ[g]h"))))
 
 ;;; Repeat system
 
@@ -5438,6 +5448,15 @@ This buffer is for notes."
         ("FT")
         ";; [T]his buffer is for notes,
 ;; and for Lisp evaluation."))))
+
+(ert-deftest evil-test-find-digraph-char ()
+  "Test evil-read-digraph-char while finding char."
+  :tags '(evil motion)
+  (ert-info ("Find digraph char")
+    (evil-test-buffer
+      "a[b]cde∀g"
+      ("f\C-kFA")
+      "abcde[∀]g")))
 
 (ert-deftest evil-test-find-char-to ()
   "Test `evil-find-char-to'"
