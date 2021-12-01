@@ -27,6 +27,7 @@
 (require 'evil-common)
 (require 'evil-digraphs)
 (require 'evil-search)
+(require 'evil-states)
 (require 'evil-ex)
 (require 'evil-types)
 (require 'evil-command-window)
@@ -2577,27 +2578,24 @@ switch to insert state."
   "Like `quoted-insert' but delete COUNT chars forward in replace state.
 Adds a `^' overlay as an input prompt."
   (interactive "p")
-  (let* ((cnt (or count 1))
-         (pnt (point))
-         (chars-to-delete (min (- (point-at-eol) pnt) cnt))
-         (insert-prompt (make-overlay pnt (+ chars-to-delete pnt))))
+  (let* ((opoint (point))
+         chars-to-delete insert-prompt)
     (unwind-protect
         (progn
-          (when (evil-replace-state-p)
-            (dotimes (c cnt)
-              (let ((pos (+ c pnt)))
-                (add-to-list 'evil-replace-alist
-                             (cons pos (when (< c chars-to-delete)
-                                         (char-after pos))))))
-            (overlay-put insert-prompt 'invisible t))
-          ;; The nature of the insert cursor means it has to be after
-          ;; the prompt rather than before (unlike vim).
-          (overlay-put insert-prompt
-                       'before-string (propertize "^" 'face 'escape-glyph))
+          (if (evil-replace-state-p)
+              (progn
+                (setq chars-to-delete (min (- (point-at-eol) opoint) count)
+                      insert-prompt (make-overlay opoint (+ chars-to-delete opoint)))
+                (evil-update-replace-alist opoint count chars-to-delete))
+            (setq insert-prompt (make-overlay opoint opoint)))
+          (overlay-put insert-prompt 'invisible t)
+          (overlay-put insert-prompt 'after-string (propertize "^"
+                                                               'face 'escape-glyph
+                                                               'cursor 1))
           (let (overwrite-mode) ;; Force `read-quoted-char'
-            (quoted-insert cnt))
+            (quoted-insert count))
           (when (evil-replace-state-p) (delete-char chars-to-delete)))
-      (delete-overlay insert-prompt))))
+      (when insert-prompt (delete-overlay insert-prompt)))))
 
 (defun evil-open-above (count)
   "Insert a new line above point and switch to Insert state.
@@ -2699,8 +2697,16 @@ next VCOUNT - 1 lines below the current one."
   "Insert COUNT digraphs."
   :repeat change
   (interactive "p")
-  (let ((digraph (evil-read-digraph-char 0)))
-    (insert-char digraph count)))
+  (let ((opoint (point))
+        chars-to-delete insert-prompt)
+    (if (evil-replace-state-p)
+        (progn
+          (setq chars-to-delete (min (- (point-at-eol) opoint) count)
+                insert-prompt (make-overlay opoint (+ chars-to-delete opoint)))
+          (evil-update-replace-alist opoint count chars-to-delete))
+      (setq insert-prompt (make-overlay opoint opoint)))
+    (insert-char (evil-read-digraph-char-with-overlay insert-prompt) count)
+    (when chars-to-delete (delete-char chars-to-delete))))
 
 (evil-define-command evil-ex-show-digraphs ()
   "Shows a list of all available digraphs."

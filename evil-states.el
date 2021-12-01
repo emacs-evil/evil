@@ -905,6 +905,16 @@ CORNER defaults to `upper-left'."
         (when char
           (insert char))))))
 
+(defun evil-update-replace-alist (opoint count chars-to-delete)
+  "Add CHARS-TO-DELETE chars to evil-replace-alist, starting at OPOINT.
+If COUNT is greater than CHARS-TO-DELETE, pad the alist with nils."
+  (when (evil-replace-state-p)
+    (dotimes (c count)
+      (let ((pos (+ c opoint)))
+        (add-to-list 'evil-replace-alist
+                     (cons pos (when (< c chars-to-delete)
+                                 (char-after pos))))))))
+
 ;;; Motion state
 
 (evil-define-state motion
