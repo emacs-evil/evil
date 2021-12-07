@@ -2358,7 +2358,10 @@ when called interactively."
    (t
     (condition-case err
         (evil-with-single-undo
-          (execute-kbd-macro macro count))
+          (dotimes (_ (or count 1))
+            (execute-kbd-macro macro)
+            (when (eq 'evil-execute-in-normal-state last-command)
+              (evil-change-state evil--execute-normal-return-state))))
       ;; enter Normal state if the macro fails
       (error
        (evil-normal-state)
