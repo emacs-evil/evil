@@ -2343,30 +2343,32 @@ when called interactively."
        (setq macro (evil-get-register register t)
              evil-last-register register)))
      (list count macro)))
-  (cond
-   ((functionp macro)
-    (evil-repeat-abort)
-    (dotimes (_ (or count 1))
-      (funcall macro)))
-   ((or (and (not (stringp macro))
-             (not (vectorp macro)))
-        (member macro '("" [])))
-    ;; allow references to currently empty registers
-    ;; when defining macro
-    (unless evil-this-macro
-      (user-error "No previous macro")))
-   (t
-    (condition-case err
-        (evil-with-single-undo
-          (dotimes (_ (or count 1))
-            (execute-kbd-macro macro)
-            (when (eq 'evil-execute-in-normal-state last-command)
-              (evil-change-state evil--execute-normal-return-state))))
-      ;; enter Normal state if the macro fails
-      (error
-       (evil-normal-state)
-       (evil-normalize-keymaps)
-       (signal (car err) (cdr err)))))))
+  (let ((last-insertion-temp evil-last-insertion))
+    (cond
+     ((functionp macro)
+      (evil-repeat-abort)
+      (dotimes (_ (or count 1))
+        (funcall macro)))
+     ((or (and (not (stringp macro))
+               (not (vectorp macro)))
+          (member macro '("" [])))
+      ;; allow references to currently empty registers
+      ;; when defining macro
+      (unless evil-this-macro
+        (user-error "No previous macro")))
+     (t
+      (condition-case err
+          (evil-with-single-undo
+            (dotimes (_ (or count 1))
+              (execute-kbd-macro macro)
+              (when (eq 'evil-execute-in-normal-state last-command)
+                (evil-change-state evil--execute-normal-return-state)))
+            (setq evil-last-insertion last-insertion-temp))
+        ;; enter Normal state if the macro fails
+        (error
+         (evil-normal-state)
+         (evil-normalize-keymaps)
+         (signal (car err) (cdr err))))))))
 
 ;;; Visual commands
 
@@ -4722,7 +4724,10 @@ Restore the disabled repeat hooks on insert-state exit."
                       (not (memq this-command '(evil-insert
                                                 evil-goto-mark))))
              (forward-char))
-           (unless (eq 'replace evil-state)
+           (when (eq 'evil-paste-from-register this-command)
+             (evil-move-cursor-back t))
+           (unless (or (memq evil-state '(replace insert))
+                       (eq 'evil-normal-state this-command))
              (evil-change-state ',evil-state))
            (when (eq 'insert evil-state)
              (remove-hook 'pre-command-hook 'evil-repeat-pre-hook)

@@ -362,7 +362,13 @@ with `M-x evil-tests-run'"))
         "[f]oo __ bar __ baz __ qux"
         (evil-set-register ?q "f_cehi\C-o")
         ("@q1" [escape] "@q2")
-        "foo hi1 bar hi2[] baz __ qux"))))
+        "foo hi1 bar hi2[] baz __ qux")
+      (ert-info ("Paste last insertion works after returning")
+        (evil-test-buffer
+        "[f]oo __ bar __ baz __ qux"
+        (evil-set-register ?q "f_ce\C-o")
+        ("@qhi" [escape] "@q\C-r.")
+        "foo hi bar hi[] baz __ qux")))))
 
 (defun evil-test-suppress-keymap (state)
   "Verify that `self-insert-command' is suppressed in STATE"
