@@ -356,19 +356,7 @@ with `M-x evil-tests-run'"))
         :state insert
         "ab[]cfg"
         ("\C-o~de\C-o.")
-        "abCdeF[]g"))
-    (ert-info ("Returned to initial state when finishing a macro")
-      (evil-test-buffer
-        "[f]oo __ bar __ baz __ qux"
-        (evil-set-register ?q "f_cehi\C-o")
-        ("@q1" [escape] "@q2")
-        "foo hi1 bar hi2[] baz __ qux")
-      (ert-info ("Paste last insertion works after returning")
-        (evil-test-buffer
-        "[f]oo __ bar __ baz __ qux"
-        (evil-set-register ?q "f_ce\C-o")
-        ("@qhi" [escape] "@q\C-r.")
-        "foo hi bar hi[] baz __ qux")))))
+        "abCdeF[]g"))))
 
 (defun evil-test-suppress-keymap (state)
   "Verify that `self-insert-command' is suppressed in STATE"
