@@ -2251,10 +2251,8 @@ The return value is the yanked text."
            (overlay-put overlay 'after-string string)
            (list (or evil-this-register (read-char))))
        (delete-overlay overlay))))
-  (when (evil-paste-before nil register t)
-    ;; go to end of pasted text
-    (unless (eobp)
-      (forward-char))))
+  (let (evil-move-cursor-back)
+    (evil-paste-before nil register t)))
 
 (defun evil-paste-last-insertion ()
   "Paste last insertion."
@@ -2262,7 +2260,7 @@ The return value is the yanked text."
   (evil-paste-from-register ?.))
 
 (defun evil-paste-last-insertion-and-stop-insert ()
-  "Past last insertion and change to normal state."
+  "Paste last insertion and change to normal state."
   (interactive)
   (evil-paste-last-insertion)
   (evil-normal-state))
@@ -2277,6 +2275,18 @@ The return value is the yanked text."
 (defvar evil-macro-buffer nil
   "The buffer that has been active on macro recording.")
 
+(defun evil-end-and-return-macro ()
+  "Like `end-kbd-macro' but also return the macro.
+Remove \\<evil-insert-state-map>\\[evil-execute-in-normal-state] from the end."
+  (end-kbd-macro)
+  (let ((end-keys-seq (append evil-execute-normal-keys nil))
+        (last-kbd-macro-seq (append last-kbd-macro nil)))
+    (unless last-kbd-macro-seq
+      (setq last-kbd-macro nil))
+    (if (and end-keys-seq last-kbd-macro-seq)
+        (apply #'vector (butlast last-kbd-macro-seq (length end-keys-seq)))
+      last-kbd-macro)))
+
 (evil-define-command evil-record-macro (register)
   "Record a keyboard macro into REGISTER.
 If REGISTER is :, /, or ?, the corresponding command line window
@@ -2286,34 +2296,33 @@ will be opened instead."
   (interactive
    (list (unless (and evil-this-macro defining-kbd-macro)
            (or evil-this-register (evil-read-key)))))
-  (cond
-   ((eq register ?\C-g)
-    (keyboard-quit))
-   ((and evil-this-macro defining-kbd-macro)
-    (setq evil-macro-buffer nil)
-    (condition-case nil
-        (end-kbd-macro)
-      (error nil))
-    (when last-kbd-macro
-      (when (member last-kbd-macro '("" []))
-        (setq last-kbd-macro nil))
-      (evil-set-register evil-this-macro last-kbd-macro))
-    (setq evil-this-macro nil))
-   ((eq register ?:)
-    (evil-command-window-ex))
-   ((eq register ?/)
-    (evil-command-window-search-forward))
-   ((eq register ??)
-    (evil-command-window-search-backward))
-   ((or (and (>= register ?0) (<= register ?9))
-        (and (>= register ?a) (<= register ?z))
-        (and (>= register ?A) (<= register ?Z)))
-    (when defining-kbd-macro (end-kbd-macro))
-    (setq evil-this-macro register)
-    (evil-set-register evil-this-macro nil)
-    (start-kbd-macro nil)
-    (setq evil-macro-buffer (current-buffer)))
-   (t (error "Invalid register"))))
+  (let (last-macro)
+    (cond
+     ((eq register ?\C-g)
+      (keyboard-quit))
+     ((and evil-this-macro defining-kbd-macro)
+      (setq evil-macro-buffer nil)
+      (condition-case nil
+          (setq last-macro (evil-end-and-return-macro))
+        (error nil))
+      (when last-macro
+        (evil-set-register evil-this-macro last-macro))
+      (setq evil-this-macro nil))
+     ((eq register ?:)
+      (evil-command-window-ex))
+     ((eq register ?/)
+      (evil-command-window-search-forward))
+     ((eq register ??)
+      (evil-command-window-search-backward))
+     ((or (<= ?0 register ?9)
+          (<= ?a register ?z)
+          (<= ?A register ?Z))
+      (when defining-kbd-macro (end-kbd-macro))
+      (setq evil-this-macro register)
+      (evil-set-register evil-this-macro nil)
+      (start-kbd-macro nil)
+      (setq evil-macro-buffer (current-buffer)))
+     (t (error "Invalid register")))))
 
 (evil-define-command evil-execute-macro (count macro)
   "Execute keyboard macro MACRO, COUNT times.
@@ -2343,32 +2352,28 @@ when called interactively."
        (setq macro (evil-get-register register t)
              evil-last-register register)))
      (list count macro)))
-  (let ((last-insertion-temp evil-last-insertion))
-    (cond
-     ((functionp macro)
-      (evil-repeat-abort)
-      (dotimes (_ (or count 1))
-        (funcall macro)))
-     ((or (and (not (stringp macro))
-               (not (vectorp macro)))
-          (member macro '("" [])))
-      ;; allow references to currently empty registers
-      ;; when defining macro
-      (unless evil-this-macro
-        (user-error "No previous macro")))
-     (t
-      (condition-case err
-          (evil-with-single-undo
-            (dotimes (_ (or count 1))
-              (execute-kbd-macro macro)
-              (when (eq 'evil-execute-in-normal-state last-command)
-                (evil-change-state evil--execute-normal-return-state)))
-            (setq evil-last-insertion last-insertion-temp))
-        ;; enter Normal state if the macro fails
-        (error
-         (evil-normal-state)
-         (evil-normalize-keymaps)
-         (signal (car err) (cdr err))))))))
+  (cond
+   ((functionp macro)
+    (evil-repeat-abort)
+    (dotimes (_ (or count 1))
+      (funcall macro)))
+   ((or (and (not (stringp macro))
+             (not (vectorp macro)))
+        (member macro '("" [])))
+    ;; allow references to currently empty registers
+    ;; when defining macro
+    (unless evil-this-macro
+      (user-error "No previous macro")))
+   (t
+    (condition-case err
+        (evil-with-single-undo
+          (dotimes (_ (or count 1))
+            (execute-kbd-macro macro)))
+      ;; enter Normal state if the macro fails
+      (error
+       (evil-normal-state)
+       (evil-normalize-keymaps)
+       (signal (car err) (cdr err)))))))
 
 ;;; Visual commands
 
@@ -4688,6 +4693,11 @@ if the previous state was Emacs state."
       (when (evil-emacs-state-p)
         (evil-normal-state (and message 1))))))
 
+(defvar evil-execute-normal-keys nil
+  "The keys used to invoke the current `evil-execute-in-normal-state'.
+Can be used to detect if we are currently in that quasi-state.
+With current bindings, it will be \\<evil-insert-state-map>\\[evil-execute-in-normal-state]")
+
 (evil-define-local-var evil--execute-normal-eol-pos nil
   "Vim has special behaviour for executing in normal state at eol.
 This var stores the eol position, so it can be restored when necessary.")
@@ -4724,22 +4734,21 @@ Restore the disabled repeat hooks on insert-state exit."
                       (not (memq this-command '(evil-insert
                                                 evil-goto-mark))))
              (forward-char))
-           (when (eq 'evil-paste-from-register this-command)
-             (evil-move-cursor-back t))
-           (unless (or (memq evil-state '(replace insert))
-                       (eq 'evil-normal-state this-command))
+           (unless (memq evil-state '(replace insert))
              (evil-change-state ',evil-state))
            (when (eq 'insert evil-state)
              (remove-hook 'pre-command-hook 'evil-repeat-pre-hook)
              (remove-hook 'post-command-hook 'evil-repeat-post-hook)
              (add-hook 'evil-insert-state-exit-hook 'evil--restore-repeat-hooks))
            (setq evil-move-cursor-back ',evil-move-cursor-back
-                 evil-move-beyond-eol ',evil-move-beyond-eol)))
+                 evil-move-beyond-eol ',evil-move-beyond-eol
+                 evil-execute-normal-keys nil)))
     'post-command-hook)
   (setq evil-insert-count nil
         evil--execute-normal-return-state evil-state
         evil--execute-normal-eol-pos (when (eolp) (point))
-        evil-move-cursor-back nil)
+        evil-move-cursor-back nil
+        evil-execute-normal-keys (this-command-keys))
   (evil-normal-state)
   (setq evil-move-beyond-eol t)
   (evil-echo "Switched to Normal state for the next command ..."))
