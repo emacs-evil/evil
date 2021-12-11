@@ -221,7 +221,8 @@ Otherwise behaves like `delete-backward-char'."
 
 (defun evil-ex-abort ()
   "Cancel ex state when another buffer is selected."
-  (unless (minibufferp)
+  (unless (or (minibufferp)
+              (memq this-command '(mouse-drag-region choose-completion)))
     (abort-recursive-edit)))
 
 (defun evil-ex-command-window-execute (config result)
