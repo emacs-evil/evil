@@ -2018,7 +2018,7 @@ the current line."
     (evil-shift-left (line-beginning-position) (line-beginning-position 2) count t)))
 
 (evil-define-operator evil-align-left (beg end type &optional width)
-  "Right-align lines in the region at WIDTH columns.
+  "Left-align lines in the region at WIDTH columns.
 The default for width is the value of `fill-column'."
   :motion evil-line
   :type line
@@ -2242,18 +2242,26 @@ The return value is the yanked text."
 (defun evil-paste-from-register (register)
   "Paste from REGISTER."
   (interactive
-   (let ((overlay (make-overlay (point) (point)))
-         (string "\""))
+   (let* ((opoint (point))
+          (overlay (make-overlay opoint (+ opoint (if (evil-replace-state-p) 1 0)))))
      (unwind-protect
          (progn
-           ;; display " in the buffer while reading register
-           (put-text-property 0 1 'face 'minibuffer-prompt string)
-           (put-text-property 0 1 'cursor t string)
-           (overlay-put overlay 'after-string string)
+           (overlay-put overlay 'invisible t)
+           (overlay-put overlay 'after-string (propertize "\""
+                                                          'face 'minibuffer-prompt
+                                                          'cursor 1))
            (list (or evil-this-register (read-char))))
        (delete-overlay overlay))))
-  (let (evil-move-cursor-back)
-    (evil-paste-before nil register t)))
+  (let ((opoint (point))
+        (evil-move-cursor-back nil)
+        reg-length chars-to-delete)
+    (evil-paste-before nil register t)
+    (when (evil-replace-state-p)
+      (setq reg-length (- (point) opoint)
+            chars-to-delete (min (- (point-at-eol) (point)) reg-length))
+      ;; TODO: handle multi-line paste backspacing
+      (evil-update-replace-alist (point) reg-length chars-to-delete chars-to-delete)
+      (delete-char chars-to-delete))))
 
 (defun evil-paste-last-insertion ()
   "Paste last insertion."

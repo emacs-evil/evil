@@ -438,11 +438,11 @@ included in `evil-insert-state-bindings' by default."
 
 ;;; Replace state
 
+(dolist (binding evil-insert-state-bindings)
+  (define-key evil-replace-state-map (car binding) (cdr binding)))
 (define-key evil-replace-state-map (kbd "DEL") 'evil-replace-backspace)
 (define-key evil-replace-state-map [escape] 'evil-normal-state)
 (define-key evil-replace-state-map [insert] 'evil-append)
-(dolist (binding evil-insert-state-bindings)
-  (define-key evil-replace-state-map (car binding) (cdr binding)))
 
 ;;; Emacs state
 
