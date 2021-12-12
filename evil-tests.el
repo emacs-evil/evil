@@ -2987,7 +2987,14 @@ word3[]"))
     (evil-test-buffer
       "[a]lpha beta"
       ("\"ayiw" "w" "\"bciw" "\C-ra")
-      "alpha alpha[]")))
+      "alpha alpha[]"))
+  (ert-info ("Paste from register in replace state")
+    (evil-test-buffer
+      "[a]lpha bravo charlie"
+      ("yiw" "w" "R" "\C-r0")
+      "alpha alpha[ ]charlie"
+      ([backspace] [backspace] [backspace])
+      "alpha al[a]vo charlie")))
 
 (ert-deftest evil-test-last-insert-register ()
   "Test last insertion register."
