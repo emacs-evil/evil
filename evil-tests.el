@@ -2079,24 +2079,36 @@ ine3 line3      line3 l\n")))
       "line1\n\n[\n]last line\n")))
 
 (ert-deftest evil-test-delete-backward-word ()
-  "Test `evil-delete-backward-word' in insert state."
+  "Test `evil-delete-backward-word' in insert & replace states."
   :tags '(evil)
-  (let ((evil-backspace-join-lines t))
+  (ert-info ("evil-delete-backward-word in insert state")
+    (let ((evil-backspace-join-lines t))
+      (evil-test-buffer
+        "abc def\n   ghi j[k]l\n"
+        ("i" (kbd "C-w"))
+        "abc def\n   ghi [k]l\n"
+        ((kbd "C-w"))
+        "abc def\n   [k]l\n"
+        ((kbd "C-w"))
+        "abc def\n[k]l\n"
+        ((kbd "C-w"))
+        "abc def[k]l\n"))
+    (let (evil-backspace-join-lines)
+      (evil-test-buffer
+        "abc def\n[k]l\n"
+        (should-error (execute-kbd-macro (concat "i" (kbd "C-w"))))
+        "abc def\n[k]l\n")))
+  (ert-info ("evil-delete-backward-word in replace state")
     (evil-test-buffer
-      "abc def\n   ghi j[k]l\n"
-      ("i" (kbd "C-w"))
-      "abc def\n   ghi [k]l\n"
-      ((kbd "C-w"))
-      "abc def\n   [k]l\n"
-      ((kbd "C-w"))
-      "abc def\n[k]l\n"
-      ((kbd "C-w"))
-      "abc def[k]l\n"))
-  (let (evil-backspace-join-lines)
-    (evil-test-buffer
-      "abc def\n[k]l\n"
-      (should-error (execute-kbd-macro (concat "i" (kbd "C-w"))))
-      "abc def\n[k]l\n")))
+      "alpha bravo [c]harlie delta"
+      ("R" "one two")
+      "alpha bravo one two[ ]delta"
+      ("\C-w")
+      "alpha bravo one [l]ie delta"
+      ("\C-w")
+      "alpha bravo [c]harlie delta"
+      ("\C-w")
+      "alpha [b]ravo charlie delta")))
 
 (ert-deftest evil-test-delete-back-to-indentation ()
   "Test `evil-delete-back-to-indentation' in insert state."

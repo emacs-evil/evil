@@ -1578,16 +1578,15 @@ be joined with the previous line if and only if
 
 (evil-define-command evil-delete-backward-word ()
   "Delete previous word."
-  (if (and (bolp) (not (bobp)))
-      (progn
-        (unless evil-backspace-join-lines (user-error "Beginning of line"))
-        (delete-char -1))
-    (delete-region (max
-                    (save-excursion
-                      (evil-backward-word-begin)
-                      (point))
-                    (line-beginning-position))
-                   (point))))
+  (let ((beg (save-excursion (evil-backward-word-begin) (point)))
+        (end (point)))
+    (cond
+     ((evil-replace-state-p) (while (< beg (point))
+                               (evil-replace-backspace)))
+     ((or (not (bolp)) (bobp)) (delete-region (max beg (line-beginning-position))
+                                              end))
+     (evil-backspace-join-lines (delete-char -1))
+     (t (user-error "Beginning of line")))))
 
 (evil-define-command evil-delete-back-to-indentation ()
   "Delete back to the first non-whitespace character.
