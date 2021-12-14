@@ -2278,7 +2278,7 @@ The return value is the yanked text."
 (defun evil-end-and-return-macro ()
   "Like `end-kbd-macro' but also return the macro.
 Remove \\<evil-insert-state-map>\\[evil-execute-in-normal-state] from the end."
-  (end-kbd-macro)
+  (kmacro-end-macro nil)
   (let ((end-keys-seq (append evil-execute-normal-keys nil))
         (last-kbd-macro-seq (append last-kbd-macro nil)))
     (unless last-kbd-macro-seq
@@ -2320,7 +2320,7 @@ will be opened instead."
       (when defining-kbd-macro (end-kbd-macro))
       (setq evil-this-macro register)
       (evil-set-register evil-this-macro nil)
-      (start-kbd-macro nil)
+      (kmacro-start-macro nil)
       (setq evil-macro-buffer (current-buffer)))
      (t (error "Invalid register")))))
 
