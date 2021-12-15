@@ -1594,14 +1594,17 @@ If point is before the first non-whitespace character of a
 current line then delete from the point to the beginning of the
 current line.  If point is on the beginning of the line, behave
 according to `evil-backspace-join-lines'."
-  (if (bolp)
-      (evil-delete-backward-char-and-join 1)
-    (delete-region (if (<= (current-column) (current-indentation))
-                       (line-beginning-position)
-                     (save-excursion
-                       (evil-first-non-blank)
-                       (point)))
-                   (point))))
+  (let ((beg (if (<= (current-column) (current-indentation))
+                 (line-beginning-position)
+               (save-excursion
+                 (evil-first-non-blank)
+                 (point)))))
+    (cond
+     ((and (bolp) (evil-replace-state-p)) (evil-replace-backspace))
+     ((bolp) (evil-delete-backward-char-and-join 1))
+     ((evil-replace-state-p) (while (< beg (point))
+                               (evil-replace-backspace)))
+     (t (delete-region beg (point))))))
 
 (defun evil-ex-delete-or-yank (should-delete beg end type register count yank-handler)
   "Execute evil-delete or evil-yank on the given region.

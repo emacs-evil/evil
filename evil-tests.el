@@ -2111,7 +2111,7 @@ ine3 line3      line3 l\n")))
       "alpha [b]ravo charlie delta")))
 
 (ert-deftest evil-test-delete-back-to-indentation ()
-  "Test `evil-delete-back-to-indentation' in insert state."
+  "Test `evil-delete-back-to-indentation' in insert & replace states."
   :tags '(evil)
   (let ((evil-backspace-join-lines t))
     (evil-test-buffer
@@ -2131,7 +2131,14 @@ ine3 line3      line3 l\n")))
        (progn
          (execute-kbd-macro "i")
          (call-interactively #'evil-delete-back-to-indentation)))
-      "abc def\n[k]l\n")))
+      "abc def\n[k]l\n"))
+  (ert-info ("Delete back to indentation in replace state")
+    (evil-test-buffer
+      "    alpha [b]ravo charlie"
+      ("R" "delta")
+      "    alpha delta[ ]charlie"
+      (evil-delete-back-to-indentation)
+      "    [a]lpha bravo charlie")))
 
 (ert-deftest evil-test-change ()
   "Test `evil-change'"
