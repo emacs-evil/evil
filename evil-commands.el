@@ -1942,7 +1942,7 @@ The text is shifted to the nearest multiple of `evil-shift-width'
 \(the rounding can be disabled by setting `evil-shift-round').
 If PRESERVE-EMPTY is non-nil, lines that contain only spaces are
 indented, too, otherwise they are ignored.  Location of point
-is preserved relative to text when called from insert state.
+is preserved relative to text when called from insert or replace states.
 Otherwise, it is determined by `evil-start-of-line' and/or `evil-track-eol'.
 See also `evil-shift-left'."
   :type line
@@ -1986,7 +1986,8 @@ See also `evil-shift-left'."
     ;; When called from insert state (C-t or C-d) the cursor should shift with the line,
     ;; otherwise (normal state) its position is determined by `evil-start-of-line'.
     (cond
-     ((evil-insert-state-p) (move-to-column (max 0 (+ col-for-insert first-shift))))
+     ((or (evil-insert-state-p) (evil-replace-state-p))
+      (move-to-column (max 0 (+ col-for-insert first-shift))))
      (evil-start-of-line (evil-first-non-blank))
      ((evil--stick-to-eol-p) (move-end-of-line 1))
      (t (move-to-column (or goal-column evil-operator-start-col))))
