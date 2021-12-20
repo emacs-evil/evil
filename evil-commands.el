@@ -2276,7 +2276,7 @@ The return value is the yanked text."
   "The buffer that has been active on macro recording.")
 
 (defun evil-end-and-return-macro ()
-  "Like `end-kbd-macro' but also return the macro.
+  "Like `kmacro-end-macro' but also return the macro.
 Remove \\<evil-insert-state-map>\\[evil-execute-in-normal-state] from the end."
   (kmacro-end-macro nil)
   (let ((end-keys-seq (append evil-execute-normal-keys nil))
