@@ -67,13 +67,14 @@
     (range
      ("%" #'(evil-ex-full-range))
      ("*" #'(evil-ex-last-visual-range))
+     ((alt "," ";") line #'(evil-ex-range (evil-ex-current-line) $2))
      (line ";" line #'(let ((tmp1 $1))
                         (save-excursion
                           (goto-line tmp1)
                           (evil-ex-range tmp1 $3))))
      (line "," line #'(evil-ex-range $1 $3))
      (line #'(evil-ex-range $1 nil))
-     ("`" "[-a-zA-Z_<>']" ",`" "[-a-zA-Z_<>']"
+     ("`" marker-name ",`" marker-name
       #'(evil-ex-char-marker-range $2 $4)))
     (line
      (base (\? offset) search (\? offset)
@@ -98,7 +99,7 @@
     (offset
      (+ signed-number #'+))
     (marker
-     ("'" "[-a-zA-Z_<>']" #'(evil-ex-marker $2)))
+     ("'" marker-name #'(evil-ex-marker $2)))
     (search
      forward
      backward
@@ -115,6 +116,8 @@
       #'(evil-ex-re-bwd $2))
      ("\\?" "\\(?:[\\].\\|[^?]\\)+" "\\?"
       #'(evil-ex-re-bwd $2)))
+    (marker-name
+     "[]\\[-a-zA-Z_<>']")
     (next
      "\\\\/" #'(evil-ex-prev-search))
     (prev

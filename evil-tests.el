@@ -7192,6 +7192,8 @@ if no previous selection")
                    (evil-ex-line (evil-ex-marker "x") nil))))
   (should (equal (evil-ex-parse "`x,`y" nil 'range)
                  '(evil-ex-char-marker-range "x" "y")))
+  (should (equal (evil-ex-parse "`[,`]" nil 'range)
+                 '(evil-ex-char-marker-range "[" "]")))
   (should (equal (evil-ex-parse "5,+" nil 'range)
                  '(evil-ex-range
                    (evil-ex-line (string-to-number "5") nil)
@@ -7244,6 +7246,26 @@ if no previous selection")
                     (evil-ex-last-line)
                     (+ (evil-ex-signed-number
                         (intern "-") (string-to-number "10")))))))
+  (should (equal (evil-ex-parse "'[,']" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-line
+                    (evil-ex-marker "[")
+                    nil)
+                   (evil-ex-line
+                    (evil-ex-marker "]")
+                    nil))))
+  (should (equal (evil-ex-parse ",']" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-current-line)
+                   (evil-ex-line
+                    (evil-ex-marker "]")
+                    nil))))
+  (should (equal (evil-ex-parse ";']" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-current-line)
+                   (evil-ex-line
+                    (evil-ex-marker "]")
+                    nil))))
   (should (equal (evil-ex-parse ".+42" nil 'range)
                  '(evil-ex-range
                    (evil-ex-line
