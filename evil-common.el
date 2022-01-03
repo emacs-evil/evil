@@ -985,7 +985,8 @@ See also `evil-save-goal-column'."
       (eolp))))
 
 (defmacro evil-ensure-column (&rest body)
-  "Execute BODY as if it is a `next-line' command, insofar as it tracks column.
+  "Execute BODY so that column after execution is correct.
+If `evil-start-of-line' is nil, treat BODY as if it were a `next-line' command.
 This mostly copies the approach of Emacs' `line-move-1', but is modified
 so it is more compatible with evil's notions of eol & tracking."
   (declare (indent defun)
@@ -995,7 +996,7 @@ so it is more compatible with evil's notions of eol & tracking."
               (setq temporary-goal-column (+ (car temporary-goal-column)
                                              (cdr temporary-goal-column))))))
     `(progn
-       (setq this-command 'next-line)
+       (unless evil-start-of-line (setq this-command 'next-line))
        ,normalize-temporary-goal-column
        (if (not (memq last-command '(next-line previous-line)))
            (setq temporary-goal-column

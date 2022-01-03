@@ -3294,6 +3294,13 @@ The longest lin[e]"
 Average line
 The longest line")))
 
+  (ert-info ("evil-goto-line respects evil-start-of-line")
+    (let ((evil-start-of-line t))
+      (evil-test-buffer
+        "foo\n[b]ar"
+        ("$ggj")
+        "foo\n[b]ar")))
+
   (ert-info ("N% (`evil-jump-item' with count) can preserve column")
     (let ((evil-start-of-line nil))
       (evil-test-buffer
