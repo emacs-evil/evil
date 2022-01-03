@@ -117,7 +117,7 @@
      ("\\?" "\\(?:[\\].\\|[^?]\\)+" "\\?"
       #'(evil-ex-re-bwd $2)))
     (marker-name
-     "[]\\[-a-zA-Z_<>']")
+     "[]\\[-a-zA-Z_<>'}{]")
     (next
      "\\\\/" #'(evil-ex-prev-search))
     (prev

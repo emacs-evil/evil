@@ -7261,6 +7261,14 @@ if no previous selection")
                    (evil-ex-line
                     (evil-ex-marker "]")
                     nil))))
+  (should (equal (evil-ex-parse "'{,'}" nil 'range)
+                 '(evil-ex-range
+                   (evil-ex-line
+                    (evil-ex-marker "{")
+                    nil)
+                   (evil-ex-line
+                    (evil-ex-marker "}")
+                    nil))))
   (should (equal (evil-ex-parse ",']" nil 'range)
                  '(evil-ex-range
                    (evil-ex-current-line)
