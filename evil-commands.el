@@ -235,6 +235,15 @@ move COUNT - 1 screen lines downward first."
                        -1
                        (/ (with-no-warnings (window-body-width)) 2)))))
 
+(evil-define-motion evil-percentage-of-line (count)
+  "Move the cursor to COUNT % of the width of the current line.
+If no COUNT is given, default to 50%."
+  :type exclusive
+  (let ((line-length (- (line-end-position)
+                        (line-beginning-position)
+                        (if evil-move-beyond-eol -1 0))))
+    (move-to-column (truncate (* line-length (/ (or count 50) 100.0))))))
+
 (evil-define-motion evil-first-non-blank ()
   "Move the cursor to the first non-blank character of the current line."
   :type exclusive

@@ -3346,6 +3346,18 @@ Below some empty line"
 \[]
 Below some empty line")))
 
+(ert-deftest evil-test-percentage-of-line ()
+  "Test `evil-percentage-of-line' motion"
+  :tags '(evil motion)
+  (evil-test-buffer
+    "[0]123456789"
+    ("gM")
+    "01234[5]6789"
+    ("10gM")
+    "0[1]23456789"
+    ("85gM")
+    "01234567[8]9"))
+
 (ert-deftest evil-test-first-non-blank ()
   "Test `evil-first-non-blank' motion"
   :tags '(evil motion)
