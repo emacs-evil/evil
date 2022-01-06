@@ -1654,6 +1654,9 @@ instead of `buffer-undo-list'.")
 (evil-define-local-var evil-visual-point nil
   "The position of point in Visual state, a marker.")
 
+(evil-define-local-var evil-visual-previous-point nil
+  "The position of point before Visual state, a marker.")
+
 (evil-define-local-var evil-visual-mark nil
   "The position of mark in Visual state, a marker.")
 

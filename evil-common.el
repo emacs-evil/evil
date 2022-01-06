@@ -2764,6 +2764,9 @@ is negative this is a more recent kill."
   (unless evil-last-paste
     (user-error "Previous paste command used a register"))
   (evil-undo-pop)
+  (when (eq last-command 'evil-visual-paste)
+    (evil-swap evil-visual-previous-mark evil-visual-mark)
+    (evil-swap evil-visual-previous-point evil-visual-point))
   (goto-char (nth 2 evil-last-paste))
   (setq this-command (nth 0 evil-last-paste))
   ;; use temporary kill-ring, so the paste cannot modify it
