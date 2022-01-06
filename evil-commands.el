@@ -2402,27 +2402,14 @@ when called interactively."
   "Restore previous selection."
   (let* ((point (point))
          (mark (or (mark t) point))
-         (dir evil-visual-direction)
-         (type (evil-visual-type))
-         range)
+         (type (evil-visual-type)))
+    ;; TODO handle swapping selection in visual state...
     (unless (evil-visual-state-p)
       (cond
        ;; No previous selection.
        ((or (null evil-visual-selection)
             (null evil-visual-mark)
             (null evil-visual-point)))
-       ;; If the type was one-to-one, it is preferable to infer
-       ;; point and mark from the selection's boundaries. The reason
-       ;; is that a destructive operation may displace the markers
-       ;; inside the selection.
-       ((evil-type-property type :one-to-one)
-        (setq range (evil-contract-range (evil-visual-range))
-              mark (evil-range-beginning range)
-              point (evil-range-end range))
-        (when (< dir 0)
-          (evil-swap mark point)))
-       ;; If the type wasn't one-to-one, we have to restore the
-       ;; selection on the basis of the previous point and mark.
        (t
         (setq mark evil-visual-mark
               point evil-visual-point)))
