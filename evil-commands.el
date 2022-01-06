@@ -2242,6 +2242,9 @@ The return value is the yanked text."
             (evil-paste-before count register))))
       (when evil-kill-on-visual-paste
         (current-kill -1))
+      ;; Ensure that gv can restore visually pasted area...
+      (setq evil-visual-mark (evil-get-marker ?\[ t)
+            evil-visual-point (evil-get-marker ?\] t))
       ;; mark the last paste as visual-paste
       (setq evil-last-paste
             (list (nth 0 evil-last-paste)
