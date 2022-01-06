@@ -7108,7 +7108,22 @@ if no previous selection")
 ;;[ ]>and for Lisp evaluation."
       ([escape] "gv")
       "<;; This buffer is for notes,
-;;[ ]>and for Lisp evaluation.")))
+;;[ ]>and for Lisp evaluation.")
+    (ert-info ("After paste shifts initially selected text")
+      (evil-test-buffer
+        :visual block
+        "<1\n2\n[3]>"
+        ("yP")
+        "[1]1\n22\n33"
+        ("gvr*")
+        "[*]1\n*2\n*3")))
+  (ert-info ("Restore linewise visually-pasted selection")
+    (evil-test-buffer
+      "[a]lpha bravo\ncharlie delta
+echo foxtrot\ngolf hotel"
+      ("2yy" "++" "Vp" "gv")
+      "alpha bravo\ncharlie delta
+<alpha bravo\ncharlie delta\n>golf hotel")))
 
 ;;; Replace state
 
