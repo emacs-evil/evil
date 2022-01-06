@@ -3546,21 +3546,28 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
 
 (eval-when-compile (require 'ffap))
 (evil-define-command evil-find-file-at-point-with-line ()
-  "Opens the file at point and goes to line-number."
+  "Opens the file at point and goes to position if present."
   (require 'ffap)
   (let ((fname (with-no-warnings (ffap-file-at-point))))
-    (if fname
-        (let ((line
-               (save-excursion
-                 (goto-char (cadr ffap-string-at-point-region))
-                 (and (re-search-backward ":\\([0-9]+\\)\\="
-                                          (line-beginning-position) t)
-                      (string-to-number (match-string 1))))))
-          (with-no-warnings (find-file-at-point fname))
-          (when line
-            (goto-char (point-min))
-            (forward-line (1- line))))
-      (user-error "File does not exist."))))
+    (unless fname
+      (user-error "File does not exist."))
+    (let* ((line-number-pattern ":\\([0-9]+\\)\\=" )
+           (line-and-column-numbers-pattern ":\\([0-9]+\\):\\([0-9]+\\)\\=")
+           (get-number (lambda (pattern match-number)
+                         (save-excursion
+                           (goto-char (cadr ffap-string-at-point-region))
+                           (and (re-search-backward pattern (line-beginning-position) t)
+                                (string-to-number (match-string match-number))))))
+           (line-number (or (funcall get-number line-and-column-numbers-pattern 1)
+                            (funcall get-number line-number-pattern 1)))
+           (column-number (funcall get-number line-and-column-numbers-pattern 2)))
+      (message "line: %s, column: %s" line-number column-number)
+      (with-no-warnings (find-file-at-point fname))
+      (when line-number
+        (goto-char (point-min))
+        (forward-line (1- line-number))
+        (when column-number
+          (move-to-column (1- column-number)))))))
 
 (evil-define-command evil-find-file-at-point-visual ()
   "Find the filename selected by the visual region.
