@@ -1943,6 +1943,11 @@ Otherwise the previous command is assumed as substitute.")
 (define-key evil-ex-search-keymap [escape] 'abort-recursive-edit)
 (set-keymap-parent evil-ex-search-keymap minibuffer-local-map)
 
+(defcustom evil-want-empty-ex-last-command t
+  "Whether to default to evil-ex-previous-command at empty ex prompt."
+  :type 'boolean
+  :group 'evil)
+
 (defconst evil-version
   (eval-when-compile
     (with-temp-buffer

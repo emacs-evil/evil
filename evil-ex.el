@@ -192,18 +192,21 @@ is appended to the line."
              ":"
              (or initial-input
                  (and evil-ex-previous-command
+                      evil-want-empty-ex-last-command
                       (propertize evil-ex-previous-command 'face 'shadow)))
              evil-ex-completion-map
              nil
              'evil-ex-history
-             evil-ex-previous-command
+             (when evil-want-empty-ex-last-command
+               evil-ex-previous-command)
              t)))
     (evil-ex-execute result)))
 
 (defun evil-ex-execute (result)
   "Execute RESULT as an ex command on `evil-ex-current-buffer'."
   ;; empty input means repeating the previous command
-  (when (zerop (length result))
+  (when (and (zerop (length result))
+             evil-want-empty-ex-last-command)
     (setq result evil-ex-previous-command))
   ;; parse data
   (evil-ex-update nil nil nil result)
