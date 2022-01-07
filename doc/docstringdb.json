@@ -2130,7 +2130,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Right-align lines in the region at WIDTH columns.\nThe default for width is the value of `fill-column'.",
+    "fn-docstring": "Left-align lines in the region at WIDTH columns.\nThe default for width is the value of `fill-column'.",
     "arglist": [
       "beg",
       "end",
@@ -2635,6 +2635,17 @@
       "yank-handler"
     ],
     "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-execute-normal-keys": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": "The keys used to invoke the current `evil-execute-in-normal-state'.\nCan be used to detect if we are currently in that quasi-state.\nWith current bindings, it will be \\<evil-insert-state-map>\\[evil-execute-in-normal-state]",
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
     "macrop": null,
     "keymap-inv": null
   },
@@ -3153,9 +3164,27 @@
     "functionp": null,
     "macrop": null,
     "keymap-inv": {
-      "evil-append": "<insert>",
       "evil-normal-state": "<escape>",
-      "evil-replace-backspace": "DEL"
+      "evil-replace-backspace": "DEL",
+      "mouse-yank-primary": "<mouse-2>",
+      "evil-delete-backward-word": "C-w",
+      "evil-delete-backward-char-and-join": "",
+      "evil-paste-last-insertion-and-stop-insert": "C-@",
+      "evil-paste-last-insertion": "C-a",
+      "evil-shift-left-line": "C-d",
+      "evil-shift-right-line": "C-t",
+      "evil-complete-previous-line": "C-x C-p",
+      "evil-complete-next-line": "C-x C-n",
+      "evil-complete-previous": "C-p",
+      "evil-complete-next": "C-n",
+      "evil-copy-from-below": "C-e",
+      "evil-copy-from-above": "C-y",
+      "evil-paste-from-register": "C-r",
+      "evil-execute-in-normal-state": "C-o",
+      "evil-insert-digraph": "C-k",
+      "evil-quoted-insert": "C-v",
+      "evil-quoted-insert": "C-v",
+      "evil-append": "<insert>"
     }
   },
   "evil-change-state": {
@@ -3508,6 +3537,19 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-read-digraph-char-with-overlay": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Read two chars, displaying the first in OVERLAY, replacing `?'.\nReturn the digraph from `evil-digraph', else return second char.",
+    "arglist": [
+      "overlay"
+    ],
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil-next-match": {
     "default": "nil",
     "local": null,
@@ -3845,6 +3887,7 @@
       "evil-end-of-visual-line": "g $",
       "evil-end-of-visual-line": "g $",
       "evil-goto-char": "g o",
+      "evil-percentage-of-line": "g M",
       "evil-middle-of-visual-line": "g m",
       "evil-first-non-blank-of-visual-line": "g ^",
       "evil-first-non-blank-of-visual-line": "g ^",
@@ -4871,6 +4914,19 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-quoted-insert": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Like `quoted-insert' but delete COUNT chars forward in replace state.\nAdds a `^' overlay as an input prompt.",
+    "arglist": [
+      "count"
+    ],
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil-auto-indent": {
     "default": "t",
     "local": true,
@@ -5015,7 +5071,8 @@
       "evil-paste-from-register": "C-r",
       "evil-execute-in-normal-state": "C-o",
       "evil-insert-digraph": "C-k",
-      "quoted-insert": "C-v",
+      "evil-quoted-insert": "C-v",
+      "evil-quoted-insert": "C-v",
       "evil-replace-state": "<insert>",
       "evil-emacs-state": "C-z",
       "evil-normal-state": "<escape>",
@@ -5232,8 +5289,8 @@
       "move-beginning-of-line": "C-b",
       "evil-ex-delete-backward-char": "DEL",
       "abort-recursive-edit": "C-g",
-      "exit-minibuffer": "C-j",
-      "exit-minibuffer": "C-j",
+      "exit-minibuffer": "RET",
+      "exit-minibuffer": "RET",
       "abort-minibuffers": "",
       "file-cache-minibuffer-complete": "C-<tab>",
       "self-insert-command": "TAB",
@@ -5754,6 +5811,17 @@
     "fn-docstring": "Clean isearch overlays unless `this-command' is search.",
     "arglist": null,
     "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-want-empty-ex-last-command": {
+    "default": "t",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": "Whether to default to evil-ex-previous-command at empty ex prompt.",
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
     "macrop": null,
     "keymap-inv": null
   },
@@ -6283,6 +6351,10 @@
       "evil-close-fold": "z c",
       "evil-open-fold-rec": "z O",
       "evil-open-fold": "z o",
+      "evil-find-file-at-point-with-line": "[ F",
+      "find-file-at-point": "[ f",
+      "evil-find-file-at-point-with-line": "[ F",
+      "find-file-at-point": "[ f",
       "goto-last-change-reverse": "g ,",
       "goto-last-change": "g ;",
       "tab-bar-switch-to-prev-tab": "g T",
@@ -6290,8 +6362,8 @@
       "evil-invert-case": "g ~",
       "evil-rot13": "g ?",
       "browse-url-at-point": "g x",
-      "evil-find-file-at-point-with-line": "g F",
-      "find-file-at-point": "g f",
+      "evil-find-file-at-point-with-line": "[ F",
+      "find-file-at-point": "[ f",
       "evil-upcase": "g U",
       "evil-downcase": "g u",
       "evil-fill": "g w",
@@ -6477,7 +6549,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Shift text from BEG to END to the right.\nThe text is shifted to the nearest multiple of `evil-shift-width'\n(the rounding can be disabled by setting `evil-shift-round').\nIf PRESERVE-EMPTY is non-nil, lines that contain only spaces are\nindented, too, otherwise they are ignored.  Location of point\nis preserved relative to text when called from insert state.\nOtherwise, it is determined by `evil-start-of-line' and/or `evil-track-eol'.\nSee also `evil-shift-left'.",
+    "fn-docstring": "Shift text from BEG to END to the right.\nThe text is shifted to the nearest multiple of `evil-shift-width'\n(the rounding can be disabled by setting `evil-shift-round').\nIf PRESERVE-EMPTY is non-nil, lines that contain only spaces are\nindented, too, otherwise they are ignored.  Location of point\nis preserved relative to text when called from insert or replace states.\nOtherwise, it is determined by `evil-start-of-line' and/or `evil-track-eol'.\nSee also `evil-shift-left'.",
     "arglist": [
       "beg",
       "end",
@@ -6722,6 +6794,20 @@
     "arglist": null,
     "functionp": null,
     "macrop": true,
+    "keymap-inv": null
+  },
+  "evil-percentage-of-line": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Move the cursor to COUNT % of the width of the current line.\nIf no COUNT is given, default to 50%.",
+    "arglist": [
+      "&optional",
+      "count"
+    ],
+    "functionp": true,
+    "macrop": null,
     "keymap-inv": null
   },
   "evil-stop-track-last-insertion": {
@@ -9618,7 +9704,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Past last insertion and change to normal state.",
+    "fn-docstring": "Paste last insertion and change to normal state.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -9746,6 +9832,23 @@
     "var-docstring": null,
     "fn-docstring": "Sets `evil-scroll-count' to 0.\n`evil-scroll-up' and `evil-scroll-down' will scroll\nfor a half of the screen(default).",
     "arglist": null,
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-update-replace-alist": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Add CHARS-TO-DELETE chars to evil-replace-alist, starting at OPOINT.\nIf COUNT is greater than CHARS-TO-DELETE, pad the alist with nils.\nDecrement recorded position by optional offset, or 0.",
+    "arglist": [
+      "opoint",
+      "count",
+      "chars-to-delete",
+      "&optional",
+      "offset"
+    ],
     "functionp": true,
     "macrop": null,
     "keymap-inv": null
@@ -11749,7 +11852,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Major mode for the Evil command line window.\n\nThis mode runs the hook `evil-command-window-mode-hook', as the\nfinal or penultimate step during initialization.\n\n\\{evil-command-window-mode-map}",
+    "fn-docstring": "Major mode for the Evil command line window.\n\nThis mode runs the hook `evil-command-window-mode-hook', as the final\nor penultimate step during initialization.\n\n\\{evil-command-window-mode-map}",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -12584,6 +12687,17 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-end-and-return-macro": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Like `kmacro-end-macro' but also return the macro.\nRemove \\<evil-insert-state-map>\\[evil-execute-in-normal-state] from the end.",
+    "arglist": null,
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil--jumps-install-or-uninstall": {
     "default": "nil",
     "local": null,
@@ -13273,7 +13387,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Execute BODY as if it is a `next-line' command, insofar as it tracks column.\nThis mostly copies the approach of Emacs' `line-move-1', but is modified\nso it is more compatible with evil's notions of eol & tracking.",
+    "fn-docstring": "Execute BODY so that column after execution is correct.\nIf `evil-start-of-line' is nil, treat BODY as if it were a `next-line' command.\nThis mostly copies the approach of Emacs' `line-move-1', but is modified\nso it is more compatible with evil's notions of eol & tracking.",
     "arglist": [
       "&rest",
       "body"
@@ -13325,7 +13439,7 @@
     "default": "nil",
     "local": null,
     "default-type": "symbol",
-    "var-docstring": "Evil's bindings for insert state (for\n`evil-insert-state-map'), excluding <delete>, <escape>, and\n`evil-toggle-key'.",
+    "var-docstring": "Evil's bindings for insert & replace states.\nUsed in `evil-insert-state-map' and `evil-replace-state-map',\nexcluding <delete>, <escape>, and `evil-toggle-key'.",
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
@@ -13866,7 +13980,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Read two keys from keyboard forming a digraph.\nThis function creates an overlay at (point), hiding the next\nHIDE-CHARS characters. HIDE-CHARS defaults to 1.",
+    "fn-docstring": "Read two keys from keyboard forming a digraph.\nThis function creates an overlay at (point), hiding the next\nHIDE-CHARS characters.  HIDE-CHARS defaults to 1.",
     "arglist": [
       "&optional",
       "hide-chars"
@@ -14329,6 +14443,17 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-delete-indentation": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Delete all indentation on current line.",
+    "arglist": null,
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil-visual-char": {
     "default": "nil",
     "local": null,
@@ -14641,7 +14766,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Major mode derived from `tabulated-list-mode' by `define-derived-mode'.\nIt inherits all of the parent's attributes, but has its own keymap,\nabbrev table and syntax table:\n\n  `evil-list-view-mode-map', `evil-list-view-mode-abbrev-table' and `evil-list-view-mode-syntax-table'\n\nwhich more-or-less shadow tabulated-list-mode's corresponding tables.\n\nIn addition to any hooks its parent mode might have run, this mode\nruns the hook `evil-list-view-mode-hook', as the final or penultimate\nstep during initialization.\n\n\\{evil-list-view-mode-map}",
+    "fn-docstring": "Major mode derived from `tabulated-list-mode' by `define-derived-mode'.\nIt inherits all of the parent's attributes, but has its own keymap,\nabbrev table and syntax table:\n\n  `evil-list-view-mode-map', `evil-list-view-mode-abbrev-table' and\n`evil-list-view-mode-syntax-table'\n\nwhich more-or-less shadow tabulated-list-mode's corresponding tables.\n\nIn addition to any hooks its parent mode might have run, this mode\nruns the hook `evil-list-view-mode-hook', as the final or penultimate\nstep during initialization.\n\n\\{evil-list-view-mode-map}",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -15099,6 +15224,17 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-visual-previous-point": {
+    "default": "nil",
+    "local": true,
+    "default-type": "symbol",
+    "var-docstring": "The position of point before Visual state, a marker.",
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
@@ -16088,7 +16224,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": "Non-nil if Evil mode is enabled.\nSee the `evil-mode' command\nfor a description of this minor mode.\nSetting this variable directly does not take effect;\neither customize it (see the info node `Easy Customization')\nor call the function `evil-mode'.",
-    "fn-docstring": "This function has :around advice: ‘ad-Advice-evil-mode’.\n\nToggle Evil-Local mode in all buffers.\nWith prefix ARG, enable Evil mode if ARG is positive; otherwise,\ndisable it.  If called from Lisp, enable the mode if ARG is omitted or\nnil.\n\nEvil-Local mode is enabled in all buffers where `evil-initialize'\nwould do it.\n\nSee `evil-local-mode' for more information on Evil-Local mode.\n\n(fn &optional ARG)",
+    "fn-docstring": "Toggle Evil-Local mode in all buffers.\nWith prefix ARG, enable Evil mode if ARG is positive; otherwise,\ndisable it.\n\nIf called from Lisp, toggle the mode if ARG is `toggle'.\nEnable the mode if ARG is nil, omitted, or is a positive number.\nDisable the mode if ARG is a negative number.\n\nEvil-Local mode is enabled in all buffers where `evil-initialize'\nwould do it.\n\nSee `evil-local-mode' for more information on Evil-Local mode.\n\nThis function has :around advice: ‘ad-Advice-evil-mode’.\n\n(fn &optional ARG)",
     "arglist": [
       "&optional",
       "arg"
@@ -16116,7 +16252,7 @@
     "local": true,
     "default-type": "symbol",
     "var-docstring": "Non-nil if Evil-Local mode is enabled.\nUse the command `evil-local-mode' to change this variable.",
-    "fn-docstring": "Minor mode for setting up Evil in a single buffer.\n\nIf called interactively, toggle `Evil-Local mode'.  If the prefix\nargument is positive, enable the mode, and if it is zero or\nnegative, disable the mode.\n\nIf called from Lisp, toggle the mode if ARG is `toggle'.  Enable\nthe mode if ARG is nil, omitted, or is a positive number.\nDisable the mode if ARG is a negative number.\n\nThe mode's hook is called both when the mode is enabled and when\nit is disabled.",
+    "fn-docstring": "Minor mode for setting up Evil in a single buffer.\n\nThis is a minor mode.  If called interactively, toggle the\n`Evil-Local mode' mode.  If the prefix argument is positive,\nenable the mode, and if it is zero or negative, disable the mode.\n\nIf called from Lisp, toggle the mode if ARG is `toggle'.  Enable\nthe mode if ARG is nil, omitted, or is a positive number.\nDisable the mode if ARG is a negative number.\n\nTo check whether the minor mode is enabled in the current buffer,\nevaluate `evil-local-mode'.\n\nThe mode's hook is called both when the mode is enabled and when\nit is disabled.",
     "arglist": [
       "&optional",
       "arg"
