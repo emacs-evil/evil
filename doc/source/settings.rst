@@ -183,6 +183,8 @@ Miscellaneous
 
 .. elisp:autovariable:: evil-complete-all-buffers
 
+.. elisp:autovariable:: evil-want-empty-ex-last-command
+
 
 .. rubric:: Footnotes
 
