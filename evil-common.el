@@ -2172,6 +2172,11 @@ The following special registers are supported.
                 (user-error "Register <C-f> only available in ex state"))
               (with-current-buffer evil-ex-current-buffer
                 (thing-at-point 'filename)))
+             ((eq register ?\C-L)
+              (unless (evil-ex-p)
+                (user-error "Register <C-l> only available in ex state"))
+              (with-current-buffer evil-ex-current-buffer
+                (replace-regexp-in-string "\n\\'" "" (thing-at-point 'line))))
              ((eq register ?%)
               (or (buffer-file-name (and (evil-ex-p)
                                          (minibufferp)
