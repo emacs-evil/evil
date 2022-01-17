@@ -9078,23 +9078,51 @@ Source
 
 (ert-deftest evil-test-find-file ()
   :tags '(evil jumps)
-  (ert-info ("Normal mode find-file-at-point")
+  (ert-info ("Find file at point (normal state)")
     (evil-with-temp-file file-name ""
       (evil-test-buffer
         (vconcat "i" file-name [escape])
         (should (not (equal file-name (buffer-file-name (current-buffer)))))
         ("gf")
         (should (equal file-name (buffer-file-name (current-buffer)))))))
-  (ert-info ("Visual mode evil-find-file-at-point-visual")
+  (ert-info ("Find file at point (visual state)")
     (evil-with-temp-file file-name ""
       (evil-test-buffer
         (vconcat "iuser@localhost:" file-name "$" [escape])
         (should (not (equal file-name (buffer-file-name (current-buffer)))))
         ("0f:lvt$gf")
-        (should (equal file-name (buffer-file-name (current-buffer))))))))
+        (should (equal file-name (buffer-file-name (current-buffer)))))))
+  (ert-info ("Find file at point with line number")
+    (let* ((line-number 3)
+           (file-content (make-string (* 2 line-number) ?\n)))
+      (evil-with-temp-file file-name (insert file-content)
+          (evil-test-buffer
+            (vconcat "i" file-name (format ":%d" line-number) [escape])
+            (should (and (not (equal file-name (buffer-file-name (current-buffer))))
+                         (not (equal line-number (line-number-at-pos)))))
+            ("gF")
+            (should (and (equal file-name (buffer-file-name (current-buffer)))
+                         (equal line-number (line-number-at-pos))))))))
+  (ert-info ("Find file at point with line and column numbers")
+    (let* ((line-number 3)
+           (column-number 5)
+           (file-content (mapconcat 'identity
+                                    (make-list (* 2 line-number)
+                                               (make-string (* 2 column-number) ?\s))
+                                    "\n")))
+      (evil-with-temp-file file-name (insert file-content)
+        (evil-test-buffer
+          (vconcat "i" file-name (format ":%d:%d" line-number column-number) [escape])
+          (should (and (not (equal file-name (buffer-file-name (current-buffer))))
+                       (not (equal line-number (line-number-at-pos)))
+                       (not (equal column-number (current-column)))))
+          ("gF")
+          (should (and (equal file-name (buffer-file-name (current-buffer)))
+                       (equal line-number (line-number-at-pos))
+                       (equal column-number (1+ (current-column))))))))))
 
 (ert-deftest evil-test-jump-buffers ()
-  :tags '(evil jums)
+  :tags '(evil jumps)
   (skip-unless nil)
   (ert-info ("Test jumping backward and forward across buffers")
     (evil-test-buffer
