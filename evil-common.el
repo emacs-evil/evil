@@ -1559,7 +1559,7 @@ last successful match (that caused COUNT to reach zero)."
         (while
             (and (setq match
                        (re-search-forward
-                        "<\\([^/ >\n]+\\)\\(?:[^\"/>]\\|\"[^\"]*\"\\)*?>\\|</\\([^>]+?\\)>"
+                        "<\\([^/ >\n]+\\)\\(?:=>?\\|[^\"/>]\\|\"[^\"]*\"\\)*?>\\|</\\([^>]+?\\)>"
                         nil t dir))
                  (cond
                   ((match-beginning op)

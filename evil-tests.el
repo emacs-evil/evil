@@ -6922,9 +6922,14 @@ test hello <a href=\"/deed.zh\">Creative Commons</a>
 </p>[\n]}</div>
 </body>
 </html>
-"
-
-      )))
+"))
+  (ert-info ("Handle js arrow fns")
+    (evil-test-buffer
+      :visual-start "«"
+      :visual-end "»"
+      "<button foo=\"bar\" onClick={() => fnbody()}>inner [t]ext</button>"
+      ("vit")
+      "<button foo=\"bar\" onClick={() => fnbody()}>«inner tex[t]»</button>")))
 
 ;;; Visual state
 
