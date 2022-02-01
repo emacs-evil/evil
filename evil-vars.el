@@ -1456,8 +1456,8 @@ Using `evil-with-restriction' stores the previous values of
 `point-min' and `point-max' as a pair in this list.")
 
 (evil-define-local-var evil-markers-alist
-  '((?\( . evil-backward-sentence)
-    (?\) . evil-forward-sentence)
+  '((?\( . evil-backward-sentence-begin)
+    (?\) . evil-forward-sentence-begin)
     (?{ . evil-backward-paragraph)
     (?} . evil-forward-paragraph)
     (?' . evil-jump-backward-swap)
