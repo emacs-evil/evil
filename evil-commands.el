@@ -1488,34 +1488,44 @@ or line COUNT to the top of the window."
   "Delete text from BEG to END with TYPE.
 Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (interactive "<R><x><y>")
-  (unless register
-    (let ((text (filter-buffer-substring beg end)))
-      (unless (string-match-p "\n" text)
-        ;; set the small delete register
-        (evil-set-register ?- text))))
-  (let ((evil-was-yanked-without-register nil))
-    (evil-yank beg end type register yank-handler))
-  (cond
-   ((eq type 'block)
-    (evil-apply-on-block #'delete-region beg end nil))
-   ((and (eq type 'line)
-         (= end (point-max))
-         (or (= beg end)
-             (/= (char-before end) ?\n))
-         (/= beg (point-min))
-         (=  (char-before beg) ?\n))
-    (delete-region (1- beg) end))
-   (t
-    (delete-region beg end)))
-  (when (and (called-interactively-p 'any)
-             (eq type 'line))
-    (evil-first-non-blank)
-    (when (and (not evil-start-of-line)
-               evil-operator-start-col
-               ;; Special exceptions to ever saving column:
-               (not (memq evil-this-motion '(evil-forward-word-begin
-                                             evil-forward-WORD-begin))))
-      (move-to-column evil-operator-start-col))))
+  (if (and (memq type '(inclusive exclusive))
+           (not (evil-visual-state-p))
+           (eq 'evil-delete evil-this-operator)
+           (save-excursion (goto-char beg) (bolp))
+           (save-excursion (goto-char end) (eolp))
+           (<= 1 (evil-count-lines beg end)))
+      ;; Imitate Vi strangeness: if motion meets above criteria,
+      ;; delete linewise. Not for change operator or visual state.
+      (let ((new-range (evil-expand beg end 'line)))
+        (evil-delete (nth 0 new-range) (nth 1 new-range) 'line register yank-handler))
+    (unless register
+      (let ((text (filter-buffer-substring beg end)))
+        (unless (string-match-p "\n" text)
+          ;; set the small delete register
+          (evil-set-register ?- text))))
+    (let ((evil-was-yanked-without-register nil))
+      (evil-yank beg end type register yank-handler))
+    (cond
+     ((eq type 'block)
+      (evil-apply-on-block #'delete-region beg end nil))
+     ((and (eq type 'line)
+           (= end (point-max))
+           (or (= beg end)
+               (/= (char-before end) ?\n))
+           (/= beg (point-min))
+           (=  (char-before beg) ?\n))
+      (delete-region (1- beg) end))
+     (t
+      (delete-region beg end)))
+    (when (and (called-interactively-p 'any)
+               (eq type 'line))
+      (evil-first-non-blank)
+      (when (and (not evil-start-of-line)
+                 evil-operator-start-col
+                 ;; Special exceptions to ever saving column:
+                 (not (memq evil-this-motion '(evil-forward-word-begin
+                                               evil-forward-WORD-begin))))
+        (move-to-column evil-operator-start-col)))))
 
 (evil-define-operator evil-delete-line (beg end type register yank-handler)
   "Delete to end of line."

@@ -2025,7 +2025,12 @@ then enter the text in that file's own buffer."))
       "a\n[b]\nc\nd\ne\nf\n"
       (":delete r 3")
       "a\ne\nf\n"
-      (should (string= (substring-no-properties (evil-get-register ?r)) "b\nc\nd\n")))))
+      (should (string= (substring-no-properties (evil-get-register ?r)) "b\nc\nd\n"))))
+  (ert-info ("Charwise multiple whole line delete becomes linewise")
+    (evil-test-buffer
+      "1\n[2]\n3\n4"
+      ("d2w")
+      "1\n[4]")))
 
 (ert-deftest evil-test-delete-line ()
   "Test `evil-delete-line'"
