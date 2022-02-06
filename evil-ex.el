@@ -48,7 +48,10 @@
 ;;; Code:
 
 (defconst evil-ex-grammar
-  '((expression
+  '((expressions
+     expression
+     (expression (\* "||" expressions)))
+    (expression
      (count command argument #'evil-ex-call-command)
      ((\? range) command argument #'evil-ex-call-command)
      (line #'evil-goto-line)
@@ -62,8 +65,7 @@
      "[[:alpha:]-][[:alnum:][:punct:]-]+")
     (bang
      (\? (! space) "!" #'$1))
-    (argument
-     ((\? space) (\? "\\(?:.\\|\n\\)+") #'$2))
+    (argument #'evil-ex-parse-argument)
     (range
      ("%" #'(evil-ex-full-range))
      ("*" #'(evil-ex-last-visual-range))
@@ -847,11 +849,21 @@ NUMBER defaults to 1."
 (defun evil-ex-parse (string &optional syntax start)
   "Parse STRING as an Ex expression and return an evaluation tree.
 If SYNTAX is non-nil, return a syntax tree instead.
-START is the start symbol, which defaults to `expression'."
+START is the start symbol, which defaults to `expressions'."
   (let* ((start (or start (car-safe (car-safe evil-ex-grammar))))
          (match (evil-parser
                  string start evil-ex-grammar t syntax)))
     (car-safe match)))
+
+(defun evil-ex-parse-argument (string)
+  "Parse STRING as Ex argument, stopping at double bar: `||'."
+  (let* ((trimmed (replace-regexp-in-string "^ +" "" string))
+         (double-bar (string-match "||" trimmed)))
+    (cond
+     ((zerop (length trimmed)) (cons nil nil))
+     (double-bar (cons (substring trimmed 0 double-bar)
+                       (substring trimmed double-bar)))
+     (t (cons trimmed nil)))))
 
 (defun evil-ex-parse-command (string)
   "Parse STRING as an Ex binding."
