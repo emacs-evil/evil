@@ -48,9 +48,9 @@
 ;;; Code:
 
 (defconst evil-ex-grammar
-  '((expressions
+  `((expressions
      expression
-     (expression (\* "||" expressions)))
+     (expression (\* ,evil-ex-expression-separator expressions)))
     (expression
      (count command argument #'evil-ex-call-command)
      ((\? range) command argument #'evil-ex-call-command)
@@ -856,9 +856,9 @@ START is the start symbol, which defaults to `expressions'."
     (car-safe match)))
 
 (defun evil-ex-parse-argument (string)
-  "Parse STRING as Ex argument, stopping at double bar: `||'."
+  "Parse STRING as Ex argument, stopping at `evil-ex-expression-separator'."
   (let* ((trimmed (replace-regexp-in-string "^ +" "" string))
-         (double-bar (string-match "||" trimmed)))
+         (double-bar (string-match evil-ex-expression-separator trimmed)))
     (cond
      ((zerop (length trimmed)) (cons nil nil))
      (double-bar (cons (substring trimmed 0 double-bar)

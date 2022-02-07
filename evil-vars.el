@@ -1126,6 +1126,16 @@ list of categories."
                 :value-type (choice character (const nil)))
   :group 'evil-cjk)
 
+(defcustom evil-ex-expression-separator "||"
+  "Analogue of vim's <bar>.
+This implementation of expression separation is simpler, but less
+powerful than vim's.  An expression separator cannot (yet) be
+differentiated from an arg (such as alternation in regexp).
+The separator will always have priority over use as an arg,
+hence the default of `||' instead of `|'."
+  :group 'evil
+  :type 'string)
+
 (defcustom evil-ex-complete-emacs-commands 'in-turn
   "TAB-completion for Emacs commands in ex command line.
 This variable determines when Emacs commands are considered for
