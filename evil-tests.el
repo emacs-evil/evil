@@ -8137,6 +8137,18 @@ maybe we need one line more with some text\n")
           "[l]line 1\nline 2"
           (":read!echo cmd line 1" [return])
           "line 1\n[c]md line 1\nline 2")))
+    (ert-info ("Test substitution of % in shell commands")
+      (evil-with-temp-file name
+          "3\n2\n1\n"
+        (evil-test-buffer
+          ((vconcat ":e " name [return]))
+          "[3]\n2\n1\n"
+          ((vconcat ":read !echo %" [return]))
+          ((vconcat ":w " [return]))
+          (file name (concat "3\n"
+                             (buffer-file-name) "\n"
+                             "2\n"
+                             "1\n")))))
     (ert-info ("Test insertion of shell command without trailing newline")
       (ert-info ("with space")
         (evil-test-buffer
