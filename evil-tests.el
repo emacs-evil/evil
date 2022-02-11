@@ -8149,6 +8149,13 @@ maybe we need one line more with some text\n")
                              (buffer-file-name) "\n"
                              "2\n"
                              "1\n")))))
+    (ert-info ("Ensure that point ends up at the last line of shell output, if any")
+      (evil-with-temp-file name
+          "3\n2\n1\n"
+        (evil-test-buffer
+          "[l]ine 1\nline 2"
+          ((vconcat ":read !cat " name [return]))
+          "line 1\n3\n2\n[1]\nline 2")))
     (ert-info ("Test insertion of shell command without trailing newline")
       (ert-info ("with space")
         (evil-test-buffer
