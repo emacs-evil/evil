@@ -3204,9 +3204,9 @@ If no FILE is specified, reload the current buffer from disk."
           (unless (bolp) (insert "\n")))))
      (t
       (shell-command (evil-ex-replace-special-filenames (substring file 1)) t)
-      (save-excursion
-        (goto-char (mark))
-        (unless (bolp) (insert "\n")))))))
+      (goto-char (mark))
+      (unless (bolp) (insert "\n"))
+      (forward-line -1)))))
 
 (evil-define-command evil-show-files ()
   "Shows the file-list.
