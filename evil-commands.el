@@ -2314,7 +2314,8 @@ The return value is the yanked text."
 (defun evil-end-and-return-macro ()
   "Like `kmacro-end-macro' but also return the macro.
 Remove \\<evil-insert-state-map>\\[evil-execute-in-normal-state] from the end."
-  (kmacro-end-macro nil)
+  ;; `end-kbd-macro' rather than `kmacro-end-macro' to allow clearing registers
+  (end-kbd-macro nil #'kmacro-loop-setup-function)
   (let ((end-keys-seq (append evil-execute-normal-keys nil))
         (last-kbd-macro-seq (append last-kbd-macro nil)))
     (unless last-kbd-macro-seq
