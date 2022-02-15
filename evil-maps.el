@@ -405,6 +405,8 @@
        '("\C-w" . evil-window-map))
     ,@(when evil-want-C-u-delete
         '(("\C-u" . evil-delete-back-to-indentation)))
+    ,@(when evil-want-C-h-delete
+        '(("\C-h" . evil-delete-back-to-indentation)))
     ([mouse-2] . mouse-yank-primary))
   "Evil's bindings for insert & replace states.
 Used in `evil-insert-state-map' and `evil-replace-state-map',
@@ -446,6 +448,8 @@ included in `evil-insert-state-bindings' by default."
 (dolist (binding evil-insert-state-bindings)
   (define-key evil-replace-state-map (car binding) (cdr binding)))
 (define-key evil-replace-state-map (kbd "DEL") 'evil-replace-backspace)
+(when evil-want-C-h-delete
+  (define-key evil-replace-state-map "\C-h" 'evil-replace-backspace))
 (define-key evil-replace-state-map [escape] 'evil-normal-state)
 (define-key evil-replace-state-map [insert] 'evil-append)
 

@@ -514,15 +514,18 @@ ubiquity of prefix arguments."
   :group 'evil
   :set #'(lambda (sym value)
            (set-default sym value)
-           (when (boundp 'evil-insert-state-map)
+           (when (and (boundp 'evil-insert-state-map)
+                      (boundp 'evil-replace-state-map))
              (cond
               ((and (not value)
                     (eq (lookup-key evil-insert-state-map (kbd "C-u"))
                         'evil-delete-back-to-indentation))
-               (define-key evil-insert-state-map (kbd "C-u") nil))
+               (define-key evil-insert-state-map (kbd "C-u") nil)
+               (define-key evil-replace-state-map (kbd "C-u") nil))
               ((and value
                     (not (lookup-key evil-insert-state-map (kbd "C-u"))))
-               (define-key evil-insert-state-map (kbd "C-u") 'evil-delete-back-to-indentation))))))
+               (define-key evil-insert-state-map (kbd "C-u") 'evil-delete-back-to-indentation)
+               (define-key evil-replace-state-map (kbd "C-u") 'evil-delete-back-to-indentation))))))
 
 (defcustom evil-want-C-w-delete t
   "Whether `C-w' deletes a word in Insert state."
@@ -530,16 +533,38 @@ ubiquity of prefix arguments."
   :group 'evil
   :set #'(lambda (sym value)
            (set-default sym value)
-           (when (boundp 'evil-insert-state-map)
+           (when (and (boundp 'evil-insert-state-map)
+                      (boundp 'evil-replace-state-map))
              (cond
               ((and (not value)
                     (eq (lookup-key evil-insert-state-map (kbd "C-w"))
                         'evil-delete-backward-word))
-               (define-key evil-insert-state-map (kbd "C-w") 'evil-window-map))
+               (define-key evil-insert-state-map (kbd "C-w") 'evil-window-map)
+               (define-key evil-replace-state-map (kbd "C-w") 'evil-window-map))
               ((and value
                     (eq (lookup-key evil-insert-state-map (kbd "C-w"))
                         'evil-window-map))
-               (define-key evil-insert-state-map (kbd "C-w") 'evil-delete-backward-word))))))
+               (define-key evil-insert-state-map (kbd "C-w") 'evil-delete-backward-word)
+               (define-key evil-replace-state-map (kbd "C-w") 'evil-delete-backward-word))))))
+
+(defcustom evil-want-C-h-delete nil
+  "Whether `C-h' deletes a char in Insert state."
+  :type 'boolean
+  :group 'evil
+  :set #'(lambda (sym value)
+           (set-default sym value)
+           (when (and (boundp 'evil-insert-state-map)
+                      (boundp 'evil-replace-state-map))
+             (cond
+              ((and (not value)
+                    (eq (lookup-key evil-insert-state-map (kbd "C-h"))
+                        'evil-delete-backward-char-and-join))
+               (define-key evil-insert-state-map (kbd "C-h") nil)
+               (define-key evil-replace-state-map (kbd "C-h") nil))
+              ((and value
+                    (not (lookup-key evil-insert-state-map (kbd "C-h"))))
+               (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+               (define-key evil-replace-state-map (kbd "C-h") 'evil-replace-backspace))))))
 
 (defcustom evil-want-C-g-bindings nil
   "Whether `C-g' postfix can be used in bindings."
