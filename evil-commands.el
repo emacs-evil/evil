@@ -3065,7 +3065,7 @@ not interfere with another."
           (let* ((actions (cdar list))
                  (fn      (plist-get actions action)))
             (when fn
-              (with-demoted-errors (funcall fn))))
+              (with-demoted-errors "Error: %S" (funcall fn))))
         (evil-fold-action (cdr list) action)))))
 
 (defun evil--mode-p (modes)
