@@ -2009,7 +2009,7 @@ See also `evil-shift-left'."
       (move-to-column (max 0 (+ col-for-insert first-shift))))
      (evil-start-of-line (evil-first-non-blank))
      ((evil--stick-to-eol-p) (move-end-of-line 1))
-     (t (move-to-column (or goal-column evil-operator-start-col))))
+     (t (move-to-column (or goal-column evil-operator-start-col col-for-insert))))
     (setq temporary-goal-column 0)))
 
 (defun evil-delete-indentation ()
