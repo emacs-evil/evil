@@ -4209,8 +4209,9 @@ when `evil-split-window-below' is non-nil. If COUNT and
 of the parent of the splitted window are rebalanced."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count
-                (if evil-split-window-below 'above 'below))
+  (select-window
+   (split-window (selected-window) (when count (- count))
+                 (if evil-split-window-below 'below 'above)))
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (when file
@@ -4224,8 +4225,9 @@ right when `evil-vsplit-window-right' is non-nil. If COUNT and
 of the parent of the splitted window are rebalanced."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count
-                (if evil-vsplit-window-right 'left 'right))
+  (select-window
+   (split-window (selected-window) (when count (- count))
+                 (if evil-vsplit-window-right 'right 'left)))
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (when file
@@ -4341,34 +4343,34 @@ top-left."
 and opens a new buffer or edits a certain FILE."
   :repeat nil
   (interactive "P<f>")
-  (let ((new-window (split-window (selected-window) count
+  (let ((new-window (split-window (selected-window) (when count (- count))
                                   (if evil-split-window-below 'below 'above))))
     (when (and (not count) evil-auto-balance-windows)
       (balance-windows (window-parent)))
-    (if file
-        (evil-edit file)
-      (let ((buffer (generate-new-buffer "*new*")))
-        (set-window-buffer new-window buffer)
-        (select-window new-window)
-        (with-current-buffer buffer
-          (funcall (default-value 'major-mode)))))))
+    (let ((buffer (generate-new-buffer "*new*")))
+      (set-window-buffer new-window buffer)
+      (select-window new-window)
+      (with-current-buffer buffer
+        (funcall (default-value 'major-mode))))
+    (when file
+      (evil-edit file))))
 
 (evil-define-command evil-window-vnew (count file)
   "Splits the current window vertically
 and opens a new buffer name or edits a certain FILE."
   :repeat nil
   (interactive "P<f>")
-  (let ((new-window (split-window (selected-window) count
+  (let ((new-window (split-window (selected-window) (when count (- count))
                                   (if evil-vsplit-window-right 'right 'left))))
     (when (and (not count) evil-auto-balance-windows)
       (balance-windows (window-parent)))
-    (if file
-        (evil-edit file)
-      (let ((buffer (generate-new-buffer "*new*")))
-        (set-window-buffer new-window buffer)
-        (select-window new-window)
-        (with-current-buffer buffer
-          (funcall (default-value 'major-mode)))))))
+    (let ((buffer (generate-new-buffer "*new*")))
+      (set-window-buffer new-window buffer)
+      (select-window new-window)
+      (with-current-buffer buffer
+        (funcall (default-value 'major-mode))))
+    (when file
+      (evil-edit file))))
 
 (evil-define-command evil-buffer-new (count file)
   "Creates a new buffer replacing the current window, optionally
