@@ -434,7 +434,9 @@ expression and is not transformed."
         (ignore-case (eq (evil-ex-regex-case regexp case) 'insensitive)))
     ;; possibly transform regular expression from vim-style to
     ;; Emacs-style.
-    (if evil-ex-search-vim-style-regexp
+    (if (and evil-ex-search-vim-style-regexp
+             (not (or (string-match-p "\\`\\\\_?<" regexp)
+                      (string-match-p "\\\\_?>\\'" regexp))))
         (setq re (evil-transform-vim-style-regexp re))
       ;; Even for Emacs regular expressions we translate certain
       ;; whitespace sequences
