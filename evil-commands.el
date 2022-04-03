@@ -3165,6 +3165,15 @@ otherwise they are skipped. "
                            (and (not buffer-read-only)
                                 (buffer-file-name))))))
 
+(evil-define-command evil-update ()
+  "Same as `evil-write', but only write when the buffer has been modified."
+  :motion nil
+  :move-point nil
+  :type line
+  :repeat nil
+  (when (buffer-modified-p)
+    (call-interactively #'evil-write)))
+
 (evil-define-command evil-save (filename &optional bang)
   "Save the current buffer to FILENAME.
 Changes the file name of the current buffer to FILENAME.  If no
