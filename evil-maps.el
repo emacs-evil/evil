@@ -472,6 +472,7 @@ included in `evil-insert-state-bindings' by default."
 
 (evil-ex-define-cmd "e[dit]" 'evil-edit)
 (evil-ex-define-cmd "w[rite]" 'evil-write)
+(evil-ex-define-cmd "up[date]" 'evil-update)
 (evil-ex-define-cmd "wa[ll]" 'evil-write-all)
 (evil-ex-define-cmd "sav[eas]" 'evil-save)
 (evil-ex-define-cmd "r[ead]" 'evil-read)
