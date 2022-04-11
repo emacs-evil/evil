@@ -7952,9 +7952,11 @@ maybe we need one line more with some text\n"
       (let ((evil-ex-search-vim-style-regexp t)
             (evil-magic 'very-magic))
         (evil-test-buffer
-          "[a]lpha bravo alpha charlie"
+          "[a]lpha bravo alpha charlie alpha"
           ("*")
-          "alpha bravo [a]lpha charlie")))))
+          "alpha bravo [a]lpha charlie alpha"
+          ("/" [return])
+          "alpha bravo alpha charlie [a]lpha")))))
 
 (ert-deftest evil-test-ex-search-motion ()
   :tags '(evil ex search)
