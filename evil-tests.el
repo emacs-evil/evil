@@ -8372,7 +8372,12 @@ Source
 Target
 Source
 [O]ther line
-")))
+"))
+  (ert-info ("Move with global (classic line reversal)")
+    (evil-test-buffer
+      "5\n4\n3\n2\n1\n"
+      (":g/^/m0")
+      "1\n2\n3\n4\n5\n")))
 
 (ert-deftest evil-test-write ()
   :tags '(evil ex)

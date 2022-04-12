@@ -1748,24 +1748,25 @@ of the block."
   "Move lines in BEG END below line given by ADDRESS."
   :motion evil-line-or-visual-line
   (interactive "<r><addr>")
-  (goto-char (point-min))
-  (forward-line address)
-  (let* ((m (set-marker (make-marker) (point)))
-         (txt (buffer-substring-no-properties beg end))
-         (len (length txt)))
-    (delete-region beg end)
-    (goto-char m)
-    (set-marker m nil)
-    ;; ensure text consists of complete lines
-    (when (or (zerop len) (/= (aref txt (1- len)) ?\n))
-      (setq txt (concat txt "\n")))
-    (when (and (eobp) (not (bolp))) (newline)) ; incomplete last line
-    (when (evil-visual-state-p)
-      (move-marker evil-visual-mark (point)))
-    (insert txt)
-    (forward-line -1)
-    (when (evil-visual-state-p)
-      (move-marker evil-visual-point (point)))))
+  (unless (= (1+ address) (line-number-at-pos beg))
+    (goto-char (point-min))
+    (forward-line address)
+    (let* ((m (set-marker (make-marker) (point)))
+           (txt (buffer-substring-no-properties beg end))
+           (len (length txt)))
+      (delete-region beg end)
+      (goto-char m)
+      (set-marker m nil)
+      ;; ensure text consists of complete lines
+      (when (or (zerop len) (/= (aref txt (1- len)) ?\n))
+        (setq txt (concat txt "\n")))
+      (when (and (eobp) (not (bolp))) (newline)) ; incomplete last line
+      (when (evil-visual-state-p)
+        (move-marker evil-visual-mark (point)))
+      (insert txt)
+      (forward-line -1)
+      (when (evil-visual-state-p)
+        (move-marker evil-visual-point (point))))))
 
 (defun evil--check-undo-system ()
   (when (and (eq evil-undo-system 'undo-tree)
