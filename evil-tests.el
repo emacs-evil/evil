@@ -8386,6 +8386,11 @@ Source
     (evil-test-buffer
       "5\n4\n3\n2\n1\n"
       (":g/^/m0")
+      "1\n2\n3\n4\n5\n"))
+  (ert-info ("Move with global, and visual selection")
+    (evil-test-buffer
+      "<5\n4\n3\n2\n[1]>\n"
+      (":g/^/m0")
       "1\n2\n3\n4\n5\n")))
 
 (ert-deftest evil-test-write ()
