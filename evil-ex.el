@@ -718,6 +718,7 @@ This function interprets special file names like # and %."
           (cond
            ((not evil-ex-range)
             (setq this-command evil-ex-command)
+            (evil-exit-visual-state)
             (run-hooks 'pre-command-hook)
             (call-interactively evil-ex-command)
             (run-hooks 'post-command-hook))
