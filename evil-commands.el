@@ -1653,6 +1653,7 @@ given."
 (evil-define-operator evil-ex-yank (beg end type register count yank-handler)
   "The Ex yank command.
 \[BEG,END]yank [REGISTER] [COUNT]"
+  :restore-point t
   (interactive "<R><xc/><y>")
   (evil-ex-delete-or-yank nil beg end type register count yank-handler))
 

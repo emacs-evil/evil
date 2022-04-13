@@ -1935,7 +1935,16 @@ New Tex[t]
       "a\n[b]\nc\nd\ne\nf\n"
       (":yank r 3")
       "a\nb\nc\nd\ne\nf\n"
-      (should (string= (substring-no-properties (evil-get-register ?r)) "b\nc\nd\n")))))
+      (should (string= (substring-no-properties (evil-get-register ?r)) "b\nc\nd\n"))))
+  (ert-info (":yank with range yanks without moving point")
+    (evil-test-buffer
+      "[a]\nb\nc\nd\ne\n"
+      (":4y" [return] "p")
+      "a\n[d]\nb\nc\nd\ne\n")
+    (evil-test-buffer
+      "[a]\nb\nc\nd\ne\n"
+      (":+4y" [return] "p")
+      "a\n[e]\nb\nc\nd\ne\n")))
 
 (ert-deftest evil-test-delete ()
   "Test `evil-delete'"
