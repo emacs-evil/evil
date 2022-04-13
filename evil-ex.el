@@ -703,6 +703,8 @@ This function interprets special file names like # and %."
          (evil-ex-range
           (or range (and count (evil-ex-range count count))))
          (evil-ex-command (evil-ex-completed-binding command))
+         (restore-point (when (evil-get-command-property evil-ex-command :restore-point)
+                          (min (point) (or (mark) most-positive-fixnum))))
          (evil-ex-bang (and bang t))
          (evil-ex-argument (copy-sequence argument))
          (evil-this-type (evil-type evil-ex-range))
@@ -734,7 +736,8 @@ This function interprets special file names like # and %."
               (goto-char beg)
               (activate-mark)
               (call-interactively evil-ex-command)
-              (run-hooks 'post-command-hook))))
+              (run-hooks 'post-command-hook)
+              (when restore-point (goto-char restore-point)))))
         (when (buffer-live-p buf)
           (with-current-buffer buf
             (deactivate-mark)))))))
