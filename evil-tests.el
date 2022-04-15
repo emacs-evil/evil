@@ -8269,7 +8269,13 @@ maybe we need one line more with some text\n")
        (evil-test-buffer
          "this\nThis\n"
          (":g/This/d" [return])
-         "this\n")))))
+         "this\n"))))
+  (ert-info (":global should transform vim-style regexp when appropriate")
+    (let ((evil-ex-search-vim-style-regexp t))
+      (evil-test-buffer
+        "a\n1\nb\n2\nc\n3\n"
+        (":g/\\d/>")
+        "a\n    1\nb\n    2\nc\n    3\n"))))
 
 (ert-deftest evil-test-normal ()
   "Test `evil-ex-normal'."

@@ -3992,6 +3992,8 @@ This is the same as :%s//~/&"
           (deactivate-mark deactivate-mark)
           match markers)
       (when (and pattern command)
+        (when evil-ex-search-vim-style-regexp
+          (setq pattern (evil-transform-vim-style-regexp pattern)))
         (setq isearch-string pattern)
         (isearch-update-ring pattern t)
         (goto-char beg)
