@@ -8386,12 +8386,17 @@ Source
     (evil-test-buffer
       "5\n4\n3\n2\n1\n"
       (":g/^/m0")
-      "1\n2\n3\n4\n5\n"))
-  (ert-info ("Move with global, and visual selection")
-    (evil-test-buffer
-      "<5\n4\n3\n2\n[1]>\n"
-      (":g/^/m0")
-      "1\n2\n3\n4\n5\n")))
+      "1\n2\n3\n4\n5\n")
+    (ert-info ("... and visual selection")
+      (evil-test-buffer
+        "<5\n4\n3\n2\n[1]>\n"
+        (":g/^/m0")
+        "1\n2\n3\n4\n5\n"))
+    (ert-info ("... and no last blank line")
+      (evil-test-buffer
+        "5\n4\n3\n2\n1"
+        (":g/^/m0")
+        "1\n2\n3\n4\n5"))))
 
 (ert-deftest evil-test-write ()
   :tags '(evil ex)
