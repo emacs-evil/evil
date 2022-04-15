@@ -1754,8 +1754,11 @@ of the block."
     (forward-line address)
     (let* ((m (set-marker (make-marker) (point)))
            (txt (buffer-substring-no-properties beg end))
-           (len (length txt)))
+           (len (length txt))
+           (last-line-blank (progn (goto-char (point-max)) (bolp))))
       (delete-region beg end)
+      (unless last-line-blank ; as vim, preserve lack of blank last line
+        (progn (goto-char (point-max)) (when (bolp) (delete-char -1))))
       (goto-char m)
       (set-marker m nil)
       ;; ensure text consists of complete lines
