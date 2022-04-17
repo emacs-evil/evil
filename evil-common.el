@@ -2458,8 +2458,8 @@ Then restore Transient Mark mode to its previous setting."
   "Call FUNC for each line of a block selection.
 The selection is specified by the region BEG and END.  FUNC must
 take at least two arguments, the beginning and end of each
-line. If PASS-COLUMNS is non-nil, these values are the columns,
-otherwise tey are buffer positions. Extra arguments to FUNC may
+line.  If PASS-COLUMNS is non-nil, these values are the columns,
+otherwise they are buffer positions.  Extra arguments to FUNC may
 be passed via ARGS."
   (let ((eol-col (and (memq last-command '(next-line previous-line))
                       (numberp temporary-goal-column)
