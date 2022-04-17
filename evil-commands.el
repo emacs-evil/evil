@@ -2213,6 +2213,11 @@ The return value is the yanked text."
           (setq evil-last-paste nil))
         (and (> (length text) 0) text)))))
 
+(defun evil-insert-for-yank-at-col (startcol _endcol string)
+  "Insert STRING at STARTCOL."
+  (move-to-column startcol)
+  (insert-for-yank string))
+
 (evil-define-command evil-visual-paste (count &optional register)
   "Paste over Visual selection."
   :suppress-operator t
@@ -2227,10 +2232,12 @@ The return value is the yanked text."
                  (current-kill 0)))
          (yank-handler (car-safe (get-text-property
                                   0 'yank-handler text)))
-         paste-eob)
+         beg end paste-eob)
     (evil-with-undo
       (let ((kill-ring-yank-pointer (when kill-ring (list (current-kill 0)))))
         (when (evil-visual-state-p)
+          (setq beg evil-visual-beginning
+                end evil-visual-end)
           (evil-visual-rotate 'upper-left)
           ;; if we replace the last buffer line that does not end in a
           ;; newline, we use `evil-paste-after' because `evil-delete'
@@ -2238,10 +2245,7 @@ The return value is the yanked text."
           (when (and (= evil-visual-end (point-max))
                      (/= (char-before (point-max)) ?\n))
             (setq paste-eob t))
-          (evil-delete evil-visual-beginning
-                       evil-visual-end
-                       (evil-visual-type)
-                       (unless evil-kill-on-visual-paste ?_))
+          (evil-delete beg end (evil-visual-type) (unless evil-kill-on-visual-paste ?_))
           (when (and (eq yank-handler #'evil-yank-line-handler)
                      (not (eq (evil-visual-type) 'line))
                      (not (= evil-visual-end (point-max))))
@@ -2252,9 +2256,11 @@ The return value is the yanked text."
         ;; side-effecting (e.g. for the `=' register)...
         (cl-letf (((symbol-function 'evil-get-register)
                    (lambda (&rest _) text)))
-          (if paste-eob
-              (evil-paste-after count register)
-            (evil-paste-before count register))))
+          (cond
+           ((eq 'block (evil-visual-type))
+            (evil-apply-on-block #'evil-insert-for-yank-at-col beg end t text))
+           (paste-eob (evil-paste-after count register))
+           (t (evil-paste-before count register)))))
       (when evil-kill-on-visual-paste
         (current-kill -1))
       ;; Ensure that gv can restore visually pasted area...
