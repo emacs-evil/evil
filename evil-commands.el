@@ -2247,7 +2247,7 @@ The return value is the yanked text."
             (setq paste-eob t))
           (evil-delete beg end (evil-visual-type) (unless evil-kill-on-visual-paste ?_))
           (when (and (eq yank-handler #'evil-yank-line-handler)
-                     (not (eq (evil-visual-type) 'line))
+                     (not (memq (evil-visual-type) '(line block)))
                      (not (= evil-visual-end (point-max))))
             (insert "\n"))
           (evil-normal-state)
@@ -2258,6 +2258,8 @@ The return value is the yanked text."
                    (lambda (&rest _) text)))
           (cond
            ((eq 'block (evil-visual-type))
+            (when (eq yank-handler #'evil-yank-line-handler)
+              (setq text (concat "\n" text)))
             (evil-apply-on-block #'evil-insert-for-yank-at-col beg end t text))
            (paste-eob (evil-paste-after count register))
            (t (evil-paste-before count register)))))
