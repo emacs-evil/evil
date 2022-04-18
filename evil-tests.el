@@ -2926,7 +2926,19 @@ word3[]"))
     (evil-test-buffer
      "foo"
      ("viw" "\"=p(* 6 7)" [return])
-     "4[2]")))
+     "4[2]"))
+  (ert-info ("Blockwise visual paste (of charwise text) with count")
+    (evil-test-buffer
+      "[a]bc\n123\n123\n123"
+      ("ye" "jl" "\C-vG" "2p")
+      "abc\n1[a]bcabc3\n1abcabc3\n1abcabc3"
+      ("gv") ;; Test point & mark are stored correctly
+      "abc\n1<abcabc3\n1abcabc3\n1abcab[c]>3"))
+  (ert-info ("Blockwise visual paste of linewise text")
+    (evil-test-buffer
+      "[a]bc\n123\n123\n123"
+      ("yy" "jl" "\C-vG" "p")
+      "abc\n1\nabc\n3\n1\nabc\n3\n1\nabc\n3")))
 
 (ert-deftest evil-test-visual-paste-pop ()
   "Test `evil-paste-pop' after visual paste."
