@@ -2213,10 +2213,12 @@ The return value is the yanked text."
           (setq evil-last-paste nil))
         (and (> (length text) 0) text)))))
 
-(defun evil-insert-for-yank-at-col (startcol _endcol string)
+(defun evil-insert-for-yank-at-col (startcol _endcol string count)
   "Insert STRING at STARTCOL."
   (move-to-column startcol)
-  (insert-for-yank string))
+  (dotimes (_ (or count 1))
+    (insert-for-yank string))
+  (evil-set-marker ?\] (1- (point))))
 
 (evil-define-command evil-visual-paste (count &optional register)
   "Paste over Visual selection."
@@ -2260,7 +2262,8 @@ The return value is the yanked text."
            ((eq 'block (evil-visual-type))
             (when (eq yank-handler #'evil-yank-line-handler)
               (setq text (concat "\n" text)))
-            (evil-apply-on-block #'evil-insert-for-yank-at-col beg end t text))
+            (evil-set-marker ?\[ beg)
+            (evil-apply-on-block #'evil-insert-for-yank-at-col beg end t text count))
            (paste-eob (evil-paste-after count register))
            (t (evil-paste-before count register)))))
       (when evil-kill-on-visual-paste
