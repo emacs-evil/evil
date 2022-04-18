@@ -2234,6 +2234,7 @@ The return value is the yanked text."
                  (current-kill 0)))
          (yank-handler (car-safe (get-text-property
                                   0 'yank-handler text)))
+         (dir (evil-visual-direction))
          beg end paste-eob)
     (evil-with-undo
       (let ((kill-ring-yank-pointer (when kill-ring (list (current-kill 0)))))
@@ -2270,9 +2271,9 @@ The return value is the yanked text."
         (current-kill -1))
       ;; Ensure that gv can restore visually pasted area...
       (setq evil-visual-previous-mark evil-visual-mark
-            evil-visual-mark (evil-get-marker ?\[ t)
+            evil-visual-mark (evil-get-marker (if (<= 0 dir) ?\[ ?\]) t)
             evil-visual-previous-point evil-visual-point
-            evil-visual-point (evil-get-marker ?\] t))
+            evil-visual-point (evil-get-marker (if (<= 0 dir) ?\] ?\[) t))
       ;; mark the last paste as visual-paste
       (setq evil-last-paste
             (list (nth 0 evil-last-paste)
