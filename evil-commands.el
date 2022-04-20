@@ -3826,17 +3826,12 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
                         (string-match-p "\n" (buffer-substring-no-properties
                                               match-beg match-end)))
                   (setq zero-length-match (= match-beg match-end))
-                  (when (= match-end end-marker)
+                  (when (and (= match-end end-marker) (not match-contains-newline) (bolp))
                     ;; The range (beg end) includes the final newline which means
-                    ;; end-marker is on one line down, causing some issues...
-                    (when (and (not match-contains-newline) (bolp))
-                      ;; With the exception of explicitly substituting newlines,
-                      ;; we abort when the match ends here and it's an empty line
-                      (throw 'exit-search t))
-                    (when (string= "^" evil-ex-substitute-regex)
-                      ;; With the regex "^" the beginning of this last line
-                      ;; will be matched which we don't want, so we abort here
-                      (throw 'exit-search t)))
+                    ;; end-marker is on one line down.
+                    ;; With the exception of explicitly substituting newlines,
+                    ;; we abort when the match ends here and it's an empty line
+                    (throw 'exit-search t))
                   (setq evil-ex-substitute-last-point match-beg)
                   (if confirm
                       (let ((prompt
