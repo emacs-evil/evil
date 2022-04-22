@@ -1081,7 +1081,10 @@ These commands work better without this newline."
   :initialize 'evil-custom-initialize-pending-reset)
 
 (defcustom evil-want-visual-char-semi-exclusive nil
-  "Visual character selection to beginning/end of line is exclusive.
+  "DEPRECATED.  Will be removed in a future version.
+Prefer to set `evil-v$-excludes-newline' to non-nil.
+
+Visual character selection to beginning/end of line is exclusive.
 If non nil then an inclusive visual character selection which
 ends at the beginning or end of a line is turned into an
 exclusive selection. Thus if the selected (inclusive) range ends
@@ -1089,6 +1092,19 @@ at the beginning of a line it is changed to not include the first
 character of that line, and if the selected range ends at the end
 of a line it is changed to not include the newline character of
 that line."
+  :type 'boolean
+  :group 'evil)
+(make-obsolete-variable
+ evil-want-visual-char-semi-exclusive
+ "Semi-exclusivity prevents selecting text + 1st char of next line,
+without having to introduce new niche functionality.
+Prefer to set `evil-v$-excludes-newline' to non-nil."
+ "1.15.0")
+
+(defcustom evil-v$-excludes-newline nil
+  "If non-nil, `evil-end-of-line' does not move as far as to include
+the `\n' char at eol. This makes `v$' consistent with `$' used as a
+motion (e.g. `v$y' is consistent with `y$' in normal state)."
   :type 'boolean
   :group 'evil)
 
