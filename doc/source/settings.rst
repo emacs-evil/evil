@@ -116,6 +116,8 @@ of them can be tweaked using the following variables.
 
 .. elisp:autovariable:: evil-move-beyond-eol
 
+.. elisp:autovariable:: evil-v$-excludes-newline
+
 .. elisp:autovariable:: evil-cross-lines
 
 .. elisp:autovariable:: evil-respect-visual-line-mode

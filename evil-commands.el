@@ -191,7 +191,10 @@ If COUNT is given, move COUNT - 1 lines downward first."
   (when evil-track-eol
     (setq temporary-goal-column most-positive-fixnum
           this-command 'next-line))
-  (unless (evil-visual-state-p)
+  (if (evil-visual-state-p)
+      (when evil-v$-excludes-newline
+        (let ((evil-move-beyond-eol nil))
+          (evil-adjust-cursor)))
     (evil-adjust-cursor)
     (when (eolp)
       ;; prevent "c$" and "d$" from deleting blank lines

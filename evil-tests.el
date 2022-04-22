@@ -3370,7 +3370,17 @@ Below some empty line"
       ("d$")
       "Above some line
 \[]
-Below some empty line")))
+Below some empty line"))
+  (ert-info ("Visual state")
+    (evil-test-buffer
+      "f[o]o\nbar"
+      ("v$")
+      "f<oo\n>bar")
+    (let ((evil-v$-excludes-newline t))
+      (evil-test-buffer
+        "f[o]o\nbar"
+        ("v$")
+        "f<oo>\nbar"))))
 
 (ert-deftest evil-test-percentage-of-line ()
   "Test `evil-percentage-of-line' motion"
@@ -7036,24 +7046,7 @@ test hello <a href=\"/deed.zh\">Creative Commons</a>
 ;; and for Lisp evaluation."
     ("vV")
     "<;; [ ]buffer is for notes you don't want to save,\n>\
-;; and for Lisp evaluation.")
-  (ert-info ("Test `evil-want-visual-char-semi-exclusive")
-    (let ((evil-want-visual-char-semi-exclusive t))
-      (evil-test-buffer
-        "[;]; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-;; And a third line."
-        ("v")
-        "<[;]>; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.
-;; And a third line."
-        ("$")
-        "<;; This buffer is for notes you don't want to save,>[
-];; and for Lisp evaluation.
-;; And a third line."
-        ("^jj")
-        "<;; This buffer is for notes you don't want to save,
-;; and for Lisp evaluation.\n>[;]; And a third line."))))
+;; and for Lisp evaluation."))
 
 (ert-deftest evil-test-visual-line ()
   "Test Visual line selection"

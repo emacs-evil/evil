@@ -90,10 +90,8 @@ If the end position is at the beginning of a line, then:
 
 (evil-define-type inclusive
   "Include the character under point.
-If the end position is at the beginning of a line or the end of a
-line and `evil-want-visual-char-semi-exclusive', then:
-
-* If in visual state return `exclusive' (expanded)."
+Handling for `evil-want-visual-char-semi-exclusive' is deprecated,
+and will be removed in a future version."
   :expand (lambda (beg end)
             (if (and evil-want-visual-char-semi-exclusive
                      (evil-visual-state-p)
