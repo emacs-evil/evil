@@ -406,7 +406,7 @@
     ,@(when evil-want-C-u-delete
         '(("\C-u" . evil-delete-back-to-indentation)))
     ,@(when evil-want-C-h-delete
-        '(("\C-h" . evil-delete-back-to-indentation)))
+        '(("\C-h" . evil-delete-backward-char-and-join)))
     ([mouse-2] . mouse-yank-primary))
   "Evil's bindings for insert & replace states.
 Used in `evil-insert-state-map' and `evil-replace-state-map',
