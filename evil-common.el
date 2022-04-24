@@ -1701,26 +1701,47 @@ backwards."
   "Move forward COUNT whitespace sequences [[:space:]]+."
   (evil-forward-chars "[:space:]" count))
 
+(defun evil--forward-word-respect-categories (count)
+  "Move forward COUNT words.
+A word is a sequence of word characters matching [[:word:]]
+\(recognized by `forward-word')."
+  (let ((word-separating-categories evil-cjk-word-separating-categories)
+        (word-combining-categories evil-cjk-word-combining-categories)
+        (pnt (point)))
+    (forward-word count)
+    (if (= pnt (point)) count 0)))
+
+(defun evil--forward-non-word-excl-newline (count)
+  "Move forward COUNT non-words.
+A non-word is a sequence of non-whitespace non-word characters."
+  (evil-forward-chars "^[:word:]\n\r\t\f " count))
+
+(defun evil--forward-non-word-incl-newline (count)
+  "Move forward COUNT non-words.
+A non-word is a sequence of non-space, non-tab, non-word characters."
+  (evil-forward-chars "^[:word:]\t " count))
+
 (defun forward-evil-word (&optional count)
   "Move forward COUNT words.
 Moves point COUNT words forward or (- COUNT) words backward if
-COUNT is negative. Point is placed after the end of the word (if
-forward) or at the first character of the word (if backward). A
+COUNT is negative.  Point is placed after the end of the word (if
+forward) or at the first character of the word (if backward).  A
 word is a sequence of word characters matching
 \[[:word:]] (recognized by `forward-word'), a sequence of
 non-whitespace non-word characters '[^[:word:]\\n\\r\\t\\f ]', or
 an empty line matching ^$."
-  (evil-forward-nearest
-   count
-   #'(lambda (&optional cnt)
-       (let ((word-separating-categories evil-cjk-word-separating-categories)
-             (word-combining-categories evil-cjk-word-combining-categories)
-             (pnt (point)))
-         (forward-word cnt)
-         (if (= pnt (point)) cnt 0)))
-   #'(lambda (&optional cnt)
-       (evil-forward-chars "^[:word:]\n\r\t\f " cnt))
-   #'forward-evil-empty-line))
+  (evil-forward-nearest count
+                        #'evil--forward-word-respect-categories
+                        #'evil--forward-non-word-excl-newline
+                        #'forward-evil-empty-line))
+
+(defun forward-evil-word-object (&optional count)
+  "Move forward COUNT words.
+Like `forward-evil-word' but include newline in non-word chars."
+  (evil-forward-nearest count
+                        #'evil--forward-word-respect-categories
+                        #'evil--forward-non-word-incl-newline
+                        #'forward-evil-empty-line))
 
 (defun forward-evil-WORD (&optional count)
   "Move forward COUNT \"WORDS\".
@@ -1732,6 +1753,14 @@ WORD is a sequence of non-whitespace characters
   (evil-forward-nearest count
                         #'(lambda (&optional cnt)
                             (evil-forward-chars "^\n\r\t\f " cnt))
+                        #'forward-evil-empty-line))
+
+(defun forward-evil-WORD-object (&optional count)
+  "Move forward COUNT \"WORDS\".
+Like `forward-evil-WORD' but exclude newline in WORD chars."
+  (evil-forward-nearest count
+                        #'(lambda (&optional cnt)
+                            (evil-forward-chars "^\t " cnt))
                         #'forward-evil-empty-line))
 
 (defun forward-evil-symbol (&optional count)
@@ -3107,7 +3136,7 @@ This can be overridden with TYPE."
 If COUNT is positive, return objects following point; if COUNT is
 negative, return objects preceding point.  If one is unspecified,
 the other is used with a negative argument.  THING is a symbol
-understood by thing-at-point.  BEG, END and TYPE specify the
+understood by `thing-at-point'.  BEG, END and TYPE specify the
 current selection.  If LINE is non-nil, the text object should be
 linewise, otherwise it is character wise."
   (let* ((count (or count 1))
