@@ -5936,7 +5936,16 @@ Line 2"))
     (evil-test-buffer
       "([a])"
       ("viw")
-      "(<[a]>)")))
+      "(<[a]>)"))
+  (ert-info ("Deleting whitespace is confined to the line")
+    (evil-test-buffer
+      "foo\n  [ ]  bar"
+      ("diw")
+      "foo\n[b]ar")
+    (evil-test-buffer
+      "foo\n  [ ]  bar"
+      ("diW")
+      "foo\n[b]ar")))
 
 (ert-deftest evil-test-word-objects-cjk ()
   "Test `evil-inner-word' and `evil-a-word' on CJK words"
