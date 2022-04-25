@@ -238,6 +238,39 @@ Otherwise behaves like `delete-backward-char'."
   (insert result)
   (exit-minibuffer))
 
+(defun evil-ex--elisp-p ()
+  "Check if `evil-ex' is executing an elisp expression."
+  (string-prefix-p "(" (minibuffer-contents-no-properties)))
+
+(defun evil-ex-elisp-completion-at-point ()
+  "Complete an `evil-ex' Elisp expression."
+  (when (and (fboundp 'elisp-completion-at-point)
+             (evil-ex--elisp-p))
+    (elisp-completion-at-point)))
+
+(defun evil-ex-elisp-eldoc-function ()
+  "`eldoc' for `evil-ex' Elisp expressions.
+Only provides an `eldoc' hint if the current `evil-ex' command is
+an elisp expression."
+  (when (and (fboundp 'elisp-eldoc-documentation-function)
+             (evil-ex--elisp-p))
+    (elisp-eldoc-documentation-function)))
+
+(defmacro evil-ex--eldoc-add (fn)
+  "Add FN to `eldoc'.
+Handles older Emacsen that don't have `add-function'."
+  (if (fboundp 'add-function)
+      `(add-function :before-until (local 'eldoc-documentation-function) ,fn)
+    `(add-to-list (make-local-variable 'eldoc-documentation-functions) ,fn)))
+
+(defmacro evil-ex--eldoc-remove (fn)
+  "Remove FN from `eldoc'.
+See `evil-ex--eldoc-add'. FN must be a symbol."
+  (if (fboundp 'remove-function)
+      `(remove-function (local 'eldoc-documentation-function) ,fn)
+    `(set (make-local-variable 'eldoc-documentation-functions)
+          (delq ,fn eldoc-documentation-functions))))
+
 (defun evil-ex-setup ()
   "Initialize Ex minibuffer.
 This function registers several hooks that are used for the
@@ -248,11 +281,12 @@ interactive actions during ex state."
   (when evil-ex-previous-command
     (add-hook 'pre-command-hook #'evil-ex-remove-default))
   (remove-hook 'minibuffer-setup-hook #'evil-ex-setup)
-  (with-no-warnings
-    (make-variable-buffer-local 'completion-at-point-functions))
-  (setq completion-at-point-functions
-        '(evil-ex-command-completion-at-point
-          evil-ex-argument-completion-at-point)))
+  (set (make-local-variable 'completion-at-point-functions)
+       '(evil-ex-elisp-completion-at-point
+         evil-ex-command-completion-at-point
+         evil-ex-argument-completion-at-point))
+  (evil-ex--eldoc-add #'evil-ex-elisp-eldoc-function)
+  (eldoc-mode 1))
 (put 'evil-ex-setup 'permanent-local-hook t)
 
 (defun evil-ex-setup-and-update ()
@@ -270,7 +304,9 @@ Clean up everything set up by `evil-ex-setup'."
     (let ((runner (evil-ex-argument-handler-runner
                    evil-ex-argument-handler)))
       (when runner
-        (funcall runner 'stop)))))
+        (funcall runner 'stop))))
+  (evil-ex--eldoc-remove #'evil-ex-elisp-eldoc-function)
+  (eldoc-mode -1))
 (put 'evil-ex-teardown 'permanent-local-hook t)
 
 (defun evil-ex-update (&optional beg end len string)
