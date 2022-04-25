@@ -21,7 +21,7 @@
 
 @copying
 @quotation
-Evil 1.14.0, Jan 07, 2022
+Evil 1.14.1, Jan 07, 2022
 
 Eivind Fonn, Frank Fischer, Vegard Øye
 
