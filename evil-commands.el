@@ -1277,7 +1277,7 @@ or line COUNT to the top of the window."
 
 (evil-define-text-object evil-inner-word (count &optional beg end type)
   "Select inner word."
-  (evil-select-inner-object 'evil-word-object beg end type count))
+  (evil-select-inner-object 'evil-word beg end type count))
 
 (evil-define-text-object evil-a-WORD (count &optional beg end type)
   "Select a WORD."
@@ -1285,7 +1285,7 @@ or line COUNT to the top of the window."
 
 (evil-define-text-object evil-inner-WORD (count &optional beg end type)
   "Select inner WORD."
-  (evil-select-inner-object 'evil-WORD-object beg end type count))
+  (evil-select-inner-object 'evil-WORD beg end type count))
 
 (evil-define-text-object evil-a-symbol (count &optional beg end type)
   "Select a symbol."
