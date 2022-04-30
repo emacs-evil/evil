@@ -3146,7 +3146,7 @@ linewise, otherwise it is character wise."
                       (save-excursion (end-of-line) (point)))
     (evil-select-inner-unrestricted-object thing beg end type count line)))
 
-(defun evil-select-an-object (thing beg end type count &optional line)
+(defun evil-select-an-unrestricted-object (thing beg end type count &optional line)
   "Return an outer text object range of COUNT objects.
 If COUNT is positive, return objects following point; if COUNT is
 negative, return objects preceding point.  If one is unspecified,
@@ -3221,6 +3221,20 @@ linewise, otherwise it is character wise."
                 (if (< dir 0) other (point))
                 (if line 'line type)
                 :expanded t)))
+
+(defun evil-select-an-object (thing beg end type &optional count line)
+  "Return an outer text object range of COUNT objects.
+Selection is restricted to the current line.
+If COUNT is positive, return objects following point; if COUNT is
+negative, return objects preceding point.  If one is unspecified,
+the other is used with a negative argument.  THING is a symbol
+understood by thing-at-point.  BEG, END and TYPE specify the
+current selection.  If LINE is non-nil, the text object should be
+linewise, otherwise it is character wise."
+  (save-restriction
+    (narrow-to-region (save-excursion (beginning-of-line) (point))
+                      (save-excursion (end-of-line) (point)))
+    (evil-select-an-unrestricted-object thing beg end type count line)))
 
 (defun evil--get-block-range (op cl selection-type)
   "Return the exclusive range of a visual selection.

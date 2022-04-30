@@ -5959,7 +5959,15 @@ Line 2"))
     (evil-test-buffer
       "fo[o]\nbar"
       ("diW")
-      "[\n]bar")))
+      "[\n]bar")
+    (evil-test-buffer
+      "foo\n  [ ]  bar"
+      ("daw")
+      "foo\n[]")
+    (evil-test-buffer
+      "foo\n  [ ]  bar"
+      ("daW")
+      "foo\n[]")))
 
 (ert-deftest evil-test-word-objects-cjk ()
   "Test `evil-inner-word' and `evil-a-word' on CJK words"
