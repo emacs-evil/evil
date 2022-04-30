@@ -2,7 +2,7 @@
 
 ;; Author: Bailey Ling <bling at live.ca>
 
-;; Version: 1.14.1
+;; Version: 1.14.2
 
 ;;
 ;; This file is NOT part of GNU Emacs.

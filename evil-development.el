@@ -2,7 +2,7 @@
 
 ;; Author: Justin Burkett <justin at burkett dot cc>
 
-;; Version: 1.14.1
+;; Version: 1.14.2
 
 ;;
 ;; This file is NOT part of GNU Emacs.
