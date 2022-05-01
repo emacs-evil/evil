@@ -1614,6 +1614,13 @@ New Tex[t]
 
 ;;; Operators
 
+(ert-deftest evil-test-indent ()
+  "Test `evil-indent'"
+  (evil-test-buffer
+    "    Line with too much indentation."
+    ((kbd "C-x h") "=")
+    "Line with too much indentation."))
+
 (ert-deftest evil-test-keypress-parser ()
   "Test `evil-keypress-parser'"
   :tags '(evil operator)
