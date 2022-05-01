@@ -55,12 +55,12 @@ clean:
 # The TAG variable may specify a test tag or a test name:
 #       make test TAG=repeat
 # This will only run tests pertaining to the repeat system.
-test:
+test: clean
 	$(EMACS) -nw -Q --batch -L . $(LIBS) -l evil-tests.el \
 		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
 
 # Byte-compile Evil and run all tests.
-tests: compile
+tests: clean compile
 	$(EMACS) -nw -Q -L . $(LIBS) -l evil-tests.el \
 		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
 	rm -f *.elc .depend
@@ -118,4 +118,3 @@ version:
 # Change the version using make VERSION=x.y.z, but do not post to the newsgroup
 nversion:
 	@$(EMACS) --script scripts/evilupdate nonews "${VERSION}"
-
