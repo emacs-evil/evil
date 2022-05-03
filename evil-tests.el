@@ -1614,6 +1614,15 @@ New Tex[t]
 
 ;;; Operators
 
+(ert-deftest evil-test-indent ()
+  "Test `evil-indent'"
+  :tags '(evil visual operator)
+  (evil-test-buffer
+    :state visual
+    "<    Line with too much indentation.>"
+    ("=")
+    "Line with too much indentation."))
+
 (ert-deftest evil-test-keypress-parser ()
   "Test `evil-keypress-parser'"
   :tags '(evil operator)

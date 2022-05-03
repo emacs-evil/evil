@@ -1922,28 +1922,33 @@ but doesn't insert or remove any spaces."
   "Indent text."
   :move-point nil
   :type line
-  (if (and (= beg (line-beginning-position))
-           (= end (line-beginning-position 2)))
-      ;; since some Emacs modes can only indent one line at a time,
-      ;; implement "==" as a call to `indent-according-to-mode'
-      (indent-according-to-mode)
-    (goto-char beg)
-    (indent-region beg end))
-  ;; We also need to tabify or untabify the leading white characters
-  (when evil-indent-convert-tabs
-    (let* ((beg-line (line-number-at-pos beg))
-           (end-line (line-number-at-pos end))
-           (ln beg-line)
-           (convert-white (if indent-tabs-mode 'tabify 'untabify)))
-      (save-excursion
-        (while (<= ln end-line)
-          (goto-char (point-min))
-          (forward-line (- ln 1))
-          (back-to-indentation)
-          ;; Whether tab or space should be used is determined by indent-tabs-mode
-          (funcall convert-white (line-beginning-position) (point))
-          (setq ln (1+ ln)))))
-    (back-to-indentation)))
+  (save-restriction
+    (narrow-to-region beg end)
+    (if (and (= beg (line-beginning-position))
+             (= end (line-beginning-position 2)))
+        ;; since some Emacs modes can only indent one line at a time,
+        ;; implement "==" as a call to `indent-according-to-mode'
+        (indent-according-to-mode)
+      (goto-char beg)
+      (indent-region beg end))
+    ;; Update `beg' and `end'
+    (setq beg (point-min)
+          end (point-max))
+    ;; We also need to tabify or untabify the leading white characters
+    (when evil-indent-convert-tabs
+      (let* ((beg-line (line-number-at-pos beg))
+             (end-line (line-number-at-pos end))
+             (ln beg-line)
+             (convert-white (if indent-tabs-mode 'tabify 'untabify)))
+        (save-excursion
+          (while (<= ln end-line)
+            (goto-char (point-min))
+            (forward-line (- ln 1))
+            (back-to-indentation)
+            ;; Whether tab or space should be used is determined by indent-tabs-mode
+            (funcall convert-white (line-beginning-position) (point))
+            (setq ln (1+ ln)))))
+      (back-to-indentation))))
 
 (evil-define-operator evil-indent-line (beg end)
   "Indent the line."
