@@ -61,6 +61,8 @@
 ;;
 ;; This file is NOT part of Evil itself.
 
+(setq load-prefer-newer t)
+
 (require 'cl-lib)
 (require 'elp)
 (require 'ert)
