@@ -993,8 +993,12 @@ so it is more compatible with evil's notions of eol & tracking."
            (debug t))
   (let ((normalize-temporary-goal-column
          `(if (consp temporary-goal-column)
-              (setq temporary-goal-column (+ (car temporary-goal-column)
-                                             (cdr temporary-goal-column))))))
+              ;; Ensure a negative value is never set for `temporary-goal-column'
+              ;; as it may have a negative component when both `whitespace-mode'
+              ;; and `display-line-numbers-mode' are enabled.
+              ;; See #1297
+              (setq temporary-goal-column (max 0 (+ (car temporary-goal-column)
+                                                    (cdr temporary-goal-column)))))))
     `(progn
        (unless evil-start-of-line (setq this-command 'next-line))
        ,normalize-temporary-goal-column
