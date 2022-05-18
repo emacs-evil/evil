@@ -3329,7 +3329,7 @@ for the last window in each frame."
             wins))))
 
 (evil-define-command evil-quit (&optional force)
-  "Closes the current window, current frame, Emacs.
+  "Closes the current window, current frame, current tab, Emacs.
 If the current frame belongs to some client the client connection
 is closed."
   :repeat nil
@@ -3347,9 +3347,12 @@ is closed."
        (condition-case nil
            (delete-frame)
          (error
-          (if force
-              (kill-emacs)
-            (save-buffers-kill-emacs))))))))
+          (condition-case nil
+              (tab-bar-close-tab)
+            (error
+             (if force
+                 (kill-emacs)
+               (save-buffers-kill-emacs))))))))))
 
 (evil-define-command evil-quit-all (&optional bang)
   "Exits Emacs, asking for saving."
