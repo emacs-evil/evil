@@ -563,19 +563,37 @@ The following properties are supported:
   "Set the list of active overlays of the highlight HL to OVERLAYS."
   (aset hl 8 overlays))
 
+(defcustom evil-ex-hl-skip-major-mode-list '()
+  "List."
+  :type '(repeat :type function)
+  :group 'evil)
+
+(defun evil-ex-hl-buffers()
+  "Return buffers to highlight in."
+  (let ((bufs (list)) buf)
+    (dolist (frame (frame-list))
+      (dolist (win (window-list frame -1 nil))
+        (setq buf (window-buffer win))
+        (unless (or (memq buf bufs)
+                    (memq (with-current-buffer buf major-mode) evil-ex-hl-skip-major-mode-list))
+          (setq bufs (append bufs (list buf))))))
+    bufs))
+
 (defun evil-ex-delete-hl (name)
   "Remove the highlighting object with a certain NAME."
-  (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
-    (when hl
-      (mapc #'delete-overlay (evil-ex-hl-overlays hl))
-      (setq evil-ex-active-highlights-alist
-            (assq-delete-all name evil-ex-active-highlights-alist))
-      (evil-ex-hl-update-highlights))
-    (when (null evil-ex-active-highlights-alist)
-      (remove-hook 'window-scroll-functions
-                   #'evil-ex-hl-update-highlights-scroll t)
-      (remove-hook 'window-size-change-functions
-                   #'evil-ex-hl-update-highlights-resize))))
+  (dolist (buf (evil-ex-hl-buffers))
+    (with-current-buffer buf
+      (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
+        (when hl
+          (mapc #'delete-overlay (evil-ex-hl-overlays hl))
+          (setq evil-ex-active-highlights-alist
+                (assq-delete-all name evil-ex-active-highlights-alist))
+          (evil-ex-hl-update-highlights))
+        (when (null evil-ex-active-highlights-alist)
+          (remove-hook 'window-scroll-functions
+                      #'evil-ex-hl-update-highlights-scroll t)
+          (remove-hook 'window-size-change-functions
+                      #'evil-ex-hl-update-highlights-resize))))))
 
 (defun evil-ex-hl-active-p (name)
   "Whether the highlight with a certain NAME is active."
@@ -589,7 +607,7 @@ The following properties are supported:
                               (if (zerop (length pattern))
                                   nil
                                 pattern))
-      (evil-ex-hl-idle-update))))
+      (evil-ex-hl-update))))
 
 (defun evil-ex-hl-set-region (name beg end &optional _type)
   "Set minimal and maximal position of highlight NAME to BEG and END."
@@ -597,7 +615,7 @@ The following properties are supported:
     (when hl
       (evil-ex-hl-set-min hl beg)
       (evil-ex-hl-set-max hl end)
-      (evil-ex-hl-idle-update))))
+      (evil-ex-hl-update))))
 
 (defun evil-ex-hl-get-max (name)
   "Return the maximal position of the highlight with name NAME."
@@ -625,7 +643,7 @@ The following properties are supported:
               (when (window-live-p win)
                 (let ((beg (max (window-start win)
                                 (or (evil-ex-hl-min hl) (point-min))))
-                      (end (min (window-end win)
+                      (end (min (window-end win t)
                                 (or (evil-ex-hl-max hl) (point-max)))))
                   (when (< beg end)
                     (push (cons beg end) ranges)))))
@@ -742,28 +760,16 @@ Note that this function ignores the whole-line property of PATTERN."
      (t
       (user-error "Unknown search direction: %s" direction)))))
 
-(defun evil-ex-hl-idle-update ()
-  "Triggers the timer to update the highlights in the current buffer."
+(defun evil-ex-hl-update ()
+  "Update the highlights in the current buffer."
   (when (and evil-ex-interactive-search-highlight
              evil-ex-active-highlights-alist)
-    (when evil-ex-hl-update-timer
-      (cancel-timer evil-ex-hl-update-timer))
-    (setq evil-ex-hl-update-timer
-          (run-at-time evil-ex-hl-update-delay nil
-                       #'evil-ex-hl-do-update-highlight
-                       (current-buffer)))))
-
-(defun evil-ex-hl-do-update-highlight (&optional buffer)
-  "Timer function for updating the highlights."
-  (when (buffer-live-p buffer)
-    (with-current-buffer buffer
-      (evil-ex-hl-update-highlights)))
-  (setq evil-ex-hl-update-timer nil))
+    (evil-ex-hl-update-highlights)))
 
 (defun evil-ex-hl-update-highlights-scroll (win _beg)
   "Update highlights after scrolling in some window."
   (with-current-buffer (window-buffer win)
-    (evil-ex-hl-idle-update)))
+    (evil-ex-hl-update)))
 (put 'evil-ex-hl-update-highlights-scroll 'permanent-local-hook t)
 
 (defun evil-ex-hl-update-highlights-resize (frame)
@@ -771,7 +777,7 @@ Note that this function ignores the whole-line property of PATTERN."
   (let ((buffers (delete-dups (mapcar #'window-buffer (window-list frame)))))
     (dolist (buf buffers)
       (with-current-buffer buf
-        (evil-ex-hl-idle-update)))))
+        (evil-ex-hl-update)))))
 (put 'evil-ex-hl-update-highlights-resize 'permanent-local-hook t)
 
 ;; interactive search
@@ -780,12 +786,12 @@ Note that this function ignores the whole-line property of PATTERN."
 This function does nothing if `evil-ex-search-interactive' or
 `evil-ex-search-highlight-all' is nil. "
   (when (and evil-ex-search-interactive evil-ex-search-highlight-all)
-    (with-current-buffer (or evil-ex-current-buffer (current-buffer))
-      (unless (evil-ex-hl-active-p 'evil-ex-search)
-        (evil-ex-make-hl 'evil-ex-search
-                         :win (or (minibuffer-selected-window) (selected-window))))
-      (if pattern
-          (evil-ex-hl-change 'evil-ex-search pattern)))))
+    (dolist (buf (evil-ex-hl-buffers))
+      (with-current-buffer buf
+        (unless (evil-ex-hl-active-p 'evil-ex-search)
+          (evil-ex-make-hl 'evil-ex-search :win (or (minibuffer-selected-window) (selected-window))))
+        (if pattern
+            (evil-ex-hl-change 'evil-ex-search pattern))))))
 
 (defun evil-ex-search (&optional count)
   "Search forward or backward COUNT times for the current ex search pattern.
@@ -877,7 +883,9 @@ message to be shown. This function does nothing if
       (evil-ex-search-goto-offset offset)
       ;; update highlights
       (when evil-ex-search-highlight-all
-        (evil-ex-hl-change 'evil-ex-search pattern)))
+        (dolist (buf (evil-ex-hl-buffers))
+          (with-current-buffer buf
+            (evil-ex-hl-change 'evil-ex-search pattern)))))
      (t
       ;; no match
       (when evil-ex-search-overlay
@@ -886,7 +894,9 @@ message to be shown. This function does nothing if
         (setq evil-ex-search-overlay nil))
       ;; no highlights
       (when evil-ex-search-highlight-all
-        (evil-ex-hl-change 'evil-ex-search nil))
+        (dolist (buf (evil-ex-hl-buffers))
+          (with-current-buffer buf
+            (evil-ex-hl-change 'evil-ex-search nil))))
       ;; and go to initial position
       (goto-char evil-ex-search-start-point)))
     (when (stringp message)
