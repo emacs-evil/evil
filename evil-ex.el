@@ -721,6 +721,10 @@ This function interprets special file names like # and %."
       (set-text-properties
        0 (length evil-ex-argument) nil evil-ex-argument))
     (let ((buf (current-buffer)))
+      (when evil-ex-reverse-range
+        (setq evil-ex-reverse-range nil)
+        (unless (y-or-n-p "Backward range given, OK to swap? ")
+          (user-error "Ex command cancelled")))
       (unwind-protect
           (cond
            ((not evil-ex-range)
@@ -773,6 +777,11 @@ This function interprets special file names like # and %."
 
 (defun evil-ex-range (beg-line &optional end-line)
   "Returns the first and last position of the current range."
+  (when (and end-line (< end-line beg-line))
+    (setq evil-ex-reverse-range t)
+    (let ((beg-line* beg-line))
+      (setq beg-line end-line
+            end-line beg-line*)))
   (evil-range
    (evil-line-position beg-line)
    (evil-line-position (or end-line beg-line) -1)
