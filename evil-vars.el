@@ -1890,6 +1890,9 @@ See `evil-ex-init-shell-argument-completion'.")
 (defvar evil-ex-tree nil
   "The syntax tree.")
 
+(defvar evil-ex-reverse-range nil
+  "Whether the current ex range was entered reversed.")
+
 (defvar evil-ex-command nil
   "The current Ex command.")
 
