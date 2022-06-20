@@ -711,7 +711,9 @@ This function interprets special file names like # and %."
           (or range (and count (evil-ex-range count count))))
          (evil-ex-command (evil-ex-completed-binding command))
          (restore-point (when (evil-get-command-property evil-ex-command :restore-point)
-                          (min (point) (or (mark) most-positive-fixnum))))
+                          (if (evil-visual-state-p)
+                              (min (point) (or (mark) most-positive-fixnum))
+                            (point))))
          (evil-ex-bang (and bang t))
          (evil-ex-argument (copy-sequence argument))
          (evil-this-type (evil-type evil-ex-range))
@@ -724,7 +726,7 @@ This function interprets special file names like # and %."
       (when evil-ex-reverse-range
         (setq evil-ex-reverse-range nil)
         (unless (y-or-n-p "Backward range given, OK to swap? ")
-          (user-error "Ex command cancelled")))
+          (user-error "")))
       (unwind-protect
           (cond
            ((not evil-ex-range)
