@@ -1955,7 +1955,15 @@ New Tex[t]
     (evil-test-buffer
       "[a]\nb\nc\nd\ne\n"
       (":+4y" [return] "p")
-      "a\n[e]\nb\nc\nd\ne\n")))
+      "a\n[e]\nb\nc\nd\ne\n")
+    (evil-test-buffer
+      "1\n2\n3\n4\n5\n6\n7\n8\n9\n1[0]"
+      (":-5,.y")
+      "1\n2\n3\n4\n5\n6\n7\n8\n9\n1[0]")
+    (evil-test-buffer
+      "1\n2\n3\n4\n[5]\n6\n7\n8\n9\n10"
+      ("my" "G" ":'y,.y")
+      "1\n2\n3\n4\n5\n6\n7\n8\n9\n[1]0")))
 
 (ert-deftest evil-test-delete ()
   "Test `evil-delete'"
