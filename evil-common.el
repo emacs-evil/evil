@@ -3109,7 +3109,7 @@ This can be overridden with TYPE."
        (>= (evil-range-end range2)
            (evil-range-end range1))))
 
-(defun evil-select-inner-unrestricted-object (thing beg end type &optional count line)
+(defun evil-select-inner-object (thing beg end type &optional count line)
   "Return an inner text object range of COUNT objects.
 If COUNT is positive, return objects following point; if COUNT is
 negative, return objects preceding point.  If one is unspecified,
@@ -3139,7 +3139,7 @@ linewise, otherwise it is character wise."
                 (if line 'line type)
                 :expanded t)))
 
-(defun evil-select-inner-object (thing beg end type &optional count line)
+(defun evil-select-inner-restricted-object (thing beg end type &optional count line)
   "Return an inner text object range of COUNT objects.
 Selection is restricted to the current line.
 If COUNT is positive, return objects following point; if COUNT is
@@ -3151,7 +3151,7 @@ linewise, otherwise it is character wise."
   (save-restriction
     (narrow-to-region (save-excursion (beginning-of-line) (point))
                       (save-excursion (end-of-line) (point)))
-    (evil-select-inner-unrestricted-object thing beg end type count line)))
+    (evil-select-inner-object thing beg end type count line)))
 
 (defun evil-select-an-unrestricted-object (thing beg end type count &optional line)
   "Return an outer text object range of COUNT objects.
