@@ -1276,7 +1276,7 @@ or line COUNT to the top of the window."
 
 (evil-define-text-object evil-a-word (count &optional beg end type)
   "Select a word."
-  (evil-select-an-object 'evil-word beg end type count))
+  (evil-select-a-restricted-object 'evil-word beg end type count))
 
 (evil-define-text-object evil-inner-word (count &optional beg end type)
   "Select inner word."
@@ -1284,7 +1284,7 @@ or line COUNT to the top of the window."
 
 (evil-define-text-object evil-a-WORD (count &optional beg end type)
   "Select a WORD."
-  (evil-select-an-object 'evil-WORD beg end type count))
+  (evil-select-a-restricted-object 'evil-WORD beg end type count))
 
 (evil-define-text-object evil-inner-WORD (count &optional beg end type)
   "Select inner WORD."
@@ -1292,7 +1292,7 @@ or line COUNT to the top of the window."
 
 (evil-define-text-object evil-a-symbol (count &optional beg end type)
   "Select a symbol."
-  (evil-select-an-unrestricted-object 'evil-symbol beg end type count))
+  (evil-select-an-object 'evil-symbol beg end type count))
 
 (evil-define-text-object evil-inner-symbol (count &optional beg end type)
   "Select inner symbol."
@@ -1300,7 +1300,7 @@ or line COUNT to the top of the window."
 
 (evil-define-text-object evil-a-sentence (count &optional beg end type)
   "Select a sentence."
-  (evil-select-an-unrestricted-object 'evil-sentence beg end type count))
+  (evil-select-an-object 'evil-sentence beg end type count))
 
 (evil-define-text-object evil-inner-sentence (count &optional beg end type)
   "Select inner sentence."
@@ -1309,7 +1309,7 @@ or line COUNT to the top of the window."
 (evil-define-text-object evil-a-paragraph (count &optional beg end type)
   "Select a paragraph."
   :type line
-  (evil-select-an-unrestricted-object 'evil-paragraph beg end type count t))
+  (evil-select-an-object 'evil-paragraph beg end type count t))
 
 (evil-define-text-object evil-inner-paragraph (count &optional beg end type)
   "Select inner paragraph."
