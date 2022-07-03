@@ -2009,6 +2009,10 @@ otherwise, it stays behind."
     (let ((marker (evil-get-marker char t)) alist)
       (unless (markerp marker)
         (cond
+         ((eq marker 'evil-visual-beginning)
+          (setq marker evil-visual-mark))
+         ((eq marker 'evil-visual-goto-end)
+          (setq marker evil-visual-point))
          ((and marker (symbolp marker) (boundp marker))
           (set marker (or (symbol-value marker) (make-marker)))
           (setq marker (symbol-value marker)))
