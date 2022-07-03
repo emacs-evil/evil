@@ -7189,6 +7189,61 @@ echo foxtrot\ngolf hotel"
       "alpha bravo\ncharlie delta
 <alpha bravo\ncharlie delta\n>golf hotel")))
 
+(ert-deftest evil-test-visual-redefine ()
+  "Test redefining a previous selection"
+  :tags '(evil visual)
+  (ert-info ("Redefine characterwise selection")
+    (evil-test-buffer
+      ";; <[T]his> buffer is for notes."
+      ([escape] "gv")
+      ";; <[T]his> buffer is for notes."
+      ([escape] "2lm<2wm>gv")
+      ";; Th<is buffer [i]>s for notes."))
+  (ert-info ("Redefine linewise selection")
+    (evil-test-buffer
+      :visual line
+      "<[a]lpha bravo
+>charlie delta
+echo foxtrot
+golf hotel"
+      ([escape] "gv")
+      "<[a]lpha bravo
+>charlie delta
+echo foxtrot
+golf hotel"
+      ([escape] "2jm>gv")
+      "<alpha bravo
+charlie delta
+[e]cho foxtrot
+>golf hotel"
+      ([escape] "km<gv")
+      "alpha bravo
+<charlie delta
+[e]cho foxtrot
+>golf hotel"))
+  (ert-info ("Redefine blockwise selection")
+    (evil-test-buffer
+      :visual block
+      "<alpha bravo
+charli[e]> delta
+echo foxtrot
+golf hotel"
+      ([escape] "gv")
+      "<alpha bravo
+charli[e]> delta
+echo foxtrot
+golf hotel"
+      ([escape] "2jm>gv")
+      "<alpha bravo
+charlie delta
+echo foxtrot
+golf h[o]>tel"
+      ([escape] "k0m<gv")
+      "alpha bravo
+charlie delta
+<echo foxtrot
+golf h[o]>tel")))
+
 ;;; Replace state
 
 (ert-deftest evil-test-replacement ()
