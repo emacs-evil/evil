@@ -1698,18 +1698,22 @@ of the block."
   (interactive "<R><x><y>")
   (let ((delete-func (or delete-func #'evil-delete))
         (nlines (1+ (evil-count-lines beg end)))
-        (opoint (save-excursion
-                  (goto-char beg)
-                  (line-beginning-position))))
+        opoint leftmost-point)
+    (save-excursion
+      (goto-char beg)
+      (setq opoint (line-beginning-position))
+      (setq leftmost-point
+            (let ((inhibit-field-text-motion t)) (line-beginning-position))))
     (unless (eq evil-want-fine-undo t)
       (evil-start-undo-step))
     (funcall delete-func beg end type register yank-handler)
     (cond
      ((eq type 'line)
       (setq this-command 'evil-change-whole-line) ; for evil-maybe-remove-spaces
-      (if (= opoint (point))
-          (evil-open-above 1)
-        (evil-open-below 1)))
+      (cond
+       ((/= opoint leftmost-point) (evil-insert 1)) ; deletion didn't delete line
+       ((= opoint (point)) (evil-open-above 1))
+       (t (evil-open-below 1))))
      ((eq type 'block)
       (evil-insert 1 nlines))
      (t
