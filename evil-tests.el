@@ -5986,7 +5986,16 @@ Line 2"))
     (evil-test-buffer
       "foo\n  [ ]  bar"
       ("daW")
-      "foo\n[]")))
+      "foo\n[]"))
+  (ert-info ("Deleting the only word on a line doesn't delete indentation")
+    (evil-test-buffer
+     "   [b]ar"
+     ("daw")
+     "  [ ]")
+    (evil-test-buffer
+      "   [b]ar"
+      ("daW")
+      "  [ ]")))
 
 (ert-deftest evil-test-word-objects-cjk ()
   "Test `evil-inner-word' and `evil-a-word' on CJK words"

@@ -3207,7 +3207,10 @@ linewise, otherwise it is character wise."
             (setq wsend
                   (evil-with-restriction
                       ;; restrict to current line if we do non-line selection
-                      (and (not line) (line-beginning-position))
+                      (and (not line)
+                           (if (member thing '(evil-word evil-WORD))
+                               (progn (back-to-indentation) (point))
+                             (line-beginning-position)))
                       (and (not line) (line-end-position))
                     (evil-bounds-of-not-thing-at-point thing (- dir))))
             (when wsend (setq other wsend addcurrent t)))))))
