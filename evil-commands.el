@@ -2863,6 +2863,16 @@ COL defaults to the current column."
                                 (min (line-end-position)
                                      (+ n (point))))))))
 
+(defun evil-enter-replace-state (count)
+  "Switch to Replace state at point.
+The insertion will be repeated COUNT times."
+  (interactive "p")
+  (setq evil-insert-count count)
+  (setq evil-insert-count count
+        evil-insert-lines nil
+        evil-insert-vcount nil)
+  (evil-replace-state 1))
+
 ;; completion
 (evil-define-command evil-complete-next (&optional arg)
   "Complete to the nearest following word.

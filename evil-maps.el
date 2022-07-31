@@ -53,7 +53,7 @@
 (define-key evil-normal-state-map "P" 'evil-paste-before)
 (define-key evil-normal-state-map "q" 'evil-record-macro)
 (define-key evil-normal-state-map "r" 'evil-replace)
-(define-key evil-normal-state-map "R" 'evil-replace-state)
+(define-key evil-normal-state-map "R" 'evil-enter-replace-state)
 (define-key evil-normal-state-map "s" 'evil-substitute)
 (define-key evil-normal-state-map "S" 'evil-change-whole-line)
 (define-key evil-normal-state-map "x" 'evil-delete-char)
@@ -383,7 +383,7 @@
 ;;; Insert state
 
 (defvar evil-insert-state-bindings
-  `(([insert] . evil-replace-state)
+  `(([insert] . evil-enter-replace-state)
     ("\C-q" . evil-quoted-insert)
     ("\C-v" . evil-quoted-insert)
     ("\C-k" . evil-insert-digraph)

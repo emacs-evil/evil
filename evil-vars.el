@@ -1588,7 +1588,7 @@ has been repeated.")
 See the function `evil-maybe-remove-spaces'.")
 
 (evil-define-local-var evil-insert-count nil
-  "The explicit count passed to an command starting Insert state.")
+  "The explicit count passed to a command starting Insert or Replace state.")
 
 (evil-define-local-var evil-insert-vcount nil
   "The information about the number of following lines the

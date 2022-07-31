@@ -2533,29 +2533,30 @@ disjoint union is not a single range."
       (setq ranges (cdr ranges)))
     range))
 
-(defun evil-track-last-insertion (beg end len)
+(defun evil-track-last-insertion (chg-beg chg-end len)
   "Track the last insertion range and its text.
+CHG-BEG CHG-END & LEN are supplied as for `after-change-functions'.
 The insertion range is stored as a pair of buffer positions in
-`evil-current-insertion'. If a subsequent change is compatible,
+`evil-current-insertion'.  If a subsequent change is compatible,
 then the current range is modified, otherwise it is replaced by a
-new range. Compatible changes are changes that do not create a
+new range.  Compatible changes are changes that do not create a
 disjoin range."
-  ;; deletion
-  (when (> len 0)
-    (if (and evil-current-insertion
-             (>= beg (car evil-current-insertion))
-             (<= (+ beg len) (cdr evil-current-insertion)))
-        (setcdr evil-current-insertion
-                (- (cdr evil-current-insertion) len))
-      (setq evil-current-insertion nil)))
-  ;; insertion
-  (if (and evil-current-insertion
-           (>= beg (car evil-current-insertion))
-           (<= beg (cdr evil-current-insertion)))
-      (setcdr evil-current-insertion
-              (+ (- end beg)
-                 (cdr evil-current-insertion)))
-    (setq evil-current-insertion (cons beg end))))
+  (let* ((ins-beg (car evil-current-insertion))
+         (ins-end (cdr evil-current-insertion))
+         (chg-beg-ok (and evil-current-insertion (<= ins-beg chg-beg))))
+    (cond
+     ;; Replace-state deletion - ignore
+     ((and (< 0 (- chg-end chg-beg)) (= 0 len) (evil-replace-state-p)) nil)
+     ;; Insert-state deletion - contract current insertion
+     ((= 0 (- chg-end chg-beg))
+      (if (and chg-beg-ok (<= (+ chg-beg len) ins-end))
+          (setcdr evil-current-insertion (- ins-end len))
+        (setq evil-current-insertion nil)))
+     ;; Insert- or Replace-state insertion - expand current insertion
+     (t
+      (if (and chg-beg-ok (<= chg-beg ins-end))
+          (setcdr evil-current-insertion (+ ins-end (- chg-end chg-beg)))
+        (setq evil-current-insertion (cons chg-beg chg-end)))))))
 (put 'evil-track-last-insertion 'permanent-local-hook t)
 
 (defun evil-start-track-last-insertion ()

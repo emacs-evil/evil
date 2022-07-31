@@ -141,7 +141,7 @@ commands opening a new line."
 (put 'evil-insert-repeat-hook 'permanent-local-hook t)
 
 (defun evil-cleanup-insert-state ()
-  "Called when Insert state is about to be exited.
+  "Called when Insert or Replace state is about to be exited.
 Handles the repeat-count of the insertion command."
   (when evil-insert-count
     (dotimes (_ (1- evil-insert-count))
@@ -868,16 +868,22 @@ CORNER defaults to `upper-left'."
   :tag " <R> "
   :cursor hbar
   :message "-- REPLACE --"
+  :entry-hook (evil-start-track-last-insertion)
+  :exit-hook (evil-cleanup-insert-state evil-stop-track-last-insertion)
   :input-method t
   (cond
    ((evil-replace-state-p)
     (overwrite-mode 1)
     (add-hook 'pre-command-hook #'evil-replace-pre-command nil t)
+    (add-hook 'pre-command-hook #'evil-insert-repeat-hook)
     (unless (eq evil-want-fine-undo t)
       (evil-start-undo-step)))
    (t
     (overwrite-mode -1)
     (remove-hook 'pre-command-hook #'evil-replace-pre-command t)
+    (remove-hook 'pre-command-hook #'evil-insert-repeat-hook)
+    (setq evil-insert-repeat-info evil-repeat-info)
+    (evil-set-marker ?^ nil t)
     (unless (eq evil-want-fine-undo t)
       (evil-end-undo-step))
     (evil-move-cursor-back)))
