@@ -2612,10 +2612,7 @@ the lines."
         (evil-visual-rotate 'lower-right)
         (backward-char)
         (evil-append count)))
-    (unless (= (current-column)
-               (save-excursion (end-of-line) (current-column)))
-      ;; Subtly different from `(eolp)' - see issue #1617
-      (forward-char))
+    (unless (eolp) (forward-char))
     (evil-insert count vcount skip-empty-lines)
     (add-hook 'post-command-hook #'evil-maybe-remove-spaces)))
 
