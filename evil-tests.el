@@ -7289,7 +7289,28 @@ golf h[o]>tel")))
       ";; foo bar\n;; foo[ ]quux"
       ([backspace backspace backspace])
       ";; foo bar\n;; [q]ux quux")
-    (define-key evil-replace-state-map (kbd "C-y") nil)))
+    (define-key evil-replace-state-map (kbd "C-y") nil))
+  (ert-info ("Can give Replace-state a count repeat it")
+    (evil-test-buffer
+      "a[l]pha bravo"
+      ("3Rx" [escape])
+      "axx[x]a bravo"
+      ("wi\C-a")
+      "axxxa x[]bravo"))
+  (ert-info ("Replace deletion keeps consistent . register")
+    (evil-test-buffer
+      "a[l]pha bravo"
+      ("Rfop" [backspace] "o" [escape])
+      "afo[o]a bravo"
+      ("A \C-@")
+      "afooa bravo fo[o]"))
+  (ert-info ("Replace-state sets ^ mark")
+    (evil-test-buffer
+      "a[l]pha bravo"
+      ("Rxx" [escape] "$")
+      "axxha brav[o]"
+      ("`^")
+      "axx[h]a bravo")))
 
 ;;; Ex
 
