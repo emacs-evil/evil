@@ -3058,7 +3058,12 @@ word3[]"))
       ("yiw" "w" "R" "\C-r0")
       "alpha alpha[ ]charlie"
       ([backspace] [backspace] [backspace])
-      "alpha al[a]vo charlie")))
+      "alpha al[a]vo charlie"))
+  (ert-info ("Normal delete after visual delete doesn't clobber register")
+    (evil-test-buffer
+      "[a]lpha bravo charlie delta"
+      ("vf \"xd" "dw" ";\"xp")
+      "charlie alpha delta")))
 
 (ert-deftest evil-test-last-insert-register ()
   "Test last insertion register."
