@@ -420,6 +420,7 @@ If LATER is non-nil, exit after the current command."
           (setq deactivate-mark t)
         (when evil-visual-region-expanded
           (evil-visual-contract-region))
+        (setq evil-this-register nil)
         (evil-change-to-previous-state)))))
 
 (defun evil-visual-tag (&optional selection)
