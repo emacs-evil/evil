@@ -6000,7 +6000,12 @@ Line 2"))
     (evil-test-buffer
       "   [b]ar"
       ("daW")
-      "  [ ]")))
+      "  [ ]")
+    (ert-info ("But deleting the final word of many behaves as normal")
+      (evil-test-buffer
+        "   foo   [b]ar"
+        ("daw")
+        "   fo[o]"))))
 
 (ert-deftest evil-test-word-objects-cjk ()
   "Test `evil-inner-word' and `evil-a-word' on CJK words"
