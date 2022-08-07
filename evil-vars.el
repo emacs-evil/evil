@@ -451,7 +451,8 @@ before point."
 (defcustom evil-kill-on-visual-paste t
   "Whether pasting in visual state adds the replaced text to the
 kill ring, making it the default for the next paste. The default,
-replicates the default Vim behavior."
+replicates the default Vim behavior for `p'. This is ignored by
+`evil-paste-before' (\\[evil-paste-before]) which never kills on visual paste."
   :type 'boolean
   :group 'evil)
 
