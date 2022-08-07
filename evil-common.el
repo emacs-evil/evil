@@ -3210,7 +3210,7 @@ linewise, otherwise it is character wise."
                       ;; restrict to current line if we do non-line selection
                       (and (not line)
                            (if (member thing '(evil-word evil-WORD))
-                               (progn (back-to-indentation) (point))
+                               (save-excursion (back-to-indentation) (point))
                              (line-beginning-position)))
                       (and (not line) (line-end-position))
                     (evil-bounds-of-not-thing-at-point thing (- dir))))
