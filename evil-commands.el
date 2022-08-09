@@ -2132,7 +2132,7 @@ The return value is the yanked text."
   (setq count (prefix-numeric-value count))
   (if (evil-visual-state-p)
       ;; This is the only difference with evil-paste-after in visual-state
-      (let ((evil-kill-on-visual-paste nil))
+      (let ((evil-kill-on-visual-paste (not evil-kill-on-visual-paste)))
         (evil-visual-paste count register))
     (evil-with-undo
       (let* ((text (if register
