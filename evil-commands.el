@@ -2227,6 +2227,26 @@ The return value is the yanked text."
           (setq evil-last-paste nil))
         (and (> (length text) 0) text)))))
 
+(evil-define-command evil-paste-before-cursor-after
+  (count &optional register yank-handler)
+  "The same as `evil-paste-before' but
+leave the cursor just after the new text."
+  :suppress-operator t
+  (interactive "*P<x>")
+  (setq count (prefix-numeric-value count))
+  (evil-paste-before count register yank-handler)
+  (evil-forward-char 1 nil t))
+
+(evil-define-command evil-paste-after-cursor-after
+  (count &optional register yank-handler)
+  "The same as `evil-paste-after' but
+leave the cursor just after the new text."
+  :suppress-operator t
+  (interactive "*P<x>")
+  (setq count (prefix-numeric-value count))
+  (evil-paste-after count register yank-handler)
+  (evil-forward-char 1 nil t))
+
 (defun evil-insert-for-yank-at-col (startcol _endcol string count)
   "Insert STRING at STARTCOL."
   (move-to-column startcol)
