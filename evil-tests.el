@@ -3103,6 +3103,17 @@ word3[]"))
      ("\"nyt=" "A\C-r=" "\C-rn" [return])
      "50/10 * 100 = 500")))
 
+(ert-deftest evil-test-gp-gP ()
+  (ert-info ("gp and gP are just like p and P but move the cursor forward")
+    (evil-test-buffer
+      "[a]lpha bravo charlie"
+      ("ye" "2f " "gp")
+      "alpha bravo alpha[c]harlie"
+      ("2F " "gP")
+      "alphaalpha[ ]bravo alphacharlie"
+      ("l" "ve" "gp")
+      "alphaalpha alpha[ ]alphacharlie")))
+
 (ert-deftest evil-test-ex-put ()
   "evil-ex-put inserts text linewise, regardless of yank-handler"
   (ert-info ("Can put linewise text from default register, by line number")
