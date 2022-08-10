@@ -882,6 +882,18 @@ Columns are counted from zero."
   (evil-goto-mark char noerror)
   (evil-first-non-blank))
 
+(evil-define-motion evil-goto-last-change (count)
+  "Like `goto-last-change' but takes a COUNT rather than a span."
+  (setq this-command 'goto-last-change)
+  (dotimes (_ (or count 1))
+    (goto-last-change nil)))
+
+(evil-define-motion evil-goto-last-change-reverse (count)
+  "Like `goto-last-change-reverse' but takes a COUNT rather than a span."
+  (setq this-command 'goto-last-change-reverse)
+  (dotimes (_ (or count 1))
+    (goto-last-change-reverse nil)))
+
 (evil-define-motion evil-jump-backward (count)
   "Go to older position in jump list.
 To go the other way, press \
