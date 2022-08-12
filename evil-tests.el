@@ -7733,12 +7733,17 @@ golf h[o]>tel")))
   (ert-info ("Substitute doesn't match final empty line")
     (evil-test-buffer
       "abc\n[d]ef\n\nghi"
-      (":s/$/4")
+      (":s/$/4" [return])
       "abc\n[d]ef4\n\nghi")
     (evil-test-buffer
       "abc\n[d]ef\n\nghi"
-      (":s/f\\w*/4")
-      "abc\n[d]e4\n\nghi")))
+      (":s/f\\w*/4" [return])
+      "abc\n[d]e4\n\nghi"))
+  (ert-info ("Substitute doesn't move point if 0 matches")
+    (evil-test-buffer
+      "abc\nd[e]f\nghi"
+      (":%s/nothere/foo" [return])
+      "abc\nd[e]f\nghi")))
 
 (ert-deftest evil-test-ex-repeat-substitute-replacement ()
   "Test `evil-ex-substitute' with repeating of previous substitutions."
