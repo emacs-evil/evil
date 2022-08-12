@@ -3979,7 +3979,9 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
              (if count-only "Found" "Replaced")
              evil-ex-substitute-nreplaced
              (if (/= evil-ex-substitute-nreplaced 1) "s" ""))
-    (evil-first-non-blank)))
+    (if (and (= 0 evil-ex-substitute-nreplaced) evil-ex-point)
+        (goto-char evil-ex-point)
+      (evil-first-non-blank))))
 
 (evil-define-operator evil-ex-repeat-substitute
   (beg end flags)
