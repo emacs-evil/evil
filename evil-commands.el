@@ -1739,7 +1739,7 @@ of the block."
   (interactive "<R><x><y>")
   (if (and (evil-visual-state-p) (eq 'inclusive type))
       (cl-destructuring-bind (beg* end* &rest) (evil-line-expand beg end)
-        (evil-change-whole-line beg* end* register yank-handler))
+          (evil-change-whole-line beg* end* register yank-handler))
     (evil-change beg end type register yank-handler #'evil-delete-line)))
 
 (evil-define-operator evil-change-whole-line
