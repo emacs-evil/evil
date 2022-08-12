@@ -1708,7 +1708,8 @@ If TYPE is `line', insertion starts on an empty line.
 If TYPE is `block', the inserted text in inserted at each line
 of the block."
   (interactive "<R><x><y>")
-  (let ((delete-func (or delete-func #'evil-delete))
+  (let ((register (or register (if evil-change-prevent-kill-ring ?_)))
+        (delete-func (or delete-func #'evil-delete))
         (nlines (1+ (evil-count-lines beg end)))
         opoint leftmost-point)
     (save-excursion
@@ -1738,7 +1739,7 @@ of the block."
   (interactive "<R><x><y>")
   (if (and (evil-visual-state-p) (eq 'inclusive type))
       (cl-destructuring-bind (beg* end* &rest) (evil-line-expand beg end)
-          (evil-change-whole-line beg* end* register yank-handler))
+        (evil-change-whole-line beg* end* register yank-handler))
     (evil-change beg end type register yank-handler #'evil-delete-line)))
 
 (evil-define-operator evil-change-whole-line
