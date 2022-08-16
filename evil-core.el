@@ -132,6 +132,7 @@
     (when (minibufferp)
       (setq-local evil-default-state 'insert)
       (setq-local evil-echo-state nil))
+    (setq evil-input-method current-input-method)
     ;; The initial state is usually setup by `evil-initialize' when
     ;; the major-mode in a buffer changes. This preliminary
     ;; initialization is only for the case when `evil-local-mode' is
