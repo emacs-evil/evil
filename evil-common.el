@@ -1271,6 +1271,28 @@ See also `evil-goto-min'."
                          positions))
     (goto-char (apply #'max positions))))
 
+(defun evil-next-adjusted-pos (&optional pos)
+  "Get next buffer position adjusting for composed characters.
+If POS is nil use point. This function returns pos+1 unless that
+position is in the middle of composed characters, in which case
+this returns the first position outside the composition."
+  (let* ((next-pos (evil-normalize-position (1+ (or pos (point)))))
+         (comp (find-composition next-pos)))
+    (if (and comp (nth 2 comp))
+        (nth 1 comp)
+      next-pos)))
+
+(defun evil-prev-adjusted-pos (&optional pos)
+  "Get previous buffer position adjusting for composed characters.
+If POS is nil use point. This function returns pos-1 unless that
+position is in the middle of composed characters, in which case
+this returns the first position outside the composition."
+  (let* ((prev-pos (evil-normalize-position (1- (or pos (point)))))
+         (comp (find-composition prev-pos)))
+    (if (and comp (nth 2 comp))
+        (nth 0 comp)
+      prev-pos)))
+
 (defun evil-forward-not-thing (thing &optional count)
   "Move point to the end or beginning of the complement of THING."
   (evil-motion-loop (dir (or count 1))
