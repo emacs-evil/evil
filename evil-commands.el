@@ -618,11 +618,9 @@ and jump to the corresponding one."
           limit
           ov)
       (when (evil--flyspell-overlay-at pos forwardp)
-        (if (/= pos (point-min))
-            (setq pos (save-excursion (goto-char pos)
-                                      (forward-word (if forwardp 1 -1))
-                                      (point)))
-          (setq pos (point-max))))
+        (setq pos (save-excursion (goto-char pos)
+                                  (forward-word (if forwardp 1 -1))
+                                  (point))))
       (setq limit (if forwardp (point-max) (point-min))
             ov (evil--flyspell-overlay-after pos limit forwardp))
       (if ov

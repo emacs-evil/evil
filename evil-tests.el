@@ -5850,7 +5850,17 @@ Line 2"))
       ("[s")
       "I cannt tpye for [l]yfe"
       ("[s")
-      "I cannt [t]pye for lyfe"))
+      "I cannt [t]pye for lyfe")
+    (evil-test-buffer
+      "[o]en otw thre"
+      (flyspell-mode)
+      (flyspell-buffer)
+      ("]s")
+      "oen [o]tw thre"
+      ("]s")
+      "oen otw [t]hre"
+      ("]s")
+      "[o]en otw thre"))
   (ert-info ("With count")
     (evil-test-buffer
       "[I] cannt tpye for lyfe"
