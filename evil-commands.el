@@ -4560,20 +4560,18 @@ If ARG is empty, maximize the current window height."
 With COUNT: Exchange current window with COUNTth window."
   :repeat nil
   (interactive "<c>")
-  (let ((this-buffer (window-buffer)))
+  (let ((this-buffer (window-buffer))
+        other-buffer other-window)
     (if (not count)
-        (let ((next-buffer (window-buffer (next-window))))
-          (switch-to-buffer next-buffer nil t)
-          (select-window (next-window))
-          (switch-to-buffer this-buffer nil t))
-      (let (other-window other-buffer)
-        (save-window-excursion
-          (evil-window-next count)
-          (setq other-window (selected-window)
-                other-buffer (window-buffer)))
-        (switch-to-buffer other-buffer nil t)
-        (select-window other-window)
-        (switch-to-buffer this-buffer nil t)))))
+        (setq other-buffer (window-buffer (next-window))
+              other-window (next-window))
+      (save-window-excursion
+        (evil-window-next count)
+        (setq other-buffer (window-buffer)
+              other-window (selected-window))))
+    (switch-to-buffer other-buffer nil t)
+    (select-window other-window)
+    (switch-to-buffer this-buffer nil t)))
 
 (evil-define-command evil-window-move-very-top ()
   "Closes the current window, splits the upper-left one horizontally
