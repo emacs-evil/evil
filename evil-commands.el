@@ -4411,7 +4411,7 @@ top-left."
   (if (not count)
       (select-window (next-window))
     (evil-window-top-left)
-    (other-window (1- count))))
+    (other-window (1- (min count (length (window-list)))))))
 
 (evil-define-command evil-window-prev (count)
   "Move the cursor to the previous window in the cyclic order.
@@ -4422,7 +4422,7 @@ top-left."
   (if (not count)
       (select-window (previous-window))
     (evil-window-top-left)
-    (other-window (1- count))))
+    (other-window (1- (min count (length (window-list)))))))
 
 (evil-define-command evil-window-new (count file)
   "Splits the current window horizontally
