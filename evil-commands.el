@@ -4555,6 +4555,26 @@ If ARG is empty, maximize the current window height."
               slist (cdr slist)))
       (select-window (cadr (window-list))))))
 
+(evil-define-command evil-window-exchange (count)
+  "Without COUNT: exchange current window with next one.
+With COUNT: Exchange current window with COUNTth window."
+  :repeat nil
+  (interactive "<c>")
+  (let ((this-buffer (window-buffer)))
+    (if (not count)
+        (let ((next-buffer (window-buffer (next-window))))
+          (switch-to-buffer next-buffer nil t)
+          (select-window (next-window))
+          (switch-to-buffer this-buffer nil t))
+      (let (other-window other-buffer)
+        (save-window-excursion
+          (evil-window-next count)
+          (setq other-window (selected-window)
+                other-buffer (window-buffer)))
+        (switch-to-buffer other-buffer nil t)
+        (select-window other-window)
+        (switch-to-buffer this-buffer nil t)))))
+
 (evil-define-command evil-window-move-very-top ()
   "Closes the current window, splits the upper-left one horizontally
 and redisplays the current buffer there."
