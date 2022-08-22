@@ -2990,11 +2990,18 @@ If no description is available, return the empty string."
 
 (defun evil-range (beg end &optional type &rest properties)
   "Return a list (BEG END [TYPE] PROPERTIES...).
-BEG and END are buffer positions (numbers or markers),
-TYPE is a type as per `evil-type-p', and PROPERTIES is
-a property list."
+BEG and END are buffer positions (numbers or markers), TYPE is a
+type as per `evil-type-p', and PROPERTIES is a property list. If
+beg or end are inside a sequence of composed characters, adjust
+the positions to be outside of this sequence."
   (let ((beg (evil-normalize-position beg))
         (end (evil-normalize-position end)))
+    (when-let* ((comp (find-composition beg))
+                (valid (nth 2 comp)))
+      (setq beg (nth 0 comp)))
+    (when-let* ((comp (find-composition end))
+                (valid (nth 2 comp)))
+      (setq end (nth 1 comp)))
     (when (and (numberp beg) (numberp end))
       (append (list (min beg end) (max beg end))
               (when (evil-type-p type)
