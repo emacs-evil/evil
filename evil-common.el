@@ -2996,12 +2996,12 @@ beg or end are inside a sequence of composed characters, adjust
 the positions to be outside of this sequence."
   (let ((beg (evil-normalize-position beg))
         (end (evil-normalize-position end)))
-    (when-let* ((comp (find-composition beg))
-                (valid (nth 2 comp)))
-      (setq beg (nth 0 comp)))
-    (when-let* ((comp (find-composition end))
-                (valid (nth 2 comp)))
-      (setq end (nth 1 comp)))
+    (let ((comp (find-composition beg)))
+      (when (and (listp comp) (nth 2 comp)) ; valid composition
+        (setq beg (nth 0 comp))))
+    (let ((comp (find-composition end)))
+      (when (and (listp comp) (nth 2 comp))
+        (setq end (nth 1 comp))))
     (when (and (numberp beg) (numberp end))
       (append (list (min beg end) (max beg end))
               (when (evil-type-p type)
