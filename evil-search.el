@@ -939,7 +939,7 @@ Returns a triple (regexp  offset next-search)."
 
 (defun evil-ex-search-full-pattern (pattern-string count direction)
   "Search for a full search pattern PATTERN-STRING in DIRECTION.
-This function split PATTERN-STRING in
+This function splits PATTERN-STRING into
 pattern/offset/;next-pattern parts and performs the search in
 DIRECTION which must be either 'forward or 'backward. The first
 search is repeated COUNT times. If the pattern part of
