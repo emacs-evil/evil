@@ -1939,7 +1939,7 @@ See `evil-ex-init-shell-argument-completion'.")
   "The direction of the current search, either 'forward or 'backward.")
 
 (defvar evil-ex-search-count nil
-  "The count if the current search.")
+  "The count of the current search.")
 
 (defvar evil-ex-search-start-point nil
   "The point where the search started.")

@@ -100,6 +100,7 @@
      (+ signed-number #'+))
     (marker
      ("'" marker-name #'(evil-ex-marker $2)))
+    ;; TODO - handle offset & ;next-pattern search elements
     (search
      forward
      backward
@@ -107,15 +108,9 @@
      prev
      subst)
     (forward
-     ("/" "\\(?:[\\].\\|[^/,; ]\\)+" (! "/")
-      #'(evil-ex-re-fwd $2))
-     ("/" "\\(?:[\\].\\|[^/]\\)+" "/"
-      #'(evil-ex-re-fwd $2)))
+     ("/" "\\(?:[\\].\\|[^/]\\)+" "/\\|$" #'(evil-ex-re-fwd $2)))
     (backward
-     ("\\?" "\\(?:[\\].\\|[^?,; ]\\)+" (! "\\?")
-      #'(evil-ex-re-bwd $2))
-     ("\\?" "\\(?:[\\].\\|[^?]\\)+" "\\?"
-      #'(evil-ex-re-bwd $2)))
+     ("\\?" "\\(?:[\\].\\|[^?]\\)+" "\\?\\|$" #'(evil-ex-re-bwd $2)))
     (marker-name
      "[]\\[-a-zA-Z_<>'}{)(]")
     (next
@@ -824,6 +819,10 @@ Signal an error if MARKER is in a different buffer."
 (defun evil-ex-re-fwd (pattern)
   "Search forward for PATTERN.
 Returns the line number of the match."
+  (when evil-ex-search-vim-style-regexp
+    (setq pattern (evil-transform-vim-style-regexp pattern)))
+  (setq evil-ex-search-pattern (evil-ex-make-search-pattern pattern)
+        evil-ex-search-direction 'forward)
   (condition-case err
       (save-match-data
         (save-excursion
@@ -841,6 +840,10 @@ Returns the line number of the match."
 (defun evil-ex-re-bwd (pattern)
   "Search backward for PATTERN.
 Returns the line number of the match."
+  (when evil-ex-search-vim-style-regexp
+    (setq pattern (evil-transform-vim-style-regexp pattern)))
+  (setq evil-ex-search-pattern (evil-ex-make-search-pattern pattern)
+        evil-ex-search-direction 'backward)
   (condition-case err
       (save-match-data
         (save-excursion
