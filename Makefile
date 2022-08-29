@@ -1,7 +1,8 @@
 SHELL = /bin/sh
 EMACS ?= emacs
+SED ?= sed
 FILES = $(filter-out evil-test-helpers.el evil-tests.el evil-pkg.el,$(wildcard evil*.el))
-VERSION := $(shell sed -ne '/define-package/,$$p' evil-pkg.el | sed -ne '/^\s*"[[:digit:]]\+\(\.[[:digit:]]\+\)*"\s*$$/ s/^.*"\(.*\)".*$$/\1/p')
+VERSION := $(shell $(SED) -ne '/define-package/,$$p' evil-pkg.el | $(SED) -ne '/^\s*"[[:digit:]]\+\(\.[[:digit:]]\+\)*"\s*$$/ s/^.*"\(.*\)".*$$/\1/p')
 ELPAPKG = evil-$(VERSION)
 PROFILER =
 DOC = doc
@@ -20,7 +21,7 @@ compile: $(ELCFILES)
 	@echo Compute dependencies
 	@rm -f .depend
 	@for f in $(FILES); do \
-		sed -n "s/ *(require '\(evil-[^)]*\).*)/$${f}c: \1.elc/p" $$f >> .depend;\
+		$(SED) -n "s/ *(require '\(evil-[^)]*\).*)/$${f}c: \1.elc/p" $$f >> .depend;\
 	done
 
 -include .depend
