@@ -3396,6 +3396,9 @@ respectively. BEG END TYPE are the currently selected (visual)
 range.  If INCLUSIVE is non-nil, OPEN and CLOSE are included in
 the range; otherwise they are excluded.
 
+If you aren't inside a pair of the opening and closing delimiters,
+it jumps you inside the next one. If there isn't one, it errors.
+
 The types of OPEN and CLOSE specify which kind of THING is used
 for parsing with `evil-select-block'. If OPEN and CLOSE are
 characters `evil-up-paren' is used. Otherwise OPEN and CLOSE
@@ -3404,50 +3407,60 @@ must be regular expressions and `evil-up-block' is used.
 If the selection is exclusive, whitespace at the end or at the
 beginning of the selection until the end-of-line or beginning-of-line
 is ignored."
-  ;; we need special linewise exclusive selection
-  (unless inclusive (setq inclusive 'exclusive-line))
-  (cond
-   ((and (characterp open) (characterp close))
-    (let ((thing #'(lambda (&optional cnt)
-                     (evil-up-paren open close cnt)))
-          (bnd (or (bounds-of-thing-at-point 'evil-string)
-                   (bounds-of-thing-at-point 'evil-comment)
-                   ;; If point is at the opening quote of a string,
-                   ;; this must be handled as if point is within the
-                   ;; string, i.e. the selection must be extended
-                   ;; around the string. Otherwise
-                   ;; `evil-select-block' might do the wrong thing
-                   ;; because it accidentally moves point inside the
-                   ;; string (for inclusive selection) when looking
-                   ;; for the current surrounding block. (re #364)
-                   (and (= (point) (or beg (point)))
-                        (save-excursion
-                          (goto-char (1+ (or beg (point))))
-                          (or (bounds-of-thing-at-point 'evil-string)
-                              (bounds-of-thing-at-point 'evil-comment)))))))
-      (if (not bnd)
-          (evil-select-block thing beg end type count inclusive)
-        (or (evil-with-restriction (car bnd) (cdr bnd)
-              (condition-case nil
-                  (evil-select-block thing beg end type count inclusive)
-                (error nil)))
-            (save-excursion
-              (setq beg (or beg (point))
-                    end (or end (point)))
-              (goto-char (car bnd))
-              (let ((extbeg (min beg (car bnd)))
-                    (extend (max end (cdr bnd))))
-                (evil-select-block thing
-                                   extbeg extend
-                                   type
-                                   count
-                                   inclusive
-                                   (or (< extbeg beg) (> extend end))
-                                   t)))))))
-   (t
-    (evil-select-block #'(lambda (&optional cnt)
-                           (evil-up-block open close cnt))
-                       beg end type count inclusive))))
+  (condition-case nil
+      (progn
+        ;; we need special linewise exclusive selection
+        (unless inclusive (setq inclusive 'exclusive-line))
+        (cond
+         ((and (characterp open) (characterp close))
+          (let ((thing #'(lambda (&optional cnt)
+                           (evil-up-paren open close cnt)))
+                (bnd (or (bounds-of-thing-at-point 'evil-string)
+                         (bounds-of-thing-at-point 'evil-comment)
+                         ;; If point is at the opening quote of a string,
+                         ;; this must be handled as if point is within the
+                         ;; string, i.e. the selection must be extended
+                         ;; around the string. Otherwise
+                         ;; `evil-select-block' might do the wrong thing
+                         ;; because it accidentally moves point inside the
+                         ;; string (for inclusive selection) when looking
+                         ;; for the current surrounding block. (re #364)
+                         (and (= (point) (or beg (point)))
+                              (save-excursion
+                                (goto-char (1+ (or beg (point))))
+                                (or (bounds-of-thing-at-point 'evil-string)
+                                    (bounds-of-thing-at-point 'evil-comment)))))))
+            (if (not bnd)
+                (evil-select-block thing beg end type count inclusive)
+              (or (evil-with-restriction (car bnd) (cdr bnd)
+                    (ignore-errors
+                      (evil-select-block thing beg end type count inclusive)))
+                  (save-excursion
+                    (setq beg (or beg (point))
+                          end (or end (point)))
+                    (goto-char (car bnd))
+                    (let ((extbeg (min beg (car bnd)))
+                          (extend (max end (cdr bnd))))
+                      (evil-select-block thing
+                                         extbeg extend
+                                         type
+                                         count
+                                         inclusive
+                                         (or (< extbeg beg) (> extend end))
+                                         t)))))))
+         (t
+          (evil-select-block #'(lambda (&optional cnt)
+                                 (evil-up-block open close cnt))
+                             beg end type count inclusive))))
+    (error ; we aren't in the parens, so find next instance
+     (save-match-data
+       (goto-char (or (if (and count (> 0 count)) end beg) (point)))
+       (let ((re (if (characterp open) (string open) open)))
+         (if (re-search-forward re nil t count)
+             (progn
+               (goto-char (match-beginning 0))
+               (evil-select-paren open close (match-beginning 0) (match-beginning 0) type count inclusive))
+           (error "No surrounding delimiters found")))))))
 
 (defun evil-select-quote-thing (thing beg end _type count &optional inclusive)
   "Selection THING as if it described a quoted object.
