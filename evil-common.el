@@ -604,6 +604,7 @@ Translates it according to the input method."
                ((eq cmd 'self-insert-command)
                 char)
                (cmd
+                (setq evil-last-read-digraph-char nil)
                 (call-interactively cmd))
                (t
                 (user-error "No replacement character typed"))))
@@ -649,11 +650,13 @@ Return the digraph from `evil-digraph', else return second char."
 This function creates an overlay at (point), hiding the next
 HIDE-CHARS characters.  HIDE-CHARS defaults to 1."
   (interactive)
-  (let ((overlay (make-overlay (point)
-                               (min (point-max)
-                                    (+ (or hide-chars 1)
-                                       (point))))))
-    (evil-read-digraph-char-with-overlay overlay)))
+  (let* ((overlay (make-overlay (point)
+                                (min (point-max)
+                                     (+ (or hide-chars 1)
+                                        (point)))))
+         (char (evil-read-digraph-char-with-overlay overlay)))
+    (setq evil-last-read-digraph-char char)
+    char))
 
 (defun evil-read-motion (&optional motion count type modifier)
   "Read a MOTION, motion COUNT and motion TYPE from the keyboard.

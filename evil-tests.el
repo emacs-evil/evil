@@ -938,7 +938,14 @@ If nil, KEYS is used."
       ("re'")
       "[é]; This buffer is for notes you don't want to save"
       ("3rc*")
-      "ξξ[ξ]This buffer is for notes you don't want to save"))
+      "ξξ[ξ]This buffer is for notes you don't want to save")
+    (ert-info ("Repeat replace digraph")
+      (evil-test-buffer
+        "ab[c]defghijkl"
+        ("rW*")
+        "ab[Ω]defghijkl"
+        ("fg" "2.")
+        "abΩdefΩ[Ω]ijkl")))
   (ert-info ("Replacing \\n should insert only one newline")
     (evil-test-buffer
       "(setq var xxx [y]yy zzz)\n"
