@@ -329,7 +329,9 @@ invoked the current command"
                 ;; Only add prefix if no repeat info recorded yet
                 (null evil-repeat-info))
        (string-to-vector (number-to-string arg)))
-     (this-single-command-keys))))
+     (or (when evil-last-read-digraph-char
+           (vector evil-last-read-digraph-char))
+         (this-single-command-keys)))))
 
 (defun evil-repeat-keystrokes (flag)
   "Repeation recording function for commands that are repeated by keystrokes."
@@ -343,6 +345,7 @@ invoked the current command"
     (evil-repeat-record (if (zerop (length (evil-this-command-keys t)))
                             evil-repeat-keys
                           (evil-this-command-keys t)))
+    (setq evil-last-read-digraph-char nil)
     ;; erase commands keys to prevent double recording
     (evil-clear-command-keys))))
 
