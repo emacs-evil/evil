@@ -3454,7 +3454,8 @@ is ignored."
                              beg end type count inclusive))))
     (error ; we aren't in the parens, so find next instance
      (save-match-data
-       (goto-char (or (if (and count (> 0 count)) end beg) (point)))
+       (goto-char (or (if (and count (> 0 count)) end beg)
+                      (point)))
        (let ((re (if (characterp open) (string open) open)))
          (if (re-search-forward re nil t count)
              (progn
