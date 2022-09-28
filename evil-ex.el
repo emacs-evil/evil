@@ -284,13 +284,12 @@ in case of incomplete or unknown commands."
   (let* ((prompt (minibuffer-prompt-end))
          (string (or string (buffer-substring prompt (point-max))))
          arg bang cmd count expr func handler range tree type)
-    (cond
-     ((and (eq this-command #'self-insert-command)
-           (commandp (setq cmd (lookup-key evil-ex-map string))))
-      (setq evil-ex-expression `(call-interactively #',cmd))
-      (when (minibufferp)
-        (exit-minibuffer)))
-     (t
+    (if (and (eq this-command #'self-insert-command)
+             (commandp (setq cmd (lookup-key evil-ex-map string))))
+        (progn
+          (setq evil-ex-expression `(call-interactively #',cmd))
+          (when (minibufferp)
+            (exit-minibuffer)))
       (setq cmd nil)
       ;; store the buffer position of each character
       ;; as the `ex-index' text property
@@ -346,7 +345,7 @@ in case of incomplete or unknown commands."
           (let ((n (length (all-completions cmd (evil-ex-completion-table)))))
             (cond
              ((> n 1) (evil-ex-echo "Incomplete command"))
-             ((= n 0) (evil-ex-echo "Unknown command")))))))))))
+             ((= n 0) (evil-ex-echo "Unknown command"))))))))))
 (put 'evil-ex-update 'permanent-local-hook t)
 
 (defun evil-ex-echo (string &rest args)
@@ -384,8 +383,9 @@ in case of incomplete or unknown commands."
     (remove-text-properties (minibuffer-prompt-end) (point-max) '(face nil evil))))
 
 (defun evil-ex-command-completion-at-point ()
-  (let ((beg (or (get-text-property 0 'ex-index evil-ex-cmd)
-                 (point)))
+  (let ((beg (if evil-ex-cmd
+                 (get-text-property 0 'ex-index evil-ex-cmd)
+               (point)))
         (end (point)))
     (list beg end (evil-ex-completion-table) :exclusive 'no)))
 
@@ -618,21 +618,19 @@ works accordingly."
 
 (defun evil-ex-binding (command &optional noerror)
   "Returns the final binding of COMMAND."
-  (save-match-data
-    (let ((binding command))
-      (when binding
-        (string-match "^\\(.+?\\)\\!?$" binding)
-        (setq binding (match-string 1 binding))
-        (while (progn
-                 (setq binding (cdr (assoc binding evil-ex-commands)))
-                 (stringp binding)))
-        (unless binding
-          (setq binding (intern command)))
-        (if (commandp binding)
-            ;; check for remaps
-            (or (command-remapping binding) binding)
-          (unless noerror
-            (user-error "Unknown command: `%s'" command)))))))
+  (let ((binding (save-match-data
+                   (string-match "^\\(.+?\\)\\!?$" command)
+                   (match-string 1 command))))
+    (while (progn
+             (setq binding (cdr (assoc binding evil-ex-commands)))
+             (stringp binding)))
+    (unless binding
+      (setq binding (intern command)))
+    (if (commandp binding)
+        ;; check for remaps
+        (or (command-remapping binding) binding)
+      (unless noerror
+        (user-error "Unknown command: `%s'" command)))))
 
 (defun evil-ex-completed-binding (command &optional noerror)
   "Returns the final binding of the completion of COMMAND."
