@@ -9494,7 +9494,6 @@ when an error stops the execution of the macro"
      ("@a")
      "inserted text appended tex[t]")))
 
-
 (ert-deftest evil-test-paren-jumping ()
   :tags '(evil paren)
   (ert-info ("Test doing motions on parens that you aren't in")
@@ -9502,6 +9501,12 @@ when an error stops the execution of the macro"
       "[m]ain(argc, argv) char **argv; {"
       ("dib" [escape])
       "main([)] char **argv; {")
+    (evil-test-buffer
+      "[a]lpha (bravo) charlie "
+      ("yi(")
+      "alpha ([b]ravo) charlie "
+      ("$p")
+      "alpha (bravo) charlie brav[o]")
     (evil-test-buffer
 "[#]include \"stdlib.h\"
 main(argc, argv) char **argv; {

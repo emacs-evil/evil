@@ -1477,7 +1477,8 @@ or line COUNT to the top of the window."
      ((memq type '(line screen-line))
       (evil-yank-lines beg end register yank-handler))
      (t
-      (evil-yank-characters beg end register yank-handler)))))
+      (evil-yank-characters beg end register yank-handler)
+      (goto-char beg)))))
 
 (evil-define-operator evil-yank-line (beg end type register)
   "Saves whole lines into the kill-ring."
