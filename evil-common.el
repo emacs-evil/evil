@@ -2148,7 +2148,7 @@ The following special registers are supported.
                      (current-kill reg t))))
              ((memq register '(?* ?+))
               (let ((what (if (eq register ?*) 'PRIMARY 'CLIPBOARD)))
-                (if (version<= "25" emacs-version)
+                (if (version<= "29" emacs-version)
                     (gui--selection-value-internal what)
                   ;; the following code is modified from `x-selection-value-internal'
                   (let ((request-type (or (and (boundp 'x-select-request-type)
