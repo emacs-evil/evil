@@ -1010,7 +1010,7 @@ In Insert state, insert a newline and indent."
 
 ;; scrolling
 (evil-define-command evil-scroll-line-up (count)
-  "Scrolls the window COUNT lines upwards."
+  "Scroll the window COUNT lines upwards."
   :repeat nil
   :keep-visual t
   (interactive "p")
@@ -1018,7 +1018,7 @@ In Insert state, insert a newline and indent."
     (scroll-down count)))
 
 (evil-define-command evil-scroll-line-down (count)
-  "Scrolls the window COUNT lines downwards."
+  "Scroll the window COUNT lines downwards."
   :repeat nil
   :keep-visual t
   (interactive "p")
@@ -1026,7 +1026,7 @@ In Insert state, insert a newline and indent."
     (scroll-up count)))
 
 (evil-define-command evil-scroll-count-reset ()
-  "Sets `evil-scroll-count' to 0.
+  "Set `evil-scroll-count' to 0.
 `evil-scroll-up' and `evil-scroll-down' will scroll
 for a half of the screen(default)."
   :repeat nil
@@ -1035,7 +1035,7 @@ for a half of the screen(default)."
   (setq evil-scroll-count 0))
 
 (evil-define-command evil-scroll-up (count)
-  "Scrolls the window and the cursor COUNT lines upwards.
+  "Scroll the window and the cursor COUNT lines upwards.
 If COUNT is not specified the function scrolls down
 `evil-scroll-count', which is the last used count.
 If the scroll count is zero the command scrolls half the screen."
@@ -1061,7 +1061,7 @@ If the scroll count is zero the command scrolls half the screen."
            (beginning-of-buffer)))))))
 
 (evil-define-command evil-scroll-down (count)
-  "Scrolls the window and the cursor COUNT lines downwards.
+  "Scroll the window and the cursor COUNT lines downwards.
 If COUNT is not specified the function scrolls down
 `evil-scroll-count', which is the last used count.
 If the scroll count is zero the command scrolls half the screen."
@@ -1101,7 +1101,7 @@ If the scroll count is zero the command scrolls half the screen."
            (recenter (- (max 1 scroll-margin)))))))))
 
 (evil-define-command evil-scroll-page-up (count)
-  "Scrolls the window COUNT pages upwards."
+  "Scroll the window COUNT pages upwards."
   :repeat nil
   :keep-visual t
   (interactive "p")
@@ -1115,7 +1115,7 @@ If the scroll count is zero the command scrolls half the screen."
            (goto-char (point-min))))))))
 
 (evil-define-command evil-scroll-page-down (count)
-  "Scrolls the window COUNT pages downwards."
+  "Scroll the window COUNT pages downwards."
   :repeat nil
   :keep-visual t
   (interactive "p")
@@ -1129,7 +1129,7 @@ If the scroll count is zero the command scrolls half the screen."
            (goto-char (point-max))))))))
 
 (evil-define-command evil-scroll-line-to-top (count)
-  "Scrolls line number COUNT (or the cursor line) to the top of the window."
+  "Scroll line number COUNT (or the cursor line) to the top of the window."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
@@ -1140,7 +1140,7 @@ If the scroll count is zero the command scrolls half the screen."
     (recenter (1- (max 1 scroll-margin)))))
 
 (evil-define-command evil-scroll-line-to-center (count)
-  "Scrolls line number COUNT (or the cursor line) to the center of the window."
+  "Scroll line number COUNT (or the cursor line) to the center of the window."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
@@ -1151,7 +1151,7 @@ If the scroll count is zero the command scrolls half the screen."
     (recenter nil)))
 
 (evil-define-command evil-scroll-line-to-bottom (count)
-  "Scrolls line number COUNT (or the cursor line) to the bottom of the window."
+  "Scroll line number COUNT (or the cursor line) to the bottom of the window."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
@@ -1162,7 +1162,7 @@ If the scroll count is zero the command scrolls half the screen."
     (recenter (- (max 1 scroll-margin)))))
 
 (evil-define-command evil-scroll-bottom-line-to-top (count)
-  "Scrolls the line right below the window,
+  "Scroll the line right below the window,
 or line COUNT to the top of the window."
   :repeat nil
   :keep-visual t
@@ -1177,7 +1177,7 @@ or line COUNT to the top of the window."
   (evil-first-non-blank))
 
 (evil-define-command evil-scroll-top-line-to-bottom (count)
-  "Scrolls the line right below the window,
+  "Scroll the line right below the window,
 or line COUNT to the top of the window."
   :repeat nil
   :keep-visual t
@@ -1191,7 +1191,7 @@ or line COUNT to the top of the window."
   (evil-first-non-blank))
 
 (evil-define-command evil-scroll-left (count)
-  "Scrolls the window COUNT half-screenwidths to the left."
+  "Scroll the window COUNT half-screenwidths to the left."
   :repeat nil
   :keep-visual t
   (interactive "p")
@@ -1199,7 +1199,7 @@ or line COUNT to the top of the window."
     (scroll-right (* count (/ (window-width) 2)))))
 
 (evil-define-command evil-scroll-right (count)
-  "Scrolls the window COUNT half-screenwidths to the right."
+  "Scroll the window COUNT half-screenwidths to the right."
   :repeat nil
   :keep-visual t
   (interactive "p")
@@ -1207,7 +1207,7 @@ or line COUNT to the top of the window."
     (scroll-left (* count (/ (window-width) 2)))))
 
 (evil-define-command evil-scroll-column-left (count)
-  "Scrolls the window COUNT columns to the left."
+  "Scroll the window COUNT columns to the left."
   :repeat nil
   :keep-visual t
   (interactive "p")
@@ -1215,7 +1215,7 @@ or line COUNT to the top of the window."
     (scroll-right count)))
 
 (evil-define-command evil-scroll-column-right (count)
-  "Scrolls the window COUNT columns to the right."
+  "Scroll the window COUNT columns to the right."
   :repeat nil
   :keep-visual t
   (interactive "p")
@@ -1461,7 +1461,7 @@ or line COUNT to the top of the window."
 ;;; Operator commands
 
 (evil-define-operator evil-yank (beg end type register yank-handler)
-  "Saves the characters in motion into the kill-ring."
+  "Save the characters in motion into the kill-ring."
   :move-point nil
   :repeat nil
   (interactive "<R><x><y>")
@@ -1480,7 +1480,7 @@ or line COUNT to the top of the window."
       (evil-yank-characters beg end register yank-handler)))))
 
 (evil-define-operator evil-yank-line (beg end type register)
-  "Saves whole lines into the kill-ring."
+  "Save whole lines into the kill-ring."
   :motion evil-line-or-visual-line
   :move-point nil
   (interactive "<R><x>")
@@ -2087,7 +2087,7 @@ The default for width is the value of `fill-column'."
                                        fill-column)))
 
 (evil-define-operator evil-align-center (beg end type &optional width)
-  "Centers lines in the region between WIDTH columns.
+  "Center lines in the region between WIDTH columns.
 The default for width is the value of `fill-column'."
   :motion evil-line
   :type line
@@ -2135,7 +2135,7 @@ The default for width is the value of `fill-column'."
 
 (evil-define-command evil-paste-before
   (count &optional register yank-handler)
-  "Pastes the latest yanked text before the cursor position.
+  "Paste the latest yanked text before the cursor position.
 The return value is the yanked text."
   :suppress-operator t
   (interactive "*P<x>")
@@ -2188,7 +2188,7 @@ The return value is the yanked text."
 
 (evil-define-command evil-paste-after
   (count &optional register yank-handler)
-  "Pastes the latest yanked text behind point.
+  "Paste the latest yanked text behind point.
 The return value is the yanked text."
   :suppress-operator t
   (interactive "*P<x>")
@@ -2793,7 +2793,7 @@ next VCOUNT - 1 lines below the current one."
     (when chars-to-delete (delete-char chars-to-delete))))
 
 (evil-define-command evil-ex-show-digraphs ()
-  "Shows a list of all available digraphs."
+  "Show a list of all available digraphs."
   :repeat nil
   (let ((columns 3))
     (evil-with-view-list
@@ -3140,7 +3140,7 @@ not interfere with another."
         (evil-fold-action (cdr list) action)))))
 
 (defun evil--mode-p (modes)
-  "Determines whether any symbol in MODES represents the current
+  "Determine whether any symbol in MODES represents the current
 buffer's major mode or any of its minors."
   (unless (eq modes '())
     (let ((mode (car modes)))
@@ -3221,7 +3221,7 @@ non-nil, it is overwritten without confirmation."
                     (not bang))))))
 
 (evil-define-command evil-write-all (bang)
-  "Saves all buffers visiting a file.
+  "Save all buffers visiting a file.
 If BANG is non nil then read-only buffers are saved, too,
 otherwise they are skipped. "
   :repeat nil
@@ -3266,7 +3266,7 @@ If no FILE is specified, reload the current buffer from disk."
     (revert-buffer bang (or bang (not (buffer-modified-p))) t)))
 
 (evil-define-command evil-read (count file)
-  "Inserts the contents of FILE below the current line or line COUNT."
+  "Insert the contents of FILE below the current line or line COUNT."
   :repeat nil
   :move-point nil
   (interactive "P<fsh>")
@@ -3290,7 +3290,7 @@ If no FILE is specified, reload the current buffer from disk."
       (forward-line -1)))))
 
 (evil-define-command evil-show-files ()
-  "Shows the file-list.
+  "Show the file-list.
 The same as `buffer-menu', but shows only buffers visiting
 files."
   :repeat nil
@@ -3311,7 +3311,7 @@ command."
     (next-error 0)))
 
 (evil-define-command evil-buffer (buffer)
-  "Switches to another buffer."
+  "Switch to another buffer."
   :repeat nil
   (interactive "<b>")
   (cond
@@ -3330,21 +3330,21 @@ command."
       (switch-to-buffer buffer)))))
 
 (evil-define-command evil-next-buffer (&optional count)
-  "Goes to the `count'-th next buffer in the buffer list."
+  "Go to the `count'-th next buffer in the buffer list."
   :repeat nil
   (interactive "p")
   (dotimes (_ (or count 1))
     (next-buffer)))
 
 (evil-define-command evil-prev-buffer (&optional count)
-  "Goes to the `count'-th prev buffer in the buffer list."
+  "Go to the `count'-th prev buffer in the buffer list."
   :repeat nil
   (interactive "p")
   (dotimes (_ (or count 1))
     (previous-buffer)))
 
 (evil-define-command evil-delete-buffer (buffer &optional bang)
-  "Deletes a buffer.
+  "Delete a buffer.
 All windows currently showing this buffer will be closed except
 for the last window in each frame."
   (interactive "<b><!>")
@@ -3372,7 +3372,7 @@ for the last window in each frame."
             wins))))
 
 (evil-define-command evil-quit (&optional force)
-  "Closes the current window, current frame, current tab, Emacs.
+  "Close the current window, current frame, current tab, Emacs.
 If the current frame belongs to some client the client connection
 is closed."
   :repeat nil
@@ -3398,7 +3398,7 @@ is closed."
                (save-buffers-kill-emacs))))))))))
 
 (evil-define-command evil-quit-all (&optional bang)
-  "Exits Emacs, asking for saving."
+  "Exit Emacs, asking for saving."
   :repeat nil
   (interactive "<!>")
   (if (null bang)
@@ -3412,7 +3412,7 @@ is closed."
         (kill-emacs)))))
 
 (evil-define-command evil-quit-all-with-error-code (&optional force)
-  "Exits Emacs without saving, returning an non-zero error code.
+  "Exit Emacs without saving, returning an non-zero error code.
 The FORCE argument is only there for compatibility and is ignored.
 This function fails with an error if Emacs is run in server mode."
   :repeat nil
@@ -3429,14 +3429,14 @@ This function fails with an error if Emacs is run in server mode."
   (save-buffers-kill-terminal t))
 
 (evil-define-command evil-save-and-close (file &optional bang)
-  "Saves the current buffer and closes the window."
+  "Save the current buffer and close the window."
   :repeat nil
   (interactive "<f><!>")
   (evil-write nil nil nil file bang)
   (evil-quit))
 
 (evil-define-command evil-save-modified-and-close (file &optional bang)
-  "Saves the current buffer and closes the window."
+  "Save the current buffer and close the window."
   :repeat nil
   (interactive "<f><!>")
   (when (buffer-modified-p)
@@ -3514,7 +3514,7 @@ If ARG is nil this function calls `recompile', otherwise it calls
 ;; TODO: escape special characters (currently only \n) ... perhaps
 ;; there is some Emacs function doing this?
 (evil-define-command evil-show-registers (registers)
-  "Shows the contents of REGISTERS, or all registers, if none supplied."
+  "Show the contents of REGISTERS, or all registers, if none supplied."
   :repeat nil
   (interactive "<a>")
   (let* ((all-registers (evil-register-list))
@@ -3539,7 +3539,7 @@ If ARG is nil this function calls `recompile', otherwise it calls
                                      (t ""))])))))
 
 (evil-define-command evil-show-marks (mrks)
-  "Shows all marks.
+  "Show all marks.
 If MRKS is non-nil it should be a string and only registers
 corresponding to the characters of this string are shown."
   :repeat nil
@@ -3636,7 +3636,7 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
 
 (eval-when-compile (require 'ffap))
 (evil-define-command evil-find-file-at-point-with-line ()
-  "Opens the file at point and goes to position if present."
+  "Open the file at point and go to position if present."
   (require 'ffap)
   (let ((fname (with-no-warnings (ffap-file-at-point))))
     (unless fname
@@ -3669,7 +3669,7 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
       (user-error (format "Can't find file \"%s\" in path" region)))))
 
 (evil-ex-define-argument-type state
-  "Defines an argument type which can take state names."
+  "Define an argument type which can take state names."
   :collection
   (lambda (arg predicate flag)
     (let ((completions
@@ -3729,13 +3729,13 @@ Change to `%s'? "
   (evil-normal-state))
 
 (evil-define-motion evil-ex-search-next (count)
-  "Goes to the next occurrence."
+  "Go to the next occurrence."
   :jump t
   :type exclusive
   (evil-ex-search count))
 
 (evil-define-motion evil-ex-search-previous (count)
-  "Goes the the previous occurrence."
+  "Go the the previous occurrence."
   :jump t
   :type exclusive
   (let ((evil-ex-search-direction
@@ -3761,14 +3761,14 @@ resp.  after executing the command."
    (t (evil-repeat-motion flag))))
 
 (evil-define-motion evil-ex-search-forward (count)
-  "Starts a forward search."
+  "Start a forward search."
   :jump t
   :type exclusive
   :repeat evil-repeat-ex-search
   (evil-ex-start-search 'forward count))
 
 (evil-define-motion evil-ex-search-backward (count)
-  "Starts a forward search."
+  "Start a forward search."
   :jump t
   :repeat evil-repeat-ex-search
   (evil-ex-start-search 'backward count))
@@ -4145,7 +4145,7 @@ Default position is the beginning of the buffer."
   (message "%d" (count-lines (point-min) end)))
 
 (evil-define-command evil-show-file-info ()
-  "Shows basic file information."
+  "Show basic file information."
   (let* ((nlines   (count-lines (point-min) (point-max)))
          (curr     (line-number-at-pos (point)))
          (perc     (if (> nlines 0)
@@ -4255,7 +4255,7 @@ parameter\)."
   "Return the last buffer WINDOW has displayed other than the
 current one (equivalent to Vim's alternate buffer).
 
-Returns the first item in `window-prev-buffers' that isn't
+Return the first item in `window-prev-buffers' that isn't
 `window-buffer' of WINDOW."
   ;; If the last buffer visited has been killed, then `window-prev-buffers'
   ;; returns a list with `current-buffer' at the head, we account for this
@@ -4275,7 +4275,7 @@ Returns the first item in `window-prev-buffers' that isn't
       (goto-char (car (last previous-place))))))
 
 (evil-define-command evil-window-delete ()
-  "Deletes the current window.
+  "Delete the current window.
 If `evil-auto-balance-windows' is non-nil then all children of
 the deleted window's parent window are rebalanced."
   (let ((p (window-parent)))
@@ -4288,7 +4288,7 @@ the deleted window's parent window are rebalanced."
         (error)))))
 
 (evil-define-command evil-window-split (&optional count file)
-  "Splits the current window horizontally, COUNT lines height,
+  "Split the current window horizontally, COUNT lines height,
 editing a certain FILE. The new window will be created below
 when `evil-split-window-below' is non-nil. If COUNT and
 `evil-auto-balance-windows' are both non-nil then all children
@@ -4304,7 +4304,7 @@ of the parent of the splitted window are rebalanced."
     (evil-edit file)))
 
 (evil-define-command evil-window-vsplit (&optional count file)
-  "Splits the current window vertically, COUNT columns width,
+  "Split the current window vertically, COUNT columns width,
 editing a certain FILE. The new window will be created to the
 right when `evil-vsplit-window-right' is non-nil. If COUNT and
 `evil-auto-balance-windows'are both non-nil then all children
@@ -4320,21 +4320,21 @@ of the parent of the splitted window are rebalanced."
     (evil-edit file)))
 
 (evil-define-command evil-split-buffer (buffer)
-  "Splits window and switches to another buffer."
+  "Split window and switch to another buffer."
   :repeat nil
   (interactive "<b>")
   (evil-window-split)
   (evil-buffer buffer))
 
 (evil-define-command evil-split-next-buffer (&optional count)
-  "Splits the window and goes to the COUNT-th next buffer in the buffer list."
+  "Split the window and go to the COUNT-th next buffer in the buffer list."
   :repeat nil
   (interactive "p")
   (evil-window-split)
   (evil-next-buffer count))
 
 (evil-define-command evil-split-prev-buffer (&optional count)
-  "Splits window and goes to the COUNT-th prev buffer in the buffer list."
+  "Split window and go to the COUNT-th prev buffer in the buffer list."
   :repeat nil
   (interactive "p")
   (evil-window-split)
@@ -4425,8 +4425,8 @@ top-left."
     (other-window (1- (min count (length (window-list)))))))
 
 (evil-define-command evil-window-new (count file)
-  "Splits the current window horizontally
-and opens a new buffer or edits a certain FILE."
+  "Split the current window horizontally
+and open a new buffer or edit a certain FILE."
   :repeat nil
   (interactive "P<f>")
   (let ((new-window (split-window (selected-window) (when count (- count))
@@ -4442,8 +4442,8 @@ and opens a new buffer or edits a certain FILE."
       (evil-edit file))))
 
 (evil-define-command evil-window-vnew (count file)
-  "Splits the current window vertically
-and opens a new buffer name or edits a certain FILE."
+  "Split the current window vertically
+and open a new buffer name or edit a certain FILE."
   :repeat nil
   (interactive "P<f>")
   (let ((new-window (split-window (selected-window) (when count (- count))
@@ -4459,7 +4459,7 @@ and opens a new buffer name or edits a certain FILE."
       (evil-edit file))))
 
 (evil-define-command evil-buffer-new (count file)
-  "Creates a new buffer replacing the current window, optionally
+  "Create a new buffer replacing the current window, optionally
    editing a certain FILE"
   :repeat nil
   (interactive "P<f>")
@@ -4495,13 +4495,13 @@ and opens a new buffer name or edits a certain FILE."
   (evil-resize-window (- (window-width) count) t))
 
 (evil-define-command evil-window-set-height (count)
-  "Sets the height of the current window to COUNT."
+  "Set the height of the current window to COUNT."
   :repeat nil
   (interactive "<c>")
   (evil-resize-window (or count (frame-height)) nil))
 
 (evil-define-command evil-window-set-width (count)
-  "Sets the width of the current window to COUNT."
+  "Set the width of the current window to COUNT."
   :repeat nil
   (interactive "<c>")
   (evil-resize-window (or count (frame-width)) t))
@@ -4530,7 +4530,7 @@ If ARG is empty, maximize the current window height."
         (evil-window-decrease-height (- n))))))
 
 (evil-define-command evil-window-rotate-upwards ()
-  "Rotates the windows according to the current cyclic ordering."
+  "Rotate the windows according to the current cyclic ordering."
   :repeat nil
   (evil-save-side-windows
     (let ((wlist (window-list))
@@ -4543,7 +4543,7 @@ If ARG is empty, maximize the current window height."
       (select-window (car (last (window-list)))))))
 
 (evil-define-command evil-window-rotate-downwards ()
-  "Rotates the windows according to the current cyclic ordering."
+  "Rotate the windows according to the current cyclic ordering."
   :repeat nil
   (evil-save-side-windows
     (let ((wlist (window-list))
@@ -4574,26 +4574,26 @@ With COUNT: Exchange current window with COUNTth window."
     (switch-to-buffer this-buffer nil t)))
 
 (evil-define-command evil-window-move-very-top ()
-  "Closes the current window, splits the upper-left one horizontally
-and redisplays the current buffer there."
+  "Close the current window, split the upper-left one horizontally
+and redisplay the current buffer there."
   :repeat nil
   (evil-move-window 'above))
 
 (evil-define-command evil-window-move-far-left ()
-  "Closes the current window, splits the upper-left one vertically
-and redisplays the current buffer there."
+  "Close the current window, split the upper-left one vertically
+and redisplay the current buffer there."
   :repeat nil
   (evil-move-window 'left))
 
 (evil-define-command evil-window-move-far-right ()
-  "Closes the current window, splits the lower-right one vertically
-and redisplays the current buffer there."
+  "Close the current window, split the lower-right one vertically
+and redisplay the current buffer there."
   :repeat nil
   (evil-move-window 'right))
 
 (evil-define-command evil-window-move-very-bottom ()
-  "Closes the current window, splits the lower-right one horizontally
-and redisplays the current buffer there."
+  "Close the current window, split the lower-right one horizontally
+and redisplay the current buffer there."
   :repeat nil
   (evil-move-window 'below))
 

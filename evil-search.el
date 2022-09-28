@@ -397,7 +397,7 @@ letter, otherwise it will be case-insensitive."
 
 ;; a pattern
 (defun evil-ex-make-substitute-pattern (regexp flags)
-  "Creates a PATTERN for substitution with FLAGS.
+  "Create a PATTERN for substitution with FLAGS.
 This function respects the values of `evil-ex-substitute-case'
 and `evil-ex-substitute-global'."
   (evil-ex-make-pattern regexp
@@ -413,7 +413,7 @@ and `evil-ex-substitute-global'."
                                  (memq ?g flags)))))
 
 (defun evil-ex-make-search-pattern (regexp)
-  "Creates a PATTERN for search.
+  "Create a PATTERN for search.
 This function respects the values of `evil-ex-search-case'."
   (evil-ex-make-pattern regexp evil-ex-search-case t))
 
@@ -743,7 +743,7 @@ Note that this function ignores the whole-line property of PATTERN."
       (user-error "Unknown search direction: %s" direction)))))
 
 (defun evil-ex-hl-idle-update ()
-  "Triggers the timer to update the highlights in the current buffer."
+  "Trigger the timer to update the highlights in the current buffer."
   (when (and evil-ex-interactive-search-highlight
              evil-ex-active-highlights-alist)
     (when evil-ex-hl-update-timer
@@ -924,7 +924,7 @@ message to be shown. This function does nothing if
 
 (defun evil-ex-split-search-pattern (pattern direction)
   "Split PATTERN in regexp, offset and next-pattern parts.
-Returns a triple (regexp  offset next-search)."
+Return a triple (regexp offset next-search)."
   (save-match-data
     (if (or (and (eq direction 'forward)
                  (string-match "\\(?:^\\|[^\\\\]\\)\\(?:\\\\\\\\\\)*\\(/\\([^;]*\\)\\(?:;\\([/?].*\\)?\\)?\\)?$"
@@ -1267,7 +1267,7 @@ This handler highlights the pattern of the current substitution."
     (list pattern command)))
 
 (defun evil-ex-get-substitute-info (string &optional implicit-r)
-  "Returns the substitution info of command line STRING.
+  "Return the substitution info of command line STRING.
 This function returns a three-element list \(PATTERN REPLACEMENT
 FLAGS) consisting of the substitution parts of STRING. PATTERN is
 a ex-pattern (see `evil-ex-make-pattern') and REPLACEMENT in a

@@ -417,7 +417,7 @@ REGISTER"
 
 (defun evil-ex-get-optional-register-and-count (string)
   "Parse STRING as an ex arg with both optional REGISTER and COUNT.
-Returns a list (REGISTER COUNT)."
+Return a list (REGISTER COUNT)."
   (let* ((split-args (split-string (or string "")))
          (arg-count (length split-args))
          (arg0 (car split-args))

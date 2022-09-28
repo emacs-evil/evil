@@ -375,7 +375,7 @@ in case of incomplete or unknown commands."
   (remove-hook 'pre-command-hook 'evil--ex-remove-echo-overlay t))
 
 (defun evil-ex-completion ()
-  "Completes the current ex command or argument."
+  "Complete the current ex command or argument."
   (interactive)
   (let (after-change-functions)
     (evil-ex-update)
@@ -492,7 +492,7 @@ in case of incomplete or unknown commands."
               (funcall (cdr completer)))))))))
 
 (defun evil-ex-define-cmd (cmd function)
-  "Binds the function FUNCTION to the command CMD."
+  "Bind the function FUNCTION to the command CMD."
   (save-match-data
     (if (string-match "^[^][]*\\(\\[\\(.*\\)\\]\\)[^][]*$" cmd)
         (let ((abbrev (replace-match "" nil t cmd 1))
@@ -511,7 +511,7 @@ in case of incomplete or unknown commands."
   (cadr arg-handler))
 
 (defmacro evil-ex-define-argument-type (arg-type doc &rest body)
-  "Defines a new handler for argument-type ARG-TYPE.
+  "Define a new handler for argument-type ARG-TYPE.
 DOC is the documentation string. It is followed by a list of
 keywords and function:
 
@@ -564,7 +564,7 @@ keywords and function:
         '(,runner ,completer)))))
 
 (evil-ex-define-argument-type file
-  "Handles a file argument."
+  "Handle a file argument."
   :collection read-file-name-internal)
 
 (evil-ex-define-argument-type buffer
@@ -574,7 +574,7 @@ keywords and function:
 (declare-function shell-completion-vars "shell" ())
 
 (defun evil-ex-init-shell-argument-completion (flag &optional arg)
-  "Prepares the current minibuffer for completion of shell commands.
+  "Prepare the current minibuffer for completion of shell commands.
 This function must be called from the :runner function of some
 argument handler that requires shell completion."
   (when (and (eq flag 'start)
@@ -617,7 +617,7 @@ works accordingly."
   :runner evil-ex-init-shell-argument-completion)
 
 (defun evil-ex-binding (command &optional noerror)
-  "Returns the final binding of COMMAND."
+  "Return the final binding of COMMAND."
   (let ((binding (save-match-data
                    (string-match "^\\(.+?\\)\\!?$" command)
                    (match-string 1 command))))
@@ -633,7 +633,7 @@ works accordingly."
         (user-error "Unknown command: `%s'" command)))))
 
 (defun evil-ex-completed-binding (command &optional noerror)
-  "Returns the final binding of the completion of COMMAND."
+  "Return the final binding of the completion of COMMAND."
   (let ((completion (try-completion command evil-ex-commands)))
     (evil-ex-binding (if (eq completion t) command
                        (or completion command))
@@ -670,13 +670,13 @@ Replaces # by the alternate file-name in FILE-NAME."
   file-name)
 
 (defun evil-ex-file-arg ()
-  "Returns the current Ex argument as a file name.
+  "Return the current Ex argument as a file name.
 This function interprets special file names like # and %."
   (unless (zerop (length evil-ex-argument))
     (evil-ex-replace-special-filenames evil-ex-argument)))
 
 (defun evil-ex-repeat (count)
-  "Repeats the last ex command."
+  "Repeat the last ex command."
   (interactive "P")
   (when count
     (goto-char (point-min))
@@ -771,7 +771,7 @@ This function interprets special file names like # and %."
     (line-number-at-pos)))
 
 (defun evil-ex-range (beg-line &optional end-line)
-  "Returns the first and last position of the current range."
+  "Return the first and last position of the current range."
   (when (and end-line (< end-line beg-line))
     (setq evil-ex-reverse-range t)
     (let ((beg-line* beg-line))
@@ -816,7 +816,7 @@ Signal an error if MARKER is in a different buffer."
 
 (defun evil-ex-re-fwd (pattern)
   "Search forward for PATTERN.
-Returns the line number of the match."
+Return the line number of the match."
   (when evil-ex-search-vim-style-regexp
     (setq pattern (evil-transform-vim-style-regexp pattern)))
   (setq evil-ex-search-pattern (evil-ex-make-search-pattern pattern)
@@ -837,7 +837,7 @@ Returns the line number of the match."
 
 (defun evil-ex-re-bwd (pattern)
   "Search backward for PATTERN.
-Returns the line number of the match."
+Return the line number of the match."
   (when evil-ex-search-vim-style-regexp
     (setq pattern (evil-transform-vim-style-regexp pattern)))
   (setq evil-ex-search-pattern (evil-ex-make-search-pattern pattern)

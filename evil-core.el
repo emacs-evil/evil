@@ -290,7 +290,7 @@ See also `evil-initial-state'."
 
 (defun evil-initial-state (mode &optional default follow-parent checked-modes)
   "Return the Evil state to use for MODE or its alias.
-Returns DEFAULT if no initial state is associated with MODE.
+Return DEFAULT if no initial state is associated with MODE.
 The initial state for a mode can be set with
 `evil-set-initial-state'.
 
@@ -781,7 +781,7 @@ This is a keymap alist, determined by the current state
 
 (defun evil-mode-for-keymap (keymap &optional default)
   "Return the minor mode associated with KEYMAP.
-Returns DEFAULT if no mode is found.
+Return DEFAULT if no mode is found.
 See also `evil-keymap-for-mode'."
   (let ((map (if (keymapp keymap) keymap (symbol-value keymap)))
         (var (when (symbolp keymap) keymap)))

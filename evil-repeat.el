@@ -144,7 +144,7 @@
      (evil-repeat-abort)))
 
 (defsubst evil-repeat-recording-p ()
-  "Returns non-nil iff a recording is in progress."
+  "Return non-nil iff a recording is in progress."
   (eq evil-recording-repeat t))
 
 (defun evil-repeat-start ()
@@ -240,7 +240,7 @@ If COMMAND doesn't have this property, return DEFAULT."
       (if repeat-type (cdr repeat-type) type))))
 
 (defun evil-repeat-force-abort-p (repeat-type)
-  "Returns non-nil iff the current command should abort the recording of repeat information."
+  "Return non-nil iff the current command should abort the recording of repeat information."
   (or (evil-repeat-different-buffer-p)           ; ... buffer changed
       (eq repeat-type 'abort)                    ; ... explicitely forced
       (eq evil-recording-repeat 'abort)          ; ... already aborted
@@ -388,12 +388,12 @@ If CHANGE is specified, it is added to `evil-repeat-changes'."
           (nconc evil-repeat-changes (list (list relpos ins ndel))))))
 
 (defun evil-repeat-start-record-changes ()
-  "Starts the recording of a new set of buffer changes."
+  "Start the recording of a new set of buffer changes."
   (setq evil-repeat-changes nil)
   (evil-repeat-record-position))
 
 (defun evil-repeat-finish-record-changes ()
-  "Finishes the recording of buffer changes and records them as repeat."
+  "Finish the recording of buffer changes and record them as repeat."
   (when (evil-repeat-recording-p)
     (evil-repeat-record `(evil-execute-change
                           ,evil-repeat-changes
@@ -423,7 +423,7 @@ inserts some text in a buffer between (point) and (mark)."
 
 (defun evil-normalize-repeat-info (repeat-info)
   "Concatenate consecutive arrays in REPEAT-INFO.
-Returns a single array."
+Return a single array."
   (let* ((result (cons nil nil))
          (result-last result)
          cur cur-last)
@@ -451,7 +451,7 @@ Returns a single array."
     (cdr result)))
 
 (defun evil-repeat-visual-char (nfwdlines nfwdchars)
-  "Restores a character visual selection.
+  "Restore a character visual selection.
 If the selection is in a single line, the restored visual
 selection covers the same number of characters. If the selection
 covers several lines, the restored selection covers the same
@@ -463,7 +463,7 @@ line as the original selection."
   (forward-char nfwdchars))
 
 (defun evil-repeat-visual-line (nfwdlines)
-  "Restores a character visual selection.
+  "Restore a character visual selection.
 If the selection is in a single line, the restored visual
 selection covers the same number of characters. If the selection
 covers several lines, the restored selection covers the same
@@ -473,7 +473,7 @@ line as the original selection."
   (forward-line nfwdlines))
 
 (defun evil-repeat-visual-block (nfwdlines nfwdchars)
-  "Restores a character visual selection.
+  "Restore a character visual selection.
 If the selection is in a single line, the restored visual
 selection covers the same number of characters. If the selection
 covers several lines, the restored selection covers the same
@@ -485,7 +485,7 @@ line as the original selection."
     (move-to-column (+ col nfwdchars) t)))
 
 (defun evil-execute-change (changes rel-point)
-  "Executes as list of changes.
+  "Execute as list of changes.
 
 CHANGES is a list of triples (REL-BEG INSERT-TEXT NDEL).
 REL-BEG is the relative position (to point) where the change
@@ -504,7 +504,7 @@ where point should be placed after all changes."
       (goto-char (+ point rel-point)))))
 
 (defun evil-execute-repeat-info (repeat-info)
-  "Executes a repeat-information REPEAT-INFO."
+  "Execute a repeat-information REPEAT-INFO."
   (evil-save-repeat-info
     (dolist (rep repeat-info)
       (cond

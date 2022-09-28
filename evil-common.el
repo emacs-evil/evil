@@ -314,7 +314,7 @@ sorting in between."
                               vars))))))
 
 (defun evil-vector-to-string (vector)
-  "Turns vector into a string, changing <escape> to '\\e'"
+  "Turn vector into a string, changing <escape> to '\\e'"
   (mapconcat (lambda (c)
                (if (equal c 'escape)
                    "\e"
@@ -481,7 +481,7 @@ keystrokes."
 
 (defun evil-delimited-arguments (string &optional num)
   "Parse STRING as a sequence of delimited arguments.
-Returns a list of NUM strings, or as many arguments as
+Return a list of NUM strings, or as many arguments as
 the string contains. The first non-blank character is
 taken to be the delimiter. If some arguments are missing
 from STRING, the resulting list is padded with nil values.
@@ -536,7 +536,7 @@ If any character set is complemented, the result is also complemented."
 
 (defun evil-keypress-parser (&optional input)
   "Read from keyboard or INPUT and build a command description.
-Returns (CMD COUNT), where COUNT is the numeric prefix argument.
+Return (CMD COUNT), where COUNT is the numeric prefix argument.
 Both COUNT and CMD may be nil."
   (let (count negative)
     (when input (setq unread-command-events (append input unread-command-events)))
@@ -695,7 +695,7 @@ Return a list (MOTION COUNT [TYPE])."
     (list motion count type)))
 
 (defun evil-mouse-events-p (keys)
-  "Returns non-nil iff KEYS contains a mouse event."
+  "Return non-nil iff KEYS contains a mouse event."
   (catch 'done
     (dotimes (i (length keys))
       (when (or (and (fboundp 'mouse-event-p)
@@ -705,8 +705,8 @@ Return a list (MOTION COUNT [TYPE])."
     nil))
 
 (defun evil-extract-count (keys)
-  "Splits the key-sequence KEYS into prefix-argument and the rest.
-Returns the list (PREFIX CMD SEQ REST), where PREFIX is the
+  "Split the key-sequence KEYS into prefix-argument and the rest.
+Return the list (PREFIX CMD SEQ REST), where PREFIX is the
 prefix count, CMD the command to be executed, SEQ the subsequence
 calling CMD, and REST is all remaining events in the
 key-sequence. PREFIX and REST may be nil if they do not exist.
@@ -768,7 +768,7 @@ filename."
     (setcdr map (cons prompt (cdr map)))))
 
 (defun evil-lookup-key (map key)
-  "Returns non-nil value if KEY is bound in MAP."
+  "Return non-nil value if KEY is bound in MAP."
   (let ((definition (lookup-key map key)))
     (if (numberp definition) ; in-band error
         nil
@@ -951,7 +951,7 @@ If POS is a marker, return its position."
     pos)))
 
 (defmacro evil-save-goal-column (&rest body)
-  "Restores the goal column after execution of BODY.
+  "Restore the goal column after execution of BODY.
 See also `evil-save-column'."
   (declare (indent defun)
            (debug t))
@@ -960,7 +960,7 @@ See also `evil-save-column'."
      ,@body))
 
 (defmacro evil-save-column (&rest body)
-  "Restores the column after execution of BODY.
+  "Restore the column after execution of BODY.
 See also `evil-save-goal-column'."
   (declare (indent defun)
            (debug t))
@@ -1191,7 +1191,7 @@ the loop immediately quits. See also `evil-loop'.
                (throw ',done ,i))))))))
 
 (defmacro evil-signal-without-movement (&rest body)
-  "Catches errors provided point moves within this scope."
+  "Catch errors provided point moves within this scope."
   (declare (indent defun)
            (debug t))
   `(let ((p (point)))
@@ -1202,7 +1202,7 @@ the loop immediately quits. See also `evil-loop'.
           (signal (car err) (cdr err)))))))
 
 (defun evil-signal-at-bob-or-eob (&optional count)
-  "Signals error if `point' is at boundaries.
+  "Signal error if `point' is at boundaries.
 If `point' is at bob and COUNT is negative this function signal
 'beginning-of-buffer. If `point' is at eob and COUNT is positive
 this function singal 'end-of-buffer. This function should be used
@@ -1213,14 +1213,14 @@ in motions. COUNT defaults to 1."
    ((> count 0) (evil-signal-at-eob))))
 
 (defun evil-signal-at-bob ()
-  "Signals 'beginning-of-buffer if `point' is at bob.
+  "Signal 'beginning-of-buffer if `point' is at bob.
 This function should be used in backward motions. If `point' is at
 bob so that no further backward motion is possible the error
 'beginning-of-buffer is raised."
   (when (bobp) (signal 'beginning-of-buffer nil)))
 
 (defun evil-signal-at-eob ()
-  "Signals 'end-of-buffer if `point' is at eob.
+  "Signal 'end-of-buffer if `point' is at eob.
 This function should be used in forward motions. If `point' is close
 to eob so that no further forward motion is possible the error
 'end-of-buffer is raised. This is the case if `point' is at
@@ -1308,7 +1308,7 @@ See also `evil-goto-min'."
            (point-min))))))))
 
 (defun evil-bounds-of-not-thing-at-point (thing &optional which)
-  "Returns the bounds of a complement of THING at point.
+  "Return the bounds of a complement of THING at point.
 If there is a THING at point nil is returned.  Otherwise if WHICH
 is nil or 0 a cons cell (BEG . END) is returned. If WHICH is
 negative the beginning is returned. If WHICH is positive the END
@@ -1329,7 +1329,7 @@ is returned."
          ((> which 0) end))))))
 
 (defun evil-forward-nearest (count &rest forwards)
-  "Moves point forward to the first of several motions.
+  "Move point forward to the first of several motions.
 FORWARDS is a list of forward motion functions (i.e. each moves
 point forward to the next end of a text object (if passed a +1)
 or backward to the preceeding beginning of a text object (if
@@ -1899,7 +1899,7 @@ moved."
     count))
 
 (defun evil-in-comment-p (&optional pos)
-  "Checks if POS is within a comment according to current syntax.
+  "Check if POS is within a comment according to current syntax.
 If POS is nil, (point) is used. The return value is the beginning
 position of the comment."
   (setq pos (or pos (point)))
@@ -1922,9 +1922,9 @@ position of the comment."
       (and (nth 4 syn) (nth 8 syn)))))
 
 (defun evil-looking-at-start-comment (&optional move)
-  "Returns t if point is at the start of a comment.
-point must be on one of the opening characters of a block comment
-according to the current syntax table. Futhermore these
+  "Return t if point is at the start of a comment.
+Point must be on one of the opening characters of a block comment
+according to the current syntax table. Futhermore, these
 characters must been parsed as opening characters, i.e. they
 won't be considered as comment starters inside a string or
 possibly another comment. Point is moved to the first character
@@ -1948,9 +1948,9 @@ of the comment opener if MOVE is non-nil."
          (prog1 t (when move (backward-char)))))))
 
 (defun evil-looking-at-end-comment (&optional move)
-  "Returns t if point is at the end of a comment.
-point must be on one of the opening characters of a block comment
-according to the current syntax table. Futhermore these
+  "Return t if point is at the end of a comment.
+Point must be on one of the opening characters of a block comment
+according to the current syntax table. Futhermore, these
 characters must been parsed as opening characters, i.e. they
 won't be considered as comment starters inside a string or
 possibly another comment. Point is moved right after the comment
@@ -1979,7 +1979,7 @@ closer if MOVE is non-nil."
          (prog1 t (when move (forward-char)))))))
 
 (defun evil-insert-newline-above ()
-  "Inserts a new line above point and places point in that line
+  "Insert a new line above point and place point in that line
 with regard to indentation."
   (evil-narrow-to-field
     (evil-move-beginning-of-line)
@@ -1988,7 +1988,7 @@ with regard to indentation."
     (back-to-indentation)))
 
 (defun evil-insert-newline-below ()
-  "Inserts a new line below point and places point in that line
+  "Insert a new line below point and place point in that line
 with regard to indentation."
   (evil-narrow-to-field
     (evil-move-end-of-line)
@@ -2303,7 +2303,7 @@ register instead of replacing its content."
     (set-register register text))))
 
 (defun evil-register-list ()
-  "Returns an alist of all registers, but only those named
+  "Return an alist of all registers, but only those named
 with number or character. Registers with symbol or string in names are ignored
 to keep Vim compatibility with register jumps."
   (sort (append (mapcar #'(lambda (reg)
@@ -2316,7 +2316,7 @@ to keep Vim compatibility with register jumps."
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
 
 (defsubst evil-kbd-macro-suppress-motion-error ()
-  "Returns non-nil if a motion error should be suppressed.
+  "Return non-nil if a motion error should be suppressed.
 Whether the motion error should be suppressed depends on the
 variable `evil-kbd-macro-suppress-motion-error'."
   (or (and defining-kbd-macro
@@ -2592,7 +2592,7 @@ The tracked insertion is set to `evil-last-insertion'."
 ;;; Paste
 
 (defun evil-yank-characters (beg end &optional register yank-handler)
-  "Saves the characters defined by the region BEG and END in the kill-ring."
+  "Save the characters defined by the region BEG and END in the kill-ring."
   (let ((text (filter-buffer-substring beg end)))
     (when yank-handler
       (setq text (propertize text 'yank-handler (list yank-handler))))
@@ -2604,7 +2604,7 @@ The tracked insertion is set to `evil-last-insertion'."
       (kill-new text))))
 
 (defun evil-yank-lines (beg end &optional register yank-handler)
-  "Saves the lines in the region BEG and END into the kill-ring."
+  "Save the lines in the region BEG and END into the kill-ring."
   (let* ((text (filter-buffer-substring beg end))
          (yank-handler (list (or yank-handler
                                  #'evil-yank-line-handler)
@@ -2624,7 +2624,7 @@ The tracked insertion is set to `evil-last-insertion'."
       (kill-new text))))
 
 (defun evil-yank-rectangle (beg end &optional register yank-handler)
-  "Saves the rectangle defined by region BEG and END into the kill-ring."
+  "Save the rectangle defined by region BEG and END into the kill-ring."
   (let ((lines (list nil)))
     (evil-apply-on-rectangle #'extract-rectangle-line beg end lines)
     ;; We remove spaces from the beginning and the end of the next.
@@ -2649,14 +2649,14 @@ The tracked insertion is set to `evil-last-insertion'."
       text)))
 
 (defun evil-remove-yank-excluded-properties (text)
-  "Removes `yank-excluded-properties' from TEXT."
+  "Remove `yank-excluded-properties' from TEXT."
   (if (eq yank-excluded-properties t)
       (set-text-properties 0 (length text) nil text)
     (remove-list-of-text-properties 0 (length text)
                                     yank-excluded-properties text)))
 
 (defun evil-yank-line-handler (text)
-  "Inserts the current text linewise."
+  "Insert the current text linewise."
   (let ((text (apply #'concat (make-list (or evil-paste-count 1) text)))
         (opoint (point)))
     (evil-remove-yank-excluded-properties text)
@@ -2696,7 +2696,7 @@ The tracked insertion is set to `evil-last-insertion'."
       (insert text)))))
 
 (defun evil-yank-block-handler (lines)
-  "Inserts the current text as block."
+  "Insert the current text as block."
   (let ((count (or evil-paste-count 1))
         (col (if (eq this-command 'evil-paste-after)
                  (1+ (current-column))
@@ -2819,7 +2819,7 @@ is negative this is a more recent kill."
 
 (defun evil-match-interactive-code (interactive &optional pos)
   "Match an interactive code at position POS in string INTERACTIVE.
-Returns the first matching entry in `evil-interactive-alist', or nil."
+Return the first matching entry in `evil-interactive-alist', or nil."
   (let ((length (length interactive))
         (pos (or pos 0)))
     (catch 'done
@@ -2833,7 +2833,7 @@ Returns the first matching entry in `evil-interactive-alist', or nil."
 
 (defun evil-concatenate-interactive-forms (&rest forms)
   "Concatenate interactive list expressions FORMS.
-Returns a single expression where successive expressions
+Return a single expression where successive expressions
 are joined, if possible."
   (let (result)
     (when forms
@@ -2952,7 +2952,7 @@ will make `line' the type of the `next-line' command."
 
 (defun evil-expand (beg end type &rest properties)
   "Expand BEG and END as TYPE with PROPERTIES.
-Returns a list (BEG END TYPE PROPERTIES ...), where the tail
+Return a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list."
   (apply #'evil-transform
          ;; don't expand if already expanded
@@ -2961,19 +2961,19 @@ may contain a property list."
 
 (defun evil-contract (beg end type &rest properties)
   "Contract BEG and END as TYPE with PROPERTIES.
-Returns a list (BEG END TYPE PROPERTIES ...), where the tail
+Return a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list."
   (apply #'evil-transform :contract beg end type properties))
 
 (defun evil-normalize (beg end type &rest properties)
   "Normalize BEG and END as TYPE with PROPERTIES.
-Returns a list (BEG END TYPE PROPERTIES ...), where the tail
+Return a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list."
   (apply #'evil-transform :normalize beg end type properties))
 
 (defun evil-transform (transform beg end type &rest properties)
   "Apply TRANSFORM on BEG and END with PROPERTIES.
-Returns a list (BEG END TYPE PROPERTIES ...), where the tail
+Return a list (BEG END TYPE PROPERTIES ...), where the tail
 may contain a property list. If TRANSFORM is undefined,
 return positions unchanged."
   (let* ((type (or type (evil-type properties)))
@@ -3730,7 +3730,7 @@ in `evil-temporary-undo' instead."
    regexp nil t))
 
 (defun evil-transform-magic (str magic quote transform &optional _start)
-  "Transforms STR with magic characters.
+  "Transform STR with magic characters.
 MAGIC is a regexp that matches all potential magic
 characters. Each occurence of CHAR as magic character within str
 is replaced by the result of calling the associated TRANSFORM
@@ -3848,7 +3848,7 @@ transformations, usually `regexp-quote' or `replace-quote'."
 (defconst evil-regexp-magic "[][(){}<>_dDsSxXoOaAlLuUwWyY.*+?=^$`|nrtb]")
 
 (defun evil-transform-vim-style-regexp (regexp)
-  "Transforms vim-style backslash codes to Emacs regexp.
+  "Transform vim-style backslash codes to Emacs regexp.
 This includes the backslash codes \\d, \\D, \\s, \\S, \\x, \\X,
 \\o, \\O, \\a, \\A, \\l, \\L, \\u, \\U and \\w, \\W. The new
 codes \\y and \\Y can be used instead of the Emacs code \\s and
@@ -3880,7 +3880,7 @@ codes \\y and \\Y can be used instead of the Emacs code \\s and
             (substring str 1))))
 
 (defun evil-get-magic (magic)
-  "Returns a regexp matching the magic characters according to MAGIC.
+  "Return a regexp matching the magic characters according to MAGIC.
 Depending on the value of MAGIC the following characters are
 considered magic.
   t             [][{}*+?.&~$^
@@ -3899,7 +3899,7 @@ considered magic.
 
 (defun evil-compile-subreplacement (to &optional start)
   "Convert a regexp replacement TO to Lisp from START until \\e or \\E.
-Returns a pair (RESULT . REST). RESULT is a list suitable for
+Return a pair (RESULT . REST). RESULT is a list suitable for
 `perform-replace' if necessary, the original string if not.
 REST is the unparsed remainder of TO."
   (let ((result
@@ -3966,7 +3966,7 @@ REST is the unparsed remainder of TO."
 
 (defun evil-compile-replacement (to)
   "Maybe convert a regexp replacement TO to Lisp.
-Returns a list suitable for `perform-replace' if necessary, the
+Return a list suitable for `perform-replace' if necessary, the
 original string if not. Currently the following magic characters
 in replacements are supported: 0-9&#lLuUrnbt,
 The magic character , (comma) start an Emacs-lisp expression."
@@ -3999,7 +3999,7 @@ the replacement text, otherwise the function behaves as
 ;;; Alignment
 
 (defun evil-justify-lines (beg end justify position)
-  "Justifes all lines in a range.
+  "Justify all lines in a range.
 BEG and END specify the range of those lines to be
 justified. JUSTIFY is either 'left, 'right or 'center according
 to the justification type. POSITION is the maximal text width for
@@ -4056,7 +4056,7 @@ should be left-aligned for left justification."
 (define-key evil-list-view-mode-map [return] #'evil-list-view-goto-entry)
 
 (defmacro evil-with-view-list (&rest properties)
-  "Opens new list view buffer.
+  "Open new list view buffer.
 
 PROPERTIES is a property-list which supports the following properties:
 
