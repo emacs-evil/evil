@@ -2150,7 +2150,10 @@ The following special registers are supported.
               (let ((what (if (eq register ?*) 'PRIMARY 'CLIPBOARD)))
                 (if (version<= "29" emacs-version)
                     (gui--selection-value-internal what)
-                  ;; the following code is modified from `x-selection-value-internal'
+                  ;; The following code is based on `x-selection-value-internal'
+                  ;; (now `gui--selection-value-internal') circa Emacs 24. We're
+                  ;; unsure why exactly it's duplicated here, and it's possible
+                  ;; it needn't be for newer versions of Emacs.
                   (let ((request-type (or (and (boundp 'x-select-request-type)
                                                x-select-request-type)
                                           '(UTF8_STRING COMPOUND_TEXT STRING)))
