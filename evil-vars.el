@@ -63,7 +63,7 @@ the :initialize property of `defcustom'.")
         evil-pending-custom-initialize))
 
 (defun evil-run-pending-custom-initialize ()
-  "Executes the pending initializations.
+  "Execute the pending initializations.
 See `evil-pending-custom-initialize'."
   (dolist (init evil-pending-custom-initialize)
     (apply (car init) (cdr init)))
@@ -92,7 +92,7 @@ KEY must be readable by `read-kbd-macro'."
               (define-key map old-key nil))))))))
 
 (defun evil-set-custom-state-maps (var pending-var key _make newlist)
-  "Changes the list of special keymaps.
+  "Change the list of special keymaps.
 VAR         is the variable containing the list of keymaps.
 PENDING-VAR is the variable containing the list of the currently pending
             keymaps.
@@ -109,7 +109,7 @@ NEWLIST     the list of new special keymaps."
   (evil-update-pending-maps))
 
 (defun evil-update-pending-maps (&optional _file)
-  "Tries to set pending special keymaps.
+  "Try to set pending special keymaps.
 This function should be called from an `after-load-functions'
 hook."
   (let ((maps '((evil-make-overriding-map . evil-pending-overriding-maps)
@@ -144,7 +144,7 @@ commands."
       (evil-set-command-property cmd :exclude-newline t))))
 
 (defun evil-set-custom-motions (var values)
-  "Sets the list of motion commands."
+  "Set the list of motion commands."
   (with-no-warnings
     (when (default-boundp var)
       (dolist (motion (default-value var))
@@ -1358,9 +1358,9 @@ SYMBOL is made permanent buffer local."
      (put ',symbol 'permanent-local t)))
 
 (evil-define-local-var evil-scroll-count 0
-  "Holds last used prefix for `evil-scroll-up'
+  "Hold last used prefix for `evil-scroll-up'
 and `evil-scroll-down'.
-Determines how many lines should be scrolled.
+Determine how many lines should be scrolled.
 Default value is 0 - scroll half the screen.")
 
 (evil-define-local-var evil-state nil

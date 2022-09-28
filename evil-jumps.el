@@ -123,7 +123,7 @@
   (remove-hook 'savehist-mode-hook #'evil--jumps-savehist-load))
 
 (defun evil--jumps-savehist-sync ()
-  "Updates the printable value of window jumps for `savehist'."
+  "Update the printable value of window jumps for `savehist'."
   (setq evil-jumps-history
         (delq nil (mapcar #'(lambda (jump)
                               (let* ((mark (car jump))
@@ -166,7 +166,7 @@
           (run-hooks 'evil-jumps-post-jump-hook))))))
 
 (defun evil--jumps-push ()
-  "Pushes the current cursor/file position to the jump list."
+  "Push the current cursor/file position to the jump list."
   (let ((target-list (evil--jumps-get-window-jump-list)))
     (let ((file-name (buffer-file-name))
           (buffer-name (buffer-name))
