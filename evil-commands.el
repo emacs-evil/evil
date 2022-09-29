@@ -1653,7 +1653,7 @@ given."
                 (point))
           end (save-excursion
                 (goto-char end)
-                (point-at-bol count))
+                (line-beginning-position count))
           type 'line))
   (funcall (if should-delete 'evil-delete 'evil-yank) beg end type register yank-handler))
 
@@ -1907,7 +1907,7 @@ but doesn't insert or remove any spaces."
                                (point)))
                (end-adjusted (save-excursion
                                (goto-char end)
-                               (point-at-bol count-num))))
+                               (line-beginning-position count-num))))
           (funcall join-fn beg-adjusted end-adjusted)))))))
 
 (evil-define-operator evil-fill (beg end)
@@ -2346,7 +2346,7 @@ leave the cursor just after the new text."
     (evil-paste-before nil register t)
     (when (evil-replace-state-p)
       (setq reg-length (- (point) opoint)
-            chars-to-delete (min (- (point-at-eol) (point)) reg-length))
+            chars-to-delete (min (- (line-end-position) (point)) reg-length))
       ;; TODO: handle multi-line paste backspacing
       (evil-update-replace-alist (point) reg-length chars-to-delete chars-to-delete)
       (delete-char chars-to-delete))))
@@ -2668,7 +2668,7 @@ Adds a `^' overlay as an input prompt."
         (progn
           (if (evil-replace-state-p)
               (progn
-                (setq chars-to-delete (min (- (point-at-eol) opoint) count)
+                (setq chars-to-delete (min (- (line-end-position) opoint) count)
                       insert-prompt (make-overlay opoint (+ chars-to-delete opoint)))
                 (evil-update-replace-alist opoint count chars-to-delete))
             (setq insert-prompt (make-overlay opoint opoint)))
@@ -2785,7 +2785,7 @@ next VCOUNT - 1 lines below the current one."
         chars-to-delete insert-prompt)
     (if (evil-replace-state-p)
         (progn
-          (setq chars-to-delete (min (- (point-at-eol) opoint) count)
+          (setq chars-to-delete (min (- (line-end-position) opoint) count)
                 insert-prompt (make-overlay opoint (+ chars-to-delete opoint)))
           (evil-update-replace-alist opoint count chars-to-delete))
       (setq insert-prompt (make-overlay opoint opoint)))
