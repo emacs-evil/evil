@@ -746,10 +746,10 @@ via KEY-VALUE pairs. BODY should evaluate to a list of values.
                    `(lambda ,args
                       ,@(when doc `(,doc))
                       ,@body)
-                 (macroexp-progn body))))
+                 `',(macroexp-progn body))))
     `(eval-and-compile
        (evil--add-to-alist
-        evil-interactive-alist ,code (cons ',func ',properties))
+        evil-interactive-alist ,code (cons ,func ',properties))
        ,code)))
 
 ;;; Highlighting

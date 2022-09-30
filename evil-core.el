@@ -127,7 +127,7 @@
         (add-hook 'input-method-activate-hook #'evil-activate-input-method t t)
         (add-hook 'input-method-deactivate-hook #'evil-deactivate-input-method t t)
         (add-hook 'activate-mark-hook 'evil-visual-activate-hook nil t)
-        ;; FIXME: Add these hooks buffer-locally
+        ;; FIXME: Add these hooks buffer-locally and remove when disabling
         (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
         (add-hook 'post-command-hook 'evil-repeat-post-hook))
     (evil-refresh-mode-line)

@@ -61,11 +61,15 @@
 ;;
 ;; This file is NOT part of Evil itself.
 
+;; FIXME: Merely loading an ELisp file should not change Emacs's config!
 (setq load-prefer-newer t)
 
 (require 'cl-lib)
 (require 'elp)
 (require 'ert)
+;; Load non-compiled `evil-ex'. (It defines `evil-parser' - which is
+;; needed by `evil-test-parser' - only inside an `eval-when-compile'.)
+(require 'evil-ex "evil-ex.el")
 (require 'evil)
 (require 'evil-digraphs)
 (require 'evil-test-helpers)
