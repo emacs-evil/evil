@@ -1404,8 +1404,8 @@ If STATE is given it used a parsing state at point."
 Signals an error at buffer boundaries unless NOERROR is non-nil."
   (setq this-command (if (< count 0) #'previous-line #'next-line))
   (let ((last-command
+         ;; Reset tmp goal column between visual/logical movement
          (when (eq line-move-visual (consp temporary-goal-column))
-           ;; Reset tmp goal column between visual/logical movement
            last-command))
         (opoint (point)))
     (evil-signal-without-movement
