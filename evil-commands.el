@@ -4451,8 +4451,11 @@ The \"!\" argument means to sort in reverse order."
   "Toggle side windows, evaluate BODY, restore side windows."
   (declare (indent defun) (debug (&rest form)))
   (let ((sides (make-symbol "sidesvar")))
-    `(let ((,sides (and (functionp 'window-toggle-side-windows)
+    `(let ((,sides (and (fboundp 'window-toggle-side-windows)
                         (window-with-parameter 'window-side))))
+       ;; The compiler doesn't understand that all uses are protected
+       ;; by `fboundp' :-(
+       (declare-function window-toggle-side-windows "window")
        (when ,sides
          (window-toggle-side-windows))
        (unwind-protect
