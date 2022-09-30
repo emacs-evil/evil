@@ -1405,7 +1405,8 @@ Signals an error at buffer boundaries unless NOERROR is non-nil."
   (setq this-command (if (< count 0) #'previous-line #'next-line))
   (let ((last-command
          ;; Reset tmp goal column between visual/logical movement
-         (when (eq line-move-visual (consp temporary-goal-column))
+         (when (or (eq line-move-visual (consp temporary-goal-column))
+                   (eq temporary-goal-column most-positive-fixnum))
            last-command))
         (opoint (point)))
     (evil-signal-without-movement
