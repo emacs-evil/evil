@@ -1400,32 +1400,23 @@ If STATE is given it used a parsing state at point."
 ;; the line (we never want point to leave its column). The code here
 ;; comes from simple.el, and I hope it will work in future.
 (defun evil-line-move (count &optional noerror)
-  "A wrapper for line motions which conserves the column.
+  "A wrapper for line motions that conserves the column.
 Signals an error at buffer boundaries unless NOERROR is non-nil."
-  (cond
-   (noerror
-    (condition-case nil
-        (evil-line-move count)
-      (error nil)))
-   (t
+  (setq this-command (if (< count 0) #'previous-line #'next-line))
+  (let ((last-command
+         (when (eq line-move-visual (consp temporary-goal-column))
+           ;; Reset tmp goal column between visual/logical movement
+           last-command))
+        (opoint (point)))
     (evil-signal-without-movement
-      (setq this-command (if (>= count 0)
-                             #'next-line
-                           #'previous-line))
-      (let ((opoint (point)))
-        (condition-case err
-            (with-no-warnings
-              (funcall this-command (abs count)))
-          ((beginning-of-buffer end-of-buffer)
-           (let ((col (or goal-column
-                          (if (consp temporary-goal-column)
-                              (car temporary-goal-column)
-                            temporary-goal-column))))
-             (if line-move-visual
-                 (vertical-motion (cons col 0))
-               (line-move-finish col opoint (< count 0)))
-             ;; Maybe we should just `ding'?
-             (signal (car err) (cdr err))))))))))
+      (condition-case err
+          (line-move count)
+        ((beginning-of-buffer end-of-buffer)
+         (let ((col (or goal-column
+                        (car-safe temporary-goal-column)
+                        temporary-goal-column)))
+           (line-move-finish col opoint (< count 0))
+           (unless noerror (signal (car err) (cdr err)))))))))
 
 (defun evil-forward-syntax (syntax &optional count)
   "Move point to the end or beginning of a sequence of characters in
