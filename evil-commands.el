@@ -1133,33 +1133,33 @@ If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (evil-save-column
-    (let ((line (or count (line-number-at-pos (point)))))
+  (when count
+    (evil-save-column
       (goto-char (point-min))
-      (forward-line (1- line)))
-    (recenter (1- (max 1 scroll-margin)))))
+      (forward-line (1- count))))
+  (recenter 0))
 
 (evil-define-command evil-scroll-line-to-center (count)
   "Scroll line number COUNT (or the cursor line) to the center of the window."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (evil-save-column
-    (when count
+  (when count
+    (evil-save-column
       (goto-char (point-min))
-      (forward-line (1- count)))
-    (recenter nil)))
+      (forward-line (1- count))))
+  (recenter))
 
 (evil-define-command evil-scroll-line-to-bottom (count)
   "Scroll line number COUNT (or the cursor line) to the bottom of the window."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (evil-save-column
-    (let ((line (or count (line-number-at-pos (point)))))
+  (when count
+    (evil-save-column
       (goto-char (point-min))
-      (forward-line (1- line)))
-    (recenter (- (max 1 scroll-margin)))))
+      (forward-line (1- count))))
+  (recenter -1))
 
 (evil-define-command evil-scroll-bottom-line-to-top (count)
   "Scroll the line right below the window,
@@ -1167,28 +1167,21 @@ or line COUNT to the top of the window."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (if count
-      (progn
-        (goto-char (point-min))
-        (forward-line (1- count)))
+  (unless count
     (goto-char (window-end))
-    (evil-move-cursor-back))
-  (recenter (1- (max 0 scroll-margin)))
-  (evil-first-non-blank))
+    (evil-first-non-blank))
+  (evil-scroll-line-to-top count))
 
 (evil-define-command evil-scroll-top-line-to-bottom (count)
-  "Scroll the line right below the window,
-or line COUNT to the top of the window."
+  "Scroll the line right above the window,
+or line COUNT to the bottom of the window."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (if count
-      (progn
-        (goto-char (point-min))
-        (forward-line (1- count)))
-    (goto-char (window-start)))
-  (recenter (- (max 1 scroll-margin)))
-  (evil-first-non-blank))
+  (unless count
+    (goto-char (window-start))
+    (evil-first-non-blank))
+  (evil-scroll-line-to-bottom count))
 
 (evil-define-command evil-scroll-left (count)
   "Scroll the window COUNT half-screenwidths to the left."
