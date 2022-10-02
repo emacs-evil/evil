@@ -9501,6 +9501,34 @@ when an error stops the execution of the macro"
      ("@a")
      "inserted text appended tex[t]")))
 
+(ert-deftest evil-test-paren-jumping ()
+  :tags '(evil paren)
+  (ert-info ("Test doing motions on parens that you aren't in")
+    (evil-test-buffer
+      "[m]ain(argc, argv) char **argv; {"
+      ("dib" [escape])
+      "main([)] char **argv; {")
+    (evil-test-buffer
+      "[a]lpha (bravo) charlie "
+      ("yi(")
+      "alpha ([b]ravo) charlie "
+      ("$p")
+      "alpha (bravo) charlie brav[o]")
+      (evil-test-buffer
+        "[a]lpha (bravo (charlie))"
+        ("2di(")
+        "alpha (bravo ([)]")
+    (evil-test-buffer
+"[#]include \"stdlib.h\"
+main(argc, argv) char **argv; {
+  while (1) malloc(0);
+}"
+      ("ci{  return 0;" [escape])
+"#include \"stdlib.h\"
+main(argc, argv) char **argv; {
+  return 0[;]
+}")))
+
 ;;; Core
 
 (ert-deftest evil-test-initial-state ()
