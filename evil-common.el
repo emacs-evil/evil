@@ -3457,10 +3457,16 @@ is ignored."
        (goto-char (or (if (and count (> 0 count)) end beg)
                       (point)))
        (let ((re (if (characterp open) (string open) open)))
-         (if (re-search-forward re nil t count)
-             (progn
-               (goto-char (match-beginning 0))
-               (evil-select-paren open close (match-beginning 0) (match-beginning 0) type count inclusive))
+         (if (and (not (string= (string (char-after)) re))
+                  (re-search-forward re nil t count))
+	     (progn
+	       (goto-char (match-beginning 0))
+	       (let* ((mbeg (match-beginning 0))
+		      (res (evil-select-paren open close mbeg mbeg
+					      type nil inclusive)))
+		 (if (< (car res) mbeg)
+		     (error "No surrounding delimiters found")
+		   res)))
            (error "No surrounding delimiters found")))))))
 
 (defun evil-select-quote-thing (thing beg end _type count &optional inclusive)

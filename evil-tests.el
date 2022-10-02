@@ -9507,6 +9507,10 @@ when an error stops the execution of the macro"
       "alpha ([b]ravo) charlie "
       ("$p")
       "alpha (bravo) charlie brav[o]")
+      (evil-test-buffer
+        "[a]lpha (bravo (charlie))"
+        ("2di(")
+        "alpha (bravo ([)]")
     (evil-test-buffer
 "[#]include \"stdlib.h\"
 main(argc, argv) char **argv; {
