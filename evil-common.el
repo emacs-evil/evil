@@ -3465,6 +3465,11 @@ is ignored."
 		      (res (evil-select-paren open close mbeg mbeg
 					      type nil inclusive)))
 		 (if (< (car res) mbeg)
+                     ;; this will error if the beginning of the found parens is before the target paren
+                     ;; this prevents things such as on the line `prova ( verder "((testo)")`,
+                     ;; the inputs `g2ci(` from putting your cursor inside the deleted `()` after `prova`
+                     ;; without this, it would go to the second paren (the unbalanced first paren inside the quotes)
+                     ;; and then do a change there, changing inside the whole paren after `prova`
 		     (error "No surrounding delimiters found")
 		   res)))
            (error "No surrounding delimiters found")))))))
