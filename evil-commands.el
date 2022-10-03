@@ -2367,6 +2367,7 @@ leave the cursor just after the new text."
   "Use REGISTER for the next command."
   :keep-visual t
   :repeat ignore
+  :suppress-operator t
   (interactive "<C>")
   (setq evil-this-register register))
 
@@ -2682,9 +2683,10 @@ Adds a `^' overlay as an input prompt."
           (when (evil-replace-state-p) (delete-char chars-to-delete)))
       (when insert-prompt (delete-overlay insert-prompt)))))
 
-(defun evil-open-above (count)
+(evil-define-command evil-open-above (count)
   "Insert a new line above point and switch to Insert state.
 The insertion will be repeated COUNT times."
+  :suppress-operator t
   (interactive "p")
   (unless (eq evil-want-fine-undo t)
     (evil-start-undo-step))
@@ -2696,9 +2698,10 @@ The insertion will be repeated COUNT times."
   (when evil-auto-indent
     (indent-according-to-mode)))
 
-(defun evil-open-below (count)
+(evil-define-command evil-open-below (count)
   "Insert a new line below point and switch to Insert state.
 The insertion will be repeated COUNT times."
+  :suppress-operator t
   (interactive "p")
   (unless (eq evil-want-fine-undo t)
     (evil-start-undo-step))

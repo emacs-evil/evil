@@ -1995,6 +1995,97 @@ with regard to indentation."
     (insert (if use-hard-newlines hard-newline "\n"))
     (back-to-indentation)))
 
+;;; Interactive forms
+
+(defun evil-match-interactive-code (interactive &optional pos)
+  "Match an interactive code at position POS in string INTERACTIVE.
+Return the first matching entry in `evil-interactive-alist', or nil."
+  (let ((length (length interactive))
+        (pos (or pos 0)))
+    (catch 'done
+      (dolist (entry evil-interactive-alist)
+        (let* ((string (car entry))
+               (end (+ (length string) pos)))
+          (when (and (<= end length)
+                     (string= string
+                              (substring interactive pos end)))
+            (throw 'done entry)))))))
+
+(defun evil-concatenate-interactive-forms (&rest forms)
+  "Concatenate interactive list expressions FORMS.
+Return a single expression where successive expressions
+are joined, if possible."
+  (let (result)
+    (when forms
+      (while (cdr forms)
+        (cond
+         ((null (car forms))
+          (pop forms))
+         ((and (eq (car (car forms)) 'list)
+               (eq (car (cadr forms)) 'list))
+          (setq forms (cons (append (car forms)
+                                    (cdr (cadr forms)))
+                            (cdr (cdr forms)))))
+         (t
+          (push (pop forms) result))))
+      (when (car forms)
+        (push (pop forms) result))
+      (setq result (nreverse result))
+      (cond
+       ((null result))
+       ((null (cdr result))
+        (car result))
+       (t
+        `(append ,@result))))))
+
+(defun evil-interactive-string (string)
+  "Evaluate the interactive string STRING.
+The string may contain extended interactive syntax.
+The return value is a cons cell (FORM . PROPERTIES),
+where FORM is a single list-expression to be passed to
+a standard `interactive' statement, and PROPERTIES is a
+list of command properties as passed to `evil-define-command'."
+  (let ((length (length string))
+        (pos 0)
+        code expr forms match plist prompt properties)
+    (while (< pos length)
+      (if (eq (aref string pos) ?\n)
+          (setq pos (1+ pos))
+        (setq match (evil-match-interactive-code string pos))
+        (if (null match)
+            (user-error "Unknown interactive code: `%s'"
+                        (substring string pos))
+          (setq code (car match)
+                expr (car (cdr match))
+                plist (cdr (cdr match))
+                pos (+ pos (length code)))
+          (when (functionp expr)
+            (setq prompt
+                  (substring string pos
+                             (or (string-match "\n" string pos)
+                                 length))
+                  pos (+ pos (length prompt))
+                  expr `(funcall ,expr ,prompt)))
+          (setq forms (append forms (list expr))
+                properties (append properties plist)))))
+    (cons `(append ,@forms) properties)))
+
+(defun evil-interactive-form (&rest args)
+  "Evaluate interactive forms ARGS.
+The return value is a cons cell (FORM . PROPERTIES),
+where FORM is a single list-expression to be passed to
+a standard `interactive' statement, and PROPERTIES is a
+list of command properties as passed to `evil-define-command'."
+  (let (forms properties)
+    (dolist (arg args)
+      (if (not (stringp arg))
+          (setq forms (append forms (list arg)))
+        (setq arg (evil-interactive-string arg)
+              forms (append forms (cdr (car arg)))
+              properties (append properties (cdr arg)))))
+    (cons (apply #'evil-concatenate-interactive-forms forms)
+          properties)))
+
 ;;; Markers
 
 (defun evil-global-marker-p (char)
@@ -2002,11 +2093,12 @@ with regard to indentation."
   (or (and (>= char ?A) (<= char ?Z))
       (assq char (default-value 'evil-markers-alist))))
 
-(defun evil-set-marker (char &optional pos advance)
+(evil-define-command evil-set-marker (char &optional pos advance)
   "Set the marker denoted by CHAR to position POS.
 POS defaults to the current position of point.
 If ADVANCE is t, the marker advances when inserting text at it;
 otherwise, it stays behind."
+  :suppress-operator t
   (interactive (list (read-char)))
   (catch 'done
     (let ((marker (evil-get-marker char t)) alist)
@@ -2814,97 +2906,6 @@ is negative this is a more recent kill."
   "Same as `evil-paste-pop' but with negative argument."
   (interactive "p")
   (evil-paste-pop (- count)))
-
-;;; Interactive forms
-
-(defun evil-match-interactive-code (interactive &optional pos)
-  "Match an interactive code at position POS in string INTERACTIVE.
-Return the first matching entry in `evil-interactive-alist', or nil."
-  (let ((length (length interactive))
-        (pos (or pos 0)))
-    (catch 'done
-      (dolist (entry evil-interactive-alist)
-        (let* ((string (car entry))
-               (end (+ (length string) pos)))
-          (when (and (<= end length)
-                     (string= string
-                              (substring interactive pos end)))
-            (throw 'done entry)))))))
-
-(defun evil-concatenate-interactive-forms (&rest forms)
-  "Concatenate interactive list expressions FORMS.
-Return a single expression where successive expressions
-are joined, if possible."
-  (let (result)
-    (when forms
-      (while (cdr forms)
-        (cond
-         ((null (car forms))
-          (pop forms))
-         ((and (eq (car (car forms)) 'list)
-               (eq (car (cadr forms)) 'list))
-          (setq forms (cons (append (car forms)
-                                    (cdr (cadr forms)))
-                            (cdr (cdr forms)))))
-         (t
-          (push (pop forms) result))))
-      (when (car forms)
-        (push (pop forms) result))
-      (setq result (nreverse result))
-      (cond
-       ((null result))
-       ((null (cdr result))
-        (car result))
-       (t
-        `(append ,@result))))))
-
-(defun evil-interactive-string (string)
-  "Evaluate the interactive string STRING.
-The string may contain extended interactive syntax.
-The return value is a cons cell (FORM . PROPERTIES),
-where FORM is a single list-expression to be passed to
-a standard `interactive' statement, and PROPERTIES is a
-list of command properties as passed to `evil-define-command'."
-  (let ((length (length string))
-        (pos 0)
-        code expr forms match plist prompt properties)
-    (while (< pos length)
-      (if (eq (aref string pos) ?\n)
-          (setq pos (1+ pos))
-        (setq match (evil-match-interactive-code string pos))
-        (if (null match)
-            (user-error "Unknown interactive code: `%s'"
-                        (substring string pos))
-          (setq code (car match)
-                expr (car (cdr match))
-                plist (cdr (cdr match))
-                pos (+ pos (length code)))
-          (when (functionp expr)
-            (setq prompt
-                  (substring string pos
-                             (or (string-match "\n" string pos)
-                                 length))
-                  pos (+ pos (length prompt))
-                  expr `(funcall ,expr ,prompt)))
-          (setq forms (append forms (list expr))
-                properties (append properties plist)))))
-    (cons `(append ,@forms) properties)))
-
-(defun evil-interactive-form (&rest args)
-  "Evaluate interactive forms ARGS.
-The return value is a cons cell (FORM . PROPERTIES),
-where FORM is a single list-expression to be passed to
-a standard `interactive' statement, and PROPERTIES is a
-list of command properties as passed to `evil-define-command'."
-  (let (forms properties)
-    (dolist (arg args)
-      (if (not (stringp arg))
-          (setq forms (append forms (list arg)))
-        (setq arg (evil-interactive-string arg)
-              forms (append forms (cdr (car arg)))
-              properties (append properties (cdr arg)))))
-    (cons (apply #'evil-concatenate-interactive-forms forms)
-          properties)))
 
 ;;; Types
 
