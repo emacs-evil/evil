@@ -1438,7 +1438,7 @@ or line COUNT to the top of the window."
       (evil-visual-select evil-ex-search-match-beg
                           evil-ex-search-match-end
                           'inclusive
-                          (cl-case direction ('forward +1) ('backward -1))
+                          (pcase direction ('forward +1) ('backward -1))
                           t)
       (list evil-ex-search-match-beg evil-ex-search-match-end))
      ((and visual-state (eq 'forward direction))
