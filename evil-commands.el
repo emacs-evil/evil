@@ -1938,6 +1938,8 @@ but doesn't insert or remove any spaces."
   :move-point nil
   :type line
   (evil-ensure-column
+    ;; Reset unneeded change made by evil-ensure-column
+    (setq this-command real-this-command)
     (save-restriction
       (narrow-to-region beg end)
       (if (and (= beg (line-beginning-position))
