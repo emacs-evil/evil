@@ -3859,9 +3859,8 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
          (orig-point-marker (move-marker (make-marker) (point)))
          (end-marker (move-marker (make-marker) end))
          (use-reveal confirm)
+         (match-end (make-marker))
          reveal-open-spots
-         zero-length-match
-         match-contains-newline
          transient-mark-mode)
     (setq evil-ex-substitute-pattern pattern
           evil-ex-substitute-replacement replacement
@@ -3876,28 +3875,24 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
           (goto-char beg)
           (catch 'exit-search
             (while (re-search-forward evil-ex-substitute-regex end-marker t)
-              (when (not (and query-replace-skip-read-only
-                              (text-property-any (match-beginning 0) (match-end 0) 'read-only t)))
-                (let ((match-str (match-string 0))
-                      (match-beg (move-marker (make-marker) (match-beginning 0)))
-                      (match-end (move-marker (make-marker) (match-end 0)))
-                      (match-data (match-data)))
+              (unless (and query-replace-skip-read-only
+                           (text-property-any (match-beginning 0) (match-end 0) 'read-only t))
+                (let ((inhibit-field-text-motion t)
+                      (match-beg (match-beginning 0))
+                      (match-data (match-data))
+                      match-contains-newline zero-length-match)
+                  (move-marker match-end (match-end 0))
                   (goto-char match-beg)
-                  (setq match-contains-newline
-                        (string-match-p "\n" (buffer-substring-no-properties
-                                              match-beg match-end)))
-                  (setq zero-length-match (= match-beg match-end))
-                  (when (and (= match-end end-marker) (not match-contains-newline) (bolp))
-                    ;; The range (beg end) includes the final newline which means
-                    ;; end-marker is on one line down.
-                    ;; With the exception of explicitly substituting newlines,
-                    ;; we abort when the match ends here and it's an empty line
+                  (setq match-contains-newline (< (line-end-position) match-end)
+                        zero-length-match (= match-beg match-end))
+                  (when (and (= match-beg end-marker) (> end-marker beg) (bolp))
+                    ;; This line is not included due to range being exclusive
                     (throw 'exit-search t))
                   (setq evil-ex-substitute-last-point match-beg)
                   (if confirm
                       (let ((prompt
                              (format "Replace %s with %s (y/n/a/q/l/^E/^Y)? "
-                                     match-str
+                                     (match-string 0)
                                      (evil-match-substitute-replacement
                                       evil-ex-substitute-replacement
                                       (not case-replace))))
