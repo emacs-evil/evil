@@ -661,9 +661,10 @@ The following properties are supported:
                         (while (and (not (eobp))
                                     (evil-ex-search-find-next-pattern pattern)
                                     (<= (match-end 0) end)
-                                    (not (and (= (match-end 0) end)
-                                              (string= (evil-ex-pattern-regex pattern)
-                                                       "^"))))
+                                    (not (and (= (match-beginning 0) end)
+                                              (save-excursion
+                                                (goto-char (match-beginning 0))
+                                                (bolp)))))
                           (let ((ov (or (pop old-ovs) (make-overlay 0 0))))
                             (move-overlay ov (match-beginning 0) (match-end 0))
                             (overlay-put ov 'face face)
