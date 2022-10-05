@@ -1345,7 +1345,7 @@ a :substitute command with arguments."
     (with-current-buffer evil-ex-current-buffer
       ;; Start to initial point if C-w have never been hit.
       (unless evil-ex-search-yank-point
-        (if (string-empty-p minibuf-content)
+        (if (string= "" minibuf-content)
             (setq evil-ex-search-yank-point evil-ex-search-start-point)
           (setq evil-ex-search-yank-point (point))))
       (save-excursion
