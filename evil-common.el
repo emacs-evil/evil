@@ -3457,7 +3457,7 @@ is ignored."
        (goto-char (or (if (and count (> 0 count)) end beg)
                       (point)))
        (let ((re (if (characterp open) (string open) open)))
-         (if (and (not (string= (string (char-after)) re))
+         (if (and (not (looking-at-p re))
                   (re-search-forward re nil t count))
              (progn
                (goto-char (match-beginning 0))
