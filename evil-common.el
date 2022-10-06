@@ -3456,7 +3456,7 @@ is ignored."
      (save-match-data
        (goto-char (or (if (and count (> 0 count)) end beg)
                       (point)))
-       (let ((re (if (characterp open) (string open) open)))
+       (let ((re (if (characterp open) (regexp-quote (string open)) open)))
          (if (and (not (looking-at-p re))
                   (re-search-forward re nil t count))
              (progn
