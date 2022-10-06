@@ -531,7 +531,7 @@ ubiquity of prefix arguments."
                (define-key evil-replace-state-map (kbd "C-u") 'evil-delete-back-to-indentation))))))
 
 (defcustom evil-want-C-w-delete t
-  "Whether `C-w' deletes a word in Insert state."
+  "Whether `C-w' deletes a word in Insert/Ex/Search state."
   :type 'boolean
   :group 'evil
   :set #'(lambda (sym value)
@@ -548,7 +548,27 @@ ubiquity of prefix arguments."
                     (eq (lookup-key evil-insert-state-map (kbd "C-w"))
                         'evil-window-map))
                (define-key evil-insert-state-map (kbd "C-w") 'evil-delete-backward-word)
-               (define-key evil-replace-state-map (kbd "C-w") 'evil-delete-backward-word))))))
+               (define-key evil-replace-state-map (kbd "C-w") 'evil-delete-backward-word))))
+           (when (boundp 'evil-ex-search-keymap)
+             (cond
+              ((and (not value)
+                    (eq (lookup-key evil-ex-search-keymap (kbd "C-w"))
+                        'backward-kill-word))
+               (define-key evil-ex-search-keymap (kbd "C-w") 'evil-search-yank-word))
+              ((and value
+                    (eq (lookup-key evil-ex-search-keymap (kbd "C-w"))
+                        'evil-search-yank-word))
+               (define-key evil-ex-search-keymap (kbd "C-w") 'backward-kill-word))))
+           (when (boundp 'evil-ex-completion-map)
+             (cond
+              ((and (not value)
+                    (eq (lookup-key evil-ex-completion-map (kbd "C-w"))
+                        'backward-kill-word))
+               (define-key evil-ex-completion-map (kbd "C-w") nil))
+              ((and value
+                    (eq (lookup-key evil-ex-completion-map (kbd "C-w"))
+                        nil))
+               (define-key evil-ex-completion-map (kbd "C-w") 'backward-kill-word))))))
 
 (defcustom evil-want-C-h-delete nil
   "Whether `C-h' deletes a char in Insert state."

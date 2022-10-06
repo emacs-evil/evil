@@ -7986,7 +7986,15 @@ golf h[o]>tel")))
        ("/\C-rb" [return])
        "Alpha bravo charlie alpha [b]ravo delta bravo delta"
        ("w/\C-r\C-o" [return])
-       "Alpha bravo charlie alpha bravo delta bravo [d]elta"))))
+       "Alpha bravo charlie alpha bravo delta bravo [d]elta"))
+    (ert-info ("Can use C-w yank-word functionality")
+      (let ((old-val evil-want-C-w-delete))
+        (custom-set-variables '(evil-want-C-w-delete nil))
+        (evil-test-buffer
+          "alpha [b]ravo charlie delta bravo echo"
+          ("/\C-w" [return])
+          "alpha bravo charlie delta [b]ravo echo")
+        (custom-set-variables `(evil-want-C-w-delete ,old-val))))))
 
 (ert-deftest evil-test-ex-search-offset ()
   "Test search offsets."
