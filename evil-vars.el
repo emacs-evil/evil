@@ -2116,7 +2116,7 @@ to `undo-redo', Evil uses commands natively available in Emacs 28."
            (set-default sym value)))
 
 (defcustom evil-visual-update-x-selection-p t
-  "Whether to update the X PRIMARY selection with the current visual region automatically."
+  "Whether to update the X PRIMARY selection with the current visual region."
   :type  'boolean
   :group 'evil)
 
