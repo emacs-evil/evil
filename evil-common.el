@@ -2027,6 +2027,7 @@ otherwise, it stays behind."
       (add-hook 'kill-buffer-hook #'evil-swap-out-markers nil t)
       (set-marker-insertion-type marker advance)
       (set-marker marker (or pos (point))))))
+(evil-set-command-properties #'evil-set-marker :suppress-operator t)
 
 (defun evil-get-marker (char &optional raw)
   "Return the marker denoted by CHAR.
