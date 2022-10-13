@@ -165,7 +165,6 @@ Whether to auto-indent when opening lines with \\[evil-open-below] \
 and \\[evil-open-above]."
   :type  'boolean
   :group 'evil)
-(make-variable-buffer-local 'evil-auto-indent)
 
 (defcustom evil-shift-width 4
   "\\<evil-normal-state-map>
@@ -174,7 +173,6 @@ This applies to the shifting operators \\[evil-shift-right] and \
 \\[evil-shift-left]."
   :type 'integer
   :group 'evil)
-(make-variable-buffer-local 'evil-shift-width)
 
 (defcustom evil-shift-round t
   "\\<evil-normal-state-map>
@@ -183,7 +181,6 @@ If non-nil, \\[evil-shift-right] and \\[evil-shift-left] adjust line
 indentation to the nearest multiple of `evil-shift-width'."
   :type 'boolean
   :group 'evil)
-(make-variable-buffer-local 'evil-shift-round)
 
 (defcustom evil-indent-convert-tabs t
   "\\<evil-normal-state-map>
@@ -335,7 +332,6 @@ expression.  By default, whitespace characters are considered
 WORD boundaries."
   :type 'string
   :group 'evil)
-(make-variable-buffer-local 'evil-bigword)
 
 (defcustom evil-want-fine-undo nil
   "Whether actions are undone in several steps.
@@ -1229,7 +1225,6 @@ be extended to contain full lines."
   "If nil then * and # search for words otherwise for symbols."
   :group 'evil
   :type 'boolean)
-(make-variable-buffer-local 'evil-symbol-word-search)
 
 (defcustom evil-magic t
   "Meaning which characters in a pattern are magic.
