@@ -180,7 +180,8 @@ To enable Evil globally, do (evil-mode 1)."
 
 ;;;###autoload (autoload 'evil-mode "evil" nil t)
 (define-globalized-minor-mode evil-mode
-  evil-local-mode evil-initialize)
+  evil-local-mode evil-initialize
+  :group 'evil)
 
 ;; No hooks are run in Fundamental buffers, so other measures are
 ;; necessary to initialize Evil in these buffers. When Evil is

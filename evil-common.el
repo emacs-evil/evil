@@ -2546,7 +2546,11 @@ disjoin range."
          (chg-beg-ok (and evil-current-insertion (<= ins-beg chg-beg))))
     (cond
      ;; Replace-state deletion - ignore
-     ((and (< 0 (- chg-end chg-beg)) (= 0 len) (evil-replace-state-p)) nil)
+     ((and (< 0 (- chg-end chg-beg))
+           (= 0 len)
+           (fboundp 'evil-replace-state-p)
+           (evil-replace-state-p))
+      nil)
      ;; Insert-state deletion - contract current insertion
      ((= 0 (- chg-end chg-beg))
       (if (and chg-beg-ok (<= (+ chg-beg len) ins-end))

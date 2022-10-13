@@ -882,12 +882,14 @@ Columns are counted from zero."
 
 (evil-define-motion evil-goto-last-change (count)
   "Like `goto-last-change' but takes a COUNT rather than a span."
+  (eval-and-compile (require 'goto-chg))
   (setq this-command 'goto-last-change)
   (dotimes (_ (or count 1))
     (goto-last-change nil)))
 
 (evil-define-motion evil-goto-last-change-reverse (count)
   "Like `goto-last-change-reverse' but takes a COUNT rather than a span."
+  (eval-and-compile (require 'goto-chg))
   (setq this-command 'goto-last-change-reverse)
   (dotimes (_ (or count 1))
     (goto-last-change-reverse nil)))
@@ -2368,6 +2370,11 @@ leave the cursor just after the new text."
 
 (defvar evil-macro-buffer nil
   "The buffer that has been active on macro recording.")
+
+(defvar evil-execute-normal-keys nil
+  "The keys used to invoke the current `evil-execute-in-normal-state'.
+Can be used to detect if we are currently in that quasi-state.
+With current bindings, it will be \\<evil-insert-state-map>\\[evil-execute-in-normal-state]")
 
 (defun evil-end-and-return-macro ()
   "Like `kmacro-end-macro' but also return the macro.
@@ -4858,11 +4865,6 @@ if the previous state was Emacs state."
       (evil-change-to-previous-state buffer message)
       (when (evil-emacs-state-p)
         (evil-normal-state (and message 1))))))
-
-(defvar evil-execute-normal-keys nil
-  "The keys used to invoke the current `evil-execute-in-normal-state'.
-Can be used to detect if we are currently in that quasi-state.
-With current bindings, it will be \\<evil-insert-state-map>\\[evil-execute-in-normal-state]")
 
 (evil-define-local-var evil--execute-normal-eol-pos nil
   "Vim has special behaviour for executing in normal state at eol.
