@@ -36,7 +36,8 @@
   :group 'evil)
 
 (defcustom evil-jumps-cross-buffers t
-  "When non-nil, the jump commands can cross borders between buffers, otherwise the jump commands act only within the current buffer."
+  "When non-nil, the jump commands can cross borders between buffers.
+Otherwise the jump commands act only within the current buffer."
   :type 'boolean
   :group 'evil-jumps)
 
@@ -56,7 +57,7 @@
   :group 'evil-jumps)
 
 (defcustom evil-jumps-ignored-file-patterns '("COMMIT_EDITMSG$" "TAGS$")
-  "A list of pattern regexps to match on the file path to exclude from being included in the jump list."
+  "List of regexps to exclude file path from inclusion in the jump list."
   :type '(repeat string)
   :group 'evil-jumps)
 
@@ -73,7 +74,7 @@
 (eval-when-compile (defvar evil--jumps-debug nil))
 
 (defvar evil--jumps-buffer-targets "\\*\\(new\\|scratch\\)\\*"
-  "Regexp to match against `buffer-name' to determine whether it's a valid jump target.")
+  "Regexp to determine if buffer with `buffer-name' is a valid jump target.")
 
 (defvar evil--jumps-window-jumps (make-hash-table)
   "Hashtable which stores all jumps on a per window basis.")
