@@ -903,6 +903,8 @@ message to be shown. This function does nothing if
   (evil-ex-search-activate-highlight nil))
 (put 'evil-ex-search-start-session 'permanent-local-hook t)
 
+(defvar evil-ex-search-yank-point nil)
+
 (defun evil-ex-search-stop-session ()
   "Stop interactive search."
   (with-current-buffer evil-ex-current-buffer
@@ -1333,10 +1335,7 @@ a :substitute command with arguments."
   (evil-ex-delete-hl 'evil-ex-substitute)
   (evil-ex-delete-hl 'evil-ex-search))
 
-;; Yank text at point.
-(defvar evil-ex-search-yank-point nil)
-
-(defun evil-search-yank-word (&optional arg)
+(defun evil-search-yank-word ()
   "Pull next word from buffer into search string."
   (interactive)
   (let ((fwd-fn #'forward-word)
@@ -1360,8 +1359,7 @@ a :substitute command with arguments."
       (let ((case-fold-search nil))
         (unless (string-match-p "[A-Z]" minibuf-content)
           (setq word (downcase word)))))
-    (evil-set-register ?s word)
-    (evil-paste-from-register ?s)))
+    (insert word)))
 
 
 (provide 'evil-search)

@@ -814,6 +814,8 @@ Signal an error if MARKER is in a different buffer."
                      'inclusive)))
     (user-error "Ex does not support markers in other files")))
 
+(declare-function evil-ex-make-search-pattern "evil-search")
+
 (defun evil-ex-re-fwd (pattern)
   "Search forward for PATTERN.
 Return the line number of the match."
