@@ -299,12 +299,12 @@
 ;; TODO: z RET has an advanced form taking an count before the RET
 ;; but this requires again a special state with a single command
 ;; bound to RET
-(define-key evil-motion-state-map (vconcat "z" [return]) "zt^")
-(define-key evil-motion-state-map (kbd "z RET") (vconcat "z" [return]))
+(define-key evil-motion-state-map (vconcat "z" [return]) 'evil-scroll-line-to-top-first-non-blank)
+(define-key evil-motion-state-map (kbd "z RET") 'evil-scroll-line-to-top-first-non-blank)
 (define-key evil-motion-state-map "zz" 'evil-scroll-line-to-center)
-(define-key evil-motion-state-map "z." "zz^")
+(define-key evil-motion-state-map "z." 'evil-scroll-line-to-center-first-non-blank)
 (define-key evil-motion-state-map "zb" 'evil-scroll-line-to-bottom)
-(define-key evil-motion-state-map "z-" "zb^")
+(define-key evil-motion-state-map "z-" 'evil-scroll-line-to-bottom-first-non-blank)
 (define-key evil-motion-state-map "v" 'evil-visual-char)
 (define-key evil-motion-state-map "V" 'evil-visual-line)
 (define-key evil-motion-state-map "\C-v" 'evil-visual-block)
@@ -315,11 +315,9 @@
 (define-key evil-motion-state-map [up] 'evil-previous-line)
 (define-key evil-motion-state-map [down] 'evil-next-line)
 (define-key evil-motion-state-map "zl" 'evil-scroll-column-right)
-(define-key evil-motion-state-map [?z right] "zl")
+(define-key evil-motion-state-map [?z right] 'evil-scroll-column-right)
 (define-key evil-motion-state-map "zh" 'evil-scroll-column-left)
-(define-key evil-motion-state-map [?z left] "zh")
-(define-key evil-motion-state-map "zL" 'evil-scroll-right)
-(define-key evil-motion-state-map "zH" 'evil-scroll-left)
+(define-key evil-motion-state-map [?z left] 'evil-scroll-column-left)
 (define-key evil-motion-state-map
   (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
 
