@@ -1141,6 +1141,15 @@ If the scroll count is zero the command scrolls half the screen."
       (forward-line (1- count))))
   (recenter 0))
 
+(evil-define-command evil-scroll-line-to-top-first-non-blank (count)
+  "Scroll line number COUNT (or the cursor line) to the top of the window.
+Then move the cursor to the first non-blank character of that line."
+  :repeat nil
+  :keep-visual t
+  (interactive "<c>")
+  (evil-scroll-line-to-top count)
+  (evil-first-non-blank))
+
 (evil-define-command evil-scroll-line-to-center (count)
   "Scroll line number COUNT (or the cursor line) to the center of the window."
   :repeat nil
@@ -1152,6 +1161,15 @@ If the scroll count is zero the command scrolls half the screen."
       (forward-line (1- count))))
   (recenter))
 
+(evil-define-command evil-scroll-line-to-center-first-non-blank (count)
+  "Scroll line number COUNT (or the cursor line) to the center of the window.
+Then move the cursor to the first non-blank character of that line."
+  :repeat nil
+  :keep-visual t
+  (interactive "<c>")
+  (evil-scroll-line-to-center count)
+  (evil-first-non-blank))
+
 (evil-define-command evil-scroll-line-to-bottom (count)
   "Scroll line number COUNT (or the cursor line) to the bottom of the window."
   :repeat nil
@@ -1162,6 +1180,15 @@ If the scroll count is zero the command scrolls half the screen."
       (goto-char (point-min))
       (forward-line (1- count))))
   (recenter -1))
+
+(evil-define-command evil-scroll-line-to-bottom-first-non-blank (count)
+  "Scroll line number COUNT (or the cursor line) to the bottom of the window.
+Then move the cursor to the first non-blank character of that line."
+  :repeat nil
+  :keep-visual t
+  (interactive "<c>")
+  (evil-scroll-line-to-bottom count)
+  (evil-first-non-blank))
 
 (evil-define-command evil-scroll-bottom-line-to-top (count)
   "Scroll the line right below the window,
