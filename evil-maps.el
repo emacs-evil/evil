@@ -419,6 +419,8 @@
     ("\C-a" . evil-paste-last-insertion)
     ("\C-@" . evil-paste-last-insertion-and-stop-insert)
     ([remap delete-backward-char] . evil-delete-backward-char-and-join)
+    ([S-left] . evil-backward-word-begin)
+    ([S-right] . evil-forward-word-begin)
     ,(if evil-want-C-w-delete
          '("\C-w" . evil-delete-backward-word)
        '("\C-w" . evil-window-map))
