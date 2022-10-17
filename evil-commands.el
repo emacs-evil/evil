@@ -2447,7 +2447,8 @@ will be opened instead."
           (<= ?a register ?z)
           (<= ?A register ?Z))
       (when defining-kbd-macro (end-kbd-macro))
-      (setq evil-this-macro register)
+      (setq evil-this-macro register
+            evil-last-recorded-register register)
       (evil-set-register evil-this-macro nil)
       (kmacro-start-macro nil)
       (setq evil-macro-buffer (current-buffer)))
@@ -2503,6 +2504,23 @@ when called interactively."
        (evil-normal-state)
        (evil-normalize-keymaps)
        (signal (car err) (cdr err)))))))
+
+(evil-define-command evil-execute-last-recorded-macro (count)
+  "Execute last recorded keyboard macro COUNT times.
+When called with a non-numerical prefix \
+\(such as \\[universal-argument]),
+COUNT is infinite."
+  :keep-visual t
+  :suppress-operator t
+  (interactive
+   (list (cond
+          ((and current-prefix-arg (numberp current-prefix-arg)) current-prefix-arg)
+          (current-prefix-arg 0)
+          (t 1))))
+  (if evil-last-recorded-register
+      (evil-execute-macro count (evil-get-register evil-last-recorded-register t))
+    (user-error "No previous macro"))
+  (setq evil-last-register evil-last-recorded-register))
 
 ;;; Visual commands
 

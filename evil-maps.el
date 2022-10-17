@@ -52,6 +52,7 @@
 (define-key evil-normal-state-map "p" 'evil-paste-after)
 (define-key evil-normal-state-map "P" 'evil-paste-before)
 (define-key evil-normal-state-map "q" 'evil-record-macro)
+(define-key evil-normal-state-map "Q" 'evil-execute-last-recorded-macro)
 (define-key evil-normal-state-map "r" 'evil-replace)
 (define-key evil-normal-state-map "R" 'evil-enter-replace-state)
 (define-key evil-normal-state-map "s" 'evil-substitute)

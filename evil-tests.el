@@ -370,11 +370,11 @@ with `M-x evil-tests-run'"))
 suppression keymap comes first")
       (setq evil-operator-state-minor-mode nil
             evil-operator-state-local-minor-mode nil))
-    (should (eq (key-binding "Q") #'undefined))
+    (should (eq (key-binding "£") #'undefined))
     (ert-info ("Don't insert text")
       ;; may or may not signal an error, depending on batch mode
       (condition-case nil
-          (execute-kbd-macro "QQQ")
+          (execute-kbd-macro "£££")
         (error nil))
       (should (string= (buffer-substring 1 4) ";; ")))))
 
