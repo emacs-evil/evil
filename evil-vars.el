@@ -1489,8 +1489,13 @@ type.")
 (evil-define-local-var evil-this-motion-count nil
   "Current motion count.")
 
+;; In light of `evil-last-recorded-register' this should probably
+;; be renamed to `evil-last-executed-register' but that may break configs
 (defvar evil-last-register nil
   "The last executed register.")
+
+(defvar evil-last-recorded-register nil
+  "The last recorded register.")
 
 (defvar evil-inhibit-operator nil
   "Inhibit current operator.
