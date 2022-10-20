@@ -248,6 +248,7 @@ the selection is enabled.
                 (if (and (evil-visual-state-p)
                          (eq evil-visual-selection ',selection))
                     'exit ,name) t))
+         (setq evil--region-from-mouse nil)
          (if (eq type 'exit)
              (evil-exit-visual-state)
            (setq type (or type ,name)
@@ -325,15 +326,22 @@ the selection is enabled.
 Expand the region to the selection unless COMMAND is a motion."
   (when (evil-visual-state-p)
     (setq command (or command this-command))
-    (when evil-visual-x-select-timer
-      (cancel-timer evil-visual-x-select-timer))
-    (unless (evil-get-command-property command :keep-visual)
-      (evil-visual-update-x-selection)
-      (evil-visual-expand-region
-       ;; exclude final newline from linewise selection
-       ;; unless the command has real need of it
-       (and (eq (evil-visual-type) 'line)
-            (evil-get-command-property command :exclude-newline))))))
+    (let ((visual-start-p (rassq command evil-visual-alist)))
+      (if (and evil--region-from-mouse (not visual-start-p))
+          (progn (setq evil--region-from-mouse nil)
+                 (evil-exit-visual-state))
+        (when (and evil--region-from-mouse visual-start-p)
+          (setq evil-visual-selection nil ;; maintain visual state
+                evil--region-from-mouse nil))
+        (when evil-visual-x-select-timer
+          (cancel-timer evil-visual-x-select-timer))
+        (unless (evil-get-command-property command :keep-visual)
+          (evil-visual-update-x-selection)
+          (evil-visual-expand-region
+           ;; exclude final newline from linewise selection
+           ;; unless the command has real need of it
+           (and (eq (evil-visual-type) 'line)
+                (evil-get-command-property command :exclude-newline))))))))
 
 (put 'evil-visual-pre-command 'permanent-local-hook t)
 
