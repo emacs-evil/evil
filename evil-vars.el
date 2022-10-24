@@ -1760,6 +1760,16 @@ expanded to coincide with the selection's boundaries.
 This makes the selection available to functions acting
 on Emacs' region.")
 
+(defvar evil-transient-mouse-selection nil
+  "Whether the region selected by the mouse is discarded by the next command.
+By default, the region is not discarded.  If non-nil, exit visual state
+immediately before the next command.  To use the region selected by the mouse,
+execute a command which would usually enter visual state, such as
+\\[evil-visual-char] or \\[evil-visual-block].")
+
+(defvar evil--region-from-mouse nil
+  "Whether the region was set by the mouse.")
+
 (evil-define-local-var evil-visual-overlay nil
   "Overlay for highlighting the Visual selection.
 Not used for blockwise selections, in which case

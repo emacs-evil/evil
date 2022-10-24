@@ -4773,6 +4773,9 @@ DO-MOUSE-DRAG-REGION-POST-PROCESS should only be used by
                                    nil start-point))))))
         (evil-visual-post-command)))
 
+    ;; Store the fact that the current region was set by the mouse
+    (setq evil--region-from-mouse t)
+
     ;; Handle the terminating event if possible.
     (when (consp event)
       ;; Ensure that point is on the end of the last event.
