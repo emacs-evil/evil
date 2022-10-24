@@ -175,6 +175,8 @@ Miscellaneous
 
 .. elisp:autovariable:: evil-mouse-word
 
+.. elisp:autovariable:: evil-transient-mouse-selection
+
 .. elisp:autovariable:: evil-bigword
 
 .. elisp:autovariable:: evil-esc-delay
