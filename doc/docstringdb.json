@@ -98,7 +98,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Closes the current window, splits the lower-right one vertically\nand redisplays the current buffer there.",
+    "fn-docstring": "Close the current window, split the lower-right one vertically\nand redisplay the current buffer there.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -134,7 +134,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Closes the current window, splits the lower-right one horizontally\nand redisplays the current buffer there.",
+    "fn-docstring": "Close the current window, split the lower-right one horizontally\nand redisplay the current buffer there.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -145,7 +145,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "A wrapper for line motions which conserves the column.\nSignals an error at buffer boundaries unless NOERROR is non-nil.",
+    "fn-docstring": "A wrapper for line motions that conserves the column.\nSignals an error at buffer boundaries unless NOERROR is non-nil.",
     "arglist": [
       "count",
       "&optional",
@@ -243,7 +243,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls line number COUNT (or the cursor line) to the center of the window.",
+    "fn-docstring": "Scroll line number COUNT (or the cursor line) to the center of the window.",
     "arglist": [
       "count"
     ],
@@ -438,7 +438,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns non-nil value if KEY is bound in MAP.",
+    "fn-docstring": "Return non-nil value if KEY is bound in MAP.",
     "arglist": [
       "map",
       "key"
@@ -479,6 +479,22 @@
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-paste-before-cursor-after": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "The same as `evil-paste-before' but\nleave the cursor just after the new text.",
+    "arglist": [
+      "count",
+      "&optional",
+      "register",
+      "yank-handler"
+    ],
+    "functionp": true,
     "macrop": null,
     "keymap-inv": null
   },
@@ -553,7 +569,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Inserts the current text as block.",
+    "fn-docstring": "Insert the current text as block.",
     "arglist": [
       "lines"
     ],
@@ -566,7 +582,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Call FUNC for each line of a block selection.\nThe selection is specified by the region BEG and END.  FUNC must\ntake at least two arguments, the beginning and end of each\nline. If PASS-COLUMNS is non-nil, these values are the columns,\notherwise tey are buffer positions. Extra arguments to FUNC may\nbe passed via ARGS.",
+    "fn-docstring": "Call FUNC for each line of a block selection.\nThe selection is specified by the region BEG and END.  FUNC must\ntake at least two arguments, the beginning and end of each\nline.  If PASS-COLUMNS is non-nil, these values are the columns,\notherwise they are buffer positions.  Extra arguments to FUNC may\nbe passed via ARGS.",
     "arglist": [
       "func",
       "beg",
@@ -711,7 +727,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Closes the current window, current frame, Emacs.\nIf the current frame belongs to some client the client connection\nis closed.",
+    "fn-docstring": "Close the current window, current frame, current tab, Emacs.\nIf the current frame belongs to some client the client connection\nis closed.",
     "arglist": [
       "&optional",
       "force"
@@ -854,7 +870,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns the substitution info of command line STRING.\nThis function returns a three-element list (PATTERN REPLACEMENT\nFLAGS) consisting of the substitution parts of STRING. PATTERN is\na ex-pattern (see `evil-ex-make-pattern') and REPLACEMENT in a\ncompiled replacement expression (see `evil-compile-replacement').\nThe information returned is the actual substitution information\nw.r.t. to special situations like empty patterns or repetition of\nprevious substitution commands. If IMPLICIT-R is non-nil, then\nthe flag 'r' is assumed, i.e. in the case of an empty pattern the\nlast search pattern is used. This will be used when called from\na :substitute command with arguments.",
+    "fn-docstring": "Return the substitution info of command line STRING.\nThis function returns a three-element list (PATTERN REPLACEMENT\nFLAGS) consisting of the substitution parts of STRING. PATTERN is\na ex-pattern (see `evil-ex-make-pattern') and REPLACEMENT in a\ncompiled replacement expression (see `evil-compile-replacement').\nThe information returned is the actual substitution information\nw.r.t. to special situations like empty patterns or repetition of\nprevious substitution commands. If IMPLICIT-R is non-nil, then\nthe flag 'r' is assumed, i.e. in the case of an empty pattern the\nlast search pattern is used. This will be used when called from\na :substitute command with arguments.",
     "arglist": [
       "string",
       "&optional",
@@ -909,6 +925,19 @@
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-execute-last-recorded-macro": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Execute last recorded keyboard macro COUNT times.\nWhen called with a non-numerical prefix (such as \\[universal-argument]),\nCOUNT is infinite.",
+    "arglist": [
+      "count"
+    ],
+    "functionp": true,
     "macrop": null,
     "keymap-inv": null
   },
@@ -971,7 +1000,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Starts a forward search.",
+    "fn-docstring": "Start a forward search.",
     "arglist": [
       "&optional",
       "count"
@@ -1047,7 +1076,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Binds the function FUNCTION to the command CMD.",
+    "fn-docstring": "Bind the function FUNCTION to the command CMD.",
     "arglist": [
       "cmd",
       "function"
@@ -1154,7 +1183,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Saves whole lines into the kill-ring.",
+    "fn-docstring": "Save whole lines into the kill-ring.",
     "arglist": [
       "beg",
       "end",
@@ -1211,7 +1240,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Updates the printable value of window jumps for `savehist'.",
+    "fn-docstring": "Update the printable value of window jumps for `savehist'.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -1222,7 +1251,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls the window and the cursor COUNT lines upwards.\nIf COUNT is not specified the function scrolls down\n`evil-scroll-count', which is the last used count.\nIf the scroll count is zero the command scrolls half the screen.",
+    "fn-docstring": "Scroll the window and the cursor COUNT lines upwards.\nIf COUNT is not specified the function scrolls down\n`evil-scroll-count', which is the last used count.\nIf the scroll count is zero the command scrolls half the screen.",
     "arglist": [
       "count"
     ],
@@ -1248,7 +1277,7 @@
     "default": "nil",
     "local": true,
     "default-type": "symbol",
-    "var-docstring": "Holds last used prefix for `evil-scroll-up'\nand `evil-scroll-down'.\nDetermines how many lines should be scrolled.\nDefault value is 0 - scroll half the screen.",
+    "var-docstring": "Hold last used prefix for `evil-scroll-up'\nand `evil-scroll-down'.\nDetermine how many lines should be scrolled.\nDefault value is 0 - scroll half the screen.",
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
@@ -1335,7 +1364,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Inserts the current text linewise.",
+    "fn-docstring": "Insert the current text linewise.",
     "arglist": [
       "text"
     ],
@@ -1467,7 +1496,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Creates a PATTERN for search.\nThis function respects the values of `evil-ex-search-case'.",
+    "fn-docstring": "Create a PATTERN for search.\nThis function respects the values of `evil-ex-search-case'.",
     "arglist": [
       "regexp"
     ],
@@ -1480,7 +1509,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Return an inner text object range of COUNT objects.\nIf COUNT is positive, return objects following point; if COUNT is\nnegative, return objects preceding point.  If one is unspecified,\nthe other is used with a negative argument.  THING is a symbol\nunderstood by thing-at-point.  BEG, END and TYPE specify the\ncurrent selection.  If LINE is non-nil, the text object should be\nlinewise, otherwise it is character wise.",
+    "fn-docstring": "Return an inner text object range of COUNT objects.\nIf COUNT is positive, return objects following point; if COUNT is\nnegative, return objects preceding point.  If one is unspecified,\nthe other is used with a negative argument.  THING is a symbol\nunderstood by `thing-at-point'.  BEG, END and TYPE specify the\ncurrent selection.  If LINE is non-nil, the text object should be\nlinewise, otherwise it is character wise.",
     "arglist": [
       "thing",
       "beg",
@@ -1507,6 +1536,25 @@
     ],
     "functionp": null,
     "macrop": true,
+    "keymap-inv": null
+  },
+  "evil-select-inner-restricted-object": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Return an inner text object range of COUNT objects.\nSelection is restricted to the current line.\nIf COUNT is positive, return objects following point; if COUNT is\nnegative, return objects preceding point.  If one is unspecified,\nthe other is used with a negative argument.  THING is a symbol\nunderstood by `thing-at-point'.  BEG, END and TYPE specify the\ncurrent selection.  If LINE is non-nil, the text object should be\nlinewise, otherwise it is character wise.",
+    "arglist": [
+      "thing",
+      "beg",
+      "end",
+      "type",
+      "&optional",
+      "count",
+      "line"
+    ],
+    "functionp": true,
+    "macrop": null,
     "keymap-inv": null
   },
   "evil-default-state": {
@@ -1727,7 +1775,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Signals error if `point' is at boundaries.\nIf `point' is at bob and COUNT is negative this function signal\n'beginning-of-buffer. If `point' is at eob and COUNT is positive\nthis function singal 'end-of-buffer. This function should be used\nin motions. COUNT defaults to 1.",
+    "fn-docstring": "Signal error if `point' is at boundaries.\nIf `point' is at bob and COUNT is negative this function signal\n'beginning-of-buffer. If `point' is at eob and COUNT is positive\nthis function singal 'end-of-buffer. This function should be used\nin motions. COUNT defaults to 1.",
     "arglist": [
       "&optional",
       "count"
@@ -1774,7 +1822,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Justifes all lines in a range.\nBEG and END specify the range of those lines to be\njustified. JUSTIFY is either 'left, 'right or 'center according\nto the justification type. POSITION is the maximal text width for\nright and center justification or the column at which the lines\nshould be left-aligned for left justification.",
+    "fn-docstring": "Justify all lines in a range.\nBEG and END specify the range of those lines to be\njustified. JUSTIFY is either 'left, 'right or 'center according\nto the justification type. POSITION is the maximal text width for\nright and center justification or the column at which the lines\nshould be left-aligned for left justification.",
     "arglist": [
       "beg",
       "end",
@@ -1881,7 +1929,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Prepares the current minibuffer for completion of shell commands.\nThis function must be called from the :runner function of some\nargument handler that requires shell completion.",
+    "fn-docstring": "Prepare the current minibuffer for completion of shell commands.\nThis function must be called from the :runner function of some\nargument handler that requires shell completion.",
     "arglist": [
       "flag",
       "&optional",
@@ -1929,7 +1977,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Saves the current buffer and closes the window.",
+    "fn-docstring": "Save the current buffer and close the window.",
     "arglist": [
       "file",
       "&optional",
@@ -2059,6 +2107,17 @@
     "fn-docstring": "Disable input method in all states.",
     "arglist": null,
     "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil--region-from-mouse": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": "Whether the region was set by the mouse.",
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
     "macrop": null,
     "keymap-inv": null
   },
@@ -2319,7 +2378,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Concatenate interactive list expressions FORMS.\nReturns a single expression where successive expressions\nare joined, if possible.",
+    "fn-docstring": "Concatenate interactive list expressions FORMS.\nReturn a single expression where successive expressions\nare joined, if possible.",
     "arglist": [
       "&rest",
       "forms"
@@ -2503,7 +2562,7 @@
   },
   "evil-symbol-word-search": {
     "default": "nil",
-    "local": true,
+    "local": null,
     "default-type": "symbol",
     "var-docstring": "If nil then * and # search for words otherwise for symbols.",
     "fn-docstring": null,
@@ -2609,7 +2668,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Contract BEG and END as TYPE with PROPERTIES.\nReturns a list (BEG END TYPE PROPERTIES ...), where the tail\nmay contain a property list.",
+    "fn-docstring": "Contract BEG and END as TYPE with PROPERTIES.\nReturn a list (BEG END TYPE PROPERTIES ...), where the tail\nmay contain a property list.",
     "arglist": [
       "beg",
       "end",
@@ -2723,7 +2782,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Checks if POS is within a comment according to current syntax.\nIf POS is nil, (point) is used. The return value is the beginning\nposition of the comment.",
+    "fn-docstring": "Check if POS is within a comment according to current syntax.\nIf POS is nil, (point) is used. The return value is the beginning\nposition of the comment.",
     "arglist": [
       "&optional",
       "pos"
@@ -2748,7 +2807,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls line number COUNT (or the cursor line) to the top of the window.",
+    "fn-docstring": "Scroll line number COUNT (or the cursor line) to the top of the window.",
     "arglist": [
       "count"
     ],
@@ -2837,7 +2896,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Apply TRANSFORM on BEG and END with PROPERTIES.\nReturns a list (BEG END TYPE PROPERTIES ...), where the tail\nmay contain a property list. If TRANSFORM is undefined,\nreturn positions unchanged.",
+    "fn-docstring": "Apply TRANSFORM on BEG and END with PROPERTIES.\nReturn a list (BEG END TYPE PROPERTIES ...), where the tail\nmay contain a property list. If TRANSFORM is undefined,\nreturn positions unchanged.",
     "arglist": [
       "transform",
       "beg",
@@ -3016,7 +3075,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Catches errors provided point moves within this scope.",
+    "fn-docstring": "Catch errors provided point moves within this scope.",
     "arglist": [
       "&rest",
       "body"
@@ -3042,6 +3101,20 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-goto-last-change-reverse": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Like `goto-last-change-reverse' but takes a COUNT rather than a span.",
+    "arglist": [
+      "&optional",
+      "count"
+    ],
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil-isearch-function": {
     "default": "nil",
     "local": null,
@@ -3058,7 +3131,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Splits the key-sequence KEYS into prefix-argument and the rest.\nReturns the list (PREFIX CMD SEQ REST), where PREFIX is the\nprefix count, CMD the command to be executed, SEQ the subsequence\ncalling CMD, and REST is all remaining events in the\nkey-sequence. PREFIX and REST may be nil if they do not exist.\nIf a command is bound to some keyboard macro, it is expanded\nrecursively.",
+    "fn-docstring": "Split the key-sequence KEYS into prefix-argument and the rest.\nReturn the list (PREFIX CMD SEQ REST), where PREFIX is the\nprefix count, CMD the command to be executed, SEQ the subsequence\ncalling CMD, and REST is all remaining events in the\nkey-sequence. PREFIX and REST may be nil if they do not exist.\nIf a command is bound to some keyboard macro, it is expanded\nrecursively.",
     "arglist": [
       "keys"
     ],
@@ -3093,6 +3166,17 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-last-recorded-register": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": "The last recorded register.",
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil-visual-beginning": {
     "default": "nil",
     "local": true,
@@ -3120,7 +3204,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns the final binding of COMMAND.",
+    "fn-docstring": "Return the final binding of COMMAND.",
     "arglist": [
       "command",
       "&optional",
@@ -3168,6 +3252,8 @@
       "evil-replace-backspace": "DEL",
       "mouse-yank-primary": "<mouse-2>",
       "evil-delete-backward-word": "C-w",
+      "evil-forward-word-begin": "S-<right>",
+      "evil-backward-word-begin": "S-<left>",
       "evil-delete-backward-char-and-join": "",
       "evil-paste-last-insertion-and-stop-insert": "C-@",
       "evil-paste-last-insertion": "C-a",
@@ -3235,7 +3321,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Maybe convert a regexp replacement TO to Lisp.\nReturns a list suitable for `perform-replace' if necessary, the\noriginal string if not. Currently the following magic characters\nin replacements are supported: 0-9&#lLuUrnbt,\nThe magic character , (comma) start an Emacs-lisp expression.",
+    "fn-docstring": "Maybe convert a regexp replacement TO to Lisp.\nReturn a list suitable for `perform-replace' if necessary, the\noriginal string if not. Currently the following magic characters\nin replacements are supported: 0-9&#lLuUrnbt,\nThe magic character , (comma) start an Emacs-lisp expression.",
     "arglist": [
       "to"
     ],
@@ -3283,7 +3369,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Perform normalize transformation on inclusive from BEG to END with PROPERTIES.\n\nInclude the character under point.\nIf the end position is at the beginning of a line or the end of a\nline and `evil-want-visual-char-semi-exclusive', then:\n\n* If in visual state return `exclusive' (expanded).",
+    "fn-docstring": "Perform normalize transformation on inclusive from BEG to END with PROPERTIES.\n\nInclude the character under point.\nHandling for `evil-want-visual-char-semi-exclusive' is deprecated,\nand will be removed in a future version.",
     "arglist": [
       "beg",
       "end",
@@ -3572,7 +3658,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Removes `yank-excluded-properties' from TEXT.",
+    "fn-docstring": "Remove `yank-excluded-properties' from TEXT.",
     "arglist": [
       "text"
     ],
@@ -3600,7 +3686,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Restores a character visual selection.\nIf the selection is in a single line, the restored visual\nselection covers the same number of characters. If the selection\ncovers several lines, the restored selection covers the same\nnumber of lines and the same number of characters in the last\nline as the original selection.",
+    "fn-docstring": "Restore a character visual selection.\nIf the selection is in a single line, the restored visual\nselection covers the same number of characters. If the selection\ncovers several lines, the restored selection covers the same\nnumber of lines and the same number of characters in the last\nline as the original selection.",
     "arglist": [
       "nfwdlines",
       "nfwdchars"
@@ -3707,7 +3793,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Shows the contents of REGISTERS, or all registers, if none supplied.",
+    "fn-docstring": "Show the contents of REGISTERS, or all registers, if none supplied.",
     "arglist": [
       "registers"
     ],
@@ -3734,7 +3820,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls the window COUNT half-screenwidths to the right.",
+    "fn-docstring": "Scroll the window COUNT half-screenwidths to the right.",
     "arglist": [
       "count"
     ],
@@ -3747,7 +3833,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Splits the current window vertically\nand opens a new buffer name or edits a certain FILE.",
+    "fn-docstring": "Split the current window vertically\nand open a new buffer name or edit a certain FILE.",
     "arglist": [
       "count",
       "file"
@@ -3760,7 +3846,7 @@
     "default": "t",
     "local": null,
     "default-type": "symbol",
-    "var-docstring": "When non-nil, the jump commands can cross borders between buffers, otherwise the jump commands act only within the current buffer.",
+    "var-docstring": "When non-nil, the jump commands can cross borders between buffers.\nOtherwise the jump commands act only within the current buffer.",
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
@@ -3824,12 +3910,16 @@
       "evil-visual-block": "C-v",
       "evil-visual-line": "V",
       "evil-visual-char": "v",
-      "evil-scroll-left": "z H",
-      "evil-scroll-right": "z L",
+      "evil-scroll-column-left": "z h",
       "evil-scroll-column-left": "z h",
       "evil-scroll-column-right": "z l",
+      "evil-scroll-column-right": "z l",
+      "evil-scroll-line-to-bottom-first-non-blank": "z -",
       "evil-scroll-line-to-bottom": "z b",
+      "evil-scroll-line-to-center-first-non-blank": "z .",
       "evil-scroll-line-to-center": "z z",
+      "evil-scroll-line-to-top-first-non-blank": "z RET",
+      "evil-scroll-line-to-top-first-non-blank": "z RET",
       "evil-scroll-line-to-top": "z t",
       "evil-scroll-bottom-line-to-top": "z +",
       "evil-scroll-top-line-to-bottom": "z ^",
@@ -4098,7 +4188,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Shows all marks.\nIf MRKS is non-nil it should be a string and only registers\ncorresponding to the characters of this string are shown.",
+    "fn-docstring": "Show all marks.\nIf MRKS is non-nil it should be a string and only registers\ncorresponding to the characters of this string are shown.",
     "arglist": [
       "mrks"
     ],
@@ -4197,7 +4287,7 @@
   },
   "evil-shift-round": {
     "default": "t",
-    "local": true,
+    "local": null,
     "default-type": "symbol",
     "var-docstring": "\\<evil-normal-state-map>\nWhether shifting rounds to the nearest multiple.\nIf non-nil, \\[evil-shift-right] and \\[evil-shift-left] adjust line\nindentation to the nearest multiple of `evil-shift-width'.",
     "fn-docstring": null,
@@ -4239,7 +4329,7 @@
   },
   "evil-bigword": {
     "default": "^ \t\r\n",
-    "local": true,
+    "local": null,
     "default-type": "string",
     "var-docstring": "The set of characters to be interpreted as WORD boundaries.\nThis is enclosed with square brackets and used as a regular\nexpression.  By default, whitespace characters are considered\nWORD boundaries.",
     "fn-docstring": null,
@@ -4317,7 +4407,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Restores a character visual selection.\nIf the selection is in a single line, the restored visual\nselection covers the same number of characters. If the selection\ncovers several lines, the restored selection covers the same\nnumber of lines and the same number of characters in the last\nline as the original selection.",
+    "fn-docstring": "Restore a character visual selection.\nIf the selection is in a single line, the restored visual\nselection covers the same number of characters. If the selection\ncovers several lines, the restored selection covers the same\nnumber of lines and the same number of characters in the last\nline as the original selection.",
     "arglist": [
       "nfwdlines"
     ],
@@ -4471,7 +4561,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns an alist of all registers, but only those named\nwith number or character. Registers with symbol or string in names are ignored\nto keep Vim compatibility with register jumps.",
+    "fn-docstring": "Return an alist of all registers, but only those named\nwith number or character. Registers with symbol or string in names are ignored\nto keep Vim compatibility with register jumps.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -4536,6 +4626,17 @@
       "count"
     ],
     "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-ex-reverse-range": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": "Whether the current ex range was entered reversed.",
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
     "macrop": null,
     "keymap-inv": null
   },
@@ -4628,7 +4729,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Defines a new handler for argument-type ARG-TYPE.\nDOC is the documentation string. It is followed by a list of\nkeywords and function:\n\n:collection COLLECTION\n\n  A collection for completion as required by `all-completions'.\n\n:completion-at-point FUNC\n\n  Function to be called to initialize a potential\n  completion. FUNC must match the requirements as described for\n  the variable `completion-at-point-functions'. When FUNC is\n  called the minibuffer content is narrowed to exactly match the\n  argument.\n\n:runner FUNC\n\n  Function to be called when the type of the current argument\n  changes or when the content of this argument changes. This\n  function should take one obligatory argument FLAG followed by\n  an optional argument ARG. FLAG is one of three symbol 'start,\n  'stop or 'update. When the argument type is recognized for the\n  first time and this handler is started the FLAG is 'start. If\n  the argument type changes to something else or ex state\n  finished the handler FLAG is 'stop. If the content of the\n  argument has changed FLAG is 'update. If FLAG is either 'start\n  or 'update then ARG is the current value of this argument. If\n  FLAG is 'stop then arg is nil.",
+    "fn-docstring": "Define a new handler for argument-type ARG-TYPE.\nDOC is the documentation string. It is followed by a list of\nkeywords and function:\n\n:collection COLLECTION\n\n  A collection for completion as required by `all-completions'.\n\n:completion-at-point FUNC\n\n  Function to be called to initialize a potential\n  completion. FUNC must match the requirements as described for\n  the variable `completion-at-point-functions'. When FUNC is\n  called the minibuffer content is narrowed to exactly match the\n  argument.\n\n:runner FUNC\n\n  Function to be called when the type of the current argument\n  changes or when the content of this argument changes. This\n  function should take one obligatory argument FLAG followed by\n  an optional argument ARG. FLAG is one of three symbol 'start,\n  'stop or 'update. When the argument type is recognized for the\n  first time and this handler is started the FLAG is 'start. If\n  the argument type changes to something else or ex state\n  finished the handler FLAG is 'stop. If the content of the\n  argument has changed FLAG is 'update. If FLAG is either 'start\n  or 'update then ARG is the current value of this argument. If\n  FLAG is 'stop then arg is nil.",
     "arglist": [
       "arg-type",
       "doc",
@@ -4658,6 +4759,17 @@
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-update": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Same as `evil-write', but only write when the buffer has been modified.",
+    "arglist": null,
+    "functionp": true,
     "macrop": null,
     "keymap-inv": null
   },
@@ -4738,17 +4850,6 @@
     "macrop": null,
     "keymap-inv": null
   },
-  "evil-forward-sentence": {
-    "default": "nil",
-    "local": null,
-    "default-type": "symbol",
-    "var-docstring": null,
-    "fn-docstring": null,
-    "arglist": true,
-    "functionp": null,
-    "macrop": null,
-    "keymap-inv": null
-  },
   "evil-want-C-g-bindings": {
     "default": "nil",
     "local": null,
@@ -4816,7 +4917,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Saves the rectangle defined by region BEG and END into the kill-ring.",
+    "fn-docstring": "Save the rectangle defined by region BEG and END into the kill-ring.",
     "arglist": [
       "beg",
       "end",
@@ -4833,7 +4934,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Turns vector into a string, changing <escape> to '\\e'",
+    "fn-docstring": "Turn vector into a string, changing <escape> to '\\e'",
     "arglist": [
       "vector"
     ],
@@ -4859,7 +4960,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Return a range (BEG END) of COUNT delimited text objects.\nOPEN and CLOSE specify the opening and closing delimiter,\nrespectively. BEG END TYPE are the currently selected (visual)\nrange.  If INCLUSIVE is non-nil, OPEN and CLOSE are included in\nthe range; otherwise they are excluded.\n\nThe types of OPEN and CLOSE specify which kind of THING is used\nfor parsing with `evil-select-block'. If OPEN and CLOSE are\ncharacters `evil-up-paren' is used. Otherwise OPEN and CLOSE\nmust be regular expressions and `evil-up-block' is used.\n\nIf the selection is exclusive, whitespace at the end or at the\nbeginning of the selection until the end-of-line or beginning-of-line\nis ignored.",
+    "fn-docstring": "Return a range (BEG END) of COUNT delimited text objects.\nOPEN and CLOSE specify the opening and closing delimiter,\nrespectively. BEG END TYPE are the currently selected (visual)\nrange.  If INCLUSIVE is non-nil, OPEN and CLOSE are included in\nthe range; otherwise they are excluded.\n\nIf you aren't inside a pair of the opening and closing delimiters,\nit jumps you inside the next one. If there isn't one, it errors.\n\nThe types of OPEN and CLOSE specify which kind of THING is used\nfor parsing with `evil-select-block'. If OPEN and CLOSE are\ncharacters `evil-up-paren' is used. Otherwise OPEN and CLOSE\nmust be regular expressions and `evil-up-block' is used.\n\nIf the selection is exclusive, whitespace at the end or at the\nbeginning of the selection until the end-of-line or beginning-of-line\nis ignored.",
     "arglist": [
       "open",
       "close",
@@ -4879,7 +4980,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Moves point forward to the first of several motions.\nFORWARDS is a list of forward motion functions (i.e. each moves\npoint forward to the next end of a text object (if passed a +1)\nor backward to the preceeding beginning of a text object (if\npassed a -1)). This function calls each of these functions once\nand moves point to the nearest of the resulting positions. If\nCOUNT is positive point is moved forward COUNT times, if negative\npoint is moved backward -COUNT times.",
+    "fn-docstring": "Move point forward to the first of several motions.\nFORWARDS is a list of forward motion functions (i.e. each moves\npoint forward to the next end of a text object (if passed a +1)\nor backward to the preceeding beginning of a text object (if\npassed a -1)). This function calls each of these functions once\nand moves point to the nearest of the resulting positions. If\nCOUNT is positive point is moved forward COUNT times, if negative\npoint is moved backward -COUNT times.",
     "arglist": [
       "count",
       "&rest",
@@ -4929,7 +5030,7 @@
   },
   "evil-auto-indent": {
     "default": "t",
-    "local": true,
+    "local": null,
     "default-type": "symbol",
     "var-docstring": "\\<evil-normal-state-map>\nWhether to auto-indent when opening lines with \\[evil-open-below] and \\[evil-open-above].",
     "fn-docstring": null,
@@ -4964,6 +5065,17 @@
     "arglist": [
       "hist"
     ],
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-search-yank-word": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Pull next word from buffer into search string.",
+    "arglist": null,
     "functionp": true,
     "macrop": null,
     "keymap-inv": null
@@ -5057,6 +5169,8 @@
     "keymap-inv": {
       "mouse-yank-primary": "<mouse-2>",
       "evil-delete-backward-word": "C-w",
+      "evil-forward-word-begin": "S-<right>",
+      "evil-backward-word-begin": "S-<left>",
       "evil-delete-backward-char-and-join": "DEL",
       "evil-paste-last-insertion-and-stop-insert": "C-@",
       "evil-paste-last-insertion": "C-a",
@@ -5073,7 +5187,7 @@
       "evil-insert-digraph": "C-k",
       "evil-quoted-insert": "C-v",
       "evil-quoted-insert": "C-v",
-      "evil-replace-state": "<insert>",
+      "evil-enter-replace-state": "<insert>",
       "evil-emacs-state": "C-z",
       "evil-normal-state": "<escape>",
       "delete-char": "<delete>"
@@ -5289,8 +5403,8 @@
       "move-beginning-of-line": "C-b",
       "evil-ex-delete-backward-char": "DEL",
       "abort-recursive-edit": "C-g",
-      "exit-minibuffer": "RET",
-      "exit-minibuffer": "RET",
+      "exit-minibuffer": "C-j",
+      "exit-minibuffer": "C-j",
       "abort-minibuffers": "",
       "file-cache-minibuffer-complete": "C-<tab>",
       "self-insert-command": "TAB",
@@ -5405,7 +5519,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Creates a new buffer replacing the current window, optionally\n   editing a certain FILE",
+    "fn-docstring": "Create a new buffer replacing the current window, optionally\n   editing a certain FILE",
     "arglist": [
       "count",
       "file"
@@ -5419,7 +5533,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Restores the column after execution of BODY.\nSee also `evil-save-goal-column'.",
+    "fn-docstring": "Restore the column after execution of BODY.\nSee also `evil-save-goal-column'.",
     "arglist": [
       "&rest",
       "body"
@@ -5486,7 +5600,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Pastes the latest yanked text behind point.\nThe return value is the yanked text.",
+    "fn-docstring": "Paste the latest yanked text behind point.\nThe return value is the yanked text.",
     "arglist": [
       "count",
       "&optional",
@@ -5577,6 +5691,19 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-window-exchange": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Without COUNT: exchange current window with next one.\nWith COUNT: Exchange current window with COUNTth window.",
+    "arglist": [
+      "count"
+    ],
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil-block-expand": {
     "default": "nil",
     "local": null,
@@ -5598,7 +5725,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Define an operator command OPERATOR.\nThe operator acts on the range of characters BEG through\nEND. BODY must execute the operator by potentially manipulating\nthe buffer contents, or otherwise causing side effects to happen.\n\nOptional keyword arguments are:\n- `:type' - force the input range to be of a given type (`inclusive',\n  `line', `block', and `exclusive', or a self-defined motion type).\n- `:motion' - use a predetermined motion instead of waiting for one\n  from the keyboard.  This does not affect the behavior in visual\n  state, where selection boundaries are always used.\n- `:repeat' - if non-nil (default), then   \\<evil-normal-state-map>\\[evil-repeat] will repeat the\n  operator.\n- `:move-point' - if non-nil (default), the cursor will be moved to\n  the beginning of the range before the body executes\n- `:keep-visual' - if non-nil, the selection is not disabled when the\n  operator is executed in visual state.  By default, visual state is\n  exited automatically.\n\n(fn OPERATOR (BEG END ARGS...) DOC [[KEY VALUE]...] BODY...)",
+    "fn-docstring": "Define an operator command OPERATOR.\nThe operator acts on the range of characters BEG through\nEND. BODY must execute the operator by potentially manipulating\nthe buffer contents, or otherwise causing side effects to happen.\n\nOptional keyword arguments are:\n- `:type' - force the input range to be of a given type (`inclusive',\n  `line', `block', and `exclusive', or a self-defined motion type).\n- `:motion' - use a predetermined motion instead of waiting for one\n  from the keyboard.  This does not affect the behavior in visual\n  state, where selection boundaries are always used.\n- `:repeat' - if non-nil (default), then   \\<evil-normal-state-map>\\[evil-repeat] will repeat the\n  operator.\n- `:move-point' - if non-nil (default), the cursor will be moved to\n  the beginning of the range before the body executes\n- `:keep-visual' - if non-nil, the selection is not disabled when the\n  operator is executed in visual state.  By default, visual state is\n  exited automatically.\n- `:restore-point' - if non-nil, point is restored when the\n  operator is executed from ex.\n\n(fn OPERATOR (BEG END ARGS...) DOC [[KEY VALUE]...] BODY...)",
     "arglist": [
       "operator",
       "args",
@@ -5622,6 +5749,17 @@
       "flags"
     ],
     "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-last-read-digraph-char": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": "The last digraph character read.  Used for repeats.",
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
     "macrop": null,
     "keymap-inv": null
   },
@@ -5822,6 +5960,19 @@
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-scroll-line-to-center-first-non-blank": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Scroll line number COUNT (or the cursor line) to the center of the window.\nThen move the cursor to the first non-blank character of that line.",
+    "arglist": [
+      "count"
+    ],
+    "functionp": true,
     "macrop": null,
     "keymap-inv": null
   },
@@ -6097,6 +6248,19 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-enter-replace-state": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Switch to Replace state at point.\nThe insertion will be repeated COUNT times.",
+    "arglist": [
+      "count"
+    ],
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil-an-angle": {
     "default": "nil",
     "local": null,
@@ -6119,7 +6283,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Shows a list of all available digraphs.",
+    "fn-docstring": "Show a list of all available digraphs.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -6161,7 +6325,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns a regexp matching the magic characters according to MAGIC.\nDepending on the value of MAGIC the following characters are\nconsidered magic.\n  t             [][{}*+?.&~$^\n  nil           [][{}*+?$^\n  'very-magic   not 0-9A-Za-z_\n  'very-nomagic empty.",
+    "fn-docstring": "Return a regexp matching the magic characters according to MAGIC.\nDepending on the value of MAGIC the following characters are\nconsidered magic.\n  t             [][{}*+?.&~$^\n  nil           [][{}*+?$^\n  'very-magic   not 0-9A-Za-z_\n  'very-nomagic empty.",
     "arglist": [
       "magic"
     ],
@@ -6355,10 +6519,10 @@
       "find-file-at-point": "[ f",
       "evil-find-file-at-point-with-line": "[ F",
       "find-file-at-point": "[ f",
-      "goto-last-change-reverse": "g ,",
-      "goto-last-change": "g ;",
       "tab-bar-switch-to-prev-tab": "g T",
       "tab-bar-switch-to-next-tab": "g t",
+      "evil-goto-last-change-reverse": "g ,",
+      "evil-goto-last-change": "g ;",
       "evil-invert-case": "g ~",
       "evil-rot13": "g ?",
       "browse-url-at-point": "g x",
@@ -6368,6 +6532,8 @@
       "evil-downcase": "g u",
       "evil-fill": "g w",
       "evil-fill-and-move": "g q",
+      "evil-paste-before-cursor-after": "g P",
+      "evil-paste-after-cursor-after": "g p",
       "evil-join-whitespace": "g J",
       "evil-insert-0-line": "g I",
       "evil-insert-resume": "g i",
@@ -6382,8 +6548,9 @@
       "evil-delete-char": "x",
       "evil-change-whole-line": "S",
       "evil-substitute": "s",
-      "evil-replace-state": "R",
+      "evil-enter-replace-state": "R",
       "evil-replace": "r",
+      "evil-execute-last-recorded-macro": "Q",
       "evil-record-macro": "q",
       "evil-paste-before": "P",
       "evil-paste-after": "p",
@@ -6481,7 +6648,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Completes the current ex command or argument.",
+    "fn-docstring": "Complete the current ex command or argument.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -6510,7 +6677,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns t if point is at the start of a comment.\npoint must be on one of the opening characters of a block comment\naccording to the current syntax table. Futhermore these\ncharacters must been parsed as opening characters, i.e. they\nwon't be considered as comment starters inside a string or\npossibly another comment. Point is moved to the first character\nof the comment opener if MOVE is non-nil.",
+    "fn-docstring": "Return t if point is at the start of a comment.\nPoint must be on one of the opening characters of a block comment\naccording to the current syntax table. Futhermore, these\ncharacters must been parsed as opening characters, i.e. they\nwon't be considered as comment starters inside a string or\npossibly another comment. Point is moved to the first character\nof the comment opener if MOVE is non-nil.",
     "arglist": [
       "&optional",
       "move"
@@ -6742,7 +6909,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Switches to another buffer.",
+    "fn-docstring": "Switch to another buffer.",
     "arglist": [
       "buffer"
     ],
@@ -6901,6 +7068,25 @@
       "thing",
       "&optional",
       "count"
+    ],
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-select-a-restricted-object": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Return an outer text object range of COUNT objects.\nSelection is restricted to the current line.\nIf COUNT is positive, return objects following point; if COUNT is\nnegative, return objects preceding point.  If one is unspecified,\nthe other is used with a negative argument.  THING is a symbol\nunderstood by thing-at-point.  BEG, END and TYPE specify the\ncurrent selection.  If LINE is non-nil, the text object should be\nlinewise, otherwise it is character wise.",
+    "arglist": [
+      "thing",
+      "beg",
+      "end",
+      "type",
+      "&optional",
+      "count",
+      "line"
     ],
     "functionp": true,
     "macrop": null,
@@ -7137,7 +7323,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Rotates the windows according to the current cyclic ordering.",
+    "fn-docstring": "Rotate the windows according to the current cyclic ordering.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -7148,7 +7334,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Sets the height of the current window to COUNT.",
+    "fn-docstring": "Set the height of the current window to COUNT.",
     "arglist": [
       "count"
     ],
@@ -7240,7 +7426,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Finishes the recording of buffer changes and records them as repeat.",
+    "fn-docstring": "Finish the recording of buffer changes and record them as repeat.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -7321,7 +7507,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Restores a character visual selection.\nIf the selection is in a single line, the restored visual\nselection covers the same number of characters. If the selection\ncovers several lines, the restored selection covers the same\nnumber of lines and the same number of characters in the last\nline as the original selection.",
+    "fn-docstring": "Restore a character visual selection.\nIf the selection is in a single line, the restored visual\nselection covers the same number of characters. If the selection\ncovers several lines, the restored selection covers the same\nnumber of lines and the same number of characters in the last\nline as the original selection.",
     "arglist": [
       "nfwdlines",
       "nfwdchars"
@@ -7335,7 +7521,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": "The current range of the Ex command.",
-    "fn-docstring": "Returns the first and last position of the current range.",
+    "fn-docstring": "Return the first and last position of the current range.",
     "arglist": [
       "beg-line",
       "&optional",
@@ -7372,7 +7558,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Shows basic file information.",
+    "fn-docstring": "Show basic file information.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -7464,7 +7650,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns the final binding of the completion of COMMAND.",
+    "fn-docstring": "Return the final binding of the completion of COMMAND.",
     "arglist": [
       "command",
       "&optional",
@@ -7611,7 +7797,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Executes a repeat-information REPEAT-INFO.",
+    "fn-docstring": "Execute a repeat-information REPEAT-INFO.",
     "arglist": [
       "repeat-info"
     ],
@@ -7637,7 +7823,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Signals 'beginning-of-buffer if `point' is at bob.\nThis function should be used in backward motions. If `point' is at\nbob so that no further backward motion is possible the error\n'beginning-of-buffer is raised.",
+    "fn-docstring": "Signal 'beginning-of-buffer if `point' is at bob.\nThis function should be used in backward motions. If `point' is at\nbob so that no further backward motion is possible the error\n'beginning-of-buffer is raised.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -7704,7 +7890,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns non-nil iff the current command should abort the recording of repeat information.",
+    "fn-docstring": "Return non-nil iff the current command should abort the recording of repeat information.",
     "arglist": [
       "repeat-type"
     ],
@@ -7922,7 +8108,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Saves the characters defined by the region BEG and END in the kill-ring.",
+    "fn-docstring": "Save the characters defined by the region BEG and END in the kill-ring.",
     "arglist": [
       "beg",
       "end",
@@ -8254,7 +8440,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Match an interactive code at position POS in string INTERACTIVE.\nReturns the first matching entry in `evil-interactive-alist', or nil.",
+    "fn-docstring": "Match an interactive code at position POS in string INTERACTIVE.\nReturn the first matching entry in `evil-interactive-alist', or nil.",
     "arglist": [
       "interactive",
       "&optional",
@@ -8334,7 +8520,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Concatenate consecutive arrays in REPEAT-INFO.\nReturns a single array.",
+    "fn-docstring": "Concatenate consecutive arrays in REPEAT-INFO.\nReturn a single array.",
     "arglist": [
       "repeat-info"
     ],
@@ -8398,7 +8584,7 @@
     "default": "t",
     "local": null,
     "default-type": "symbol",
-    "var-docstring": "Whether the cursor is moved backwards when exiting insert state.\nIf non-nil, the cursor moves \"backwards\" when exiting insert state,\nso that it ends up on the character to the left.  Otherwise it remains\nin place, on the character to the right.",
+    "var-docstring": "Whether the cursor is moved backwards when exiting insert state.\nIf non-nil, the cursor moves \"backwards\" when exiting insert state,\nso that it ends up on the character to the left.  Otherwise it remains\nin place, on the character to the right.\n\nSee also `evil-move-beyond-eol'.",
     "fn-docstring": "Move point one character back within the current line.\nContingent on the variable `evil-move-cursor-back' or the FORCE\nargument. Honors field boundaries, i.e., constrains the movement\nto the current field as recognized by `line-beginning-position'.",
     "arglist": [
       "&optional",
@@ -8483,7 +8669,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Deletes a buffer.\nAll windows currently showing this buffer will be closed except\nfor the last window in each frame.",
+    "fn-docstring": "Delete a buffer.\nAll windows currently showing this buffer will be closed except\nfor the last window in each frame.",
     "arglist": [
       "buffer",
       "&optional",
@@ -8566,7 +8752,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Creates a PATTERN for substitution with FLAGS.\nThis function respects the values of `evil-ex-substitute-case'\nand `evil-ex-substitute-global'.",
+    "fn-docstring": "Create a PATTERN for substitution with FLAGS.\nThis function respects the values of `evil-ex-substitute-case'\nand `evil-ex-substitute-global'.",
     "arglist": [
       "regexp",
       "flags"
@@ -8644,7 +8830,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Rotates the windows according to the current cyclic ordering.",
+    "fn-docstring": "Rotate the windows according to the current cyclic ordering.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -8691,7 +8877,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Perform expand transformation on inclusive from BEG to END with PROPERTIES.\n\nInclude the character under point.\nIf the end position is at the beginning of a line or the end of a\nline and `evil-want-visual-char-semi-exclusive', then:\n\n* If in visual state return `exclusive' (expanded).",
+    "fn-docstring": "Perform expand transformation on inclusive from BEG to END with PROPERTIES.\n\nInclude the character under point.\nHandling for `evil-want-visual-char-semi-exclusive' is deprecated,\nand will be removed in a future version.",
     "arglist": [
       "beg",
       "end",
@@ -8707,7 +8893,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls the window COUNT columns to the left.",
+    "fn-docstring": "Scroll the window COUNT columns to the left.",
     "arglist": [
       "count"
     ],
@@ -8777,7 +8963,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Exits Emacs without saving, returning an non-zero error code.\nThe FORCE argument is only there for compatibility and is ignored.\nThis function fails with an error if Emacs is run in server mode.",
+    "fn-docstring": "Exit Emacs without saving, returning an non-zero error code.\nThe FORCE argument is only there for compatibility and is ignored.\nThis function fails with an error if Emacs is run in server mode.",
     "arglist": [
       "&optional",
       "force"
@@ -9010,7 +9196,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Exits Emacs, asking for saving.",
+    "fn-docstring": "Exit Emacs, asking for saving.",
     "arglist": [
       "&optional",
       "bang"
@@ -9115,7 +9301,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Goes the the previous occurrence.",
+    "fn-docstring": "Go the the previous occurrence.",
     "arglist": [
       "&optional",
       "count"
@@ -9159,7 +9345,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Splits the window and goes to the COUNT-th next buffer in the buffer list.",
+    "fn-docstring": "Split the window and go to the COUNT-th next buffer in the buffer list.",
     "arglist": [
       "&optional",
       "count"
@@ -9255,6 +9441,17 @@
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-ex-elisp-completion-at-point": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Complete an `evil-ex' Elisp expression.",
+    "arglist": null,
+    "functionp": true,
     "macrop": null,
     "keymap-inv": null
   },
@@ -9402,7 +9599,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns t if point is at the end of a comment.\npoint must be on one of the opening characters of a block comment\naccording to the current syntax table. Futhermore these\ncharacters must been parsed as opening characters, i.e. they\nwon't be considered as comment starters inside a string or\npossibly another comment. Point is moved right after the comment\ncloser if MOVE is non-nil.",
+    "fn-docstring": "Return t if point is at the end of a comment.\nPoint must be on one of the opening characters of a block comment\naccording to the current syntax table. Futhermore, these\ncharacters must been parsed as opening characters, i.e. they\nwon't be considered as comment starters inside a string or\npossibly another comment. Point is moved right after the comment\ncloser if MOVE is non-nil.",
     "arglist": [
       "&optional",
       "move"
@@ -9451,7 +9648,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Saves all buffers visiting a file.\nIf BANG is non nil then read-only buffers are saved, too,\notherwise they are skipped. ",
+    "fn-docstring": "Save all buffers visiting a file.\nIf BANG is non nil then read-only buffers are saved, too,\notherwise they are skipped. ",
     "arglist": [
       "bang"
     ],
@@ -9552,7 +9749,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Saves the lines in the region BEG and END into the kill-ring.",
+    "fn-docstring": "Save the lines in the region BEG and END into the kill-ring.",
     "arglist": [
       "beg",
       "end",
@@ -9616,7 +9813,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Saves the current buffer and closes the window.",
+    "fn-docstring": "Save the current buffer and close the window.",
     "arglist": [
       "file",
       "&optional",
@@ -9750,9 +9947,20 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Triggers the timer to update the highlights in the current buffer.",
+    "fn-docstring": "Trigger the timer to update the highlights in the current buffer.",
     "arglist": null,
     "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-ex-search-yank-point": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
     "macrop": null,
     "keymap-inv": null
   },
@@ -9816,7 +10024,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Executes as list of changes.\n\nCHANGES is a list of triples (REL-BEG INSERT-TEXT NDEL).\nREL-BEG is the relative position (to point) where the change\ntakes place. INSERT-TEXT is the text to be inserted at that\nposition and NDEL the number of characters to be deleted at that\nposition before insertion.\n\nREL-POINT is the relative position to point before the changed\nwhere point should be placed after all changes.",
+    "fn-docstring": "Execute as list of changes.\n\nCHANGES is a list of triples (REL-BEG INSERT-TEXT NDEL).\nREL-BEG is the relative position (to point) where the change\ntakes place. INSERT-TEXT is the text to be inserted at that\nposition and NDEL the number of characters to be deleted at that\nposition before insertion.\n\nREL-POINT is the relative position to point before the changed\nwhere point should be placed after all changes.",
     "arglist": [
       "changes",
       "rel-point"
@@ -9830,7 +10038,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Sets `evil-scroll-count' to 0.\n`evil-scroll-up' and `evil-scroll-down' will scroll\nfor a half of the screen(default).",
+    "fn-docstring": "Set `evil-scroll-count' to 0.\n`evil-scroll-up' and `evil-scroll-down' will scroll\nfor a half of the screen(default).",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -9908,7 +10116,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Changes the list of special keymaps.\nVAR         is the variable containing the list of keymaps.\nPENDING-VAR is the variable containing the list of the currently pending\n            keymaps.\nKEY         the special symbol to be stored in the keymaps.\nMAKE        the creation function of the special keymaps.\nNEWLIST     the list of new special keymaps.",
+    "fn-docstring": "Change the list of special keymaps.\nVAR         is the variable containing the list of keymaps.\nPENDING-VAR is the variable containing the list of the currently pending\n            keymaps.\nKEY         the special symbol to be stored in the keymaps.\nMAKE        the creation function of the special keymaps.\nNEWLIST     the list of new special keymaps.",
     "arglist": [
       "var",
       "pending-var",
@@ -9931,23 +10139,12 @@
     "macrop": null,
     "keymap-inv": null
   },
-  "evil-backward-sentence": {
-    "default": "nil",
-    "local": null,
-    "default-type": "symbol",
-    "var-docstring": null,
-    "fn-docstring": null,
-    "arglist": true,
-    "functionp": null,
-    "macrop": null,
-    "keymap-inv": null
-  },
   "evil-insert-newline-below": {
     "default": "nil",
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Inserts a new line below point and places point in that line\nwith regard to indentation.",
+    "fn-docstring": "Insert a new line below point and place point in that line\nwith regard to indentation.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -9984,7 +10181,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Closes the current window, splits the upper-left one vertically\nand redisplays the current buffer there.",
+    "fn-docstring": "Close the current window, split the upper-left one vertically\nand redisplay the current buffer there.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -10188,7 +10385,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Restores the goal column after execution of BODY.\nSee also `evil-save-column'.",
+    "fn-docstring": "Restore the goal column after execution of BODY.\nSee also `evil-save-column'.",
     "arglist": [
       "&rest",
       "body"
@@ -10265,7 +10462,7 @@
     "default": "t",
     "local": null,
     "default-type": "symbol",
-    "var-docstring": "Whether pasting in visual state adds the replaced text to the\nkill ring, making it the default for the next paste. The default,\nreplicates the default Vim behavior.",
+    "var-docstring": "Whether pasting in visual state adds the replaced text to the\nkill ring, making it the default for the next paste. The default\nreplicates the default Vim behavior for `p'. This value is flipped by\n`evil-paste-before' (\\[evil-paste-before]).",
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
@@ -10355,6 +10552,19 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-scroll-line-to-bottom-first-non-blank": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Scroll line number COUNT (or the cursor line) to the bottom of the window.\nThen move the cursor to the first non-blank character of that line.",
+    "arglist": [
+      "count"
+    ],
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil-visual-contract-region": {
     "default": "nil",
     "local": null,
@@ -10398,7 +10608,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Tries to set pending special keymaps.\nThis function should be called from an `after-load-functions'\nhook.",
+    "fn-docstring": "Try to set pending special keymaps.\nThis function should be called from an `after-load-functions'\nhook.",
     "arglist": [
       "&optional",
       "_file"
@@ -10474,7 +10684,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Starts a forward search.",
+    "fn-docstring": "Start a forward search.",
     "arglist": [
       "&optional",
       "count"
@@ -10501,7 +10711,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Executes the pending initializations.\nSee `evil-pending-custom-initialize'.",
+    "fn-docstring": "Execute the pending initializations.\nSee `evil-pending-custom-initialize'.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -10602,6 +10812,17 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-ex-search-incremental": {
+    "default": "t",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": "If t, use incremental search. Note that this only affects the\nsearch command if `evil-search-module' is set to 'evil-search.",
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil-want-C-w-in-emacs-state": {
     "default": "nil",
     "local": null,
@@ -10627,6 +10848,22 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-paste-after-cursor-after": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "The same as `evil-paste-after' but\nleave the cursor just after the new text.",
+    "arglist": [
+      "count",
+      "&optional",
+      "register",
+      "yank-handler"
+    ],
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil-count-lines": {
     "default": "nil",
     "local": null,
@@ -10646,7 +10883,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Search backward for PATTERN.\nReturns the line number of the match.",
+    "fn-docstring": "Search backward for PATTERN.\nReturn the line number of the match.",
     "arglist": [
       "pattern"
     ],
@@ -10858,7 +11095,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Inserts a new line above point and places point in that line\nwith regard to indentation.",
+    "fn-docstring": "Insert a new line above point and place point in that line\nwith regard to indentation.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -10869,7 +11106,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Splits the current window horizontally, COUNT lines height,\nediting a certain FILE. The new window will be created below\nwhen `evil-split-window-below' is non-nil. If COUNT and\n`evil-auto-balance-windows' are both non-nil then all children\nof the parent of the splitted window are rebalanced.",
+    "fn-docstring": "Split the current window horizontally, COUNT lines height,\nediting a certain FILE. The new window will be created below\nwhen `evil-split-window-below' is non-nil. If COUNT and\n`evil-auto-balance-windows' are both non-nil then all children\nof the parent of the splitted window are rebalanced.",
     "arglist": [
       "&optional",
       "count",
@@ -10944,7 +11181,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Sets the width of the current window to COUNT.",
+    "fn-docstring": "Set the width of the current window to COUNT.",
     "arglist": [
       "count"
     ],
@@ -11168,7 +11405,7 @@
     "default": "nil",
     "local": true,
     "default-type": "symbol",
-    "var-docstring": "The explicit count passed to an command starting Insert state.",
+    "var-docstring": "The explicit count passed to a command starting Insert or Replace state.",
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
@@ -11462,7 +11699,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls line number COUNT (or the cursor line) to the bottom of the window.",
+    "fn-docstring": "Scroll line number COUNT (or the cursor line) to the bottom of the window.",
     "arglist": [
       "count"
     ],
@@ -11537,7 +11774,7 @@
     "default": "(\"COMMIT_EDITMSG$\" \"TAGS$\")",
     "local": null,
     "default-type": "cons",
-    "var-docstring": "A list of pattern regexps to match on the file path to exclude from being included in the jump list.",
+    "var-docstring": "List of regexps to exclude file path from inclusion in the jump list.",
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
@@ -11548,7 +11785,7 @@
     "default": "nil",
     "local": null,
     "default-type": "symbol",
-    "var-docstring": "Visual character selection to beginning/end of line is exclusive.\nIf non nil then an inclusive visual character selection which\nends at the beginning or end of a line is turned into an\nexclusive selection. Thus if the selected (inclusive) range ends\nat the beginning of a line it is changed to not include the first\ncharacter of that line, and if the selected range ends at the end\nof a line it is changed to not include the newline character of\nthat line.",
+    "var-docstring": "DEPRECATED.  Will be removed in a future version.\nPrefer to set `evil-v$-excludes-newline' to non-nil.\n\nVisual character selection to beginning/end of line is exclusive.\nIf non nil then an inclusive visual character selection which\nends at the beginning or end of a line is turned into an\nexclusive selection. Thus if the selected (inclusive) range ends\nat the beginning of a line it is changed to not include the first\ncharacter of that line, and if the selected range ends at the end\nof a line it is changed to not include the newline character of\nthat line.",
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
@@ -11635,6 +11872,17 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-transient-mouse-selection": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": "Whether the region selected by the mouse is discarded by the next command.\nBy default, the region is not discarded.  If non-nil, exit visual state\nimmediately before the next command.  To use the region selected by the mouse,\nexecute a command which would usually enter visual state, such as\n\\[evil-visual-char] or \\[evil-visual-block].",
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil-mode-line-tag": {
     "default": "nil",
     "local": true,
@@ -11714,7 +11962,7 @@
     "default": "nil",
     "local": null,
     "default-type": "symbol",
-    "var-docstring": "The count if the current search.",
+    "var-docstring": "The count of the current search.",
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
@@ -11839,7 +12087,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Search forward for PATTERN.\nReturns the line number of the match.",
+    "fn-docstring": "Search forward for PATTERN.\nReturn the line number of the match.",
     "arglist": [
       "pattern"
     ],
@@ -11852,7 +12100,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Major mode for the Evil command line window.\n\nThis mode runs the hook `evil-command-window-mode-hook', as the final\nor penultimate step during initialization.\n\n\\{evil-command-window-mode-map}",
+    "fn-docstring": "Major mode for the Evil command line window.\n\nThis mode runs the hook `evil-command-window-mode-hook', as the\nfinal or penultimate step during initialization.\n\n\\{evil-command-window-mode-map}",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -11910,7 +12158,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns the current Ex argument as a file name.\nThis function interprets special file names like # and %.",
+    "fn-docstring": "Return the current Ex argument as a file name.\nThis function interprets special file names like # and %.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -11961,7 +12209,7 @@
     "default": "nil",
     "local": null,
     "default-type": "symbol",
-    "var-docstring": "Regexp to match against `buffer-name' to determine whether it's a valid jump target.",
+    "var-docstring": "Regexp to determine if buffer with `buffer-name' is a valid jump target.",
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
@@ -12131,7 +12379,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Goes to the `count'-th prev buffer in the buffer list.",
+    "fn-docstring": "Go to the `count'-th prev buffer in the buffer list.",
     "arglist": [
       "&optional",
       "count"
@@ -12217,7 +12465,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Pushes the current cursor/file position to the jump list.",
+    "fn-docstring": "Push the current cursor/file position to the jump list.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -12228,7 +12476,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls the window COUNT pages upwards.",
+    "fn-docstring": "Scroll the window COUNT pages upwards.",
     "arglist": [
       "count"
     ],
@@ -12287,7 +12535,7 @@
     "default": "t",
     "local": null,
     "default-type": "symbol",
-    "var-docstring": "Whether to update the X PRIMARY selection with the current visual region automatically.",
+    "var-docstring": "Whether to update the X PRIMARY selection with the current visual region.",
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
@@ -12316,6 +12564,17 @@
     "fn-docstring": "Remove the default text shown in the ex minibuffer.\nWhen ex starts, the previous command is shown enclosed in\nparenthesis. This function removes this text when the first key\nis pressed.",
     "arglist": null,
     "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-v$-excludes-newline": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": "If non-nil, `evil-end-of-line' does not move as far as to include\nthe `\n' char at eol. This makes `v$' consistent with `$' used as a\nmotion (e.g. `v$y' is consistent with `y$' in normal state).",
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
     "macrop": null,
     "keymap-inv": null
   },
@@ -12412,7 +12671,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Inserts the contents of FILE below the current line or line COUNT.",
+    "fn-docstring": "Insert the contents of FILE below the current line or line COUNT.",
     "arglist": [
       "count",
       "file"
@@ -12584,7 +12843,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Splits window and switches to another buffer.",
+    "fn-docstring": "Split window and switch to another buffer.",
     "arglist": [
       "buffer"
     ],
@@ -12610,7 +12869,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls the line right below the window,\nor line COUNT to the top of the window.",
+    "fn-docstring": "Scroll the line right below the window,\nor line COUNT to the top of the window.",
     "arglist": [
       "count"
     ],
@@ -12784,7 +13043,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Search for a full search pattern PATTERN-STRING in DIRECTION.\nThis function split PATTERN-STRING in\npattern/offset/;next-pattern parts and performs the search in\nDIRECTION which must be either 'forward or 'backward. The first\nsearch is repeated COUNT times. If the pattern part of\nPATTERN-STRING is empty, the last global pattern stored in\n`evil-ex-search-pattern' is used instead if in addition the\noffset part is nil (i.e. no pattern/offset separator), the last\nglobal offset stored in `evil-ex-search-offset' is used as\noffset. The current match data will correspond to the last\nsuccessful match.  This function returns a triple (RESULT PATTERN\nOFFSET) where RESULT is\n\n  t              the search has been successful without wrap\n  'wrap          the search has been successful with wrap\n  'empty-pattern the last pattern has been empty\n  nil            the search has not been successful\n\nand PATTERN and OFFSET are the last pattern and offset this\nfunction searched for. Note that this function does not handle\nany error conditions.",
+    "fn-docstring": "Search for a full search pattern PATTERN-STRING in DIRECTION.\nThis function splits PATTERN-STRING into\npattern/offset/;next-pattern parts and performs the search in\nDIRECTION which must be either 'forward or 'backward. The first\nsearch is repeated COUNT times. If the pattern part of\nPATTERN-STRING is empty, the last global pattern stored in\n`evil-ex-search-pattern' is used instead if in addition the\noffset part is nil (i.e. no pattern/offset separator), the last\nglobal offset stored in `evil-ex-search-offset' is used as\noffset. The current match data will correspond to the last\nsuccessful match.  This function returns a triple (RESULT PATTERN\nOFFSET) where RESULT is\n\n  t              the search has been successful without wrap\n  'wrap          the search has been successful with wrap\n  'empty-pattern the last pattern has been empty\n  nil            the search has not been successful\n\nand PATTERN and OFFSET are the last pattern and offset this\nfunction searched for. Note that this function does not handle\nany error conditions.",
     "arglist": [
       "pattern-string",
       "count",
@@ -12821,7 +13080,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Return size of inclusive from BEG to END with PROPERTIES.\n\nInclude the character under point.\nIf the end position is at the beginning of a line or the end of a\nline and `evil-want-visual-char-semi-exclusive', then:\n\n* If in visual state return `exclusive' (expanded).",
+    "fn-docstring": "Return size of inclusive from BEG to END with PROPERTIES.\n\nInclude the character under point.\nHandling for `evil-want-visual-char-semi-exclusive' is deprecated,\nand will be removed in a future version.",
     "arglist": [
       "beg",
       "end",
@@ -12876,7 +13135,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls the line right below the window,\nor line COUNT to the top of the window.",
+    "fn-docstring": "Scroll the line right above the window,\nor line COUNT to the bottom of the window.",
     "arglist": [
       "count"
     ],
@@ -12892,6 +13151,20 @@
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-goto-last-change": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Like `goto-last-change' but takes a COUNT rather than a span.",
+    "arglist": [
+      "&optional",
+      "count"
+    ],
+    "functionp": true,
     "macrop": null,
     "keymap-inv": null
   },
@@ -12953,7 +13226,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Splits window and goes to the COUNT-th prev buffer in the buffer list.",
+    "fn-docstring": "Split window and go to the COUNT-th prev buffer in the buffer list.",
     "arglist": [
       "&optional",
       "count"
@@ -13004,7 +13277,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Starts the recording of a new set of buffer changes.",
+    "fn-docstring": "Start the recording of a new set of buffer changes.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -13100,7 +13373,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Splits the current window vertically, COUNT columns width,\nediting a certain FILE. The new window will be created to the\nright when `evil-vsplit-window-right' is non-nil. If COUNT and\n`evil-auto-balance-windows'are both non-nil then all children\nof the parent of the splitted window are rebalanced.",
+    "fn-docstring": "Split the current window vertically, COUNT columns width,\nediting a certain FILE. The new window will be created to the\nright when `evil-vsplit-window-right' is non-nil. If COUNT and\n`evil-auto-balance-windows'are both non-nil then all children\nof the parent of the splitted window are rebalanced.",
     "arglist": [
       "&optional",
       "count",
@@ -13308,7 +13581,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Return the Evil state to use for MODE or its alias.\nReturns DEFAULT if no initial state is associated with MODE.\nThe initial state for a mode can be set with\n`evil-set-initial-state'.\n\nIf FOLLOW-PARENT is non-nil, also check parent modes of MODE and\nits alias. CHECKED-MODES is used internally and should not be set\ninitially.",
+    "fn-docstring": "Return the Evil state to use for MODE or its alias.\nReturn DEFAULT if no initial state is associated with MODE.\nThe initial state for a mode can be set with\n`evil-set-initial-state'.\n\nIf FOLLOW-PARENT is non-nil, also check parent modes of MODE and\nits alias. CHECKED-MODES is used internally and should not be set\ninitially.",
     "arglist": [
       "mode",
       "&optional",
@@ -13325,7 +13598,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns non-nil iff a recording is in progress.",
+    "fn-docstring": "Return non-nil iff a recording is in progress.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -13350,7 +13623,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Deletes the current window.\nIf `evil-auto-balance-windows' is non-nil then all children of\nthe deleted window's parent window are rebalanced.",
+    "fn-docstring": "Delete the current window.\nIf `evil-auto-balance-windows' is non-nil then all children of\nthe deleted window's parent window are rebalanced.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -13361,7 +13634,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls the window COUNT pages downwards.",
+    "fn-docstring": "Scroll the window COUNT pages downwards.",
     "arglist": [
       "count"
     ],
@@ -13451,7 +13724,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Return the minor mode associated with KEYMAP.\nReturns DEFAULT if no mode is found.\nSee also `evil-keymap-for-mode'.",
+    "fn-docstring": "Return the minor mode associated with KEYMAP.\nReturn DEFAULT if no mode is found.\nSee also `evil-keymap-for-mode'.",
     "arglist": [
       "keymap",
       "&optional",
@@ -13491,7 +13764,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Repeats the last ex command.",
+    "fn-docstring": "Repeat the last ex command.",
     "arglist": [
       "count"
     ],
@@ -13584,7 +13857,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Goes to the next occurrence.",
+    "fn-docstring": "Go to the next occurrence.",
     "arglist": [
       "&optional",
       "count"
@@ -13641,7 +13914,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Return the last buffer WINDOW has displayed other than the\ncurrent one (equivalent to Vim's alternate buffer).\n\nReturns the first item in `window-prev-buffers' that isn't\n`window-buffer' of WINDOW.",
+    "fn-docstring": "Return the last buffer WINDOW has displayed other than the\ncurrent one (equivalent to Vim's alternate buffer).\n\nReturn the first item in `window-prev-buffers' that isn't\n`window-buffer' of WINDOW.",
     "arglist": [
       "&optional",
       "window"
@@ -13695,7 +13968,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls the window COUNT half-screenwidths to the left.",
+    "fn-docstring": "Scroll the window COUNT half-screenwidths to the left.",
     "arglist": [
       "count"
     ],
@@ -13766,7 +14039,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Read from keyboard or INPUT and build a command description.\nReturns (CMD COUNT), where COUNT is the numeric prefix argument.\nBoth COUNT and CMD may be nil.",
+    "fn-docstring": "Read from keyboard or INPUT and build a command description.\nReturn (CMD COUNT), where COUNT is the numeric prefix argument.\nBoth COUNT and CMD may be nil.",
     "arglist": [
       "&optional",
       "input"
@@ -13938,7 +14211,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls the window and the cursor COUNT lines downwards.\nIf COUNT is not specified the function scrolls down\n`evil-scroll-count', which is the last used count.\nIf the scroll count is zero the command scrolls half the screen.",
+    "fn-docstring": "Scroll the window and the cursor COUNT lines downwards.\nIf COUNT is not specified the function scrolls down\n`evil-scroll-count', which is the last used count.\nIf the scroll count is zero the command scrolls half the screen.",
     "arglist": [
       "count"
     ],
@@ -13951,7 +14224,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns the bounds of a complement of THING at point.\nIf there is a THING at point nil is returned.  Otherwise if WHICH\nis nil or 0 a cons cell (BEG . END) is returned. If WHICH is\nnegative the beginning is returned. If WHICH is positive the END\nis returned.",
+    "fn-docstring": "Return the bounds of a complement of THING at point.\nIf there is a THING at point nil is returned.  Otherwise if WHICH\nis nil or 0 a cons cell (BEG . END) is returned. If WHICH is\nnegative the beginning is returned. If WHICH is positive the END\nis returned.",
     "arglist": [
       "thing",
       "&optional",
@@ -14080,7 +14353,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Goes to the `count'-th next buffer in the buffer list.",
+    "fn-docstring": "Go to the `count'-th next buffer in the buffer list.",
     "arglist": [
       "&optional",
       "count"
@@ -14160,7 +14433,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Normalize BEG and END as TYPE with PROPERTIES.\nReturns a list (BEG END TYPE PROPERTIES ...), where the tail\nmay contain a property list.",
+    "fn-docstring": "Normalize BEG and END as TYPE with PROPERTIES.\nReturn a list (BEG END TYPE PROPERTIES ...), where the tail\nmay contain a property list.",
     "arglist": [
       "beg",
       "end",
@@ -14202,10 +14475,10 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Track the last insertion range and its text.\nThe insertion range is stored as a pair of buffer positions in\n`evil-current-insertion'. If a subsequent change is compatible,\nthen the current range is modified, otherwise it is replaced by a\nnew range. Compatible changes are changes that do not create a\ndisjoin range.",
+    "fn-docstring": "Track the last insertion range and its text.\nCHG-BEG CHG-END & LEN are supplied as for `after-change-functions'.\nThe insertion range is stored as a pair of buffer positions in\n`evil-current-insertion'.  If a subsequent change is compatible,\nthen the current range is modified, otherwise it is replaced by a\nnew range.  Compatible changes are changes that do not create a\ndisjoin range.",
     "arglist": [
-      "beg",
-      "end",
+      "chg-beg",
+      "chg-end",
       "len"
     ],
     "functionp": true,
@@ -14379,7 +14652,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Opens new list view buffer.\n\nPROPERTIES is a property-list which supports the following properties:\n\n:name           (required)   The name of the buffer.\n:mode-name      (required)   The name for the mode line.\n:format         (required)   The value for `tabulated-list-format'.\n:entries        (required)   The value for `tabulated-list-entries'.\n:select-action  (optional)   A function for row selection.\n                             It takes in a single parameter, which is the selected row's\n                             vector value that is passed into `:entries'.\n",
+    "fn-docstring": "Open new list view buffer.\n\nPROPERTIES is a property-list which supports the following properties:\n\n:name           (required)   The name of the buffer.\n:mode-name      (required)   The name for the mode line.\n:format         (required)   The value for `tabulated-list-format'.\n:entries        (required)   The value for `tabulated-list-entries'.\n:select-action  (optional)   A function for row selection.\n                             It takes in a single parameter, which is the selected row's\n                             vector value that is passed into `:entries'.\n",
     "arglist": [
       "&rest",
       "properties"
@@ -14437,7 +14710,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Closes the current window, splits the upper-left one horizontally\nand redisplays the current buffer there.",
+    "fn-docstring": "Close the current window, split the upper-left one horizontally\nand redisplay the current buffer there.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -14504,7 +14777,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Returns non-nil iff KEYS contains a mouse event.",
+    "fn-docstring": "Return non-nil iff KEYS contains a mouse event.",
     "arglist": [
       "keys"
     ],
@@ -14553,7 +14826,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Opens the file at point and goes to line-number.",
+    "fn-docstring": "Open the file at point and go to position if present.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -14680,7 +14953,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Sets the list of motion commands.",
+    "fn-docstring": "Set the list of motion commands.",
     "arglist": [
       "var",
       "values"
@@ -14739,7 +15012,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Perform contract transformation on inclusive from BEG to END with PROPERTIES.\n\nInclude the character under point.\nIf the end position is at the beginning of a line or the end of a\nline and `evil-want-visual-char-semi-exclusive', then:\n\n* If in visual state return `exclusive' (expanded).",
+    "fn-docstring": "Perform contract transformation on inclusive from BEG to END with PROPERTIES.\n\nInclude the character under point.\nHandling for `evil-want-visual-char-semi-exclusive' is deprecated,\nand will be removed in a future version.",
     "arglist": [
       "beg",
       "end",
@@ -14766,7 +15039,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Major mode derived from `tabulated-list-mode' by `define-derived-mode'.\nIt inherits all of the parent's attributes, but has its own keymap,\nabbrev table and syntax table:\n\n  `evil-list-view-mode-map', `evil-list-view-mode-abbrev-table' and\n`evil-list-view-mode-syntax-table'\n\nwhich more-or-less shadow tabulated-list-mode's corresponding tables.\n\nIn addition to any hooks its parent mode might have run, this mode\nruns the hook `evil-list-view-mode-hook', as the final or penultimate\nstep during initialization.\n\n\\{evil-list-view-mode-map}",
+    "fn-docstring": "Major mode derived from `tabulated-list-mode' by `define-derived-mode'.\nIt inherits all of the parent's attributes, but has its own keymap,\nabbrev table and syntax table:\n\n  `evil-list-view-mode-map', `evil-list-view-mode-abbrev-table' and `evil-list-view-mode-syntax-table'\n\nwhich more-or-less shadow tabulated-list-mode's corresponding tables.\n\nIn addition to any hooks its parent mode might have run, this mode\nruns the hook `evil-list-view-mode-hook', as the final or penultimate\nstep during initialization.\n\n\\{evil-list-view-mode-map}",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -14961,7 +15234,7 @@
     "keymap-inv": null
   },
   "evil-insert-state-modes": {
-    "default": "(comint-mode erc-mode eshell-mode geiser-repl-mode gud-mode inferior-apl-mode inferior-caml-mode inferior-emacs-lisp-mode inferior-j-mode inferior-python-mode inferior-scheme-mode inferior-sml-mode internal-ange-ftp-mode prolog-inferior-mode reb-mode shell-mode slime-repl-mode term-mode wdired-mode)",
+    "default": "(comint-mode erc-mode eshell-mode geiser-repl-mode gud-mode inferior-apl-mode inferior-caml-mode inferior-emacs-lisp-mode inferior-j-mode inferior-python-mode inferior-scheme-mode inferior-sml-mode internal-ange-ftp-mode haskell-interactive-mode prolog-inferior-mode reb-mode shell-mode slime-repl-mode term-mode utop-mode wdired-mode)",
     "local": null,
     "default-type": "cons",
     "var-docstring": "Modes that should come up in Insert state.",
@@ -15246,7 +15519,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Pastes the latest yanked text before the cursor position.\nThe return value is the yanked text.",
+    "fn-docstring": "Paste the latest yanked text before the cursor position.\nThe return value is the yanked text.",
     "arglist": [
       "count",
       "&optional",
@@ -15338,8 +15611,14 @@
     "functionp": null,
     "macrop": null,
     "keymap-inv": {
-      "ffap-other-window": "C-f",
+      "tab-bar-switch-to-prev-tab": "g T",
+      "tab-bar-switch-to-next-tab": "g t",
+      "evil-window-right": "C-l",
+      "evil-window-left": "C-h",
+      "evil-window-up": "C-k",
+      "evil-window-down": "C-j",
       "evil-window-set-height": "C-_",
+      "evil-window-exchange": "C-x",
       "evil-window-prev": "W",
       "evil-window-next": "C-w",
       "evil-window-vsplit": "C-v",
@@ -15348,22 +15627,34 @@
       "evil-window-split": "C-s",
       "evil-window-rotate-upwards": "R",
       "evil-window-rotate-downwards": "C-r",
+      "evil-quit": "C-q",
       "evil-window-mru": "C-p",
       "delete-other-windows": "C-o",
       "evil-window-new": "C-n",
       "evil-window-move-far-right": "L",
+      "evil-window-right": "C-l",
       "evil-window-move-very-top": "K",
+      "evil-window-up": "C-k",
       "evil-window-move-very-bottom": "J",
+      "evil-window-down": "C-j",
       "evil-window-move-far-left": "H",
+      "evil-window-left": "C-h",
+      "ffap-other-window": "C-f",
       "evil-window-delete": "C-c",
       "evil-window-bottom-right": "C-b",
+      "evil-window-right": "C-l",
+      "evil-window-left": "C-h",
+      "evil-window-up": "C-k",
+      "evil-window-down": "C-j",
       "evil-window-set-width": "|",
       "balance-windows": "=",
       "evil-window-increase-width": ">",
       "evil-window-decrease-width": "<",
       "evil-window-set-height": "C-_",
+      "evil-ex": ":",
       "evil-window-decrease-height": "-",
       "evil-window-increase-height": "+",
+      "evil-window-exchange": "C-x",
       "evil-window-prev": "W",
       "evil-window-next": "C-w",
       "evil-window-vsplit": "C-v",
@@ -15372,18 +15663,19 @@
       "evil-window-split": "C-s",
       "evil-window-rotate-upwards": "R",
       "evil-window-rotate-downwards": "C-r",
-      "evil-quit": "q",
+      "evil-quit": "C-q",
       "evil-window-mru": "C-p",
       "delete-other-windows": "C-o",
       "evil-window-new": "C-n",
       "evil-window-move-far-right": "L",
-      "evil-window-right": "l",
+      "evil-window-right": "C-l",
       "evil-window-move-very-top": "K",
-      "evil-window-up": "k",
+      "evil-window-up": "C-k",
       "evil-window-move-very-bottom": "J",
-      "evil-window-down": "j",
+      "evil-window-down": "C-j",
       "evil-window-move-far-left": "H",
-      "evil-window-left": "h",
+      "evil-window-left": "C-h",
+      "ffap-other-window": "C-f",
       "evil-window-delete": "C-c",
       "evil-window-bottom-right": "C-b"
     }
@@ -15393,7 +15685,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Transforms vim-style backslash codes to Emacs regexp.\nThis includes the backslash codes \\d, \\D, \\s, \\S, \\x, \\X,\n\\o, \\O, \\a, \\A, \\l, \\L, \\u, \\U and \\w, \\W. The new\ncodes \\y and \\Y can be used instead of the Emacs code \\s and\n\\S which have a different meaning in Vim-style.",
+    "fn-docstring": "Transform vim-style backslash codes to Emacs regexp.\nThis includes the backslash codes \\d, \\D, \\s, \\S, \\x, \\X,\n\\o, \\O, \\a, \\A, \\l, \\L, \\u, \\U and \\w, \\W. The new\ncodes \\y and \\Y can be used instead of the Emacs code \\s and\n\\S which have a different meaning in Vim-style.",
     "arglist": [
       "regexp"
     ],
@@ -15406,7 +15698,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Split PATTERN in regexp, offset and next-pattern parts.\nReturns a triple (regexp  offset next-search).",
+    "fn-docstring": "Split PATTERN in regexp, offset and next-pattern parts.\nReturn a triple (regexp offset next-search).",
     "arglist": [
       "pattern",
       "direction"
@@ -15471,7 +15763,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls the window COUNT lines upwards.",
+    "fn-docstring": "Scroll the window COUNT lines upwards.",
     "arglist": [
       "count"
     ],
@@ -15789,7 +16081,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls the window COUNT lines downwards.",
+    "fn-docstring": "Scroll the window COUNT lines downwards.",
     "arglist": [
       "count"
     ],
@@ -15891,12 +16183,23 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-want-C-h-delete": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": "Whether `C-h' deletes a char in Insert state.",
+    "fn-docstring": null,
+    "arglist": true,
+    "functionp": null,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil-window-new": {
     "default": "nil",
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Splits the current window horizontally\nand opens a new buffer or edits a certain FILE.",
+    "fn-docstring": "Split the current window horizontally\nand open a new buffer or edit a certain FILE.",
     "arglist": [
       "count",
       "file"
@@ -15962,7 +16265,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Expand BEG and END as TYPE with PROPERTIES.\nReturns a list (BEG END TYPE PROPERTIES ...), where the tail\nmay contain a property list.",
+    "fn-docstring": "Expand BEG and END as TYPE with PROPERTIES.\nReturn a list (BEG END TYPE PROPERTIES ...), where the tail\nmay contain a property list.",
     "arglist": [
       "beg",
       "end",
@@ -16029,7 +16332,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Saves the characters in motion into the kill-ring.",
+    "fn-docstring": "Save the characters in motion into the kill-ring.",
     "arglist": [
       "beg",
       "end",
@@ -16175,7 +16478,7 @@
     "default": "t",
     "local": null,
     "default-type": "symbol",
-    "var-docstring": "Whether `C-w' deletes a word in Insert state.",
+    "var-docstring": "Whether `C-w' deletes a word in Insert/Ex/Search state.",
     "fn-docstring": null,
     "arglist": true,
     "functionp": null,
@@ -16224,7 +16527,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": "Non-nil if Evil mode is enabled.\nSee the `evil-mode' command\nfor a description of this minor mode.\nSetting this variable directly does not take effect;\neither customize it (see the info node `Easy Customization')\nor call the function `evil-mode'.",
-    "fn-docstring": "Toggle Evil-Local mode in all buffers.\nWith prefix ARG, enable Evil mode if ARG is positive; otherwise,\ndisable it.\n\nIf called from Lisp, toggle the mode if ARG is `toggle'.\nEnable the mode if ARG is nil, omitted, or is a positive number.\nDisable the mode if ARG is a negative number.\n\nEvil-Local mode is enabled in all buffers where `evil-initialize'\nwould do it.\n\nSee `evil-local-mode' for more information on Evil-Local mode.\n\nThis function has :around advice: ‘ad-Advice-evil-mode’.\n\n(fn &optional ARG)",
+    "fn-docstring": "This function has :around advice: ‘ad-Advice-evil-mode’.\n\nToggle Evil-Local mode in all buffers.\nWith prefix ARG, enable Evil mode if ARG is positive; otherwise,\ndisable it.  If called from Lisp, enable the mode if ARG is omitted or\nnil.\n\nEvil-Local mode is enabled in all buffers where `evil-initialize'\nwould do it.\n\nSee `evil-local-mode' for more information on Evil-Local mode.\n\n(fn &optional ARG)",
     "arglist": [
       "&optional",
       "arg"
@@ -16252,7 +16555,7 @@
     "local": true,
     "default-type": "symbol",
     "var-docstring": "Non-nil if Evil-Local mode is enabled.\nUse the command `evil-local-mode' to change this variable.",
-    "fn-docstring": "Minor mode for setting up Evil in a single buffer.\n\nThis is a minor mode.  If called interactively, toggle the\n`Evil-Local mode' mode.  If the prefix argument is positive,\nenable the mode, and if it is zero or negative, disable the mode.\n\nIf called from Lisp, toggle the mode if ARG is `toggle'.  Enable\nthe mode if ARG is nil, omitted, or is a positive number.\nDisable the mode if ARG is a negative number.\n\nTo check whether the minor mode is enabled in the current buffer,\nevaluate `evil-local-mode'.\n\nThe mode's hook is called both when the mode is enabled and when\nit is disabled.",
+    "fn-docstring": "Minor mode for setting up Evil in a single buffer.\n\nIf called interactively, toggle `Evil-Local mode'.  If the prefix\nargument is positive, enable the mode, and if it is zero or\nnegative, disable the mode.\n\nIf called from Lisp, toggle the mode if ARG is `toggle'.  Enable\nthe mode if ARG is nil, omitted, or is a positive number.\nDisable the mode if ARG is a negative number.\n\nThe mode's hook is called both when the mode is enabled and when\nit is disabled.",
     "arglist": [
       "&optional",
       "arg"
@@ -16357,7 +16660,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Transforms STR with magic characters.\nMAGIC is a regexp that matches all potential magic\ncharacters. Each occurence of CHAR as magic character within str\nis replaced by the result of calling the associated TRANSFORM\nfunction. TRANSFORM is a function taking two arguments, the\ncharacter to be transformed and the rest of string after the\ncharacter. The function should return a triple (REPLACEMENT REST\n. STOP) where REPLACEMENT is the replacement and REST is the rest\nof the string that has not been transformed. If STOP is non-nil\nthen the substitution stops immediately.  The replacement starts\nat position START, everything before that position is returned\nliterally.  The result is a pair (RESULT . REST). RESULT is a\nlist containing the transformed parts in order. If two\nsubsequents parts are both strings, they are concatenated. REST\nis the untransformed rest string (usually \"\" but may be more if\nTRANSFORM stopped the substitution). Which characters are\nconsidered as magic characters (i.e. the transformation happens\nif the character is NOT preceeded by a backslash) is determined\nby `evil-magic'. The special tokens \\v, \\V, \\m and \\M have\nalways a special meaning (like in Vim) and should not be\ncontained in TRANSFORMS, otherwise their meaning is overwritten.\n\nThe parameter QUOTE is a quoting function applied to literal\ntransformations, usually `regexp-quote' or `replace-quote'.",
+    "fn-docstring": "Transform STR with magic characters.\nMAGIC is a regexp that matches all potential magic\ncharacters. Each occurence of CHAR as magic character within str\nis replaced by the result of calling the associated TRANSFORM\nfunction. TRANSFORM is a function taking two arguments, the\ncharacter to be transformed and the rest of string after the\ncharacter. The function should return a triple (REPLACEMENT REST\n. STOP) where REPLACEMENT is the replacement and REST is the rest\nof the string that has not been transformed. If STOP is non-nil\nthen the substitution stops immediately.  The replacement starts\nat position START, everything before that position is returned\nliterally.  The result is a pair (RESULT . REST). RESULT is a\nlist containing the transformed parts in order. If two\nsubsequents parts are both strings, they are concatenated. REST\nis the untransformed rest string (usually \"\" but may be more if\nTRANSFORM stopped the substitution). Which characters are\nconsidered as magic characters (i.e. the transformation happens\nif the character is NOT preceeded by a backslash) is determined\nby `evil-magic'. The special tokens \\v, \\V, \\m and \\M have\nalways a special meaning (like in Vim) and should not be\ncontained in TRANSFORMS, otherwise their meaning is overwritten.\n\nThe parameter QUOTE is a quoting function applied to literal\ntransformations, usually `regexp-quote' or `replace-quote'.",
     "arglist": [
       "str",
       "magic",
@@ -16691,7 +16994,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Shows the file-list.\nThe same as `buffer-menu', but shows only buffers visiting\nfiles.",
+    "fn-docstring": "Show the file-list.\nThe same as `buffer-menu', but shows only buffers visiting\nfiles.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -16802,6 +17105,19 @@
     "macrop": null,
     "keymap-inv": null
   },
+  "evil-scroll-line-to-top-first-non-blank": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Scroll line number COUNT (or the cursor line) to the top of the window.\nThen move the cursor to the first non-blank character of that line.",
+    "arglist": [
+      "count"
+    ],
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
   "evil--add-to-alist": {
     "default": "nil",
     "local": null,
@@ -16822,7 +17138,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Called when Insert state is about to be exited.\nHandles the repeat-count of the insertion command.",
+    "fn-docstring": "Called when Insert or Replace state is about to be exited.\nHandles the repeat-count of the insertion command.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
@@ -16833,7 +17149,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Determines whether any symbol in MODES represents the current\nbuffer's major mode or any of its minors.",
+    "fn-docstring": "Determine whether any symbol in MODES represents the current\nbuffer's major mode or any of its minors.",
     "arglist": [
       "modes"
     ],
@@ -16901,7 +17217,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Parse STRING as an ex arg with both optional REGISTER and COUNT.\nReturns a list (REGISTER COUNT).",
+    "fn-docstring": "Parse STRING as an ex arg with both optional REGISTER and COUNT.\nReturn a list (REGISTER COUNT).",
     "arglist": [
       "string"
     ],
@@ -16914,7 +17230,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Scrolls the window COUNT columns to the right.",
+    "fn-docstring": "Scroll the window COUNT columns to the right.",
     "arglist": [
       "count"
     ],
@@ -16974,8 +17290,24 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": "\\<evil-motion-state-map>\nWhether left/right motions signal errors in keyboard macros.\nThis variable only affects beginning-of-line or end-of-line errors\nregarding the motions \\[evil-backward-char] and \\[evil-forward-char]\nrespectively.  This may be desired since such errors cause macro\ndefinition or execution to be terminated.  There are four\npossibilities:\n\n- `record': errors are suppressed when recording macros, but not when\n  replaying them.\n- `replay': errors are suppressed when replaying macros, but not when\n  recording them.\n- `t': errors are suppressed in both cases.\n- `nil': errors are never suppressed.",
-    "fn-docstring": "Returns non-nil if a motion error should be suppressed.\nWhether the motion error should be suppressed depends on the\nvariable `evil-kbd-macro-suppress-motion-error'.",
+    "fn-docstring": "Return non-nil if a motion error should be suppressed.\nWhether the motion error should be suppressed depends on the\nvariable `evil-kbd-macro-suppress-motion-error'.",
     "arglist": null,
+    "functionp": true,
+    "macrop": null,
+    "keymap-inv": null
+  },
+  "evil-insert-for-yank-at-col": {
+    "default": "nil",
+    "local": null,
+    "default-type": "symbol",
+    "var-docstring": null,
+    "fn-docstring": "Insert STRING at STARTCOL.",
+    "arglist": [
+      "startcol",
+      "_endcol",
+      "string",
+      "count"
+    ],
     "functionp": true,
     "macrop": null,
     "keymap-inv": null
@@ -17106,7 +17438,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Centers lines in the region between WIDTH columns.\nThe default for width is the value of `fill-column'.",
+    "fn-docstring": "Center lines in the region between WIDTH columns.\nThe default for width is the value of `fill-column'.",
     "arglist": [
       "beg",
       "end",
@@ -17225,7 +17557,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Parse STRING as a sequence of delimited arguments.\nReturns a list of NUM strings, or as many arguments as\nthe string contains. The first non-blank character is\ntaken to be the delimiter. If some arguments are missing\nfrom STRING, the resulting list is padded with nil values.\nTwo delimiters following directly after each other gives\nan empty string.",
+    "fn-docstring": "Parse STRING as a sequence of delimited arguments.\nReturn a list of NUM strings, or as many arguments as\nthe string contains. The first non-blank character is\ntaken to be the delimiter. If some arguments are missing\nfrom STRING, the resulting list is padded with nil values.\nTwo delimiters following directly after each other gives\nan empty string.",
     "arglist": [
       "string",
       "&optional",
@@ -17254,7 +17586,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Convert a regexp replacement TO to Lisp from START until \\e or \\E.\nReturns a pair (RESULT . REST). RESULT is a list suitable for\n`perform-replace' if necessary, the original string if not.\nREST is the unparsed remainder of TO.",
+    "fn-docstring": "Convert a regexp replacement TO to Lisp from START until \\e or \\E.\nReturn a pair (RESULT . REST). RESULT is a list suitable for\n`perform-replace' if necessary, the original string if not.\nREST is the unparsed remainder of TO.",
     "arglist": [
       "to",
       "&optional",
@@ -17373,7 +17705,7 @@
   },
   "evil-shift-width": {
     "default": 4,
-    "local": true,
+    "local": null,
     "default-type": "integer",
     "var-docstring": "\\<evil-normal-state-map>\nThe number of columns by which a line is shifted.\nThis applies to the shifting operators \\[evil-shift-right] and \\[evil-shift-left].",
     "fn-docstring": null,
@@ -17495,7 +17827,7 @@
     "local": null,
     "default-type": "symbol",
     "var-docstring": null,
-    "fn-docstring": "Signals 'end-of-buffer if `point' is at eob.\nThis function should be used in forward motions. If `point' is close\nto eob so that no further forward motion is possible the error\n'end-of-buffer is raised. This is the case if `point' is at\n`point-max' or if is one position before `point-max',\n`evil-move-beyond-eol' is nil and `point' is not at the end\nof a line. The latter is necessary because `point' cannot be\nmoved to `point-max' if `evil-move-beyond-eol' is nil and\nthe last line in the buffer is not empty.",
+    "fn-docstring": "Signal 'end-of-buffer if `point' is at eob.\nThis function should be used in forward motions. If `point' is close\nto eob so that no further forward motion is possible the error\n'end-of-buffer is raised. This is the case if `point' is at\n`point-max' or if is one position before `point-max',\n`evil-move-beyond-eol' is nil and `point' is not at the end\nof a line. The latter is necessary because `point' cannot be\nmoved to `point-max' if `evil-move-beyond-eol' is nil and\nthe last line in the buffer is not empty.",
     "arglist": null,
     "functionp": true,
     "macrop": null,
