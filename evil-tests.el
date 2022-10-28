@@ -2461,6 +2461,41 @@ Below some empty line")))
         ("a" "somemore" "0\C-d")
         "line1\nsometext somemore[]"))))
 
+(ert-deftest evil-test-operator-set-marks ()
+  "Test `[ and `] are set by operators."
+  :tags '(evil operator)
+  (ert-info ("Can go to end of last operated text")
+    (evil-test-buffer
+      "alpha br[a]vo charlie"
+      ("gUiw")
+      "alpha [B]RAVO charlie"
+      ("`]")
+      "alpha BRAV[O] charlie"))
+  (ert-info ("Can go to end of last operated text")
+    (evil-test-buffer
+      "alpha br[a]vo charlie"
+      ("g?iw$")
+      "alpha oenib charli[e]"
+      ("`[")
+      "alpha [o]enib charlie"))
+  (ert-info ("Marks are correct after deletion")
+    (evil-test-buffer
+      "alpha br[a]vo charlie"
+      ("daw^")
+      "[a]lpha charlie"
+      ("`]")
+      "alpha [c]harlie"
+      ("^`[")
+      "alpha [c]harlie")
+    (evil-test-buffer
+      "alpha br[a]vo charlie"
+      ("D^")
+      "[a]lpha br"
+      ("`]")
+      "alpha b[r]"
+      ("^`[")
+      "alpha b[r]")))
+
 ;;; Paste
 
 (ert-deftest evil-test-paste-before ()
