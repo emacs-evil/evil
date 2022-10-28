@@ -497,6 +497,7 @@ Optional keyword arguments are:
                    `(,(nth 0 args) ,(nth 1 args)
                      &optional ,@(nthcdr 2 args))
                  args))
+         (end-marker (make-symbol "end-marker"))
          arg doc key keys visual)
     ;; collect docstring
     (when (and (> (length body) 1)
@@ -557,10 +558,16 @@ Optional keyword arguments are:
              (t
               (goto-char orig))))))
        (unwind-protect
-           (let ((evil-inhibit-operator evil-inhibit-operator-value))
+           (let ((evil-inhibit-operator evil-inhibit-operator-value)
+                 (,end-marker (make-marker)))
+             (set-marker ,end-marker ,(cadr args))
              (unless (and evil-inhibit-operator
                           (called-interactively-p 'any))
-               ,@body))
+               ,@body)
+             (evil-set-marker ?\[ (or ,(car args) (point-max)))
+             (evil-set-marker ?\] (max (or ,(car args) (point-max))
+                                       (1- (or (marker-position ,end-marker) (point-max)))))
+             (set-marker ,end-marker nil))
          (setq evil-inhibit-operator-value nil)))))
 
 ;; this is used in the `interactive' specification of an operator command
