@@ -8458,6 +8458,13 @@ maybe we need one line more with some text\n")
       "[n]o 1\nno 2\nno 3\nyes 4\nno 5\nno 6\nno 7\n"
       (":g/yes/d" [return])
       "no 1\nno 2\nno 3\n[n]o 5\nno 6\nno 7\n"))
+  (ert-info ("global delete, specifying case sensitivty")
+    (evil-test-buffer
+      "[a]lpha bravo charlie\nalpha Bravo charlie\nalpha BRAVO charlie\nalpha delta charlie"
+      (":g/\\CBravo/d" [return])
+      "alpha bravo charlie\n[a]lpha BRAVO charlie\nalpha delta charlie"
+      (":g/\\cBravo/d" [return])
+      "alpha delta charlie"))
   (ert-info ("global substitute")
     (evil-test-buffer
       "[n]o 1\nno 2\nno 3\nyes 4\nno 5\nno 6\nno 7\n"

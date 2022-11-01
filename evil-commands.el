@@ -4086,17 +4086,64 @@ This is the same as :%s//~/&"
   (apply #'evil-ex-substitute (point-min) (point-max)
          (evil-ex-get-substitute-info (concat "//~/&"))))
 
+(defun evil-keep-lines (pattern beg end)
+  "Stripped down version of `keep-lines'.
+Delete lines between BEG & END which don't match PATTERN."
+  (goto-char (min beg end))
+  (setq end
+        (progn
+          (save-excursion
+            (goto-char (max beg end))
+            (unless (or (bolp) (eobp))
+              (forward-line 0))
+            (point-marker))))
+  (save-excursion
+    (or (bolp) (forward-line 1))
+    (let ((start (point)))
+      (while (< (point) end)
+        ;; Start is first char not preserved by previous match.
+        (if (not (re-search-forward pattern end 'move))
+            (delete-region start end)
+          (let ((end (save-excursion (goto-char (match-beginning 0))
+                                     (forward-line 0)
+                                     (point))))
+            ;; Now end is first char preserved by the new match.
+            (if (< start end)
+                (delete-region start end))))
+
+        (setq start (save-excursion (forward-line 1) (point)))
+        ;; If the match was empty, avoid matching again at same place.
+        (and (< (point) end)
+             (= (match-beginning 0) (match-end 0))
+             (forward-char 1)))))
+  (set-marker end nil)
+  nil)
+
+(defun evil-flush-lines (pattern beg end)
+  "Stripped down version of `flush-lines'.
+Delete lines between BEG & END which match PATTERN."
+  (goto-char (min beg end))
+  (setq end (copy-marker (max beg end)))
+  (save-excursion
+    (while (and (< (point) end)
+                (re-search-forward pattern end t))
+      (delete-region (save-excursion (goto-char (match-beginning 0))
+                                     (forward-line 0)
+                                     (point))
+                     (progn (forward-line 1) (point)))))
+  (set-marker end nil))
+
 (defun evil--ex-performant-global-delete (beg end pattern invert)
   "Use fast functions for fast line deletion.
 Delete lines between BEG & END which match PATTERN.
-Use `flush-lines' if INVERT is nil, or `keep-lines' if not."
+Use `evil-flush-lines' if INVERT is nil, or `evil-keep-lines' if not."
   (goto-char end)
   (re-search-backward pattern beg t)
   (let ((end-marker (make-marker)))
     (set-marker end-marker (point))
     (if invert
-        (keep-lines pattern beg end)
-      (flush-lines pattern beg end))
+        (evil-keep-lines pattern beg end)
+      (evil-flush-lines pattern beg end))
     (goto-char end-marker)
     (set-marker end-marker nil)))
 
