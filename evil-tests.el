@@ -3154,7 +3154,16 @@ word3[]"))
       ("2F " "gP")
       "alphaalpha[ ]bravo alphacharlie"
       ("l" "ve" "gp")
-      "alphaalpha alpha[ ]alphacharlie")))
+      "alphaalpha alpha[ ]alphacharlie"))
+  (ert-info ("gp linewise")
+    (evil-test-buffer
+      "[a]lpha line\nbravo line\ncharlie line\ndelta line\necho line"
+      ("2yy" "2j")
+      "alpha line\nbravo line\n[c]harlie line\ndelta line\necho line"
+      ("gp")
+      "alpha line\nbravo line\ncharlie line\nalpha line\nbravo line\n[d]elta line\necho line"
+      (".")
+      "alpha line\nbravo line\ncharlie line\nalpha line\nbravo line\ndelta line\nalpha line\nbravo line\necho line")))
 
 (ert-deftest evil-test-ex-put ()
   "evil-ex-put inserts text linewise, regardless of yank-handler"
