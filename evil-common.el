@@ -2687,7 +2687,8 @@ The tracked insertion is set to `evil-last-insertion'."
                   (mark t)
                   (point)))
       (evil-move-mark (1+ (mark t)))
-      (evil-exchange-point-and-mark)
+      (unless evil--cursor-after
+        (evil-exchange-point-and-mark))
       (back-to-indentation))
      (t
       (insert text)))))
@@ -2738,10 +2739,12 @@ The tracked insertion is set to `evil-last-insertion'."
                 (* count (length (car lines))))) ; number of colums
     (evil-set-marker ?\[ opoint)
     (evil-set-marker ?\] (1- epoint))
-    (goto-char opoint)
-    (when (and (eq this-command 'evil-paste-after)
-               (not (eolp)))
-      (forward-char))))
+    (if evil--cursor-after
+        (goto-char (1- epoint))
+      (goto-char opoint)
+      (when (and (eq this-command 'evil-paste-after)
+                 (not (eolp)))
+        (forward-char)))))
 
 (defun evil-delete-yanked-rectangle (nrows ncols)
   "Special function to delete the block yanked by a previous paste command.

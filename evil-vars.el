@@ -1683,6 +1683,9 @@ not deleted and not yanked to a specific register.")
 (defvar evil-paste-count nil
   "The count argument of the current paste command.")
 
+(defvar evil--cursor-after nil
+  "Internal flag for gp & gP.")
+
 (defvar evil-temporary-undo nil
   "When undo is disabled in current buffer.
 Certain commands depending on undo use this variable

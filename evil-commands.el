@@ -2206,6 +2206,11 @@ The return value is the yanked text."
             (when (and evil-move-cursor-back
                        (> (length text) 0))
               (backward-char))))
+        (when evil--cursor-after
+          (if (eq 'evil-yank-line-handler yank-handler)
+              (ignore-errors (evil-next-line-first-non-blank 1))
+            (evil-forward-char 1 nil t))
+          (setq evil--cursor-after nil))
         ;; no paste-pop after pasting from a register
         (when register
           (setq evil-last-paste nil))
@@ -2258,6 +2263,11 @@ The return value is the yanked text."
               (evil-set-marker ?\] (1- (point)))
               (when (evil-normal-state-p)
                 (evil-move-cursor-back)))))
+        (when evil--cursor-after
+          (if (eq 'evil-yank-line-handler yank-handler)
+              (ignore-errors (evil-next-line-first-non-blank 1))
+            (evil-forward-char 1 nil t))
+          (setq evil--cursor-after nil))
         (when register
           (setq evil-last-paste nil))
         (and (> (length text) 0) text)))))
@@ -2268,9 +2278,9 @@ The return value is the yanked text."
 leave the cursor just after the new text."
   :suppress-operator t
   (interactive "*P<x>")
-  (setq count (prefix-numeric-value count))
-  (evil-paste-before count register yank-handler)
-  (evil-forward-char 1 nil t))
+  (setq count (prefix-numeric-value count)
+        evil--cursor-after t)
+  (evil-paste-before count register yank-handler))
 
 (evil-define-command evil-paste-after-cursor-after
   (count &optional register yank-handler)
@@ -2278,9 +2288,9 @@ leave the cursor just after the new text."
 leave the cursor just after the new text."
   :suppress-operator t
   (interactive "*P<x>")
-  (setq count (prefix-numeric-value count))
-  (evil-paste-after count register yank-handler)
-  (evil-forward-char 1 nil t))
+  (setq count (prefix-numeric-value count)
+        evil--cursor-after t)
+  (evil-paste-after count register yank-handler))
 
 (defun evil-insert-for-yank-at-col (startcol _endcol string count)
   "Insert STRING at STARTCOL."
