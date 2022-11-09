@@ -4183,7 +4183,7 @@ Use `evil-flush-lines' if INVERT is nil, or `evil-keep-lines' if not."
       (when (and pattern command)
         (when evil-ex-search-vim-style-regexp
           (setq pattern (evil-transform-vim-style-regexp pattern)))
-        (if ex-delete
+        (if (and ex-delete (not (nth 3 command-form)))
             (evil--ex-performant-global-delete beg end pattern invert)
           (setq isearch-string pattern)
           (isearch-update-ring pattern t)
