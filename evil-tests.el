@@ -5894,6 +5894,19 @@ Line 2"))
      (error user-error "`i")
      "One line is enough if we use backtick to [n]avigate")))
 
+(ert-deftest evil-automatic-marks-test ()
+  "Test that certain commands automatically set mark(er)s"
+  :tags '(evil)
+  (ert-info ("Visual selection sets angle-bracket marks")
+    (evil-test-buffer
+      "alpha br[a]vo charlie"
+      ("viw" [escape] "$")
+      "alpha bravo charli[e]"
+      ("`>")
+      "alpha brav[o] charlie"
+      ("`<")
+      "alpha [b]ravo charlie")))
+
 (ert-deftest evil-test-flyspell-motions ()
   "Test flyspell motions"
   :tags '(evil motion)
