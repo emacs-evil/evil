@@ -4661,7 +4661,7 @@ If ARG is empty, maximize the current window height."
         (window-state-put (car slist) (car wlist))
         (setq wlist (cdr wlist)
               slist (cdr slist)))
-      (select-window (car (last (window-list)))))))
+      (select-window (cadr (last (window-list)))))))
 
 (evil-define-command evil-window-rotate-downwards ()
   "Rotate the windows according to the current cyclic ordering."
@@ -4674,7 +4674,7 @@ If ARG is empty, maximize the current window height."
         (window-state-put (car slist) (car wlist))
         (setq wlist (cdr wlist)
               slist (cdr slist)))
-      (select-window (cadr (window-list))))))
+      (select-window (car (window-list))))))
 
 (evil-define-command evil-window-exchange (count)
   "Without COUNT: exchange current window with next one.
