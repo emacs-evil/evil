@@ -754,7 +754,6 @@ This is a list (BEG END TYPE PROPERTIES...), where BEG is the
 beginning of the selection, END is the end of the selection,
 TYPE is the selection's type, and PROPERTIES is a property list
 of miscellaneous selection attributes."
-  (evil-visual-refresh)
   (apply #'evil-range
          evil-visual-beginning evil-visual-end
          (evil-visual-type)
