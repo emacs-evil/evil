@@ -1630,7 +1630,12 @@ New Tex[t]
     :state visual
     "<    Line with too much indentation.>"
     ("=")
-    "Line with too much indentation."))
+    "Line with too much indentation.")
+  (ert-info ("Can repeat evil-indent without errors")
+    (evil-test-buffer
+     "[ ]x\n x"
+     ("==j.")
+     "x\nx")))
 
 (ert-deftest evil-test-keypress-parser ()
   "Test `evil-keypress-parser'"

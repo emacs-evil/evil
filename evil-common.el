@@ -971,13 +971,9 @@ See also `evil-save-goal-column'."
 
 (defun evil--stick-to-eol-p ()
   "Called by vertical movement commands to help determine cursor position."
-  (let ((goal-col (or goal-column
-                      (if (consp temporary-goal-column)
-                          (car temporary-goal-column)
-                        temporary-goal-column))))
-    (and evil-track-eol
-         (= most-positive-fixnum goal-col)
-         (eq last-command 'next-line))))
+  (and evil-track-eol
+       (eq (or goal-column temporary-goal-column) most-positive-fixnum)
+       (memq last-command '(next-line previous-line))))
 
 (defun evil-eolp ()
   "Like `eolp' but accounts for `evil-move-beyond-eol' being nil."
@@ -991,32 +987,28 @@ See also `evil-save-goal-column'."
   "Execute BODY so that column after execution is correct.
 If `evil-start-of-line' is nil, treat BODY as if it were a `next-line' command.
 This mostly copies the approach of Emacs' `line-move-1', but is modified
-so it is more compatible with evil's notions of eol & tracking."
+so it is more compatible with Evil's notions of eol & tracking."
   (declare (indent defun)
            (debug t))
-  (let ((normalize-temporary-goal-column
-         `(if (consp temporary-goal-column)
-              ;; Ensure a negative value is never set for `temporary-goal-column'
-              ;; as it may have a negative component when both `whitespace-mode'
-              ;; and `display-line-numbers-mode' are enabled.
-              ;; See #1297
-              (setq temporary-goal-column (max 0 (+ (car temporary-goal-column)
-                                                    (cdr temporary-goal-column)))))))
-    `(progn
-       (unless evil-start-of-line (setq this-command 'next-line))
-       ,normalize-temporary-goal-column
-       (if (not (memq last-command '(next-line previous-line)))
-           (setq temporary-goal-column
-                 (if (and evil-track-eol
-                          (evil-eolp)
-                          (memq real-last-command '(move-end-of-line evil-end-of-line)))
-                     most-positive-fixnum
-                   (current-column))))
-       ,@body
-       (if evil-start-of-line
-           (evil-first-non-blank)
-         ,normalize-temporary-goal-column
-         (line-move-to-column (truncate (or goal-column temporary-goal-column)))))))
+  `(progn
+     (unless evil-start-of-line
+       (setq this-command 'next-line
+             temporary-goal-column
+             (cond
+              ((memq last-command '(next-line previous-line))
+               (if (consp temporary-goal-column)
+                   ;; Guard against a negative value as `temporary-goal-column'
+                   ;; may have a negative component when both `whitespace-mode'
+                   ;; and `display-line-numbers-mode' are enabled (#1297).
+                   (max 0 (+ (truncate (car temporary-goal-column))
+                             (cdr temporary-goal-column)))
+                 temporary-goal-column))
+              ((and track-eol (eolp) (not (bolp))) most-positive-fixnum)
+              (t (current-column)))))
+     ,@body
+     (if evil-start-of-line
+         (evil-first-non-blank)
+       (line-move-to-column (or goal-column temporary-goal-column)))))
 
 (defun evil-narrow (beg end)
   "Restrict the buffer to BEG and END.
@@ -1400,7 +1392,7 @@ If STATE is given it used a parsing state at point."
 ;; the line (we never want point to leave its column). The code here
 ;; comes from simple.el, and I hope it will work in future.
 (defun evil-line-move (count &optional noerror)
-  "A wrapper for line motions that conserves the column.
+  "Like `line-move' but conserves the column.
 Signals an error at buffer boundaries unless NOERROR is non-nil."
   (setq this-command (if (< count 0) #'previous-line #'next-line))
   (let ((last-command
