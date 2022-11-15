@@ -7163,6 +7163,15 @@ test hello <a href=\"/deed.zh\">Creative Commons</a>
       (should (= evil-visual-beginning 4))
       (should (= evil-visual-end 4)))))
 
+(ert-deftest evil-test-non-transient-visual-selection ()
+  "Ensure visual charwise selection can be made when transient mark mode is nil."
+  :tags '(evil visual)
+  (evil-test-buffer
+    "Alpha [b]ravo charlie"
+    (setq-local transient-mark-mode nil)
+    ("ve")
+    "Alpha <brav[o]> charlie"))
+
 (ert-deftest evil-test-visual-exchange ()
   "Test `exchange-point-and-mark' in Visual character selection"
   :tags '(evil visual)

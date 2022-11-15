@@ -360,7 +360,8 @@ otherwise exit Visual state."
             deactivate-mark
             (and (not evil-visual-region-expanded)
                  (not (region-active-p))
-                 (not (eq evil-visual-selection 'block))))
+                 (not (eq evil-visual-selection 'block))
+                 transient-mark-mode))
         (progn
           (evil-exit-visual-state)
           (evil-adjust-cursor))
