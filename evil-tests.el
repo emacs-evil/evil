@@ -7274,7 +7274,14 @@ Tiny ln"
      "Short 
 A much
 A me[d]
-Tiny ")))
+Tiny "))
+  (ert-info ("Visual block does not extend up to curswant unless tracking EOL")
+    (evil-test-buffer
+     "[a]bc
+"
+     ("\C-vfcjd")
+     "[b]c
+")))
 
 (ert-deftest evil-test-visual-restore ()
   "Test restoring a previous selection"
