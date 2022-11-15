@@ -2061,8 +2061,7 @@ See also `evil-shift-left'."
       (move-to-column (max 0 (+ col-for-insert first-shift))))
      (evil-start-of-line (evil-first-non-blank))
      ((evil--stick-to-eol-p) (move-end-of-line 1))
-     (t (move-to-column (or goal-column evil-operator-start-col col-for-insert))))
-    (setq temporary-goal-column 0)))
+     (t (move-to-column (or goal-column evil-operator-start-col col-for-insert))))))
 
 (defun evil-delete-indentation ()
   "Delete all indentation on current line."
@@ -2689,8 +2688,7 @@ the lines."
        ((or (eq (evil-visual-type) 'line)
             (and (eq (evil-visual-type) 'block)
                  (memq last-command '(next-line previous-line))
-                 (numberp temporary-goal-column)
-                 (= temporary-goal-column most-positive-fixnum)))
+                 (eq temporary-goal-column most-positive-fixnum)))
         (evil-visual-rotate 'upper-left)
         (evil-append-line count vcount))
        ((eq (evil-visual-type) 'block)
