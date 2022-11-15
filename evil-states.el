@@ -646,10 +646,6 @@ Reuse overlays where possible to prevent flicker."
   (let* ((point (point))
          (overlays (or overlays 'evil-visual-block-overlays))
          (old (symbol-value overlays))
-         (eol-col (and (memq this-command '(next-line previous-line))
-                       (numberp temporary-goal-column)
-                       (1+ (min (round temporary-goal-column)
-                                (1- most-positive-fixnum)))))
          beg-col end-col new nlines overlay window-beg window-end)
     (save-excursion
       ;; calculate the rectangular region represented by BEG and END,
@@ -660,16 +656,13 @@ Reuse overlays where possible to prevent flicker."
       (when (>= beg-col end-col)
         (if (= beg-col end-col)
             (setq end-col (1+ end-col))
-          (evil-sort beg-col end-col))
-        (setq beg (save-excursion
-                    (goto-char beg)
-                    (evil-move-to-column beg-col))
-              end (save-excursion
-                    (goto-char end)
-                    (evil-move-to-column end-col 1))))
-      ;; update end column with eol-col (extension to eol).
-      (when (and eol-col (> eol-col end-col))
-        (setq end-col eol-col))
+          (evil-swap beg-col end-col))
+        (setq beg (progn (goto-char beg) (evil-move-to-column beg-col))
+              end (progn (goto-char end) (evil-move-to-column end-col 1))))
+      ;; maybe extend end column to EOL
+      (and (memq this-command '(next-line previous-line))
+           (eq temporary-goal-column most-positive-fixnum)
+           (setq end-col most-positive-fixnum))
       ;; force a redisplay so we can do reliable window
       ;; BEG/END calculations
       (sit-for 0)

@@ -2464,33 +2464,24 @@ take at least two arguments, the beginning and end of each
 line.  If PASS-COLUMNS is non-nil, these values are the columns,
 otherwise they are buffer positions.  Extra arguments to FUNC may
 be passed via ARGS."
-  (let ((eol-col (and (memq last-command '(next-line previous-line))
-                      (numberp temporary-goal-column)
-                      temporary-goal-column))
-        startcol startpt endcol endpt)
+  (let (startcol startpt endcol endpt)
     (save-excursion
       (goto-char beg)
-      (setq startcol (current-column))
-      (beginning-of-line)
-      (setq startpt (point))
+      (setq startcol (current-column)
+            startpt (line-beginning-position))
       (goto-char end)
       (setq endcol (current-column))
       (forward-line 1)
       (setq endpt (point-marker))
       ;; ensure the start column is the left one.
       (evil-sort startcol endcol)
-      ;; maybe find maximal column
-      (when eol-col
-        (setq eol-col 0)
+      ;; maybe extend up to EOL
+      (when (and (memq last-command '(next-line previous-line))
+                 (eq temporary-goal-column most-positive-fixnum))
         (goto-char startpt)
         (while (< (point) endpt)
-          (setq eol-col (max eol-col
-                             (evil-column (line-end-position))))
-          (forward-line 1))
-        (setq endcol (max endcol
-                          (min eol-col
-                               (1+ (min (1- most-positive-fixnum)
-                                        (truncate temporary-goal-column)))))))
+          (setq endcol (max endcol (evil-column (line-end-position))))
+          (forward-line 1)))
       ;; start looping over lines
       (goto-char startpt)
       (while (< (point) endpt)
