@@ -3153,7 +3153,7 @@ linewise, otherwise it is character wise."
 
 (defun evil-select-inner-restricted-object (thing beg end type &optional count line)
   "Return an inner text object range of COUNT objects.
-Selection is restricted to the current line.
+Selection is restricted to the current line, unless it is empty.
 If COUNT is positive, return objects following point; if COUNT is
 negative, return objects preceding point.  If one is unspecified,
 the other is used with a negative argument.  THING is a symbol
@@ -3161,8 +3161,10 @@ understood by `thing-at-point'.  BEG, END and TYPE specify the
 current selection.  If LINE is non-nil, the text object should be
 linewise, otherwise it is character wise."
   (save-restriction
-    (narrow-to-region (save-excursion (beginning-of-line) (point))
-                      (save-excursion (end-of-line) (point)))
+    (let ((start (save-excursion (beginning-of-line) (point)))
+          (end (save-excursion (end-of-line) (point))))
+      (when (/= start end)
+        (narrow-to-region start end)))
     (evil-select-inner-object thing beg end type count line)))
 
 (defun evil-select-an-object (thing beg end type count &optional line)
@@ -3246,7 +3248,7 @@ linewise, otherwise it is character wise."
 
 (defun evil-select-a-restricted-object (thing beg end type &optional count line)
   "Return an outer text object range of COUNT objects.
-Selection is restricted to the current line.
+Selection is restricted to the current line, unless it is empty.
 If COUNT is positive, return objects following point; if COUNT is
 negative, return objects preceding point.  If one is unspecified,
 the other is used with a negative argument.  THING is a symbol
@@ -3254,8 +3256,10 @@ understood by thing-at-point.  BEG, END and TYPE specify the
 current selection.  If LINE is non-nil, the text object should be
 linewise, otherwise it is character wise."
   (save-restriction
-    (narrow-to-region (save-excursion (beginning-of-line) (point))
-                      (save-excursion (end-of-line) (point)))
+    (let ((start (save-excursion (beginning-of-line) (point)))
+          (end (save-excursion (end-of-line) (point))))
+      (when (/= start end)
+        (narrow-to-region start end)))
     (evil-select-an-object thing beg end type count line)))
 
 (defun evil--get-block-range (op cl selection-type)
