@@ -104,10 +104,8 @@ and will be removed in a future version."
   :contract (lambda (beg end)
               (evil-range beg (max beg (1- end))))
   :normalize (lambda (beg end)
-               (goto-char end)
-               (when (eq (char-after) ?\n)
-                 (setq end (max beg (1- end))))
-               (evil-range beg end))
+               (evil-range beg (if (eq (char-after end) ?\n)
+                                   (max beg (1- end)) end)))
   :string (lambda (beg end)
             (let ((width (- end beg)))
               (format "%s character%s" width
