@@ -281,7 +281,7 @@ the selection is enabled.
   ;; refresh the :corner property
   (setq evil-visual-properties
         (plist-put evil-visual-properties :corner
-                   (evil-visual-block-corner 'upper-left))))
+                   (evil-visual-block-corner))))
 
 (evil-define-state visual
   "Visual state."
@@ -812,37 +812,21 @@ the horizontal or vertical component of CORNER is used.
 CORNER defaults to `upper-left'."
   (let* ((point (or point (point)))
          (mark (or mark (mark t)))
-         (corner (symbol-name
-                  (or corner
-                      (and (overlayp evil-visual-overlay)
-                           (overlay-get evil-visual-overlay
-                                        :corner))
-                      'upper-left)))
+         (corner (or corner
+                     (when (overlayp evil-visual-overlay)
+                       (overlay-get evil-visual-overlay :corner))
+                     'upper-left))
          (point-col (evil-column point))
          (mark-col (evil-column mark))
-         horizontal vertical)
-    (cond
-     ((= point-col mark-col)
-      (setq horizontal
-            (or (and (string-match "left\\|right" corner)
-                     (match-string 0 corner))
-                "left")))
-     ((< point-col mark-col)
-      (setq horizontal "left"))
-     ((> point-col mark-col)
-      (setq horizontal "right")))
-    (cond
-     ((= (line-number-at-pos point)
-         (line-number-at-pos mark))
-      (setq vertical
-            (or (and (string-match "upper\\|lower" corner)
-                     (match-string 0 corner))
-                "upper")))
-     ((< point mark)
-      (setq vertical "upper"))
-     ((> point mark)
-      (setq vertical "lower")))
-    (intern (format "%s-%s" vertical horizontal))))
+         (upperp (if (= (line-number-at-pos point) (line-number-at-pos mark))
+                     (memq corner '(upper-left upper-right))
+                   (< point mark)))
+         (leftp (if (= point-col mark-col)
+                    (memq corner '(upper-left lower-left))
+                  (< point-col mark-col))))
+    (if upperp
+        (if leftp 'upper-left 'upper-right)
+      (if leftp 'lower-left 'lower-right))))
 
 ;;; Operator-Pending state
 
