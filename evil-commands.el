@@ -492,12 +492,11 @@ and jump to the corresponding one."
    (count
     (evil-ensure-column
       (goto-char
-       (evil-normalize-position
-        (let ((size (- (point-max) (point-min))))
-          (+ (point-min)
-             (if (> size 80000)
-                 (* count (/ size 100))
-               (/ (* count size) 100)))))))
+       (let ((size (- (point-max) (point-min))))
+         (+ (point-min)
+            (if (> size 80000)
+                (* count (/ size 100))
+              (/ (* count size) 100))))))
     (setq evil-this-type 'line))
    ((and (evil-looking-at-start-comment t)
          (let ((pnt (point)))
@@ -4252,9 +4251,7 @@ range. The given argument is passed straight to
 Default position is the beginning of the buffer."
   :jump t
   (interactive "<N>")
-  (let ((position (evil-normalize-position
-                   (or position (point-min)))))
-    (goto-char position)))
+  (goto-char (or position (point-min))))
 
 (evil-define-operator evil-ex-line-number (beg end)
   "Print the last line number."

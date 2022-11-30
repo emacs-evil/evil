@@ -1014,9 +1014,7 @@ so it is more compatible with Evil's notions of eol & tracking."
   "Restrict the buffer to BEG and END.
 BEG or END may be nil, specifying a one-sided restriction including
 `point-min' or `point-max'. See also `evil-with-restriction.'"
-  (setq beg (or (evil-normalize-position beg) (point-min)))
-  (setq end (or (evil-normalize-position end) (point-max)))
-  (narrow-to-region beg end))
+  (narrow-to-region (or beg (point-min)) (or end (point-max))))
 
 (defmacro evil-with-restriction (beg end &rest body)
   "Execute BODY with the buffer narrowed to BEG and END.
@@ -2315,8 +2313,6 @@ variable `evil-kbd-macro-suppress-motion-error'."
 (defun evil-move-mark (pos)
   "Set buffer's mark to POS.
 If POS is nil, delete the mark."
-  (when pos
-    (setq pos (evil-normalize-position pos)))
   (set-marker (mark-marker) pos))
 
 (defun evil-save-transient-mark-mode ()

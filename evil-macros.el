@@ -707,9 +707,7 @@ be transformations on buffer positions, like `:expand' and `:contract'.
            `(defun ,name (beg end &rest properties)
               ,(format "Return size of %s from BEG to END \
 with PROPERTIES.\n\n%s%s" type string doc)
-              (let ((beg (evil-normalize-position beg))
-                    (end (evil-normalize-position end))
-                    (type ',type)
+              (let ((type ',type)
                     plist range)
                 (when (and beg end)
                   (save-excursion
@@ -731,9 +729,7 @@ with PROPERTIES.\n\n%s%s" type string doc)
            `(defun ,name (beg end &rest properties)
               ,(format "Perform %s transformation on %s from BEG to END \
 with PROPERTIES.\n\n%s%s" sym type string doc)
-              (let ((beg (evil-normalize-position beg))
-                    (end (evil-normalize-position end))
-                    (type ',type)
+              (let ((type ',type)
                     plist range)
                 (when (and beg end)
                   (save-excursion
