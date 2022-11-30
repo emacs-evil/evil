@@ -500,14 +500,12 @@ mark and point, use `evil-visual-select' instead."
 If TYPE is given, also set the Visual type.
 If MESSAGE is given, display it in the echo area."
   (interactive)
-  (let* ((point (evil-normalize-position
-                 (or point (point))))
-         (mark (evil-normalize-position
-                (or mark
-                    (when (or (evil-visual-state-p)
-                              (region-active-p))
-                      (mark t))
-                    point))))
+  (let* ((point (or point (point)))
+         (mark (or mark
+                   (when (or (evil-visual-state-p)
+                             (region-active-p))
+                     (mark t))
+                   point)))
     (unless (evil-visual-state-p)
       (evil-visual-state))
     (evil-active-region 1)
