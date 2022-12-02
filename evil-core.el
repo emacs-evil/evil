@@ -372,7 +372,7 @@ then this function does nothing."
     (when (get-buffer (ad-get-arg 1))
       (with-current-buffer (ad-get-arg 1)
         (unless evil-local-mode
-          (evil-local-mode 1))))))
+          (save-match-data (evil-local-mode 1)))))))
 
 ;; Refresh cursor color.
 ;; Cursor color can only be set for each frame but not for each buffer.
