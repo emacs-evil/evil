@@ -308,6 +308,7 @@ WHERE is either `before' or `after', and WHICH is a symbol in
 `mode-line-format'.  The tag is then placed before or after that
 symbol, respectively."
   :type '(radio :value 'before
+                (const :tag "No tag" nil)
                 (const before)
                 (const after)
                 (cons :tag "Next to symbol"
