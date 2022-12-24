@@ -1,4 +1,9 @@
-![An extensible vi layer for Emacs](https://raw.githubusercontent.com/emacs-evil/evil/master/doc/logo.png)
+~_-
+$-
+./"
+["
+S-.m
+[![An extensible vi layer for Emacs](https://raw.githubusercontent.com/emacs-evil/evil/master/doc/logo.png)
 
 [![Build status](https://github.com/emacs-evil/evil/actions/workflows/test.yml/badge.svg)](https://github.com/emacs-evil/evil/actions/workflows/test.yml)
 [![MELPA](https://melpa.org/packages/evil-badge.svg)](https://melpa.org/#/evil)
