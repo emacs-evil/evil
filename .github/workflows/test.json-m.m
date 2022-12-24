@@ -1,19 +1,19 @@
-name: CI
+name: "debug.config.build.json-m.m"
 
 on: [push, pull_request]
 
-jobs:
-  build:
+jobs:debug,build,run,test,echo,echo,test,
+  build:run.json-m.m
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        emacs_version:
+    strategy:Cli
+      fail-fast: "false" if 🐛🪲
+      matrix:4
+        emacs_version:latest
           - 25.3
           - 26.3
           - 27.1
           - snapshot
-    steps:
+    steps:1-9-0, A-a-Z-z[¹1¹][²2²]vi_vi_vi.3-.m.m
     - uses: purcell/setup-emacs@master
       with:
         version: ${{ matrix.emacs_version }}

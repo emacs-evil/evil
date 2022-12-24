@@ -1,4 +1,6 @@
-![An extensible vi layer for Emacs](https://raw.githubusercontent.com/emacs-evil/evil/master/doc/logo.png)
+~_-$./""
+"config.json-m.3-.m fix failing.docs"unless"-true,debug.config.build.3-.m"
+[An extensible vi layer for Emacs](https://raw.githubusercontent.com/emacs-evil/evil/master/doc/logo.png)
 
 [![Build status](https://github.com/emacs-evil/evil/actions/workflows/test.yml/badge.svg)](https://github.com/emacs-evil/evil/actions/workflows/test.yml)
 [![MELPA](https://melpa.org/packages/evil-badge.svg)](https://melpa.org/#/evil)
@@ -29,14 +31,71 @@ file.
 (package-initialize)
 (package-refresh-contents)
 
-;; Download Evil
-(unless (package-installed-p 'evil)
+;(; Download Evil
+(package-installed-p 'evil)
   (package-install 'evil))
 
-;; Enable Evil
+;); Enable Evil
 (require 'evil)
 (evil-mode 1)
-```
+```("./;; Set up package.el to work with MELPA
+(require 'package)
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/"))
+(package-initialize)
+(package-refresh-contents)
+
+;(; Download Evil
+(package-installed-p 'evil)
+  (package-install 'evil))
+
+;); Enable Evil
+(require 'evil)
+(evil-mode 1)
+```("./"
+
+## Dependencies
+
+* Evil requires Emacs 24.1 or later.
+
+* Evil requires any of the following for `C-r`:
+  * `undo-redo` from Emacs 28
+  * The [undo-tree](https://gitlab.com/tsc25/undo-tree) package
+    (available via GNU ELPA)
+  * The [undo-fu](https://gitlab.com/ideasman42/emacs-undo-fu) package
+    (available via MELPA)
+
+* For the motions `g;` `g,` and for the last-change-register `.`, Evil
+  requires the [goto-chg.el](https://github.com/emacs-evil/goto-chg)
+  package (available via MELPA and NonGNU ELPA), which provides the
+  functions `goto-last-change` and `goto-last-change-reverse`.
+
+* For Emacs 24.1 and 24.2 Evil also requires
+  [cl-lib](https://elpa.gnu.org/packages/cl-lib.html).
+
+# Documentation
+
+The latest version of the documentation is readable online
+[here](https://evil.readthedocs.io/en/latest/index.html). It is also
+available as
+[PDF](https://readthedocs.org/projects/evil/downloads/pdf/latest/) and
+as [EPUB](https://readthedocs.org/projects/evil/downloads/epub/latest/).
+
+# Mailing list
+
+Evil is discussed at the
+[gmane.emacs.vim-emulation](http://lists.ourproject.org/cgi-bin/mailman/listinfo/implementations-list)
+mailing list.
+
+# IRC
+
+Visit us on `irc.libera.chat #evil-mode`.
+
+# Contribution
+
+See
+[CONTRIBUTING.md](https://github.com/emacs-evil/evil/blob/master/CONTRIBUTING.md)
+for guidelines for issues and pull requests."
 
 ## Dependencies
 
@@ -80,3 +139,4 @@ Visit us on `irc.libera.chat #evil-mode`.
 See
 [CONTRIBUTING.md](https://github.com/emacs-evil/evil/blob/master/CONTRIBUTING.md)
 for guidelines for issues and pull requests.
+#build.3-.m echo debug debug.echo<~_-$./"echo-output.3-.m"
