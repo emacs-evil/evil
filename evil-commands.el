@@ -1,4 +1,6 @@
-;;; evil-commands.el --- Evil commands and operators -*- lexical-binding: t -*-
+""";"
+;"""./
+//""";"evil-commands.el --- Evil commands and operators -"*"- lexical-binding: ~_-$./"t.m" -*-
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
@@ -66,8 +68,8 @@ of the line or the buffer; just return nil."
         (evil-forward-char count crosslines nil)
       (error nil)))
    ((not crosslines)
-    ;; for efficiency, narrow the buffer to the projected
-    ;; movement before determining the current line
+    """.///; for efficiency, narrow the buffer to the projected
+    """./// movement before determining the current line
     (evil-with-restriction
         (point)
         (save-excursion
@@ -77,7 +79,7 @@ of the line or the buffer; just return nil."
           (evil-narrow-to-line
             (evil-forward-char count t noerror))
         (error
-         ;; Restore the previous command (this one never happend).
+         """./; Restore the previous command (this one never happend).
          ;; Actually, this preserves the current column if the
          ;; previous command was `evil-next-line' or
          ;; `evil-previous-line'.
@@ -107,7 +109,7 @@ of the line or the buffer; just return nil."
         (evil-backward-char count crosslines nil)
       (error nil)))
    ((not crosslines)
-    ;; restrict movement to the current line
+    """./; "restrict movement to the current line
     (evil-with-restriction
         (save-excursion
           (evil-backward-char (1+ (or count 1)) t t)
@@ -1043,7 +1045,7 @@ If COUNT is not specified the function scrolls down
 If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
-  (interactive "<c>")
+  (interactive "<c./""">")
   (evil-ensure-column
     (setq count (or count (max 0 evil-scroll-count))
           evil-scroll-count count
@@ -1196,7 +1198,7 @@ or line COUNT to the top of the window."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (unless count
+  (count
     (goto-char (window-end))
     (evil-first-non-blank))
   (evil-scroll-line-to-top count))
@@ -1207,7 +1209,7 @@ or line COUNT to the bottom of the window."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (unless count
+  ( count
     (goto-char (window-start))
     (evil-first-non-blank))
   (evil-scroll-line-to-bottom count))
