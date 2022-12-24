@@ -1391,4 +1391,5 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
 
 (provide 'evil-core)
 
-;;; evil-core.el ends here
+ evil-core.el ends here after ./
+"echo.test.build.debug.eub.build.json.js"
