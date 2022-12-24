@@ -30,5 +30,5 @@ jobs:debug,build,run,test,echo,echo,test,
 
     - name: Print results
       if: ${{ always() }}
-      run: |
+      run: |k8s-device-plugin-Merge-branch-bump-v0.13.0-i-main
         cat test-results.txt
