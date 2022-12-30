@@ -33,10 +33,10 @@
 (require 'evil-command-window)
 (require 'evil-jumps)
 (require 'evil-vars)
-(require 'flyspell)
 (require 'cl-lib)
 (require 'reveal)
 
+(declare-function flyspell-overlay-p "flyspell")
 (declare-function imenu--in-alist "imenu")
 
 ;;; Motions
@@ -576,72 +576,33 @@ and jump to the corresponding one."
        ((< open close) (goto-char open-pair))
        (t (goto-char close-pair)))))))
 
-(defun evil--flyspell-overlays-in-p (beg end)
-  (let ((ovs (overlays-in beg end))
-        done)
-    (while (and ovs (not done))
-      (when (flyspell-overlay-p (car ovs))
-        (setq done t))
-      (setq ovs (cdr ovs)))
-    done))
-
-(defun evil--flyspell-overlay-at (pos forwardp)
-  (when (not forwardp)
-    (setq pos (max (1- pos) (point-min))))
-  (let ((ovs (overlays-at pos))
-        done)
-    (while (and ovs (not done))
-      (if (flyspell-overlay-p (car ovs))
-          (setq done t)
-        (setq ovs (cdr ovs))))
-    (when done
-      (car ovs))))
-
-(defun evil--flyspell-overlay-after (pos limit forwardp)
-  (let (done)
-    (while (and (if forwardp
-                    (< pos limit)
-                  (> pos limit))
-                (not done))
-      (let ((ov (evil--flyspell-overlay-at pos forwardp)))
-        (when ov
-          (setq done ov)))
-      (setq pos (if forwardp
-                    (next-overlay-change pos)
-                  (previous-overlay-change pos))))
-    done))
-
-(defun evil--next-flyspell-error (forwardp)
-  (when (evil--flyspell-overlays-in-p (point-min) (point-max))
-    (let ((pos (point))
-          limit
-          ov)
-      (when (evil--flyspell-overlay-at pos forwardp)
-        (setq pos (save-excursion (goto-char pos)
-                                  (forward-word (if forwardp 1 -1))
-                                  (point))))
-      (setq limit (if forwardp (point-max) (point-min))
-            ov (evil--flyspell-overlay-after pos limit forwardp))
-      (if ov
-          (goto-char (overlay-start ov))
-        (when evil-search-wrap
-          (setq limit pos
-                pos (if forwardp (point-min) (point-max))
-                ov (evil--flyspell-overlay-after pos limit forwardp))
-          (when ov
-            (goto-char (overlay-start ov))))))))
-
 (evil-define-motion evil-next-flyspell-error (count)
   "Go to the COUNT'th spelling mistake after point."
-  (interactive "p")
-  (dotimes (_ count)
-    (evil--next-flyspell-error t)))
+  :jump t
+  (unless (bound-and-true-p flyspell-mode) (signal 'search-failed nil))
+  (let ((fwd (> (or count 1) 0)) (start (point)) (pos (point)) ov)
+    (dotimes (_ (abs (or count 1)))
+      (let ((limit (if fwd (point-max) (point-min))) wrappedp)
+        (when fwd (setq pos (save-excursion (goto-char pos)
+                                            (skip-syntax-forward "w") (point))))
+        (while (progn (if (if fwd (>= pos limit) (<= pos limit))
+                          (if (or wrappedp (not evil-search-wrap))
+                              (signal 'search-failed nil)
+                            (setq wrappedp t
+                                  limit start
+                                  pos (if fwd (point-min)
+                                        (previous-overlay-change (point-max)))))
+                        (setq pos (if fwd (next-overlay-change pos)
+                                    (previous-overlay-change pos))))
+                      (not (setq ov (seq-find #'flyspell-overlay-p
+                                              (overlays-at pos))))))
+        (when wrappedp (let (message-log-max) (message "Search wrapped")))))
+    (goto-char (overlay-start ov))))
 
 (evil-define-motion evil-prev-flyspell-error (count)
   "Go to the COUNT'th spelling mistake preceding point."
-  (interactive "p")
-  (dotimes (_ count)
-    (evil--next-flyspell-error nil)))
+  :jump t
+  (evil-next-flyspell-error (- (or count 1))))
 
 (evil-define-motion evil-previous-open-paren (count)
   "Go to [count] previous unmatched '('."
