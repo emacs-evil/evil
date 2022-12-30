@@ -68,6 +68,7 @@
 (require 'ert)
 (require 'evil)
 (require 'evil-test-helpers)
+(require 'ispell)
 
 ;;; Code:
 
@@ -5915,7 +5916,7 @@ Line 2"))
 (ert-deftest evil-test-flyspell-motions ()
   "Test flyspell motions"
   :tags '(evil motion)
-  (skip-unless (executable-find "aspell"))
+  (skip-unless (condition-case _ (progn (ispell-check-version) t) (error)))
   (ert-info ("Simple")
     (evil-test-buffer
       "[I] cannt tpye for lyfe"
@@ -5968,8 +5969,7 @@ Line 2"))
         "I cannt [t]pye for lyfe"
         ("]s")
         "I cannt tpye for [l]yfe"
-        ("]s")
-        "I cannt tpye for [l]yfe")))
+        (error search-failed "]s"))))
   (ert-info ("One mistake")
     (evil-test-buffer
       "[I]'m almst there..."
@@ -5984,10 +5984,8 @@ Line 2"))
       "[I]'ve learned to type!"
       (flyspell-mode)
       (flyspell-buffer)
-      ("]s")
-      "[I]'ve learned to type!"
-      ("[s")
-      "[I]'ve learned to type!")))
+      (error search-failed "]s")
+      (error search-failed "[s"))))
 
 ;;; Text objects
 
