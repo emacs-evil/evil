@@ -105,38 +105,26 @@
 
 (defadvice show-paren-function (around evil disable)
   "Match parentheses in Normal state."
-  (if (if (memq 'not evil-highlight-closing-paren-at-point-states)
-          (memq evil-state evil-highlight-closing-paren-at-point-states)
-        (not (memq evil-state evil-highlight-closing-paren-at-point-states)))
+  (if (eq (not (memq 'not evil-highlight-closing-paren-at-point-states))
+          (not (memq evil-state evil-highlight-closing-paren-at-point-states)))
       ad-do-it
-    (let ((pos (point)) syntax narrow)
-      (setq pos
-            (catch 'end
-              (dotimes (var (1+ (* 2 evil-show-paren-range)))
-                (if (zerop (mod var 2))
-                    (setq pos (+ pos var))
-                  (setq pos (- pos var)))
-                (setq syntax (syntax-class (syntax-after pos)))
-                (cond
-                 ((eq syntax 4)
-                  (setq narrow pos)
-                  (throw 'end pos))
-                 ((eq syntax 5)
-                  (throw 'end (1+ pos)))))))
-      (if pos
-          (save-excursion
-            (goto-char pos)
-            (save-restriction
-              (when narrow
-                (narrow-to-region narrow (point-max)))
-              ad-do-it))
-        ;; prevent the preceding pair from being highlighted
-        (dolist (ov '(show-paren--overlay
-                      show-paren--overlay-1
-                      show-paren-overlay
-                      show-paren-overlay-1))
-          (let ((ov (and (boundp ov) (symbol-value ov))))
-            (when (overlayp ov) (delete-overlay ov))))))))
+    (let* ((orig-spdf show-paren-data-function)
+           (show-paren-data-function
+            (lambda ()
+              (let ((pos (point)) narrow)
+                (setq
+                 pos (cl-dotimes (i (1+ (* 2 evil-show-paren-range)))
+                       (setq pos (+ pos (if (cl-evenp i) i (- i))))
+                       (pcase (syntax-class (syntax-after pos))
+                         (4 (setq narrow pos) (cl-return pos))
+                         (5 (cl-return (1+ pos))))))
+                (when pos
+                  (save-excursion
+                    (goto-char pos)
+                    (save-restriction
+                      (when narrow (narrow-to-region narrow (point-max)))
+                      (funcall orig-spdf))))))))
+      ad-do-it)))
 
 ;;; Undo tree
 (eval-after-load 'undo-tree
