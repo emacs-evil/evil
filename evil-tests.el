@@ -2104,7 +2104,12 @@ and for Lisp evaluation."
       ("0P")
       "ine1 line1 line1line1 l
 ine2            line2 l
-ine3 line3      line3 l\n")))
+ine3 line3      line3 l\n"))
+  (ert-info ("Delete additional whole lines with count")
+    (evil-test-buffer
+     "a[a]a\nbbb\nc\n"
+     ("2D")
+     "a\nc\n")))
 
 (ert-deftest evil-test-delete-folded ()
   "Test `evil-delete' on folded lines."

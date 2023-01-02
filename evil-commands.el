@@ -1484,83 +1484,68 @@ or line COUNT to the bottom of the window."
   "Delete text from BEG to END with TYPE.
 Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (interactive "<R><x><y>")
-  (if (and (memq type '(inclusive exclusive))
-           (not (evil-visual-state-p))
-           (eq 'evil-delete evil-this-operator)
-           (save-excursion (goto-char beg) (bolp))
-           (save-excursion (goto-char end) (eolp))
-           (<= 1 (evil-count-lines beg end)))
-      ;; Imitate Vi strangeness: if motion meets above criteria,
-      ;; delete linewise. Not for change operator or visual state.
-      (let ((new-range (evil-expand beg end 'line)))
-        (evil-delete (nth 0 new-range) (nth 1 new-range) 'line register yank-handler))
-    (unless register
-      (let ((text (filter-buffer-substring beg end)))
-        (unless (string-match-p "\n" text)
-          ;; set the small delete register
-          (evil-set-register ?- text))))
-    (let ((evil-was-yanked-without-register nil))
-      (evil-yank beg end type register yank-handler))
-    (cond
-     ((eq type 'block)
-      (evil-apply-on-block #'delete-region beg end nil))
-     ((and (eq type 'line)
-           (= end (point-max))
-           (or (= beg end)
-               (/= (char-before end) ?\n))
-           (/= beg (point-min))
-           (=  (char-before beg) ?\n))
-      (delete-region (1- beg) end))
-     (t
-      (delete-region beg end)))
-    (when (and (called-interactively-p 'any)
-               (eq type 'line))
-      (evil-first-non-blank)
-      (when (and (not evil-start-of-line)
-                 evil-operator-start-col
-                 ;; Special exceptions to ever saving column:
-                 (not (memq evil-this-motion '(evil-forward-word-begin
-                                               evil-forward-WORD-begin))))
-        (move-to-column evil-operator-start-col)))))
+  (when (and (memq type '(inclusive exclusive))
+             (not (evil-visual-state-p))
+             (eq 'evil-delete evil-this-operator)
+             (save-excursion (goto-char beg) (bolp))
+             (save-excursion (goto-char end) (eolp))
+             (<= 1 (evil-count-lines beg end)))
+    ;; Imitate Vi strangeness: if motion meets above criteria,
+    ;; delete linewise. Not for change operator or visual state.
+    (let ((new-range (evil-line-expand beg end)))
+      (setq beg (car new-range)
+            end (cadr new-range)
+            type 'line)))
+  (unless register
+    (let ((text (filter-buffer-substring beg end)))
+      (unless (string-match-p "\n" text)
+        ;; set the small delete register
+        (evil-set-register ?- text))))
+  (let ((evil-was-yanked-without-register nil))
+    (evil-yank beg end type register yank-handler))
+  (cond
+   ((eq type 'block)
+    (evil-apply-on-block #'delete-region beg end nil))
+   ((and (eq type 'line)
+         (= end (point-max))
+         (or (= beg end)
+             (/= (char-before end) ?\n))
+         (/= beg (point-min))
+         (=  (char-before beg) ?\n))
+    (delete-region (1- beg) end))
+   (t (delete-region beg end)))
+  (when (and (eq type 'line)
+             (called-interactively-p 'any))
+    (evil-first-non-blank)
+    (when (and (not evil-start-of-line)
+               evil-operator-start-col
+               ;; Special exceptions to ever saving column:
+               (not (memq evil-this-motion '(evil-forward-word-begin
+                                             evil-forward-WORD-begin))))
+      (move-to-column evil-operator-start-col))))
 
 (evil-define-operator evil-delete-line (beg end type register yank-handler)
   "Delete to end of line."
-  :motion nil
-  :keep-visual t
+  :motion evil-end-of-line-or-visual-line
   (interactive "<R><x>")
-  ;; act linewise in Visual state
-  (let* ((beg (or beg (point)))
-         (end (or end beg))
-         (visual-line-mode (and evil-respect-visual-line-mode
-                                visual-line-mode))
-         (line-end (if visual-line-mode
-                       (save-excursion
-                         (end-of-visual-line)
-                         (point))
-                     (line-end-position))))
-    (when (evil-visual-state-p)
-      (unless (memq type '(line screen-line block))
-        (let ((range (evil-expand beg end
-                                  (if visual-line-mode
-                                      'screen-line
-                                    'line))))
-          (setq beg (evil-range-beginning range)
-                end (evil-range-end range)
-                type (evil-type range))))
-      (evil-exit-visual-state))
-    (cond
-     ((eq type 'block)
-      ;; equivalent to $d, i.e., we use the block-to-eol selection and
+  ;; Act linewise in Visual state
+  (when (and (evil-visual-state-p) (eq type 'inclusive))
+    (let ((range (evil-expand
+                  beg end
+                  (if (and evil-respect-visual-line-mode visual-line-mode)
+                      'screen-line 'line))))
+      (setq beg (car range)
+            end (cadr range)
+            type (evil-type range))))
+  (if (eq type 'block)
+      ;; Equivalent to $d, i.e., we use the block-to-eol selection and
       ;; call `evil-delete'. In this case we fake the call to
       ;; `evil-end-of-line' by setting `temporary-goal-column' and
       ;; `last-command' appropriately as `evil-end-of-line' would do.
       (let ((temporary-goal-column most-positive-fixnum)
             (last-command 'next-line))
-        (evil-delete beg end 'block register yank-handler)))
-     ((memq type '(line screen-line))
-      (evil-delete beg end type register yank-handler))
-     (t
-      (evil-delete beg line-end type register yank-handler)))))
+        (evil-delete beg end 'block register yank-handler))
+    (evil-delete beg end type register yank-handler)))
 
 (evil-define-operator evil-delete-whole-line
   (beg end type register yank-handler)
@@ -1717,9 +1702,9 @@ of the block."
   "Change to end of line, or change whole line if characterwise visual mode."
   :motion evil-end-of-line-or-visual-line
   (interactive "<R><x><y>")
-  (if (and (evil-visual-state-p) (eq 'inclusive type))
-      (cl-destructuring-bind (beg* end* &rest) (evil-line-expand beg end)
-          (evil-change-whole-line beg* end* register yank-handler))
+  (if (and (evil-visual-state-p) (eq type 'inclusive))
+      (cl-destructuring-bind (beg end &rest) (evil-line-expand beg end)
+        (evil-change-whole-line beg end register yank-handler))
     (evil-change beg end type register yank-handler #'evil-delete-line)))
 
 (evil-define-operator evil-change-whole-line
@@ -1728,7 +1713,7 @@ of the block."
   :motion evil-line-or-visual-line
   :type line
   (interactive "<r><x>")
-  (evil-change beg end 'line register yank-handler #'evil-delete-whole-line))
+  (evil-change beg end 'line register yank-handler))
 
 (evil-define-command evil-copy (beg end address)
   "Copy lines in BEG END below line given by ADDRESS."
