@@ -221,10 +221,9 @@ line if `visual-line-mode' is active and
 `evil-respect-visual-line-mode' is non-nil.  If COUNT is given,
 move COUNT - 1 screen lines downward first."
   :type inclusive
-  (if (and (fboundp 'end-of-visual-line)
-           evil-respect-visual-line-mode
+  (if (and evil-respect-visual-line-mode
            visual-line-mode)
-      (end-of-visual-line count)
+      (evil-end-of-visual-line count)
     (evil-end-of-line count)))
 
 (evil-define-motion evil-middle-of-visual-line ()
@@ -234,9 +233,8 @@ move COUNT - 1 screen lines downward first."
   (evil-with-restriction
       nil
       (save-excursion (end-of-visual-line) (point))
-    (move-to-column (+ (current-column)
-                       -1
-                       (/ (with-no-warnings (window-body-width)) 2)))))
+    (move-to-column
+     (+ (current-column) -1 (/ (window-body-width) 2)))))
 
 (evil-define-motion evil-percentage-of-line (count)
   "Move the cursor to COUNT % of the width of the current line.
@@ -959,9 +957,7 @@ In Insert state, insert a newline and indent."
   "Move the cursor to the middle line in the window."
   :jump t
   :type line
-  (evil-ensure-column
-    (move-to-window-line
-     (/ (1+ (save-excursion (move-to-window-line -1))) 2))))
+  (evil-ensure-column (move-to-window-line nil)))
 
 (evil-define-motion evil-window-bottom (count)
   "Move the cursor to line COUNT from the bottom of the window."
@@ -989,78 +985,80 @@ In Insert state, insert a newline and indent."
 
 (evil-define-command evil-scroll-count-reset ()
   "Set `evil-scroll-count' to 0.
-`evil-scroll-up' and `evil-scroll-down' will scroll
-for a half of the screen(default)."
+`evil-scroll-up' and `evil-scroll-down' will then scroll by half of
+the screen (the default)."
   :repeat nil
   :keep-visual t
   (interactive)
   (setq evil-scroll-count 0))
 
+;; With `scroll-preserve-screen-position' `scroll-up'/`scroll-down'
+;; target the same cursor pixel Y-coordinate while `last-command' has
+;; the `scroll-command' property. However the target needs updating
+;; when e.g. scrolling maximally to the first or last line and then
+;; switching scroll direction. Do this by resetting `last-command'
+;; when `real-this-command' (`evil-ensure-column' modifies
+;; `this-command') changed from last value:
+
 (evil-define-command evil-scroll-up (count)
   "Scroll the window and the cursor COUNT lines upwards.
-If COUNT is not specified the function scrolls down
-`evil-scroll-count', which is the last used count.
+If COUNT is not specified the function scrolls up `evil-scroll-count'
+lines, which is the last used count.
 If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
+  (when (= (line-beginning-position) (point-min))
+    (signal 'beginning-of-buffer nil))
+  (setq count (or count (max 0 evil-scroll-count))
+        evil-scroll-count count)
+  (when (zerop count) (setq count (/ (window-body-height) 2)))
   (evil-ensure-column
-    (setq count (or count (max 0 evil-scroll-count))
-          evil-scroll-count count
-          this-command 'next-line)
-    (when (= (point-min) (line-beginning-position))
-      (signal 'beginning-of-buffer nil))
-    (when (zerop count)
-      (setq count (/ (window-body-height) 2)))
-    (let ((xy (evil-posn-x-y (posn-at-point))))
+    (let ((opoint (point)))
       (condition-case nil
-          (progn
-            (scroll-down count)
-            (goto-char (posn-point (posn-at-x-y (car xy) (cdr xy)))))
-        (beginning-of-buffer
-         (condition-case nil
-             (with-no-warnings (previous-line count))
-           (beginning-of-buffer)))))))
+          (let ((scroll-preserve-screen-position 'always)
+                (last-command (when (eq real-last-command real-this-command)
+                                real-last-command)))
+            (scroll-down count))
+        (:success
+         ;; Redo if `scroll-down' only did partial scroll up to BOB
+         (when (<= (window-start) (point-min))
+           (goto-char opoint)
+           (vertical-motion (- count))))
+        (beginning-of-buffer (vertical-motion (- count)))))))
+(put 'evil-scroll-up 'scroll-command t)
 
 (evil-define-command evil-scroll-down (count)
   "Scroll the window and the cursor COUNT lines downwards.
 If COUNT is not specified the function scrolls down
-`evil-scroll-count', which is the last used count.
+`evil-scroll-count' lines, which is the last used count.
 If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
+  (when (= (line-end-position) (point-max))
+    (signal 'end-of-buffer nil))
+  (setq count (or count (max 0 evil-scroll-count))
+        evil-scroll-count count)
+  (when (zerop count) (setq count (/ (window-body-height) 2)))
   (evil-ensure-column
-    (setq count (or count (max 0 evil-scroll-count))
-          evil-scroll-count count
-          this-command 'next-line)
-    (when (eobp) (signal 'end-of-buffer nil))
-    (when (zerop count)
-      (setq count (/ (window-body-height) 2)))
     ;; BUG #660: First check whether the eob is visible.
     ;; In that case we do not scroll but merely move point.
     (if (<= (point-max) (window-end))
-        (with-no-warnings (next-line count nil))
-      (let ((xy (evil-posn-x-y (posn-at-point))))
-        (condition-case nil
-            (progn
-              (scroll-up count)
-              (let* ((wend (window-end nil t))
-                     (p (posn-at-x-y (car xy) (cdr xy)))
-                     (margin (max 0 (- scroll-margin
-                                       (cdr (posn-col-row p))))))
-                (goto-char (posn-point p))
-                ;; ensure point is not within the scroll-margin
-                (when (> margin 0)
-                  (with-no-warnings (next-line margin))
-                  (recenter scroll-margin))
-                (when (<= (point-max) wend)
-                  (save-excursion
-                    (goto-char (point-max))
-                    (recenter (- (max 1 scroll-margin)))))))
-          (end-of-buffer
-           (goto-char (point-max))
-           (recenter (- (max 1 scroll-margin)))))))))
+        (vertical-motion count)
+      (condition-case nil
+          (let ((scroll-preserve-screen-position 'always)
+                (last-command (when (eq real-last-command real-this-command)
+                                real-last-command)))
+            (scroll-up count))
+        (:success
+         ;; If EOB became visible: Scroll it to the bottom
+         (save-excursion
+           (goto-char (window-start))
+           (vertical-motion (max 0 (- (window-height) 1 scroll-margin)))
+           (when (<= (point-max) (point)) (recenter -1))))
+        (end-of-buffer (goto-char (point-max)) (recenter -1))))))
+(put 'evil-scroll-down 'scroll-command t)
 
 (evil-define-command evil-scroll-page-up (count)
   "Scroll the window COUNT pages upwards."
@@ -4296,8 +4294,8 @@ SIDE has the same meaning as in `split-window'.
 
 Note, this function only operates on the window tree rooted in
 the frame's main window and effectively preserves any side
-windows \(i.e. windows with a valid window-side window
-parameter\)."
+windows (i.e. windows with a valid window-side window
+parameter)."
   (evil-save-side-windows
     (unless (one-window-p)
       (save-excursion
@@ -4314,14 +4312,10 @@ parameter\)."
       (balance-windows))))
 
 (defun evil-alternate-buffer (&optional window)
-  "Return the last buffer WINDOW has displayed other than the
-current one (equivalent to Vim's alternate buffer).
-
-Return the first item in `window-prev-buffers' that isn't
-`window-buffer' of WINDOW."
+  "Return the last buffer WINDOW has displayed other than the current one.
+This is equivalent to Vim's alternate buffer."
   ;; If the last buffer visited has been killed, then `window-prev-buffers'
-  ;; returns a list with `current-buffer' at the head, we account for this
-  ;; possibility.
+  ;; returns a list with `window-buffer' at the head.
   (let* ((prev-buffers (window-prev-buffers))
          (head (car prev-buffers)))
     (if (eq (car head) (window-buffer window))
@@ -4329,12 +4323,11 @@ Return the first item in `window-prev-buffers' that isn't
       head)))
 
 (evil-define-command evil-switch-to-windows-last-buffer ()
-  "Switch to current windows last open buffer."
+  "Switch to the last open buffer of the current window."
   :repeat nil
   (let ((previous-place (evil-alternate-buffer)))
     (when previous-place
-      (switch-to-buffer (car previous-place))
-      (goto-char (car (last previous-place))))))
+      (switch-to-buffer (car previous-place)))))
 
 (evil-define-command evil-window-delete ()
   "Delete the current window.
