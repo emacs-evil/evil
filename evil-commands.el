@@ -2407,10 +2407,8 @@ leave the cursor just after the new text."
       (when evil-kill-on-visual-paste
         (current-kill -1))
       ;; Ensure that gv can restore visually pasted area...
-      (setq evil-visual-previous-mark evil-visual-mark
-            evil-visual-mark (evil-get-marker (if (< 0 dir) ?\[ ?\]) t)
-            evil-visual-previous-point evil-visual-point
-            evil-visual-point (evil-get-marker (if (< 0 dir) ?\] ?\[) t))
+      (set-marker evil-visual-point (evil-get-marker (if (< dir 0) ?\[ ?\]) t))
+      (set-marker evil-visual-mark (evil-get-marker (if (< dir 0) ?\] ?\[) t))
       ;; mark the last paste as visual-paste
       (setq evil-last-paste
             (list (nth 0 evil-last-paste)

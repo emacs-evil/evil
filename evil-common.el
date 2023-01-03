@@ -2160,21 +2160,6 @@ The earlier settings of Transient Mark mode are stored in
             (funcall var (if val 1 -1))
           (setq var val))))))
 
-(defun evil-save-mark ()
-  "Save the current mark, including whether it is transient.
-See also `evil-restore-mark'."
-  (unless evil-visual-previous-mark
-    (setq evil-visual-previous-mark (mark t))
-    (evil-save-transient-mark-mode)))
-
-(defun evil-restore-mark ()
-  "Restore the mark, including whether it was transient.
-See also `evil-save-mark'."
-  (when evil-visual-previous-mark
-    (evil-restore-transient-mark-mode)
-    (evil-move-mark evil-visual-previous-mark)
-    (setq evil-visual-previous-mark nil)))
-
 ;; In theory, an active region implies Transient Mark mode, and
 ;; disabling Transient Mark mode implies deactivating the region.
 ;; In practice, Emacs never clears `mark-active' except in Transient
@@ -2534,9 +2519,6 @@ is negative this is a more recent kill."
   (unless evil-last-paste
     (user-error "Previous paste command used a register"))
   (evil-undo-pop)
-  (when (eq last-command 'evil-visual-paste)
-    (evil-swap evil-visual-previous-mark evil-visual-mark)
-    (evil-swap evil-visual-previous-point evil-visual-point))
   (goto-char (nth 2 evil-last-paste))
   (setq this-command (nth 0 evil-last-paste))
   ;; use temporary kill-ring, so the paste cannot modify it
