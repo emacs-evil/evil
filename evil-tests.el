@@ -7436,6 +7436,12 @@ charlie delta
 <echo foxtrot
 golf h[o]>tel")))
 
+(ert-deftest evil-test-visual-separate-from-operator-marks ()
+  "Test that visual selection is kept separate from the '[ and '] marks (#1744)."
+  (evil-test-buffer "x\ny"
+    ("ylvpjxgv")
+    "[x]\n"))
+
 ;;; Replace state
 
 (ert-deftest evil-test-replacement ()
