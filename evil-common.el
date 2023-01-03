@@ -39,12 +39,9 @@
 (declare-function evil-ex-p "evil-ex")
 (declare-function evil-set-jump "evil-jumps")
 
-(condition-case nil
-    (require 'windmove)
-  (error
-   (message "evil: Could not load `windmove', \
-window commands not available.")
-   nil))
+(unless (require 'windmove nil t)
+  (message "evil: Could not load `windmove', \
+window commands not available."))
 
 ;;; Compatibility with different Emacs versions
 
@@ -880,44 +877,6 @@ Inhibits echo area messages, mode line updates and cursor changes."
   `(let ((evil-no-display t))
      ,@body))
 
-(defvar evil-cached-header-line-height nil
-  "Cached height of the header line.
-Used for fallback implementation on older Emacsen.")
-
-(defun evil-header-line-height ()
-  "Return the height of the header line.
-If there is no header line, return 0.
-Used as a fallback implementation of `window-header-line-height' on
-older Emacsen."
-  (let ((posn (posn-at-x-y 0 0)))
-    (or (when (eq (posn-area posn) 'header-line)
-          (cdr (posn-object-width-height posn)))
-        0)))
-
-(defun evil-posn-x-y (position)
-  "Return the x and y coordinates in POSITION.
-This function returns y offset from the top of the buffer area including
-the header line and the tab line (on Emacs 27 and later versions).
-
-On Emacs 24 and later versions, the y-offset returned by
-`posn-at-point' is relative to the text area excluding the header
-line and the tab line, while y offset taken by `posn-at-x-y' is relative to
-the buffer area including the header line and the tab line.
-This asymmetry is by design according to GNU Emacs team.
-This function fixes the asymmetry between them.
-
-Learned from mozc.el."
-  (let ((xy (posn-x-y position)))
-    (when header-line-format
-      (setcdr xy (+ (cdr xy)
-                    (or (and (fboundp 'window-header-line-height)
-                             (window-header-line-height))
-                        evil-cached-header-line-height
-                        (setq evil-cached-header-line-height (evil-header-line-height))))))
-    (when (fboundp 'window-tab-line-height)
-      (setcdr xy (+ (cdr xy) (window-tab-line-height))))
-    xy))
-
 (defun evil-count-lines (beg end)
   "Return absolute line-number-difference betweeen `beg` and `end`.
 This should give the same results no matter where on the line `beg`
@@ -987,34 +946,36 @@ See also `evil-save-goal-column'."
   "Execute BODY so that column after execution is correct.
 If `evil-start-of-line' is nil, treat BODY as if it were a `next-line' command.
 This mostly copies the approach of Emacs' `line-move-1', but is modified
-so it is more compatible with Evil's notions of eol & tracking."
-  (declare (indent defun)
-           (debug t))
+so it is more compatible with Evil's notion of EOL tracking."
+  (declare (indent defun) (debug t))
   `(progn
      (unless evil-start-of-line
        (setq this-command 'next-line
              temporary-goal-column
-             (cond
-              ((memq last-command '(next-line previous-line))
-               (if (consp temporary-goal-column)
-                   ;; Guard against a negative value as `temporary-goal-column'
-                   ;; may have a negative component when both `whitespace-mode'
-                   ;; and `display-line-numbers-mode' are enabled (#1297).
-                   (max 0 (+ (truncate (car temporary-goal-column))
-                             (cdr temporary-goal-column)))
-                 temporary-goal-column))
-              ((and track-eol (eolp) (not (bolp))) most-positive-fixnum)
-              (t (current-column)))))
+             (cond ((memq last-command '(next-line previous-line))
+                    temporary-goal-column)
+                   ((and track-eol (eolp) (not (bolp))) most-positive-fixnum)
+                   (t (current-column)))))
      ,@body
      (if evil-start-of-line
          (evil-first-non-blank)
-       (line-move-to-column (or goal-column temporary-goal-column)))))
+       (line-move-to-column
+        (or goal-column
+            (if (consp temporary-goal-column)
+                ;; Guard against a negative value as `temporary-goal-column'
+                ;; may have a negative component when both `whitespace-mode'
+                ;; and `display-line-numbers-mode' are enabled (#1297).
+                (max 0 (+ (truncate (car temporary-goal-column))
+                          (cdr temporary-goal-column)))
+              temporary-goal-column))))))
 
 (defun evil-narrow (beg end)
   "Restrict the buffer to BEG and END.
 BEG or END may be nil, specifying a one-sided restriction including
 `point-min' or `point-max'. See also `evil-with-restriction.'"
-  (narrow-to-region (or beg (point-min)) (or end (point-max))))
+  (narrow-to-region
+   (if beg (max beg (point-min)) (point-min))
+   (if end (min end (point-max)) (point-max))))
 
 (defmacro evil-with-restriction (beg end &rest body)
   "Execute BODY with the buffer narrowed to BEG and END.
@@ -1392,22 +1353,21 @@ If STATE is given it used a parsing state at point."
 (defun evil-line-move (count &optional noerror)
   "Like `line-move' but conserves the column.
 Signals an error at buffer boundaries unless NOERROR is non-nil."
-  (setq this-command (if (< count 0) #'previous-line #'next-line))
+  (setq this-command (if (< count 0) 'previous-line 'next-line))
   (let ((last-command
          ;; Reset tmp goal column between visual/logical movement
          (when (or (eq line-move-visual (consp temporary-goal-column))
                    (eq temporary-goal-column most-positive-fixnum))
            last-command))
         (opoint (point)))
-    (evil-signal-without-movement
-      (condition-case err
-          (line-move count)
-        ((beginning-of-buffer end-of-buffer)
-         (let ((col (or goal-column
-                        (car-safe temporary-goal-column)
-                        temporary-goal-column)))
-           (line-move-finish col opoint (< count 0))
-           (unless noerror (signal (car err) (cdr err)))))))))
+    (condition-case err
+        (line-move count)
+      ((beginning-of-buffer end-of-buffer)
+       (let ((col (or goal-column
+                      (car-safe temporary-goal-column)
+                      temporary-goal-column)))
+         (line-move-finish col opoint (< count 0)))
+       (or noerror (/= (point) opoint) (signal (car err) (cdr err)))))))
 
 (defun evil-forward-syntax (syntax &optional count)
   "Move point to the end or beginning of a sequence of characters in
