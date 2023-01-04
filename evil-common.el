@@ -1141,17 +1141,6 @@ the loop immediately quits. See also `evil-loop'.
              (when (= (point) ,orig)
                (throw ',done ,i))))))))
 
-(defmacro evil-signal-without-movement (&rest body)
-  "Catch errors provided point moves within this scope."
-  (declare (indent defun)
-           (debug t))
-  `(let ((p (point)))
-     (condition-case err
-         (progn ,@body)
-       (error
-        (when (= p (point))
-          (signal (car err) (cdr err)))))))
-
 (defun evil-signal-at-bob-or-eob (&optional count)
   "Signal error if `point' is at boundaries.
 If `point' is at bob and COUNT is negative this function signal

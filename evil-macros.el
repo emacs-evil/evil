@@ -166,40 +166,32 @@ Optional keyword arguments are:
 (defmacro evil-narrow-to-line (&rest body)
   "Narrow BODY to the current line.
 BODY will signal the errors 'beginning-of-line or 'end-of-line
-upon reaching the beginning or end of the current line.
-
-\(fn [[KEY VAL]...] BODY...)"
-  (declare (indent defun)
-           (debug t))
-  `(let* ((range (evil-expand (point) (point) 'line))
-          (beg (evil-range-beginning range))
-          (end (evil-range-end range))
-          (min (point-min))
-          (max (point-max)))
+upon reaching the beginning or end of the current line."
+  (declare (indent defun) (debug t))
+  `(cl-destructuring-bind (beg end &rest) (evil-line-expand (point) (point))
      (when (save-excursion (goto-char end) (bolp))
        (setq end (max beg (1- end))))
-     ;; don't include the newline in Normal state
-     (when (and (not evil-move-beyond-eol)
-                (not (evil-visual-state-p))
-                (not (evil-operator-state-p)))
-       (setq end (max beg (1- end))))
+     ;; Do not include the newline in Normal state
+     (and (not evil-move-beyond-eol)
+          (not (evil-visual-state-p))
+          (not (evil-operator-state-p))
+          (setq end (max beg (1- end))))
      (evil-with-restriction beg end
-       (evil-signal-without-movement
-         (condition-case err
-             (progn ,@body)
-           (beginning-of-buffer
-            (if (= beg min)
-                (signal (car err) (cdr err))
-              (signal 'beginning-of-line nil)))
-           (end-of-buffer
-            (if (= end max)
-                (signal (car err) (cdr err))
-              (signal 'end-of-line nil))))))))
+       (condition-case err
+           (progn ,@body)
+         (beginning-of-buffer
+          (if (= (point-min) beg)
+              (signal 'beginning-of-line nil)
+            (signal (car err) (cdr err))))
+         (end-of-buffer
+          (if (= (point-max) end)
+              (signal 'end-of-line nil)
+            (signal (car err) (cdr err))))))))
 
 ;; we don't want line boundaries to trigger the debugger
 ;; when `debug-on-error' is t
-(add-to-list 'debug-ignored-errors "^Beginning of line$")
-(add-to-list 'debug-ignored-errors "^End of line$")
+(cl-pushnew 'beginning-of-line debug-ignored-errors)
+(cl-pushnew 'end-of-line debug-ignored-errors)
 
 (defun evil-eobp (&optional pos)
   "Whether point is at end-of-buffer with regard to end-of-line."
@@ -208,8 +200,7 @@ upon reaching the beginning or end of the current line.
     (cond
      ((eobp))
      ;; the rest only pertains to Normal state
-     ((not (evil-normal-state-p))
-      nil)
+     ((not (evil-normal-state-p)) nil)
      ;; at the end of the last line
      ((eolp)
       (forward-char)

@@ -61,37 +61,31 @@ of the line or the buffer; just return nil."
   (interactive "<c>" (list evil-cross-lines
                            (evil-kbd-macro-suppress-motion-error)))
   (cond
+   ((not crosslines)
+    ;; For efficiency, narrow the buffer to the projected
+    ;; movement before determining the current line
+    (evil-with-restriction (point) (+ (point) (or count 1) 1)
+      (condition-case err
+          (evil-narrow-to-line (forward-char count))
+        (error
+         ;; Restore the previous command (this one never happened).
+         ;; This preserves the current column if the previous command
+         ;; was `evil-next-line' or `evil-previous-line'.
+         (setq this-command last-command)
+         (unless noerror (signal (car err) (cdr err)))))))
    (noerror
     (condition-case nil
         (evil-forward-char count crosslines nil)
-      (error nil)))
-   ((not crosslines)
-    ;; for efficiency, narrow the buffer to the projected
-    ;; movement before determining the current line
-    (evil-with-restriction
-        (point)
-        (save-excursion
-          (evil-forward-char (1+ (or count 1)) t t)
-          (point))
-      (condition-case err
-          (evil-narrow-to-line
-            (evil-forward-char count t noerror))
-        (error
-         ;; Restore the previous command (this one never happend).
-         ;; Actually, this preserves the current column if the
-         ;; previous command was `evil-next-line' or
-         ;; `evil-previous-line'.
-         (setq this-command last-command)
-         (signal (car err) (cdr err))))))
+      (error)))
    (t
     (evil-motion-loop (nil (or count 1))
       (forward-char)
       ;; don't put the cursor on a newline
-      (when (and (not evil-move-beyond-eol)
-                 (not (evil-visual-state-p))
-                 (not (evil-operator-state-p))
-                 (eolp) (not (eobp)) (not (bolp)))
-        (forward-char))))))
+      (and (not evil-move-beyond-eol)
+           (not (evil-visual-state-p))
+           (not (evil-operator-state-p))
+           (eolp) (not (eobp)) (not (bolp))
+           (forward-char))))))
 
 (evil-define-motion evil-backward-char (count &optional crosslines noerror)
   "Move cursor to the left by COUNT characters.
@@ -102,27 +96,21 @@ of the line or the buffer; just return nil."
   (interactive "<c>" (list evil-cross-lines
                            (evil-kbd-macro-suppress-motion-error)))
   (cond
+   ((not crosslines)
+    ;; Restrict movement to the current line
+    (evil-with-restriction (- (point) (or count 1)) (1+ (point))
+      (condition-case err
+          (evil-narrow-to-line (backward-char count))
+        (error
+         ;; Restore the previous command (this one never happened).
+         ;; This preserves the current column if the previous command
+         ;; was `evil-next-line' or `evil-previous-line'.
+         (setq this-command last-command)
+         (unless noerror (signal (car err) (cdr err)))))))
    (noerror
     (condition-case nil
         (evil-backward-char count crosslines nil)
       (error nil)))
-   ((not crosslines)
-    ;; restrict movement to the current line
-    (evil-with-restriction
-        (save-excursion
-          (evil-backward-char (1+ (or count 1)) t t)
-          (point))
-        (1+ (point))
-      (condition-case err
-          (evil-narrow-to-line
-            (evil-backward-char count t noerror))
-        (error
-         ;; Restore the previous command (this one never happened).
-         ;; Actually, this preserves the current column if the
-         ;; previous command was `evil-next-line' or
-         ;; `evil-previous-line'.
-         (setq this-command last-command)
-         (signal (car err) (cdr err))))))
    (t
     (evil-motion-loop (nil (or count 1))
       (backward-char)

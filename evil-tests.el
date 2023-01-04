@@ -3256,12 +3256,12 @@ sed do eiusmod tempor incididunt"))
   (ert-info ("End of line")
     (evil-test-buffer
       ";; This buffer is for notes[.]"
-      (should-error (execute-kbd-macro "l"))
-      (should-error (execute-kbd-macro "10l"))))
+      (error end-of-line "l")
+      (error end-of-line "10l")))
   (ert-info ("Until end-of-line")
     (evil-test-buffer
       "[;]; This buffer is for notes."
-      ("100l")
+      (error end-of-line "100l")
       ";; This buffer is for notes[.]"))
   (ert-info ("On empty line")
     (evil-test-buffer
@@ -3292,7 +3292,7 @@ Below some empty line"
   (ert-info ("Until beginning-of-line")
     (evil-test-buffer
       ";; This[ ]buffer is for notes."
-      ("100h")
+      (error beginning-of-line "100h")
       "[;]; This buffer is for notes."))
   (ert-info ("On empty line")
     (evil-test-buffer
