@@ -118,18 +118,14 @@ and will be removed in a future version."
             (evil-range
              (progn
                (goto-char beg)
-               (min (line-beginning-position)
-                    (progn
-                      ;; move to beginning of line as displayed
-                      (evil-move-beginning-of-line)
-                      (line-beginning-position))))
+               ;; move to beginning of line as displayed
+               (evil-move-beginning-of-line)
+               (point))
              (progn
                (goto-char end)
-               (max (line-beginning-position 2)
-                    (progn
-                      ;; move to end of line as displayed
-                      (evil-move-end-of-line)
-                      (line-beginning-position 2))))))
+               ;; move to the end of line as displayed
+               (evil-move-end-of-line)
+               (line-beginning-position 2))))
   :contract (lambda (beg end)
               (evil-range beg (max beg (1- end))))
   :string (lambda (beg end)
