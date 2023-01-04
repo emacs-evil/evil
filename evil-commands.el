@@ -1050,7 +1050,7 @@ If the scroll count is zero the command scrolls half the screen."
     (when (= (point-min) (line-beginning-position))
       (signal 'beginning-of-buffer nil))
     (when (zerop count)
-      (setq count (/ (window-body-height) 2)))
+      (setq count (/ (evil-window-visible-height) 2)))
     (let ((xy (evil-posn-x-y (posn-at-point))))
       (condition-case nil
           (progn
@@ -1075,28 +1075,31 @@ If the scroll count is zero the command scrolls half the screen."
           this-command 'next-line)
     (when (eobp) (signal 'end-of-buffer nil))
     (when (zerop count)
-      (setq count (/ (window-body-height) 2)))
+      (setq count (/ (evil-window-visible-height) 2)))
     ;; BUG #660: First check whether the eob is visible.
     ;; In that case we do not scroll but merely move point.
-    (if (<= (point-max) (window-end))
+    (if (pos-visible-in-window-p (point-max))
         (with-no-warnings (next-line count nil))
       (let ((xy (evil-posn-x-y (posn-at-point))))
         (condition-case nil
             (progn
               (scroll-up count)
-              (let* ((wend (window-end nil t))
-                     (p (posn-at-x-y (car xy) (cdr xy)))
+              (let* ((p (posn-at-x-y (car xy) (cdr xy)))
                      (margin (max 0 (- scroll-margin
                                        (cdr (posn-col-row p))))))
+                ;; return point to its original window-relative
+                ;; position prior to scrolling
                 (goto-char (posn-point p))
                 ;; ensure point is not within the scroll-margin
                 (when (> margin 0)
                   (with-no-warnings (next-line margin))
-                  (recenter scroll-margin))
-                (when (<= (point-max) wend)
-                  (save-excursion
-                    (goto-char (point-max))
-                    (recenter (- (max 1 scroll-margin)))))))
+                  (recenter scroll-margin)))
+              ;; once the end of the buffer is visible, ensure it
+              ;; is positioned near the bottom of the window
+              (when (pos-visible-in-window-p (point-max))
+                (save-excursion
+                  (goto-char (point-max))
+                  (recenter (- (max 1 scroll-margin))))))
           (end-of-buffer
            (goto-char (point-max))
            (recenter (- (max 1 scroll-margin)))))))))

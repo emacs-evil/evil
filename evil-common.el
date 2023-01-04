@@ -30,6 +30,7 @@
 (require 'thingatpt)
 (require 'cl-lib)
 (require 'calc)
+(require 'face-remap)
 
 ;;; Code:
 
@@ -4090,6 +4091,18 @@ PROPERTIES is a property-list which supports the following properties:
          (setq mode-name ,(plist-get properties :mode-name))
          (evil-motion-state))
        (switch-to-buffer-other-window buf))))
+
+;;; Window
+
+(defun evil-window-visible-height (&optional window)
+  "The visible height of WINDOW in lines.
+
+If no WINDOW is specified, use the selected one."
+  (let ((window (or window (selected-window))))
+    (save-window-excursion
+      (select-window window)
+      (let ((current-scale (expt text-scale-mode-step text-scale-mode-amount)))
+        (round (/ (window-body-height) current-scale))))))
 
 (provide 'evil-common)
 
