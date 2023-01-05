@@ -926,20 +926,6 @@ A return value of t means all states."
      (t
       state))))
 
-(defun evil-send-leader ()
-  "Put symbol leader in `unread-command-events' to trigger any
-<leader> bindings."
-  (interactive)
-  (setq prefix-arg current-prefix-arg)
-  (push '(t . leader) unread-command-events))
-
-(defun evil-send-localleader ()
-  "Put symbol localleader in `unread-command-events' to trigger any
-<localleader> bindings."
-  (interactive)
-  (setq prefix-arg current-prefix-arg)
-  (push '(t . localleader) unread-command-events))
-
 (defun evil-set-leader (state key &optional localleader)
   "Set KEY to trigger leader bindings in STATE.
 KEY should be in the form produced by `kbd'. STATE is one of
@@ -951,7 +937,9 @@ instead."
          (states (cond ((null state) all-states)
                        ((consp state) state)
                        (t (list state))))
-         (binding (if localleader #'evil-send-localleader #'evil-send-leader)))
+         (leaderkey (if localleader [localleader] [leader]))
+         (binding
+          `(menu-item "" nil :filter ,(lambda (_cmd) (key-binding leaderkey)))))
     (dolist (state states)
       (evil-global-set-key state key binding))))
 
