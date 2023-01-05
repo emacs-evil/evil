@@ -996,12 +996,10 @@ KEY should be in the form produced by `kbd'. STATE is one of
 all of the above. If LOCALLEADER is non-nil, set the local leader
 instead."
   (let* ((all-states '(normal insert visual replace operator motion emacs))
-         (states (cond ((listp state) state)
-                       ((member state all-states) (list state))
-                       ((null state) all-states)
-                       ;; Maybe throw error here
+         (states (cond ((null state) all-states)
+                       ((consp state) state)
                        (t (list state))))
-         (binding (if localleader 'evil-send-localleader 'evil-send-leader)))
+         (binding (if localleader #'evil-send-localleader #'evil-send-leader)))
     (dolist (state states)
       (evil-global-set-key state key binding))))
 
