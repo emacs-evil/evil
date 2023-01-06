@@ -410,7 +410,7 @@ See also `evil-get-command-property'."
 To set multiple properties at once, see
 `evil-set-command-properties' and `evil-add-command-properties'."
   (evil-put-property 'evil-command-properties command property value))
-(defalias 'evil-put-command-property 'evil-set-command-property)
+(defalias 'evil-put-command-property #'evil-set-command-property)
 
 (defun evil-add-command-properties (command &rest properties)
   "Add PROPERTIES to COMMAND.
@@ -3625,7 +3625,7 @@ make the entries undoable as a single action. See
   "Execute BODY with enabled undo.
 If undo is disabled in the current buffer, the undo information
 is stored in `evil-temporary-undo' instead of `buffer-undo-list'."
-  (declare (debug t))
+  (declare (indent defun) (debug t))
   (let ((undo-list (make-symbol "undo-list")))
     `(let ((,undo-list buffer-undo-list)
            (evil-undo-system evil-undo-system))
@@ -3645,7 +3645,7 @@ is stored in `evil-temporary-undo' instead of `buffer-undo-list'."
 
 (defmacro evil-with-single-undo (&rest body)
   "Execute BODY as a single undo step."
-  (declare (debug t))
+  (declare (indent defun) (debug t))
   `(let (evil-undo-list-pointer)
      (evil-with-undo
        (evil-start-undo-step)
@@ -4000,7 +4000,6 @@ should be left-aligned for left justification."
 ;;; View helper
 
 (defvar-local evil-list-view-select-action nil)
-(put 'evil-list-view-select-action 'permanent-local t)
 
 (define-derived-mode evil-list-view-mode tabulated-list-mode
   "Evil List View"
