@@ -706,29 +706,27 @@ Movement is restricted to the current line unless `evil-cross-lines' is non-nil.
   (setq count (or count 1))
   (let ((fwd (> count 0))
         (visual (and evil-respect-visual-line-mode
-                     visual-line-mode)))
+                     visual-line-mode))
+        case-fold-search)
     (setq evil-last-find (list #'evil-find-char char fwd))
     (when fwd (evil-forward-char 1 evil-cross-lines))
-    (let ((case-fold-search nil))
-      (unless (prog1
-                  (search-forward (char-to-string char)
-                                  (cond (evil-cross-lines
-                                         nil)
-                                        ((and fwd visual)
-                                         (save-excursion
-                                           (end-of-visual-line)
-                                           (point)))
-                                        (fwd
-                                         (line-end-position))
-                                        (visual
-                                         (save-excursion
-                                           (beginning-of-visual-line)
-                                           (point)))
-                                        (t
-                                         (line-beginning-position)))
-                                  t count)
-                (when fwd (backward-char)))
-        (user-error "Can't find %c" char)))))
+    (unless (prog1
+                (search-forward
+                 (char-to-string char)
+                 (cond (evil-cross-lines nil)
+                       ((and fwd visual)
+                        (save-excursion
+                          (end-of-visual-line)
+                          (point)))
+                       (fwd (line-end-position))
+                       (visual
+                        (save-excursion
+                          (beginning-of-visual-line)
+                          (point)))
+                       (t (line-beginning-position)))
+                 t count)
+              (when fwd (backward-char)))
+      (user-error "Can't find `%c'" char))))
 
 (evil-define-motion evil-find-char-backward (count char)
   "Move to the previous COUNT'th occurrence of CHAR."
@@ -4476,13 +4474,8 @@ and open a new buffer or edit a certain FILE."
                                   (if evil-split-window-below 'below 'above))))
     (when (and (not count) evil-auto-balance-windows)
       (balance-windows (window-parent)))
-    (let ((buffer (generate-new-buffer "*new*")))
-      (set-window-buffer new-window buffer)
-      (select-window new-window)
-      (with-current-buffer buffer
-        (funcall (default-value 'major-mode))))
-    (when file
-      (evil-edit file))))
+    (select-window new-window)
+    (evil-buffer-new file)))
 
 (evil-define-command evil-window-vnew (count file)
   "Split the current window vertically
@@ -4493,25 +4486,18 @@ and open a new buffer name or edit a certain FILE."
                                   (if evil-vsplit-window-right 'right 'left))))
     (when (and (not count) evil-auto-balance-windows)
       (balance-windows (window-parent)))
-    (let ((buffer (generate-new-buffer "*new*")))
-      (set-window-buffer new-window buffer)
-      (select-window new-window)
-      (with-current-buffer buffer
-        (funcall (default-value 'major-mode))))
-    (when file
-      (evil-edit file))))
+    (select-window new-window)
+    (evil-buffer-new file)))
 
-(evil-define-command evil-buffer-new (count file)
-  "Create a new buffer replacing the current window, optionally
-   editing a certain FILE"
+(evil-define-command evil-buffer-new (&optional file)
+  "Edit a new unnamed buffer or FILE."
   :repeat nil
-  (interactive "P<f>")
+  (interactive "<f>")
   (if file
       (evil-edit file)
     (let ((buffer (generate-new-buffer "*new*")))
-      (set-window-buffer nil buffer)
-      (with-current-buffer buffer
-        (funcall (default-value 'major-mode))))))
+      (set-buffer-major-mode buffer)
+      (set-window-buffer nil buffer))))
 
 (evil-define-command evil-window-increase-height (count)
   "Increase current window height by COUNT."

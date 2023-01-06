@@ -95,9 +95,8 @@ Otherwise the jump commands act only within the current buffer."
        (insert (apply #'format format args) "\n"))))
 
 (defun evil--jumps-get-current (&optional window)
-  (unless window
-    (setq window (frame-selected-window)))
-  (let* ((jump-struct (gethash window evil--jumps-window-jumps)))
+  (unless window (setq window (selected-window)))
+  (let ((jump-struct (gethash window evil--jumps-window-jumps)))
     (unless jump-struct
       (setq jump-struct (make-evil-jumps-struct))
       (puthash window jump-struct evil--jumps-window-jumps))
@@ -168,28 +167,28 @@ Otherwise the jump commands act only within the current buffer."
 
 (defun evil--jumps-push ()
   "Push the current cursor/file position to the jump list."
-  (let ((target-list (evil--jumps-get-window-jump-list)))
-    (let ((file-name (buffer-file-name))
-          (buffer-name (buffer-name))
-          (current-pos (point-marker))
-          (first-pos nil)
-          (first-file-name nil)
-          (excluded nil))
-      (when (and (not file-name)
-                 (string-match-p evil--jumps-buffer-targets buffer-name))
-        (setq file-name buffer-name))
-      (when file-name
-        (dolist (pattern evil-jumps-ignored-file-patterns)
-          (when (string-match-p pattern file-name)
-            (setq excluded t)))
-        (unless excluded
-          (unless (ring-empty-p target-list)
-            (setq first-pos (car (ring-ref target-list 0)))
-            (setq first-file-name (car (cdr (ring-ref target-list 0)))))
-          (unless (and (equal first-pos current-pos)
-                       (equal first-file-name file-name))
-            (evil--jumps-message "pushing %s on %s" current-pos file-name)
-            (ring-insert target-list `(,current-pos ,file-name))))))
+  (let ((target-list (evil--jumps-get-window-jump-list))
+        (file-name (buffer-file-name))
+        (buffer-name (buffer-name))
+        (current-pos (point-marker))
+        (first-pos nil)
+        (first-file-name nil)
+        (excluded nil))
+    (when (and (not file-name)
+               (string-match-p evil--jumps-buffer-targets buffer-name))
+      (setq file-name buffer-name))
+    (when file-name
+      (dolist (pattern evil-jumps-ignored-file-patterns)
+        (when (string-match-p pattern file-name)
+          (setq excluded t)))
+      (unless excluded
+        (unless (ring-empty-p target-list)
+          (setq first-pos (car (ring-ref target-list 0)))
+          (setq first-file-name (car (cdr (ring-ref target-list 0)))))
+        (unless (and (equal first-pos current-pos)
+                     (equal first-file-name file-name))
+          (evil--jumps-message "pushing %s on %s" current-pos file-name)
+          (ring-insert target-list `(,current-pos ,file-name)))))
     (evil--jumps-message "%s %s"
                          (selected-window)
                          (and (not (ring-empty-p target-list))
@@ -240,6 +239,7 @@ POS defaults to point."
       (when pos
         (goto-char pos))
       (evil--jumps-push))))
+(put 'evil-set-jump 'permanent-local-hook t)
 
 (defun evil--jump-backward (count)
   (setq evil--jumps-jumping-backward t)
@@ -288,6 +288,7 @@ POS defaults to point."
                  (evil--jumps-message "removing %s" key)
                  (remhash key evil--jumps-window-jumps)))
              evil--jumps-window-jumps)))
+(put 'evil--jumps-window-configuration-hook 'permanent-local-hook t)
 
 (defun evil--jump-hook (&optional command)
   "`pre-command-hook' for evil-jumps.
@@ -299,6 +300,7 @@ change the current buffer."
       (evil-set-jump)
     (setf (evil-jumps-struct-previous-pos (evil--jumps-get-current))
           (point-marker))))
+(put 'evil--jump-hook 'permanent-local-hook t)
 
 (defun evil--jump-handle-buffer-crossing ()
   (let ((jumping-backward evil--jumps-jumping-backward))
@@ -330,6 +332,7 @@ change the current buffer."
                         (not (eq previous-buffer (window-buffer window))))))
                 (evil-set-jump previous-pos)
               (set-marker previous-pos nil))))))))
+(put 'evil--jump-handle-buffer-crossing 'permanent-local-hook t)
 
 (if (bound-and-true-p savehist-loaded)
     (evil--jumps-savehist-load)
@@ -345,8 +348,7 @@ change the current buffer."
     (remove-hook 'pre-command-hook #'evil--jump-hook t)
     (remove-hook 'post-command-hook #'evil--jump-handle-buffer-crossing t)
     (remove-hook 'next-error-hook #'evil-set-jump t)
-    (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)
-    (evil--jump-handle-buffer-crossing)))
+    (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)))
 
 (add-hook 'evil-local-mode-hook #'evil--jumps-install-or-uninstall)
 

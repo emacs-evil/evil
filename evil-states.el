@@ -48,8 +48,7 @@ AKA \"Command\" state."
   "Reset command loop variables in Normal state.
 Also prevent point from reaching the end of the line.
 If the region is activated, enter Visual state."
-  (unless (or (evil-initializing-p)
-              (null this-command))
+  (unless (null this-command)
     (setq command (or command this-command))
     (when (evil-normal-state-p)
       (setq evil-this-type nil
@@ -449,17 +448,13 @@ or `block'."
 SELECTION is a kind of selection as defined by
 `evil-define-visual-selection', such as `char', `line'
 or `block'."
-  (let (message)
-    (setq selection (or selection evil-visual-selection))
-    (when selection
-      (setq message
-            (symbol-value (intern (format "evil-visual-%s-message"
-                                          selection))))
+  (unless selection (setq selection evil-visual-selection))
+  (when selection
+    (let ((message (symbol-value (intern (format "evil-visual-%s-message"
+                                                 selection)))))
       (cond
-       ((functionp message)
-        (funcall message))
-       ((stringp message)
-        (evil-echo "%s" message))))))
+       ((functionp message) (funcall message))
+       ((stringp message) (evil-echo "%s" message))))))
 
 (defun evil-visual-select (beg end &optional type dir message)
   "Create a Visual selection of type TYPE from BEG to END.

@@ -9328,7 +9328,7 @@ parameter set."
 ;;; ESC
 
 (ert-deftest evil-test-esc-count ()
-  "Test if prefix-argument is transfered for key sequences with meta-key"
+  "Test if prefix-argument is transferred for key sequences with meta-key"
   :tags '(evil esc)
   (unless noninteractive
     (ert-info ("Test M-<right>")
@@ -9370,11 +9370,10 @@ parameter set."
   (ert-info ("Execute yanked macro")
     (evil-test-buffer
       "[i]foo\e"
-      ("\"qd$@q\"qp"
-       "fooifoo\e")))
+      ("\"qD@q\"qp"
+      "fooifoo\e")))
   (ert-info ("Paste recorded marco")
     (evil-test-buffer
-      ""
       (evil-set-register ?q (vconcat "ifoo" [escape]))
       ("@q\"qp")
       "fooifoo\e")))
@@ -9453,14 +9452,14 @@ parameter set."
     (ert-info ("Jump across files")
       (let ((temp-file (make-temp-file "evil-test-")))
         (unwind-protect
-          (evil-test-buffer
-            "[z] z z z z z z"
-            ("\M-x" "find-file" [return] temp-file [return] "inew buffer" [escape])
-            "new buffe[r]"
-            ("\C-o")
-            "[z] z z z z z z"
-            ("\C-i")
-            "new buffe[r]")
+            (evil-test-buffer
+              "[z] z z z z z z"
+              ("\M-x" "find-file" [return] temp-file [return] "inew buffer" [escape])
+              "new buffe[r]"
+              ("\C-o")
+              "[z] z z z z z z"
+              ("\C-i")
+              "new buffe[r]")
           (delete-file temp-file)
           (with-current-buffer (get-file-buffer temp-file)
             (set-buffer-modified-p nil))
@@ -9708,7 +9707,7 @@ main(argc, argv) char **argv; {
             ;; is sufficient for `evil-initial-state-for-buffer' to work.
             (should-error (evil-initial-state-for-buffer)))
         (put 'test-1-mode 'derived-mode-parent 'prog-mode))))
-  (defalias 'test-1-alias-mode 'test-1-mode)
+  (defalias 'test-1-alias-mode #'test-1-mode)
   (define-derived-mode test-3-mode test-1-alias-mode "Test3")
   (evil-set-initial-state 'test-1-mode 'insert)
   (ert-info ("Check inheritance from major mode aliases")
