@@ -59,7 +59,7 @@
 ;;      mailing list (see below).
 ;; Created: 2011-03-01
 ;; Version: 1.15.0
-;; Keywords: emulation, vim
+;; Keywords: emulations
 ;; URL: https://github.com/emacs-evil/evil
 ;;      Repository: https://github.com/emacs-evil/evil.git
 ;;      EmacsWiki: http://www.emacswiki.org/emacs/Evil
