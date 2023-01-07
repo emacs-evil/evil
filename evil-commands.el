@@ -2460,7 +2460,7 @@ will be opened instead."
       (evil-set-register evil-this-macro nil)
       (kmacro-start-macro nil)
       (setq evil-macro-buffer (current-buffer)))
-     (t (error "Invalid register")))))
+     (t (error "Invalid register `%s'" register)))))
 
 (evil-define-command evil-execute-macro (count macro)
   "Execute keyboard macro MACRO, COUNT times.
@@ -2472,15 +2472,14 @@ when called interactively."
   :suppress-operator t
   (interactive
    (let (count macro register)
-     (setq count (if current-prefix-arg
-                     (if (numberp current-prefix-arg)
-                         current-prefix-arg
-                       0) 1)
+     (setq count (cond ((null current-prefix-arg) 1)
+                       ((numberp current-prefix-arg) current-prefix-arg)
+                       (t 0))
            register (or evil-this-register (read-char)))
      (cond
-      ((or (and (eq register ?@) (eq evil-last-register ?:))
-           (eq register ?:))
-       (setq macro (lambda () (evil-ex-repeat nil))
+      ((or (eq register ?:)
+           (and (eq register ?@) (eq evil-last-register ?:)))
+       (setq macro #'evil-ex-repeat
              evil-last-register ?:))
       ((eq register ?@)
        (unless evil-last-register
@@ -2493,24 +2492,22 @@ when called interactively."
   (cond
    ((functionp macro)
     (evil-repeat-abort)
-    (dotimes (_ (or count 1))
-      (funcall macro)))
+    (if (zerop count)
+        (while t (funcall macro))
+      (dotimes (_ (or count 1)) (funcall macro))))
    ((or (and (not (stringp macro))
              (not (vectorp macro)))
         (member macro '("" [])))
     ;; allow references to currently empty registers
     ;; when defining macro
-    (unless evil-this-macro
-      (user-error "No previous macro")))
+    (unless evil-this-macro (user-error "No previous macro")))
    (t
     (condition-case err
         (evil-with-single-undo
-          (dotimes (_ (or count 1))
-            (execute-kbd-macro macro)))
+          (execute-kbd-macro macro count))
       ;; enter Normal state if the macro fails
       (error
        (evil-normal-state)
-       (evil-normalize-keymaps)
        (signal (car err) (cdr err)))))))
 
 (evil-define-command evil-execute-last-recorded-macro (count)

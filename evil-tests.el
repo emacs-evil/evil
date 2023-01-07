@@ -9567,6 +9567,15 @@ Source
       ("ci|testing" [escape])
       "| foo |testing| bar |")))
 
+(ert-deftest evil-test-kbd-macro ()
+  "Test recording and replaying of macros."
+  :tags '(evil kbd-macro)
+  (ert-info ("Execute macro an infinite number of times")
+    (evil-test-buffer "xxx"
+      (evil-set-register ?q "ryl")
+      (error 'end-of-line "\C-u@q")
+      "yyy")))
+
 (ert-deftest evil-test-undo-kbd-macro ()
   "Test if evil can undo the changes made by a keyboard macro
 when an error stops the execution of the macro"
