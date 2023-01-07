@@ -675,8 +675,8 @@ This function interprets special file names like # and %."
   (unless (zerop (length evil-ex-argument))
     (evil-ex-replace-special-filenames evil-ex-argument)))
 
-(defun evil-ex-repeat (count)
-  "Repeat the last ex command."
+(defun evil-ex-repeat (&optional count)
+  "Repeat the last Ex command."
   (interactive "P")
   (when count
     (goto-char (point-min))
