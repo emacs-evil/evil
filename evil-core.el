@@ -126,12 +126,12 @@
         (evil-initialize-state)
         (add-hook 'input-method-activate-hook #'evil-activate-input-method t t)
         (add-hook 'input-method-deactivate-hook #'evil-deactivate-input-method t t)
-        (add-hook 'activate-mark-hook 'evil-visual-activate-hook nil t)
+        (add-hook 'activate-mark-hook #'evil-visual-activate-hook nil t)
         ;; FIXME: Add these hooks buffer-locally
-        (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
-        (add-hook 'post-command-hook 'evil-repeat-post-hook))
+        (add-hook 'pre-command-hook #'evil-repeat-pre-hook)
+        (add-hook 'post-command-hook #'evil-repeat-post-hook))
     (evil-refresh-mode-line)
-    (remove-hook 'activate-mark-hook 'evil-visual-activate-hook t)
+    (remove-hook 'activate-mark-hook #'evil-visual-activate-hook t)
     (remove-hook 'input-method-activate-hook #'evil-activate-input-method t)
     (remove-hook 'input-method-deactivate-hook #'evil-deactivate-input-method t)
     (evil-change-state nil)))
@@ -177,14 +177,14 @@ To enable Evil globally, do (evil-mode)."
   ;; the `evil--fundamental-mode' alias, sidestepping the restriction.
   (if evil-mode
       (progn
-        (and (eval-when-compile (version< emacs-version "26.1"))
-             (eq (default-value 'major-mode) 'fundamental-mode)
-             (setq-default major-mode 'evil--fundamental-mode))
+        (and (eval-when-compile (< emacs-major-version 26))
+             (eq (default-value 'major-mode) #'fundamental-mode)
+             (setq-default major-mode #'evil--fundamental-mode))
         (ad-enable-regexp "^evil")
         (ad-activate-regexp "^evil")
         (evil-esc-mode 1))
-    (when (eq (default-value 'major-mode) 'evil--fundamental-mode)
-      (setq-default major-mode 'fundamental-mode))
+    (when (eq (default-value 'major-mode) #'evil--fundamental-mode)
+      (setq-default major-mode #'fundamental-mode))
     (ad-disable-regexp "^evil")
     (ad-update-regexp "^evil")
     (evil-esc-mode -1)))
@@ -347,6 +347,7 @@ then this function does nothing."
 
 ;; Refresh cursor color.
 ;; Cursor color can only be set for each frame but not for each buffer.
+;; FIXME: Shouldn't this belong in `evil-(local-)mode'?
 (add-hook 'window-configuration-change-hook #'evil-refresh-cursor)
 (defadvice select-window (after evil activate)
   (evil-refresh-cursor))
@@ -987,16 +988,17 @@ mode, in which case `evil-define-minor-mode-key' is used."
         ((and (consp keymap) (eq (car keymap) 'quote))
          `(evil-define-minor-mode-key ,state ,keymap ,key ,def ,@bindings))
         (t
-         `(evil-delay ',(if (symbolp keymap)
-                            `(and (boundp ',keymap) (keymapp ,keymap))
-                          `(keymapp ,keymap))
-              '(condition-case-unless-debug err
-                   (evil-define-key* ,state ,keymap ,key ,def ,@bindings)
-                 (error "error in evil-define-key: %s"
-                        (error-message-string err)))
-            'after-load-functions t nil
-            (format "evil-define-key-in-%s"
-                    ',(if (symbolp keymap) keymap 'keymap))))))
+         `(evil-with-delay ,(if (symbolp keymap)
+                                `(and (boundp ',keymap) (keymapp ,keymap))
+                              `(keymapp ,keymap))
+              (after-load-functions t nil
+                                    ,(format "evil-define-key-in-%s"
+                                             (if (symbolp keymap) keymap
+                                               'keymap)))
+            (condition-case-unless-debug err
+                (evil-define-key* ,state ,keymap ,key ,def ,@bindings)
+              (error (message "error in evil-define-key: %s"
+                              (error-message-string err))))))))
 (defalias 'evil-declare-key #'evil-define-key)
 
 (defun evil-define-key* (state keymap key def &rest bindings)
@@ -1039,7 +1041,7 @@ The use is nearly identical to `evil-define-key' with the
 exception that this is a function and not a macro (and so will
 not be expanded when compiled which can have unintended
 consequences). `evil-define-key*' also does not defer any
-bindings like `evil-define-key' does using `evil-delay'. This
+bindings like `evil-define-key' does using `evil-with-delay'.  This
 allows errors in the bindings to be caught immediately, and makes
 its behavior more predictable."
   (declare (indent defun))

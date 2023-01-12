@@ -594,10 +594,9 @@ RETURN-TYPE is non-nil."
             ;; Make linewise operator shortcuts. E.g., "d" yields the
             ;; shortcut "dd", and "g?" yields shortcuts "g??" and "g?g?".
             (let ((keys (nth 2 (evil-extract-count (this-command-keys)))))
-              (setq keys (listify-key-sequence keys))
-              (dotimes (var (length keys))
+              (cl-loop for keys on (listify-key-sequence keys) do
                 (define-key evil-operator-shortcut-map
-                  (vconcat (nthcdr var keys)) 'evil-line-or-visual-line)))
+                  (vconcat keys) #'evil-line-or-visual-line)))
             ;; read motion from keyboard
             (setq command (evil-read-motion motion)
                   motion (nth 0 command)
@@ -769,19 +768,19 @@ via KEY-VALUE pairs. BODY should evaluate to a list of values.
     (while (keywordp (car-safe body))
       (setq properties
             (append properties (list (pop body) (pop body)))))
-    (cond
-     (args
-      (setq func `(lambda ,args
+    (setq func (cond
+                (args
+                 `(lambda ,args
                     ,@(when doc `(,doc))
-                    ,@body)))
-     ((> (length body) 1)
-      (setq func `(progn ,@body)))
-     (t
-      (setq func (car body))))
+                    ,@body))
+                ((> (length body) 1)
+                 `'(progn ,@body))
+                (t
+                 `',(car body))))
     `(eval-and-compile
        (let* ((code ,code)
               (entry (assoc code evil-interactive-alist))
-              (value (cons ',func ',properties)))
+              (value (cons ,func ',properties)))
          (if entry
              (setcdr entry value)
            (push (cons code value) evil-interactive-alist))

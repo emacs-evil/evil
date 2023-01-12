@@ -164,7 +164,7 @@ function to execute."
           (push result evil-search-backward-history)))
       (evil-search result forward evil-regexp-search))))
 
-(defun evil-command-window-draw-prefix (&rest ignored)
+(defun evil-command-window-draw-prefix (&rest _ignored)
   "Display `evil-command-window-cmd-key' as a prefix to the current line.
 Parameters passed in through IGNORED are ignored."
   (let ((prefix (propertize evil-command-window-cmd-key

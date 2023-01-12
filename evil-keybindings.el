@@ -42,7 +42,7 @@
 ;; FIXME: probably etags-select should be recomended in docs
 (eval-after-load 'etags-select
   '(progn
-     (define-key evil-motion-state-map "g]" 'etags-select-find-tag-at-point)))
+     (define-key evil-motion-state-map "g]" #'etags-select-find-tag-at-point)))
 
 ;;; Buffer-menu
 

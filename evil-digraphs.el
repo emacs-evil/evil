@@ -42,8 +42,7 @@ where the digraph is a list of two characters.
 See also `evil-digraphs-table'."
   :type '(alist :key-type (list character character)
                 :value-type character)
-  :require 'evil-digraphs
-  :group 'evil-digraphs)
+  :require 'evil-digraphs)
 
 (defconst evil-digraphs-table
   '(((?N ?U) . ?\x00)

@@ -62,29 +62,38 @@ no arguments.  In Emacs 23.2 and newer, it takes one argument."
                "Git commit 222b791")
 
 ;; macro helper
-(eval-and-compile
-  (defun evil-unquote (exp)
-    "Return EXP unquoted."
-    (while (eq (car-safe exp) 'quote)
-      (setq exp (cadr exp)))
-    exp))
+(defun evil--with-delay (cond-fun body-fun hook &optional append local name)
+  (if (and cond-fun (funcall cond-fun))
+      (funcall body-fun)
+    (let* ((name (or name (format "evil-delay-in-%s" hook)))
+           (fun (make-symbol name)))
+      (fset fun (lambda (&rest _)
+                  (when (or (null cond-fun) (funcall cond-fun))
+                    (remove-hook hook fun local)
+                    (funcall body-fun))))
+      (put fun 'permanent-local-hook t)
+      (add-hook hook fun append local))))
+
+(defmacro evil-with-delay (condition hook &rest body)
+  "Execute BODY when CONDITION becomes true, checking with HOOK.
+HOOK can be a simple symbol or it can be of the form
+\(HOOK APPEND LOCAL NAME) where:
+NAME specifies the name of the entry added to HOOK.
+If APPEND is non-nil, the entry is appended to the hook.
+If LOCAL is non-nil, the buffer-local value of HOOK is modified."
+  (declare (debug (form sexp body)) (indent 2))
+  (unless (consp hook) (setq hook (list hook)))
+  `(evil--with-delay ,(if condition `(lambda () ,condition))
+                     (lambda () ,@body)
+                     ,@(mapcar #'macroexp-quote hook)))
 
 (defun evil-delay (condition form hook &optional append local name)
   "Execute FORM when CONDITION becomes true, checking with HOOK.
 NAME specifies the name of the entry added to HOOK. If APPEND is
 non-nil, the entry is appended to the hook. If LOCAL is non-nil,
 the buffer-local value of HOOK is modified."
-  (if (and (not (booleanp condition)) (eval condition))
-      (eval form)
-    (let* ((name (or name (format "evil-delay-form-in-%s" hook)))
-           (fun (make-symbol name))
-           (condition (or condition t)))
-      (fset fun `(lambda (&rest args)
-                   (when ,condition
-                     (remove-hook ',hook #',fun ',local)
-                     ,form)))
-      (put fun 'permanent-local-hook t)
-      (add-hook hook fun append local))))
+  (declare (obsolete evil-with-delay "2022"))
+  (eval `(evil-with-delay ,condition (,hook ,append ,local ,name) ,form) t))
 (put 'evil-delay 'lisp-indent-function 2)
 
 ;;; List functions
@@ -136,7 +145,7 @@ otherwise add at the end of the list."
   "Delete by side-effect all items satisfying PREDICATE in LIST.
 Stop when reaching POINTER.  If the first item satisfies PREDICATE,
 there is no way to remove it by side-effect; therefore, write
-\(setq foo (evil-filter-list 'predicate foo)) to be sure of
+\(setq foo (evil-filter-list #\\='predicate foo)) to be sure of
 changing the value of `foo'."
   (let ((tail list) elt head)
     (while (and tail (not (eq tail pointer)))
@@ -302,7 +311,7 @@ If three or more arguments are given, place the smallest
 value in the first argument and the largest in the last,
 sorting in between."
   (let ((sorted (make-symbol "sortvar")))
-    `(let ((,sorted (sort (list ,min ,max ,@vars) '<)))
+    `(let ((,sorted (sort (list ,min ,max ,@vars) #'<)))
        (setq ,min (pop ,sorted)
              ,max (pop ,sorted)
              ,@(apply #'append
@@ -371,11 +380,11 @@ sorting in between."
        ,(when (and command doc-form)
           `(put ',command 'function-documentation ,doc-form))
        ;; set command properties for symbol or lambda function
-       (let ((func ',(if (and (null command) body)
-                         `(lambda ,args
-                            ,interactive
-                            ,@body)
-                       command)))
+       (let ((func #',(if (and (null command) body)
+                          `(lambda ,args
+                             ,interactive
+                             ,@body)
+                        command)))
          (apply #'evil-set-command-properties func ',keys)
          func))))
 
@@ -1143,9 +1152,9 @@ the loop immediately quits. See also `evil-loop'.
 
 (defun evil-signal-at-bob-or-eob (&optional count)
   "Signal error if `point' is at boundaries.
-If `point' is at bob and COUNT is negative this function signal
-'beginning-of-buffer. If `point' is at eob and COUNT is positive
-this function singal 'end-of-buffer. This function should be used
+If `point' is at bob and COUNT is negative this function signals
+`beginning-of-buffer'.  If `point' is at eob and COUNT is positive
+this function signals `end-of-buffer'.  This function should be used
 in motions. COUNT defaults to 1."
   (setq count (or count 1))
   (cond

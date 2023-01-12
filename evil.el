@@ -1,4 +1,4 @@
-;;; evil.el --- extensible vi layer
+;;; evil.el --- Extensible vi layer for Emacs  -*- lexical-binding: t; -*-
 
 ;; The following list of authors was kept up to date until the beginning of
 ;; 2017, when evil moved under new maintainers. For authors since then, please
@@ -59,6 +59,7 @@
 ;;      mailing list (see below).
 ;; Created: 2011-03-01
 ;; Version: 1.15.0
+;; Package-Requires: ((emacs "24.1") (goto-chg "1.6") (cl-lib "0.5"))
 ;; Keywords: emulations
 ;; URL: https://github.com/emacs-evil/evil
 ;;      Repository: https://github.com/emacs-evil/evil.git

@@ -167,17 +167,16 @@ raised.  Remaining forms are evaluated as-is.
                                  `(execute-kbd-macro
                                    (apply #'vconcat
                                           (mapcar #'listify-key-sequence
-                                                  (mapcar #'eval ',form)))))
+                                                  (list ,@form)))))
                                 ((memq (car-safe form) '(kbd vconcat))
                                  `(execute-kbd-macro ,form))
-                                (t
-                                 form))))
+                                (t form))))
                           (if error-symbol
                               `(should-error ,result :type ',error-symbol)
                             result))))
                   body)))
-         (and (buffer-name buffer)
-              (kill-buffer buffer))))))
+         (when (buffer-live-p buffer)
+           (kill-buffer buffer))))))
 
 (defmacro evil-test-selection (string &optional end-string
                                       before-predicate after-predicate)

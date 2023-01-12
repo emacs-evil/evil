@@ -1,4 +1,4 @@
-;;; evil-ex.el --- Ex-mode -*- lexical-binding: nil -*-
+;;; evil-ex.el --- Ex-mode -*- lexical-binding: t -*-
 
 ;; Author: Frank Fischer <frank fischer at mathematik.tu-chemnitz.de>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
@@ -143,6 +143,8 @@ of the syntax.")
   "Whether Ex is currently active."
   (and evil-ex-current-buffer t))
 
+(defvar evil-ex-info-string) ;; FIXME: Where is it used?
+
 (evil-define-command evil-ex (&optional initial-input)
   "Enter an Ex command.
 The ex command line is initialized with the value of
@@ -275,7 +277,7 @@ Clean up everything set up by `evil-ex-setup'."
         (funcall runner 'stop)))))
 (put 'evil-ex-teardown 'permanent-local-hook t)
 
-(defun evil-ex-update (&optional beg end len string)
+(defun evil-ex-update (&optional beg _end _len string)
   "Update Ex variables when the minibuffer changes.
 This function is usually called from `after-change-functions'
 hook. If BEG is non-nil (which is the case when called from
@@ -372,7 +374,7 @@ in case of incomplete or unknown commands."
   (when evil-ex-echo-overlay
     (delete-overlay evil-ex-echo-overlay)
     (setq evil-ex-echo-overlay nil))
-  (remove-hook 'pre-command-hook 'evil--ex-remove-echo-overlay t))
+  (remove-hook 'pre-command-hook #'evil--ex-remove-echo-overlay t))
 
 (defun evil-ex-completion ()
   "Complete the current ex command or argument."
@@ -573,7 +575,7 @@ keywords and function:
 
 (declare-function shell-completion-vars "shell" ())
 
-(defun evil-ex-init-shell-argument-completion (flag &optional arg)
+(defun evil-ex-init-shell-argument-completion (flag &optional _arg)
   "Prepare the current minibuffer for completion of shell commands.
 This function must be called from the :runner function of some
 argument handler that requires shell completion."
@@ -586,14 +588,14 @@ argument handler that requires shell completion."
       (shell-completion-vars))
      (t
       (set (make-local-variable 'minibuffer-default-add-function)
-           'minibuffer-default-add-shell-commands)))
+           #'minibuffer-default-add-shell-commands)))
     (setq completion-at-point-functions
           '(evil-ex-command-completion-at-point
             evil-ex-argument-completion-at-point))))
 
 (define-obsolete-function-alias
   'evil-ex-shell-command-completion-at-point
-  'comint-completion-at-point "1.2.13")
+  #'comint-completion-at-point "1.2.13")
 
 (evil-ex-define-argument-type shell
   "Shell argument type, supports completion."
@@ -922,7 +924,7 @@ for the corresponding string index (counted from zero)."
          (traverse
           #'(lambda (tree path)
               (if (stringp tree)
-                  (dotimes (char (length tree))
+                  (dotimes (_char (length tree))
                     (push path result))
                 (let ((path (cons (car tree) path)))
                   (dolist (subtree (cdr tree))
@@ -1029,6 +1031,7 @@ one can determine how each character was parsed.
 
 The following symbols have reserved meanings within a grammar:
 `\\?', `*', `+', `&', `!', `function', `alt', `seq' and nil."
+  (defvar evil--context)
   (let ((string (or string ""))
         func pair result rules tail)
     (cond
@@ -1054,15 +1057,15 @@ The following symbols have reserved meanings within a grammar:
             (setcar pair result)))))
      ;; symbol
      ((symbolp symbol)
-      (let ((context symbol))
+      (let ((evil--context symbol))
         (setq rules (cdr-safe (assq symbol grammar)))
         (setq pair (evil-parser string `(alt ,@rules)
                                 grammar greedy syntax))
         (when (and syntax pair)
           (setq result (car pair))
-          (if (and (listp result) (sequencep (car result)))
-              (setq result `(,symbol ,@result))
-            (setq result `(,symbol ,result)))
+          (setq result (if (and (listp result) (sequencep (car result)))
+                           `(,symbol ,@result)
+                         `(,symbol ,result)))
           (setcar pair result))))
      ;; function
      ((eq (car-safe symbol) 'function)
@@ -1134,8 +1137,7 @@ The following symbols have reserved meanings within a grammar:
        ;; sequence
        (t
         (setq func (or func 'list))
-        (let ((last (car-safe (last rules)))
-              current results rule)
+        (let (current results rule)
           (catch 'done
             (while rules
               (setq rule (pop rules)
@@ -1151,49 +1153,51 @@ The following symbols have reserved meanings within a grammar:
                 (setq result (car-safe current)
                       tail (cdr-safe current))
                 (unless (memq (car-safe rule) '(& !))
-                  (if (and syntax
-                           (or (null result)
-                               (and (listp result)
-                                    (listp rule)
-                                    ;; splice in single-element
-                                    ;; (\? ...) expressions
-                                    (not (and (eq (car-safe rule) '\?)
-                                              (eq (length rule) 2))))))
-                      (setq results (append results result))
-                    (setq results (append results (list result)))))
+                  (setq results
+                        (append results
+                                (if (and syntax
+                                         (or (null result)
+                                             (and (listp result)
+                                                  (listp rule)
+                                                  ;; splice in single-element
+                                                  ;; (\? ...) expressions
+                                                  (not (and (eq (car-safe rule) '\?)
+                                                            (eq (length rule) 2))))))
+                                    result
+                                  (list result)))))
                 (setq string (or tail ""))))))
           (when results
             (setq pair (cons results tail))))))
       ;; semantic action
       (when (and pair func (not syntax))
         (setq result (car pair))
-        (cond
-         ((null func)
-          (setq result nil))
-         ;; lambda function
-         ((eq (car-safe func) 'lambda)
-          (if (memq symbol '(+ seq))
-              (setq result `(funcall ,func ,@result))
-            (setq result `(funcall ,func ,result))))
-         ;; string replacement
-         ((or (stringp func) (stringp (car-safe func)))
-          (let* ((symbol (or (car-safe (cdr-safe func))
-                             (and (boundp 'context) context)
-                             (car-safe (car-safe grammar))))
-                 (string (if (stringp func) func (car-safe func))))
-            (setq result (car-safe (evil-parser string symbol grammar
-                                                greedy syntax)))))
-         ;; dollar expression
-         ((evil-parser--dexp func)
-          (setq result (evil-parser--dval func result)))
-         ;; function call
-         ((listp func)
-          (setq result (evil-parser--dval func result)))
-         ;; symbol
-         (t
-          (if (memq symbol '(+ seq))
-              (setq result `(,func ,@result))
-            (setq result `(,func ,result)))))
+        (setq result
+              (cond
+               ((null func) nil)
+               ;; lambda function
+               ((eq (car-safe func) 'lambda)
+                (if (memq symbol '(+ seq))
+                    `(funcall ,func ,@result)
+                  `(funcall ,func ,result)))
+               ;; string replacement
+               ((or (stringp func) (stringp (car-safe func)))
+                (let* ((symbol (or (car-safe (cdr-safe func))
+                                   (and (boundp 'evil--context) evil--context)
+                                   (car-safe (car-safe grammar))))
+                       (string (if (stringp func) func (car-safe func))))
+                  (car-safe (evil-parser string symbol grammar
+                                         greedy syntax))))
+               ;; dollar expression
+               ((evil-parser--dexp func)
+                (evil-parser--dval func result))
+               ;; function call
+               ((listp func)
+                (evil-parser--dval func result))
+               ;; symbol
+               (t
+                (if (memq symbol '(+ seq))
+                    `(,func ,@result)
+                  `(,func ,result)))))
         (setcar pair result))))
     ;; weed out incomplete matches
     (when pair

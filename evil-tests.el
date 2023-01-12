@@ -1,4 +1,4 @@
-;; evil-tests.el --- unit tests for Evil -*- coding: utf-8 -*-
+;; evil-tests.el --- unit tests for Evil -*- coding: utf-8; lexical-binding: t; -*-
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
@@ -200,13 +200,10 @@ with `M-x evil-tests-run'"))
 
 (defun evil-test-change-state (state)
   "Change state to STATE and check keymaps"
-  (let (mode keymap local-mode local-keymap tag)
-    (evil-change-state state)
-    (setq mode (evil-state-property state :mode)
-          keymap (evil-state-property state :keymap t)
-          local-mode (evil-state-property state :local)
-          local-keymap (evil-state-property state :local-keymap t)
-          tag (evil-state-property state :tag t))
+  (evil-change-state state)
+  (let ((mode (evil-state-property state :mode))
+        (local-mode (evil-state-property state :local))
+        (tag (evil-state-property state :tag t)))
     (when (functionp tag)
       (setq tag (funcall tag)))
     (ert-info ("Update `evil-state'")
@@ -434,14 +431,15 @@ when exiting Operator-Pending state")
 (ert-deftest evil-test-auxiliary-maps ()
   "Test auxiliary keymaps"
   :tags '(evil state)
-  (let ((map (make-sparse-keymap)) aux)
+  (defvar evil--map)
+  (let ((evil--map (make-sparse-keymap)) aux)
     (ert-info ("Create a new auxiliary keymap")
-      (evil-define-key 'normal map "f" 'foo)
-      (setq aux (evil-get-auxiliary-keymap map 'normal))
+      (evil-define-key 'normal evil--map "f" 'foo)
+      (setq aux (evil-get-auxiliary-keymap evil--map 'normal))
       (should (evil-auxiliary-keymap-p aux))
       (should (eq (lookup-key aux "f") 'foo)))
     (ert-info ("Add to auxiliary keymap")
-      (evil-define-key 'normal map "b" 'bar)
+      (evil-define-key 'normal evil--map "b" 'bar)
       (should (eq (lookup-key aux "f") 'foo))
       (should (eq (lookup-key aux "b") 'bar)))))
 
@@ -485,7 +483,7 @@ when exiting Operator-Pending state")
            (second-line (progn
                           (forward-line)
                           (point)))
-           (third-line (progn
+           (_third-line (progn
                          (forward-line)
                          (point))))
       (ert-info ("Return the beginning and end unchanged \
@@ -1926,7 +1924,7 @@ New Tex[t]
       ";; [T]his buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y3s")
       (should (string= (current-kill 0) "Thi\nIf \nthe"))
       (should (eq (car-safe (get-text-property 0 'yank-handler
@@ -2034,7 +2032,7 @@ New Tex[t]
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("d3s")
       "[T]his buffer is for notes you don't want to save.
 If you want to create a file, visit that file with C-x C-f,
@@ -2279,7 +2277,7 @@ for this test."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("c3sABC" [escape])
       "AB[C]This buffer is for notes you don't want to save.
 ABCIf you want to create a file, visit that file with C-x C-f,
@@ -2581,7 +2579,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("3ysP")
       "[;]; ;; This buffer is for notes you don't want to save.
 ;; ;; If you want to create a file, visit that file with C-x C-f,
@@ -2591,7 +2589,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("3ys2P")
       "[;]; ;; ;; This buffer is for notes you don't want to save.
 ;; ;; ;; If you want to create a file, visit that file with C-x C-f,
@@ -2601,7 +2599,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; Above some line
 
 ;; Below some empty line"
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("3ys2P")
       "[;]; ;; ;; Above some line
       \n\
@@ -2611,7 +2609,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("3ysj")
       ";; This buffer is for notes you don't want to save.
 \[;]; If you want to create a file, visit that file with C-x C-f,
@@ -2626,7 +2624,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("3ys$")
       ";; This buffer is for notes you don't want to save[.]
 ;; If you want to create a file, visit that file with C-x C-f,
@@ -2708,7 +2706,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("3ysp")
       ";[;]; ; This buffer is for notes you don't want to save.
 ;;; ; If you want to create a file, visit that file with C-x C-f,
@@ -2718,7 +2716,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("3ys2p")
       ";[;]; ;; ; This buffer is for notes you don't want to save.
 ;;; ;; ; If you want to create a file, visit that file with C-x C-f,
@@ -2728,7 +2726,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; Above some line
 
 ;; Below some empty line"
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("3ys2p")
       ";;; ;; ; Above some line
 
@@ -2738,7 +2736,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("3ysj")
       ";; This buffer is for notes you don't want to save.
 \[;]; If you want to create a file, visit that file with C-x C-f,
@@ -2753,7 +2751,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("3ys$")
       ";; This buffer is for notes you don't want to save[.]
 ;; If you want to create a file, visit that file with C-x C-f,
@@ -2783,7 +2781,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sj")
       ";; This buffer is for notes you don't want to save.
 \[;]; If you want to create a file, visit that file with C-x C-f,
@@ -2798,7 +2796,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sjP\C-p")
       ";; This buffer is for notes you don't want to save.
 \[;]; This buffer is for notes you don't want to save.
@@ -2810,7 +2808,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sjP\C-p\C-p")
       ";; This buffer is for notes you don't want to save.
 ;; Thi[s];; If you want to create a file, visit that file with C-x C-f,
@@ -2820,7 +2818,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sjP2\C-p")
       ";; This buffer is for notes you don't want to save.
 ;; Thi[s];; If you want to create a file, visit that file with C-x C-f,
@@ -2830,7 +2828,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sjP2\C-p\C-n")
       ";; This buffer is for notes you don't want to save.
 \[;]; This buffer is for notes you don't want to save.
@@ -2842,7 +2840,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sjP\C-p\C-p2\C-n")
       ";; This buffer is for notes you don't want to save.
 \[;]; ;; If you want to create a file, visit that file with C-x C-f,
@@ -2857,7 +2855,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sj")
       ";; This buffer is for notes you don't want to save.
 \[;]; If you want to create a file, visit that file with C-x C-f,
@@ -2872,7 +2870,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sjp\C-p")
       ";; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
@@ -2884,7 +2882,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sjp\C-p\C-p")
       ";; This buffer is for notes you don't want to save.
 ;;; Thi[s]; If you want to create a file, visit that file with C-x C-f,
@@ -2894,7 +2892,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sjp2\C-p")
       ";; This buffer is for notes you don't want to save.
 ;;; Thi[s]; If you want to create a file, visit that file with C-x C-f,
@@ -2904,7 +2902,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sjp2\C-p\C-n")
       ";; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
@@ -2916,7 +2914,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
       "[;]; This buffer is for notes you don't want to save.
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sjp\C-p\C-p2\C-n")
       ";; This buffer is for notes you don't want to save.
 ;[;]; ; If you want to create a file, visit that file with C-x C-f,
@@ -2932,7 +2930,7 @@ This bufferThis bufferThis buffe[r];; and for Lisp evaluation."))
 ;; If you want to create a file, visit that file with C-x C-f,
 ;; then enter the text in that file's own buffer."
       (setq buffer-undo-list t)
-      (define-key evil-operator-state-local-map "s" 'evil-test-square-motion)
+      (define-key evil-operator-state-local-map "s" #'evil-test-square-motion)
       ("y2e2yyy3sjP\C-p\C-p2\C-n")
       ";; This buffer is for notes you don't want to save.
 \[;]; ;; If you want to create a file, visit that file with C-x C-f,
@@ -5997,7 +5995,7 @@ Line 2"))
 (ert-deftest evil-test-text-object ()
   "Test `evil-define-text-object'"
   :tags '(evil text-object)
-  (let ((object (evil-define-text-object nil (count &optional beg end type)
+  (let ((object (evil-define-text-object nil (count &optional beg end _type)
                   (let ((sel (and beg end (evil-range beg end))))
                     (when (and sel (> count 0)) (forward-char 1))
                     (let ((range (if (< count 0)
@@ -7405,7 +7403,7 @@ golf h[o]>tel")))
       ([backspace backspace backspace backspace backspace backspace backspace])
       ";; This buffer is for [n]otes"))
   (ert-info ("Replace from line below and restore")
-    (define-key evil-replace-state-map (kbd "C-e") 'evil-copy-from-below)
+    (define-key evil-replace-state-map (kbd "C-e") #'evil-copy-from-below)
     (evil-test-buffer
       ";; [f]oo bar\n;; qux quux"
       ("R\C-e\C-e\C-e")
@@ -7414,7 +7412,7 @@ golf h[o]>tel")))
       ";; [f]oo bar\n;; qux quux")
     (define-key evil-replace-state-map (kbd "C-e") nil))
   (ert-info ("Replace from line above and restore")
-    (define-key evil-replace-state-map (kbd "C-y") 'evil-copy-from-above)
+    (define-key evil-replace-state-map (kbd "C-y") #'evil-copy-from-above)
     (evil-test-buffer
       ";; foo bar\n;; [q]ux quux"
       ("R\C-y\C-y\C-y")
@@ -8496,6 +8494,15 @@ maybe we need one line more with some text\n")
       ("vj!sort" [return])
       "line 5\n[l]ine 3\nline 4\nline 2\nline 1\n")))
 
+(defmacro evil-with-both-search-modules (&rest body)
+  `(mapc (lambda (search-module)
+           (setq evil-search-forward-history nil
+                 evil-search-backward-history nil
+                 evil-ex-search-history nil)
+           (evil-select-search-module 'evil-search-module search-module)
+           ,@body)
+         '(isearch evil-search)))
+
 (ert-deftest evil-test-global ()
   "Test `evil-ex-global'."
   :tags '(evil ex global)
@@ -8831,15 +8838,6 @@ Source
         (execute-kbd-macro "q:")
         (should (= (length (window-list)) num-windows))))))
 
-(defmacro evil-with-both-search-modules (&rest body)
-  `(mapc (lambda (search-module)
-           (setq evil-search-forward-history nil
-                 evil-search-backward-history nil
-                 evil-ex-search-history nil)
-           (evil-select-search-module 'evil-search-module search-module)
-           ,@body)
-         '(isearch evil-search)))
-
 (ert-deftest evil-test-command-window-search-history ()
   "Test command window with forward and backward search history"
   (skip-unless (not noninteractive))
@@ -9114,25 +9112,26 @@ parameter set."
 (ert-deftest evil-test-properties ()
   "Test `evil-get-property' and `evil-put-property'"
   :tags '(evil util)
-  (let (alist)
+  (defvar evil--alist)
+  (let (evil--alist)
     (ert-info ("Set properties")
-      (evil-put-property 'alist 'wibble :foo t)
-      (should (equal alist '((wibble . (:foo t)))))
-      (evil-put-property 'alist 'wibble :bar nil)
-      (should (equal alist '((wibble . (:foo t :bar nil)))))
-      (evil-put-property 'alist 'wobble :foo nil :bar nil :baz t)
-      (should (equal alist '((wobble . (:foo nil :bar nil :baz t))
+      (evil-put-property 'evil--alist 'wibble :foo t)
+      (should (equal evil--alist '((wibble . (:foo t)))))
+      (evil-put-property 'evil--alist 'wibble :bar nil)
+      (should (equal evil--alist '((wibble . (:foo t :bar nil)))))
+      (evil-put-property 'evil--alist 'wobble :foo nil :bar nil :baz t)
+      (should (equal evil--alist '((wobble . (:foo nil :bar nil :baz t))
                              (wibble . (:foo t :bar nil))))))
     (ert-info ("Get properties")
-      (should (evil-get-property alist 'wibble :foo))
-      (should-not (evil-get-property alist 'wibble :bar))
-      (should-not (evil-get-property alist 'wobble :foo))
-      (should-not (evil-get-property alist 'wibble :baz))
-      (should (equal (evil-get-property alist t :foo)
+      (should (evil-get-property evil--alist 'wibble :foo))
+      (should-not (evil-get-property evil--alist 'wibble :bar))
+      (should-not (evil-get-property evil--alist 'wobble :foo))
+      (should-not (evil-get-property evil--alist 'wibble :baz))
+      (should (equal (evil-get-property evil--alist t :foo)
                      '((wibble . t) (wobble . nil))))
-      (should (equal (evil-get-property alist t :bar)
+      (should (equal (evil-get-property evil--alist t :bar)
                      '((wibble . nil) (wobble . nil))))
-      (should (equal (evil-get-property alist t :baz)
+      (should (equal (evil-get-property evil--alist t :baz)
                      '((wobble . t)))))))
 
 (ert-deftest evil-test-filter-list ()
@@ -9471,42 +9470,42 @@ parameter set."
     (evil-with-temp-file file-name ""
       (evil-test-buffer
         (vconcat "i" file-name [escape])
-        (should (not (equal file-name (buffer-file-name (current-buffer)))))
+        (should (not (equal file-name (buffer-file-name))))
         ("gf")
-        (should (equal file-name (buffer-file-name (current-buffer)))))))
+        (should (equal file-name (buffer-file-name))))))
   (ert-info ("Find file at point (visual state)")
     (evil-with-temp-file file-name ""
       (evil-test-buffer
         (vconcat "iuser@localhost:" file-name "$" [escape])
-        (should (not (equal file-name (buffer-file-name (current-buffer)))))
+        (should (not (equal file-name (buffer-file-name))))
         ("0f:lvt$gf")
-        (should (equal file-name (buffer-file-name (current-buffer)))))))
+        (should (equal file-name (buffer-file-name))))))
   (ert-info ("Find file at point with line number")
     (let* ((line-number 3)
            (file-content (make-string (* 2 line-number) ?\n)))
       (evil-with-temp-file file-name (insert file-content)
           (evil-test-buffer
             (vconcat "i" file-name (format ":%d" line-number) [escape])
-            (should (and (not (equal file-name (buffer-file-name (current-buffer))))
+            (should (and (not (equal file-name (buffer-file-name)))
                          (not (equal line-number (line-number-at-pos)))))
             ("gF")
-            (should (and (equal file-name (buffer-file-name (current-buffer)))
+            (should (and (equal file-name (buffer-file-name))
                          (equal line-number (line-number-at-pos))))))))
   (ert-info ("Find file at point with line and column numbers")
     (let* ((line-number 3)
            (column-number 5)
-           (file-content (mapconcat 'identity
+           (file-content (mapconcat #'identity
                                     (make-list (* 2 line-number)
                                                (make-string (* 2 column-number) ?\s))
                                     "\n")))
       (evil-with-temp-file file-name (insert file-content)
         (evil-test-buffer
           (vconcat "i" file-name (format ":%d:%d" line-number column-number) [escape])
-          (should (and (not (equal file-name (buffer-file-name (current-buffer))))
+          (should (and (not (equal file-name (buffer-file-name)))
                        (not (equal line-number (line-number-at-pos)))
                        (not (equal column-number (current-column)))))
           ("gF")
-          (should (and (equal file-name (buffer-file-name (current-buffer)))
+          (should (and (equal file-name (buffer-file-name))
                        (equal line-number (line-number-at-pos))
                        (equal column-number (1+ (current-column))))))))))
 
