@@ -429,7 +429,14 @@ when exiting Operator-Pending state")
                   'bar))
       (evil-test-change-state 'emacs)
       (should-not (eq (lookup-key evil-operator-shortcut-map "b")
-                      'bar)))))
+                      'bar))))
+  (ert-info ("Compute shortcuts with original keymaps")
+    (evil-test-buffer "foo"
+     (define-key evil-normal-state-local-map (kbd "SPC x") #'evil-delete)
+     ;; evil-forward-char in motion map should not shadow the executed
+     ;; evil-delete binding above when populating shortcut map.
+     ((kbd "SPC x x"))
+     "")))
 
 (ert-deftest evil-test-auxiliary-maps ()
   "Test auxiliary keymaps"
