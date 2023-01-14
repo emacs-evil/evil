@@ -305,11 +305,14 @@ directly."
 
 (evil-define-interactive-code "<r>"
   "Untyped motion range (BEG END)."
-  (evil-operator-range))
+  (let ((range (evil-operator-range)))
+    (setcdr (cdr range) nil)
+    range))
 
 (evil-define-interactive-code "<R>"
   "Typed motion range (BEG END TYPE)."
-  (evil-operator-range t))
+  (let ((range (evil-operator-range)))
+    (list (car range) (cadr range) (evil-type range))))
 
 (evil-define-interactive-code "<v>"
   "Typed motion range of visual range(BEG END TYPE).

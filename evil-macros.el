@@ -25,13 +25,14 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
+;;; Code:
+
 (require 'evil-common)
 (require 'evil-states)
 (require 'evil-repeat)
 
-;;; Code:
-
 (declare-function evil-ex-p "evil-ex")
+(declare-function evil-line-or-visual-line "evil-commands")
 
 ;; set some error codes
 (put 'beginning-of-line 'error-conditions '(beginning-of-line error))
@@ -562,16 +563,13 @@ Optional keyword arguments are:
          (setq evil-inhibit-operator-value nil)))))
 
 ;; this is used in the `interactive' specification of an operator command
-(defun evil-operator-range (&optional return-type)
-  "Read a motion from the keyboard and return its buffer positions.
-The return value is a list (BEG END), or (BEG END TYPE) if
-RETURN-TYPE is non-nil."
+(defun evil-operator-range ()
+  "Read a motion from the keyboard and return its buffer positions."
   (let* ((evil-ex-p (and (not (minibufferp)) (evil-ex-p)))
          (motion (or evil-operator-range-motion
                      (when evil-ex-p 'evil-line)))
          (type evil-operator-range-type)
-         (range (evil-range (point) (point)))
-         command count)
+         range count)
     (setq evil-this-type-modified nil)
     (evil-save-echo-area
       (cond
@@ -586,67 +584,59 @@ RETURN-TYPE is non-nil."
         (setq range (evil-range (region-beginning)
                                 (region-end)
                                 (or evil-this-type 'exclusive))))
+       ;; motion
        (t
-        ;; motion
-        (evil-save-state
-          (unless motion
-            (evil-change-state 'operator)
+        (unless motion
+          (evil-save-state
             ;; Make linewise operator shortcuts. E.g., "d" yields the
             ;; shortcut "dd", and "g?" yields shortcuts "g??" and "g?g?".
             (let ((keys (nth 2 (evil-extract-count (this-command-keys)))))
-              (setq keys (listify-key-sequence keys))
-              (dotimes (var (length keys))
-                (define-key evil-operator-shortcut-map
-                  (vconcat (nthcdr var keys)) 'evil-line-or-visual-line)))
+              (evil-change-state 'operator)
+              (cl-loop for keys on (listify-key-sequence keys) do
+                       (define-key evil-operator-shortcut-map
+                         (vconcat keys) #'evil-line-or-visual-line)))
             ;; read motion from keyboard
-            (setq command (evil-read-motion motion)
-                  motion (nth 0 command)
-                  count (nth 1 command)
-                  type (or type (nth 2 command))))
-          (cond
-           ((eq motion #'undefined)
-            (setq range (if return-type '(nil nil nil) '(nil nil))
-                  motion nil))
-           ((or (null motion) ; keyboard-quit
-                (evil-get-command-property motion :suppress-operator))
-            (when (fboundp 'evil-repeat-abort)
-              (evil-repeat-abort))
-            (setq quit-flag t
-                  motion nil))
-           (evil-repeat-count
-            (setq count evil-repeat-count
-                  ;; only the first operator's count is overwritten
-                  evil-repeat-count nil))
-           ((or count current-prefix-arg)
-            ;; multiply operator count and motion count together
-            (setq count
-                  (* (prefix-numeric-value count)
-                     (prefix-numeric-value current-prefix-arg)))))
-          (when motion
-            (let ((evil-state 'operator)
-                  mark-active)
-              ;; calculate motion range
-              (setq range (evil-motion-range
-                           motion
-                           count
-                           type))))
-          ;; update global variables
-          (setq evil-this-motion motion
-                evil-this-motion-count count
-                type (evil-type range type)
-                evil-this-type type))))
-      (when (evil-range-p range)
-        (unless (or (null type) (eq (evil-type range) type))
-          (evil-contract-range range)
-          (evil-set-type range type)
-          (evil-expand-range range))
-        (evil-set-range-properties range nil)
-        (unless return-type
-          (evil-set-type range nil))
-        (setq evil-operator-range-beginning (evil-range-beginning range)
-              evil-operator-range-end (evil-range-end range)
-              evil-operator-range-type (evil-type range)))
-      range)))
+            (let ((command (evil-read-motion motion)))
+              (setq motion (car command)
+                    count (cadr command)
+                    type (or type (nth 2 command))))))
+        (cond
+         ((eq motion #'undefined)
+          (setq range (list nil nil)
+                motion nil))
+         ((or (null motion) ; keyboard-quit
+              (evil-get-command-property motion :suppress-operator))
+          (evil-repeat-abort)
+          (setq quit-flag t
+                range (evil-range (point) (point)) ; zero-len range
+                motion nil))
+         (evil-repeat-count
+          (setq count evil-repeat-count
+                ;; only the first operator's count is overwritten
+                evil-repeat-count nil))
+         ((or count current-prefix-arg)
+          ;; multiply operator count and motion count together
+          (setq count
+                (* (prefix-numeric-value count)
+                   (prefix-numeric-value current-prefix-arg)))))
+        (when motion
+          (let ((evil-state 'operator)
+                mark-active)
+            ;; calculate motion range
+            (setq range (evil-motion-range motion count type))))
+        ;; update global variables
+        (setq evil-this-motion motion
+              evil-this-motion-count count
+              type (evil-type range type)
+              evil-this-type type))))
+    (unless (or (null type) (eq (evil-type range) type))
+      (evil-contract-range range)
+      (evil-set-range-type range type)
+      (evil-expand-range range))
+    (setq evil-operator-range-beginning (evil-range-beginning range)
+          evil-operator-range-end (evil-range-end range)
+          evil-operator-range-type (evil-type range))
+    range))
 
 (defmacro evil-define-type (type doc &rest body)
   "Define type TYPE.

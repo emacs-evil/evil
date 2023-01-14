@@ -714,12 +714,12 @@ recursively."
            (beg 0)
            (end 1)
            (found-prefix nil))
-      (while (and (<= end len))
+      (while (<= end len)
         (let* ((seq (substring keys beg end))
                (cmd (key-binding seq)))
           (cond
            ((memq cmd '(undefined nil))
-            (user-error "No command bound to %s" seq))
+            (user-error "No command bound to `%s'" seq))
            ((arrayp cmd) ; keyboard macro, replace command with macro
             (setq keys (vconcat (substring keys 0 beg)
                                 cmd
