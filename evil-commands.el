@@ -1188,6 +1188,32 @@ or line COUNT to the bottom of the window."
   (evil-with-hproject-point-on-window
     (scroll-left count)))
 
+(evil-define-command evil-scroll-end-column ()
+  "Scroll the window to position the cursor at the end (right side) of the screen.
+Warn if `hscroll-margin' > 0, as cursor will be `hscroll-margin' chars from
+the right edge."
+  :repeat nil
+  :keep-visual t
+  (interactive)
+  (let* ((window-hpos (- (current-column) (window-hscroll)))
+         (dist-from-right-edge (- (window-width) window-hpos)))
+    (when (< 0 hscroll-margin)
+      (message "%s: hscroll-margin = %d" this-command hscroll-margin))
+    (evil-scroll-column-left (- dist-from-right-edge (abs (* 2 hscroll-margin))))))
+
+(evil-define-command evil-scroll-start-column ()
+  "Scroll the window to position the cursor at the start (left side) of the screen.
+Warn if `hscroll-margin' > 0, as cursor will be `hscroll-margin' chars from
+the left edge."
+  :repeat nil
+  :keep-visual t
+  (interactive)
+  (let ((initial-column (current-column))
+        (initial-hscroll (window-hscroll)))
+    (when (< 0 hscroll-margin)
+      (message "%s: hscroll-margin = %d" this-command hscroll-margin))
+    (evil-scroll-column-right (- initial-column initial-hscroll hscroll-margin 1))))
+
 ;;; Text objects
 
 ;; Text objects are defined with `evil-define-text-object'. In Visual
