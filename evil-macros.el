@@ -588,8 +588,8 @@ RETURN-TYPE is non-nil."
                                 (or evil-this-type 'exclusive))))
        ;; motion
        (t
-        (unless motion
-          (evil-save-state
+        (evil-save-state
+          (unless motion
             ;; Make linewise operator shortcuts. E.g., "d" yields the
             ;; shortcut "dd", and "g?" yields shortcuts "g??" and "g?g?".
             (let ((keys (nth 2 (evil-extract-count (this-command-keys)))))
@@ -601,36 +601,36 @@ RETURN-TYPE is non-nil."
             (let ((command (evil-read-motion motion)))
               (setq motion (car command)
                     count (cadr command)
-                    type (or type (nth 2 command))))))
-        (cond
-         ((eq motion #'undefined)
-          (setq range (list nil nil)
-                motion nil))
-         ((or (null motion) ; keyboard-quit
-              (evil-get-command-property motion :suppress-operator))
-          (evil-repeat-abort)
-          (setq quit-flag t
-                range (evil-range (point) (point)) ; zero-len range
-                motion nil))
-         (evil-repeat-count
-          (setq count evil-repeat-count
-                ;; only the first operator's count is overwritten
-                evil-repeat-count nil))
-         ((or count current-prefix-arg)
-          ;; multiply operator count and motion count together
-          (setq count
-                (* (prefix-numeric-value count)
-                   (prefix-numeric-value current-prefix-arg)))))
-        (when motion
-          (let ((evil-state 'operator)
-                mark-active)
-            ;; calculate motion range
-            (setq range (evil-motion-range motion count type))))
-        ;; update global variables
-        (setq evil-this-motion motion
-              evil-this-motion-count count
-              type (evil-type range type)
-              evil-this-type type))))
+                    type (or type (nth 2 command)))))
+          (cond
+           ((eq motion #'undefined)
+            (setq range (list nil nil)
+                  motion nil))
+           ((or (null motion) ; keyboard-quit
+                (evil-get-command-property motion :suppress-operator))
+            (evil-repeat-abort)
+            (setq quit-flag t
+                  range (evil-range (point) (point)) ; zero-len range
+                  motion nil))
+           (evil-repeat-count
+            (setq count evil-repeat-count
+                  ;; only the first operator's count is overwritten
+                  evil-repeat-count nil))
+           ((or count current-prefix-arg)
+            ;; multiply operator count and motion count together
+            (setq count
+                  (* (prefix-numeric-value count)
+                     (prefix-numeric-value current-prefix-arg)))))
+          (when motion
+            (let ((evil-state 'operator)
+                  mark-active)
+              ;; calculate motion range
+              (setq range (evil-motion-range motion count type))))
+          ;; update global variables
+          (setq evil-this-motion motion
+                evil-this-motion-count count
+                type (evil-type range type)
+                evil-this-type type)))))
     (unless (or (null type) (eq (evil-type range) type))
       (evil-contract-range range)
       (evil-set-range-type range type)
@@ -638,10 +638,9 @@ RETURN-TYPE is non-nil."
     (setq evil-operator-range-beginning (evil-range-beginning range)
           evil-operator-range-end (evil-range-end range)
           evil-operator-range-type (evil-type range))
-    (if return-type
-        (list (car range) (cadr range) (evil-type range))
-      (setcdr (cdr range) nil)
-      range)))
+    (setcdr (cdr range)
+            (when return-type (list (evil-type range))))
+    range))
 
 (defmacro evil-define-type (type doc &rest body)
   "Define type TYPE.

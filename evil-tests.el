@@ -2514,6 +2514,12 @@ Below some empty line")))
       ("^`[")
       "alpha b[r]")))
 
+(ert-deftest evil-test-operator-save-state-for-motion ()
+  "Test that `evil-operator-range' restores state after executing motion."
+  (evil-test-buffer "abc"
+    ("dfbix" [escape])
+    "xc"))
+
 ;;; Paste
 
 (ert-deftest evil-test-paste-before ()
