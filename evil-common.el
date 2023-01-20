@@ -539,7 +539,7 @@ Both COUNT and CMD may be nil."
     (when input (setq unread-command-events (append input unread-command-events)))
     (catch 'done
       (while t
-        (let ((seq (read-key-sequence "")))
+        (let ((seq (read-key-sequence nil)))
           (when seq
             (let ((cmd (key-binding seq)))
               (cond
@@ -767,9 +767,37 @@ filename."
 (defun evil-lookup-key (map key)
   "Return non-nil value if KEY is bound in MAP."
   (let ((definition (lookup-key map key)))
-    (if (numberp definition) ; in-band error
-        nil
+    (unless (numberp definition) ; in-band error
       definition)))
+
+(defvar evil--prefix-keystrokes nil
+  "The value of `evil--current-prefix-keystrokes' for the next editing command.")
+(defvar evil--current-prefix-keystrokes nil
+  "List of keystroke strings to echo in addition to unfinished command.
+The keys for `evil-use-register' and operators etc. get appended to
+this variable, in order to better emulate the \"showcmd\" feature of
+Vim when `echo-keystrokes' is on.  This is needed as Vim considers
+them part of a single command, whereas in Evil they are separate.")
+
+(defun evil--prefix-keystrokes ()
+  "Format `evil--current-prefix-keystrokes' as a string.
+Intended for `prefix-command-echo-keystrokes-functions'."
+  (when evil--current-prefix-keystrokes
+    (mapconcat #'identity evil--current-prefix-keystrokes " ")))
+
+(defun evil--add-prefix-keystrokes ()
+  "Continue to echo the key sequence of this command for the next one too."
+  (setq evil--current-prefix-keystrokes
+        (nconc evil--current-prefix-keystrokes (list (this-command-keys))))
+  (prefix-command-update))
+
+(defun evil--reset-prefix-keystrokes ()
+  "Reset `evil--current-prefix-keystrokes' unless it has been preserved."
+  (setq evil--current-prefix-keystrokes evil--prefix-keystrokes
+        evil--prefix-keystrokes nil))
+
+(defun evil--prefix-keystrokes-preserve ()
+  (setq evil--prefix-keystrokes evil--current-prefix-keystrokes))
 
 ;;; Display
 
@@ -4025,17 +4053,16 @@ should be left-aligned for left justification."
 
 (defmacro evil-with-view-list (&rest properties)
   "Open new list view buffer.
-
 PROPERTIES is a property-list which supports the following properties:
 
-:name           (required)   The name of the buffer.
-:mode-name      (required)   The name for the mode line.
-:format         (required)   The value for `tabulated-list-format'.
-:entries        (required)   The value for `tabulated-list-entries'.
-:select-action  (optional)   A function for row selection.
-                             It takes in a single parameter, which is the selected row's
-                             vector value that is passed into `:entries'.
-"
+:name          (required)   The name of the buffer.
+:mode-name     (required)   The name for the mode line.
+:format        (required)   The value for `tabulated-list-format'.
+:entries       (required)   The value for `tabulated-list-entries'.
+:select-action (optional)   A function for row selection.
+                            It takes a single parameter, which is the
+                            selected row's vector value that is passed
+                            into `:entries'."
   (declare (indent defun) (debug t))
   `(let ((bufname (concat "*" ,(plist-get properties :name) "*"))
          (inhibit-read-only t))

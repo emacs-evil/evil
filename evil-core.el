@@ -180,11 +180,28 @@ To enable Evil globally, do (evil-mode)."
         (and (eval-when-compile (version< emacs-version "26.1"))
              (eq (default-value 'major-mode) 'fundamental-mode)
              (setq-default major-mode 'evil--fundamental-mode))
+
+        (add-hook 'post-command-hook #'evil--reset-prefix-keystrokes)
+        (when (eval-when-compile (>= emacs-major-version 25))
+          (add-hook 'prefix-command-echo-keystrokes-functions
+                    ;; Add before `universal-argument--description'
+                    #'evil--prefix-keystrokes -50)
+          (add-hook 'prefix-command-preserve-state-hook
+                    #'evil--prefix-keystrokes-preserve))
+
         (ad-enable-regexp "^evil")
         (ad-activate-regexp "^evil")
         (evil-esc-mode 1))
     (when (eq (default-value 'major-mode) 'evil--fundamental-mode)
       (setq-default major-mode 'fundamental-mode))
+
+    (remove-hook 'post-command-hook #'evil--reset-prefix-keystrokes)
+    (when (eval-when-compile (>= emacs-major-version 25))
+      (remove-hook 'prefix-command-echo-keystrokes-functions
+                   #'evil--prefix-keystrokes)
+      (remove-hook 'prefix-command-preserve-state-hook
+                   #'evil--prefix-keystrokes-preserve))
+
     (ad-disable-regexp "^evil")
     (ad-update-regexp "^evil")
     (evil-esc-mode -1)))

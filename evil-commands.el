@@ -2357,7 +2357,11 @@ leave the cursor just after the new text."
   :repeat ignore
   :suppress-operator t
   (interactive "<C>")
-  (setq evil-this-register register))
+  (setq evil-this-register register)
+  (when (eval-when-compile (>= emacs-major-version 25))
+    (evil--add-prefix-keystrokes)
+    ;; Pass count on to next command, i.a.
+    (run-hooks 'prefix-command-preserve-state-hook)))
 
 (defvar evil-macro-buffer nil
   "The buffer that has been active on macro recording.")
