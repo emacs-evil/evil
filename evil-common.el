@@ -2926,13 +2926,25 @@ If no description is available, return the empty string."
 
 (defun evil-range (beg end &optional type &rest properties)
   "Return a list (BEG END [TYPE] PROPERTIES...).
-BEG and END are buffer positions (numbers or markers),
-TYPE is a type as per `evil-type-p', and PROPERTIES is
-a property list."
+BEG and END are buffer positions (numbers or markers), TYPE is a
+type as per `evil-type-p', and PROPERTIES is a property list. If
+beg or end are inside a sequence of composed characters, adjust
+the positions to be outside of this sequence."
   (let ((beg (evil-normalize-position beg))
-        (end (evil-normalize-position end)))
+        (end (evil-normalize-position end))
+        beg-out end-out)
     (when (and (numberp beg) (numberp end))
-      (append (list (min beg end) (max beg end))
+      (setq beg-out (min beg end))
+      (setq end-out (max beg end))
+      (when evil-treat-composed-chars-as-one
+        (let ((comp (find-composition beg-out)))
+          ;; find-composition returns (FROM TO VALID-P)
+          (when (and (listp comp) (nth 2 comp))
+            (setq beg-out (nth 0 comp))))
+        (let ((comp (find-composition end-out)))
+          (when (and (listp comp) (nth 2 comp))
+            (setq end-out (nth 1 comp)))))
+      (append (list beg-out end-out)
               (when (evil-type-p type)
                 (list type))
               properties))))

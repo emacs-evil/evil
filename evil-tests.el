@@ -516,7 +516,12 @@ and the beginning")
         (should (string= (evil-describe 1 2 'exclusive)
                          "1 character"))
         (should (string= (evil-describe 5 2 'exclusive)
-                         "3 characters"))))))
+                         "3 characters")))
+      (let ((evil-treat-composed-chars-as-one t))
+        (compose-region 9 15 "ϐ")       ; visually replaces "buffer" with ϐ
+        (ert-info ("Adjust range to account for composed characters")
+                  (should (equal (evil-normalize 10 10 'exclusive)
+                                 '(9 15 exclusive))))))))
 
 (ert-deftest evil-test-inclusive-type ()
   "Expand and contract the `inclusive' type"
@@ -541,7 +546,15 @@ and the beginning")
       (should (string= (evil-describe 1 1 'inclusive)
                        "1 character"))
       (should (string= (evil-describe 5 2 'inclusive)
-                       "4 characters")))))
+                       "4 characters")))
+    (let ((evil-treat-composed-chars-as-one t))
+      (compose-region 9 15 "ϐ")         ; visually replaces "buffer" with ϐ
+      (ert-info ("Don't end in composed characters")
+                (should (equal (evil-expand 7 12 'inclusive)
+                               '(7 15 inclusive :expanded t))))
+      (ert-info ("Don't begin in composed characters")
+                (should (equal (evil-expand 10 20 'inclusive)
+                               '(9 21 inclusive :expanded t)))))))
 
 (ert-deftest evil-test-line-type ()
   "Expand the `line' type"

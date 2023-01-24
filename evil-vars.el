@@ -1121,6 +1121,19 @@ without having to introduce new niche functionality.
 Prefer to set `evil-v$-excludes-newline' to non-nil."
  "1.15.0")
 
+(defcustom evil-treat-composed-chars-as-one nil
+  "EXPERIMENTAL. Treat composed characters as single characters.
+
+Composed characters are sequences of characters in the buffer
+that are displayed as a single glyph. This is the device used by
+`prettify-symbols-mode' among others. This option tells evil that
+these sequences of characters should be treated as a single unit
+to, for example, prevent part of the sequence from being deleted
+by an evil command. It alters low-level functionality of evil and
+is considered experimental."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-v$-excludes-newline nil
   "If non-nil, `evil-end-of-line' does not move as far as to include
 the `\n' char at eol. This makes `v$' consistent with `$' used as a
