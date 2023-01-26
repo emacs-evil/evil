@@ -4590,25 +4590,25 @@ and open a new buffer name or edit a certain FILE."
   "Increase current window height by COUNT."
   :repeat nil
   (interactive "p")
-  (evil-resize-window (+ (window-height) count)))
+  (enlarge-window count))
 
 (evil-define-command evil-window-decrease-height (count)
   "Decrease current window height by COUNT."
   :repeat nil
   (interactive "p")
-  (evil-resize-window (- (window-height) count)))
+  (enlarge-window (- count)))
 
 (evil-define-command evil-window-increase-width (count)
   "Increase current window width by COUNT."
   :repeat nil
   (interactive "p")
-  (evil-resize-window (+ (window-width) count) t))
+  (enlarge-window count t))
 
 (evil-define-command evil-window-decrease-width (count)
   "Decrease current window width by COUNT."
   :repeat nil
   (interactive "p")
-  (evil-resize-window (- (window-width) count) t))
+  (enlarge-window (- count) t))
 
 (evil-define-command evil-window-set-height (count)
   "Set the height of the current window to COUNT."

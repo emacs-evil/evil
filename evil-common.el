@@ -286,36 +286,23 @@ return the value of that variable."
         (symbol-value val)
       val)))
 
-(defmacro evil-swap (this that &rest vars)
-  "Swap the values of variables THIS and THAT.
-If three or more arguments are given, the values are rotated.
-E.g., (evil-swap A B C) sets A to B, B to C, and C to A."
-  `(progn
-     (setq ,this (prog1 ,that
-                   (setq ,that ,this)))
-     ,@(when vars
-         `((evil-swap ,that ,@vars)))))
+(eval-and-compile (defalias 'evil-swap #'cl-rotatef))
 
-(defmacro evil-sort (min max &rest vars)
-  "Place the smallest value in MIN and the largest in MAX.
-If three or more arguments are given, place the smallest
-value in the first argument and the largest in the last,
-sorting in between."
-  (let ((sorted (make-symbol "sortvar")))
-    `(let ((,sorted (sort (list ,min ,max ,@vars) '<)))
-       (setq ,min (pop ,sorted)
-             ,max (pop ,sorted)
-             ,@(apply #'append
-                      (mapcar #'(lambda (var)
-                                  (list var `(pop ,sorted)))
-                              vars))))))
+(defmacro evil-sort (&rest vars)
+  "Sort the symbol values of VARS.
+Place the smallest value in the first argument and the largest in the
+last, sorting in between."
+  (if (= (length vars) 2)
+      `(when (> ,@vars) (evil-swap ,@vars))
+    (let ((sorted (make-symbol "sortvar")))
+      `(let ((,sorted (sort (list ,@vars) #'<)))
+         (setq ,@(apply #'nconc
+                        (mapcar (lambda (var) (list var `(pop ,sorted)))
+                                vars)))))))
 
 (defun evil-vector-to-string (vector)
-  "Turn vector into a string, changing <escape> to '\\e'"
-  (mapconcat (lambda (c)
-               (if (equal c 'escape)
-                   "\e"
-                 (make-string 1 c)))
+  "Turn VECTOR into a string, changing <escape> to \"\\e\"."
+  (mapconcat (lambda (c) (if (eq c 'escape) "\e" (list c)))
              vector
              ""))
 
@@ -2932,10 +2919,10 @@ a property list."
   (let ((beg (evil-normalize-position beg))
         (end (evil-normalize-position end)))
     (when (and (numberp beg) (numberp end))
-      (append (list (min beg end) (max beg end))
-              (when (evil-type-p type)
-                (list type))
-              properties))))
+      (evil-sort beg end)
+      (nconc (list beg end)
+             (when (evil-type-p type) (list type))
+             properties))))
 
 (defun evil-range-p (object)
   "Whether OBJECT is a range."
@@ -4024,18 +4011,17 @@ should be left-aligned for left justification."
 (define-key evil-list-view-mode-map [return] #'evil-list-view-goto-entry)
 
 (defmacro evil-with-view-list (&rest properties)
-  "Open new list view buffer.
-
+  "Open a new list view buffer.
 PROPERTIES is a property-list which supports the following properties:
 
-:name           (required)   The name of the buffer.
-:mode-name      (required)   The name for the mode line.
-:format         (required)   The value for `tabulated-list-format'.
-:entries        (required)   The value for `tabulated-list-entries'.
-:select-action  (optional)   A function for row selection.
-                             It takes in a single parameter, which is the selected row's
-                             vector value that is passed into `:entries'.
-"
+:name          (required)   The name of the buffer.
+:mode-name     (required)   The name for the mode line.
+:format        (required)   The value for `tabulated-list-format'.
+:entries       (required)   The value for `tabulated-list-entries'.
+:select-action (optional)   A function for row selection.
+                            It takes a single parameter, which is the
+                            selected row's vector value that is
+                            passed into `:entries'."
   (declare (indent defun) (debug t))
   `(let ((bufname (concat "*" ,(plist-get properties :name) "*"))
          (inhibit-read-only t))
