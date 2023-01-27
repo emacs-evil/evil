@@ -1100,6 +1100,28 @@ intercepted."
   :set #'evil-set-custom-motions
   :initialize #'evil-custom-initialize-pending-reset)
 
+(defcustom evil-special-delete-motions
+  '(evil-ex-search-forward
+    evil-ex-search-backward
+    evil-ex-search-next
+    evil-ex-search-previous
+    evil-search-forward
+    evil-search-backward
+    evil-search-next
+    evil-search-previous
+    evil-jump-item
+    evil-backward-sentence-begin
+    evil-forward-sentence-begin
+    evil-goto-mark
+    evil-backward-paragraph
+    evil-forward-paragraph)
+  "Evil motions that always store deleted text in register 1.
+Normally if text is deleted using a motion command, the text is
+stored in register 1 only when a named registered is not
+specified."
+  :type '(repeat symbol)
+  :group 'evil)
+
 (defcustom evil-visual-newline-commands
   '(LaTeX-section
     TeX-font)
@@ -1677,9 +1699,8 @@ buffer-region of the newly inserted text.")
   "The last piece of deleted text.
 The text should be less than a line.")
 
-(defvar evil-was-yanked-without-register t
-  "Whether text being saved to the numbered-register ring was
-not deleted and not yanked to a specific register.")
+(defvar evil-delete-kill-ring (make-list 9 "")
+  "The kill ring that stores text for the 1-9 registers.")
 
 (defvar evil-paste-count nil
   "The count argument of the current paste command.")
