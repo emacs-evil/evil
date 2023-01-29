@@ -7628,7 +7628,9 @@ golf h[o]>tel")))
   (should (equal (evil-ex-parse "mu4e")
                  '(evil-ex-call-command nil "mu4e" nil)))
   (should (equal (evil-ex-parse "make-frame")
-                 '(evil-ex-call-command nil "make-frame" nil))))
+                 '(evil-ex-call-command nil "make-frame" nil)))
+  (should (equal (evil-ex-parse ":command")
+                 '(evil-ex-call-command nil "command" nil))))
 
 (ert-deftest evil-text-ex-search-offset ()
   "Test for addresses like /base//pattern/"
