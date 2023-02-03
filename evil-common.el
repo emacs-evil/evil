@@ -36,6 +36,7 @@
 (declare-function evil-visual-state-p "evil-states")
 (declare-function evil-visual-restore "evil-states")
 (declare-function evil-motion-state "evil-states")
+(declare-function evil-replace-state-p "evil-states")
 (declare-function evil-ex-p "evil-ex")
 (declare-function evil-set-jump "evil-jumps")
 
@@ -2160,47 +2161,45 @@ The following special registers are supported.
     (error (unless noerror (signal (car err) (cdr err))))))
 
 (defun evil-append-register (register text)
-  "Append TEXT to the contents of register REGISTER."
+  "Append TEXT to the contents of REGISTER."
   (let ((content (get-register register)))
-    (cond
-     ((not content)
-      (set-register register text))
-     ((not (stringp content))
+    (set-register
+     register
+     (cond
+      ((not content) text)
       ;; if the register does not contain a string treat it as a vector
-      (set-register register (vconcat content text)))
-     ((or (text-property-not-all 0 (length content)
-                                 'yank-handler nil
-                                 content)
-          (text-property-not-all 0 (length text)
-                                 'yank-handler nil
-                                 text))
+      ((not (stringp content)) (vconcat content text))
       ;; some non-trivial yank-handler -> always switch to line handler
-      ;; ensure complete lines
-      (when (and (> (length content) 0)
-                 (/= (aref content (1- (length content))) ?\n))
-        (setq content (concat content "\n")))
-      (when (and (> (length text) 0)
-                 (/= (aref text (1- (length text))) ?\n))
-        (setq text (concat text "\n")))
-      (setq text (concat content text))
-      (remove-list-of-text-properties 0 (length text) '(yank-handler) text)
-      (setq text (propertize text 'yank-handler '(evil-yank-line-handler)))
-      (set-register register text))
-     (t
-      (set-register register (concat content text))))))
+      ((or (text-property-not-all
+            0 (length content) 'yank-handler nil content)
+           (text-property-not-all
+            0 (length text) 'yank-handler nil text))
+       ;; ensure complete lines
+       (setq text
+             (concat
+              content
+              (and (> (length content) 0)
+                   (/= (aref content (1- (length content))) ?\n)
+                   "\n")
+              text
+              (and (> (length text) 0)
+                   (/= (aref text (1- (length text))) ?\n)
+                   "\n")))
+       (put-text-property 0 (length text) 'yank-handler '(evil-yank-line-handler)
+                          text)
+       text)
+      (t (concat content text))))))
 
 (defun evil-set-register (register text)
-  "Set the contents of register REGISTER to TEXT.
-If REGISTER is an upcase character then text is appended to that
+  "Set the contents of REGISTER to TEXT.
+If REGISTER is an upper case character then TEXT is appended to that
 register instead of replacing its content."
   (cond
-   ((not (characterp register))
-    (user-error "Invalid register"))
+   ((not (characterp register)) (user-error "Invalid register"))
    ;; don't allow modification of read-only registers
    ((member register '(?: ?. ?%))
     (user-error "Can't modify read-only register"))
-   ((eq register ?\")
-    (kill-new text))
+   ((eq register ?\") (kill-new text))
    ((and (<= ?1 register) (<= register ?9))
     (if (null kill-ring)
         (kill-new text)
@@ -2209,18 +2208,13 @@ register instead of replacing its content."
             interprogram-cut-function)
         (current-kill (- register ?1))
         (setcar kill-ring-yank-pointer text))))
-   ((eq register ?*)
-    (evil-set-selection 'PRIMARY text))
-   ((eq register ?+)
-    (evil-set-selection 'CLIPBOARD text))
-   ((eq register ?-)
-    (setq evil-last-small-deletion text))
-   ((eq register ?_) ; the black hole register
-    nil)
+   ((eq register ?*) (evil-set-selection 'PRIMARY text))
+   ((eq register ?+) (evil-set-selection 'CLIPBOARD text))
+   ((eq register ?-) (setq evil-last-small-deletion text))
+   ((eq register ?_) nil) ; the black hole register
    ((and (<= ?A register) (<= register ?Z))
     (evil-append-register (downcase register) text))
-   (t
-    (set-register register text))))
+   (t (set-register register text))))
 
 (defun evil-register-list ()
   "Return an alist of all registers, but only those named
@@ -2449,34 +2443,24 @@ disjoint union is not a single range."
       (setq ranges (cdr ranges)))
     range))
 
-(defun evil-track-last-insertion (chg-beg chg-end len)
+(defun evil-track-last-insertion (beg end old-len)
   "Track the last insertion range and its text.
-CHG-BEG CHG-END & LEN are supplied as for `after-change-functions'.
+BEG, END and OLD-LEN are as for `after-change-functions'.
 The insertion range is stored as a pair of buffer positions in
-`evil-current-insertion'.  If a subsequent change is compatible,
-then the current range is modified, otherwise it is replaced by a
-new range.  Compatible changes are changes that do not create a
-disjoin range."
-  (let* ((ins-beg (car evil-current-insertion))
-         (ins-end (cdr evil-current-insertion))
-         (chg-beg-ok (and evil-current-insertion (<= ins-beg chg-beg))))
-    (cond
-     ;; Replace-state deletion - ignore
-     ((and (< 0 (- chg-end chg-beg))
-           (= 0 len)
-           (fboundp 'evil-replace-state-p)
-           (evil-replace-state-p))
-      nil)
-     ;; Insert-state deletion - contract current insertion
-     ((= 0 (- chg-end chg-beg))
-      (if (and chg-beg-ok (<= (+ chg-beg len) ins-end))
-          (setcdr evil-current-insertion (- ins-end len))
-        (setq evil-current-insertion nil)))
-     ;; Insert- or Replace-state insertion - expand current insertion
-     (t
-      (if (and chg-beg-ok (<= chg-beg ins-end))
-          (setcdr evil-current-insertion (+ ins-end (- chg-end chg-beg)))
-        (setq evil-current-insertion (cons chg-beg chg-end)))))))
+`evil-current-insertion'."
+  ;; For deletions left of, or insertions right of the end of the last
+  ;; insertion (with any changes in between), extend or contract the
+  ;; insertion range as appropriate. Otherwise, start a new range.
+  (if (when evil-current-insertion
+        (let ((ins-beg (car evil-current-insertion))
+              (ins-end (cdr evil-current-insertion)))
+          (and (<= ins-beg beg)
+               (or (= (+ beg old-len) ins-end)
+                   (when (evil-replace-state-p) (= beg ins-end))))))
+      ;; Ignore insertion of previous char from Backspace in Replace state
+      (unless (and (eq this-command 'evil-replace-backspace) (= old-len 0))
+        (setcdr evil-current-insertion end))
+    (setq evil-current-insertion (cons beg end))))
 (put 'evil-track-last-insertion 'permanent-local-hook t)
 
 (defun evil-start-track-last-insertion ()

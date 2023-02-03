@@ -885,14 +885,13 @@ CORNER defaults to `upper-left'."
 (defun evil-replace-backspace ()
   "Restore character under cursor."
   (interactive)
-  (let (char)
-    (backward-char)
-    (when (assq (point) evil-replace-alist)
-      (setq char (cdr (assq (point) evil-replace-alist)))
-      (save-excursion
-        (delete-char 1)
-        (when char
-          (insert char))))))
+  (backward-char)
+  (let* ((prev (assq (point) evil-replace-alist))
+         (char (cdr prev))
+         (this-command #'evil-replace-backspace))
+    (when prev
+      (delete-char 1)
+      (when char (save-excursion (insert char))))))
 
 (defun evil-update-replace-alist (opoint count chars-to-delete &optional offset)
   "Add CHARS-TO-DELETE chars to evil-replace-alist, starting at OPOINT.
