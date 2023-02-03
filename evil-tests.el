@@ -783,9 +783,16 @@ de[f]
       "abç[d]efgh")
     (ert-info ("with count")
       (evil-test-buffer
-      "abc[d]efgh"
-      ("R\C-u3\C-kd*")
-      "abcδδδ[g]h"))))
+        "abc[d]efgh"
+        ("R\C-u3\C-kd*")
+        "abcδδδ[g]h"))))
+
+(ert-deftest evil-test-track-insertion ()
+  "Test that the text of the previous insertion is tracked."
+  (ert-info ("Moving the cursor starts a new insertion")
+    (evil-test-buffer
+      ("iabc" [left] "xxx" [escape] "o\C-a")
+      "abxxxc\nxxx")))
 
 ;;; Repeat system
 
