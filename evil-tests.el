@@ -7442,6 +7442,10 @@ golf h[o]>tel")))
       ([backspace backspace backspace])
       ";; foo bar\n;; [q]ux quux")
     (define-key evil-replace-state-map (kbd "C-y") nil))
+  (ert-info ("Replace character twice and restore")
+    (evil-test-buffer "[a]"
+      ("Rb" [left] "c" [backspace])
+      "b"))
   (ert-info ("Can give Replace-state a count repeat it")
     (evil-test-buffer
       "a[l]pha bravo"

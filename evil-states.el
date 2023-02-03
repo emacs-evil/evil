@@ -875,11 +875,11 @@ CORNER defaults to `upper-left'."
 (defun evil-replace-pre-command ()
   "Remember the character under point."
   (when (evil-replace-state-p)
-    (unless (assq (point) evil-replace-alist)
-      (add-to-list 'evil-replace-alist
-                   (cons (point)
-                         (unless (eolp)
-                           (char-after)))))))
+    (let ((char (unless (eolp) (char-after)))
+          (prev (assq (point) evil-replace-alist)))
+      (if prev
+          (setcdr prev char)
+        (push (cons (point) char) evil-replace-alist)))))
 (put 'evil-replace-pre-command 'permanent-local-hook t)
 
 (defun evil-replace-backspace ()
