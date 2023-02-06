@@ -792,7 +792,14 @@ de[f]
   (ert-info ("Moving the cursor starts a new insertion")
     (evil-test-buffer
       ("iabc" [left] "xxx" [escape] "o\C-a")
-      "abxxxc\nxxx")))
+      "abxxxc\nxxx"))
+  (ert-info ("Autoindentation should be excluded")
+    (evil-test-buffer "\(setq x"
+      (emacs-lisp-mode)
+      ("o0\)" [escape] "o\C-a")
+      "(setq x
+      0)
+0\)")))
 
 ;;; Repeat system
 
