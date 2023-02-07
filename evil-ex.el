@@ -40,12 +40,11 @@
 ;; substitution command (":s/foo/bar"), the handler incrementally
 ;; highlights matches in the buffer as the substitution is typed.
 
+;;; Code:
+
 (require 'evil-common)
 (require 'evil-states)
 (require 'evil-types)
-(require 'shell)
-
-;;; Code:
 
 (defconst evil-ex-grammar
   '((expression
@@ -571,25 +570,21 @@ keywords and function:
   "Called to complete a buffer name argument."
   :collection internal-complete-buffer)
 
+(declare-function comint-completion-at-point "comint")
 (declare-function shell-completion-vars "shell" ())
 
-(defun evil-ex-init-shell-argument-completion (flag &optional arg)
+(defun evil-ex-init-shell-argument-completion (flag &optional _arg)
   "Prepare the current minibuffer for completion of shell commands.
 This function must be called from the :runner function of some
 argument handler that requires shell completion."
   (when (and (eq flag 'start)
              (not evil-ex-shell-argument-initialized))
     (set (make-local-variable 'evil-ex-shell-argument-initialized) t)
-    (cond
-     ;; Emacs 24
-     ((fboundp 'comint-completion-at-point)
-      (shell-completion-vars))
-     (t
-      (set (make-local-variable 'minibuffer-default-add-function)
-           'minibuffer-default-add-shell-commands)))
-    (setq completion-at-point-functions
-          '(evil-ex-command-completion-at-point
-            evil-ex-argument-completion-at-point))))
+    (require 'shell)
+    ;; Set up Comint for Shell mode, except
+    ;; `comint-completion-at-point' will be called manually.
+    (let (completion-at-point-functions)
+      (shell-completion-vars))))
 
 (define-obsolete-function-alias
   'evil-ex-shell-command-completion-at-point
@@ -601,8 +596,7 @@ argument handler that requires shell completion."
   :runner evil-ex-init-shell-argument-completion)
 
 (defun evil-ex-file-or-shell-command-completion-at-point ()
-  (if (and (< (point-min) (point-max))
-           (= (char-after (point-min)) ?!))
+  (if (eq (char-after (point-min)) ?!)
       (save-restriction
         (narrow-to-region (1+ (point-min)) (point-max))
         (comint-completion-at-point))
