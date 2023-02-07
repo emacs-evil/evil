@@ -1094,7 +1094,7 @@ current search result."
 
 (defun evil-ex-search-setup ()
   "Hook to initialize the minibuffer for ex search."
-  (add-hook 'pre-command-hook #'evil-ex-remove-default))
+  (add-hook 'pre-command-hook #'evil-ex-remove-default nil t))
 
 (defun evil-ex-start-search (direction count)
   "Start a new search in a certain DIRECTION."

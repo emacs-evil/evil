@@ -2022,18 +2022,17 @@ sometimes moving point, so `C-a' `C-w' etc. would miss their intended target.")
 
 (defun evil-ex-remove-default ()
   "Remove the default text shown in the ex minibuffer.
-When ex starts, the previous command is shown enclosed in
+When Ex starts, the previous command is shown enclosed in
 parenthesis. This function removes this text when the first key
 is pressed."
   (when (and (not (eq this-command 'exit-minibuffer))
              (/= (minibuffer-prompt-end) (point-max)))
-    (if (eq this-command 'evil-ex-delete-backward-char)
-        (setq this-command 'ignore))
+    (when (eq this-command 'evil-ex-delete-backward-char)
+      (setq this-command 'ignore))
     (if (eq this-original-command 'evil-paste-from-register)
         (setq evil-paste-clear-minibuffer-first t)
       (delete-minibuffer-contents)))
-  (remove-hook 'pre-command-hook #'evil-ex-remove-default))
-(put 'evil-ex-remove-default 'permanent-local-hook t)
+  (remove-hook 'pre-command-hook #'evil-ex-remove-default t))
 
 (defun evil-get-register (register &optional noerror)
   "Return contents of REGISTER.
@@ -2137,8 +2136,9 @@ The following special registers are supported.
               (let ((enable-recursive-minibuffers t))
                 (setq evil-last-=-register-input
                       (minibuffer-with-setup-hook
-                          (lambda () (when evil-last-=-register-input
-                                       (add-hook 'pre-command-hook #'evil-ex-remove-default)))
+                          (lambda ()
+                            (when evil-last-=-register-input
+                              (add-hook 'pre-command-hook #'evil-ex-remove-default nil t)))
                         (read-from-minibuffer
                          "="
                          (and evil-last-=-register-input
