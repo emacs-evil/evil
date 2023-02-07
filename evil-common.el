@@ -1013,37 +1013,34 @@ Like `move-end-of-line', but retains the goal column."
 
 (defun evil-adjust-cursor (&optional _)
   "Move point one character back if at the end of a non-empty line.
-This behavior is controled by `evil-move-beyond-eol'."
-  (when (and (eolp)
-             (not evil-move-beyond-eol)
-             (not (bolp))
-             (= (point)
-                (save-excursion
-                  (evil-move-end-of-line)
-                  (point))))
-    (evil-move-cursor-back t)))
+This behavior is controlled by `evil-move-beyond-eol'."
+  (and (not evil-move-beyond-eol)
+       (eolp)
+       (= (point)
+          (save-excursion
+            (evil-move-end-of-line)
+            (point)))
+       (evil-move-cursor-back t)))
 
 (defun evil-move-cursor-back (&optional force)
   "Move point one character back within the current line.
 Contingent on the variable `evil-move-cursor-back' or the FORCE
-argument. Honors field boundaries, i.e., constrains the movement
-to the current field as recognized by `line-beginning-position'."
-  (when (or evil-move-cursor-back force)
-    (unless (or (= (point) (line-beginning-position))
-                (and (boundp 'visual-line-mode)
-                     visual-line-mode
-                     (= (point) (save-excursion
-                                  (beginning-of-visual-line)
-                                  (point)))))
-      (backward-char))))
+argument.  Movement is constrained to the current field."
+  (unless (or (not (or evil-move-cursor-back force))
+              (bolp)
+              (when (bound-and-true-p visual-line-mode)
+                (= (point) (save-excursion
+                             (vertical-motion 0)
+                             (point)))))
+    (goto-char (constrain-to-field (1- (point)) (point)))))
 
 (defun evil-line-position (line &optional column)
   "Return the position of LINE.
 If COLUMN is specified, return its position on the line.
 A negative number means the end of the line."
+  (declare-function evil-goto-line "evil-commands")
   (save-excursion
-    (when (fboundp 'evil-goto-line)
-      (evil-goto-line line))
+    (evil-goto-line line)
     (if (numberp column)
         (if (< column 0)
             (beginning-of-line 2)
@@ -3061,9 +3058,9 @@ understood by `thing-at-point'.  BEG, END and TYPE specify the
 current selection.  If LINE is non-nil, the text object should be
 linewise, otherwise it is character wise."
   (save-restriction
-    (let ((start (save-excursion (beginning-of-line) (point)))
-          (end (save-excursion (end-of-line) (point))))
-      (when (/= start end)
+    (let ((start (line-beginning-position))
+          (end (line-end-position)))
+      (unless (= start end)
         (narrow-to-region start end)))
     (evil-select-inner-object thing beg end type count line)))
 
