@@ -7480,161 +7480,120 @@ golf h[o]>tel")))
 (ert-deftest evil-test-ex-parse ()
   "Test `evil-ex-parse'"
   :tags '(evil ex)
-  (should (equal (evil-ex-parse "5,2cmd arg")
-                 '(evil-ex-call-command
-                   (evil-ex-range
-                    (evil-ex-line (string-to-number "5") nil)
-                    (evil-ex-line (string-to-number "2") nil))
-                   "cmd"
-                   "arg")))
-  (should (equal (evil-ex-parse "5,2cmd !arg")
-                 '(evil-ex-call-command
-                   (evil-ex-range
-                    (evil-ex-line (string-to-number "5") nil)
-                    (evil-ex-line (string-to-number "2") nil))
-                   "cmd"
-                   "!arg")))
-  (should (equal (evil-ex-parse "5,2 arg")
-                 '(evil-ex-call-command
-                   (evil-ex-range
-                    (evil-ex-line (string-to-number "5") nil)
-                    (evil-ex-line (string-to-number "2") nil))
-                   "arg"
-                   nil)))
+  (should (equal (evil-ex-parse "5cmd arg")
+                 '(evil-ex-call-command (string-to-number "5") "cmd" "arg")))
+  (should (equal (evil-ex-parse "5cmd !arg")
+                 '(evil-ex-call-command (string-to-number "5") "cmd" "!arg")))
+  (should (equal (evil-ex-parse "5 arg")
+                 '(evil-ex-call-command (string-to-number "5") "arg" nil)))
   (should (equal (evil-ex-parse "+1,+2t-1")
                  '(evil-ex-call-command
-                   (evil-ex-range
-                    (evil-ex-line
-                     nil
-                     (+ (evil-ex-signed-number
-                         (intern "+")
-                         (string-to-number "1"))))
-                    (evil-ex-line
-                     nil
-                     (+ (evil-ex-signed-number
-                         (intern "+")
-                         (string-to-number "2")))))
+                   (let ((l1 (evil-ex-line
+                              nil
+                              (+ (evil-ex-signed-number
+                                  (intern "+")
+                                  (string-to-number "1"))))))
+                     (save-excursion
+                       (and l1 (string= "," ";") (goto-line l1))
+                       (evil-ex-range (or l1 (evil-ex-current-line))
+                                      (evil-ex-line
+                                       nil
+                                       (+ (evil-ex-signed-number
+                                           (intern "+")
+                                           (string-to-number "2")))))))
                    "t"
                    "-1"))))
 
 (ert-deftest evil-test-ex-parse-ranges ()
   "Test parsing of ranges"
   :tags '(evil ex)
-  (should (equal (evil-ex-parse "%" nil 'range)
-                 '(evil-ex-full-range)))
-  (should (equal (evil-ex-parse "*" nil 'range)
-                 '(evil-ex-last-visual-range)))
-  (should (equal (evil-ex-parse "5,27" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-line (string-to-number "5") nil)
-                   (evil-ex-line (string-to-number "27") nil))))
-  (should (equal (evil-ex-parse "5,$" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-line (string-to-number "5") nil)
-                   (evil-ex-line (evil-ex-last-line) nil))))
-  (should (equal (evil-ex-parse "5,'x" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-line (string-to-number "5") nil)
-                   (evil-ex-line (evil-ex-marker "x") nil))))
-  (should (equal (evil-ex-parse "`x,`y" nil 'range)
-                 '(evil-ex-char-marker-range "x" "y")))
-  (should (equal (evil-ex-parse "`[,`]" nil 'range)
-                 '(evil-ex-char-marker-range "[" "]")))
-  (should (equal (evil-ex-parse "5,+" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-line (string-to-number "5") nil)
-                   (evil-ex-line
-                    nil (+ (evil-ex-signed-number (intern "+") nil))))))
-  (should (equal (evil-ex-parse "5,-" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-line (string-to-number "5") nil)
-                   (evil-ex-line
-                    nil (+ (evil-ex-signed-number (intern "-") nil))))))
-  (should (equal (evil-ex-parse "5,4+2-7-3+10-" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-line (string-to-number "5") nil)
-                   (evil-ex-line
-                    (string-to-number "4")
-                    (+ (evil-ex-signed-number
-                        (intern "+") (string-to-number "2"))
-                       (evil-ex-signed-number
-                        (intern "-") (string-to-number "7"))
-                       (evil-ex-signed-number
-                        (intern "-") (string-to-number "3"))
-                       (evil-ex-signed-number
-                        (intern "+") (string-to-number "10"))
-                       (evil-ex-signed-number (intern "-") nil))))))
-  (should (equal (evil-ex-parse ".-2,4+2-7-3+10-" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-line
-                    (evil-ex-current-line)
-                    (+ (evil-ex-signed-number
-                        (intern "-") (string-to-number "2"))))
-                   (evil-ex-line
-                    (string-to-number "4")
-                    (+ (evil-ex-signed-number
-                        (intern "+") (string-to-number "2"))
-                       (evil-ex-signed-number
-                        (intern "-") (string-to-number "7"))
-                       (evil-ex-signed-number
-                        (intern "-") (string-to-number "3"))
-                       (evil-ex-signed-number
-                        (intern "+") (string-to-number "10"))
-                       (evil-ex-signed-number
-                        (intern "-") nil))))))
-  (should (equal (evil-ex-parse "'a-2,$-10" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-line
-                    (evil-ex-marker "a")
-                    (+ (evil-ex-signed-number
-                        (intern "-") (string-to-number "2"))))
-                   (evil-ex-line
-                    (evil-ex-last-line)
-                    (+ (evil-ex-signed-number
-                        (intern "-") (string-to-number "10")))))))
-  (should (equal (evil-ex-parse "'[,']" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-line
-                    (evil-ex-marker "[")
-                    nil)
-                   (evil-ex-line
-                    (evil-ex-marker "]")
-                    nil))))
-  (should (equal (evil-ex-parse "'{,'}" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-line
-                    (evil-ex-marker "{")
-                    nil)
-                   (evil-ex-line
-                    (evil-ex-marker "}")
-                    nil))))
-  (should (equal (evil-ex-parse "'(,')" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-line
-                    (evil-ex-marker "(")
-                    nil)
-                   (evil-ex-line
-                    (evil-ex-marker ")")
-                    nil))))
-  (should (equal (evil-ex-parse ",']" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-current-line)
-                   (evil-ex-line
-                    (evil-ex-marker "]")
-                    nil))))
-  (should (equal (evil-ex-parse ";']" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-current-line)
-                   (evil-ex-line
-                    (evil-ex-marker "]")
-                    nil))))
-  (should (equal (evil-ex-parse ".+42" nil 'range)
-                 '(evil-ex-range
-                   (evil-ex-line
-                    (evil-ex-current-line)
-                    (+ (evil-ex-signed-number
-                        (intern "+") (string-to-number "42"))))
-                   nil))))
+  (cl-flet
+      ((mk-range
+        (a b &optional relative)
+        `(let ((l1 ,(when a `(evil-ex-line ,@a))))
+           (save-excursion
+             (and l1 (string= ,(if relative ";" ",") ";") (goto-line l1))
+             (evil-ex-range (or l1 (evil-ex-current-line))
+                            ,(when b `(evil-ex-line ,@b)))))))
+    (should (equal (evil-ex-parse "%" nil 'range)
+                   '(evil-ex-full-range)))
+    (should (equal (evil-ex-parse "*" nil 'range)
+                   '(evil-ex-last-visual-range)))
+    (should (equal (evil-ex-parse "5,27" nil 'range)
+                   (mk-range '((string-to-number "5") nil)
+                             '((string-to-number "27") nil))))
+    (should (equal (evil-ex-parse "5,$" nil 'range)
+                   (mk-range '((string-to-number "5") nil)
+                             '((evil-ex-last-line) nil))))
+    (should (equal (evil-ex-parse "5,'x" nil 'range)
+                   (mk-range '((string-to-number "5") nil)
+                             '((evil-ex-marker "x") nil))))
+    (should (equal (evil-ex-parse "`x,`y" nil 'range)
+                   '(evil-ex-char-marker-range "x" "y")))
+    (should (equal (evil-ex-parse "`[,`]" nil 'range)
+                   '(evil-ex-char-marker-range "[" "]")))
+    (should (equal (evil-ex-parse "5,+" nil 'range)
+                   (mk-range '((string-to-number "5") nil)
+                             '(nil (+ (evil-ex-signed-number (intern "+") nil))))))
+    (should (equal (evil-ex-parse "5,-" nil 'range)
+                   (mk-range '((string-to-number "5") nil)
+                             '(nil (+ (evil-ex-signed-number (intern "-") nil))))))
+    (should (equal (evil-ex-parse "5,4+2-7-3+10-" nil 'range)
+                   (mk-range
+                    '((string-to-number "5") nil)
+                    '((string-to-number "4")
+                      (+ (evil-ex-signed-number
+                          (intern "+") (string-to-number "2"))
+                         (evil-ex-signed-number
+                          (intern "-") (string-to-number "7"))
+                         (evil-ex-signed-number
+                          (intern "-") (string-to-number "3"))
+                         (evil-ex-signed-number
+                          (intern "+") (string-to-number "10"))
+                         (evil-ex-signed-number (intern "-") nil))))))
+    (should (equal (evil-ex-parse ".-2,4+2-7-3+10-" nil 'range)
+                   (mk-range
+                    '((evil-ex-current-line)
+                      (+ (evil-ex-signed-number
+                          (intern "-") (string-to-number "2"))))
+                    '((string-to-number "4")
+                      (+ (evil-ex-signed-number
+                          (intern "+") (string-to-number "2"))
+                         (evil-ex-signed-number
+                          (intern "-") (string-to-number "7"))
+                         (evil-ex-signed-number
+                          (intern "-") (string-to-number "3"))
+                         (evil-ex-signed-number
+                          (intern "+") (string-to-number "10"))
+                         (evil-ex-signed-number
+                          (intern "-") nil))))))
+    (should (equal (evil-ex-parse "'a-2,$-10" nil 'range)
+                   (mk-range
+                    '((evil-ex-marker "a")
+                      (+ (evil-ex-signed-number
+                          (intern "-") (string-to-number "2"))))
+                    '((evil-ex-last-line)
+                      (+ (evil-ex-signed-number
+                          (intern "-") (string-to-number "10")))))))
+    (should (equal (evil-ex-parse "'[,']" nil 'range)
+                   (mk-range '((evil-ex-marker "[") nil)
+                             '((evil-ex-marker "]") nil))))
+    (should (equal (evil-ex-parse "'{,'}" nil 'range)
+                   (mk-range '((evil-ex-marker "{") nil)
+                             '((evil-ex-marker "}") nil))))
+    (should (equal (evil-ex-parse "'(,')" nil 'range)
+                   (mk-range '((evil-ex-marker "(") nil)
+                             '((evil-ex-marker ")") nil))))
+    (should (equal (evil-ex-parse ",']" nil 'range)
+                   (mk-range nil '((evil-ex-marker "]") nil))))
+    (should (equal (evil-ex-parse ";']" nil 'range)
+                   (mk-range nil '((evil-ex-marker "]") nil) t)))
+    (should (equal (evil-ex-parse ".+42" nil 'range)
+                   '(evil-ex-range
+                     (evil-ex-line
+                      (evil-ex-current-line)
+                      (+ (evil-ex-signed-number
+                          (intern "+") (string-to-number "42")))))))))
 
 (ert-deftest evil-test-ex-parse-emacs-commands ()
   "Test parsing of Emacs commands"
@@ -8472,10 +8431,9 @@ maybe we need one line more with some text\n")
       (evil-with-temp-file name
           "3\n2\n1\n"
         (evil-test-buffer
-          ((vconcat ":e " name [return]))
+          (":e " name [return])
           "[3]\n2\n1\n"
-          ((vconcat ":read !echo %" [return]))
-          ((vconcat ":w " [return]))
+          (":read !echo %" [return] ":w" [return])
           (file name (concat "3\n"
                              (buffer-file-name) "\n"
                              "2\n"
@@ -8974,114 +8932,44 @@ parameter set."
 
 (ert-deftest evil-test-parser ()
   "Test `evil-parser'"
-  (let ((grammar '((number "[0-9]+" #'string-to-number)
-                   (plus "\\+" #'intern)
-                   (minus "-" #'intern)
-                   (operator
-                    plus
-                    minus)
-                   (sign
-                    ((\? operator) #'$1))
-                   (signed-number
-                    (sign number))
-                   (inc
-                    (number #'(lambda (n) (1+ n))))
-                   (expr
-                    (number operator number)
-                    ("2" #'"1+1"))
-                   (epsilon nil))))
+  (cl-flet ((parse
+             (evil-parser
+              '((number "[0-9]+" #'string-to-number)
+                (plus "\\+" #'intern)
+                (minus "-" #'intern)
+                (operator
+                 plus
+                 minus)
+                (sign (\? operator))
+                (signed-number (sign number))
+                (expr
+                 ("foo" (& "bar"))
+                 ("xxx" (! "yyy"))
+                 (number operator number))
+                (epsilon nil))
+              expr operator plus signed-number number epsilon)))
     (ert-info ("Nothing")
-      (should (equal (evil-parser "1+2" nil grammar t)
-                     nil))
-      (should (equal (evil-parser "1+2" nil grammar)
-                     '(nil . "1+2")))
-      (should (equal (evil-parser "1+2" 'epsilon grammar t)
-                     nil))
-      (should (equal (evil-parser "1+2" 'epsilon grammar)
-                     '(nil . "1+2"))))
-    (ert-info ("Strings")
-      (should (equal (evil-parser "1" 'number grammar t)
-                     '((string-to-number "1"))))
-      (should (equal (evil-parser "11" 'number grammar)
-                     '((string-to-number "11") . ""))))
-    (ert-info ("Sequences")
-      (should (equal (evil-parser "1" '(number) grammar t)
-                     '((list (string-to-number "1")))))
-      (should (equal (evil-parser "1+2" '(number operator number) grammar t)
-                     '((list
-                        (string-to-number "1")
-                        (intern "+")
-                        (string-to-number "2"))))))
+      (should (equal (parse "1+2" 'epsilon) '(nil . 0))))
     (ert-info ("Symbols")
-      (should (equal (evil-parser "+" 'plus grammar t)
-                     '((intern "+"))))
-      (should (equal (evil-parser "+" 'operator grammar t)
-                     '((intern "+"))))
-      (should (equal (evil-parser "1" 'number grammar t)
-                     '((string-to-number "1")))))
-    (ert-info ("Whitespace")
-      (should (equal (evil-parser " 1" 'number grammar t)
-                     '((string-to-number "1")))))
-    (ert-info ("One or more")
-      (should (equal (evil-parser "1 2 3" '(+ number) grammar t)
-                     '((list
-                        (string-to-number "1")
-                        (string-to-number "2")
-                        (string-to-number "3")))))
-      (should (equal (evil-parser "1 2 3" '(* number) grammar t)
-                     '((list
-                        (string-to-number "1")
-                        (string-to-number "2")
-                        (string-to-number "3")))))
-      (should (equal (evil-parser "1 2 3" '(\? number) grammar)
-                     '((string-to-number "1") . " 2 3")))
-      (should (equal (evil-parser "1 2 3" '(\? number number) grammar)
-                     '((list
-                        (string-to-number "1")
-                        (string-to-number "2"))
-                       . " 3")))
-      (should (equal (evil-parser "1 2 3" '(number (\? number)) grammar)
-                     '((list
-                        (string-to-number "1")
-                        (string-to-number "2"))
-                       . " 3")))
-      (should (equal (evil-parser "1 2 3" '(number (\? number number)) grammar)
-                     '((list
-                        (string-to-number "1")
-                        (list
-                         (string-to-number "2")
-                         (string-to-number "3")))
-                       . "")))
-      (should (equal (evil-parser "1 a 3" '(number (\? number)) grammar)
-                     '((list
-                        (string-to-number "1")
-                        nil)
-                       . " a 3")))
-      (should (equal (evil-parser "1" 'signed-number grammar t t)
-                     '((signed-number (sign "") (number "1")) . ""))))
+      (should (equal (parse "+" 'plus) '((intern "+") . 1)))
+      (should (equal (parse "+" 'operator) '((intern "+") . 1))))
+    (ert-info ("Leading whitespace")
+      (should (equal (parse " 1" 'number) '((string-to-number "1") . 2))))
+    (ert-info ("Syntax tree")
+      (should (equal (parse "1" 'signed-number t)
+                     '((signed-number (sign "") (number "1")) . 1))))
     (ert-info ("Lookahead")
-      (should (equal (evil-parser "foobar" '("foo" (& "bar")) grammar)
-                     '((list "foo") . "bar")))
-      (should (equal (evil-parser "foobar" '("foo" (! "bar")) grammar)
-                     nil))
-      (should (equal (evil-parser "foobar" '("foo" (& "baz")) grammar)
-                     nil))
-      (should (equal (evil-parser "foobar" '("foo" (! "baz")) grammar)
-                     '((list "foo") . "bar"))))
+      (should (equal (parse "foobar" 'expr) '((list "foo") . 3)))
+      (should (equal (parse "foobaz" 'expr) nil))
+      (should (equal (parse "xxxyyy" 'expr) nil))
+      (should (equal (parse "xxxzzz" 'expr) '((list "xxx") . 3))))
     (ert-info ("Semantic actions")
-      (should (equal (evil-parser "1" 'inc grammar t)
-                     '((funcall (lambda (n)
-                                  (1+ n))
-                                (string-to-number "1")))))
-      (should (equal (evil-parser "1+1" 'expr grammar t)
+      (should (equal (parse "1+1" 'expr)
                      '((list
                         (string-to-number "1")
                         (intern "+")
-                        (string-to-number "1")))))
-      (should (equal (evil-parser "2" 'expr grammar t)
-                     '((list (string-to-number "1")
-                             (intern "+")
-                             (string-to-number "1"))))))))
+                        (string-to-number "1"))
+                       . 3))))))
 
 (ert-deftest evil-test-delimited-arguments ()
   "Test `evil-delimited-arguments'"

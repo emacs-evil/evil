@@ -46,94 +46,287 @@
 (require 'evil-states)
 (require 'evil-types)
 
-(defconst evil-ex-grammar
-  '((expression
-     (count command argument #'evil-ex-call-command)
-     ((\? range) command argument #'evil-ex-call-command)
-     (line #'evil-goto-line)
-     (sexp #'eval-expression))
-    (count
-     number)
-    (command #'evil-ex-parse-command)
-    (binding
-     "[~&*@<>=:]+\\|[[:alpha:]_]+\\|!")
-    (emacs-binding
-     "[[:alpha:]-][[:alnum:][:punct:]-]+")
-    (bang
-     (\? (! space) "!" #'$1))
-    (argument
-     ((\? space) (\? "\\(?:.\\|\n\\)+") #'$2))
-    (range
-     ("%" #'(evil-ex-full-range))
-     ("*" #'(evil-ex-last-visual-range))
-     ((alt "," ";") line #'(evil-ex-range (evil-ex-current-line) $2))
-     (line ";" line #'(let ((tmp1 $1))
-                        (save-excursion
-                          (goto-line tmp1)
-                          (evil-ex-range tmp1 $3))))
-     (line "," line #'(evil-ex-range $1 $3))
-     (line #'(evil-ex-range $1 nil))
-     ("`" marker-name ",`" marker-name
-      #'(evil-ex-char-marker-range $2 $4)))
-    (line
-     (base (\? offset) search (\? offset)
-           #'(let ((tmp (evil-ex-line $1 $2)))
-               (save-excursion
-                 (goto-line tmp)
-                 (evil-ex-line $3 $4))))
-     ((\? base) offset search (\? offset)
-      #'(let ((tmp (evil-ex-line $1 $2)))
-          (save-excursion
-            (goto-line tmp)
-            (evil-ex-line $3 $4))))
-     (base (\? offset) #'evil-ex-line)
-     ((\? base) offset #'evil-ex-line))
-    (base
-     number
-     marker
-     search
-     ("\\^" #'(evil-ex-first-line))
-     ("\\$" #'(evil-ex-last-line))
-     ("\\." #'(evil-ex-current-line)))
-    (offset
-     (+ signed-number #'+))
-    (marker
-     ("'" marker-name #'(evil-ex-marker $2)))
-    ;; TODO - handle offset & ;next-pattern search elements
-    (search
-     forward
-     backward
-     next
-     prev
-     subst)
-    (forward
-     ("/" "\\(?:[\\].\\|[^/]\\)+" "/\\|$" #'(evil-ex-re-fwd $2)))
-    (backward
-     ("\\?" "\\(?:[\\].\\|[^?]\\)+" "\\?\\|$" #'(evil-ex-re-bwd $2)))
-    (marker-name
-     "[]\\[-a-zA-Z_<>'}{)(]")
-    (next
-     "\\\\/" #'(evil-ex-prev-search))
-    (prev
-     "\\\\\\?" #'(evil-ex-prev-search))
-    (subst
-     "\\\\&" #'(evil-ex-prev-search))
-    (signed-number
-     (sign (\? number) #'evil-ex-signed-number))
-    (sign
-     "\\+\\|-" #'intern)
-    (number
-     "[0-9]+" #'string-to-number)
-    (space
-     "[ ]+")
-    (sexp
-     "(.*)" #'(car-safe (read-from-string $1))))
-  "Grammar for Ex.
+(declare-function evil-goto-line "evil-commands")
+
+(eval-when-compile
+  (defconst evil-ex-grammar
+    '((expression
+       (count command argument #'evil-ex-call-command)
+       ((\? range) command argument #'evil-ex-call-command)
+       (line #'evil-goto-line)
+       (sexp #'eval-expression))
+      (count
+       number)
+      (command #'evil-ex-parse-command)
+      (binding
+       "[~&*@<>=:]+\\|[[:alpha:]_]+\\|!")
+      (emacs-binding
+       "[[:alpha:]-][[:alnum:][:punct:]]*")
+      (argument
+       ((\? "\\(?:.\\|\n\\)+") #'$1))
+      (range
+       ("%" #'(evil-ex-full-range))
+       ("*" #'(evil-ex-last-visual-range))
+       ((\? line) "[,;]" (\? line)
+        #'(let ((l1 $1))
+            (save-excursion
+              (and l1 (string= $2 ";") (goto-line l1))
+              (evil-ex-range (or l1 (evil-ex-current-line)) $3))))
+       (line #'evil-ex-range)
+       ("`" marker-name ",`" marker-name
+        #'(evil-ex-char-marker-range $2 $4)))
+      (line
+       (base (\? offset) search (\? offset)
+             #'(let ((tmp (evil-ex-line $1 $2)))
+                 (save-excursion
+                   (goto-line tmp)
+                   (evil-ex-line $3 $4))))
+       ((\? base) offset search (\? offset)
+        #'(let ((tmp (evil-ex-line $1 $2)))
+            (save-excursion
+              (goto-line tmp)
+              (evil-ex-line $3 $4))))
+       (base (\? offset) #'evil-ex-line)
+       ((\? base) offset #'evil-ex-line))
+      (base
+       number
+       marker
+       search
+       ("\\^" #'(evil-ex-first-line))
+       ("\\$" #'(evil-ex-last-line))
+       ("\\." #'(evil-ex-current-line)))
+      (offset
+       (+ signed-number #'+))
+      (marker
+       ("'" marker-name #'(evil-ex-marker $2)))
+      ;; TODO - handle offset & ;next-pattern search elements
+      (search
+       forward
+       backward
+       next
+       prev
+       subst)
+      (forward
+       ("/" "\\(?:[\\].\\|[^/]\\)+" "/\\|$" #'(evil-ex-re-fwd $2)))
+      (backward
+       ("\\?" "\\(?:[\\].\\|[^?]\\)+" "\\?\\|$" #'(evil-ex-re-bwd $2)))
+      (marker-name
+       "[]\\[-a-zA-Z_<>'}{)(]")
+      (next
+       "\\\\/" #'(evil-ex-prev-search))
+      (prev
+       "\\\\\\?" #'(evil-ex-prev-search))
+      (subst
+       "\\\\&" #'(evil-ex-prev-search))
+      (signed-number
+       (sign (\? number) #'evil-ex-signed-number))
+      (sign
+       "\\+\\|-" #'intern)
+      (number
+       "[0-9]+" #'string-to-number)
+      (sexp
+       "(.*)" #'(car-safe (read-from-string $0))))
+    "Grammar for Ex.
 An association list of syntactic symbols and their definitions.
 The first entry is the start symbol.  A symbol's definition may
 reference other symbols, but the grammar cannot contain
 left recursion.  See `evil-parser' for a detailed explanation
 of the syntax.")
+
+  (defun evil-parser--dexp (obj)
+    "Parse a numerical dollar-sign symbol.
+Given e.g. $4, return 4."
+    (when (symbolp obj)
+      (let ((str (symbol-name obj)))
+        (when (string-match "\\$\\([0-9]+\\)" str)
+          (string-to-number (match-string 1 str))))))
+
+  (defmacro evil-parser (grammar &rest entrypoints)
+    "Construct a parser for GRAMMAR with ENTRYPOINTS.
+The result is a function taking the arguments STRING, SYMBOL and
+SYNTAX, that parses STRING. SYMBOL should be one of ENTRYPOINTS.
+
+If the parse succeeds, the return value is a cons cell
+\(RESULT . END), where RESULT is a parse tree and END is the start of
+the remainder of STRING. Otherwise, the return value is nil.
+
+GRAMMAR is an association list of symbols and their definitions.
+A definition is a list of production rules, which are tried in
+succession.
+
+A production rule can be one of the following:
+
+    nil matches the empty string.
+    A regular expression matches a substring.
+    A symbol matches a production for that symbol.
+    (X Y) matches X followed by Y.
+    (\\? X) matches zero or one of X.
+    (* X) matches zero or more of X.
+    (+ X) matches one or more of X.
+    (& X) matches X, but does not consume.
+    (! X) matches anything but X, but does not consume.
+
+Thus, a simple grammar may look like:
+
+    ((plus \"\\\\+\")       ; plus <- \"+\"
+     (minus \"-\")          ; minus <- \"-\"
+     (operator plus minus)) ; operator <- plus / minus
+
+All input-consuming rules have a value. A regular expression evaluates
+to the text matched, while a list evaluates to a list of values.
+The value of a list may be overridden with a semantic action, which is
+specified with a #'-quoted expression at the end:
+
+    (X Y #'foo)
+
+The value of this rule is the result of calling foo with the values
+of X and Y as arguments. Alternatively, the function call may be
+specified explicitly:
+
+    (X Y #'(foo $1 $2))
+
+Here, $1 refers to X and $2 refers to Y. $0 refers to the whole list.
+Dollar expressions can also be used directly:
+
+    (X Y #'$1)
+
+This matches X followed by Y, but ignores the value of Y;
+the value of the list is the same as the value of X.
+
+If the SYNTAX argument is non-nil, then all semantic actions
+are ignored, and a syntax tree is constructed instead. The
+syntax tree obeys the property that all the leaf nodes are
+parts of the input string. Thus, by traversing the syntax tree,
+one can determine how each character was parsed.
+
+The following symbols have reserved meanings within a grammar:
+`\\?', `*', `+', `&', `!', `function', `alt', `seq' and nil."
+    (cl-labels
+        ;; Return code for parsing PRODUCTION.
+        ;; Assumes the variable POS stores the current offset into
+        ;; STRING.
+        ((compile
+          (production)
+          (pcase production
+            ((or 'nil "") '(cons (when syntax "") pos)) ; Epsilon
+            ((and (pred stringp) regexp) ; Token
+             `(when
+                  ;; Ignore leading whitespace
+                  (let ((start (string-match-p "[^ \f\t\n\r\v]\\|\\'" string pos)))
+                    (equal (string-match ,regexp string start) start))
+                (cons (if syntax (substring string pos (match-end 0))
+                        (match-string 0 string))
+                      (match-end 0))))
+            ((and (pred symbolp) symbol) ; Symbol
+             `(let ((pair (,symbol string pos syntax)))
+                (and syntax pair
+                     (setcar
+                      pair
+                      (let ((result (car pair)))
+                        (cons ',symbol
+                              (if (listp result) result (list result))))))
+                pair))
+            (`(function ,fun) ; Function
+             `(let ((pair (funcall #',fun string pos)))
+                (and pair syntax (setcar pair (substring string pos (cdr pair))))
+                pair))
+            ;; Positive lookahead
+            (`(& . ,rule) `(when ,(compile rule) ,(compile nil)))
+            ;; Negative lookahead
+            (`(! . ,rule) `(unless ,(compile rule) ,(compile nil)))
+            ;; Zero or one
+            (`(\? . ,(or `(,rule) rule)) (compile `(alt ,rule nil)))
+            ;; Zero or more
+            (`(* . ,rules) (compile `(alt (+ ,@rules) nil)))
+            ;; Lists
+            ((or `(,(and (or '+ 'alt 'seq) symbol) . ,rules)
+                 (and (pred listp) rules (let symbol 'seq)))
+             (let ((func (unless (eq symbol 'alt) #'list)))
+               (pcase (when (> (length rules) 1) (car (last rules)))
+                 (`(function ,x) (setq func x
+                                       rules (butlast (copy-sequence rules)))))
+               `(let ((pair
+                       ,(pcase symbol
+                          ('+ ; One or more
+                           (when (cdr rules) (error "Too many `+' rules"))
+                           `(let ((pos pos) result)
+                              (while (let ((x ,(compile (car rules))))
+                                       (when x
+                                         (push (car x) result)
+                                         (< (setq pos (cdr x)) (length string)))))
+                              (when result (cons (nreverse result) pos))))
+                          ('alt `(or ,@(mapcar #'compile rules)))
+                          ('seq
+                           (cl-loop
+                            for rule in rules collect
+                            `(let ((x ,(compile rule)))
+                               (when x
+                                 (setq pos (cdr x))
+                                 ,(if (memq (car-safe rule) '(& !)) t
+                                    `(push (car x) result))))
+                            into items finally return
+                            `(let ((pos pos) result)
+                               (and ,@items (cons (nreverse result) pos))))))))
+                  ;; Semantic action
+                  ,(when func
+                     `(when (and pair (not syntax))
+                        (let ((result (car pair)))
+                          (ignore result) ; Suppress unused var warning
+                          (setcar
+                           pair
+                           ,(pcase func
+                              ;; Dollar expression
+                              ((or (pred evil-parser--dexp) (pred listp))
+                               (dval func))
+                              ((pred symbolp)
+                               `(,(if (eq symbol 'alt) 'list 'cons) #',func result))
+                              (_ (error "Invalid semantic action `%S'" func)))))))
+                  pair)))))
+         ;; Substitute all dollar-sign symbols in X.
+         ;; Each dollar-sign symbol is replaced with the corresponding
+         ;; element in RESULT, so that $1 becomes the first element, etc.
+         ;; The special value $0 is substituted with the whole list RESULT.
+         (dval
+          (x)
+          (if (listp x) (cons #'list (mapcar #'dval x))
+            (let ((num (evil-parser--dexp x)))
+              (cond ((null num) `(quote ,x))
+                    ((eq num 0) 'result)
+                    (t `(nth (1- ,num) result)))))))
+      `(lambda (string symbol &optional syntax)
+         (cl-labels
+             (,@(cl-loop
+                 for (symbol . def) in (eval grammar t) collect
+                 `(,symbol (string pos syntax) ,(compile `(alt . ,def))))
+              (evil-ex-parse-command
+               (string pos)
+               (let ((result (binding string pos nil)) command end)
+                 (when result
+                   (setq command (car result)
+                         end (cdr result))
+                   (cond
+                    ;; check whether the parsed command is followed by a slash,
+                    ;; dash or number and either the part before is NOT known to be
+                    ;; a binding, or the complete string IS known to be a binding
+                    ((and (< end (length string))
+                          (let ((ch (aref string end)))
+                            (or (memq ch '(?- ?/)) (<= ?0 ch ?9)))
+                          (or (evil-ex-binding
+                               (concat command (substring string end)) t)
+                              (not (evil-ex-binding command t))))
+                     (emacs-binding string pos nil))
+                    ;; parse a following "!" as bang only if the
+                    ;; command has the property :ex-bang t
+                    ((and (evil-ex-command-force-p command)
+                          (< end (length string))
+                          (eq (aref string end) ?!))
+                     (cons (concat command "!") (1+ end)))
+                    (t result))))))
+           (pcase symbol
+             ,@(cl-loop
+                for sym in entrypoints collect
+                `(',sym (let ((pos 0)) ,(compile sym))))
+             (_ (error "Unknown entrypoint `%s'" symbol))))))))
 
 (defvar evil-ex-echo-overlay nil
   "Overlay used for displaying info messages during Ex.")
@@ -270,7 +463,7 @@ hook. If BEG is non-nil (which is the case when called from
 in case of incomplete or unknown commands."
   (let* ((prompt (minibuffer-prompt-end))
          (string (or string (minibuffer-contents-no-properties)))
-         arg bang cmd count expr func handler range tree type)
+         arg bang cmd count expr func handler range type)
     (if (and (eq this-command #'self-insert-command)
              (commandp (setq cmd (lookup-key evil-ex-map string))))
         (progn
@@ -282,20 +475,16 @@ in case of incomplete or unknown commands."
       (dotimes (i (length string))
         (put-text-property i (1+ i) 'ex-index (+ i prompt) string))
       (with-current-buffer evil-ex-current-buffer
-        (setq tree (evil-ex-parse string t)
-              expr (evil-ex-parse string))
-        (when (eq (car-safe expr) 'evil-ex-call-command)
+        (setq expr (evil-ex-parse string))
+        (when (eq (car expr) #'evil-ex-call-command)
           (setq count (eval (nth 1 expr))
                 cmd (eval (nth 2 expr))
                 arg (eval (nth 3 expr))
                 range (cond
-                       ((evil-range-p count)
-                        count)
-                       ((numberp count)
-                        (evil-ex-range count count)))
-                bang (and (save-match-data (string-match ".!$" cmd)) t))))
-      (setq evil-ex-tree tree
-            evil-ex-expression expr
+                       ((evil-range-p count) count)
+                       ((numberp count) (evil-ex-range count count)))
+                bang (when (string-match-p ".!$" cmd) t))))
+      (setq evil-ex-expression expr
             evil-ex-range range
             evil-ex-cmd cmd
             evil-ex-bang bang
@@ -443,7 +632,7 @@ in case of incomplete or unknown commands."
       `(boundaries 0 . ,(length (cdr flag)))))))
 
 (defun evil-ex-argument-completion-at-point ()
-  (let ((context (evil-ex-syntactic-context (1- (point)))))
+  (let ((context (evil-ex-syntactic-context)))
     (when (memq 'argument context)
       ;; if it's an autoload, load the function; this allows external
       ;; packages to register autoloaded ex commands which will be
@@ -833,38 +1022,13 @@ NUMBER defaults to 1."
   "Parse STRING as an Ex expression and return an evaluation tree.
 If SYNTAX is non-nil, return a syntax tree instead.
 START is the start symbol, which defaults to `expression'."
-  (let* ((start (or start (car-safe (car-safe evil-ex-grammar))))
-         (match (evil-parser
-                 string start evil-ex-grammar t syntax)))
-    (car-safe match)))
-
-(defun evil-ex-parse-command (string)
-  "Parse STRING as an Ex binding."
-  (let ((result (evil-parser string 'binding evil-ex-grammar))
-        bang command)
-    (when result
-      (setq command (car-safe result)
-            string (cdr-safe result))
-      ;; check whether the parsed command is followed by a slash, dash
-      ;; or number and either the part before is NOT known to be a binding,
-      ;; or the complete string IS known to be a binding
-      (when (and (> (length string) 0)
-                 (string-match-p "^[-/[:digit:]]" string)
-                 (or (evil-ex-binding (concat command string) t)
-                     (not (evil-ex-binding command t))))
-        (setq result (evil-parser (concat command string)
-                                  'emacs-binding
-                                  evil-ex-grammar)
-              command (car-safe result)
-              string (cdr-safe result)))
-      ;; parse a following "!" as bang only if
-      ;; the command has the property :ex-bang t
-      (when (evil-ex-command-force-p command)
-        (setq result (evil-parser string 'bang evil-ex-grammar)
-              bang (or (car-safe result) "")
-              string (cdr-safe result)
-              command (concat command bang)))
-      (cons command string))))
+  (let ((result (funcall
+                 (evil-parser evil-ex-grammar expression range)
+                 string (or start 'expression) syntax)))
+    (and result
+         ;; Disallow incomplete matches (ignore trailing WS)
+         (not (string-match-p "[^ \f\t\n\r\v]" string (cdr result)))
+         (car result))))
 
 (defun evil-ex-command-force-p (command)
   "Whether COMMAND accepts the bang argument."
@@ -872,297 +1036,31 @@ START is the start symbol, which defaults to `expression'."
     (when binding
       (evil-get-command-property binding :ex-bang))))
 
-(defun evil-flatten-syntax-tree (tree)
-  "Find all paths from the root of TREE to its leaves.
-TREE is a syntax tree, i.e., all its leave nodes are strings.
-The `nth' element in the result is the syntactic context
-for the corresponding string index (counted from zero)."
-  (let* ((result nil)
-         (traverse nil)
-         (traverse
-          #'(lambda (tree path)
-              (if (stringp tree)
-                  (dotimes (char (length tree))
-                    (push path result))
-                (let ((path (cons (car tree) path)))
-                  (dolist (subtree (cdr tree))
-                    (funcall traverse subtree path)))))))
-    (funcall traverse tree nil)
-    (nreverse result)))
-
 (defun evil-ex-syntactic-context (&optional pos)
   "Return the syntactical context of the character at POS.
 POS defaults to the current position of point."
-  (let* ((contexts (evil-flatten-syntax-tree evil-ex-tree))
-         (length (length contexts))
-         (pos (- (or pos (point)) (minibuffer-prompt-end))))
-    (when (>= pos length)
-      (setq pos (1- length)))
-    (when (< pos 0)
-      (setq pos 0))
-    (when contexts
-      (nth pos contexts))))
-
-(defun evil-parser--dexp (obj)
-  "Parse a numerical dollar-sign symbol.
-Given e.g. $4, return 4."
-  (when (symbolp obj)
-    (let ((str (symbol-name obj)))
-      (save-match-data
-        (when (string-match "\\$\\([0-9]+\\)" str)
-          (string-to-number (match-string 1 str)))))))
-
-(defun evil-parser--dval (obj result)
-  "Substitute all dollar-sign symbols in OBJ.
-Each dollar-sign symbol is replaced with the corresponding
-element in RESULT, so that $1 becomes the first element, etc.
-The special value $0 is substituted with the whole list RESULT.
-If RESULT is not a list, all dollar-sign symbols are substituted with
-RESULT."
-  (if (listp obj)
-      (mapcar (lambda (obj) (evil-parser--dval obj result)) obj)
-    (let ((num (evil-parser--dexp obj)))
-      (if num
-          (if (not (listp result))
-              result
-            (if (eq num 0)
-                `(list ,@result)
-              (nth (1- num) result)))
-        obj))))
-
-(defun evil-parser (string symbol grammar &optional greedy syntax)
-  "Parse STRING as a SYMBOL in GRAMMAR.
-If GREEDY is non-nil, the whole of STRING must match.
-If the parse succeeds, the return value is a cons cell
-\(RESULT . TAIL), where RESULT is a parse tree and TAIL is
-the remainder of STRING. Otherwise, the return value is nil.
-
-GRAMMAR is an association list of symbols and their definitions.
-A definition is either a list of production rules, which are
-tried in succession, or a #'-quoted function, which is called
-to parse the input.
-
-A production rule can be one of the following:
-
-    nil matches the empty string.
-    A regular expression matches a substring.
-    A symbol matches a production for that symbol.
-    (X Y) matches X followed by Y.
-    (\\? X) matches zero or one of X.
-    (* X) matches zero or more of X.
-    (+ X) matches one or more of X.
-    (& X) matches X, but does not consume.
-    (! X) matches anything but X, but does not consume.
-
-Thus, a simple grammar may look like:
-
-    ((plus \"\\\\+\")           ; plus <- \"+\"
-     (minus \"-\")            ; minus <- \"-\"
-     (operator plus minus)) ; operator <- plus / minus
-
-All input-consuming rules have a value. A regular expression evaluates
-to the text matched, while a list evaluates to a list of values.
-The value of a list may be overridden with a semantic action, which is
-specified with a #'-quoted expression at the end:
-
-    (X Y #'foo)
-
-The value of this rule is the result of calling foo with the values
-of X and Y as arguments. Alternatively, the function call may be
-specified explicitly:
-
-    (X Y #'(foo $1 $2))
-
-Here, $1 refers to X and $2 refers to Y. $0 refers to the whole list.
-Dollar expressions can also be used directly:
-
-    (X Y #'$1)
-
-This matches X followed by Y, but ignores the value of Y;
-the value of the list is the same as the value of X.
-
-If the SYNTAX argument is non-nil, then all semantic actions
-are ignored, and a syntax tree is constructed instead. The
-syntax tree obeys the property that all the leave nodes are
-parts of the input string. Thus, by traversing the syntax tree,
-one can determine how each character was parsed.
-
-The following symbols have reserved meanings within a grammar:
-`\\?', `*', `+', `&', `!', `function', `alt', `seq' and nil."
-  (let ((string (or string ""))
-        func pair result rules tail)
-    (cond
-     ;; epsilon
-     ((member symbol '("" nil))
-      (setq pair (cons (if syntax "" nil) string)))
-     ;; token
-     ((stringp symbol)
-      (save-match-data
-        (when (or (eq (string-match symbol string) 0)
-                  ;; ignore leading whitespace
-                  (and (eq (string-match "^[ \f\t\n\r\v]+" string) 0)
-                       (eq (match-end 0)
-                           (string-match
-                            symbol string (match-end 0)))))
-          (setq result (match-string 0 string)
-                tail (substring string (match-end 0))
-                pair (cons result tail))
-          (when (and syntax pair)
-            (setq result (substring string 0
-                                    (- (length string)
-                                       (length tail))))
-            (setcar pair result)))))
-     ;; symbol
-     ((symbolp symbol)
-      (let ((context symbol))
-        (setq rules (cdr-safe (assq symbol grammar)))
-        (setq pair (evil-parser string `(alt ,@rules)
-                                grammar greedy syntax))
-        (when (and syntax pair)
-          (setq result (car pair))
-          (if (and (listp result) (sequencep (car result)))
-              (setq result `(,symbol ,@result))
-            (setq result `(,symbol ,result)))
-          (setcar pair result))))
-     ;; function
-     ((eq (car-safe symbol) 'function)
-      (setq symbol (cadr symbol)
-            pair (funcall symbol string))
-      (when (and syntax pair)
-        (setq tail (or (cdr pair) "")
-              result (substring string 0
-                                (- (length string)
-                                   (length tail))))
-        (setcar pair result)))
-     ;; list
-     ((listp symbol)
-      (setq rules symbol
-            symbol (car-safe rules))
-      (if (memq symbol '(& ! \? * + alt seq))
-          (setq rules (cdr rules))
-        (setq symbol 'seq))
-      (when (and (memq symbol '(+ alt seq))
-                 (> (length rules) 1))
-        (setq func (car (last rules)))
-        (if (eq (car-safe func) 'function)
-            (setq rules (delq func (copy-sequence rules))
-                  func (cadr func))
-          (setq func nil)))
-      (cond
-       ;; positive lookahead
-       ((eq symbol '&)
-        (when (evil-parser string rules grammar greedy syntax)
-          (setq pair (evil-parser string nil grammar nil syntax))))
-       ;; negative lookahead
-       ((eq symbol '!)
-        (unless (evil-parser string rules grammar greedy syntax)
-          (setq pair (evil-parser string nil grammar nil syntax))))
-       ;; zero or one
-       ((eq symbol '\?)
-        (setq rules (if (> (length rules) 1)
-                        `(alt ,rules nil)
-                      `(alt ,@rules nil))
-              pair (evil-parser string rules grammar greedy syntax)))
-       ;; zero or more
-       ((eq symbol '*)
-        (setq rules `(alt (+ ,@rules) nil)
-              pair (evil-parser string rules grammar greedy syntax)))
-       ;; one or more
-       ((eq symbol '+)
-        (let (current results)
-          (catch 'done
-            (while (setq current (evil-parser
-                                  string rules grammar nil syntax))
-              (setq result (car-safe current)
-                    tail (or (cdr-safe current) "")
-                    results (append results (if syntax result
-                                              (cdr-safe result))))
-              ;; stop if stuck
-              (if (equal string tail)
-                  (throw 'done nil)
-                (setq string tail))))
-          (when results
-            (setq func (or func 'list)
-                  pair (cons results tail)))))
-       ;; alternatives
-       ((eq symbol 'alt)
-        (catch 'done
-          (dolist (rule rules)
-            (when (setq pair (evil-parser
-                              string rule grammar greedy syntax))
-              (throw 'done pair)))))
-       ;; sequence
-       (t
-        (setq func (or func 'list))
-        (let ((last (car-safe (last rules)))
-              current results rule)
-          (catch 'done
-            (while rules
-              (setq rule (pop rules)
-                    current (evil-parser string rule grammar
-                                         (when greedy
-                                           (null rules))
-                                         syntax))
-              (cond
-               ((null current)
-                (setq results nil)
-                (throw 'done nil))
-               (t
-                (setq result (car-safe current)
-                      tail (cdr-safe current))
-                (unless (memq (car-safe rule) '(& !))
-                  (if (and syntax
-                           (or (null result)
-                               (and (listp result)
-                                    (listp rule)
-                                    ;; splice in single-element
-                                    ;; (\? ...) expressions
-                                    (not (and (eq (car-safe rule) '\?)
-                                              (eq (length rule) 2))))))
-                      (setq results (append results result))
-                    (setq results (append results (list result)))))
-                (setq string (or tail ""))))))
-          (when results
-            (setq pair (cons results tail))))))
-      ;; semantic action
-      (when (and pair func (not syntax))
-        (setq result (car pair))
-        (cond
-         ((null func)
-          (setq result nil))
-         ;; lambda function
-         ((eq (car-safe func) 'lambda)
-          (if (memq symbol '(+ seq))
-              (setq result `(funcall ,func ,@result))
-            (setq result `(funcall ,func ,result))))
-         ;; string replacement
-         ((or (stringp func) (stringp (car-safe func)))
-          (let* ((symbol (or (car-safe (cdr-safe func))
-                             (and (boundp 'context) context)
-                             (car-safe (car-safe grammar))))
-                 (string (if (stringp func) func (car-safe func))))
-            (setq result (car-safe (evil-parser string symbol grammar
-                                                greedy syntax)))))
-         ;; dollar expression
-         ((evil-parser--dexp func)
-          (setq result (evil-parser--dval func result)))
-         ;; function call
-         ((listp func)
-          (setq result (evil-parser--dval func result)))
-         ;; symbol
-         (t
-          (if (memq symbol '(+ seq))
-              (setq result `(,func ,@result))
-            (setq result `(,func ,result)))))
-        (setcar pair result))))
-    ;; weed out incomplete matches
-    (when pair
-      (if (not greedy) pair
-        (if (null (cdr pair)) pair
-          ;; ignore trailing whitespace
-          (when (save-match-data (string-match "^[ \f\t\n\r\v]*$" (cdr pair)))
-            (unless syntax (setcdr pair nil))
-            pair))))))
+  (setq pos (max (- (or pos (point)) (minibuffer-prompt-end)) 0))
+  (let* ((tree (evil-ex-parse (minibuffer-contents-no-properties) t))
+         (i 0) j result)
+    ;; Iterate over syntax tree leaves (i.e. the strings), and return
+    ;; the path to the leaf containing the cursor. Or, if not found,
+    ;; e.g. because of trailing whitespace, the last leaf allowed to
+    ;; be one past the rightmost non-empty string.
+    (cl-labels
+        ((traverse
+          (tree path)
+          (when (symbolp (car tree)) (setq path (cons (pop tree) path)))
+          (dolist (child tree)
+            (if (not (stringp child))
+                (traverse child path)
+              (setq i (+ i (length child)))
+              (when (cond ((>= i pos) (throw 'done path))
+                          ((null result) (setq j i))
+                          ((>= i j) (setq j (1+ j))))
+                (setq result path))))))
+      (catch 'done
+        (traverse tree nil)
+        result))))
 
 (provide 'evil-ex)
 
