@@ -1,4 +1,4 @@
-;;; evil-ex.el --- Ex-mode -*- lexical-binding: nil -*-
+;;; evil-ex.el --- Ex mode  -*- lexical-binding: t; -*-
 
 ;; Author: Frank Fischer <frank fischer at mathematik.tu-chemnitz.de>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
@@ -561,47 +561,48 @@ in case of incomplete or unknown commands."
     (list beg end (evil-ex-completion-table) :exclusive 'no)))
 
 (defun evil-ex-completion-table ()
-  (cond
-   ((eq evil-ex-complete-emacs-commands nil)
-    #'evil-ex-command-collection)
-   ((eq evil-ex-complete-emacs-commands 'in-turn)
-    (completion-table-in-turn
-     #'evil-ex-command-collection
-     #'(lambda (str pred flag)
-         (completion-table-with-predicate
-          obarray #'commandp t str pred flag))))
-   (t
-    #'(lambda (str pred flag)
-        (evil-completion-table-concat
-         #'evil-ex-command-collection
-         #'(lambda (str pred flag)
-             (completion-table-with-predicate
-              obarray #'commandp t str pred flag))
-         str pred flag)))))
+  (let ((ex-cmds
+         (cl-loop
+          for (cmd . fun) in evil-ex-commands unless (stringp fun)
+          collect cmd
+          ;; Append ! to all commands that may take a bang argument
+          when (evil-get-command-property fun :ex-bang)
+          collect (concat cmd "!")))
+        (emacs-cmds
+         (lambda (str pred action)
+           (completion-table-with-predicate
+            obarray #'commandp t str pred action))))
+    (when (eq evil-ex-complete-emacs-commands t)
+      (setq ex-cmds
+            (mapcar (lambda (str) (propertize str 'face 'evil-ex-commands))
+                    ex-cmds)))
+    (cond
+     ((null evil-ex-complete-emacs-commands) ex-cmds)
+     ((eq evil-ex-complete-emacs-commands 'in-turn)
+      (completion-table-in-turn ex-cmds emacs-cmds))
+     (t (evil-completion-table-concat ex-cmds emacs-cmds)))))
 
-(defun evil-completion-table-concat (table1 table2 string pred flag)
-  (cond
-   ((eq flag nil)
-    (let ((result1 (try-completion string table1 pred))
-          (result2 (try-completion string table2 pred)))
-      (cond
-       ((null result1) result2)
-       ((null result2) result1)
-       ((and (eq result1 t) (eq result2 t)) t)
-       (t result1))))
-   ((eq flag t)
-    (delete-dups
-     (append (all-completions string table1 pred)
-             (all-completions string table2 pred))))
-   ((eq flag 'lambda)
-    (and (or (eq t (test-completion string table1 pred))
-             (eq t (test-completion string table2 pred)))
-         t))
-   ((eq (car-safe flag) 'boundaries)
-    (or (completion-boundaries string table1 pred (cdr flag))
-        (completion-boundaries string table2 pred (cdr flag))))
-   ((eq flag 'metadata)
-    '(metadata (display-sort-function . evil-ex-sort-completions)))))
+(defun evil-completion-table-concat (table1 table2)
+  (lambda (string pred action)
+    (cond
+     ((eq action nil)
+      (let (matches)
+        (dolist (table (list table1 table2) (try-completion string matches))
+          (let ((x (try-completion string table pred)))
+            (when x (push (if (eq x 't) string x) matches))))))
+     ((eq action t)
+      (delete-dups
+       (append (all-completions string table1 pred)
+               (all-completions string table2 pred))))
+     ((eq action 'lambda)
+      (when (or (test-completion string table1 pred)
+                (test-completion string table2 pred))
+        t))
+     ((eq (car-safe action) 'boundaries)
+      (or (completion-boundaries string table1 pred (cdr action))
+          (completion-boundaries string table2 pred (cdr action))))
+     ((eq action 'metadata)
+      '(metadata (display-sort-function . evil-ex-sort-completions))))))
 
 (defun evil-ex-sort-completions (completions)
   (sort completions
@@ -612,24 +613,16 @@ in case of incomplete or unknown commands."
                   (string< str1 str2)
                 p1)))))
 
-(defun evil-ex-command-collection (cmd predicate flag)
-  "Called to complete a command."
-  (let (commands)
-    ;; append ! to all commands that may take a bang argument
-    (dolist (cmd (mapcar #'car evil-ex-commands))
-      (push cmd commands)
-      (if (evil-ex-command-force-p cmd)
-          (push (concat cmd "!") commands)))
-    (when (eq evil-ex-complete-emacs-commands t)
-      (setq commands
-            (mapcar #'(lambda (str) (propertize str 'face 'evil-ex-commands))
-                    commands)))
+(defun evil-ex-command-collection (string predicate action)
+  (declare (obsolete evil-ex-completion-table "1.15.0"))
+  (let* (evil-ex-complete-emacs-commands
+         (commands (evil-ex-completion-table)))
     (cond
-     ((eq flag nil) (try-completion cmd commands predicate))
-     ((eq flag t) (all-completions cmd commands predicate))
-     ((eq flag 'lambda) (test-completion cmd commands))
-     ((eq (car-safe flag) 'boundaries)
-      `(boundaries 0 . ,(length (cdr flag)))))))
+     ((eq action nil) (try-completion string commands predicate))
+     ((eq action t) (all-completions string commands predicate))
+     ((eq action 'lambda) (test-completion string commands))
+     ((eq (car-safe action) 'boundaries)
+      `(boundaries 0 . ,(length (cdr action)))))))
 
 (defun evil-ex-argument-completion-at-point ()
   (let ((context (evil-ex-syntactic-context)))
