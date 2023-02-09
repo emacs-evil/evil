@@ -3849,129 +3849,124 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
   :motion evil-line
   (interactive "<r><s/>")
   (evil-ex-nohighlight)
-  (unless pattern
-    (user-error "No pattern given"))
-  (setq replacement (or replacement ""))
-  (setq evil-ex-last-was-search nil)
+  (unless pattern (user-error "No pattern given"))
+  (setq replacement (or replacement "")
+        evil-ex-last-was-search nil
+        evil-ex-substitute-pattern pattern
+        evil-ex-substitute-replacement replacement)
   (let* ((flags (append flags nil))
          (count-only (memq ?n flags))
          (confirm (and (memq ?c flags) (not count-only)))
          (case-fold-search (evil-ex-pattern-ignore-case pattern))
          (case-replace case-fold-search)
-         (evil-ex-substitute-regex (evil-ex-pattern-regex pattern))
-         (evil-ex-substitute-nreplaced 0)
-         (evil-ex-substitute-last-point (point))
+         (regex (evil-ex-pattern-regex pattern))
+         (nreplaced 0)
+         (last-point (point))
          (whole-line (evil-ex-pattern-whole-line pattern))
          (evil-ex-substitute-overlay (make-overlay (point) (point)))
          (orig-point-marker (move-marker (make-marker) (point)))
          (end-marker (move-marker (make-marker) end))
          (use-reveal confirm)
          (match-end (make-marker))
+         match-data
          reveal-open-spots
          transient-mark-mode)
-    (setq evil-ex-substitute-pattern pattern
-          evil-ex-substitute-replacement replacement
-          evil-ex-substitute-flags flags
-          isearch-string evil-ex-substitute-regex)
-    (isearch-update-ring evil-ex-substitute-regex t)
+    (setq evil-ex-substitute-flags flags
+          isearch-string regex)
+    (isearch-update-ring regex t)
     (unwind-protect
-        (progn
+        (catch 'exit-search
           (evil-ex-hl-change 'evil-ex-substitute pattern)
           (overlay-put evil-ex-substitute-overlay 'face 'isearch)
           (overlay-put evil-ex-substitute-overlay 'priority 1001)
           (goto-char beg)
-          (catch 'exit-search
-            (while (re-search-forward evil-ex-substitute-regex end-marker t)
-              (unless (and query-replace-skip-read-only
-                           (text-property-any (match-beginning 0) (match-end 0) 'read-only t))
-                (let ((inhibit-field-text-motion t)
-                      (match-beg (match-beginning 0))
-                      (match-data (match-data))
-                      match-contains-newline zero-length-match)
-                  (move-marker match-end (match-end 0))
-                  (goto-char match-beg)
-                  (setq match-contains-newline (< (line-end-position) match-end)
-                        zero-length-match (= match-beg match-end))
-                  (when (and (= match-beg end-marker) (> end-marker beg) (bolp))
-                    ;; This line is not included due to range being exclusive
-                    (throw 'exit-search t))
-                  (setq evil-ex-substitute-last-point match-beg)
-                  (if confirm
-                      (let ((prompt
-                             (format "Replace %s with %s (y/n/a/q/l/^E/^Y)? "
-                                     (match-string 0)
-                                     (evil-match-substitute-replacement
-                                      evil-ex-substitute-replacement
-                                      (not case-replace))))
-                            (search-invisible t)
-                            response)
-                        (move-overlay evil-ex-substitute-overlay match-beg match-end)
-                        ;; Simulate `reveal-mode'. `reveal-mode' uses
-                        ;; `post-command-hook' but that won't work here.
-                        (when use-reveal
-                          (reveal-post-command))
-                        (catch 'exit-read-char
-                          (while (setq response (read-char prompt))
-                            (when (member response '(?y ?a ?l))
-                              (unless count-only
-                                (set-match-data match-data)
-                                (evil-replace-match evil-ex-substitute-replacement
-                                                    (not case-replace)))
-                              (setq evil-ex-substitute-nreplaced
-                                    (1+ evil-ex-substitute-nreplaced))
-                              (evil-ex-hl-set-region 'evil-ex-substitute
-                                                     (save-excursion
-                                                       (forward-line)
-                                                       (point))
-                                                     (evil-ex-hl-get-max
-                                                      'evil-ex-substitute)))
-                            (cl-case response
-                              ((?y ?n) (throw 'exit-read-char t))
-                              (?a (setq confirm nil)
-                                  (throw 'exit-read-char t))
-                              ((?q ?l ?\C-\[) (throw 'exit-search t))
-                              (?\C-e (evil-scroll-line-down 1))
-                              (?\C-y (evil-scroll-line-up 1))))))
-                    (setq evil-ex-substitute-nreplaced
-                          (1+ evil-ex-substitute-nreplaced))
-                    (unless count-only
+          (while (re-search-forward regex end-marker t)
+            (unless (and query-replace-skip-read-only
+                         (text-property-any (match-beginning 0) (match-end 0) 'read-only t))
+              (let ((inhibit-field-text-motion t)
+                    (match-beg (match-beginning 0))
+                    match-contains-newline zero-length-match)
+                (move-marker match-end (match-end 0))
+                (goto-char match-beg)
+                (setq match-data (match-data t match-data)
+                      match-contains-newline (< (line-end-position) match-end)
+                      zero-length-match (= match-beg match-end))
+                (when (and (= match-beg end-marker) (> end-marker beg) (bolp))
+                  ;; This line is not included due to range being exclusive
+                  (throw 'exit-search t))
+                (setq last-point match-beg)
+                (if confirm
+                    (let* ((next-replacement
+                            (if (stringp replacement) replacement
+                              (funcall (car replacement) (cdr replacement)
+                                       nreplaced)))
+                           (prompt
+                            (format "Replace %s with %s (y/n/a/q/l/^E/^Y)? "
+                                    (match-string 0)
+                                    (match-substitute-replacement
+                                     next-replacement (not case-replace))))
+                           (search-invisible t)
+                           response)
+                      (move-overlay evil-ex-substitute-overlay match-beg match-end)
+                      ;; Simulate `reveal-mode'. `reveal-mode' uses
+                      ;; `post-command-hook' but that won't work here.
+                      (when use-reveal
+                        (reveal-post-command))
+                      (catch 'exit-read-char
+                        (while (setq response (read-char prompt))
+                          (when (member response '(?y ?a ?l))
+                            (unless count-only
+                              (set-match-data match-data)
+                              (replace-match next-replacement (not case-replace)))
+                            (cl-incf nreplaced)
+                            (evil-ex-hl-set-region
+                             'evil-ex-substitute
+                             (line-beginning-position 2)
+                             (evil-ex-hl-get-max 'evil-ex-substitute)))
+                          (cl-case response
+                            ((?y ?n) (throw 'exit-read-char t))
+                            (?a (setq confirm nil)
+                                (throw 'exit-read-char t))
+                            ((?q ?l ?\C-\[) (throw 'exit-search t))
+                            (?\C-e (evil-scroll-line-down 1))
+                            (?\C-y (evil-scroll-line-up 1))))))
+                  (unless count-only
+                    (let ((next-replacement
+                           (if (stringp replacement) replacement
+                             (funcall (car replacement) (cdr replacement)
+                                      nreplaced))))
                       (set-match-data match-data)
-                      (evil-replace-match evil-ex-substitute-replacement
-                                          (not case-replace))))
-                  (goto-char match-end)
-                  (cond ((>= (point) end-marker)
-                         ;; Don't want to perform multiple replacements at the end
-                         ;; of the search region.
-                         (throw 'exit-search t))
-                        ((and (not whole-line)
-                              (not match-contains-newline))
-                         (forward-line)
-                         ;; forward-line just moves to the end of the line on the
-                         ;; last line of the buffer.
-                         (when (or (eobp)
-                                   (> (point) end-marker))
-                           (throw 'exit-search t)))
-                        ;; For zero-length matches check to see if point won't
-                        ;; move next time. This is a problem when matching the
-                        ;; regexp "$" because we can enter an infinite loop,
-                        ;; repeatedly matching the same character
-                        ((and zero-length-match
-                              (let ((pnt (point)))
-                                (save-excursion
-                                  (and
-                                   (re-search-forward
-                                    evil-ex-substitute-regex end-marker t)
-                                   (= pnt (point))))))
-                         (if (or (eobp)
-                                 (>= (point) end-marker))
-                             (throw 'exit-search t)
-                           (forward-char)))))))))
+                      (replace-match next-replacement (not case-replace))))
+                  (cl-incf nreplaced))
+                (goto-char match-end)
+                (cond ((>= (point) end-marker)
+                       ;; Don't want to perform multiple replacements at the end
+                       ;; of the search region.
+                       (throw 'exit-search t))
+                      ((and (not whole-line)
+                            (not match-contains-newline))
+                       (forward-line)
+                       ;; forward-line just moves to the end of the line on the
+                       ;; last line of the buffer.
+                       (when (or (eobp)
+                                 (> (point) end-marker))
+                         (throw 'exit-search t)))
+                      ;; For zero-length matches check to see if point won't
+                      ;; move next time. This is a problem when matching the
+                      ;; regexp "$" because we can enter an infinite loop,
+                      ;; repeatedly matching the same character
+                      ((and zero-length-match
+                            (let ((pnt (point)))
+                              (save-excursion
+                                (and (re-search-forward regex end-marker t)
+                                     (= pnt (point))))))
+                       (when (eobp) (throw 'exit-search t))
+                       (forward-char)))))))
       (evil-ex-delete-hl 'evil-ex-substitute)
       (delete-overlay evil-ex-substitute-overlay)
 
-      (if count-only
-          (goto-char orig-point-marker)
-        (goto-char evil-ex-substitute-last-point))
+      (goto-char (if count-only orig-point-marker
+                   last-point))
 
       (move-marker orig-point-marker nil)
       (move-marker end-marker nil)
@@ -3981,9 +3976,9 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
 
     (message "%s %d occurrence%s"
              (if count-only "Found" "Replaced")
-             evil-ex-substitute-nreplaced
-             (if (/= evil-ex-substitute-nreplaced 1) "s" ""))
-    (if (and (= 0 evil-ex-substitute-nreplaced) evil-ex-point)
+             nreplaced
+             (if (/= nreplaced 1) "s" ""))
+    (if (and (= 0 nreplaced) evil-ex-point)
         (goto-char evil-ex-point)
       (evil-first-non-blank))))
 

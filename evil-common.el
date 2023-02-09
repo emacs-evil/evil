@@ -3912,26 +3912,17 @@ The magic character , (comma) start an Emacs-lisp expression."
       (cons 'replace-eval-replacement
             (car (evil-compile-subreplacement to))))))
 
-(defun evil-replace-match (replacement &optional fixedcase string)
-  "Replace text match by last search with REPLACEMENT.
-If REPLACEMENT is an expression it will be evaluated to compute
-the replacement text, otherwise the function behaves as
-`replace-match'."
-  (if (stringp replacement)
-      (replace-match replacement fixedcase nil string)
-    (replace-match (funcall (car replacement)
-                            (cdr replacement)
-                            0)
-                   fixedcase nil string)))
-
 (defun evil-match-substitute-replacement (replacement &optional fixedcase string)
-  "Return REPLACEMENT as it will be inserted by `evil-replace-match'."
-  (if (stringp replacement)
-      (match-substitute-replacement replacement fixedcase nil string)
-    (match-substitute-replacement (funcall (car replacement)
-                                           (cdr replacement)
-                                           0)
-                                  fixedcase nil string)))
+  "Return REPLACEMENT as it will be inserted by `evil-replace-match'.
+If REPLACEMENT is an expression it will be evaluated to compute the
+replacement text first."
+  (match-substitute-replacement
+   (if (stringp replacement)
+       replacement
+     (funcall (car replacement)
+              (cdr replacement)
+              0))
+   fixedcase nil string))
 
 ;;; Alignment
 

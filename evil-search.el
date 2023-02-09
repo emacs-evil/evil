@@ -1240,18 +1240,15 @@ This handler highlights the pattern of the current substitution."
 
 (defun evil-ex-pattern-update-replacement (_hl overlay)
   "Update the replacement display."
-  (when (fboundp 'match-substitute-replacement)
-    (let ((fixedcase (not case-replace))
-          repl)
-      (setq repl (if evil-ex-substitute-current-replacement
-                     (evil-match-substitute-replacement
-                      evil-ex-substitute-current-replacement
-                      fixedcase)
-                   ""))
-      (put-text-property 0 (length repl)
-                         'face 'evil-ex-substitute-replacement
-                         repl)
-      (overlay-put overlay 'after-string repl))))
+  (let ((repl (if evil-ex-substitute-current-replacement
+                  (evil-match-substitute-replacement
+                   evil-ex-substitute-current-replacement
+                   (not case-replace))
+                "")))
+    (put-text-property 0 (length repl)
+                       'face 'evil-ex-substitute-replacement
+                       repl)
+    (overlay-put overlay 'after-string repl)))
 
 (defun evil-ex-parse-global (string)
   "Parse STRING as a global argument."
