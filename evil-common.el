@@ -580,13 +580,9 @@ Translates it according to the input method."
                 (setq char (aref cmd 0)
                       cmd (key-binding cmd)))
               (cond
-               ((eq cmd 'self-insert-command)
-                char)
-               (cmd
-                (setq evil-last-read-digraph-char nil)
-                (call-interactively cmd))
-               (t
-                (user-error "No replacement character typed"))))
+               ((eq cmd 'self-insert-command) char)
+               (cmd (call-interactively cmd))
+               (t (user-error "No replacement character typed"))))
           (quit
            (when (fboundp 'evil-repeat-abort)
              (evil-repeat-abort))
@@ -601,41 +597,42 @@ as a command. Its main use is in the `evil-read-key-map'."
   (read-quoted-char))
 
 (defun evil-read-digraph-char-with-overlay (overlay)
-  "Read two chars, displaying the first in OVERLAY, replacing `?'.
+  "Read two chars, displaying the first in OVERLAY, replacing \"?\".
 Return the digraph from `evil-digraph', else return second char."
   (interactive)
-  (let (char1 char2 string)
-    (unwind-protect
-        (progn
-          (overlay-put overlay 'invisible t)
-          ;; create overlay prompt
-          (setq string (propertize "?"
-                                   'face 'minibuffer-prompt
-                                   'cursor 1))
-          (overlay-put overlay 'after-string string)
-          (setq char1 (read-key))
-          (setq string (propertize (string char1)
-                                   'face 'minibuffer-prompt
-                                   'cursor 1))
-          (overlay-put overlay 'after-string string)
-          (setq char2 (read-key)))
-      (delete-overlay overlay))
-    (or (evil-digraph (list char1 char2))
-        ;; use the last character if undefined
-        char2)))
+  (unwind-protect
+      (let ((read-key-empty-map
+             (let ((map (make-sparse-keymap)))
+               (set-keymap-parent map read-key-empty-map)
+               ;; Disable read-key-sequence unbound fallbacks, e.g. downcasing
+               (define-key map [t] 'dummy)
+               map))
+            char1 char2)
+        ;; create overlay prompt
+        (overlay-put overlay 'invisible t)
+        (overlay-put overlay 'after-string
+                     #("?" 0 1 (face minibuffer-prompt cursor 1)))
+        (setq char1 (read-key))
+        (overlay-put overlay 'after-string
+                     (propertize (char-to-string char1)
+                                 'face 'minibuffer-prompt
+                                 'cursor 1))
+        (setq char2 (read-key))
+
+        (or (evil-digraph (list char1 char2))
+            ;; use the last character if undefined
+            char2))
+    (delete-overlay overlay)))
 
 (defun evil-read-digraph-char (&optional hide-chars)
   "Read two keys from keyboard forming a digraph.
 This function creates an overlay at (point), hiding the next
 HIDE-CHARS characters.  HIDE-CHARS defaults to 1."
   (interactive)
-  (let* ((overlay (make-overlay (point)
-                                (min (point-max)
-                                     (+ (or hide-chars 1)
-                                        (point)))))
-         (char (evil-read-digraph-char-with-overlay overlay)))
-    (setq evil-last-read-digraph-char char)
-    char))
+  (let ((overlay (make-overlay
+                  (point) (min (+ (point) (or hide-chars 1))
+                               (point-max)))))
+    (evil-read-digraph-char-with-overlay overlay)))
 
 (defun evil-read-motion (&optional motion count type modifier)
   "Read a MOTION, motion COUNT and motion TYPE from the keyboard.

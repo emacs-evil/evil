@@ -3767,7 +3767,7 @@ resp.  after executing the command."
     ;; tag, which bypasses the source of `this-command-keys', we'd be able
     ;; to capture the key(s) in the post-command of the operator as usual.
     ;; Fortunately however, `last-input-event' can see the key (by default, `return')
-    (unless (append (this-command-keys) nil)
+    (when (= (length (this-command-keys)) 0)
       (evil-repeat-record (vector last-input-event))))
    (t (evil-repeat-motion flag))))
 
