@@ -1559,9 +1559,6 @@ This keymap can be used to bind some commands during the
 execution of `evil-read-key' which is usually used to read a
 character argument for some commands, e.g. `evil-replace'.")
 
-(defvar evil-last-read-digraph-char nil
-  "The last digraph character read.  Used for repeats.")
-
 ;; TODO: customize size of ring
 (defvar evil-repeat-ring (make-ring 10)
   "A ring of repeat-informations to repeat the last command.")
