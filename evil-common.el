@@ -464,39 +464,33 @@ keystrokes."
   "Declare COMMAND to be nonrepeatable."
   (evil-add-command-properties command :repeat 'abort))
 
-(defun evil-delimited-arguments (string &optional num)
+(defun evil-delimited-arguments (string &optional count)
   "Parse STRING as a sequence of delimited arguments.
-Return a list of NUM strings, or as many arguments as
-the string contains. The first non-blank character is
-taken to be the delimiter. If some arguments are missing
-from STRING, the resulting list is padded with nil values.
-Two delimiters following directly after each other gives
-an empty string."
-  (save-match-data
-    (let ((string (or string ""))
-          (count (or num -1)) (idx 0)
-          argument delim match result)
-      (when (string-match "^[[:space:]]*\\([^[:space:]]\\)" string)
-        (setq delim (match-string 1 string)
-              argument (format "%s\\(\\(?:[\\].\\|[^%s]\\)*\\)"
-                               (regexp-quote delim)
-                               delim))
-        (while (and (/= count 0) (string-match argument string idx))
-          (setq match (match-string 1 string)
-                idx (match-end 1)
-                count (1- count))
-          (when (= count 0)
-            (unless (save-match-data
-                      (string-match
-                       (format "%s[[:space:]]*$" delim) string idx))
-              (setq match (substring string (match-beginning 1)))))
-          (unless (and (zerop (length match))
-                       (zerop (length (substring string idx))))
-            (push match result))))
-      (when (and num (< (length result) num))
-        (dotimes (_ (- num (length result)))
-          (push nil result)))
-      (nreverse result))))
+Return a list of COUNT strings, or as many arguments as the string
+contains.  The first non-blank character is taken to be the delimiter.
+If some arguments are missing from STRING, the resulting list is
+padded with nil values.  Two delimiters following directly after each
+other gives an empty string."
+  (unless count (setq count -1))
+  (let ((idx 0) delim regexp result)
+    (when (string-match "^[[:space:]]*\\([^[:space:]]\\)" string)
+      (setq delim (match-string 1 string)
+            regexp (format "%s\\(\\(?:\\\\.\\|[^%s]\\)*\\)"
+                           (regexp-quote delim) delim))
+      (while (and (/= count 0) (string-match regexp string idx)
+                  (/= (match-beginning 1) (length string)))
+        (setq idx (match-end 0)
+              count (1- count))
+        (push
+         (if (when (= count 0)
+               (not (string-match-p
+                     (concat (regexp-quote delim) "[[:space:]]*$")
+                     string idx)))
+             (substring string (match-beginning 1))
+           (match-string 1 string))
+         result)))
+    (dotimes (_ count) (push nil result))
+    (nreverse result)))
 
 (defun evil-concat-charsets (&rest sets)
   "Concatenate character sets.
@@ -656,11 +650,12 @@ Return a list (MOTION COUNT [TYPE])."
                      motion (pop command)
                      prefix (pop command))
                (when prefix
-                 (if count
-                     (setq count (string-to-number
-                                  (concat (number-to-string count)
-                                          (number-to-string prefix))))
-                   (setq count prefix)))
+                 (setq count
+                       (if count
+                           (string-to-number
+                            (concat (number-to-string count)
+                                    (number-to-string prefix)))
+                         prefix)))
                ;; if the command is a type modifier, read more
                (when (rassq motion evil-visual-alist)
                  (setq modifier
@@ -671,23 +666,16 @@ Return a list (MOTION COUNT [TYPE])."
       (cond
        ((eq modifier 'char)
         ;; TODO: this behavior could be less hard-coded
-        (if (eq type 'exclusive)
-            (setq type 'inclusive)
-          (setq type 'exclusive)))
-       (t
-        (setq type modifier)))
+        (setq type (if (eq type 'exclusive) 'inclusive 'exclusive)))
+       (t (setq type modifier)))
       (setq evil-this-type-modified type))
     (list motion count type)))
 
 (defun evil-mouse-events-p (keys)
   "Return non-nil iff KEYS contains a mouse event."
-  (catch 'done
-    (dotimes (i (length keys))
-      (when (or (and (fboundp 'mouse-event-p)
-                     (mouse-event-p (aref keys i)))
-                (mouse-movement-p (aref keys i)))
-        (throw 'done t)))
-    nil))
+  (cl-loop for key across keys thereis
+           (or (mouse-event-p key)
+               (mouse-movement-p key))))
 
 (defun evil-extract-count (keys)
   "Split the key-sequence KEYS into prefix-argument and the rest.
@@ -1178,26 +1166,6 @@ right positions are increased or decreased, respectively, by
        (let* ((,left (+ (window-hscroll) ,diff))
               (,right (+ (window-hscroll) (window-width) (- ,diff) -1)))
          (move-to-column (min (max (current-column) ,left) ,right))))))
-
-(defun evil-goto-min (&rest positions)
-  "Go to the smallest position in POSITIONS.
-Non-numerical elements are ignored.
-See also `evil-goto-max'."
-  (when (setq positions (evil-filter-list
-                         #'(lambda (elt)
-                             (not (number-or-marker-p elt)))
-                         positions))
-    (goto-char (apply #'min positions))))
-
-(defun evil-goto-max (&rest positions)
-  "Go to the largest position in POSITIONS.
-Non-numerical elements are ignored.
-See also `evil-goto-min'."
-  (when (setq positions (evil-filter-list
-                         #'(lambda (elt)
-                             (not (number-or-marker-p elt)))
-                         positions))
-    (goto-char (apply #'max positions))))
 
 (defun evil-forward-not-thing (thing &optional count)
   "Move point to the end or beginning of the complement of THING."
@@ -2425,20 +2393,6 @@ column is set to the maximal column in all covered lines."
   (apply #'evil-apply-on-block function start end t args))
 
 ;;; Insertion
-
-(defun evil-concat-ranges (ranges)
-  "Concatenate RANGES.
-RANGES must be a list of ranges.  They must be ordered so that
-successive ranges share their boundaries.  The return value is a
-single range of disjoint union of the ranges or nil if the
-disjoint union is not a single range."
-  (let ((range (car-safe ranges)) (ranges (cdr ranges)) r)
-    (while (and range (setq r (car-safe ranges)))
-      (setq range
-            (cond ((and (= (cdr r) (car range))) (cons (car r) (cdr range)))
-                  ((and (= (cdr range) (car r))) (cons (car range) (cdr r)))))
-      (setq ranges (cdr ranges)))
-    range))
 
 (defun evil-track-last-insertion (beg end old-len)
   "Track the last insertion range and its text.
