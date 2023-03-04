@@ -24,14 +24,13 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
+;;; Code:
+
 (require 'evil-vars)
 (require 'evil-digraphs)
 (require 'rect)
 (require 'thingatpt)
 (require 'cl-lib)
-(require 'calc)
-
-;;; Code:
 
 (declare-function evil-visual-state-p "evil-states")
 (declare-function evil-visual-restore "evil-states")
@@ -39,10 +38,6 @@
 (declare-function evil-replace-state-p "evil-states")
 (declare-function evil-ex-p "evil-ex")
 (declare-function evil-set-jump "evil-jumps")
-
-(unless (require 'windmove nil t)
-  (message "evil: Could not load `windmove', \
-window commands not available."))
 
 ;;; Compatibility with different Emacs versions
 
@@ -1952,33 +1947,30 @@ or a marker object pointing nowhere."
 
 (defun evil-swap-out-markers ()
   "Turn markers into file references when the buffer is killed."
-  (and buffer-file-name
-       (dolist (entry evil-markers-alist)
-         (and (markerp (cdr entry))
-              (eq (marker-buffer (cdr entry)) (current-buffer))
-              (setcdr entry (cons buffer-file-name
-                                  (marker-position (cdr entry))))))))
+  (when buffer-file-name
+    (dolist (entry evil-markers-alist)
+      (and (markerp (cdr entry))
+           (eq (marker-buffer (cdr entry)) (current-buffer))
+           (setcdr entry (cons buffer-file-name
+                               (marker-position (cdr entry))))))))
 (put 'evil-swap-out-markers 'permanent-local-hook t)
 
+(defvar calc-multiplication-has-precedence)
 (defun evil--eval-expr (input)
   "Eval INPUT and return stringified result, if of a suitable type.
 If INPUT starts with a number, +, -, or . use `calc-eval' instead."
-  (let* ((first-char (car (remove ?\s (string-to-list input))))
-         (calcable-p (and first-char (or (<= ?0 first-char ?9)
-                                         (memq first-char '(?- ?+ ?.)))))
+  (let* ((calcable-p (string-match-p "\\`[[:space:]]*[0-9+.-]" input))
          (result (if calcable-p
                      (let ((calc-multiplication-has-precedence nil))
                        (calc-eval input))
                    (eval (car (read-from-string input))))))
     (cond
-     (calcable-p result)
-     ((or (stringp result)
-          (numberp result)
-          (symbolp result))
+     ((stringp result) result)
+     ((or (numberp result) (symbolp result))
       (format "%s" result))
      ((sequencep result)
       (mapconcat (lambda (x) (format "%s" x)) result "\n"))
-     (t (user-error "Using %s as a string" (type-of result))))))
+     (t (user-error "Using `%s' as a string" (type-of result))))))
 
 (defvar evil-paste-clear-minibuffer-first nil
   "`evil-paste-before' cannot have `delete-minibuffer-contents' called before
