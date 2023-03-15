@@ -134,6 +134,7 @@
     (remove-hook 'activate-mark-hook 'evil-visual-activate-hook t)
     (remove-hook 'input-method-activate-hook #'evil-activate-input-method t)
     (remove-hook 'input-method-deactivate-hook #'evil-deactivate-input-method t)
+    (activate-input-method evil-input-method)
     (evil-change-state nil)))
 
 ;; Make the variable permanent local.  This is particular useful in

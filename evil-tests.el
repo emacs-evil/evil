@@ -9680,6 +9680,26 @@ main(argc, argv) char **argv; {
     (test-3-mode)
     (should (eq evil-state 'insert))))
 
+(ert-deftest evil-test-keep-input-method ()
+  "Test that the input method is preserved when changing the major mode."
+  :tags '(evil core input-method)
+  (cl-flet ((use-german-input-method () (set-input-method "german-prefix")))
+    (unwind-protect
+        (progn
+          (add-hook 'text-mode-hook #'use-german-input-method)
+          (evil-test-buffer
+           "[]"
+           (should (equal evil-input-method nil))
+           ("a\"a" [escape])
+           "\"[a]"
+           (text-mode)
+           (should (equal evil-input-method "german-prefix"))
+           ("a\"a" [escape])
+           "\"a[ä]"
+           (emacs-lisp-mode)
+           (should (equal evil-input-method "german-prefix"))))
+      (remove-hook 'text-mode-hook #'use-german-input-method))))
+
 (provide 'evil-tests)
 
 ;;; evil-tests.el ends here
