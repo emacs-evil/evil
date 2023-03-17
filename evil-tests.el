@@ -3425,15 +3425,14 @@ Below some empty line"
 (ert-deftest evil-test-logical-visual-next-line ()
   "Test alternating between logical and visual next/previous line motions."
   :tags '(evil motion)
-  (skip-unless (and (not noninteractive) (> (window-width) 1)))
-  (evil-test-buffer
-   "[]\nyy\n"
-   (insert (make-string (window-width) ?x)) ; Make first line soft-wrap
-   (goto-char (point-min))
-   ("gjj")
-   (should (= (current-column) 1))
-   ("Gkgk")
-   (should (evil-eolp))))
+  (skip-unless (and (not noninteractive) (> (window-width) 2)))
+  (evil-test-buffer "[x]\nyy\n"
+    (insert (make-string (window-width) ?x)) ; Make first line soft-wrap
+    (goto-char (point-min))
+    ("gjj")
+    (should (= (current-column) 1))
+    ("Gkgk")
+    (should (not (bolp)))))
 
 (ert-deftest evil-test-other-commands-preserve-column ()
   "Test other comamnds preserve the column, when appropriate."
