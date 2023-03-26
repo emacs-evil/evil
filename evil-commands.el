@@ -3271,6 +3271,7 @@ FILENAME is given, the current file name is used."
   "Open FILE.
 If no FILE is specified, reload the current buffer from disk."
   :repeat nil
+  :jump t
   (interactive "<f><!>")
   (if file
       (find-file file)
