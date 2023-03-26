@@ -137,13 +137,18 @@ Otherwise the jump commands act only within the current buffer."
                                   (list pos file-name))))
                           (ring-elements (evil--jumps-get-window-jump-list))))))
 
+(defun evil--jumps-current-file-name ()
+  "Get the current buffer file name for `evil--jumps-push'."
+  (or buffer-file-name
+      (when (derived-mode-p 'dired-mode) default-directory)))
+
 (defun evil--jumps-jump (idx shift)
   (let ((target-list (evil--jumps-get-window-jump-list)))
     (evil--jumps-message "jumping from %s by %s" idx shift)
     (evil--jumps-message "target list = %s" target-list)
     (setq idx (+ idx shift))
-    (let* ((current-file-name (or (buffer-file-name) (buffer-name)))
-           (size (ring-length target-list)))
+    (let ((current-file-name (or (evil--jumps-current-file-name) (buffer-name)))
+          (size (ring-length target-list)))
       (unless evil-jumps-cross-buffers
         ;; skip jump marks pointing to other buffers
         (while (and (< idx size) (>= idx 0)
@@ -168,7 +173,7 @@ Otherwise the jump commands act only within the current buffer."
 (defun evil--jumps-push ()
   "Push the current cursor/file position to the jump list."
   (let ((target-list (evil--jumps-get-window-jump-list))
-        (file-name (buffer-file-name))
+        (file-name (evil--jumps-current-file-name))
         (buffer-name (buffer-name))
         (current-pos (point-marker))
         (first-pos nil)
