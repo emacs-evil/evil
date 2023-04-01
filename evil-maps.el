@@ -187,9 +187,9 @@
 (define-key evil-window-map [C-right] 'evil-window-right)
 
 (when (featurep 'tab-bar)
-  (define-key evil-normal-state-map "gt" 'tab-bar-switch-to-next-tab)
+  (define-key evil-motion-state-map "gt" 'tab-bar-switch-to-next-tab)
   (define-key evil-window-map "gt" 'tab-bar-switch-to-next-tab)
-  (define-key evil-normal-state-map "gT" 'tab-bar-switch-to-prev-tab)
+  (define-key evil-motion-state-map "gT" 'tab-bar-switch-to-prev-tab)
   (define-key evil-window-map "gT" 'tab-bar-switch-to-prev-tab))
 
 ;;; Motion state
