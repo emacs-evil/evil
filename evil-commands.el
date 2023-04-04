@@ -1696,7 +1696,9 @@ of the block."
       (evil-start-undo-step))
     (funcall delete-func beg end type register yank-handler)
     (cond
-     ((eq type 'line)
+     ((or (eq type 'line)
+          (and (eq type 'screen-line)
+               (> nlines 1)))
       (setq this-command 'evil-change-whole-line) ; for evil-maybe-remove-spaces
       (cond
        ((/= opoint leftmost-point) (evil-insert 1)) ; deletion didn't delete line
