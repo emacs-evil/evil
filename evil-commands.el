@@ -1201,6 +1201,15 @@ the right edge."
       (message "%s: hscroll-margin = %d" this-command hscroll-margin))
     (evil-scroll-column-left (- dist-from-right-edge (abs (* 2 hscroll-margin))))))
 
+(when (featurep 'tab-bar)
+ (evil-define-command evil-tab-move (index-or-offset relative)
+   "Move the current tab to INDEX-OR-OFFSET. Treat as offset if
+RELATIVE is non-nil."
+   (interactive "<+N>")
+   (if relative
+       (tab-bar-move-tab index-or-offset)
+     (tab-bar-move-tab-to index-or-offset))))
+
 (evil-define-command evil-scroll-start-column ()
   "Scroll the window to position the cursor at the start (left side) of the screen.
 Warn if `hscroll-margin' > 0, as cursor will be `hscroll-margin' chars from
