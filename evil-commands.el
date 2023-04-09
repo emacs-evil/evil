@@ -4398,11 +4398,17 @@ This is equivalent to Vim's alternate buffer."
       (switch-to-buffer (car previous-place)))))
 
 (evil-define-command evil-window-delete ()
-  "Delete the current window.
+  "Delete the current window or tab.
 If `evil-auto-balance-windows' is non-nil then all children of
 the deleted window's parent window are rebalanced."
   (let ((p (window-parent)))
-    (delete-window)
+    ;; If tabs are enabled and this is the only visible window, then attempt to
+    ;; close this tab.
+    (if (and (boundp 'tab-bar-mode)
+             tab-bar-mode
+             (not p))
+        (tab-close)
+      (delete-window))
     (when evil-auto-balance-windows
       ;; balance-windows raises an error if the parent does not have
       ;; any further children (then rebalancing is not necessary anyway)
