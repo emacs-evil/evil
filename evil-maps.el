@@ -140,6 +140,8 @@
 (define-key evil-window-map "s" 'evil-window-split)
 (define-key evil-window-map "S" 'evil-window-split)
 (define-key evil-window-map "t" 'evil-window-top-left)
+(when (featurep 'tab-bar)
+  (define-key evil-window-map "T" 'tab-window-detach))
 (define-key evil-window-map "v" 'evil-window-vsplit)
 (define-key evil-window-map "w" 'evil-window-next)
 (define-key evil-window-map "W" 'evil-window-prev)
