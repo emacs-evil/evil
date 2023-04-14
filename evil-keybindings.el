@@ -104,7 +104,7 @@
      (evil-define-key 'normal ibuffer-mode-map
        "j" 'evil-next-line
        "k" 'evil-previous-line
-       "RET" 'ibuffer-visit-buffer)))
+       (kbd "RET") 'ibuffer-visit-buffer)))
 
 ;;; ag.el
 (eval-after-load 'ag
