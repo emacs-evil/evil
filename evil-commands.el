@@ -1684,7 +1684,8 @@ If TYPE is `line', insertion starts on an empty line.
 If TYPE is `block', the inserted text in inserted at each line
 of the block."
   (interactive "<R><x><y>")
-  (let ((delete-func (or delete-func #'evil-delete))
+  (let ((register (or register (if evil-change-prevent-kill-ring ?_)))
+        (delete-func (or delete-func #'evil-delete))
         (nlines (1+ (evil-count-lines beg end)))
         opoint leftmost-point)
     (save-excursion
