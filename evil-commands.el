@@ -4782,6 +4782,18 @@ and redisplay the current buffer there."
   :repeat nil
   (evil-move-window 'below))
 
+;;; Tab commands
+
+(evil-define-command evil-tab-next (arg)
+  "Switch to the next tab.
+If ARG is non-nil, parse ARG as an index and go to the tab at that
+index."
+  :repeat nil
+  (interactive "<c>")
+  (if arg
+      (tab-bar-select-tab arg)
+    (tab-bar-switch-to-next-tab)))
+
 ;;; Mouse handling
 
 ;; Large parts of this code are taken from mouse.el which is

@@ -189,8 +189,8 @@
 (define-key evil-window-map [C-right] 'evil-window-right)
 
 (when (featurep 'tab-bar)
-  (define-key evil-motion-state-map "gt" 'tab-bar-switch-to-next-tab)
-  (define-key evil-window-map "gt" 'tab-bar-switch-to-next-tab)
+  (define-key evil-motion-state-map "gt" 'evil-tab-next)
+  (define-key evil-window-map "gt" 'evil-tab-next)
   (define-key evil-motion-state-map "gT" 'tab-bar-switch-to-prev-tab)
   (define-key evil-window-map "gT" 'tab-bar-switch-to-prev-tab))
 
@@ -588,7 +588,7 @@ included in `evil-insert-state-bindings' by default."
   (evil-ex-define-cmd "tabnew" 'tab-bar-new-tab)
   (evil-ex-define-cmd "tabc[lose]" 'tab-bar-close-tab)
   (evil-ex-define-cmd "tabo[nly]" 'tab-bar-close-other-tabs)
-  (evil-ex-define-cmd "tabn[ext]" 'tab-bar-switch-to-next-tab)
+  (evil-ex-define-cmd "tabn[ext]" 'evil-tab-next)
   (evil-ex-define-cmd "tabp[revious]" 'tab-bar-switch-to-prev-tab))
 
 ;; Command-line editing
