@@ -2251,13 +2251,6 @@ leave the cursor just after the new text."
         evil--cursor-after t)
   (evil-paste-after count register yank-handler))
 
-(defun evil-insert-for-yank-at-col (startcol _endcol string count)
-  "Insert STRING at STARTCOL."
-  (move-to-column startcol)
-  (dotimes (_ (or count 1))
-    (insert-for-yank string))
-  (evil-set-marker ?\] (1- (point))))
-
 (evil-define-command evil-visual-paste (count &optional register)
   "Paste over Visual selection."
   :suppress-operator t
@@ -2273,45 +2266,50 @@ leave the cursor just after the new text."
          (yank-handler (car-safe (get-text-property
                                   0 'yank-handler text)))
          (dir (evil-visual-direction))
-         beg end paste-eob)
+         beg end type)
     (evil-with-undo
       (let ((kill-ring-yank-pointer (when kill-ring (list (current-kill 0)))))
         (when (evil-visual-state-p)
           (setq beg evil-visual-beginning
-                end evil-visual-end)
+                end evil-visual-end
+                type (evil-visual-type))
           (evil-visual-rotate 'upper-left)
-          ;; if we replace the last buffer line that does not end in a
-          ;; newline, we use `evil-paste-after' because `evil-delete'
-          ;; will move point to the line above
-          (when (and (= evil-visual-end (point-max))
-                     (/= (char-before (point-max)) ?\n))
-            (setq paste-eob t))
-          (evil-delete beg end (evil-visual-type) (unless evil-kill-on-visual-paste ?_))
+          (evil-delete beg end type (unless evil-kill-on-visual-paste ?_))
           (when (and (eq yank-handler #'evil-yank-line-handler)
-                     (not (memq (evil-visual-type) '(line block)))
-                     (not (= evil-visual-end (point-max))))
+                     (not (memq type '(line block)))
+                     (/= end (point-max)))
             (insert "\n"))
           (evil-normal-state)
           (when kill-ring (current-kill 1)))
         ;; Effectively memoize `evil-get-register' because it can be
         ;; side-effecting (e.g. for the `=' register)...
-        (cl-letf (((symbol-function 'evil-get-register)
+        (cl-letf (((symbol-function #'evil-get-register)
                    (lambda (&rest _) text)))
           (cond
-           ((eq 'block (evil-visual-type))
-            (when (eq yank-handler #'evil-yank-line-handler)
-              (setq text (concat "\n" text)))
-            (evil-set-marker ?\[ beg)
-            (evil-apply-on-block #'evil-insert-for-yank-at-col beg end t text count))
-           (paste-eob (evil-paste-after count register))
+           ;; When replacing the last buffer line and it does not end
+           ;; in a newline, use `evil-paste-after' because
+           ;; `evil-delete' will have moved point to the line above.
+           ((cond ((eq type 'line) (= end (point-max)))
+                  ((eq type 'block) (eq yank-handler #'evil-yank-line-handler)))
+            (goto-char end)
+            (evil-paste-after count register))
+           ((and (eq type 'block)
+                 (not (eq yank-handler #'evil-yank-block-handler))
+                 (not (string-match-p "\n" text)))
+            (evil-apply-on-block
+             (lambda (startcol _endcol string count)
+               (move-to-column startcol)
+               (dotimes (_ count) (insert-for-yank string))
+               (evil-set-marker ?\] (1- (point))))
+             beg end t text count))
            (t (evil-paste-before count register)))))
       (when evil-kill-on-visual-paste
         (current-kill -1))
       ;; Ensure that gv can restore visually pasted area...
       (setq evil-visual-previous-mark evil-visual-mark
-            evil-visual-mark (evil-get-marker (if (<= 0 dir) ?\[ ?\]) t)
+            evil-visual-mark (evil-get-marker (if (< 0 dir) ?\[ ?\]) t)
             evil-visual-previous-point evil-visual-point
-            evil-visual-point (evil-get-marker (if (<= 0 dir) ?\] ?\[) t))
+            evil-visual-point (evil-get-marker (if (< 0 dir) ?\] ?\[) t))
       ;; mark the last paste as visual-paste
       (setq evil-last-paste
             (list (nth 0 evil-last-paste)
