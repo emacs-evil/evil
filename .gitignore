@@ -17,6 +17,7 @@ typescript
 /doc/*.toc
 /doc/*.vr
 /doc/*.vrs
+/doc/docstringdb.json
 /doc/build/*/
 !/doc/build/texinfo/evil.texi
 *.pyc

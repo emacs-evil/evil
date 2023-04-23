@@ -1,8 +1,8 @@
-#!/usr/bin/emacs --script
+#!/usr/bin/env -S emacs --script
 
 (setq cur-path (file-name-directory load-file-name))
 
-(add-to-list 'load-path (format "%s.." cur-path))
+(add-to-list 'load-path (expand-file-name ".." cur-path))
 (require 'evil)
 (require 'json)
 (require 'help)
@@ -28,7 +28,7 @@
         (push (cons func (key-description (where-is-internal func map t))) bindings)))
     bindings))
 
-(with-temp-file (format "%s../doc/docstringdb.json" cur-path)
+(with-temp-file (expand-file-name "../doc/docstringdb.json" cur-path)
   (let (vars)
     (mapatoms
      (lambda (sym)
