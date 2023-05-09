@@ -3647,21 +3647,28 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
 
 (eval-when-compile (require 'ffap))
 (evil-define-command evil-find-file-at-point-with-line ()
-  "Open the file at point and go to position if present."
+  "Open the file at point and go to position if present.
+    Support positions in the following formats: path:line path:line:col and path(line,col)"
   (require 'ffap)
   (let ((fname (with-no-warnings (ffap-file-at-point))))
     (unless fname
       (user-error "File does not exist."))
-    (let* ((line-number-pattern ":\\([0-9]+\\)\\=" )
-           (line-and-column-numbers-pattern ":\\([0-9]+\\):\\([0-9]+\\)\\=")
-           (get-number (lambda (pattern match-number)
+    (let* ((line-number-pattern ":\\([0-9]+\\)\\=" ) ; path:line format
+           (line-and-column-numbers-pattern ":\\([0-9]+\\):\\([0-9]+\\)\\=") ; path:line:col format
+           (line-and-column-numbers-pattern-alt "\\=(\\([0-9]+\\),\\([0-9]+\\))") ; file(line,col) format
+           (get-number (lambda (pattern match-number backward)
                          (save-excursion
                            (goto-char (cadr ffap-string-at-point-region))
-                           (and (re-search-backward pattern (line-beginning-position) t)
+                           (and
+                                (if backward
+                                    (re-search-backward pattern (line-beginning-position) t)
+                                  (re-search-forward pattern (line-end-position) t))
                                 (string-to-number (match-string match-number))))))
-           (line-number (or (funcall get-number line-and-column-numbers-pattern 1)
-                            (funcall get-number line-number-pattern 1)))
-           (column-number (funcall get-number line-and-column-numbers-pattern 2)))
+           (line-number (or (funcall get-number line-and-column-numbers-pattern 1 t)
+                            (funcall get-number line-and-column-numbers-pattern-alt 1 nil)
+                            (funcall get-number line-number-pattern 1 t)))
+           (column-number (or (funcall get-number line-and-column-numbers-pattern 2 t)
+                              (funcall get-number line-and-column-numbers-pattern-alt 2 nil))))
       (message "line: %s, column: %s" line-number column-number)
       (with-no-warnings (find-file-at-point fname))
       (when line-number
