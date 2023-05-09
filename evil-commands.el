@@ -3660,8 +3660,7 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
            (get-number (lambda (pattern match-number backward)
                          (save-excursion
                            (goto-char (cadr ffap-string-at-point-region))
-                           (and
-                                (if backward
+                           (and (if backward
                                     (re-search-backward pattern (line-beginning-position) t)
                                   (re-search-forward pattern (line-end-position) t))
                                 (string-to-number (match-string match-number))))))
@@ -3672,8 +3671,8 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
            (column-number (or (funcall get-number line-and-column-numbers-pattern 2 t)
                               (funcall get-number line-and-column-numbers-pattern-alt 2 nil))))
       (message "%s, %s"
-               (if line-number (format "line %s" line-number) "no line")
-               (if column-number (format "column %s" column-number) "no column"))
+               (if line-number (format "line: %s" line-number) "no line")
+               (if column-number (format "column: %s" column-number) "no column"))
       (with-no-warnings (find-file-at-point fname))
       (when line-number
         (goto-char (point-min))
