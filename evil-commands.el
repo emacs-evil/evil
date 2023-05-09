@@ -3648,12 +3648,13 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
 (eval-when-compile (require 'ffap))
 (evil-define-command evil-find-file-at-point-with-line ()
   "Open the file at point and go to position if present.
-    Support positions in the following formats: path:line path:line:col and path(line,col)"
+    Support positions in the following formats: path:line path(line) path:line:col and path(line,col)"
   (require 'ffap)
   (let ((fname (with-no-warnings (ffap-file-at-point))))
     (unless fname
       (user-error "File does not exist."))
     (let* ((line-number-pattern ":\\([0-9]+\\)\\=" ) ; path:line format
+           (line-number-pattern-alt "\\=(\\([0-9]+\\))") ; path(line) format
            (line-and-column-numbers-pattern ":\\([0-9]+\\):\\([0-9]+\\)\\=") ; path:line:col format
            (line-and-column-numbers-pattern-alt "\\=(\\([0-9]+\\),\\([0-9]+\\))") ; file(line,col) format
            (get-number (lambda (pattern match-number backward)
@@ -3666,7 +3667,8 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
                                 (string-to-number (match-string match-number))))))
            (line-number (or (funcall get-number line-and-column-numbers-pattern 1 t)
                             (funcall get-number line-and-column-numbers-pattern-alt 1 nil)
-                            (funcall get-number line-number-pattern 1 t)))
+                            (funcall get-number line-number-pattern 1 t)
+                            (funcall get-number line-number-pattern-alt 1 nil)))
            (column-number (or (funcall get-number line-and-column-numbers-pattern 2 t)
                               (funcall get-number line-and-column-numbers-pattern-alt 2 nil))))
       (message "line: %s, column: %s" line-number column-number)
