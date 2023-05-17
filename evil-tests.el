@@ -8056,6 +8056,20 @@ golf h[o]>tel")))
         "start\nline 2\nline [3]\n\n"
         ("n")
         "start\nline 2\nline 3\n[]\n"))
+    (ert-info ("Can search for start/end of symbol")
+      (let ((evil-magic 'very-magic))
+        (evil-test-buffer
+          "[a]lpha bravo bra charlie"
+          ("/bra\\_>" [return])
+          "alpha bravo [b]ra charlie")))
+    (ert-info ("Can search for literal < and >")
+      (let ((evil-magic 'very-magic))
+        (evil-test-buffer
+          :visual-start "«"
+          :visual-end "»"
+          "[a]lpha bravo <bravo> charlie"
+          ("/<bravo>" [return])
+          "alpha bravo [<]bravo> charlie")))
     (ert-info ("Can paste from register in ex-search")
       (evil-test-buffer
        "Alpha [b]ravo charlie alpha bravo delta bravo delta"

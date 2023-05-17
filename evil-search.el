@@ -435,8 +435,8 @@ expression and is not transformed."
     ;; possibly transform regular expression from vim-style to
     ;; Emacs-style.
     (if (and evil-ex-search-vim-style-regexp
-             (not (or (string-match-p "\\`\\\\_?<" regexp)
-                      (string-match-p "\\\\_?>\\'" regexp))))
+             (not (or (string-match-p "\\`\\\\_<" regexp)
+                      (string-match-p "\\\\_>\\'" regexp))))
         (setq re (evil-transform-vim-style-regexp re))
       ;; Even for Emacs regular expressions we translate certain
       ;; whitespace sequences
