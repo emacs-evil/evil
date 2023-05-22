@@ -1844,12 +1844,17 @@ Add (add-hook 'evil-local-mode-hook 'turn-on-undo-tree-mode) to your init file f
 (evil-define-operator evil-join (beg end)
   "Join the selected lines."
   :motion evil-line
-  (let ((count (count-lines beg end)))
+  (let ((count (count-lines beg end))
+        last-line-blank)
     (when (> count 1)
       (setq count (1- count)))
     (goto-char beg)
-    (dotimes (_ count)
-      (join-line 1))))
+    (dotimes (i count)
+      (when (= (1+ i) count) ; i.e. we're just before the last join
+        (evil-move-beginning-of-line)
+        (setq last-line-blank (looking-at "[ \t]*$")))
+      (join-line 1))
+    (and last-line-blank (indent-according-to-mode))))
 
 (evil-define-operator evil-join-whitespace (beg end)
   "Join the selected lines without changing whitespace.

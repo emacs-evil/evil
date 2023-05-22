@@ -2415,7 +2415,12 @@ ABCthen enter the text in that file's own buffer.")))
       "[l]ine 1\nline 2\nline 3\nline 4"
       (":1,3join")
       "line 1 line 2 line 3\nline 4"))
-  )
+  (ert-info ("Join blank line")
+    (evil-test-buffer
+      "(when foo\n[]\n  bar)"
+      (emacs-lisp-mode)
+      ("J")
+      "(when foo\n  [b]ar)")))
 
 (ert-deftest evil-test-substitute ()
   "Test `evil-substitute'"
