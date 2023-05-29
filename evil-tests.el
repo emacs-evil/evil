@@ -6147,6 +6147,10 @@ Line 2"))
     (evil-test-buffer
       "foo\n[ ]\nbar"
       ("diw")
+      "foo\n[]\nbar")
+    (evil-test-buffer
+      "foo\n[ ]\nbar"
+      ("daw")
       "foo\n[]\nbar")))
 
 (ert-deftest evil-test-word-objects-cjk ()
