@@ -759,10 +759,9 @@ the direction of the last selection."
 (defun evil-visual-type (&optional selection)
   "Return the type of the Visual selection.
 If SELECTION is specified, return the type of that instead."
-  (if (and (null selection) (evil-visual-state-p))
-      (or evil-this-type (evil-visual-type evil-visual-selection))
-    (setq selection (or selection evil-visual-selection))
-    (symbol-value (cdr-safe (assq selection evil-visual-alist)))))
+  (or (and (null selection) (evil-visual-state-p) evil-this-type)
+      (symbol-value (cdr (assq (or selection evil-visual-selection)
+                               evil-visual-alist)))))
 
 (defun evil-visual-goto-end ()
   "Go to the last line of the Visual selection.

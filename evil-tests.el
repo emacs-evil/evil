@@ -3039,10 +3039,13 @@ word3[]"))
       ("gv") ;; Test point & mark are stored correctly
       "abc\n1<abcabc3\n1abcabc3\n1abcab[c]>3"))
   (ert-info ("Blockwise visual paste of linewise text")
-    (evil-test-buffer
-      "[a]bc\n123\n123\n123"
-      ("yy" "jl" "\C-vG" "p")
-      "abc\n1\nabc\n3\n1\nabc\n3\n1\nabc\n3")))
+    (evil-test-buffer "[a]bc\n123\n123"
+      ("yy" "jl" "\C-vj" "p")
+      "abc\n13\n13\nabc"))
+  (ert-info ("Blockwise visual paste of blockwise text")
+    (evil-test-buffer "xy\n[z]\n123\n123"
+      ("\C-vkly2jl\C-vjp")
+      "xy\nz\n1xy3\n1z 3")))
 
 (ert-deftest evil-test-visual-paste-pop ()
   "Test `evil-paste-pop' after visual paste."
