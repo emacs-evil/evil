@@ -2251,6 +2251,13 @@ leave the cursor just after the new text."
         evil--cursor-after t)
   (evil-paste-after count register yank-handler))
 
+(defun evil-insert-for-yank-at-col (startcol _endcol string count)
+  "Insert STRING at STARTCOL."
+  (move-to-column startcol)
+  (dotimes (_ (or count 1))
+    (insert-for-yank string))
+  (evil-set-marker ?\] (1- (point))))
+
 (evil-define-command evil-visual-paste (count &optional register)
   "Paste over Visual selection."
   :suppress-operator t
@@ -2296,12 +2303,7 @@ leave the cursor just after the new text."
            ((and (eq type 'block)
                  (not (eq yank-handler #'evil-yank-block-handler))
                  (not (string-match-p "\n" text)))
-            (evil-apply-on-block
-             (lambda (startcol _endcol string count)
-               (move-to-column startcol)
-               (dotimes (_ count) (insert-for-yank string))
-               (evil-set-marker ?\] (1- (point))))
-             beg end t text count))
+            (evil-apply-on-block #'evil-insert-for-yank-at-col beg end t text count))
            (t (evil-paste-before count register)))))
       (when evil-kill-on-visual-paste
         (current-kill -1))
