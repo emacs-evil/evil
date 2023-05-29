@@ -6142,7 +6142,12 @@ Line 2"))
       (evil-test-buffer
         "   foo   [b]ar"
         ("daw")
-        "   fo[o]"))))
+        "   fo[o]")))
+  (ert-info ("Deleting whitespace on whitepsace only line")
+    (evil-test-buffer
+      "foo\n[ ]\nbar"
+      ("diw")
+      "foo\n[]\nbar")))
 
 (ert-deftest evil-test-word-objects-cjk ()
   "Test `evil-inner-word' and `evil-a-word' on CJK words"
