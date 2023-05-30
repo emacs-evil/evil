@@ -3854,6 +3854,25 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
         ;; Remove the overlay from the list of open spots.
         (overlay-put ol 'reveal-invisible nil)))))
 
+(defun evil--ex-substitute-final-message (nreplaced flags)
+  "Display message according to replacements and flags.
+If FLAGS contains `p' or `#' and NREPLACED is more than 0, print the last line
+to the echo area.  Otherwise, print the number of replacements made or found."
+  (let ((replaced-any (< 0 nreplaced)))
+    (cond
+     ((and replaced-any (memq ?p flags))
+      (message "%s" (buffer-substring (line-beginning-position)
+                                      (line-end-position))))
+     ((and replaced-any (memq ?# flags))
+      (message "%s %s" (propertize (number-to-string (line-number-at-pos))
+                                   'face 'line-number-current-line)
+                       (buffer-substring (line-beginning-position)
+                                         (line-end-position))))
+     (t (message "%s %d occurrence%s"
+                 (if (memq ?n flags) "Found" "Replaced")
+                 nreplaced
+                 (if (/= nreplaced 1) "s" ""))))))
+
 (evil-define-operator evil-ex-substitute
   (beg end pattern replacement flags)
   "The Ex substitute command.
@@ -3989,10 +4008,8 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
       (when use-reveal
         (evil-revert-reveal reveal-open-spots)))
 
-    (message "%s %d occurrence%s"
-             (if count-only "Found" "Replaced")
-             nreplaced
-             (if (/= nreplaced 1) "s" ""))
+    (evil--ex-substitute-final-message nreplaced flags)
+
     (if (and (= 0 nreplaced) evil-ex-point)
         (goto-char evil-ex-point)
       (evil-first-non-blank))))
