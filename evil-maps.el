@@ -577,6 +577,9 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "res[ize]" 'evil-ex-resize)
 (evil-ex-define-cmd "u[ndo]" 'evil-undo)
 (evil-ex-define-cmd "red[o]" 'evil-redo)
+(evil-ex-define-cmd "p[rint]" 'evil-ex-print)
+(evil-ex-define-cmd "nu[mber]" 'evil-ex-numbered-print)
+(evil-ex-define-cmd "#" 'evil-ex-numbered-print)
 
 (when (featurep 'tab-bar)
   (evil-ex-define-cmd "tabnew" 'tab-bar-new-tab)

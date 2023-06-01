@@ -59,7 +59,7 @@
        number)
       (command #'evil-ex-parse-command)
       (binding
-       "[~&*@<>=:]+\\|[[:alpha:]_]+\\|!")
+       "[~&*@<>=:#]+\\|[[:alpha:]_]+\\|!")
       (emacs-binding
        "[[:alpha:]-][[:alnum:][:punct:]]*")
       (argument

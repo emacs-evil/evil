@@ -36,8 +36,11 @@
 
 (defvar evil-after-load-hook nil
   "Functions to be run when loading of Evil is finished.
-This hook can be used the execute some initialization routines
+This hook can be used to execute some initialization routines
 when Evil is completely loaded.")
+
+(defvar evil-after-global-hook nil
+  "Functions to be run after :global and :vglobal.")
 
 (defcustom evil-goto-definition-functions
   '(evil-goto-definition-imenu
@@ -1220,6 +1223,13 @@ the visual selection. In the second case the passed region will
 be extended to contain full lines."
   :group 'evil
   :type 'boolean)
+
+(defvar evil--ex-global-active-p nil
+  "If the :global command is running.
+Used to change the behaviour of certain commands like :print.")
+
+(defvar evil--ex-print-accumulator ""
+  "Used by :print etc. to accumulate a string when invoked by :global etc.")
 
 ;; Searching
 (defcustom evil-symbol-word-search nil
