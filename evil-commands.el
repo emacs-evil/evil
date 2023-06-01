@@ -1893,6 +1893,63 @@ but doesn't insert or remove any spaces."
                                (line-beginning-position count-num))))
           (funcall join-fn beg-adjusted end-adjusted)))))))
 
+(defun evil--ex-string-for-print (beg end linump)
+  "Return a string to be printed by :print etc.
+Starts at line of BEG and end at line of END.
+Includes line number at beginning of each line if LINUMP is non-nil."
+  (let ((result-string "")
+        (continue t))
+    (save-excursion
+      (goto-char beg)
+      (while continue
+        (when linump
+          (setq result-string
+                (concat result-string
+                        (propertize (number-to-string (line-number-at-pos))
+                                    'face 'line-number-current-line)
+                        " ")))
+        (setq result-string (concat result-string
+                                    (thing-at-point 'line)))
+        (when (or (= (point) (progn (evil-line-move 1 t) (point)))
+                  (> (line-end-position) end))
+          (setq continue nil))))
+    (setq result-string (string-trim-right result-string "\n"))
+    result-string))
+
+(defun evil--ex-print (beg end count linump)
+  "Print lines in range to the echo area.
+Starting at BEG and ending at END + COUNT lines.
+Include line number at the start of each line if LINUMP is non-nil."
+  (let* ((count (if count (string-to-number count) 1))
+         (end (save-excursion (goto-char (if (= (point-max) end) end (1- end)))
+                              (line-end-position count)))
+         (substring (evil--ex-string-for-print beg end linump)))
+    (cond ((> 1 count) (user-error "Positive count required"))
+          (evil--ex-global-active-p
+           (setq evil--ex-print-accumulator
+                 (if (string= "" evil--ex-print-accumulator)
+                     (concat evil--ex-print-accumulator substring)
+                   (concat evil--ex-print-accumulator "\n" substring))))
+          (t (message "%s" substring)
+             (when (string-match-p "\n" substring)
+               (goto-char end)
+               (evil-beginning-of-line))))))
+
+(defun evil--echo-global-print+clear ()
+  "Print accumulated print output from :global print, and clear."
+  (message "%s" evil--ex-print-accumulator)
+  (setq evil--ex-print-accumulator ""))
+
+(add-hook 'evil-after-global-hook #'evil--echo-global-print+clear)
+
+(evil-define-command evil-ex-print (beg end &optional count)
+  (interactive "<r><a>")
+  (evil--ex-print beg end count nil))
+
+(evil-define-command evil-ex-numbered-print (beg end &optional count)
+  (interactive "<r><a>")
+  (evil--ex-print beg end count t))
+
 (evil-define-operator evil-fill (beg end)
   "Fill text."
   :move-point nil
@@ -4177,13 +4234,18 @@ Use `evil-flush-lines' if INVERT is nil, or `evil-keep-lines' if not."
             (forward-line))
           (setq markers (nreverse markers))
           (unwind-protect
+              (progn
+                (setq evil--ex-global-active-p t)
+                (dolist (marker markers)
+                  (goto-char marker)
+                  (eval command-form)))
+            (progn
+              ;; ensure that all markers are deleted afterwards,
+              ;; even in the event of failure
               (dolist (marker markers)
-                (goto-char marker)
-                (eval command-form))
-            ;; ensure that all markers are deleted afterwards,
-            ;; even in the event of failure
-            (dolist (marker markers)
-              (set-marker marker nil))))))))
+                (set-marker marker nil))
+              (run-hooks 'evil-after-global-hook)
+              (setq evil--ex-global-active-p nil))))))))
 
 (evil-define-operator evil-ex-global-inverted
   (beg end pattern command &optional invert)
