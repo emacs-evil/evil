@@ -1913,8 +1913,15 @@ Includes line number at beginning of each line if LINUMP is non-nil."
         (when (or (= (point) (progn (evil-line-move 1 t) (point)))
                   (> (line-end-position) end))
           (setq continue nil))))
-    (setq result-string (string-trim-right result-string "\n"))
-    result-string))
+    (string-trim-right result-string "\n")))
+
+(defun evil--ex-print-to-minibuffer (string)
+  "Print STRING to the minibuffer for better persistence."
+  (let ((keymap (make-keymap))
+        minibuffer-local-map)
+    (set-char-table-range (nth 1 keymap) t 'abort-recursive-edit)
+    (setq minibuffer-local-map keymap)
+    (read-from-minibuffer "" (propertize string 'read-only t))))
 
 (defun evil--ex-print (beg end count linump)
   "Print lines in range to the echo area.
@@ -1930,17 +1937,19 @@ Include line number at the start of each line if LINUMP is non-nil."
                  (if (string= "" evil--ex-print-accumulator)
                      (concat evil--ex-print-accumulator substring)
                    (concat evil--ex-print-accumulator "\n" substring))))
-          (t (message "%s" substring)
+          (t (evil--ex-print-to-minibuffer substring)
              (when (string-match-p "\n" substring)
                (goto-char end)
                (evil-beginning-of-line))))))
 
-(defun evil--echo-global-print+clear ()
+(defun evil--global-print+clear ()
   "Print accumulated print output from :global print, and clear."
-  (message "%s" evil--ex-print-accumulator)
-  (setq evil--ex-print-accumulator ""))
+  (unwind-protect
+      (unless (string= "" evil--ex-print-accumulator)
+        (evil--ex-print-to-minibuffer evil--ex-print-accumulator))
+    (setq evil--ex-print-accumulator "")))
 
-(add-hook 'evil-after-global-hook #'evil--echo-global-print+clear)
+(add-hook 'evil-after-global-hook #'evil--global-print+clear)
 
 (evil-define-command evil-ex-print (beg end &optional count)
   (interactive "<r><a>")
@@ -4240,12 +4249,12 @@ Use `evil-flush-lines' if INVERT is nil, or `evil-keep-lines' if not."
                   (goto-char marker)
                   (eval command-form)))
             (progn
+              (setq evil--ex-global-active-p nil)
               ;; ensure that all markers are deleted afterwards,
               ;; even in the event of failure
               (dolist (marker markers)
                 (set-marker marker nil))
-              (run-hooks 'evil-after-global-hook)
-              (setq evil--ex-global-active-p nil))))))))
+              (run-hooks 'evil-after-global-hook))))))))
 
 (evil-define-operator evil-ex-global-inverted
   (beg end pattern command &optional invert)
