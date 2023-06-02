@@ -1959,6 +1959,35 @@ Include line number at the start of each line if LINUMP is non-nil."
   (interactive "<r><a>")
   (evil--ex-print beg end count t))
 
+(evil-define-command evil-ex-z (_beg end &optional zmarks bang)
+  (interactive "<r><a><!>")
+  (goto-char end)
+  (save-match-data
+    (string-match "\\([^0-9]*\\)\\([0-9]*\\)" (or zmarks ""))
+    (cl-destructuring-bind (_ _ ms me cs ce) (match-data)
+      (let ((mark  (unless (= ms me) (substring zmarks ms me)))
+            (count (unless (= cs ce) (substring zmarks cs ce))))
+        (cond
+         ((< 1 (- me ms))
+          (user-error "Too many mark args (got %d, expected 1)" (- me ms)))
+         ((or (not mark) (string= "+" mark))
+          ;; first: current line; last: 1scr forward; new cursor: 1scr forward
+          )
+         ((string= "-" mark)
+          ;; first: 1scr back; last: current line; new cursor: current line
+          )
+         ((string= "^" mark)
+          ;; first: 2scr back; last: 1scr back; new cursor: 1scr back
+          )
+         ((string= "." mark)
+          ;; first: ½scr back; last: ½scr forward; new cursor: ½scr forward
+          )
+         ((string= "=" mark)
+          ;; first: ½scr back; last: ½scr forward; new cursor: current line
+          ;; Also, a line of dashes is printed around the current line
+          )
+         (t (user-error "Invalid mark arg: %s" mark)))))))
+
 (evil-define-operator evil-fill (beg end)
   "Fill text."
   :move-point nil
