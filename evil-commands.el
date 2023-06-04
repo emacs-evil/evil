@@ -978,6 +978,13 @@ the screen (the default)."
   (interactive)
   (setq evil-scroll-count 0))
 
+(defun evil--get-scroll-count (count)
+  "Given a user-supplied COUNT, return scroll count."
+  (cl-flet ((posint (x) (and (natnump x) (< 0 x) x)))
+    (or (posint count)
+        (posint evil-scroll-count)
+        (/ (window-body-height) 2))))
+
 ;; With `scroll-preserve-screen-position' `scroll-up'/`scroll-down'
 ;; target the same cursor pixel Y-coordinate while `last-command' has
 ;; the `scroll-command' property. However the target needs updating
@@ -996,9 +1003,7 @@ If the scroll count is zero the command scrolls half the screen."
   (interactive "<c>")
   (when (= (line-beginning-position) (point-min))
     (signal 'beginning-of-buffer nil))
-  (setq count (or count (max 0 evil-scroll-count))
-        evil-scroll-count count)
-  (when (zerop count) (setq count (/ (window-body-height) 2)))
+  (setq count (evil--get-scroll-count count))
   (evil-ensure-column
     (let ((opoint (point)))
       (condition-case nil
@@ -1024,9 +1029,7 @@ If the scroll count is zero the command scrolls half the screen."
   (interactive "<c>")
   (when (= (line-end-position) (point-max))
     (signal 'end-of-buffer nil))
-  (setq count (or count (max 0 evil-scroll-count))
-        evil-scroll-count count)
-  (when (zerop count) (setq count (/ (window-body-height) 2)))
+  (setq count (evil--get-scroll-count count))
   (evil-ensure-column
     ;; BUG #660: First check whether the eob is visible.
     ;; In that case we do not scroll but merely move point.
