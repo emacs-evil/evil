@@ -1927,10 +1927,12 @@ Includes line number at beginning of each line if LINUMP is non-nil."
     (read-from-minibuffer "" (propertize string 'read-only t))))
 
 (defun evil--ex-print (beg end count linump)
-  "Print lines in range to the echo area.
+  "Print lines in range to the minibuffer.
 Starting at BEG and ending at END + COUNT lines.
 Include line number at the start of each line if LINUMP is non-nil."
-  (let* ((count (if count (string-to-number count) 1))
+  (let* ((count (cond ((stringp count) (string-to-number count))
+                      ((natnump count) count)
+                      (t 1)))
          (end (save-excursion (goto-char (if (= (point-max) end) end (1- end)))
                               (line-end-position count)))
          (substring (evil--ex-string-for-print beg end linump)))
@@ -1964,32 +1966,44 @@ Include line number at the start of each line if LINUMP is non-nil."
 
 (evil-define-command evil-ex-z (_beg end &optional zmarks bang)
   (interactive "<r><a><!>")
-  (goto-char end)
+  (goto-char (setq end (1- end)))
   (save-match-data
-    (string-match "\\([^0-9]*\\)\\([0-9]*\\)" (or zmarks ""))
-    (cl-destructuring-bind (_ _ ms me cs ce) (match-data)
-      (let ((mark  (unless (= ms me) (substring zmarks ms me)))
-            (count (unless (= cs ce) (substring zmarks cs ce))))
+    (string-match "\\(#?\\)\\([^0-9]*\\)\\([0-9]*\\)" (or zmarks ""))
+    (cl-destructuring-bind (_ _ hs he ms me cs ce) (match-data)
+      (let* ((linump (/= hs he))
+             (mark-string (if (= ms me) "+" (substring zmarks ms me)))
+             (count-string (if (= cs ce) "" (substring zmarks cs ce)))
+             (count (evil--get-scroll-count (string-to-number count-string)))
+             (max-mini-window-height 0.5)
+             (buffer (buffer-name)))
         (cond
          ((< 1 (- me ms))
           (user-error "Too many mark args (got %d, expected 1)" (- me ms)))
-         ((or (not mark) (string= "+" mark))
-          ;; first: current line; last: 1scr forward; new cursor: 1scr forward
+         ((string= "+" mark-string)
+          (ignore-errors (beginning-of-line count))
+          (evil--ex-print end end count linump))
+         ((string= "-" mark-string)
+          (evil-beginning-of-line)
+          (evil--ex-print (line-beginning-position (- 2 count)) end 1 linump))
+         ((string= "^" mark-string)
+          (let ((end (progn (move-end-of-line (- 1 count)) (point)))
+                (beg (line-beginning-position (- 2 count))))
+            (evil--ex-print beg end 1 linump)))
+         ((string= "." mark-string)
+          (let* ((half-count (floor count 2))
+                 (beg (line-beginning-position (- 1 half-count)))
+                 ;; TODO handle eob
+                 (end (progn (move-end-of-line (1+ half-count)) (point))))
+            (evil--ex-print beg end 1 linump)))
+         ((string= "=" mark-string)
+          (let* ((half-count (floor count 2))
+                 (beg (line-beginning-position (- 1 half-count)))
+                 (end (line-end-position (1+ half-count))))
+            (evil-beginning-of-line)
+            (evil--ex-print beg end 1 linump))
+          ;; TODO a line of dashes is printed around the current line
           )
-         ((string= "-" mark)
-          ;; first: 1scr back; last: current line; new cursor: current line
-          )
-         ((string= "^" mark)
-          ;; first: 2scr back; last: 1scr back; new cursor: 1scr back
-          )
-         ((string= "." mark)
-          ;; first: ½scr back; last: ½scr forward; new cursor: ½scr forward
-          )
-         ((string= "=" mark)
-          ;; first: ½scr back; last: ½scr forward; new cursor: current line
-          ;; Also, a line of dashes is printed around the current line
-          )
-         (t (user-error "Invalid mark arg: %s" mark)))))))
+         (t (user-error "Invalid mark arg: %s" mark-string)))))))
 
 (evil-define-operator evil-fill (beg end)
   "Fill text."
