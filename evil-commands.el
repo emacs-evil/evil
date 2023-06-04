@@ -978,6 +978,13 @@ the screen (the default)."
   (interactive)
   (setq evil-scroll-count 0))
 
+(defun evil--get-scroll-count (count)
+  "Given a user-supplied COUNT, return scroll count."
+  (cl-flet ((posint (x) (and (natnump x) (< 0 x) x)))
+    (or (posint count)
+        (posint evil-scroll-count)
+        (/ (window-body-height) 2))))
+
 ;; With `scroll-preserve-screen-position' `scroll-up'/`scroll-down'
 ;; target the same cursor pixel Y-coordinate while `last-command' has
 ;; the `scroll-command' property. However the target needs updating
@@ -996,9 +1003,7 @@ If the scroll count is zero the command scrolls half the screen."
   (interactive "<c>")
   (when (= (line-beginning-position) (point-min))
     (signal 'beginning-of-buffer nil))
-  (setq count (or count (max 0 evil-scroll-count))
-        evil-scroll-count count)
-  (when (zerop count) (setq count (/ (window-body-height) 2)))
+  (setq count (evil--get-scroll-count count))
   (evil-ensure-column
     (let ((opoint (point)))
       (condition-case nil
@@ -1024,9 +1029,7 @@ If the scroll count is zero the command scrolls half the screen."
   (interactive "<c>")
   (when (= (line-end-position) (point-max))
     (signal 'end-of-buffer nil))
-  (setq count (or count (max 0 evil-scroll-count))
-        evil-scroll-count count)
-  (when (zerop count) (setq count (/ (window-body-height) 2)))
+  (setq count (evil--get-scroll-count count))
   (evil-ensure-column
     ;; BUG #660: First check whether the eob is visible.
     ;; In that case we do not scroll but merely move point.
@@ -1893,26 +1896,39 @@ but doesn't insert or remove any spaces."
                                (line-beginning-position count-num))))
           (funcall join-fn beg-adjusted end-adjusted)))))))
 
-(defun evil--ex-string-for-print (beg end linump)
+(defun evil--ex-string-for-print (beg end linump borderline)
   "Return a string to be printed by :print etc.
 Starts at line of BEG and end at line of END.
-Includes line number at beginning of each line if LINUMP is non-nil."
+Include line number at the start of each line if LINUMP is non-nil.
+Surround line denoted by BORDERLINE with dashes if non-nil."
   (let ((result-string "")
         (continue t))
     (save-excursion
       (goto-char beg)
       (while continue
-        (when linump
-          (setq result-string
-                (concat result-string
-                        (propertize (number-to-string (line-number-at-pos))
-                                    'face 'line-number-current-line)
-                        " ")))
-        (setq result-string (concat result-string
-                                    (thing-at-point 'line)))
-        (when (or (= (point) (progn (evil-line-move 1 t) (point)))
-                  (> (line-end-position) end))
-          (setq continue nil))))
+        (let* ((line-num (line-number-at-pos))
+               (border (and (natnump borderline) (= borderline line-num)))
+               (raw-line (thing-at-point 'line))
+               (line (if (string= "\n" (substring raw-line -1))
+                         raw-line (concat raw-line "\n")))
+               (border-length (1- (min (length line) (frame-width)))))
+          (when border
+            (setq result-string
+                  (concat result-string (make-string border-length ?-) "\n")))
+          (when linump
+            (setq result-string
+                  (concat result-string
+                          (propertize (number-to-string (line-number-at-pos))
+                                      'face 'line-number-current-line)
+                          " ")))
+          (unless (eobp)
+            (setq result-string (concat result-string line)))
+          (when border
+            (setq result-string
+                  (concat result-string (make-string border-length ?-) "\n")))
+          (when (or (= (point) (progn (evil-line-move 1 t) (point)))
+                    (> (line-end-position) end))
+            (setq continue nil)))))
     (string-trim-right result-string "\n")))
 
 (defun evil--ex-print-to-minibuffer (string)
@@ -1923,14 +1939,17 @@ Includes line number at beginning of each line if LINUMP is non-nil."
     (setq minibuffer-local-map keymap)
     (read-from-minibuffer "" (propertize string 'read-only t))))
 
-(defun evil--ex-print (beg end count linump)
-  "Print lines in range to the echo area.
+(defun evil--ex-print (beg end count &optional linump borderline)
+  "Print lines in range to the minibuffer.
 Starting at BEG and ending at END + COUNT lines.
-Include line number at the start of each line if LINUMP is non-nil."
-  (let* ((count (if count (string-to-number count) 1))
+Include line number at the start of each line if LINUMP is non-nil.
+Surround line denoted by BORDERLINE with dashes if non-nil."
+  (let* ((count (cond ((stringp count) (string-to-number count))
+                      ((natnump count) count)
+                      (t 1)))
          (end (save-excursion (goto-char (if (= (point-max) end) end (1- end)))
                               (line-end-position count)))
-         (substring (evil--ex-string-for-print beg end linump)))
+         (substring (evil--ex-string-for-print beg end linump borderline)))
     (cond ((> 1 count) (user-error "Positive count required"))
           (evil--ex-global-active-p
            (setq evil--ex-print-accumulator
@@ -1953,11 +1972,68 @@ Include line number at the start of each line if LINUMP is non-nil."
 
 (evil-define-command evil-ex-print (beg end &optional count)
   (interactive "<r><a>")
-  (evil--ex-print beg end count nil))
+  (evil--ex-print beg end count))
 
 (evil-define-command evil-ex-numbered-print (beg end &optional count)
   (interactive "<r><a>")
   (evil--ex-print beg end count t))
+
+(evil-define-command evil-ex-z (_beg end &optional zmarks _bang)
+  "Display several lines of text surrounding the line specified by range.
+BEG and END represent the range, ZMARKS represents the args in string form.
+With a count supplied in the args, display that number of lines.  Without a
+count, display `evil-scroll-count' number of lines, or half the window height.
+This table explains what each mark argument does.
+
+mark | first line              | last line                  | new cursor line
+-----+-------------------------+----------------------------+----------------
++    | current line            | 1 scr (or 1 count) forward | last line
+-    | 1 scr (or 1 count) back | current line               | last line
+^    | 2 scr (or 2 count) back | 1 scr (or 1 count) back    | last line
+.    | ½ scr (or ½ count) back | ½ scr (or ½ count) forward | last line
+=    | ½ scr (or ½ count) back | ½ scr (or ½ count) forward | current line
+
+Specifying no mark at all is the same as +.
+If the mark is `=' a line of dashes is printed around the current line.
+If a `#' is included before the mark args, the lines are numbered."
+  ;; TODO implement bang argument.
+  (interactive "<r><a><!>")
+  (goto-char (setq end (1- end)))
+  (save-match-data
+    (string-match "\\(#?\\)\\([^0-9]*\\)\\([0-9]*\\)" (or zmarks ""))
+    (cl-destructuring-bind (_ _ hs he ms me cs ce) (match-data)
+      (let* ((linump (/= hs he))
+             (mark-string (if (= ms me) "+" (substring zmarks ms me)))
+             (count-string (if (= cs ce) "" (substring zmarks cs ce)))
+             (count (evil--get-scroll-count (string-to-number count-string)))
+             (max-mini-window-height 0.5))
+        (cond
+         ((< 1 (- me ms))
+          (evil-beginning-of-line)
+          (user-error "Too many mark args (got %d, expected 1)" (- me ms)))
+         ((string= "+" mark-string)
+          (ignore-errors (beginning-of-line count))
+          (evil--ex-print end end count linump))
+         ((string= "-" mark-string)
+          (evil-beginning-of-line)
+          (evil--ex-print (line-beginning-position (- 2 count)) end 1 linump))
+         ((string= "^" mark-string)
+          (let ((end* (progn (move-end-of-line (- 1 count)) (point)))
+                (beg* (line-beginning-position (- 2 count))))
+            (evil-beginning-of-line)
+            (evil--ex-print beg* end* 1 linump)))
+         ((string= "." mark-string)
+          (let ((beg* (line-beginning-position (- 1 (floor count 2))))
+                (end* (progn (move-end-of-line (ceiling count 2)) (point))))
+            (evil-beginning-of-line)
+            (evil--ex-print beg* end* 1 linump)))
+         ((string= "=" mark-string)
+          (let ((beg* (line-beginning-position (- 1 (floor count 2))))
+                (end* (line-end-position (ceiling count 2))))
+            (evil-beginning-of-line)
+            (evil--ex-print beg* end* 1 linump (line-number-at-pos end))))
+         (t (evil-beginning-of-line)
+            (user-error "Invalid mark arg: %s" mark-string)))))))
 
 (evil-define-operator evil-fill (beg end)
   "Fill text."
