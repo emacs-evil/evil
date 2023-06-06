@@ -1993,7 +1993,7 @@ mark | first line              | last line                  | new cursor line
 .    | ½ scr (or ½ count) back | ½ scr (or ½ count) forward | last line
 =    | ½ scr (or ½ count) back | ½ scr (or ½ count) forward | current line
 
-Specifying no mark at all is the same as +.
+Specifying no mark at all is the same as `+'.
 If the mark is `=' a line of dashes is printed around the current line.
 If a `#' is included before the mark args, the lines are numbered."
   ;; TODO implement bang argument.
@@ -4214,6 +4214,35 @@ This is the same as :%s//~/&"
   (interactive)
   (apply #'evil-ex-substitute (point-min) (point-max)
          (evil-ex-get-substitute-info (concat "//~/&"))))
+
+(evil-define-command evil-ex-match (args &optional bang)
+  "Define a pattern to highlight in the current buffer.
+With no args, clear a highlight from the buffer
+With only an ! argument, clear all highlights from the buffer.
+With one arg, interpret as the pattern, and prompt for a face.
+With two args, interpret as :match {face} /{pattern}/.
+Unlike vim, multiple highlights can be set at once, so there is no need for
+`:2match' and `:3match' ex commands."
+  (interactive "<a><!>")
+  (save-match-data
+    (string-match " *\\([^ ]*\\) *\\(.*\\)" (or args ""))
+    (cl-destructuring-bind (_ _ fs fe ss se) (match-data)
+      (let* ((face (unless (= fs fe) (substring args fs fe)))
+             (search-string (unless (= ss se) (substring args ss se)))
+             (patterns (evil-delimited-arguments (or search-string face "")))
+             (pattern (if (and (car patterns) evil-ex-search-vim-style-regexp)
+                          (evil-transform-vim-style-regexp (car patterns))
+                        (car patterns))))
+        (cond
+         ((or (not face) (string= "none" face))
+          (if bang
+              (hi-lock-unface-buffer t)
+            (call-interactively #'hi-lock-unface-buffer)))
+         ((/= 1 (length patterns))
+          (user-error "Invalid pattern argument supplied"))
+         ((not search-string)
+          (hi-lock-face-buffer pattern (hi-lock-read-face-name)))
+         (t (hi-lock-face-buffer pattern face)))))))
 
 (defun evil-keep-lines (pattern beg end)
   "Stripped down version of `keep-lines'.

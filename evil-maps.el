@@ -552,6 +552,7 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "&&" 'evil-ex-repeat-substitute-with-flags)
 (evil-ex-define-cmd "~" 'evil-ex-repeat-substitute-with-search)
 (evil-ex-define-cmd "~&" 'evil-ex-repeat-substitute-with-search-and-flags)
+(evil-ex-define-cmd "mat[ch]" 'evil-ex-match)
 (evil-ex-define-cmd "registers" 'evil-show-registers)
 (evil-ex-define-cmd "di[splay]" "registers")
 (evil-ex-define-cmd "ma[rk]" 'evil-set-col-0-mark)
