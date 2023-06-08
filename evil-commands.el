@@ -4229,16 +4229,21 @@ Unlike vim, multiple highlights can be set at once, so there is no need for
     (cl-destructuring-bind (_ _ fs fe ss se) (match-data)
       (let* ((face (unless (= fs fe) (substring args fs fe)))
              (search-string (unless (= ss se) (substring args ss se)))
-             (patterns (evil-delimited-arguments (or search-string face "")))
-             (pattern (if (and (car patterns) evil-ex-search-vim-style-regexp)
-                          (evil-transform-vim-style-regexp (car patterns))
-                        (car patterns))))
+             (raw-patterns (evil-delimited-arguments (or search-string face "")))
+             (raw-pattern (or (car raw-patterns) ""))
+             (case-fold-search ;; ignore case if non-nil
+              (eq (evil-ex-regex-case raw-pattern evil-ex-search-case) 'insensitive))
+             (search-upper-case nil) ;; bypass isearch-no-upper-case-p
+             (pattern-no-case (evil-ex-regex-without-case raw-pattern))
+             (pattern (if evil-ex-search-vim-style-regexp
+                          (evil-transform-vim-style-regexp pattern-no-case)
+                        pattern-no-case)))
         (cond
          ((or (not face) (string= "none" face))
           (if bang
               (hi-lock-unface-buffer t)
             (call-interactively #'hi-lock-unface-buffer)))
-         ((/= 1 (length patterns))
+         ((/= 1 (length raw-patterns))
           (user-error "Invalid pattern argument supplied"))
          ((not search-string)
           (hi-lock-face-buffer pattern (hi-lock-read-face-name)))
