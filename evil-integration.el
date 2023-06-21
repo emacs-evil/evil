@@ -129,38 +129,30 @@
 ;;; Undo tree
 (eval-after-load 'undo-tree
   '(with-no-warnings
-     (defadvice undo-tree-visualize (after evil activate)
-       "Initialize Evil in the visualization buffer."
-       (when evil-local-mode
-         (evil-initialize-state)))
+     (evil-ex-define-cmd "undol[ist]" 'undo-tree-visualize)
+     (evil-ex-define-cmd "ul" 'undo-tree-visualize)
 
-     (when (fboundp 'undo-tree-visualize)
-       (evil-ex-define-cmd "undol[ist]" 'undo-tree-visualize)
-       (evil-ex-define-cmd "ul" 'undo-tree-visualize))
+     (define-key undo-tree-visualizer-mode-map
+       [remap evil-backward-char] 'undo-tree-visualize-switch-branch-left)
+     (define-key undo-tree-visualizer-mode-map
+       [remap evil-forward-char] 'undo-tree-visualize-switch-branch-right)
+     (define-key undo-tree-visualizer-mode-map
+       [remap evil-next-line] 'undo-tree-visualize-redo)
+     (define-key undo-tree-visualizer-mode-map
+       [remap evil-previous-line] 'undo-tree-visualize-undo)
+     (define-key undo-tree-visualizer-mode-map
+       [remap evil-ret] 'undo-tree-visualizer-set)
 
-     (when (boundp 'undo-tree-visualizer-mode-map)
-       (define-key undo-tree-visualizer-mode-map
-         [remap evil-backward-char] 'undo-tree-visualize-switch-branch-left)
-       (define-key undo-tree-visualizer-mode-map
-         [remap evil-forward-char] 'undo-tree-visualize-switch-branch-right)
-       (define-key undo-tree-visualizer-mode-map
-         [remap evil-next-line] 'undo-tree-visualize-redo)
-       (define-key undo-tree-visualizer-mode-map
-         [remap evil-previous-line] 'undo-tree-visualize-undo)
-       (define-key undo-tree-visualizer-mode-map
-         [remap evil-ret] 'undo-tree-visualizer-set))
-
-     (when (boundp 'undo-tree-visualizer-selection-mode-map)
-       (define-key undo-tree-visualizer-selection-mode-map
-         [remap evil-backward-char] 'undo-tree-visualizer-select-left)
-       (define-key undo-tree-visualizer-selection-mode-map
-         [remap evil-forward-char] 'undo-tree-visualizer-select-right)
-       (define-key undo-tree-visualizer-selection-mode-map
-         [remap evil-next-line] 'undo-tree-visualizer-select-next)
-       (define-key undo-tree-visualizer-selection-mode-map
-         [remap evil-previous-line] 'undo-tree-visualizer-select-previous)
-       (define-key undo-tree-visualizer-selection-mode-map
-         [remap evil-ret] 'undo-tree-visualizer-set))))
+     (define-key undo-tree-visualizer-selection-mode-map
+       [remap evil-backward-char] 'undo-tree-visualizer-select-left)
+     (define-key undo-tree-visualizer-selection-mode-map
+       [remap evil-forward-char] 'undo-tree-visualizer-select-right)
+     (define-key undo-tree-visualizer-selection-mode-map
+       [remap evil-next-line] 'undo-tree-visualizer-select-next)
+     (define-key undo-tree-visualizer-selection-mode-map
+       [remap evil-previous-line] 'undo-tree-visualizer-select-previous)
+     (define-key undo-tree-visualizer-selection-mode-map
+       [remap evil-ret] 'undo-tree-visualizer-set)))
 
 ;;; Auto-complete
 (eval-after-load 'auto-complete
