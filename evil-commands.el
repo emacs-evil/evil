@@ -2958,30 +2958,16 @@ next VCOUNT - 1 lines below the current one."
       :name "evil-digraphs"
       :mode-name "Evil Digraphs"
       :format
-      (cl-loop repeat columns
-               vconcat [("Digraph" 8 nil)
-                        ("Sequence" 16 nil)])
+      (cl-loop repeat columns vconcat [("Digraph" 8 nil) ("Sequence" 16 nil)])
       :entries
-      (let* ((digraphs (mapcar #'(lambda (digraph)
-                                   (cons (cdr digraph)
-                                         (car digraph)))
-                               (append evil-digraphs-table
-                                       evil-digraphs-table-user)))
-             (entries (cl-loop for digraph in digraphs
-                               collect `(,(concat (char-to-string (nth 1 digraph))
-                                                  (char-to-string (nth 2 digraph)))
-                                         ,(char-to-string (nth 0 digraph)))))
-             (row)
-             (rows)
-             (clength (* columns 2)))
-        (cl-loop for e in entries
-                 do
-                 (push (nth 0 e) row)
-                 (push (nth 1 e) row)
-                 (when (eq (length row) clength)
-                   (push `(nil ,(apply #'vector row)) rows)
-                   (setq row nil)))
-        rows))))
+      (cl-loop
+       with xs = (append evil-digraphs-table-user evil-digraphs-table)
+       while xs collect
+       (cl-loop
+        repeat columns vconcat
+        (cl-destructuring-bind (chars . digraph) (or (pop xs) '(() . ?\ ))
+          (list (char-to-string digraph) (concat chars)))
+        into row finally return (list nil row))))))
 
 (defun evil--self-insert-string (string)
   "Insert STRING as if typed interactively."
