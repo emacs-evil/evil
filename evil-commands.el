@@ -5194,10 +5194,6 @@ if the previous state was Emacs state."
       (when (evil-emacs-state-p)
         (evil-normal-state (and message 1))))))
 
-(evil-define-local-var evil--execute-normal-eol-pos nil
-  "Vim has special behaviour for executing in normal state at eol.
-This var stores the eol position, so it can be restored when necessary.")
-
 (defun evil--restore-repeat-hooks ()
   "No insert-state repeat info is recorded after executing in normal state.
 Restore the disabled repeat hooks on insert-state exit."
@@ -5208,6 +5204,9 @@ Restore the disabled repeat hooks on insert-state exit."
 
 (defvar evil--execute-normal-return-state nil
   "The state to return to after executing in normal state.")
+
+(evil-define-local-var evil--execute-normal-eol-pos nil
+  "Point position if it was at EOL before `evil-execute-in-normal-state'.")
 
 (defun evil-execute-in-normal-state ()
   "Execute the next command in Normal state."
@@ -5223,31 +5222,34 @@ Restore the disabled repeat hooks on insert-state exit."
                             universal-argument-minus
                             universal-argument-more
                             universal-argument-other-key)))
-      `(progn
-         (with-current-buffer ,(current-buffer)
-           (when (and evil--execute-normal-eol-pos
-                      (= (point) (1- evil--execute-normal-eol-pos))
-                      (not (memq this-command '(evil-insert
-                                                evil-goto-mark))))
-             (forward-char))
-           (unless (memq evil-state '(replace insert))
-             (evil-change-state ',evil-state))
-           (when (eq 'insert evil-state)
-             (remove-hook 'pre-command-hook 'evil-repeat-pre-hook)
-             (remove-hook 'post-command-hook 'evil-repeat-post-hook)
-             (add-hook 'evil-insert-state-exit-hook 'evil--restore-repeat-hooks))
-           (setq evil-move-cursor-back ',evil-move-cursor-back
-                 evil-move-beyond-eol ',evil-move-beyond-eol
-                 evil-execute-normal-keys nil)))
+      `(with-current-buffer ,(current-buffer)
+         ;; If cursor was after EOL before CTRL-O and is now at EOL,
+         ;; put it after EOL.
+         (and (or (when evil--execute-normal-eol-pos
+                    (= (1+ (point)) (save-excursion
+                                      (goto-char evil--execute-normal-eol-pos)
+                                      (set-marker evil--execute-normal-eol-pos nil)
+                                      (line-end-position))))
+                  (and (eq (or goal-column temporary-goal-column) most-positive-fixnum)
+                       (memq this-command '(next-line previous-line))))
+              (not (eolp))
+              (not (memq this-command
+                         '(evil-insert evil-beginning-of-line evil-first-non-blank)))
+              (forward-char))
+         (unless (memq evil-state '(replace insert))
+           (evil-change-state ',evil-state))
+         (when (eq 'insert evil-state)
+           (remove-hook 'pre-command-hook 'evil-repeat-pre-hook)
+           (remove-hook 'post-command-hook 'evil-repeat-post-hook)
+           (add-hook 'evil-insert-state-exit-hook 'evil--restore-repeat-hooks))
+         (setq evil-execute-normal-keys nil))
     'post-command-hook)
   (setq evil-insert-count nil
         evil--execute-normal-return-state evil-state
-        evil--execute-normal-eol-pos (when (eolp) (point))
-        evil-move-cursor-back nil
+        evil--execute-normal-eol-pos (when (eolp) (point-marker))
         evil-execute-normal-keys (this-command-keys))
-  (evil-normal-state)
-  (setq evil-move-beyond-eol t)
-  (evil-echo "Switched to Normal state for the next command ..."))
+  (let (evil-move-cursor-back) (evil-normal-state))
+  (evil-echo "Switched to Normal state for the next command..."))
 
 (defun evil-stop-execute-in-emacs-state ()
   (when (and (not (eq this-command #'evil-execute-in-emacs-state))

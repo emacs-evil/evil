@@ -295,71 +295,72 @@ with `M-x evil-tests-run'"))
     (evil-test-change-state 'normal)))
 
 (ert-deftest evil-test-execute-in-normal-state ()
-  "Test `evil-execute-in-normal-state'."
+  "Execute Normal state command in Insert state (`evil-execute-in-normal-state')."
   :tags '(evil)
-  (ert-info ("Execute normal state command in insert state")
+  (evil-test-buffer "[a]bcdef\n"
+    ("I")
+    (should (evil-insert-state-p))
+    ("\C-ox")
+    (ert-info ("Should return to Insert state") (should (evil-insert-state-p)))
+    "[b]cdef\n"
+    ("\C-oA")
+    (ert-info ("Should return to Insert state after Insert state command")
+      (should (evil-insert-state-p)))
+    ("bcdef[]\n"))
+  (ert-info ("Cursor is placed correctly afterwards")
     (evil-test-buffer
-      "[a]bcdef\n"
-      ("I")
-      (should (evil-insert-state-p))
-      ("\C-ox")
-      (ert-info ("Should return to insert state")
-        (should (evil-insert-state-p)))
-      "[b]cdef\n"
-      ("\C-oA")
-      (ert-info ("Should return to insert state after insert state command")
-        (should (evil-insert-state-p)))
-      ("bcdef[]\n"))
-    (ert-info ("Cursor is placed correctly afterwards")
-      (evil-test-buffer
-        :state insert
-        "abcdefg[]"
-        ("\C-o~")
-        "abcdefG[]")
-      (evil-test-buffer
-        :state insert
-        "abcdefg[]"
-        ("\C-ozz")
-        "abcdefg[]")
-      (evil-test-buffer
-        :state insert
-        "abc[]defg"
-        ("\C-o$")
-        "abcdefg[]")
-      (evil-test-buffer
-        :state insert
-        "abcdefg[]"
-        ("\C-o^")
-        "[]abcdefg")
-      (evil-test-buffer
-        :state insert
-        "abcdefg[]"
-        ("\C-oi")
-        "abcdef[]g")
-      (evil-test-buffer
-        "line1\nli[n]e2"
-        ("ma" "kA" "\C-o`a")
-        "line1\nli[]ne2"))
-    (ert-info ("Can enter replace state and stay in it")
-      (evil-test-buffer
-        :state insert
-        "abc[]defg"
-        ("\C-oRfoo")
-        "abcfoog"))
-    (ert-info ("Insert count is ignored")
-      (evil-test-buffer
-        "[]"
-        ("2i" "abcdef" "\C-o~" "g" [escape])
-        "abcdeF[g]"))
-    (ert-info ("Can execute evil-repeat in normal state")
-      (evil-test-buffer
-        ;; Although this is the same in vim, text inserted after the temporary
-        ;; normal command is not recorded for repetition, which is a subtle
-        ;; (but arguably more useful) difference
-        :state insert
-        "ab[]cfg"
-        ("\C-o~de\C-o.")
-        "abCdeF[]g"))))
+      :state insert
+      "abcdefg[]"
+      ("\C-o~")
+      "abcdefG[]")
+    (evil-test-buffer
+      :state insert
+      "abcdefg[]"
+      ("\C-ozz")
+      "abcdefg[]")
+    (evil-test-buffer
+      :state insert
+      "abc[]defg"
+      ("\C-o$")
+      "abcdefg[]")
+    (evil-test-buffer
+      :state insert
+      "abcdefg[]"
+      ("\C-o^")
+      "[]abcdefg")
+    (evil-test-buffer
+      :state insert
+      "abcdefg[]"
+      ("\C-oi")
+      "abcdef[]g")
+    (evil-test-buffer
+      :state insert
+      "\n[]"
+      ("\C-ok")
+      "[]\n")
+    (evil-test-buffer
+      "line1\nli[n]e2"
+      ("ma" "kA" "\C-o`a")
+      "line1\nli[]ne2"))
+  (ert-info ("Can enter replace state and stay in it")
+    (evil-test-buffer
+      :state insert
+      "abc[]defg"
+      ("\C-oRfoo")
+      "abcfoog"))
+  (ert-info ("Insert count is ignored")
+    (evil-test-buffer "[]"
+      ("2i" "abcdef" "\C-o~" "g" [escape])
+      "abcdeF[g]"))
+  (ert-info ("Can execute evil-repeat in normal state")
+    (evil-test-buffer
+      ;; Although this is the same in Vim, text inserted after the temporary
+      ;; normal command is not recorded for repetition, which is a subtle
+      ;; (but arguably more useful) difference.
+      :state insert
+      "ab[]cfg"
+      ("\C-o~de\C-o.")
+      "abCdeF[]g")))
 
 (defun evil-test-suppress-keymap (state)
   "Verify that `self-insert-command' is suppressed in STATE"
