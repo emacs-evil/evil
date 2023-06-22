@@ -1516,7 +1516,7 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (cond
    ((eq type 'block)
     (evil-apply-on-block #'delete-region beg end nil))
-   ((and (eq type 'line)
+   ((and (memq type '(line screen-line))
          (= end (point-max))
          (or (= beg end)
              (/= (char-before end) ?\n))
