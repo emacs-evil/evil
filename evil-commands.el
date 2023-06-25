@@ -789,18 +789,42 @@ Columns are counted from zero."
   :type exclusive
   (move-to-column (or count 0)))
 
-(evil-define-command evil-goto-mark (char &optional noerror)
-  "Go to the marker specified by CHAR."
-  :keep-visual t
-  :repeat nil
-  :type exclusive
-  :jump t
+(defun evil--goto-mark-globalp (marker)
+  (not (equal (current-buffer) (marker-buffer marker))))
+
+(defun evil--goto-mark-list (&optional line-or-buffer)
+  (let ((initial-buffer (current-buffer)))
+    (evil-show-marks nil)
+    (let* ((char (read-char))
+           (key (char-to-string char))
+           (entry (tabulated-list-get-entry)))
+      (while (and
+              entry
+              (not (string= (aref entry 0) key)))
+        (next-line)
+        (setq entry (tabulated-list-get-entry)))
+      (cond ((eobp) (message "Marker '%s' is not set in this buffer" key)
+             (evil-list-view-quit))
+            (t (evil-list-view-quit)
+               (switch-to-buffer (car (elt entry 3)))
+               (let ((same-buffer (equal initial-buffer (current-buffer))))
+                 (when (or same-buffer
+                           (and (not same-buffer) (not line-or-buffer)))
+                   (evil--goto-mark (string-to-char (elt entry 0)))
+                   (when line-or-buffer
+                     (evil-first-non-blank)))))))))
+
+(defun evil--goto-mark (char &optional noerror line-or-buffer)
   (interactive (list (read-char)))
   (let ((marker (evil-get-marker char)))
     (cond
      ((markerp marker)
-      (switch-to-buffer (marker-buffer marker))
-      (goto-char (marker-position marker)))
+      (let ((goto-is-global (evil--goto-mark-globalp marker)))
+        (switch-to-buffer (marker-buffer marker))
+        (unless (and evil-mark-goto-buffer-not-line
+                     goto-is-global
+                     line-or-buffer)
+          (goto-char (marker-position marker)))))
      ((numberp marker)
       (goto-char marker))
      ((consp marker)
@@ -814,15 +838,32 @@ Columns are counted from zero."
                   (if (evil-global-marker-p char) ""
                     " in this buffer"))))))
 
-(evil-define-command evil-goto-mark-line (char &optional noerror)
+(defun evil--goto-mark-line (char &optional noerror)
+  (interactive (list (read-char)))
+  (when (evil--goto-mark char nil t)
+    (evil-first-non-blank)))
+
+(evil-define-command evil-goto-mark ()
+  "Go to the marker specified by CHAR."
+  :keep-visual t
+  :repeat nil
+  :type exclusive
+  :jump t
+  (if evil-mark-goto-buffer-not-line
+      (with-timeout (0.6 (evil--goto-mark-list))
+        (call-interactively 'evil--goto-mark))
+    (call-interactively 'evil--goto-mark)))
+
+(evil-define-command evil-goto-mark-line (&optional char noerror)
   "Go to the line of the marker specified by CHAR."
   :keep-visual t
   :repeat nil
   :type line
   :jump t
-  (interactive (list (read-char)))
-  (evil-goto-mark char noerror)
-  (evil-first-non-blank))
+  (if evil-mark-goto-buffer-not-line
+      (with-timeout (0.6 (evil--goto-mark-list t))
+        (call-interactively 'evil--goto-mark-line))
+    (call-interactively 'evil--goto-mark-line)))
 
 (evil-define-motion evil-goto-last-change (count)
   "Like `goto-last-change' but takes a COUNT rather than a span."
