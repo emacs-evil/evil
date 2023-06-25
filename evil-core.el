@@ -120,8 +120,8 @@
         (cl-pushnew 'evil-mode-map-alist emulation-mode-map-alists)
         (evil-initialize-local-keymaps)
         (when (minibufferp)
-          (setq-local evil-default-state 'insert
-                      evil-echo-state nil))
+          (setq-local evil-default-state 'insert)
+          (setq-local evil-echo-state nil))
         (setq evil-input-method current-input-method)
         (evil-initialize-state)
         (add-hook 'input-method-activate-hook #'evil-activate-input-method t t)

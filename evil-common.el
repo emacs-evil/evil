@@ -48,15 +48,6 @@
 (defalias 'evil-set-selection
   (if (fboundp 'gui-set-selection) 'gui-set-selection 'x-set-selection))
 
-(defmacro evil-called-interactively-p ()
-  "Wrapper for `called-interactively-p'.
-In older versions of Emacs, `called-interactively-p' takes
-no arguments.  In Emacs 23.2 and newer, it takes one argument."
-  (called-interactively-p 'any))
-(make-obsolete 'evil-called-interactively-p
-               "please use (called-interactively-p 'any) instead."
-               "Git commit 222b791")
-
 ;; macro helper
 (eval-and-compile
   (defun evil-unquote (exp)
@@ -492,19 +483,18 @@ other gives an empty string."
 A character set is the part between [ and ] in a regular expression.
 If any character set is complemented, the result is also complemented."
   (let ((bracket "") (complement "") (hyphen "") result)
-    (save-match-data
-      (dolist (set sets)
-        (when (string-match-p "^\\^" set)
-          (setq set (substring set 1)
-                complement "^"))
-        (when (string-match-p "^]" set)
-          (setq set (substring set 1)
-                bracket "]"))
-        (when (string-match-p "^-" set)
-          (setq set (substring set 1)
-                hyphen "-"))
-        (setq result (concat result set)))
-      (format "%s%s%s%s" complement bracket hyphen result))))
+    (dolist (set sets)
+      (when (string-match-p "^\\^" set)
+        (setq set (substring set 1)
+              complement "^"))
+      (when (string-match-p "^]" set)
+        (setq set (substring set 1)
+              bracket "]"))
+      (when (string-match-p "^-" set)
+        (setq set (substring set 1)
+              hyphen "-"))
+      (setq result (concat result set)))
+    (format "%s%s%s%s" complement bracket hyphen result)))
 
 ;;; Key sequences
 
@@ -723,7 +713,7 @@ directive and nil otherwise.  FILENAME will be the extracted
 filename."
   (if (and (stringp file-or-append)
            (string-match "\\(>> *\\)" file-or-append))
-      (cons t (substring file-or-append(match-end 1)))
+      (cons t (substring file-or-append (match-end 1)))
     (cons nil file-or-append)))
 
 (defun evil-set-keymap-prompt (map prompt)
@@ -735,8 +725,7 @@ filename."
 (defun evil-lookup-key (map key)
   "Return non-nil value if KEY is bound in MAP."
   (let ((definition (lookup-key map key)))
-    (if (numberp definition) ; in-band error
-        nil
+    (unless (numberp definition) ; in-band error
       definition)))
 
 ;;; Display
@@ -996,23 +985,18 @@ Like `move-end-of-line', but retains the goal column."
 This behavior is controlled by `evil-move-beyond-eol'."
   (and (not evil-move-beyond-eol)
        (eolp)
-       (= (point)
-          (save-excursion
-            (evil-move-end-of-line)
-            (point)))
+       (= (point) (save-excursion (evil-move-end-of-line) (point)))
        (evil-move-cursor-back t)))
 
 (defun evil-move-cursor-back (&optional force)
   "Move point one character back within the current line.
 Contingent on the variable `evil-move-cursor-back' or the FORCE
 argument.  Movement is constrained to the current field."
-  (unless (or (not (or evil-move-cursor-back force))
-              (bolp)
-              (when (bound-and-true-p visual-line-mode)
-                (= (point) (save-excursion
-                             (vertical-motion 0)
-                             (point)))))
-    (goto-char (constrain-to-field (1- (point)) (point)))))
+  (or (not (or evil-move-cursor-back force))
+      (bolp)
+      (when (bound-and-true-p visual-line-mode)
+        (= (point) (save-excursion (vertical-motion 0) (point))))
+      (goto-char (constrain-to-field (1- (point)) (point)))))
 
 (defun evil-line-position (line &optional column)
   "Return the position of LINE.
@@ -1057,8 +1041,7 @@ terminates, which is 0 if the loop completes successfully.
 RESULT specifies a variable for storing this value.
 
 \(fn (VAR COUNT [RESULT]) BODY...)"
-  (declare (indent defun)
-           (debug dolist))
+  (declare (indent defun) (debug dolist) (obsolete nil "1.15.0"))
   (let* ((i (make-symbol "loopvar"))
          (var (pop spec))
          (count (pop spec))
@@ -1080,37 +1063,32 @@ RESULT specifies a variable for storing this value.
 (defmacro evil-motion-loop (spec &rest body)
   "Loop a certain number of times.
 Evaluate BODY repeatedly COUNT times with VAR bound to 1 or -1,
-depending on the sign of COUNT. RESULT, if specified, holds
-the number of unsuccessful iterations, which is 0 if the loop
-completes successfully. This is also the return value.
+depending on the sign of COUNT. Set RESULT, if specified, to the
+number of unsuccessful iterations, which is 0 if the loop completes
+successfully. This is also the return value.
 
-Each iteration must move point; if point does not change,
-the loop immediately quits. See also `evil-loop'.
+Each iteration must move point; if point does not change, the loop
+immediately quits.
 
 \(fn (VAR COUNT [RESULT]) BODY...)"
   (declare (indent defun)
            (debug ((symbolp form &optional symbolp) body)))
   (let* ((var (or (pop spec) (make-symbol "unitvar")))
-         (countval (or (pop spec) 0))
-         (result (pop spec))
-         (i (make-symbol "loopvar"))
-         (count (make-symbol "countvar"))
-         (done (make-symbol "donevar"))
-         (orig (make-symbol "origvar")))
-    `(let* ((,count ,countval)
-            (,var (if (< ,count 0) -1 1)))
-       (catch ',done
-         (evil-loop (,i ,count ,result)
-           (let ((,orig (point)))
-             ,@body
-             (when (= (point) ,orig)
-               (throw ',done ,i))))))))
+         (count (or (pop spec) 0))
+         (result (or (pop spec) var))
+         (i (make-symbol "loopvar")))
+    `(let* ((,i ,count)
+            (,var (if (< ,i 0) -1 1)))
+       (while (and (/= ,i 0)
+                   (/= (point) (progn ,@body (point))))
+         (setq ,i (if (< ,i 0) (1+ ,i) (1- ,i))))
+       (setq ,result ,i))))
 
 (defun evil-signal-at-bob-or-eob (&optional count)
   "Signal error if `point' is at boundaries.
 If `point' is at bob and COUNT is negative this function signal
-'beginning-of-buffer. If `point' is at eob and COUNT is positive
-this function singal 'end-of-buffer. This function should be used
+`beginning-of-buffer'. If `point' is at eob and COUNT is positive
+this function singal `end-of-buffer'. This function should be used
 in motions. COUNT defaults to 1."
   (setq count (or count 1))
   (cond
@@ -1118,17 +1096,17 @@ in motions. COUNT defaults to 1."
    ((> count 0) (evil-signal-at-eob))))
 
 (defun evil-signal-at-bob ()
-  "Signal 'beginning-of-buffer if `point' is at bob.
+  "Signal `beginning-of-buffer' if `point' is at bob.
 This function should be used in backward motions. If `point' is at
 bob so that no further backward motion is possible the error
-'beginning-of-buffer is raised."
+`beginning-of-buffer' is raised."
   (when (bobp) (signal 'beginning-of-buffer nil)))
 
 (defun evil-signal-at-eob ()
-  "Signal 'end-of-buffer if `point' is at eob.
+  "Signal `end-of-buffer' if `point' is at eob.
 This function should be used in forward motions. If `point' is close
 to eob so that no further forward motion is possible the error
-'end-of-buffer is raised. This is the case if `point' is at
+`end-of-buffer' is raised. This is the case if `point' is at
 `point-max' or if is one position before `point-max',
 `evil-move-beyond-eol' is nil and `point' is not at the end
 of a line. The latter is necessary because `point' cannot be
@@ -2851,7 +2829,6 @@ a property list."
 (defun evil-range-p (object)
   "Whether OBJECT is a range."
   (and (listp object)
-       (>= (length object) 2)
        (numberp (nth 0 object))
        (numberp (nth 1 object))))
 

@@ -1978,7 +1978,7 @@ Surround line denoted by BORDERLINE with dashes if non-nil."
   (interactive "<r><a>")
   (evil--ex-print beg end count t))
 
-(evil-define-command evil-ex-z (_beg end &optional zmarks _bang)
+(evil-define-command evil-ex-z (beg end &optional zmarks bang)
   "Display several lines of text surrounding the line specified by range.
 BEG and END represent the range, ZMARKS represents the args in string form.
 With a count supplied in the args, display that number of lines.  Without a
@@ -2062,34 +2062,24 @@ If a `#' is included before the mark args, the lines are numbered."
   :move-point nil
   :type line
   (evil-ensure-column
-    ;; Reset unneeded change made by evil-ensure-column
-    (setq this-command real-this-command)
+    (setq this-command real-this-command) ; Reset change made by evil-ensure-column
     (save-restriction
       (narrow-to-region beg end)
-      (if (and (= beg (line-beginning-position))
-               (= end (line-beginning-position 2)))
+      (if (save-excursion (goto-char beg) (= end (line-beginning-position 2)))
           ;; since some Emacs modes can only indent one line at a time,
           ;; implement "==" as a call to `indent-according-to-mode'
           (indent-according-to-mode)
         (goto-char beg)
         (indent-region beg end))
-      ;; Update `beg' and `end'
-      (setq beg (point-min)
-            end (point-max))
-      ;; We also need to tabify or untabify the leading white characters
+      ;; Tabify or untabify leading whitespace characters
       (when evil-indent-convert-tabs
-        (let* ((beg-line (line-number-at-pos beg))
-               (end-line (line-number-at-pos end))
-               (ln beg-line)
-               (convert-white (if indent-tabs-mode 'tabify 'untabify)))
+        ;; Whether tab or space should be used is determined by indent-tabs-mode
+        (let ((convert-fun (if indent-tabs-mode #'tabify #'untabify)))
           (save-excursion
-            (while (<= ln end-line)
-              (goto-char (point-min))
-              (forward-line (- ln 1))
-              (back-to-indentation)
-              ;; Whether tab or space should be used is determined by indent-tabs-mode
-              (funcall convert-white (line-beginning-position) (point))
-              (setq ln (1+ ln)))))))))
+            (goto-char (point-min))
+            (while (not (eolp))
+              (funcall convert-fun (point) (progn (skip-chars-forward " \t") (point)))
+              (forward-line))))))))
 
 (evil-define-operator evil-indent-line (beg end)
   "Indent the line."
@@ -2169,7 +2159,7 @@ See also `evil-shift-left'."
   "Delete all indentation on current line."
   (interactive)
   (save-excursion
-    (evil-beginning-of-line)
+    (move-beginning-of-line nil)
     (delete-region (point) (progn (skip-chars-forward " \t") (point)))))
 
 (evil-define-command evil-shift-right-line (count)
@@ -3778,12 +3768,14 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
                   (cl-remove-if-not (lambda (m) (<= ?0 (car m) ?9))
                                     evil-markers-alist))))))
 
-(eval-when-compile (require 'ffap))
+(declare-function ffap-file-at-point "ffap")
+(defvar ffap-string-at-point-region)
 (evil-define-command evil-find-file-at-point-with-line ()
   "Open the file at point and go to position if present.
-    Support positions in the following formats: path:line path(line) path:line:col and path(line,col)"
+Supports positions in the following formats: \"path:line path(line)\",
+\"path:line:col\" and \"path(line,col)\"."
   (require 'ffap)
-  (let ((fname (with-no-warnings (ffap-file-at-point))))
+  (let ((fname (ffap-file-at-point)))
     (unless fname
       (user-error "File does not exist."))
     (let* ((line-number-pattern ":\\([0-9]+\\)\\=" ) ; path:line format
@@ -3806,7 +3798,7 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
       (message "%s, %s"
                (if line-number (format "line: %s" line-number) "no line")
                (if column-number (format "column: %s" column-number) "no column"))
-      (with-no-warnings (find-file-at-point fname))
+      (find-file-at-point fname)
       (when line-number
         (goto-char (point-min))
         (forward-line (1- line-number))
