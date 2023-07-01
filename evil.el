@@ -59,7 +59,7 @@
 ;;      mailing list (see below).
 ;; Created: 2011-03-01
 ;; Version: 1.15.0
-;; Package-Requires: ((emacs "24.1") (cl-lib "0.5") (goto-chg "1.6"))
+;; Package-Requires: ((emacs "24.1") (cl-lib "0.5") (goto-chg "1.6") (nadvice "0.3"))
 ;; Keywords: emulations
 ;; URL: https://github.com/emacs-evil/evil
 ;;      Repository: https://github.com/emacs-evil/evil.git
