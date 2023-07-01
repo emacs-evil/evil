@@ -1,10 +1,8 @@
-SHELL = /bin/sh
 EMACS ?= emacs
 SED ?= sed
 FILES = $(filter-out evil-test-helpers.el evil-tests.el evil-pkg.el,$(wildcard evil*.el))
-VERSION := $(shell $(SED) -ne '/define-package/,$$p' evil-pkg.el | $(SED) -ne '/^\s*"[[:digit:]]\+\(\.[[:digit:]]\+\)*"\s*$$/ s/^.*"\(.*\)".*$$/\1/p')
+VERSION := $(shell $(SED) -n '/^;\+ \+Version: *\(.*\)/{s//\1/p;q}' evil.el)
 PROFILER =
-DOC = doc
 TAG =
 EASK ?= eask
 
@@ -52,8 +50,7 @@ emacs:
 		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)"
 
 # Load Evil in a terminal Emacs and run all tests.
-term: terminal
-terminal:
+term terminal:
 	$(EASK) run command terminal
 
 # Run all tests with profiler.
@@ -66,8 +63,12 @@ profiler:
 indent: clean
 	$(EASK) run command indent
 
+evil-pkg.el: evil.el
+	$(EMACS) --batch -l package $^ \
+		--eval "(package-generate-description-file (package-buffer-info) \"$@\")"
+
 # Create an ELPA package.
-elpa:
+elpa: evil-pkg.el
 	$(EASK) package
 
 # Change the version using make VERSION=x.y.z

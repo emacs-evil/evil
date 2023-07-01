@@ -4,7 +4,8 @@
 *.pg
 *.tp
 .depend
-evil-autoloads.el
+/evil-autoloads.el
+/evil-pkg.el
 test-results.txt
 typescript
 
