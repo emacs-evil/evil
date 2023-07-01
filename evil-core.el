@@ -556,7 +556,7 @@ Enable with positive ARG and disable with negative ARG.
 
 When enabled, `evil-esc-mode' modifies the entry of \\e in
 `input-decode-map'. If such an event arrives, it is translated to
-a plain 'escape event if no further event occurs within
+a plain `escape' event if no further event occurs within
 `evil-esc-delay' seconds. Otherwise no translation happens and
 the ESC prefix map (i.e. the map originally bound to \\e in
 `input-decode-map`) is returned."
@@ -599,17 +599,17 @@ the ESC prefix map (i.e. the map originally bound to \\e in
             (set-terminal-parameter term 'evil-esc-map nil)))))))
 
 (defun evil-esc (map)
-  "Translate \\e to 'escape if no further event arrives.
-This function is used to translate a \\e event either to 'escape
+  "Translate \\e to `escape' if no further event arrives.
+This function is used to translate a \\e event either to `escape'
 or to the standard ESC prefix translation map. If \\e arrives,
 this function waits for `evil-esc-delay' seconds for another
 event. If no other event arrives, the event is translated to
-'escape, otherwise it is translated to the standard ESC prefix
+`escape', otherwise it is translated to the standard ESC prefix
 map stored in `input-decode-map'. If `evil-inhibit-esc' is
 non-nil or if evil is in emacs state, the event is always
 translated to the ESC prefix.
 
-The translation to 'escape happens only if the current command
+The translation to `escape' happens only if the current command
 has indeed been triggered by \\e. In other words, this will only
 happen when the keymap is accessed from `read-key-sequence'. In
 particular, if it is access from `define-key' the returned
@@ -940,21 +940,21 @@ these. Omitting a state by using `nil' corresponds to a standard
 Emacs binding using `define-key'. The remaining arguments are
 like those of `define-key'. For example:
 
-    (evil-define-key 'normal foo-map \"a\" 'bar)
+    (evil-define-key \\='normal foo-map \"a\" \\='bar)
 
 This creates a binding from `a' to `bar' in normal state, which
 is active whenever `foo-map' is active. Using nil for the state,
 the following lead to identical bindings:
 
-    (evil-define-key nil foo-map \"a\" 'bar)
-    (define-key foo-map \"a\" 'bar)
+    (evil-define-key nil foo-map \"a\" \\='bar)
+    (define-key foo-map \"a\" \\='bar)
 
 It is possible to specify multiple states and/or bindings at
 once:
 
-    (evil-define-key '(normal visual) foo-map
-      \"a\" 'bar
-      \"b\" 'foo)
+    (evil-define-key \\='(normal visual) foo-map
+      \"a\" \\='bar
+      \"b\" \\='foo)
 
 If `foo-map' has not been initialized yet, this macro adds an
 entry to `after-load-functions', delaying execution as necessary.
@@ -963,8 +963,8 @@ KEYMAP may also be a quoted symbol. If the symbol is `global', the
 global evil keymap corresponding to the state(s) is used, meaning
 the following lead to identical bindings:
 
-    (evil-define-key 'normal 'global \"a\" 'bar)
-    (evil-global-set-key 'normal \"a\" 'bar)
+    (evil-define-key \\='normal \\='global \"a\" \\='bar)
+    (evil-global-set-key \\='normal \"a\" \\='bar)
 
 The symbol `local' may also be used, which corresponds to using
 `evil-local-set-key'. If a quoted symbol is used that is not
@@ -996,30 +996,30 @@ state by using nil corresponds to a standard Emacs binding using
 `define-key' The remaining arguments are like those of
 `define-key'. For example:
 
-    (evil-define-key* 'normal foo-map \"a\" 'bar)
+    (evil-define-key* \\='normal foo-map \"a\" \\='bar)
 
 This creates a binding from \"a\" to bar in Normal state, which
 is active whenever foo-map is active. Using nil for the state,
 the following are equivalent:
 
-    (evil-define-key* nil foo-map \"a\" 'bar)
+    (evil-define-key* nil foo-map \"a\" \\='bar)
 
-    (define-key foo-map \"a\" 'bar)
+    (define-key foo-map \"a\" \\='bar)
 
  It is possible to specify multiple states and/or bindings at
  once:
 
-    (evil-define-key* '(normal visual) foo-map
-      \"a\" 'bar
-      \"b\" 'foo)
+    (evil-define-key* \\='(normal visual) foo-map
+      \"a\" \\='bar
+      \"b\" \\='foo)
 
 KEYMAP may also be a quoted symbol. If the symbol is global, the
 global evil keymap corresponding to the state(s) is used, meaning
 the following are equivalent:
 
-    (evil-define-key* 'normal 'global \"a\" 'bar)
+    (evil-define-key* \\='normal \\='global \"a\" \\='bar)
 
-    (evil-global-set-key 'normal \"a\" 'bar)
+    (evil-global-set-key \\='normal \"a\" \\='bar)
 
 The symbol local may also be used, which corresponds to using
 `evil-local-set-key'.

@@ -1853,7 +1853,7 @@ the format:
 MODES acts as a predicate, containing the symbols of all major or
 minor modes for which the handler should match.  For example:
 
-  '((outline-minor-mode org-mode) ...)
+  \\='((outline-minor-mode org-mode) ...)
 
 would match for either outline-minor-mode or org-mode, even though the
 former is a minor mode and the latter is a major.

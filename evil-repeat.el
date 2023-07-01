@@ -242,7 +242,8 @@ If COMMAND doesn't have this property, return DEFAULT."
       (if repeat-type (cdr repeat-type) type))))
 
 (defun evil-repeat-force-abort-p (repeat-type)
-  "Return non-nil if the current command should abort the recording of repeat info."
+  "Whether the current command should abort the recording of repeat information.
+Return non-nil if so."
   (or (evil-repeat-different-buffer-p)  ; ... buffer changed
       (eq repeat-type 'abort)           ; ... explicitely forced
       (eq evil-recording-repeat 'abort) ; ... already aborted
@@ -341,7 +342,7 @@ invoked the current command"
     (evil-clear-command-keys))))
 
 (defun evil-repeat-motion (flag)
-  "Repeation for motions.
+  "Repetition for motions.
 Motions are recorded by keystroke but only in Insert state."
   (when (memq evil-state '(insert replace))
     (evil-repeat-keystrokes flag)))
