@@ -971,21 +971,27 @@ The symbol `local' may also be used, which corresponds to using
 `global' or `local', it is assumed to be the name of a minor
 mode, in which case `evil-define-minor-mode-key' is used."
   (declare (indent defun))
-  (cond ((member keymap '('global 'local))
-         `(evil-define-key* ,state ,keymap ,key ,def ,@bindings))
-        ((eq (car-safe keymap) 'quote)
-         `(evil-define-minor-mode-key ,state ,keymap ,key ,def ,@bindings))
-        (t
-         `(evil-delay ',(if (symbolp keymap)
-                            `(and (boundp ',keymap) (keymapp ,keymap))
-                          `(keymapp ,keymap))
-              '(condition-case-unless-debug err
-                   (evil-define-key* ,state ,keymap ,key ,def ,@bindings)
-                 (error (message "error in evil-define-key: %s"
-                                 (error-message-string err))))
-            'after-load-functions t nil
-            (format "evil-define-key-in-%s"
-                    ',(if (symbolp keymap) keymap 'keymap))))))
+  (cond
+   ((member keymap '('global 'local))
+    `(evil-define-key* ,state ,keymap ,key ,def ,@bindings))
+   ((eq (car-safe keymap) 'quote)
+    `(evil-define-minor-mode-key ,state ,keymap ,key ,def ,@bindings))
+   (t `(evil-with-delay ,(if (symbolp keymap)
+                             ;; BEWARE: Can't work for lexically scoped vars
+                             `(and (boundp ',keymap) (keymapp ,keymap))
+                           `(keymapp ,keymap))
+           (after-load-functions t nil
+                                 ,(format "evil-define-key-in-%s"
+                                          (if (symbolp keymap) keymap
+                                            'keymap)))
+         ;; Sadly, the compiler doesn't understand `evil-with-delay's
+         ;; code well enough to figure out that the keymap var is
+         ;; necessarily bound since we just tested `boundp'.
+         ,(when (symbolp keymap) `(defvar ,keymap))
+         (condition-case-unless-debug err
+             (evil-define-key* ,state ,keymap ,key ,def ,@bindings)
+           (error (message "error in evil-define-key: %s"
+                           (error-message-string err))))))))
 (defalias 'evil-declare-key #'evil-define-key)
 
 (defun evil-define-key* (state keymap key def &rest bindings)
@@ -1028,7 +1034,7 @@ The use is nearly identical to `evil-define-key' with the
 exception that this is a function and not a macro (and so will
 not be expanded when compiled which can have unintended
 consequences). `evil-define-key*' also does not defer any
-bindings like `evil-define-key' does using `evil-delay'. This
+bindings like `evil-define-key' does using `evil-with-delay'.  This
 allows errors in the bindings to be caught immediately, and makes
 its behavior more predictable."
   (declare (indent defun))

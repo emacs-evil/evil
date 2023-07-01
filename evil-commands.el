@@ -5116,39 +5116,41 @@ Restore the disabled repeat hooks on insert-state exit."
 (defun evil-execute-in-normal-state ()
   "Execute the next command in Normal state."
   (interactive)
-  (evil-delay '(not (memq this-command
-                          '(nil
-                            evil-execute-in-normal-state
-                            evil-replace-state
-                            evil-use-register
-                            digit-argument
-                            negative-argument
-                            universal-argument
-                            universal-argument-minus
-                            universal-argument-more
-                            universal-argument-other-key)))
-      `(with-current-buffer ,(current-buffer)
-         ;; If cursor was after EOL before CTRL-O and is now at EOL,
-         ;; put it after EOL.
-         (and (or (when evil--execute-normal-eol-pos
-                    (= (1+ (point)) (save-excursion
-                                      (goto-char evil--execute-normal-eol-pos)
-                                      (set-marker evil--execute-normal-eol-pos nil)
-                                      (line-end-position))))
-                  (and (eq (or goal-column temporary-goal-column) most-positive-fixnum)
-                       (memq this-command '(next-line previous-line))))
-              (not (eolp))
-              (not (memq this-command
-                         '(evil-insert evil-beginning-of-line evil-first-non-blank)))
-              (forward-char))
-         (unless (memq evil-state '(replace insert))
-           (evil-change-state ',evil-state))
-         (when (eq 'insert evil-state)
-           (remove-hook 'pre-command-hook #'evil-repeat-pre-hook)
-           (remove-hook 'post-command-hook #'evil-repeat-post-hook)
-           (add-hook 'evil-insert-state-exit-hook #'evil--restore-repeat-hooks))
-         (setq evil-execute-normal-keys nil))
-    'post-command-hook)
+  (let ((buf (current-buffer))
+        (state evil-state))
+    (evil-with-delay (not (memq this-command
+                                '(nil
+                                  evil-execute-in-normal-state
+                                  evil-replace-state
+                                  evil-use-register
+                                  digit-argument
+                                  negative-argument
+                                  universal-argument
+                                  universal-argument-minus
+                                  universal-argument-more
+                                  universal-argument-other-key)))
+        post-command-hook
+      (with-current-buffer buf
+        ;; If cursor was after EOL before CTRL-O and is now at EOL,
+        ;; put it after EOL.
+        (and (or (when evil--execute-normal-eol-pos
+                   (= (1+ (point)) (save-excursion
+                                     (goto-char evil--execute-normal-eol-pos)
+                                     (set-marker evil--execute-normal-eol-pos nil)
+                                     (line-end-position))))
+                 (and (eq (or goal-column temporary-goal-column) most-positive-fixnum)
+                      (memq this-command '(next-line previous-line))))
+             (not (eolp))
+             (not (memq this-command
+                        '(evil-insert evil-beginning-of-line evil-first-non-blank)))
+             (forward-char))
+        (unless (memq evil-state '(replace insert))
+          (evil-change-state state))
+        (when (eq 'insert evil-state)
+          (remove-hook 'pre-command-hook #'evil-repeat-pre-hook)
+          (remove-hook 'post-command-hook #'evil-repeat-post-hook)
+          (add-hook 'evil-insert-state-exit-hook #'evil--restore-repeat-hooks))
+        (setq evil-execute-normal-keys nil))))
   (setq evil-insert-count nil
         evil--execute-normal-return-state evil-state
         evil--execute-normal-eol-pos (when (eolp) (point-marker))
