@@ -25,9 +25,9 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
-(require 'evil-core)
-
 ;;; Code:
+
+(require 'evil-core)
 
 ;;; Normal state
 
@@ -36,7 +36,6 @@
 AKA \"Command\" state."
   :tag " <N> "
   :enable (motion)
-  :exit-hook (evil-repeat-start-hook)
   (cond
    ((evil-normal-state-p)
     (overwrite-mode -1)
@@ -139,6 +138,7 @@ commands opening a new line."
   (remove-hook 'pre-command-hook #'evil-insert-repeat-hook))
 (put 'evil-insert-repeat-hook 'permanent-local-hook t)
 
+(declare-function evil-execute-repeat-info "evil-repeat")
 (defun evil-cleanup-insert-state ()
   "Called when Insert or Replace state is about to be exited.
 Handles the repeat-count of the insertion command."
@@ -148,22 +148,15 @@ Handles the repeat-count of the insertion command."
         (evil-insert-newline-below)
         (when evil-auto-indent
           (indent-according-to-mode)))
-      (when (fboundp 'evil-execute-repeat-info)
-        (evil-execute-repeat-info
-         (cdr evil-insert-repeat-info)))))
+      (evil-execute-repeat-info (cdr evil-insert-repeat-info))))
   (when evil-insert-vcount
     (let ((buffer-invisibility-spec buffer-invisibility-spec))
       ;; make all lines hidden by hideshow temporarily visible
       (when (listp buffer-invisibility-spec)
         (setq buffer-invisibility-spec
-              (evil-filter-list
-               #'(lambda (x)
-                   (or (eq x 'hs)
-                       (eq (car-safe x) 'hs)))
-               buffer-invisibility-spec)))
-      (let ((line (nth 0 evil-insert-vcount))
-            (col (nth 1 evil-insert-vcount))
-            (vcount (nth 2 evil-insert-vcount)))
+              (cl-remove-if (lambda (x) (eq (or (car-safe x) x) 'hs))
+                            buffer-invisibility-spec)))
+      (cl-destructuring-bind (line col vcount) evil-insert-vcount
         (save-excursion
           (dotimes (v (1- vcount))
             (goto-char (point-min))
@@ -177,9 +170,7 @@ Handles the repeat-count of the insertion command."
                   (move-to-column col t)
                 (funcall col))
               (dotimes (_ (or evil-insert-count 1))
-                (when (fboundp 'evil-execute-repeat-info)
-                  (evil-execute-repeat-info
-                   (cdr evil-insert-repeat-info)))))))))))
+                (evil-execute-repeat-info (cdr evil-insert-repeat-info))))))))))
 
 ;;; Visual state
 

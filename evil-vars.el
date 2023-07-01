@@ -1570,14 +1570,6 @@ character argument for some commands, e.g. `evil-replace'.")
 (defvar evil-repeat-ring (make-ring 10)
   "A ring of repeat-informations to repeat the last command.")
 
-(defvar evil-repeat-types
-  '((t . evil-repeat-keystrokes)
-    (change . evil-repeat-changes)
-    (motion . evil-repeat-motion)
-    (insert-at-point . evil-repeat-insert-at-point)
-    (ignore . nil))
-  "An alist of defined repeat-types.")
-
 (defvar evil-recording-repeat nil
   "Whether we are recording a repeat.")
 
@@ -1585,7 +1577,7 @@ character argument for some commands, e.g. `evil-replace'.")
   "Whether we are recording the current command for repeat.")
 
 (defvar evil-repeat-changes nil
-  "Accumulated buffer changes for changed-based commands.")
+  "Accumulated buffer changes in reverse order for change-tracking commands.")
 
 (defvar evil-repeat-info nil
   "Information accumulated during current repeat.")
@@ -1595,8 +1587,7 @@ character argument for some commands, e.g. `evil-replace'.")
 If the buffer is changed, the repeat is cancelled.")
 
 (defvar evil-repeat-pos nil
-  "The position of point at the beginning of an change-tracking
-  editing command.")
+  "The point position at the start of a change-tracking command.")
 
 (defvar evil-repeat-keys nil
   "The keys that invoked the current command.")

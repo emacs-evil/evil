@@ -8286,14 +8286,13 @@ maybe we need one line more with some text\n"
           "alpha bravo alpha charlie [a]lpha")))))
 
 (ert-deftest evil-test-ex-search-motion ()
+  "Test that Ex forward search, as a motion, can be repeated."
   :tags '(evil ex search)
   (evil-without-display
     (evil-select-search-module 'evil-search-module 'evil-search)
-    (ert-info ("Ex forward search, as a motion, can be repeated")
-      (evil-test-buffer
-        "alpha [b]ravo charlie delta golf hotel charlie india"
-        ("c/charlie" [return] "replacement " [escape] "4w.")
-        "alpha replacement charlie delta golf replacement[ ]charlie india"))))
+    (evil-test-buffer "alpha [b]ravo charlie delta golf hotel charlie india"
+      ("c/charlie" [return] "replacement " [escape] "4w.")
+      "alpha replacement charlie delta golf replacement[ ]charlie india")))
 
 (ert-deftest evil-test-ex-search-next+previous-match ()
   :tags '(evil ex search)

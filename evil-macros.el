@@ -58,7 +58,7 @@ The return value is a list (BEG END TYPE)."
                   (evil-this-type
                    (or type (evil-get-command-property motion :type 'exclusive))))
               (condition-case err
-                  (let ((repeat-type (evil-repeat-type motion t)))
+                  (let ((repeat-type (evil--repeat-type motion)))
                     (when (functionp repeat-type) (funcall repeat-type 'pre))
                     (unless (with-local-quit
                               (setq range (call-interactively motion))
