@@ -91,23 +91,22 @@
 ;;; key-binding
 
 ;; Calling `keyboard-quit' should cancel repeat
-(defadvice keyboard-quit (before evil activate)
-  (when (fboundp 'evil-repeat-abort)
-    (evil-repeat-abort)))
+(advice-add 'keyboard-quit :before #'evil-repeat-abort)
 
-(eval-after-load 'wdired
-  '(progn
-     (add-hook 'wdired-mode-hook #'evil-change-to-initial-state)
-     (defadvice wdired-change-to-dired-mode (after evil activate)
-       (evil-change-to-initial-state nil t))))
+(add-hook 'wdired-mode-hook #'evil-change-to-initial-state)
+(advice-add 'wdired-change-to-dired-mode :after
+            #'evil--change-to-initial-state-with-msg)
+(defun evil--change-to-initial-state-with-msg (&rest _)
+  (evil-change-to-initial-state nil t))
 
 ;;; Parentheses
 
-(defadvice show-paren-function (around evil disable)
+(evil--advice-add 'show-paren-function :around #'evil--match-paren-in-normal-state)
+(defun evil--match-paren-in-normal-state (orig-fun &rest args)
   "Match parentheses in Normal state."
   (if (eq (not (memq 'not evil-highlight-closing-paren-at-point-states))
           (not (memq evil-state evil-highlight-closing-paren-at-point-states)))
-      ad-do-it
+      (apply orig-fun args)
     (let* ((orig-spdf show-paren-data-function)
            (show-paren-data-function
             (lambda ()
@@ -124,7 +123,7 @@
                     (save-restriction
                       (when narrow (narrow-to-region narrow (point-max)))
                       (funcall orig-spdf))))))))
-      ad-do-it)))
+      (apply orig-fun args))))
 
 ;;; Undo tree
 (eval-after-load 'undo-tree
@@ -209,50 +208,27 @@
              company-search-candidates
              company-filter-candidates))))
 
-;; Eval last sexp
-(cond
- ((version< emacs-version "25")
-  (defadvice preceding-sexp (around evil activate)
-    "In normal-state or motion-state, last sexp ends at point."
-    (if (and (not evil-move-beyond-eol)
-             (or (evil-normal-state-p) (evil-motion-state-p)))
-        (save-excursion
-          (unless (or (eobp) (eolp)) (forward-char))
-          ad-do-it)
-      ad-do-it))
+;;; Eval last sexp
+(defun evil--preceding-sexp (command &rest args)
+  "In Normal- or Motion-state, allow last sexp to end at point."
+  (save-excursion
+    (or evil-move-beyond-eol
+        (eolp)
+        (not (or (evil-normal-state-p) (evil-motion-state-p)))
+        (forward-char))
+    (apply command args)))
+(advice-add 'elisp--preceding-sexp :around #'evil--preceding-sexp)
+(advice-add 'pp-last-sexp          :around #'evil--preceding-sexp)
+(advice-add 'lisp-eval-last-sexp   :around #'evil--preceding-sexp)
 
-  (defadvice pp-last-sexp (around evil activate)
-    "In normal-state or motion-state, last sexp ends at point."
-    (if (and (not evil-move-beyond-eol)
-             (or (evil-normal-state-p) (evil-motion-state-p)))
-        (save-excursion
-          (unless (or (eobp) (eolp)) (forward-char))
-          ad-do-it)
-      ad-do-it)))
- (t
-  (defun evil--preceding-sexp (command &rest args)
-    "In normal-state or motion-state, last sexp ends at point."
-    (if (and (not evil-move-beyond-eol)
-             (or (evil-normal-state-p) (evil-motion-state-p)))
-        (save-excursion
-          (unless (or (eobp) (eolp)) (forward-char))
-          (apply command args))
-      (apply command args)))
+;;; Show key
+(advice-add 'quail-show-key :around #'evil--in-emacs-state)
+(advice-add 'describe-char  :around #'evil--in-emacs-state)
+(defun evil--in-emacs-state (orig-fun &rest args)
+  "Temporarily enter Emacs-state and apply ORIG-FUN to ARGS."
+  (evil-with-state emacs (apply orig-fun args)))
 
-  (advice-add 'elisp--preceding-sexp :around 'evil--preceding-sexp '((name . evil)))
-  (advice-add 'pp-last-sexp          :around 'evil--preceding-sexp '((name . evil)))
-  (advice-add 'lisp-eval-last-sexp   :around 'evil--preceding-sexp '((name . evil)))))
-
-;; Show key
-(defadvice quail-show-key (around evil activate)
-  "Temporarily go to Emacs state"
-  (evil-with-state emacs ad-do-it))
-
-(defadvice describe-char (around evil activate)
-  "Temporarily go to Emacs state"
-  (evil-with-state emacs ad-do-it))
-
-;; ace-jump-mode
+;;; ace-jump-mode
 (declare-function ace-jump-char-mode "ext:ace-jump-mode")
 (declare-function ace-jump-word-mode "ext:ace-jump-mode")
 (declare-function ace-jump-line-mode "ext:ace-jump-mode")
@@ -294,10 +270,10 @@ the mark and entering `recursive-edit'."
              (set-mark old-mark))
          (push-mark old-mark)))))
 
-(eval-after-load 'ace-jump-mode
-  `(defadvice ace-jump-done (after evil activate)
-     (when evil-ace-jump-active
-       (add-hook 'post-command-hook #'evil-ace-jump-exit-recursive-edit))))
+(advice-add 'ace-jump-done :after #'evil--after-ace-jump-done)
+(defun evil--after-ace-jump-done (&rest _)
+  (when evil-ace-jump-active
+    (add-hook 'post-command-hook #'evil-ace-jump-exit-recursive-edit)))
 
 (defun evil-ace-jump-exit-recursive-edit ()
   "Exit a recursive edit caused by an evil jump."
