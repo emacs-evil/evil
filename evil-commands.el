@@ -4271,7 +4271,7 @@ Use `evil-flush-lines' if INVERT is nil, or `evil-keep-lines' if not."
               (let ((evil--ex-global-active-p t))
                 (dolist (marker markers)
                   (goto-char marker)
-                  (eval command-form))))
+                  (eval command-form t))))
           ;; ensure that all markers are deleted afterwards,
           ;; even in the event of failure
           (dolist (marker markers)
