@@ -56,28 +56,25 @@ The return value is a list (BEG END TYPE)."
                   ;; If necessary, motions can change their type
                   ;; during execution by setting this variable.
                   (evil-this-type
-                   (or type (evil-type motion 'exclusive))))
+                   (or type (evil-get-command-property motion :type 'exclusive))))
               (condition-case err
                   (let ((repeat-type (evil-repeat-type motion t)))
-                    (if (functionp repeat-type)
-                        (funcall repeat-type 'pre))
+                    (when (functionp repeat-type) (funcall repeat-type 'pre))
                     (unless (with-local-quit
                               (setq range (call-interactively motion))
                               t)
                       (evil-repeat-abort)
                       (setq quit-flag t))
-                    (if (functionp repeat-type)
-                        (funcall repeat-type 'post)))
-                (error (prog1 nil
-                         (evil-repeat-abort)
-                         ;; some operators depend on succeeding
-                         ;; motions, in particular for
-                         ;; `evil-forward-char' (e.g., used by
-                         ;; `evil-substitute'), therefore we let
-                         ;; end-of-line and end-of-buffer pass
-                         (if (not (memq (car err) '(end-of-line end-of-buffer)))
-                             (signal (car err) (cdr err))
-                           (message (error-message-string err))))))
+                    (when (functionp repeat-type) (funcall repeat-type 'post)))
+                (error
+                 (evil-repeat-abort)
+                 ;; some operators depend on succeeding motions, in
+                 ;; particular for `evil-forward-char' (e.g., used by
+                 ;; `evil-substitute'), therefore we let end-of-line
+                 ;; and end-of-buffer pass
+                 (if (memq (car err) '(end-of-line end-of-buffer))
+                     (message (error-message-string err))
+                   (signal (car err) (cdr err)))))
               (cond
                ;; the motion returned a range
                ((evil-range-p range))
@@ -86,15 +83,13 @@ The return value is a list (BEG END TYPE)."
                 (setq range (evil-visual-range)))
                ;; the motion made an active region
                ((region-active-p)
-                (setq range (evil-range (region-beginning)
-                                        (region-end)
+                (setq range (evil-range (region-beginning) (region-end)
                                         evil-this-type)))
                ;; default: range from previous position to current
-               (t
-                (setq range (evil-expand-range
-                             (evil-normalize evil-motion-marker
-                                             (point)
-                                             evil-this-type)))))
+               (t (setq range (evil-expand-range
+                               (evil-normalize evil-motion-marker
+                                               (point)
+                                               evil-this-type)))))
               (unless (or (null type) (eq (evil-type range) type))
                 (evil-set-type range type)
                 (evil-expand-range range))
@@ -520,35 +515,28 @@ Optional keyword arguments are:
        :keep-visual t
        :suppress-operator t
        (interactive
-        (let* ((evil-operator-range-motion
-                (when (evil-has-command-property-p ',operator :motion)
+        (let* ((props (evil-command-properties ',operator))
+               (evil-operator-range-motion
+                (let ((p (plist-member props :motion)))
                   ;; :motion nil is equivalent to :motion undefined
-                  (or (evil-get-command-property ',operator :motion)
-                      #'undefined)))
-               (evil-operator-range-type
-                (evil-get-command-property ',operator :type))
-               (orig (point))
-               evil-operator-range-beginning
-               evil-operator-range-end
+                  (when p (or (cadr p) #'undefined))))
+               (evil-operator-range-type (plist-get props :type))
+               evil-operator-range-beginning evil-operator-range-end
                evil-inhibit-operator)
           (setq evil-inhibit-operator-value nil
-                evil-this-operator this-command)
-          (setq evil-operator-start-col (current-column))
+                evil-this-operator this-command
+                evil-operator-start-col (current-column))
           (prog1 ,interactive
-            (setq orig (point)
-                  evil-inhibit-operator-value evil-inhibit-operator)
+            (setq evil-inhibit-operator-value evil-inhibit-operator)
             (if ,visual
-                (when (evil-visual-state-p)
-                  (evil-visual-expand-region))
-              (when (or (evil-visual-state-p) (region-active-p))
-                (setq deactivate-mark t)))
+                (when (evil-visual-state-p) (evil-visual-expand-region))
+              (setq deactivate-mark t))
             (cond
              ((evil-visual-state-p)
               (evil-visual-rotate 'upper-left))
-             ((evil-get-command-property ',operator :move-point)
-              (goto-char (or evil-operator-range-beginning orig)))
-             (t
-              (goto-char orig))))))
+             ((plist-get props :move-point)
+              (when evil-operator-range-beginning
+                (goto-char evil-operator-range-beginning)))))))
        (unwind-protect
            (let ((evil-inhibit-operator evil-inhibit-operator-value)
                  (,end-marker (make-marker)))

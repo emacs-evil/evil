@@ -76,47 +76,21 @@ the buffer-local value of HOOK is modified."
 
 ;;; List functions
 
-(defmacro evil--add-to-alist (list-var &rest elements)
-  "Add the assocation of KEY and VAL to the value of LIST-VAR.
+(defmacro evil--add-to-alist (alist &rest elements)
+  "Add the association of KEY and VAL to the value of ALIST.
 If the list already contains an entry for KEY, update that entry;
-otherwise add at the end of the list.
+otherwise prepend it to the list.
 
-\(fn LIST-VAR KEY VAL &rest ELEMENTS)"
-  (when (eq (car-safe list-var) 'quote)
-    (setq list-var (cadr list-var)))
+\(fn ALIST [KEY VAL]...)"
   `(progn
-     ,@(if (version< emacs-version "26")
-           ;; TODO: Remove this path when support for Emacs 25 is dropped
-           (cl-loop for (key val) on elements by #'cddr
-                    collect `(let* ((key ,key)
-                                    (val ,val)
-                                    (cell (assoc key ,list-var)))
-                               (if cell
-                                   (setcdr cell val)
-                                 (push (cons key val) ,list-var))))
-         (cl-loop for (key val) on elements by #'cddr
-                  collect `(setf (alist-get ,key ,list-var nil nil #'equal) ,val)))
-     ,list-var))
-
-(defun evil-add-to-alist (list-var key val &rest elements)
-  "Add the assocation of KEY and VAL to the value of LIST-VAR.
-If the list already contains an entry for KEY, update that entry;
-otherwise add at the end of the list."
-  (let ((tail (symbol-value list-var)))
-    (while (and tail (not (equal (car-safe (car-safe tail)) key)))
-      (setq tail (cdr tail)))
-    (if tail
-        (setcar tail (cons key val))
-      (set list-var (append (symbol-value list-var)
-                            (list (cons key val)))))
-    (if elements
-        (with-no-warnings
-          (apply #'evil-add-to-alist list-var elements))
-      (symbol-value list-var))))
-
-(make-obsolete 'evil-add-to-alist
-               "use `evil--add-to-alist' instead. You may need to recompile code with evil macros."
-               "1.13.1")
+     ,@(cl-loop
+        for (key val) on elements by #'cddr collect
+        (if (< emacs-major-version 26)
+            (macroexp-let2* nil ((k key) (p `(assoc ,k ,alist)))
+              `(if ,p (setcdr ,p ,val)
+                 (push (cons ,k ,val) ,alist)))
+          `(setf (alist-get ,key ,alist nil nil #'equal) ,val)))
+     ,alist))
 
 ;; custom version of `delete-if'
 (defun evil-filter-list (predicate list &optional pointer)
@@ -153,6 +127,7 @@ in the list."
 
 (defun evil-member-recursive-if (predicate tree)
   "Find the first item satisfying PREDICATE in TREE."
+  (declare (obsolete nil "1.15.0"))
   (cond
    ((funcall predicate tree)
     tree)
@@ -308,30 +283,22 @@ last, sorting in between."
                            [&optional ("interactive" [&rest form])]
                            def-body)))
   (let ((interactive '(interactive))
-        arg args doc doc-form key keys)
+        args doc doc-form keys)
     ;; collect arguments
-    (when (listp (car-safe body))
+    (when (listp (car body))
       (setq args (pop body)))
     ;; collect docstring
-    (when (> (length body) 1)
-      (if (eq (car-safe (car-safe body)) 'format)
-          (setq doc-form (pop body))
-        (when (stringp (car-safe body))
-          (setq doc (pop body)))))
+    (cond ((stringp (car body)) (setq doc (pop body)))
+          ((eq (car-safe (car body)) #'format) (setq doc-form (pop body))))
     ;; collect keywords
-    (setq keys (plist-put keys :repeat t))
-    (while (keywordp (car-safe body))
-      (setq key (pop body)
-            arg (pop body))
-      (unless nil ; TODO: add keyword check
-        (setq keys (plist-put keys key arg))))
+    (while (keywordp (car body))
+      (let* ((key (pop body))
+             (arg (pop body)))
+        (setq keys (plist-put keys key arg)))) ; TODO: add keyword check
     ;; collect `interactive' form
-    (when (and body (consp (car body))
-               (eq (car (car body)) 'interactive))
-      (let* ((iform (pop body))
-             (result (apply #'evil-interactive-form (cdr iform)))
-             (form (car result))
-             (attrs (cdr result)))
+    (when (eq (caar body) 'interactive)
+      (cl-destructuring-bind (form . attrs)
+          (apply #'evil-interactive-form (cdr (pop body)))
         (setq interactive `(interactive ,form)
               keys (evil-concat-plists keys attrs))))
     `(progn
@@ -353,55 +320,65 @@ last, sorting in between."
          (apply #'evil-set-command-properties func ',keys)
          func))))
 
-;; If no Evil properties are defined for the command, several parts of
-;; Evil apply certain default rules; e.g., the repeat system decides
-;; whether the command is repeatable by monitoring buffer changes.
+(define-obsolete-variable-alias
+  'evil-command-properties 'evil--command-properties "1.15.0")
+(defvar evil--command-properties nil
+  "Specifications made by `evil-define-command'.")
+
+(defun evil-command-properties (command)
+  "Return the Evil command property list for COMMAND.
+See also `evil-get-command-property'."
+  (if (symbolp command) (get command 'evil--command-plist)
+    (cdr (assq command evil--command-properties))))
+(define-obsolete-function-alias
+  'evil-get-command-properties #'evil-command-properties "1.15.0")
+
+(gv-define-setter evil-command-properties (val command)
+  `(if (symbolp ,command) (put ,command 'evil--command-plist ,val)
+     ,(macroexp-let2 nil p `(assq ,command evil--command-properties)
+        `(if ,p (setcdr ,p ,val)
+           (push (cons ,command ,val) evil--command-properties)))))
+
+(defalias 'evil-has-command-properties-p #'evil-command-properties
+  "Whether Evil properties are defined for COMMAND.
+See also `evil-has-command-property-p'.")
+
 (defun evil-has-command-property-p (command property)
   "Whether COMMAND has Evil PROPERTY.
 See also `evil-has-command-properties-p'."
-  (plist-member (evil-get-command-properties command) property))
-
-(defun evil-has-command-properties-p (command)
-  "Whether Evil properties are defined for COMMAND.
-See also `evil-has-command-property-p'."
-  (and (evil-get-command-properties command) t))
+  (plist-member (evil-command-properties command) property))
 
 (defun evil-get-command-property (command property &optional default)
   "Return the value of Evil PROPERTY of COMMAND.
 If the command does not have the property, return DEFAULT.
 See also `evil-get-command-properties'."
-  (if (evil-has-command-property-p command property)
-      (evil-get-property evil-command-properties command property)
-    default))
-
-(defun evil-get-command-properties (command)
-  "Return all Evil properties of COMMAND.
-See also `evil-get-command-property'."
-  (evil-get-property evil-command-properties command))
-
-(defun evil-set-command-property (command property value)
-  "Set PROPERTY to VALUE for COMMAND.
-To set multiple properties at once, see
-`evil-set-command-properties' and `evil-add-command-properties'."
-  (evil-put-property 'evil-command-properties command property value))
-(defalias 'evil-put-command-property #'evil-set-command-property)
+  (let ((p (plist-member (evil-command-properties command) property)))
+    (if p (cadr p) default)))
 
 (defun evil-add-command-properties (command &rest properties)
-  "Add PROPERTIES to COMMAND.
-PROPERTIES should be a property list.
-To replace all properties at once, use `evil-set-command-properties'."
-  (apply #'evil-put-property
-         'evil-command-properties command properties))
+  "Set each Evil command property KEY to its VAL for COMMAND.
+To replace existing properties, use `evil-set-command-properties'.
+
+\(fn COMMAND [KEY VAL]...)"
+  (let ((props (evil-command-properties command)))
+    (while properties
+      (setq props (plist-put props (pop properties) (pop properties))))
+    (setf (evil-command-properties command) props)))
+
+(defalias 'evil-set-command-property #'evil-add-command-properties
+  "Set PROPERTY to VALUE for COMMAND.
+To set multiple properties at once, see
+`evil-set-command-properties' and `evil-add-command-properties'.
+
+\(fn COMMAND PROPERTY VALUE)")
+(defalias 'evil-put-command-property #'evil-set-command-property)
 
 (defun evil-set-command-properties (command &rest properties)
   "Replace all of COMMAND's properties with PROPERTIES.
 PROPERTIES should be a property list.
 This erases all previous properties; to only add properties,
 use `evil-set-command-property'."
-  (setq evil-command-properties
-        (assq-delete-all command evil-command-properties))
-  (when properties
-    (apply #'evil-add-command-properties command properties)))
+  (setf (evil-command-properties command) properties))
 
 (defun evil-remove-command-properties (command &rest properties)
   "Remove PROPERTIES from COMMAND.
@@ -409,7 +386,7 @@ PROPERTIES should be a list of properties (:PROP1 :PROP2 ...).
 If PROPERTIES is the empty list, all properties are removed."
   (let (plist)
     (when properties
-      (setq plist (evil-get-command-properties command))
+      (setq plist (evil-command-properties command))
       (dolist (property properties)
         (setq plist (evil-plist-delete property plist))))
     (apply #'evil-set-command-properties command plist)))
@@ -432,10 +409,7 @@ This ensures that it behaves correctly in visual state."
 (defun evil-declare-not-repeat (command)
   "Declare COMMAND to be nonrepeatable."
   (evil-add-command-properties command :repeat nil))
-
-(defun evil-declare-ignore-repeat (command)
-  "Declare COMMAND to be nonrepeatable."
-  (evil-add-command-properties command :repeat 'ignore))
+(defalias 'evil-declare-ignore-repeat #'evil-declare-not-repeat)
 
 (defun evil-declare-change-repeat (command)
   "Declare COMMAND to be repeatable by buffer changes rather than
@@ -742,9 +716,7 @@ function for changing the cursor, or a list of the above."
   (dolist (spec specs)
     (cond
      ((functionp spec)
-      (condition-case nil
-          (funcall spec)
-        (error nil)))
+      (ignore-errors (funcall spec)))
      ((stringp spec)
       (evil-set-cursor-color spec))
      (t
@@ -761,20 +733,20 @@ function for changing the cursor, or a list of the above."
   "Refresh the cursor for STATE in BUFFER.
 BUFFER defaults to the current buffer.  If STATE is nil the
 cursor type is either `evil-force-cursor' or the current state."
-  (when (and (boundp 'evil-local-mode) evil-local-mode)
+  (defvar evil-local-mode)
+  (when evil-local-mode
     (let* ((state (or state evil-force-cursor evil-state 'normal))
            (default (or evil-default-cursor t))
            (cursor (evil-state-property state :cursor t))
            (color (or (and (stringp cursor) cursor)
-                      (and (listp cursor)
-                           (evil-member-if #'stringp cursor))
+                      (and (listp cursor) (evil-member-if #'stringp cursor))
                       (frame-parameter nil 'cursor-color))))
       (with-current-buffer (or buffer (current-buffer))
         ;; if both STATE and `evil-default-cursor'
         ;; specify a color, don't set it twice
-        (when (and color (listp default))
-          (setq default (evil-filter-list #'stringp default)))
-        (evil-set-cursor default)
+        (evil-set-cursor (if (and color (listp default))
+                             (cl-remove-if #'stringp default)
+                           default))
         (evil-set-cursor cursor)))))
 
 (defmacro evil-save-cursor (&rest body)
@@ -1158,8 +1130,7 @@ right positions are increased or decreased, respectively, by
           (goto-char (point-max))))
        (t
         (while (and (not (bobp))
-                    (or (backward-char) t)
-                    (setq bnd (bounds-of-thing-at-point thing))
+                    (setq bnd (progn (backward-char) (bounds-of-thing-at-point thing)))
                     (< (point) (cdr bnd)))
           (goto-char (car bnd)))
         ;; either bob or no thing at point
@@ -1185,7 +1156,7 @@ is returned."
                  (and (zerop (forward-thing thing))
                       (forward-thing thing -1))
                  (if (< (point) pnt) (point-max) (point)))))
-      (when (and (<= beg (point)) (<= (point) end) (< beg end))
+      (when (and (<= beg (point) end) (< beg end))
         (cond
          ((or (not which) (zerop which)) (cons beg end))
          ((< which 0) beg)
@@ -1202,25 +1173,23 @@ COUNT is positive point is moved forward COUNT times, if negative
 point is moved backward -COUNT times."
   (evil-motion-loop (dir (or count 1))
     (let ((pnt (point))
-          (nxt (if (> dir 0) (point-max) (point-min))))
+          (nxt (if (< dir 0) (point-min) (point-max))))
       (dolist (fwd forwards)
         (goto-char pnt)
-        (condition-case nil
-            (evil-with-restriction
-                (and (< dir 0)
-                     (save-excursion
-                       (goto-char nxt)
-                       (line-beginning-position 0)))
-                (and (> dir 0)
-                     (save-excursion
-                       (goto-char nxt)
-                       (line-end-position 2)))
-              (if (and (zerop (funcall fwd dir))
-                       (/= (point) pnt)
-                       (or (and (> dir 0) (< (point) nxt))
-                           (and (< dir 0) (> (point) nxt))))
-                  (setq nxt (point))))
-          (error)))
+        (ignore-errors
+          (evil-with-restriction
+              (when (< dir 0)
+                (save-excursion
+                  (goto-char nxt)
+                  (line-beginning-position 0)))
+              (when (> dir 0)
+                (save-excursion
+                  (goto-char nxt)
+                  (line-end-position 2)))
+            (and (zerop (funcall fwd dir))
+                 (/= (point) pnt)
+                 (if (< dir 0) (> (point) nxt) (< (point) nxt))
+                 (setq nxt (point))))))
       (goto-char nxt))))
 
 (defun bounds-of-evil-string-at-point (&optional state)
@@ -1228,30 +1197,22 @@ point is moved backward -COUNT times."
 If STATE is given it used a parsing state at point."
   (save-excursion
     (let ((state (or state (syntax-ppss))))
-      (and (nth 3 state)
-           (cons (nth 8 state)
-                 (and (parse-partial-sexp (point)
-                                          (point-max)
-                                          nil
-                                          nil
-                                          state
-                                          'syntax-table)
-                      (point)))))))
+      (when (nth 3 state)
+        (cons (nth 8 state)
+              (when (parse-partial-sexp
+                     (point) (point-max) nil nil state 'syntax-table)
+                (point)))))))
 (put 'evil-string 'bounds-of-thing-at-point #'bounds-of-evil-string-at-point)
 
 (defun bounds-of-evil-comment-at-point ()
   "Return the bounds of a string at point."
   (save-excursion
     (let ((state (syntax-ppss)))
-      (and (nth 4 state)
-           (cons (nth 8 state)
-                 (and (parse-partial-sexp (point)
-                                          (point-max)
-                                          nil
-                                          nil
-                                          state
-                                          'syntax-table)
-                      (point)))))))
+      (when (nth 4 state)
+        (cons (nth 8 state)
+              (when (parse-partial-sexp
+                     (point) (point-max) nil nil state 'syntax-table)
+                (point)))))))
 (put 'evil-comment 'bounds-of-thing-at-point #'bounds-of-evil-comment-at-point)
 
 ;; The purpose of this function is to provide line motions which
@@ -1282,8 +1243,7 @@ Signals an error at buffer boundaries unless NOERROR is non-nil."
        (or noerror (/= (point) opoint) (signal (car err) (cdr err)))))))
 
 (defun evil-forward-syntax (syntax &optional count)
-  "Move point to the end or beginning of a sequence of characters in
-SYNTAX.
+  "Move point to the end or beginning of a sequence of characters in SYNTAX.
 Stop on reaching a character not in SYNTAX."
   (let ((notsyntax (if (= (aref syntax 0) ?^)
                        (substring syntax 1)
@@ -1503,11 +1463,8 @@ backwards."
           (setq reset-parser nil)
           (catch 'done
             (while (and (> count 0) (not (eobp)))
-              (setq state (parse-partial-sexp (point) (point-max)
-                                              nil
-                                              nil
-                                              state
-                                              'syntax-table))
+              (setq state (parse-partial-sexp
+                           (point) (point-max) nil nil state 'syntax-table))
               (cond
                ((nth 3 state)
                 (setq bnd (bounds-of-thing-at-point 'evil-string))
@@ -1628,9 +1585,7 @@ backward if COUNT is negative.  This function is the same as
 `forward-sentence' but returns the number of sentences that could
 NOT be moved over."
   (evil-motion-loop (dir (or count 1))
-    (condition-case nil
-        (forward-sentence dir)
-      (error))))
+    (ignore-errors (forward-sentence dir))))
 
 (defun forward-evil-paragraph (&optional count)
   "Move forward COUNT paragraphs.
@@ -1694,15 +1649,14 @@ The motion is repeated COUNT times."
           rest)
       (when (and bnd (< (point) (cdr bnd)))
         (goto-char (cdr bnd)))
-      (condition-case nil
-          (when (zerop (setq rest (forward-thing thing count)))
-            (when (and (bounds-of-thing-at-point thing)
-                       (not (bobp))
-                       ;; handle final empty line
-                       (not (and (bolp) (eobp))))
-              (forward-char -1))
-            (beginning-of-thing thing))
-        (error))
+      (ignore-errors
+        (when (zerop (setq rest (forward-thing thing count)))
+          (when (and (bounds-of-thing-at-point thing)
+                     (not (bobp))
+                     ;; handle final empty line
+                     (not (and (bolp) (eobp))))
+            (backward-char))
+          (beginning-of-thing thing)))
       rest)))
 
 (defun evil-backward-beginning (thing &optional count)
@@ -1715,22 +1669,19 @@ The motion is repeated COUNT times. This is the same as calling
   "Move forward to end of THING.
 The motion is repeated COUNT times."
   (setq count (or count 1))
-  (cond
-   ((> count 0)
-    (unless (eobp) (forward-char))
-    (prog1 (forward-thing thing count)
-      (unless (bobp) (forward-char -1))))
-   (t
+  (if (> count 0)
+      (progn (unless (eobp) (forward-char))
+             (prog1 (forward-thing thing count)
+               (unless (bobp) (backward-char))))
     (let ((bnd (bounds-of-thing-at-point thing))
           rest)
       (when (and bnd (< (point) (cdr bnd) ))
         (goto-char (car bnd)))
-      (condition-case nil
-          (when (zerop (setq rest (forward-thing thing count)))
-            (end-of-thing thing)
-            (forward-char -1))
-        (error))
-      rest))))
+      (ignore-errors
+        (when (zerop (setq rest (forward-thing thing count)))
+          (end-of-thing thing)
+          (backward-char)))
+      rest)))
 
 (defun evil-backward-end (thing &optional count)
   "Move backward to end of THING.
@@ -1882,11 +1833,11 @@ otherwise, it stays behind."
          ((evil-global-marker-p char)
           (setq alist (default-value 'evil-markers-alist)
                 marker (make-marker))
-          (evil--add-to-alist 'alist char marker)
+          (evil--add-to-alist alist char marker)
           (setq-default evil-markers-alist alist))
          (t
           (setq marker (make-marker))
-          (evil--add-to-alist 'evil-markers-alist char marker))))
+          (evil--add-to-alist evil-markers-alist char marker))))
       (add-hook 'kill-buffer-hook #'evil-swap-out-markers nil t)
       (set-marker-insertion-type marker advance)
       (set-marker marker (or pos (point))))))
@@ -2000,22 +1951,20 @@ The following special registers are supported.
                      (current-kill reg t))))
              ((memq register '(?* ?+))
               (let ((what (if (eq register ?*) 'PRIMARY 'CLIPBOARD)))
-                (if (version<= "29" emacs-version)
+                (if (eval-when-compile (>= emacs-major-version 29))
                     (gui--selection-value-internal what)
                   ;; The following code is based on `x-selection-value-internal'
                   ;; (now `gui--selection-value-internal') circa Emacs 24. We're
                   ;; unsure why exactly it's duplicated here, and it's possible
                   ;; it needn't be for newer versions of Emacs.
-                  (let ((request-type (or (and (boundp 'x-select-request-type)
-                                               x-select-request-type)
+                  (let ((request-type (or (bound-and-true-p x-select-request-type)
                                           '(UTF8_STRING COMPOUND_TEXT STRING)))
                         text)
                     (unless (consp request-type)
                       (setq request-type (list request-type)))
                     (while (and request-type (not text))
-                      (condition-case nil
-                          (setq text (evil-get-selection what (pop request-type)))
-                        (error nil)))
+                      (setq text (ignore-errors
+                                   (evil-get-selection what (pop request-type)))))
                     (when text
                       (remove-text-properties 0 (length text) '(foreign-selection nil) text))
                     text))))
@@ -2053,12 +2002,11 @@ The following special registers are supported.
               (or (with-current-buffer (other-buffer) (buffer-file-name))
                   (user-error "No file name")))
              ((eq register ?/)
-              (or (car-safe
-                   (or (and (boundp 'evil-search-module)
-                            (eq evil-search-module 'evil-search)
-                            evil-ex-search-history)
-                       (and isearch-regexp regexp-search-ring)
-                       search-ring))
+              (defvar evil-search-module)
+              (or (car (cond
+                        ((eq evil-search-module 'evil-search) evil-ex-search-history)
+                        (isearch-regexp regexp-search-ring)
+                        (t search-ring)))
                   (user-error "No previous regular expression")))
              ((eq register ?:)
               (or (car-safe evil-ex-history)
@@ -2849,13 +2797,10 @@ a property list."
 (defun evil-range-properties (range)
   "Return properties of RANGE."
   (when (evil-range-p range)
-    (if (evil-type range)
-        (nthcdr 3 range)
-      (nthcdr 2 range))))
+    (nthcdr (if (evil-type range) 3 2) range)))
 
-(defun evil-copy-range (range)
-  "Return a copy of RANGE."
-  (copy-sequence range))
+(defalias 'evil-copy-range #'copy-sequence
+  "Return a copy of RANGE.")
 
 (defun evil-set-range (range &optional beg end type &rest properties)
   "Set RANGE to have beginning BEG and end END.
@@ -2910,9 +2855,7 @@ If COPY is non-nil, return a copy of RANGE."
 If COPY is non-nil, return a copy of RANGE."
   (when copy
     (setq range (evil-copy-range range)))
-  (if (evil-type range)
-      (setcdr (cdr (cdr range)) properties)
-    (setcdr (cdr range) properties))
+  (setcdr (if (evil-type range) (cddr range) (cdr range)) properties)
   range)
 
 (defun evil-range-union (range1 range2 &optional type)
@@ -3407,12 +3350,11 @@ preceeding (or following) whitespace is added to the range. "
                      (/= (char-after (car bnd)) quote)
                      (/= (char-before (cdr bnd)) quote))
             (evil-with-restriction (car bnd) (cdr bnd)
-              (condition-case nil
-                  (evil-select-quote-thing 'evil-quote-simple
-                                           beg end type
-                                           count
-                                           inclusive)
-                (error nil)))))
+              (ignore-errors (evil-select-quote-thing
+                              'evil-quote-simple
+                              beg end type
+                              count
+                              inclusive)))))
         (let ((evil-forward-quote-char quote))
           (evil-select-quote-thing 'evil-quote
                                    beg end type

@@ -659,9 +659,10 @@ in case of incomplete or unknown commands."
   (if (string-match "^[^][]*\\(\\[\\(.*\\)\\]\\)[^][]*$" cmd)
       (let ((abbrev (replace-match "" nil t cmd 1))
             (full (replace-match "\\2" nil nil cmd 1)))
-        (evil--add-to-alist 'evil-ex-commands full function)
-        (evil--add-to-alist 'evil-ex-commands abbrev full))
-    (evil--add-to-alist 'evil-ex-commands cmd function)))
+        (evil--add-to-alist evil-ex-commands
+                            full function
+                            abbrev full))
+    (evil--add-to-alist evil-ex-commands cmd function)))
 
 (defun evil-ex-make-argument-handler (runner completer)
   (list runner completer))
@@ -720,10 +721,8 @@ keywords and function:
          ((eq key :completion-at-point)
           (setq completer (cons 'completion-at-point func))))))
     `(eval-and-compile
-       (evil--add-to-alist
-        'evil-ex-argument-types
-        ',arg-type
-        '(,runner ,completer)))))
+       (evil--add-to-alist evil-ex-argument-types
+                           ',arg-type '(,runner ,completer)))))
 
 (evil-ex-define-argument-type file
   "Handle a file argument."

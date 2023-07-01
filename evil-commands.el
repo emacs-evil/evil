@@ -1524,7 +1524,7 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
          (or (= beg end)
              (/= (char-before end) ?\n))
          (/= beg (point-min))
-         (=  (char-before beg) ?\n))
+         (= (char-before beg) ?\n))
     (delete-region (1- beg) end))
    (t (delete-region beg end)))
   (when (and (eq type 'line)

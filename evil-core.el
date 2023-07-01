@@ -535,12 +535,9 @@ may be specified before the body code:
        ,@(if local
              `((make-variable-buffer-local ',keymap)
                (put ',keymap 'permanent-local t)
-               (evil--add-to-alist 'evil-local-keymaps-alist
-                                  ',mode ',keymap))
-           `((evil--add-to-alist 'evil-global-keymaps-alist
-                                ',mode ',keymap)
-             (evil--add-to-alist 'evil-mode-map-alist
-                                ',mode ,keymap)))
+               (evil--add-to-alist evil-local-keymaps-alist ',mode ',keymap))
+           `((evil--add-to-alist evil-global-keymaps-alist ',mode ',keymap)
+             (evil--add-to-alist evil-mode-map-alist ',mode ,keymap)))
        ,(when (or body func)
           `(defun ,mode (&optional arg)
              ,@(when doc `(,doc))
@@ -702,8 +699,8 @@ This is a keymap alist, determined by the current state
     (evil-initialize-local-keymaps)
     ;; deactivate keymaps of previous state
     (dolist (entry evil-mode-map-alist)
-      (setq mode (car-safe entry)
-            map (cdr-safe entry))
+      (setq mode (car entry)
+            map (cdr entry))
       ;; don't deactivate overriding keymaps;
       ;; they are toggled by their associated mode
       (if (or (memq mode excluded)
@@ -712,8 +709,7 @@ This is a keymap alist, determined by the current state
               (evil-auxiliary-keymap-p map)
               (evil-minor-mode-keymap-p map))
           (push mode excluded)
-        (when (and (fboundp mode) (symbol-value mode))
-          (funcall mode -1))
+        (and (fboundp mode) (symbol-value mode) (funcall mode -1))
         (set mode nil)))
     (setq evil-mode-map-alist nil)
     ;; activate keymaps of current state
@@ -777,17 +773,13 @@ See also `evil-mode-for-keymap'."
   "Return a keymap alist of auxiliary keymaps for STATE."
   (let ((state (or state evil-state))
         aux result)
-    (dolist (map (current-active-maps) result)
+    (dolist (map (current-active-maps) (nreverse result))
       (when (setq aux (evil-get-auxiliary-keymap map state))
-        (push (cons (evil-mode-for-keymap map t) aux) result)))
-    (nreverse result)))
+        (push (cons (evil-mode-for-keymap map t) aux) result)))))
 
 (defun evil-state-minor-mode-keymaps (state)
   "Return a keymap alist of minor-mode keymaps for STATE."
-  (let* ((state (or state evil-state))
-         (state-entry (assq state evil-minor-mode-keymaps-alist)))
-    (when state-entry
-      (cdr state-entry))))
+  (cdr (assq (or state evil-state) evil-minor-mode-keymaps-alist)))
 
 (defun evil-state-overriding-keymaps (&optional state)
   "Return a keymap alist of overriding keymaps for STATE."
@@ -870,15 +862,13 @@ does not already exist."
 
 (defun evil-auxiliary-keymap-p (map)
   "Whether MAP is an auxiliary keymap."
-  (and (keymapp map)
-       (string-match-p "Auxiliary keymap"
-                       (or (keymap-prompt map) "")) t))
+  (let ((prompt (keymap-prompt map)))
+    (when prompt (string-prefix-p "Auxiliary keymap" prompt))))
 
 (defun evil-minor-mode-keymap-p (map)
   "Whether MAP is a minor-mode keymap."
-  (and (keymapp map)
-       (string-match-p "Minor-mode keymap"
-                       (or (keymap-prompt map) "")) t))
+  (let ((prompt (keymap-prompt map)))
+    (when prompt (string-prefix-p "Minor-mode keymap" prompt))))
 
 (defun evil-intercept-keymap-p (map &optional state)
   "Whether MAP is an intercept keymap for STATE.
@@ -1282,12 +1272,11 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
           (t
            (unless evil-local-mode (evil-local-mode))
            (let ((evil-next-state ',state)
-                 input-method-activate-hook
-                 input-method-deactivate-hook)
+                 input-method-activate-hook input-method-deactivate-hook)
              (evil-change-state nil)
              (setq evil-state ',state)
-             (evil--add-to-alist 'evil-previous-state-alist
-                                ',state evil-previous-state)
+             (evil--add-to-alist evil-previous-state-alist
+                                 ',state evil-previous-state)
              (let ((evil-state ',state))
                (evil-normalize-keymaps)
                (if ',input-method

@@ -1442,9 +1442,6 @@ use `evil-state-property'.")
 Elements have the form (MODE . KEYMAP), with the first keymaps
 having higher priority.")
 
-(defvar evil-command-properties nil
-  "Specifications made by `evil-define-command'.")
-
 (defvar evil-change-commands '(evil-change)
   "Commands that wrap or replace `evil-change'.
 This list exists to apply an inconsistency with vim's change command

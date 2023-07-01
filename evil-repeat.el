@@ -340,7 +340,8 @@ invoked the current command"
     (evil-clear-command-keys))))
 
 (defun evil-repeat-motion (flag)
-  "Repeation for motions. Motions are recorded by keystroke but only in insert state."
+  "Repeation for motions.
+Motions are recorded by keystroke but only in Insert state."
   (when (memq evil-state '(insert replace))
     (evil-repeat-keystrokes flag)))
 
