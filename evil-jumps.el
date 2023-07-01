@@ -38,28 +38,23 @@
 (defcustom evil-jumps-cross-buffers t
   "When non-nil, the jump commands can cross borders between buffers.
 Otherwise the jump commands act only within the current buffer."
-  :type 'boolean
-  :group 'evil-jumps)
+  :type 'boolean)
 
 (defcustom evil-jumps-max-length 100
   "The maximum number of jumps to keep track of."
-  :type 'integer
-  :group 'evil-jumps)
+  :type 'integer)
 
 (defcustom evil-jumps-pre-jump-hook nil
   "Hooks to run just before jumping to a location in the jump list."
-  :type 'hook
-  :group 'evil-jumps)
+  :type 'hook)
 
 (defcustom evil-jumps-post-jump-hook nil
   "Hooks to run just after jumping to a location in the jump list."
-  :type 'hook
-  :group 'evil-jumps)
+  :type 'hook)
 
 (defcustom evil-jumps-ignored-file-patterns '("COMMIT_EDITMSG$" "TAGS$")
   "List of regexps to exclude file path from inclusion in the jump list."
-  :type '(repeat string)
-  :group 'evil-jumps)
+  :type '(repeat string))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
