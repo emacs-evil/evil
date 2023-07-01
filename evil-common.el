@@ -1888,7 +1888,7 @@ If INPUT starts with a number, +, -, or . use `calc-eval' instead."
          (result (if calcable-p
                      (let ((calc-multiplication-has-precedence nil))
                        (calc-eval input))
-                   (eval (car (read-from-string input))))))
+                   (eval (car (read-from-string input)) t))))
     (cond
      ((stringp result) result)
      ((or (numberp result) (symbolp result))
