@@ -320,11 +320,11 @@ last, sorting in between."
        ,(when (and command doc-form)
           `(put ',command 'function-documentation ,doc-form))
        ;; set command properties for symbol or lambda function
-       (let ((func ',(if (and (null command) body)
-                         `(lambda ,args
-                            ,interactive
-                            ,@body)
-                       command)))
+       (let ((func ,(if (and (null command) body)
+                        `(lambda ,args
+                           ,interactive
+                           ,@body)
+                      `#',command)))
          (apply #'evil-set-command-properties func ',keys)
          func))))
 

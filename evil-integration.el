@@ -473,7 +473,7 @@ Based on `evil-enclose-ace-jump-for-motion'."
     (expand-abbrev)))
 
 (eval-after-load 'abbrev
-  '(add-hook 'evil-insert-state-exit-hook 'evil-maybe-expand-abbrev))
+  '(add-hook 'evil-insert-state-exit-hook #'evil-maybe-expand-abbrev))
 
 ;;; ElDoc
 (eval-after-load 'eldoc

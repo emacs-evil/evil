@@ -70,8 +70,8 @@ the :initialize property of `defcustom'.")
 See `evil-pending-custom-initialize'."
   (dolist (init evil-pending-custom-initialize)
     (apply (car init) (cdr init)))
-  (remove-hook 'evil-after-load-hook 'evil-run-pending-custom-initialize))
-(add-hook 'evil-after-load-hook 'evil-run-pending-custom-initialize)
+  (remove-hook 'evil-after-load-hook #'evil-run-pending-custom-initialize))
+(add-hook 'evil-after-load-hook #'evil-run-pending-custom-initialize)
 
 ;;; Setters
 
@@ -471,7 +471,8 @@ Otherwise, `C-i' inserts a tab character."
                (define-key evil-motion-state-map (kbd "C-i") nil))
               ((and value
                     (not (lookup-key evil-motion-state-map (kbd "C-i"))))
-               (define-key evil-motion-state-map (kbd "C-i") 'evil-jump-forward))))))
+               (define-key evil-motion-state-map (kbd "C-i")
+                           'evil-jump-forward))))))
 
 (defcustom evil-want-C-u-scroll nil
   "Whether `C-u' scrolls up (like Vim).
@@ -490,7 +491,8 @@ ubiquity of prefix arguments."
                (define-key evil-motion-state-map (kbd "C-u") nil))
               ((and value
                     (not (lookup-key evil-motion-state-map (kbd "C-u"))))
-               (define-key evil-motion-state-map (kbd "C-u") 'evil-scroll-up))))))
+               (define-key evil-motion-state-map (kbd "C-u")
+                           'evil-scroll-up))))))
 
 (defcustom evil-want-C-d-scroll t
   "Whether `C-d' scrolls down (like Vim)."
@@ -506,7 +508,8 @@ ubiquity of prefix arguments."
                (define-key evil-motion-state-map (kbd "C-d") nil))
               ((and value
                     (not (lookup-key evil-motion-state-map (kbd "C-d"))))
-               (define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down))))))
+               (define-key evil-motion-state-map (kbd "C-d")
+                           'evil-scroll-down))))))
 
 (defcustom evil-want-C-u-delete nil
   "Whether `C-u' deletes back to indentation in insert state.
@@ -527,8 +530,10 @@ ubiquity of prefix arguments."
                (define-key evil-replace-state-map (kbd "C-u") nil))
               ((and value
                     (not (lookup-key evil-insert-state-map (kbd "C-u"))))
-               (define-key evil-insert-state-map (kbd "C-u") 'evil-delete-back-to-indentation)
-               (define-key evil-replace-state-map (kbd "C-u") 'evil-delete-back-to-indentation))))))
+               (define-key evil-insert-state-map (kbd "C-u")
+                           'evil-delete-back-to-indentation)
+               (define-key evil-replace-state-map (kbd "C-u")
+                           'evil-delete-back-to-indentation))))))
 
 (defcustom evil-want-C-w-delete t
   "Whether `C-w' deletes a word in Insert/Ex/Search state."
@@ -553,22 +558,22 @@ ubiquity of prefix arguments."
              (cond
               ((and (not value)
                     (eq (lookup-key evil-ex-search-keymap (kbd "C-w"))
-                        'backward-kill-word))
+                        #'backward-kill-word))
                (define-key evil-ex-search-keymap (kbd "C-w") 'evil-search-yank-word))
               ((and value
                     (eq (lookup-key evil-ex-search-keymap (kbd "C-w"))
                         'evil-search-yank-word))
-               (define-key evil-ex-search-keymap (kbd "C-w") 'backward-kill-word))))
+               (define-key evil-ex-search-keymap (kbd "C-w") #'backward-kill-word))))
            (when (boundp 'evil-ex-completion-map)
              (cond
               ((and (not value)
                     (eq (lookup-key evil-ex-completion-map (kbd "C-w"))
-                        'backward-kill-word))
+                        #'backward-kill-word))
                (define-key evil-ex-completion-map (kbd "C-w") nil))
               ((and value
                     (eq (lookup-key evil-ex-completion-map (kbd "C-w"))
                         nil))
-               (define-key evil-ex-completion-map (kbd "C-w") 'backward-kill-word))))))
+               (define-key evil-ex-completion-map (kbd "C-w") #'backward-kill-word))))))
 
 (defcustom evil-want-C-h-delete nil
   "Whether `C-h' deletes a char in Insert state."
@@ -586,8 +591,10 @@ ubiquity of prefix arguments."
                (define-key evil-replace-state-map (kbd "C-h") nil))
               ((and value
                     (not (lookup-key evil-insert-state-map (kbd "C-h"))))
-               (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
-               (define-key evil-replace-state-map (kbd "C-h") 'evil-replace-backspace))))))
+               (define-key evil-insert-state-map (kbd "C-h")
+                           'evil-delete-backward-char-and-join)
+               (define-key evil-replace-state-map (kbd "C-h")
+                           'evil-replace-backspace))))))
 
 (defcustom evil-want-C-g-bindings nil
   "Whether `C-g' postfix can be used in bindings."
@@ -971,7 +978,7 @@ overridden."
                                        'override-state
                                        'evil-make-overriding-map
                                        values))
-  :initialize 'evil-custom-initialize-pending-reset)
+  :initialize #'evil-custom-initialize-pending-reset)
 
 (add-hook 'after-load-functions #'evil-update-pending-maps)
 
@@ -991,7 +998,7 @@ intercepted."
                                        'intercept-state
                                        'evil-make-intercept-map
                                        values))
-  :initialize 'evil-custom-initialize-pending-reset)
+  :initialize #'evil-custom-initialize-pending-reset)
 
 (defcustom evil-motions
   '(back-to-indentation
@@ -1090,8 +1097,8 @@ intercepted."
   "Non-Evil commands to initialize to motions."
   :type  '(repeat symbol)
   :group 'evil
-  :set 'evil-set-custom-motions
-  :initialize 'evil-custom-initialize-pending-reset)
+  :set #'evil-set-custom-motions
+  :initialize #'evil-custom-initialize-pending-reset)
 
 (defcustom evil-visual-newline-commands
   '(LaTeX-section
@@ -1100,8 +1107,8 @@ intercepted."
 These commands work better without this newline."
   :type  '(repeat symbol)
   :group 'evil
-  :set 'evil-set-visual-newline-commands
-  :initialize 'evil-custom-initialize-pending-reset)
+  :set #'evil-set-visual-newline-commands
+  :initialize #'evil-custom-initialize-pending-reset)
 
 (defcustom evil-want-visual-char-semi-exclusive nil
   "DEPRECATED.  Will be removed in a future version.
@@ -1999,7 +2006,7 @@ Otherwise the previous command is assumed as substitute.")
 
 (defvar evil-ex-search-keymap (make-sparse-keymap)
   "Keymap used in ex-search-mode.")
-(define-key evil-ex-search-keymap [escape] 'abort-recursive-edit)
+(define-key evil-ex-search-keymap [escape] #'abort-recursive-edit)
 (set-keymap-parent evil-ex-search-keymap minibuffer-local-map)
 
 (defcustom evil-want-empty-ex-last-command t
@@ -2056,11 +2063,11 @@ This variable must be set before evil is loaded."
 (defun evil--redo-placeholder (_count)
   (user-error "Customize `evil-undo-system' for redo functionality."))
 
-(defvar evil-undo-function 'undo
+(defvar evil-undo-function #'undo
   "Function to be used by `evil-undo'.
 Customized via `evil-undo-system'.")
 
-(defvar evil-redo-function 'evil--redo-placeholder
+(defvar evil-redo-function #'evil--redo-placeholder
   "Function to be used by `evil-redo'.
 Customized via `evil-undo-system'.")
 
@@ -2068,11 +2075,11 @@ Customized via `evil-undo-system'.")
   "Set `evil-undo-function' and `evil-redo-function' by SYSTEM."
   (cond
    ((not system)
-    (setq evil-undo-function 'undo
-          evil-redo-function 'evil--redo-placeholder))
+    (setq evil-undo-function #'undo
+          evil-redo-function #'evil--redo-placeholder))
    ((eq system 'undo-redo)
-    (setq evil-undo-function 'undo-only
-          evil-redo-function 'undo-redo))
+    (setq evil-undo-function #'undo-only
+          evil-redo-function #'undo-redo))
    ((eq system 'undo-tree)
     (setq evil-undo-function 'undo-tree-undo
           evil-redo-function 'undo-tree-redo))

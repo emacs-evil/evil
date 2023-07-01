@@ -65,8 +65,8 @@ To swap out relevant keybindings, see `evil-select-search-module' function."
   :type '(radio (const :tag "Emacs built-in isearch." :value isearch)
                 (const :tag "Evil interactive search." :value evil-search))
   :group 'evil
-  :set 'evil-select-search-module
-  :initialize 'evil-custom-initialize-pending-reset)
+  :set #'evil-select-search-module
+  :initialize #'evil-custom-initialize-pending-reset)
 
 (defun evil-push-search-history (string forward)
   "Push STRING into the appropriate search history (determined by FORWARD)."
