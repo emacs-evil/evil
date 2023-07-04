@@ -4,6 +4,7 @@
 
 (add-to-list 'load-path (expand-file-name ".." cur-path))
 (require 'evil)
+(require 'evil-digraphs)
 (require 'json)
 (require 'help)
 

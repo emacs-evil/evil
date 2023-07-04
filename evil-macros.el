@@ -656,9 +656,8 @@ be transformations on buffer positions, like `:expand' and `:contract'.
            (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp function-form]])))
-  (let (args defun-forms func key name plist string sym val)
-    ;; standard values
-    (setq plist (plist-put plist :one-to-one t))
+  (let ((plist (list :one-to-one t)) ; standard values
+        args defun-forms func key name string sym val)
     ;; keywords
     (while (keywordp (car-safe body))
       (setq key (pop body)
@@ -670,7 +669,7 @@ be transformations on buffer positions, like `:expand' and `:contract'.
                            "^:" "" (symbol-name key)))
               name (intern (format "evil-%s-%s" type sym))
               args (car (cdr-safe func))
-              string (car (cdr (cdr-safe func)))
+              string (cadr (cdr-safe func))
               string (if (stringp string)
                          (format "%s\n\n" string) "")
               plist (plist-put plist key `',name))
@@ -731,7 +730,7 @@ with PROPERTIES.\n\n%s%s" sym type string doc)
                              (and (plist-get plist :contract)
                                   (plist-get plist :one-to-one)))))
     `(progn
-       (evil-put-property 'evil-type-properties ',type ,@plist)
+       (evil--add-to-alist evil-type-properties ',type (list ,@plist))
        ,@defun-forms
        ',type)))
 

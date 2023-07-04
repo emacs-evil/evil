@@ -805,15 +805,13 @@ See also `evil-mode-for-keymap'."
 (defun evil-set-auxiliary-keymap (map state &optional aux)
   "Set the auxiliary keymap for MAP in STATE to AUX.
 If AUX is nil, create a new auxiliary keymap."
-  (unless (keymapp aux)
-    (setq aux (make-sparse-keymap)))
+  (unless aux (setq aux (make-sparse-keymap)))
   (unless (evil-auxiliary-keymap-p aux)
     (evil-set-keymap-prompt
      aux (format "Auxiliary keymap for %s"
                  (or (evil-state-property state :name)
                      (format "%s state" state)))))
-  (define-key map
-    (vconcat (list (intern (format "%s-state" state)))) aux)
+  (define-key map (vector (intern (format "%s-state" state))) aux)
   aux)
 (put 'evil-set-auxiliary-keymap 'lisp-indent-function 'defun)
 
@@ -825,7 +823,7 @@ IGNORE-PARENT are non-nil then a new auxiliary
 keymap is created even if the parent of MAP has
 one already."
   (when state
-    (let* ((key (vconcat (list (intern (format "%s-state" state)))))
+    (let* ((key (vector (intern (format "%s-state" state))))
            (parent-aux (when (and ignore-parent
                                   (keymap-parent map))
                          (lookup-key (keymap-parent map) key)))
@@ -1207,47 +1205,44 @@ the local keymap will be `evil-test-state-local-map', and so on.
        ;; it depends on the current buffer and its active keymaps
        ;; (to which we may have assigned state bindings), as well as
        ;; states whose definitions may not have been processed yet.
-       (evil-put-property
-        'evil-state-properties ',state
-        :name ',name
-        :toggle ',toggle
-        :mode (defvar ,mode nil
-                ,(format "Non-nil if %s is enabled.
+       (let ((plist (list
+                     :name ',name
+                     :toggle ',toggle
+                     :mode (defvar ,mode nil
+                             ,(format "Non-nil if %s is enabled.
 Use the command `%s' to change this variable." name toggle))
-        :keymap (defvar ,keymap (make-sparse-keymap)
-                  ,(format "Keymap for %s." name))
-        :local (defvar ,local nil
-                 ,(format "Non-nil if %s is enabled.
+                     :keymap (defvar ,keymap (make-sparse-keymap)
+                               ,(format "Keymap for %s." name))
+                     :local (defvar ,local nil
+                              ,(format "Non-nil if %s is enabled.
 Use the command `%s' to change this variable." name toggle))
-        :local-keymap (defvar ,local-keymap nil
-                        ,(format "Buffer-local keymap for %s." name))
-        :tag (defvar ,tag ,tag-value
-               ,(format "Mode line tag for %s." name))
-        :message (defvar ,message ,message-value
-                   ,(format "Echo area message for %s." name))
-        :cursor (defvar ,cursor ',cursor-value
-                  ,(format "Cursor for %s.
+                     :local-keymap (defvar ,local-keymap nil
+                                     ,(format "Buffer-local keymap for %s." name))
+                     :tag (defvar ,tag ,tag-value
+                            ,(format "Mode line tag for %s." name))
+                     :message (defvar ,message ,message-value
+                                ,(format "Echo area message for %s." name))
+                     :cursor (defvar ,cursor ',cursor-value
+                               ,(format "Cursor for %s.
 May be a cursor type as per `cursor-type', a color string as passed
 to `set-cursor-color', a zero-argument function for changing the
 cursor, or a list of the above." name))
-        :entry-hook (defvar ,entry-hook nil
-                      ,(format "Hooks to run when entering %s." name))
-        :exit-hook (defvar ,exit-hook nil
-                     ,(format "Hooks to run when exiting %s." name))
-        :modes (defvar ,modes nil
-                 ,(format "Modes that should come up in %s." name))
-        :input-method ',input-method
-        :predicate ',predicate
-        :enable ',enable)
+                     :entry-hook (defvar ,entry-hook nil
+                                   ,(format "Hooks to run when entering %s." name))
+                     :exit-hook (defvar ,exit-hook nil
+                                  ,(format "Hooks to run when exiting %s." name))
+                     :modes (defvar ,modes nil
+                              ,(format "Modes that should come up in %s." name))
+                     :input-method ',input-method
+                     :predicate ',predicate
+                     :enable ',enable)))
+       (evil--add-to-alist evil-state-properties ',state plist))
 
        ,@(when suppress-keymap
            `((set-keymap-parent ,keymap evil-suppress-map)))
 
-       (dolist (func ',entry-hook-value)
-         (add-hook ',entry-hook func))
-
-       (dolist (func ',exit-hook-value)
-         (add-hook ',exit-hook func))
+       (dolist (func ',entry-hook-value) (add-hook ',entry-hook func))
+       (dolist (func ',exit-hook-value) (add-hook ',exit-hook func))
 
        (defun ,predicate (&optional state)
          ,(format "Whether the current state is %s.
@@ -1286,8 +1281,8 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                  ;; an error would be raised. This strange situation
                  ;; should not arise in general and there should
                  ;; probably be a better way to handle this situation.
-                 (if deactivate-current-input-method-function
-                     (deactivate-input-method)))
+                 (when deactivate-current-input-method-function
+                   (deactivate-input-method)))
                (unless evil-no-display
                  (evil-refresh-cursor ',state)
                  (evil-refresh-mode-line ',state)

@@ -27,7 +27,6 @@
 ;;; Code:
 
 (require 'evil-vars)
-(require 'evil-digraphs)
 (require 'rect)
 (require 'thingatpt)
 (require 'cl-lib)
@@ -239,14 +238,21 @@ ALIST-VAR points to an association list with entries of the form
 
 (defun evil-state-property (state prop &optional value)
   "Return the value of property PROP for STATE.
-PROP is a keyword as used by `evil-define-state'.
-STATE is the state's symbolic name.
-If VALUE is non-nil and the value is a variable,
-return the value of that variable."
-  (let ((val (evil-get-property evil-state-properties state prop)))
-    (if (and value (symbolp val) (boundp val))
-        (symbol-value val)
-      val)))
+PROP is a keyword as used by `evil-define-state'. STATE is the state's
+symbolic name. If VALUE is non-nil and the value is a variable, return
+the value of that variable.
+
+If STATE is t, return an association list of states and their PROP
+values instead."
+  (if (eq state t)
+      (cl-loop for (key . plist) in evil-state-properties with result do
+               (let ((p (plist-member plist prop)))
+                 (when p (push (cons key (cadr p)) result)))
+               finally return result)
+    (let ((val (plist-get (cdr (assq state evil-state-properties)) prop)))
+      (if (and value (symbolp val) (boundp val))
+          (symbol-value val)
+        val))))
 
 (eval-and-compile (defalias 'evil-swap #'cl-rotatef))
 
@@ -394,8 +400,7 @@ If PROPERTIES is the empty list, all properties are removed."
 (defun evil-yank-handler (&optional motion)
   "Return the yank handler for MOTION.
 MOTION defaults to the current motion."
-  (setq motion (or motion evil-this-motion))
-  (evil-get-command-property motion :yank-handler))
+  (evil-get-command-property (or motion evil-this-motion) :yank-handler))
 
 (defun evil-declare-motion (command)
   "Declare COMMAND to be a movement function.
@@ -476,8 +481,8 @@ If any character set is complemented, the result is also complemented."
   "Read from keyboard or INPUT and build a command description.
 Return (CMD COUNT), where COUNT is the numeric prefix argument.
 Both COUNT and CMD may be nil."
+  (when input (setq unread-command-events (append input unread-command-events)))
   (let (count negative)
-    (when input (setq unread-command-events (append input unread-command-events)))
     (catch 'done
       (while t
         (let ((seq (read-key-sequence "")))
@@ -493,14 +498,12 @@ Both COUNT and CMD may be nil."
                                    (list (car cmd) (* (or count 1)
                                                       (or (cadr cmd) 1))))))))
                ((or (eq cmd #'digit-argument)
-                    (and (equal seq "0")
-                         count))
-                (let* ((event (aref seq (- (length seq) 1)))
+                    (and (equal seq "0") count))
+                (let* ((event (aref seq (1- (length seq))))
                        (char (or (when (characterp event) event)
                                  (when (symbolp event)
                                    (get event 'ascii-character))))
-                       (digit (if (or (characterp char) (integerp char))
-                                  (- (logand char ?\177) ?0))))
+                       (digit (when (integerp char) (- (logand char ?\177) ?0))))
                   (setq count (+ (* 10 (or count 0)) digit))))
                ((eq cmd #'negative-argument)
                 (setq negative (not negative)))
@@ -555,6 +558,7 @@ as a command. Its main use is in the `evil-read-key-map'."
   (interactive)
   (read-quoted-char))
 
+(declare-function evil-digraph "evil-digraphs")
 (defun evil-read-digraph-char-with-overlay (overlay)
   "Read two chars, displaying the first in OVERLAY, replacing \"?\".
 Return the digraph from `evil-digraph', else return second char."
@@ -2710,7 +2714,7 @@ will make `line' the type of the `next-line' command."
 
 (defun evil-type-property (type prop)
   "Return property PROP for TYPE."
-  (evil-get-property evil-type-properties type prop))
+  (plist-get (cdr (assq type evil-type-properties)) prop))
 
 (defun evil-type-p (sym)
   "Whether SYM is the name of a type."

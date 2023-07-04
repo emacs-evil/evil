@@ -25,9 +25,9 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
-(require 'evil-vars)
-
 ;;; Code:
+
+(require 'evil-vars)
 
 (defgroup evil-digraphs nil
   "Digraph support based on RFC 1345."
@@ -41,9 +41,7 @@ a cons cell of the digraph and its character replacement,
 where the digraph is a list of two characters.
 See also `evil-digraphs-table'."
   :type '(alist :key-type (list character character)
-                :value-type character)
-  :require 'evil-digraphs
-  :group 'evil-digraphs)
+                :value-type character))
 
 (defconst evil-digraphs-table
   '(((?N ?U) . ?\x00)
@@ -1716,16 +1714,16 @@ This includes all digraphs defined in RFC 1345,
 as well as miscellaneous digraphs for multi-byte characters.
 See also `evil-digraphs-table-user'.")
 
+;;;###autoload
 (defun evil-digraph (digraph)
   "Convert DIGRAPH to character or list representation.
 If DIGRAPH is a list (CHAR1 CHAR2), return the corresponding character;
 if DIGRAPH is a character, return the corresponding list.
 Searches in `evil-digraphs-table-user' and `evil-digraphs-table'."
   (if (listp digraph)
-      (let* ((char1 (car digraph))
-             (char2 (cadr digraph)))
-        (or (cdr (assoc (list char1 char2) evil-digraphs-table-user))
-            (cdr (assoc (list char1 char2) evil-digraphs-table))
+      (or (cdr (assoc digraph evil-digraphs-table-user))
+          (cdr (assoc digraph evil-digraphs-table))
+          (cl-destructuring-bind (char1 char2) digraph
             (unless (eq char1 char2)
               (or (cdr (assoc (list char2 char1) evil-digraphs-table-user))
                   (cdr (assoc (list char2 char1) evil-digraphs-table))))))

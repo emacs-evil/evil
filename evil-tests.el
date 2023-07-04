@@ -67,6 +67,7 @@
 (require 'elp)
 (require 'ert)
 (require 'evil)
+(require 'evil-digraphs)
 (require 'evil-test-helpers)
 (require 'ispell)
 
