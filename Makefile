@@ -7,7 +7,6 @@ ELPAPKG = evil-$(VERSION)
 PROFILER =
 DOC = doc
 TAG =
-LIBS = -L lib
 
 ELCFILES = $(FILES:.el=.elc)
 
@@ -27,12 +26,12 @@ compile: $(ELCFILES)
 -include .depend
 
 $(ELCFILES): %.elc: %.el
-	$(EMACS) --batch -Q -L . $(LIBS) -f batch-byte-compile $<
+	$(EMACS) --batch -Q -L . -f batch-byte-compile $<
 
 # Byte-compile all files in one batch. This is faster than
 # compiling each file in isolation, but also less stringent.
 compile-batch: clean
-	$(EMACS) --batch -Q -L . $(LIBS) -f batch-byte-compile ${FILES}
+	$(EMACS) --batch -Q -L . -f batch-byte-compile ${FILES}
 
 # Documentation.
 docstrings:
@@ -57,38 +56,38 @@ clean:
 #       make test TAG=repeat
 # This will only run tests pertaining to the repeat system.
 test:
-	$(EMACS) -nw -Q --batch -L . $(LIBS) -l evil-tests.el \
+	$(EMACS) -nw -Q --batch -L . -l evil-tests.el \
 		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
 
 # Byte-compile Evil and run all tests.
 tests: compile
-	$(EMACS) -nw -Q -L . $(LIBS) -l evil-tests.el \
+	$(EMACS) -nw -Q -L . -l evil-tests.el \
 		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
 	rm -f *.elc .depend
 
 # Load Evil in a fresh instance of Emacs and run all tests.
 emacs:
-	$(EMACS) -Q -L . $(LIBS) -l goto-chg.el -l evil-tests.el \
+	$(EMACS) -Q -L . -l evil-tests.el \
 		--eval "(evil-mode 1)" \
 		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)"
 
 # Load Evil in a terminal Emacs and run all tests.
 term: terminal
 terminal:
-	$(EMACS) -nw -Q -L . $(LIBS) -l goto-chg.el -l evil-tests.el \
+	$(EMACS) -nw -Q -L . -l evil-tests.el \
 		--eval "(evil-mode 1)" \
 		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}) t)"
 
 # Run all tests with profiler.
 profiler:
-	$(EMACS) --batch -Q -L . $(LIBS) -l goto-chg.el -l evil-tests.el \
+	$(EMACS) --batch -Q -L . -l evil-tests.el \
 		--eval "(evil-tests-initialize '(${TAG}) (or '(${PROFILER}) t))"
 
 # Re-indent all Evil code.
 # Loads Evil into memory in order to indent macros properly.
 # Also removes trailing whitespace, tabs and extraneous blank lines.
 indent: clean
-	$(EMACS) --batch --eval '(setq vc-handled-backends nil)' ${FILES} evil-tests.el -Q -L . $(LIBS) -l evil-tests.el \
+	$(EMACS) --batch --eval '(setq vc-handled-backends nil)' ${FILES} evil-tests.el -Q -L . -l evil-tests.el \
 		--eval "(dolist (buffer (reverse (buffer-list))) \
 		(when (buffer-file-name buffer) \
 		(set-buffer buffer) \
@@ -119,4 +118,3 @@ version:
 # Change the version using make VERSION=x.y.z, but do not post to the newsgroup
 nversion:
 	@$(EMACS) --script scripts/evilupdate nonews "${VERSION}"
-
