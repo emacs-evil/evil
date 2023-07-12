@@ -2355,7 +2355,7 @@ The tracked insertion is set to `evil-last-insertion'."
   "Save the characters defined by the region BEG and END in the kill-ring."
   (let ((text (filter-buffer-substring beg end)))
     (when yank-handler
-      (setq text (propertize text 'yank-handler (list yank-handler))))
+      (put-text-property 0 (length text) 'yank-handler (list yank-handler) text))
     (when register
       (evil-set-register register text))
     (when evil-was-yanked-without-register
@@ -2365,17 +2365,16 @@ The tracked insertion is set to `evil-last-insertion'."
 
 (defun evil-yank-lines (beg end &optional register yank-handler)
   "Save the lines in the region BEG and END into the kill-ring."
-  (let* ((text (filter-buffer-substring beg end))
-         (yank-handler (list (or yank-handler
-                                 #'evil-yank-line-handler)
-                             nil
-                             t)))
+  (let ((text (filter-buffer-substring beg end))
+        (yank-handler (list (or yank-handler #'evil-yank-line-handler)
+                            nil
+                            t)))
     ;; Ensure the text ends with a newline. This is required
     ;; if the deleted lines were the last lines in the buffer.
     (when (or (zerop (length text))
               (/= (aref text (1- (length text))) ?\n))
       (setq text (concat text "\n")))
-    (setq text (propertize text 'yank-handler yank-handler))
+    (put-text-property 0 (length text) 'yank-handler yank-handler text)
     (when register
       (evil-set-register register text))
     (when evil-was-yanked-without-register
@@ -2393,13 +2392,12 @@ The tracked insertion is set to `evil-last-insertion'."
     (setq lines (nreverse (cdr lines)))
     ;; `text' is used as default insert text when pasting this rectangle
     ;; in another program, e.g., using the X clipboard.
-    (let* ((yank-handler (list (or yank-handler
-                                   #'evil-yank-block-handler)
-                               lines
-                               t
-                               'evil-delete-yanked-rectangle))
-           (text (propertize (mapconcat #'identity lines "\n")
-                             'yank-handler yank-handler)))
+    (let ((yank-handler (list (or yank-handler #'evil-yank-block-handler)
+                              lines
+                              t
+                              #'evil-delete-yanked-rectangle))
+          (text (mapconcat #'identity lines "\n")))
+      (put-text-property 0 (length text) 'yank-handler yank-handler text)
       (when register
         (evil-set-register register text))
       (when evil-was-yanked-without-register

@@ -150,12 +150,12 @@ Handles the repeat-count of the insertion command."
           (indent-according-to-mode)))
       (evil-execute-repeat-info (cdr evil-insert-repeat-info))))
   (when evil-insert-vcount
-    (let ((buffer-invisibility-spec buffer-invisibility-spec))
-      ;; make all lines hidden by hideshow temporarily visible
-      (when (listp buffer-invisibility-spec)
-        (setq buffer-invisibility-spec
-              (cl-remove-if (lambda (x) (eq (or (car-safe x) x) 'hs))
-                            buffer-invisibility-spec)))
+    (let ((buffer-invisibility-spec
+           (if (listp buffer-invisibility-spec)
+               ;; make all lines hidden by hideshow temporarily visible
+               (cl-remove-if (lambda (x) (eq (or (car-safe x) x) 'hs))
+                             buffer-invisibility-spec)
+             buffer-invisibility-spec)))
       (cl-destructuring-bind (line col vcount) evil-insert-vcount
         (save-excursion
           (dotimes (v (1- vcount))
@@ -796,14 +796,15 @@ CORNER defaults to `upper-left'."
   (let* ((point (or point (point)))
          (mark (or mark (mark t)))
          (corner (or corner
-                     (when (overlayp evil-visual-overlay)
+                     (when evil-visual-overlay
                        (overlay-get evil-visual-overlay :corner))
                      'upper-left))
          (point-col (evil-column point))
          (mark-col (evil-column mark))
-         (upperp (if (= (line-number-at-pos point) (line-number-at-pos mark))
-                     (memq corner '(upper-left upper-right))
-                   (< point mark)))
+         (upperp (if (save-excursion (goto-char (min point mark))
+                                     (search-forward "\n" (max point mark) t))
+                     (< point mark)
+                   (memq corner '(upper-left upper-right))))
          (leftp (if (= point-col mark-col)
                     (memq corner '(upper-left lower-left))
                   (< point-col mark-col))))

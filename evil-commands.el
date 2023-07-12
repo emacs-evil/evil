@@ -577,24 +577,24 @@ and jump to the corresponding one."
   (evil-next-flyspell-error (- (or count 1))))
 
 (evil-define-motion evil-previous-open-paren (count)
-  "Go to [count] previous unmatched '('."
+  "Go to COUNT previous unmatched \"(\"."
   :type exclusive
   (evil-up-paren ?\( ?\) (- (or count 1))))
 
 (evil-define-motion evil-next-close-paren (count)
-  "Go to [count] next unmatched ')'."
+  "Go to COUNT next unmatched \")\"."
   :type exclusive
   (forward-char)
   (evil-up-paren ?\( ?\) (or count 1))
   (backward-char))
 
 (evil-define-motion evil-previous-open-brace (count)
-  "Go to [count] previous unmatched '{'."
+  "Go to COUNT previous unmatched \"{\"."
   :type exclusive
   (evil-up-paren ?{ ?} (- (or count 1))))
 
 (evil-define-motion evil-next-close-brace (count)
-  "Go to [count] next unmatched '}'."
+  "Go to COUNT next unmatched \"}\"."
   :type exclusive
   (forward-char)
   (evil-up-paren ?{ ?} (or count 1))
@@ -631,7 +631,7 @@ Loop back to the top of buffer if the end is reached."
           (goto-char (marker-position (cdar descending-markers)))))))))
 
 (evil-define-motion evil-next-mark (count)
-  "Go to [count] next lowercase mark."
+  "Go to COUNT next lowercase mark."
   :keep-visual t
   :repeat nil
   :type exclusive
@@ -640,7 +640,7 @@ Loop back to the top of buffer if the end is reached."
     (evil--next-mark t)))
 
 (evil-define-motion evil-next-mark-line (count)
-  "Go to [count] line of next lowercase mark after current line."
+  "Go to COUNT line of next lowercase mark after current line."
   :keep-visual t
   :repeat nil
   :type exclusive
@@ -653,7 +653,7 @@ Loop back to the top of buffer if the end is reached."
     (user-error "No marks in this buffer")))
 
 (evil-define-motion evil-previous-mark (count)
-  "Go to [count] previous lowercase mark."
+  "Go to COUNT previous lowercase mark."
   :keep-visual t
   :repeat nil
   :type exclusive
@@ -662,7 +662,7 @@ Loop back to the top of buffer if the end is reached."
     (evil--next-mark nil)))
 
 (evil-define-motion evil-previous-mark-line (count)
-  "Go to [count] line of previous lowercase mark before current line."
+  "Go to COUNT line of previous lowercase mark before current line."
   :keep-visual t
   :repeat nil
   :type exclusive
@@ -1719,7 +1719,7 @@ of the block."
     (forward-line -1)))
 
 (evil-define-command evil-move (beg end address)
-  "Move lines in BEG END below line given by ADDRESS."
+  "Move lines in BEG .. END below the line given by ADDRESS."
   :motion evil-line-or-visual-line
   (interactive "<r><addr>")
   (unless (= (1+ address) (line-number-at-pos beg))
@@ -1849,25 +1849,19 @@ but doesn't insert or remove any spaces."
 (evil-define-operator evil-ex-join (beg end &optional count bang)
   "Join the selected lines with optional COUNT and BANG."
   (interactive "<r><a><!>")
-  (if (and count (not (string-match-p "^[1-9][0-9]*$" count)))
-      (user-error "Invalid count")
-    (let ((join-fn (if bang 'evil-join-whitespace 'evil-join)))
-      (cond
-       ((not count)
+  (let ((join-fn (if bang 'evil-join-whitespace 'evil-join)))
+    (if (not count)
         ;; without count - just join the given region
-        (funcall join-fn beg end))
-       (t
-        ;; emulate vim's :join when count is given - start from the
-        ;; end of the region and join COUNT lines from there
-        (let* ((count-num (string-to-number count))
-               (beg-adjusted (save-excursion
-                               (goto-char end)
-                               (forward-line -1)
-                               (point)))
-               (end-adjusted (save-excursion
-                               (goto-char end)
-                               (line-beginning-position count-num))))
-          (funcall join-fn beg-adjusted end-adjusted)))))))
+        (funcall join-fn beg end)
+      (unless (string-match-p "^[1-9][0-9]*$" count)
+        (user-error "Invalid count"))
+      ;; emulate Vim's :join when count is given - start from the
+      ;; end of the region and join COUNT lines from there
+      (save-excursion
+        (goto-char end)
+        (let ((beg-adjusted (line-beginning-position 0))
+              (end-adjusted (line-beginning-position (string-to-number count))))
+          (funcall join-fn beg-adjusted end-adjusted))))))
 
 (defun evil--ex-string-for-print (beg end linump borderline)
   "Return a string to be printed by :print etc.
@@ -2724,7 +2718,7 @@ lines.  This is the default behaviour for Visual-state insertion."
                                         (current-column)
                                         vcount))
           evil-insert-skip-empty-lines skip-empty-lines)
-    (evil-insert-state 1)))
+    (evil-insert-state)))
 
 (defun evil-append (count &optional vcount skip-empty-lines)
   "Switch to Insert state just after point.
@@ -2814,7 +2808,7 @@ The insertion will be repeated COUNT times."
   (unwind-protect
       (when evil-auto-indent
         (indent-according-to-mode))
-    (evil-insert-state 1)))
+    (evil-insert-state)))
 
 (evil-define-command evil-open-below (count)
   "Insert a new line below point and switch to Insert state.
@@ -2831,7 +2825,7 @@ The insertion will be repeated COUNT times."
   (unwind-protect
       (when evil-auto-indent
         (indent-according-to-mode))
-    (evil-insert-state 1)))
+    (evil-insert-state)))
 
 (defun evil--insert-line (count vcount non-blank-p)
   "Switch to insert state at the beginning of the current line.
@@ -2860,7 +2854,7 @@ in the next VCOUNT - 1 lines below the current one."
              (list (line-number-at-pos)
                    (if non-blank-p #'evil-first-non-blank #'evil-beginning-of-line)
                    vcount)))
-  (evil-insert-state 1))
+  (evil-insert-state))
 
 (defun evil-insert-line (count &optional vcount)
   "Switch to insert state at beginning of current line.
@@ -2898,7 +2892,7 @@ next VCOUNT - 1 lines below the current one."
              (list (line-number-at-pos)
                    #'end-of-line
                    vcount)))
-  (evil-insert-state 1))
+  (evil-insert-state))
 
 (evil-define-command evil-insert-digraph (count)
   "Insert COUNT digraphs."
@@ -3562,25 +3556,13 @@ output is displayed in its own buffer. If PREVIOUS is non-nil,
 the previous shell command is executed instead."
   (interactive "<R><sh><!>")
   (if (not (evil-ex-p))
-      (let ((evil-ex-initial-input
-             (if (and beg
-                      (not (evil-visual-state-p))
-                      (not current-prefix-arg))
-                 (let ((range (evil-range beg end type)))
-                   (evil-contract-range range)
-                   ;; TODO: this is not exactly the same as Vim, which
-                   ;; uses .,+count as range. However, this is easier
-                   ;; to achieve with the current implementation and
-                   ;; the very inconvenient range interface.
-                   ;;
-                   ;; TODO: the range interface really needs some
-                   ;; rework!
-                   (format
-                    "%d,%d!"
-                    (line-number-at-pos (evil-range-beginning range))
-                    (line-number-at-pos (evil-range-end range))))
-               "!")))
-        (call-interactively 'evil-ex))
+      (let ((current-prefix-arg
+             (if (or current-prefix-arg (evil-visual-state-p))
+                 current-prefix-arg
+               (goto-char (min beg end))
+               (setq current-prefix-arg (count-lines beg end))))
+            (evil-ex-initial-input "!"))
+        (call-interactively #'evil-ex))
     (when command
       (setq command (evil-ex-replace-special-filenames command)))
     (if (zerop (length command))
@@ -3588,8 +3570,7 @@ the previous shell command is executed instead."
       (setq evil-previous-shell-command command))
     (cond
      ((zerop (length command))
-      (if previous (user-error "No previous shell command")
-        (user-error "No shell command")))
+      (user-error "No%s shell command" (if previous " previous" "")))
      (evil-ex-range
       (if (not evil-display-shell-error-in-message)
           (shell-command-on-region beg end command nil t)
@@ -3608,8 +3589,7 @@ the previous shell command is executed instead."
                 (display-message-or-buffer error-buffer))
             (kill-buffer output-buffer)
             (kill-buffer error-buffer)))))
-     (t
-      (shell-command command)))))
+     (t (shell-command command)))))
 
 (evil-define-command evil-make (arg)
   "Call a build command in the current directory.
@@ -3948,8 +3928,9 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
 
 (defun evil--ex-substitute-final-message (nreplaced flags)
   "Display message according to replacements and flags.
-If FLAGS contains `p' or `#' and NREPLACED is more than 0, print the last line
-to the echo area.  Otherwise, print the number of replacements made or found."
+If FLAGS contains \"p\" or \"#\" and NREPLACED is more than 0, print
+the last line to the echo area.  Otherwise, print the number of
+replacements made or found."
   (let ((replaced-any (< 0 nreplaced)))
     (cond
      ((and replaced-any (memq ?p flags))

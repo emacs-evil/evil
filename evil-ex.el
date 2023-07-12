@@ -138,7 +138,7 @@ of the syntax.")
 Given e.g. $4, return 4."
     (when (symbolp obj)
       (let ((str (symbol-name obj)))
-        (when (string-match "\\$\\([0-9]+\\)" str)
+        (when (string-match "\\`\\$\\([0-9]+\\)\\'" str)
           (string-to-number (match-string 1 str))))))
 
   (defmacro evil-parser (grammar &rest entrypoints)
@@ -360,10 +360,9 @@ is appended to the line."
                (let ((arg (prefix-numeric-value current-prefix-arg)))
                  (cond ((< arg 0) (setq arg (1+ arg)))
                        ((> arg 0) (setq arg (1- arg))))
-                 (if (= arg 0) "."
-                   (format ".,.%+d" arg)))))
+                 (if (= arg 0) "." (format ".,.%+d" arg)))))
              evil-ex-initial-input)))
-     (list (when (> (length s) 0) s))))
+     (list (unless (string= s "") s))))
   (let ((evil-ex-current-buffer (current-buffer))
         (evil-ex-previous-command (unless initial-input
                                     (car evil-ex-history)))
