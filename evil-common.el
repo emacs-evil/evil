@@ -2423,38 +2423,28 @@ The tracked insertion is set to `evil-last-insertion'."
     (cond
      ((eq this-command 'evil-paste-before)
       (evil-move-beginning-of-line)
-      (evil-move-mark (point))
-      (insert text)
-      (setq evil-last-paste
-            (list 'evil-paste-before
-                  evil-paste-count
-                  opoint
-                  (mark t)
-                  (point)))
-      (evil-set-marker ?\[ (mark))
-      (evil-set-marker ?\] (1- (point)))
-      (evil-exchange-point-and-mark)
+      (let ((beg (point)))
+        (insert text)
+        (setq evil-last-paste
+              (list 'evil-paste-before evil-paste-count opoint beg (point)))
+        (evil-set-marker ?\[ beg)
+        (evil-set-marker ?\] (1- (point)))
+        (goto-char beg))
       (back-to-indentation))
      ((eq this-command 'evil-paste-after)
       (evil-move-end-of-line)
-      (evil-move-mark (point))
-      (insert "\n")
-      (insert text)
-      (evil-set-marker ?\[ (1+ (mark)))
-      (evil-set-marker ?\] (1- (point)))
-      (delete-char -1) ; delete the last newline
-      (setq evil-last-paste
-            (list 'evil-paste-after
-                  evil-paste-count
-                  opoint
-                  (mark t)
-                  (point)))
-      (evil-move-mark (1+ (mark t)))
-      (unless evil--cursor-after
-        (evil-exchange-point-and-mark))
+      (let ((beg (point)))
+        (insert "\n")
+        (insert text)
+        (delete-char -1) ; delete the last newline
+        (setq evil-last-paste
+              (list 'evil-paste-after evil-paste-count opoint beg (point)))
+        (evil-set-marker ?\[ (1+ beg))
+        (evil-set-marker ?\] (point))
+        (unless evil--cursor-after
+          (goto-char (1+ beg))))
       (back-to-indentation))
-     (t
-      (insert text)))))
+     (t (insert text)))))
 
 (defun evil-yank-block-handler (lines)
   "Insert the current text as block."
@@ -2462,26 +2452,25 @@ The tracked insertion is set to `evil-last-insertion'."
         (col (if (eq this-command 'evil-paste-after)
                  (1+ (current-column))
                (current-column)))
-        (current-line (line-number-at-pos (point)))
         (opoint (point))
-        epoint)
+        (first t))
     (dolist (line lines)
+      ;; maybe we have to insert a new line at eob
+      (if first
+          (setq first nil)
+        (when (or (> (forward-line 1) 0)
+                  (and (eobp) (not (bolp))))
+          (insert "\n")))
       ;; concat multiple copies according to count
       (setq line (apply #'concat (make-list count line)))
-      ;; strip whitespaces at beginning and end
-      (string-match "^ *\\(.*?\\) *$" line)
+      ;; trim whitespace at beginning and end
+      (string-match "\\` *\\(.*?\\) *\\'" line)
       (let ((text (match-string 1 line))
             (begextra (match-beginning 1))
             (endextra (- (match-end 0) (match-end 1))))
-        ;; maybe we have to insert a new line at eob
-        (while (< (line-number-at-pos (point))
-                  current-line)
-          (goto-char (point-max))
-          (insert "\n"))
-        (setq current-line (1+ current-line))
         ;; insert text unless we insert an empty line behind eol
         (unless (and (< (evil-column (line-end-position)) col)
-                     (zerop (length text)))
+                     (string= text ""))
           ;; if we paste behind eol, it may be sufficient to insert tabs
           (if (< (evil-column (line-end-position)) col)
               (move-to-column (+ col begextra) t)
@@ -2491,19 +2480,17 @@ The tracked insertion is set to `evil-last-insertion'."
           (insert text)
           (unless (eolp)
             ;; text follows, so we have to insert spaces
-            (insert (make-string endextra ?\s)))
-          (setq epoint (point)))
-        (forward-line 1)))
+            (insert (make-string endextra ?\s))))))
     (setq evil-last-paste
           (list this-command
                 evil-paste-count
                 opoint
                 (length lines)                   ; number of rows
-                (* count (length (car lines))))) ; number of colums
+                (* count (length (car lines))))) ; number of columns
     (evil-set-marker ?\[ opoint)
-    (evil-set-marker ?\] (1- epoint))
+    (evil-set-marker ?\] (1- (point)))
     (if evil--cursor-after
-        (goto-char (1- epoint))
+        (backward-char)
       (goto-char opoint)
       (when (and (eq this-command 'evil-paste-after)
                  (not (eolp)))
