@@ -1854,29 +1854,23 @@ a number, a cons cell (FILE . POS) with FILE being a string
 and POS a number, or nil. If RAW is non-nil, then the
 return value may also be a variable, a movement function,
 or a marker object pointing nowhere."
-  (let ((marker (if (evil-global-marker-p char)
-                    (cdr-safe (assq char (default-value
-                                           'evil-markers-alist)))
-                  (cdr-safe (assq char evil-markers-alist)))))
-    (save-excursion
-      (if raw
-          marker
-        (when (and (symbolp marker) (boundp marker))
-          (setq marker (symbol-value marker)))
-        (when (functionp marker)
+  (let ((marker (cdr (assq char (if (evil-global-marker-p char)
+                                    (default-value 'evil-markers-alist)
+                                  evil-markers-alist)))))
+    (if raw
+        marker
+      (when (and (symbolp marker) (boundp marker))
+        (setq marker (symbol-value marker)))
+      (when (functionp marker)
+        (save-excursion
           (save-window-excursion
             (funcall marker)
-            (setq marker (move-marker (make-marker) (point)))))
-        (when (markerp marker)
+            (setq marker (move-marker (make-marker) (point))))))
+      (if (markerp marker)
           (if (eq (marker-buffer marker) (current-buffer))
-              (setq marker (marker-position marker))
-            (setq marker (and (marker-buffer marker) marker))))
-        (when (or (numberp marker)
-                  (markerp marker)
-                  (and (consp marker)
-                       (stringp (car marker))
-                       (numberp (cdr marker))))
-          marker)))))
+              (marker-position marker)
+            (when (marker-buffer marker) marker))
+        marker))))
 
 (defun evil-swap-out-markers ()
   "Turn markers into file references when the buffer is killed."
@@ -2084,7 +2078,7 @@ register instead of replacing its content."
    ((member register '(?: ?. ?%))
     (user-error "Can't modify read-only register"))
    ((eq register ?\") (kill-new text))
-   ((and (<= ?1 register) (<= register ?9))
+   ((<= ?1 register ?9)
     (if (null kill-ring)
         (kill-new text)
       (let ((kill-ring-yank-pointer kill-ring-yank-pointer)
@@ -2104,14 +2098,13 @@ register instead of replacing its content."
   "Return an alist of all registers, but only those named
 with number or character. Registers with symbol or string in names are ignored
 to keep Vim compatibility with register jumps."
-  (sort (append (mapcar #'(lambda (reg)
-                            (cons reg (evil-get-register reg t)))
+  (sort (append (mapcar (lambda (reg) (cons reg (evil-get-register reg t)))
                         '(?\" ?* ?+ ?% ?# ?/ ?: ?. ?-
                               ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
                 (list (cons ?= evil-last-=-register-input))
                 (cl-remove-if-not (lambda (reg) (number-or-marker-p (car reg))) register-alist)
                 nil)
-        #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
+        #'car-less-than-car))
 
 (defsubst evil-kbd-macro-suppress-motion-error ()
   "Return non-nil if a motion error should be suppressed.
@@ -3023,8 +3016,8 @@ understood by thing-at-point.  BEG, END and TYPE specify the
 current selection.  If LINE is non-nil, the text object should be
 linewise, otherwise it is character wise."
   (save-restriction
-    (let ((start (save-excursion (beginning-of-line) (point)))
-          (end (save-excursion (end-of-line) (point))))
+    (let ((start (line-beginning-position))
+          (end (line-end-position)))
       (when (/= start end)
         (narrow-to-region start end)))
     (evil-select-an-object thing beg end type count line)))
@@ -3057,8 +3050,7 @@ end of the line of OP and at the beginning of the line of CL."
           (when (and (not (bolp)) (< beg end))
             (setq end (1- end)))))
       (cons beg end)))
-   (t
-    (user-error "Unknown selection-type %s" selection-type))))
+   (t (user-error "Unknown selection-type `%s'" selection-type))))
 
 (defun evil-select-block (thing beg end type count
                                 &optional
@@ -3155,8 +3147,7 @@ are the delimiters of a string or comment."
                 cl (cdr sel)))
         (cond
          ((and (equal op orig-beg) (equal cl orig-end)
-               (or (not countcurrent)
-                   (and countcurrent (/= count 1))))
+               (or (not countcurrent) (/= count 1)))
           (error "No surrounding delimiters found"))
          ((save-excursion
             (and (not (evil-visual-state-p))
@@ -3164,8 +3155,7 @@ are the delimiters of a string or comment."
                  (progn (goto-char op) (bolp))
                  (progn (goto-char cl) (bolp))))
           (evil-range op cl 'line :expanded t))
-         (t
-          (evil-range op cl type :expanded t)))))))
+         (t (evil-range op cl type :expanded t)))))))
 
 (defun evil-select-paren (open close beg end type count &optional inclusive)
   "Return a range (BEG END) of COUNT delimited text objects.

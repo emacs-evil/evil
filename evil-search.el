@@ -279,7 +279,7 @@ one more than the current position."
 If FORWARD is nil, search backward, otherwise forward. If SYMBOL
 is non-nil then the functions searches for the symbol at point,
 otherwise for the word at point."
-  (let ((string (car-safe regexp-search-ring)))
+  (let ((string (car regexp-search-ring)))
     (setq isearch-forward forward)
     (cond
      ((and (memq last-command
@@ -459,8 +459,20 @@ expression and is not transformed."
 Otherwise PATTERN matches only the first occurence."
   (nth 2 pattern))
 
-;; Highlight
-(defun evil-ex-make-hl (name &rest args)
+;;; Highlight
+
+(cl-defstruct (evil-ex-hl (:type vector) (:constructor nil)
+                          (:copier nil) (:predicate nil))
+  (name nil :read-only t) pattern
+  (face nil :read-only t) (window nil :read-only t)
+  (min nil :documentation "The minimal buffer position of the highlight.")
+  (max nil :documentation "The maximal buffer position of the highlight.")
+  (match-hook nil :read-only t) (update-hook nil :read-only t)
+  (overlays nil :documentation "The active overlays of the highlight."))
+
+(cl-defun evil-ex-make-hl
+    (name &key (face 'evil-ex-lazy-highlight) (win (selected-window))
+          min max match-hook update-hook)
   "Create a new highlight object with name NAME and properties ARGS.
 The following properties are supported:
 :face The face to be used for the highlighting overlays.
@@ -479,99 +491,31 @@ The following properties are supported:
              describing the current match status."
   (unless (symbolp name)
     (user-error "Expected symbol as name of highlight"))
-  (let ((face 'evil-ex-lazy-highlight)
-        (win (selected-window))
-        min max match-hook update-hook)
-    (while args
-      (let ((key (pop args))
-            (val (pop args)))
-        (cond
-         ((eq key :face) (setq face val))
-         ((eq key :win)  (setq win val))
-         ((eq key :min)  (setq min val))
-         ((eq key :max)  (setq max val))
-         ((eq key :match-hook) (setq match-hook val))
-         ((eq key :update-hook) (setq update-hook val))
-         (t (user-error "Unexpected keyword: %s" key)))))
-    (when (assoc name evil-ex-active-highlights-alist)
-      (evil-ex-delete-hl name))
-    (when (null evil-ex-active-highlights-alist)
-      (add-hook 'window-scroll-functions
-                #'evil-ex-hl-update-highlights-scroll nil t)
-      (add-hook 'window-size-change-functions
-                #'evil-ex-hl-update-highlights-resize nil))
-    (push (cons name (vector name
-                             nil
-                             face
-                             win
-                             min
-                             max
-                             match-hook
-                             update-hook
-                             nil))
-          evil-ex-active-highlights-alist)))
-
-(defun evil-ex-hl-name (hl)
-  "Return the name of the highlight HL."
-  (aref hl 0))
-
-(defun evil-ex-hl-pattern (hl)
-  "Return the pattern of the highlight HL."
-  (aref hl 1))
-
-(defun evil-ex-hl-set-pattern (hl pattern)
-  "Set the pattern of the highlight HL to PATTERN."
-  (aset hl 1 pattern))
-
-(defun evil-ex-hl-face (hl)
-  "Return the face of the highlight HL."
-  (aref hl 2))
-
-(defun evil-ex-hl-window (hl)
-  "Return the window of the highlight HL."
-  (aref hl 3))
-
-(defun evil-ex-hl-min (hl)
-  "Return the minimal buffer position of the highlight HL."
-  (aref hl 4))
-
-(defun evil-ex-hl-set-min (hl min)
-  "Set the minimal buffer position of the highlight HL to MIN."
-  (aset hl 4 min))
-
-(defun evil-ex-hl-max (hl)
-  "Return the maximal buffer position of the highlight HL."
-  (aref hl 5))
-
-(defun evil-ex-hl-set-max (hl max)
-  "Set the minimal buffer position of the highlight HL to MAX."
-  (aset hl 5 max))
-
-(defun evil-ex-hl-match-hook (hl)
-  "Return the match-hook of the highlight HL."
-  (aref hl 6))
-
-(defun evil-ex-hl-update-hook (hl)
-  "Return the update-hook of the highlight HL."
-  (aref hl 7))
-
-(defun evil-ex-hl-overlays (hl)
-  "Return the list of active overlays of the highlight HL."
-  (aref hl 8))
-
-(defun evil-ex-hl-set-overlays (hl overlays)
-  "Set the list of active overlays of the highlight HL to OVERLAYS."
-  (aset hl 8 overlays))
+  (when (assq name evil-ex-active-highlights-alist)
+    (evil-ex-delete-hl name))
+  (unless evil-ex-active-highlights-alist
+    (add-hook 'window-scroll-functions
+              #'evil-ex-hl-update-highlights-scroll nil t)
+    (add-hook 'window-size-change-functions
+              #'evil-ex-hl-update-highlights-resize nil))
+  (push (cons name (vector name
+                           nil
+                           face
+                           win
+                           min max
+                           match-hook update-hook
+                           nil))
+        evil-ex-active-highlights-alist))
 
 (defun evil-ex-delete-hl (name)
   "Remove the highlighting object with a certain NAME."
-  (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
+  (let ((hl (cdr (assq name evil-ex-active-highlights-alist))))
     (when hl
       (mapc #'delete-overlay (evil-ex-hl-overlays hl))
       (setq evil-ex-active-highlights-alist
             (assq-delete-all name evil-ex-active-highlights-alist))
       (evil-ex-hl-update-highlights))
-    (when (null evil-ex-active-highlights-alist)
+    (unless evil-ex-active-highlights-alist
       (remove-hook 'window-scroll-functions
                    #'evil-ex-hl-update-highlights-scroll t)
       (remove-hook 'window-size-change-functions
@@ -579,29 +523,26 @@ The following properties are supported:
 
 (defun evil-ex-hl-active-p (name)
   "Whether the highlight with a certain NAME is active."
-  (and (assoc name evil-ex-active-highlights-alist) t))
+  (and (assq name evil-ex-active-highlights-alist) t))
 
 (defun evil-ex-hl-change (name pattern)
   "Set the regular expression of highlight NAME to PATTERN."
-  (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
+  (let ((hl (cdr (assq name evil-ex-active-highlights-alist))))
     (when hl
-      (evil-ex-hl-set-pattern hl
-                              (if (zerop (length pattern))
-                                  nil
-                                pattern))
+      (setf (evil-ex-hl-pattern hl) pattern)
       (evil-ex-hl-idle-update))))
 
 (defun evil-ex-hl-set-region (name beg end &optional _type)
   "Set minimal and maximal position of highlight NAME to BEG and END."
-  (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
+  (let ((hl (cdr (assq name evil-ex-active-highlights-alist))))
     (when hl
-      (evil-ex-hl-set-min hl beg)
-      (evil-ex-hl-set-max hl end)
+      (setf (evil-ex-hl-min hl) beg
+            (evil-ex-hl-max hl) end)
       (evil-ex-hl-idle-update))))
 
 (defun evil-ex-hl-get-max (name)
   "Return the maximal position of the highlight with name NAME."
-  (let ((hl (cdr-safe (assoc name evil-ex-active-highlights-alist))))
+  (let ((hl (cdr (assq name evil-ex-active-highlights-alist))))
     (and hl (evil-ex-hl-max hl))))
 
 (defun evil-ex-hl-update-highlights ()
@@ -682,7 +623,7 @@ The following properties are supported:
                             (forward-char))
                            (t (goto-char (match-end 0))))))))
                   (mapc #'delete-overlay old-ovs)
-                  (evil-ex-hl-set-overlays hl new-ovs)
+                  (setf (evil-ex-hl-overlays hl) new-ovs)
                   (if (or (null pattern) new-ovs)
                       (setq result t)
                     ;; Maybe the match could just not be found somewhere else?
@@ -696,20 +637,12 @@ The following properties are supported:
                                                 (match-beginning 0))))
                         (setq result "No match")))))
 
-              (invalid-regexp
-               (setq result (cadr lossage)))
-
-              (search-failed
-               (setq result (nth 2 lossage)))
-
-              (error
-               (setq result (format "%s" (cadr lossage))))
-
-              (user-error
-               (setq result (format "%s" (cadr lossage))))))
+              (invalid-regexp (setq result (cadr lossage)))
+              (search-failed (setq result (nth 2 lossage)))
+              (error (setq result (format "%s" (cadr lossage))))))
         ;; no pattern, remove all highlights
         (mapc #'delete-overlay old-ovs)
-        (evil-ex-hl-set-overlays hl new-ovs))
+        (setf (evil-ex-hl-overlays hl) new-ovs))
       (when (evil-ex-hl-update-hook hl)
         (funcall (evil-ex-hl-update-hook hl) hl result)))))
 
@@ -740,8 +673,7 @@ Note that this function ignores the whole-line property of PATTERN."
            (t
             (goto-char pnt)
             ret)))))
-     (t
-      (user-error "Unknown search direction: %s" direction)))))
+     (t (user-error "Unknown search direction `%s'" direction)))))
 
 (defun evil-ex-hl-idle-update ()
   "Trigger the timer to update the highlights in the current buffer."
@@ -785,8 +717,8 @@ This function does nothing if `evil-ex-search-interactive' or
       (unless (evil-ex-hl-active-p 'evil-ex-search)
         (evil-ex-make-hl 'evil-ex-search
                          :win (or (minibuffer-selected-window) (selected-window))))
-      (if pattern
-          (evil-ex-hl-change 'evil-ex-search pattern)))))
+      (when pattern
+        (evil-ex-hl-change 'evil-ex-search pattern)))))
 
 (defun evil-ex-search (&optional count)
   "Search forward or backward COUNT times for the current ex search pattern.
@@ -1180,7 +1112,7 @@ point."
               evil-ex-last-was-search t)
         ;; update search history unless this pattern equals the
         ;; previous pattern
-        (unless (equal (car-safe evil-ex-search-history) regex)
+        (unless (equal (car evil-ex-search-history) regex)
           (push regex evil-ex-search-history))
         (evil-push-search-history regex (eq direction 'forward)))
       (evil-ex-delete-hl 'evil-ex-search)

@@ -39,6 +39,10 @@
 (put 'beginning-of-line 'error-message "Beginning of line")
 (put 'end-of-line 'error-conditions '(end-of-line error))
 (put 'end-of-line 'error-message "End of line")
+;; we don't want line boundaries to trigger the debugger
+;; when `debug-on-error' is t
+(cl-pushnew 'beginning-of-line debug-ignored-errors)
+(cl-pushnew 'end-of-line debug-ignored-errors)
 
 (defun evil-motion-range (motion &optional count type)
   "Execute a motion and return the buffer positions.
@@ -161,8 +165,8 @@ Optional keyword arguments are:
 
 (defmacro evil-narrow-to-line (&rest body)
   "Narrow BODY to the current line.
-BODY will signal the errors 'beginning-of-line or 'end-of-line
-upon reaching the beginning or end of the current line."
+BODY will signal `beginning-of-line' or `end-of-line' upon reaching
+the beginning or end of the current line."
   (declare (indent defun) (debug t))
   `(cl-destructuring-bind (beg end &rest) (evil-line-expand (point) (point))
      (when (save-excursion (goto-char end) (bolp))
@@ -183,11 +187,6 @@ upon reaching the beginning or end of the current line."
           (if (= (point-max) end)
               (signal 'end-of-line nil)
             (signal (car err) (cdr err))))))))
-
-;; we don't want line boundaries to trigger the debugger
-;; when `debug-on-error' is t
-(cl-pushnew 'beginning-of-line debug-ignored-errors)
-(cl-pushnew 'end-of-line debug-ignored-errors)
 
 (defun evil-eobp (&optional pos)
   "Whether point is at end-of-buffer with regard to end-of-line."

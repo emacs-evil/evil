@@ -1566,7 +1566,7 @@ be joined with the previous line if and only if
 `evil-backspace-join-lines'."
   (interactive "p")
   (if (or evil-backspace-join-lines (not (bolp)))
-      (call-interactively 'delete-backward-char)
+      (call-interactively #'delete-backward-char)
     (signal 'beginning-of-line nil)))
 
 (evil-define-command evil-delete-backward-word ()
@@ -1936,11 +1936,10 @@ Surround line denoted by BORDERLINE with dashes if non-nil."
 
 (defun evil--global-print+clear ()
   "Print accumulated print output from :global print, and clear."
-  (unwind-protect
-      (unless (string= "" evil--ex-print-accumulator)
-        (evil--ex-print-to-minibuffer evil--ex-print-accumulator))
-    (setq evil--ex-print-accumulator "")))
-
+  (let ((s evil--ex-print-accumulator))
+    (unless (string= s "")
+      (setq evil--ex-print-accumulator "")
+      (evil--ex-print-to-minibuffer s))))
 (add-hook 'evil-after-global-hook #'evil--global-print+clear)
 
 (evil-define-command evil-ex-print (beg end &optional count)
@@ -2272,7 +2271,7 @@ The return value is the yanked text."
               (backward-char))))
         (when evil--cursor-after
           (if (eq 'evil-yank-line-handler yank-handler)
-              (ignore-errors (evil-next-line-first-non-blank 1))
+              (ignore-errors (evil-next-line-first-non-blank))
             (evil-forward-char 1 nil t))
           (setq evil--cursor-after nil))
         ;; no paste-pop after pasting from a register
@@ -3977,31 +3976,30 @@ to the echo area.  Otherwise, print the number of replacements made or found."
   (evil-ex-nohighlight)
   (unless pattern (user-error "No pattern given"))
   (setq replacement (or replacement "")
+        flags (append flags)
         evil-ex-last-was-search nil
         evil-ex-substitute-pattern pattern
-        evil-ex-substitute-replacement replacement)
-  (let* ((flags (append flags nil))
+        evil-ex-substitute-replacement replacement
+        evil-ex-substitute-flags flags)
+  (let* ((inhibit-field-text-motion t)
          (count-only (memq ?n flags))
          (confirm (and (memq ?c flags) (not count-only)))
          (case-fold-search (evil-ex-pattern-ignore-case pattern))
          (case-replace case-fold-search)
          (regex (evil-ex-pattern-regex pattern))
          (nreplaced 0)
+         (orig-point (point-marker))
          (last-point (point))
          (whole-line (evil-ex-pattern-whole-line pattern))
          (evil-ex-substitute-overlay (make-overlay (point) (point)))
-         (orig-point-marker (move-marker (make-marker) (point)))
          (end-marker (move-marker (make-marker) end))
          (use-reveal confirm)
-         (match-end (make-marker))
          match-data
          reveal-open-spots
          transient-mark-mode)
-    (setq evil-ex-substitute-flags flags
-          isearch-string regex)
-    (isearch-update-ring regex t)
     (unwind-protect
         (catch 'exit-search
+          (isearch-update-ring (setq isearch-string regex) t)
           (evil-ex-hl-change 'evil-ex-substitute pattern)
           (overlay-put evil-ex-substitute-overlay 'face 'isearch)
           (overlay-put evil-ex-substitute-overlay 'priority 1001)
@@ -4009,23 +4007,21 @@ to the echo area.  Otherwise, print the number of replacements made or found."
           (while (re-search-forward regex end-marker t)
             (unless (and query-replace-skip-read-only
                          (text-property-any (match-beginning 0) (match-end 0) 'read-only t))
-              (let ((inhibit-field-text-motion t)
-                    (match-beg (match-beginning 0))
-                    match-contains-newline zero-length-match)
-                (move-marker match-end (match-end 0))
+              (let* ((match-beg (match-beginning 0))
+                     (match-end (match-end 0))
+                     (zero-length-match (= match-beg match-end))
+                     match-contains-newline)
                 (goto-char match-beg)
-                (setq match-data (match-data t match-data)
-                      match-contains-newline (< (line-end-position) match-end)
-                      zero-length-match (= match-beg match-end))
                 (when (and (= match-beg end-marker) (> end-marker beg) (bolp))
                   ;; This line is not included due to range being exclusive
-                  (throw 'exit-search t))
-                (setq last-point match-beg)
+                  (throw 'exit-search nil))
+                (setq match-data (match-data t match-data)
+                      match-contains-newline (search-forward "\n" match-end t))
+                (goto-char match-end)
                 (if confirm
                     (let* ((next-replacement
                             (if (stringp replacement) replacement
-                              (funcall (car replacement) (cdr replacement)
-                                       nreplaced)))
+                              (funcall (car replacement) (cdr replacement) nreplaced)))
                            (prompt
                             (format "Replace %s with %s (y/n/a/q/l/^E/^Y)? "
                                     (match-string 0)
@@ -4050,33 +4046,30 @@ to the echo area.  Otherwise, print the number of replacements made or found."
                              (line-beginning-position 2)
                              (evil-ex-hl-get-max 'evil-ex-substitute)))
                           (cl-case response
-                            ((?y ?n) (throw 'exit-read-char t))
+                            ((?y ?n) (throw 'exit-read-char nil))
                             (?a (setq confirm nil)
-                                (throw 'exit-read-char t))
-                            ((?q ?l ?\C-\[) (throw 'exit-search t))
+                                (throw 'exit-read-char nil))
+                            ((?q ?l ?\C-\[) (throw 'exit-search nil))
                             (?\C-e (evil-scroll-line-down 1))
                             (?\C-y (evil-scroll-line-up 1))))))
                   (unless count-only
                     (let ((next-replacement
                            (if (stringp replacement) replacement
-                             (funcall (car replacement) (cdr replacement)
-                                      nreplaced))))
+                             (funcall (car replacement) (cdr replacement) nreplaced))))
                       (set-match-data match-data)
                       (replace-match next-replacement (not case-replace))))
                   (cl-incf nreplaced))
-                (goto-char match-end)
+                (setq last-point (point))
                 (cond ((>= (point) end-marker)
                        ;; Don't want to perform multiple replacements at the end
                        ;; of the search region.
-                       (throw 'exit-search t))
+                       (throw 'exit-search nil))
                       ((and (not whole-line)
                             (not match-contains-newline))
                        (forward-line)
                        ;; forward-line just moves to the end of the line on the
                        ;; last line of the buffer.
-                       (when (or (eobp)
-                                 (> (point) end-marker))
-                         (throw 'exit-search t)))
+                       (when (>= (point) end-marker) (throw 'exit-search nil)))
                       ;; For zero-length matches check to see if point won't
                       ;; move next time. This is a problem when matching the
                       ;; regexp "$" because we can enter an infinite loop,
@@ -4086,15 +4079,12 @@ to the echo area.  Otherwise, print the number of replacements made or found."
                               (save-excursion
                                 (and (re-search-forward regex end-marker t)
                                      (= pnt (point))))))
-                       (when (eobp) (throw 'exit-search t))
+                       (when (eobp) (throw 'exit-search nil))
                        (forward-char)))))))
       (evil-ex-delete-hl 'evil-ex-substitute)
       (delete-overlay evil-ex-substitute-overlay)
-
-      (goto-char (if count-only orig-point-marker
-                   last-point))
-
-      (move-marker orig-point-marker nil)
+      (goto-char (if count-only orig-point last-point))
+      (move-marker orig-point nil)
       (move-marker end-marker nil)
 
       (when use-reveal
@@ -4102,14 +4092,13 @@ to the echo area.  Otherwise, print the number of replacements made or found."
 
     (evil--ex-substitute-final-message nreplaced flags)
 
-    (if (and (= 0 nreplaced) evil-ex-point)
+    (if (and (= nreplaced 0) evil-ex-point)
         (goto-char evil-ex-point)
       (evil-first-non-blank))))
 
-(evil-define-operator evil-ex-repeat-substitute
-  (beg end flags)
+(evil-define-operator evil-ex-repeat-substitute (beg end flags)
   "Repeat last substitute command.
-This is the same as :s//~/"
+This is the same as \":s//~/\"."
   :repeat nil
   :jump t
   :move-point nil
@@ -4118,10 +4107,9 @@ This is the same as :s//~/"
   (apply #'evil-ex-substitute beg end
          (evil-ex-get-substitute-info (concat "//~/" flags))))
 
-(evil-define-operator evil-ex-repeat-substitute-with-flags
-  (beg end flags)
+(evil-define-operator evil-ex-repeat-substitute-with-flags (beg end flags)
   "Repeat last substitute command with last flags.
-This is the same as :s//~/&"
+This is the same as \":s//~/&\"."
   :repeat nil
   :jump t
   :move-point nil
@@ -4130,10 +4118,9 @@ This is the same as :s//~/&"
   (apply #'evil-ex-substitute beg end
          (evil-ex-get-substitute-info (concat "//~/&" flags))))
 
-(evil-define-operator evil-ex-repeat-substitute-with-search
-  (beg end flags)
+(evil-define-operator evil-ex-repeat-substitute-with-search (beg end flags)
   "Repeat last substitute command with last search pattern.
-This is the same as :s//~/r"
+This is the same as \":s//~/r\"."
   :repeat nil
   :jump t
   :move-point nil
@@ -4145,7 +4132,7 @@ This is the same as :s//~/r"
 (evil-define-operator evil-ex-repeat-substitute-with-search-and-flags
   (beg end flags)
   "Repeat last substitute command with last search pattern and last flags.
-This is the same as :s//~/&r"
+This is the same as \":s//~/&r\"."
   :repeat nil
   :jump t
   :move-point nil
@@ -4156,7 +4143,7 @@ This is the same as :s//~/&r"
 
 (evil-define-operator evil-ex-repeat-global-substitute ()
   "Repeat last substitute command on the whole buffer.
-This is the same as :%s//~/&"
+This is the same as \":%s//~/&\"."
   :repeat nil
   :jump t
   :move-point nil

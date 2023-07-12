@@ -7864,10 +7864,13 @@ golf h[o]>tel")))
       (":%s/nothere/foo" [return])
       "abc\nd[e]f\nghi"))
   (ert-info ("Substitute up to EOB works")
-    (evil-test-buffer
-      "[f]oo"
+    (evil-test-buffer "[f]oo"
       (":s/foo")
       ""))
+  (ert-info ("Substitute with multi-line replacement")
+    (evil-test-buffer "x"
+      (":s/./foo\\nbar")
+      "foo\n[b]ar"))
   (ert-info ("Use replace count in substitution")
     (evil-test-buffer "xx"
       (":s/./\\#/g")
