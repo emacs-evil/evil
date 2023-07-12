@@ -1875,7 +1875,8 @@ Starts at line of BEG and end at line of END.
 Include line number at the start of each line if LINUMP is non-nil.
 Surround line denoted by BORDERLINE with dashes if non-nil."
   (let ((result-string "")
-        (continue t))
+        (continue t)
+        (line-move-visual nil))
     (save-excursion
       (goto-char beg)
       (while continue
