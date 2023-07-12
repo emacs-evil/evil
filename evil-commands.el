@@ -2811,9 +2811,10 @@ The insertion will be repeated COUNT times."
   (setq evil-insert-count count
         evil-insert-lines t
         evil-insert-vcount nil)
-  (when evil-auto-indent
-    (indent-according-to-mode))
-  (evil-insert-state 1))
+  (unwind-protect
+      (when evil-auto-indent
+        (indent-according-to-mode))
+    (evil-insert-state 1)))
 
 (evil-define-command evil-open-below (count)
   "Insert a new line below point and switch to Insert state.
@@ -2827,9 +2828,10 @@ The insertion will be repeated COUNT times."
   (setq evil-insert-count count
         evil-insert-lines t
         evil-insert-vcount nil)
-  (when evil-auto-indent
-    (indent-according-to-mode))
-  (evil-insert-state 1))
+  (unwind-protect
+      (when evil-auto-indent
+        (indent-according-to-mode))
+    (evil-insert-state 1)))
 
 (defun evil--insert-line (count vcount non-blank-p)
   "Switch to insert state at the beginning of the current line.
