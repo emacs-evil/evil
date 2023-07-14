@@ -124,6 +124,13 @@ function to execute."
     (let ((evil-ex-current-buffer evil-command-window-current-buffer))
       (evil-ex-execute result))))
 
+(defun evil-ex-command-window-execute (config result)
+  (select-window (active-minibuffer-window) t)
+  (set-window-configuration config)
+  (delete-minibuffer-contents)
+  (insert result)
+  (exit-minibuffer))
+
 (defun evil-command-window-search-forward ()
   "Open a command line window for forward searches."
   (interactive)

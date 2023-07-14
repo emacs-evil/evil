@@ -1900,13 +1900,9 @@ Key sequences bound in this map are immediately executed.")
   "Completion keymap for Ex.")
 
 (defvar evil-ex-initial-input nil
-  "Additional initial content of the ex command line.
-This content of this variable is appended to the ex command line
-if ex is started interactively.")
-
-(defvar evil-ex-shell-argument-initialized nil
-  "This variable is set to t if shell command completion has been initialized.
-See `evil-ex-init-shell-argument-completion'.")
+  "Additional initial content of the Ex command line.
+This content of this variable is appended to the Ex command line
+when Ex is started interactively.")
 
 (defvar evil-ex-commands nil
   "Association list of command bindings and functions.")
@@ -1917,23 +1913,8 @@ See `evil-ex-init-shell-argument-completion'.")
 (defvar evil-ex-current-buffer nil
   "The buffer from which Ex was started.")
 
-(defvar evil-ex-expression nil
-  "The evaluation tree.")
-
-(defvar evil-ex-reverse-range nil
-  "Whether the current ex range was entered reversed.")
-
-(defvar evil-ex-command nil
-  "The current Ex command.")
-
-(defvar evil-ex-previous-command nil
-  "The previously executed Ex command.")
-
-(defvar evil-ex-cmd nil
-  "The current Ex command string.")
-
 (defvar evil-ex-point nil
-  "The position of `point' when the ex command has been called.")
+  "The point position when the Ex command was called.")
 
 (defvar evil-ex-range nil
   "The current range of the Ex command.")
@@ -1943,12 +1924,6 @@ See `evil-ex-init-shell-argument-completion'.")
 
 (defvar evil-ex-argument nil
   "The current argument of the Ex command.")
-
-(defvar evil-ex-argument-handler nil
-  "The argument handler for the current Ex command.")
-
-(defvar evil-ex-argument-types nil
-  "Association list of argument handlers.")
 
 (defvar evil-previous-shell-command nil
   "The last shell command.")

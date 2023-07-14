@@ -7513,12 +7513,12 @@ golf h[o]>tel")))
                                   (string-to-number "1"))))))
                      (save-excursion
                        (and l1 (string= "," ";") (goto-line l1))
-                       (evil-ex-range (or l1 (evil-ex-current-line))
-                                      (evil-ex-line
-                                       nil
-                                       (+ (evil-ex-signed-number
-                                           (intern "+")
-                                           (string-to-number "2")))))))
+                       (evil-ex-range
+                        l1 (evil-ex-line
+                            nil
+                            (+ (evil-ex-signed-number
+                                (intern "+")
+                                (string-to-number "2")))))))
                    "t"
                    "-1"))))
 
@@ -7531,8 +7531,7 @@ golf h[o]>tel")))
         `(let ((l1 ,(when a `(evil-ex-line ,@a))))
            (save-excursion
              (and l1 (string= ,(if relative ";" ",") ";") (goto-line l1))
-             (evil-ex-range (or l1 (evil-ex-current-line))
-                            ,(when b `(evil-ex-line ,@b)))))))
+             (evil-ex-range l1 ,(when b `(evil-ex-line ,@b)))))))
     (should (equal (evil-ex-parse "%" nil 'range)
                    '(evil-ex-full-range)))
     (should (equal (evil-ex-parse "*" nil 'range)
@@ -8974,44 +8973,51 @@ parameter set."
 
 (ert-deftest evil-test-parser ()
   "Test `evil-parser'"
-  (cl-flet ((parse
-             (evil-parser
-              '((number "[0-9]+" #'string-to-number)
-                (plus "\\+" #'intern)
-                (minus "-" #'intern)
-                (operator
-                 plus
-                 minus)
-                (sign (\? operator))
-                (signed-number (sign number))
-                (expr
-                 ("foo" (& "bar"))
-                 ("xxx" (! "yyy"))
-                 (number operator number))
-                (epsilon nil))
-              expr operator plus signed-number number epsilon)))
-    (ert-info ("Nothing")
-      (should (equal (parse "1+2" 'epsilon) '(nil . 0))))
-    (ert-info ("Symbols")
-      (should (equal (parse "+" 'plus) '((intern "+") . 1)))
-      (should (equal (parse "+" 'operator) '((intern "+") . 1))))
-    (ert-info ("Leading whitespace")
-      (should (equal (parse " 1" 'number) '((string-to-number "1") . 2))))
-    (ert-info ("Syntax tree")
-      (should (equal (parse "1" 'signed-number t)
-                     '((signed-number (sign "") (number "1")) . 1))))
-    (ert-info ("Lookahead")
-      (should (equal (parse "foobar" 'expr) '((list "foo") . 3)))
-      (should (equal (parse "foobaz" 'expr) nil))
-      (should (equal (parse "xxxyyy" 'expr) nil))
-      (should (equal (parse "xxxzzz" 'expr) '((list "xxx") . 3))))
-    (ert-info ("Semantic actions")
-      (should (equal (parse "1+1" 'expr)
-                     '((list
-                        (string-to-number "1")
-                        (intern "+")
-                        (string-to-number "1"))
-                       . 3))))))
+  (with-temp-buffer
+    (cl-flet
+        ((parse
+          (s &rest args)
+          (erase-buffer)
+          (insert s)
+          (goto-char (point-min))
+          (apply
+           (evil-parser
+            '((number "[0-9]+" #'string-to-number)
+              (plus "\\+" #'intern)
+              (minus "-" #'intern)
+              (operator
+               plus
+               minus)
+              (sign (\? operator))
+              (signed-number (sign number))
+              (expr
+               ("foo" (& "bar"))
+               ("xxx" (! "yyy"))
+               (number operator number))
+              (epsilon nil))
+            expr operator plus signed-number number epsilon)
+           args)))
+      (ert-info ("Nothing")
+        (should (equal (parse "1+2" 'epsilon) '(nil))))
+      (ert-info ("Symbols")
+        (should (equal (parse "+" 'plus) '((intern "+"))))
+        (should (equal (parse "+" 'operator) '((intern "+")))))
+      (ert-info ("Leading whitespace")
+        (should (equal (parse " 1" 'number) '((string-to-number "1")))))
+      (ert-info ("Syntax tree")
+        (should (equal (parse "1" 'signed-number t)
+                       '((signed-number (sign . 1) (number . 2))))))
+      (ert-info ("Lookahead")
+        (should (equal (parse "foobar" 'expr) '((list "foo"))))
+        (should (equal (parse "foobaz" 'expr) nil))
+        (should (equal (parse "xxxyyy" 'expr) nil))
+        (should (equal (parse "xxxzzz" 'expr) '((list "xxx")))))
+      (ert-info ("Semantic actions")
+        (should (equal (parse "1+1" 'expr)
+                       '((list
+                          (string-to-number "1")
+                          (intern "+")
+                          (string-to-number "1")))))))))
 
 (ert-deftest evil-test-delimited-arguments ()
   "Test `evil-delimited-arguments'"

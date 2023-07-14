@@ -848,7 +848,7 @@ does not already exist."
       (let ((map (make-sparse-keymap)))
         (evil-set-keymap-prompt
          map (format "Minor-mode keymap for %s in %s"
-                     (symbol-name mode)
+                     mode
                      (or (evil-state-property state :name)
                          (format "%s state" state))))
         (if state-entry
@@ -973,7 +973,7 @@ mode, in which case `evil-define-minor-mode-key' is used."
   (declare (indent defun))
   (cond ((member keymap '('global 'local))
          `(evil-define-key* ,state ,keymap ,key ,def ,@bindings))
-        ((and (consp keymap) (eq (car keymap) 'quote))
+        ((eq (car-safe keymap) 'quote)
          `(evil-define-minor-mode-key ,state ,keymap ,key ,def ,@bindings))
         (t
          `(evil-delay ',(if (symbolp keymap)

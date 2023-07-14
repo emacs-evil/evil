@@ -3560,14 +3560,13 @@ the previous shell command is executed instead."
              (if (or current-prefix-arg (evil-visual-state-p))
                  current-prefix-arg
                (goto-char (min beg end))
-               (setq current-prefix-arg (count-lines beg end))))
+               (count-lines beg end)))
             (evil-ex-initial-input "!"))
         (call-interactively #'evil-ex))
-    (when command
-      (setq command (evil-ex-replace-special-filenames command)))
     (if (zerop (length command))
         (when previous (setq command evil-previous-shell-command))
-      (setq evil-previous-shell-command command))
+      (setq command (evil-ex-replace-special-filenames command)
+            evil-previous-shell-command command))
     (cond
      ((zerop (length command))
       (user-error "No%s shell command" (if previous " previous" "")))
@@ -3577,10 +3576,9 @@ the previous shell command is executed instead."
         (let ((output-buffer (generate-new-buffer " *temp*"))
               (error-buffer (generate-new-buffer " *temp*")))
           (unwind-protect
-              (if (zerop (shell-command-on-region beg end
-                                                  command
-                                                  output-buffer nil
-                                                  error-buffer))
+              (if (zerop (shell-command-on-region
+                          beg end command
+                          output-buffer nil error-buffer))
                   (progn
                     (delete-region beg end)
                     (insert-buffer-substring output-buffer)
@@ -3794,7 +3792,7 @@ Signal an error if the file does not exist."
   "A valid evil state."
   :ex-arg state
   (list (when (and (evil-ex-p) evil-ex-argument)
-          (intern evil-ex-argument))))
+          (intern-soft evil-ex-argument))))
 
 ;; TODO: should we merge this command with `evil-set-initial-state'?
 (evil-define-command evil-ex-set-initial-state (state)
@@ -4304,25 +4302,20 @@ range. The given argument is passed straight to
   (evil-with-single-undo
     (let (markers evil-ex-current-buffer prefix-arg current-prefix-arg)
       (goto-char beg)
-      (while
-          (and (< (point) end)
-               (progn
-                 (push (move-marker (make-marker) (line-beginning-position))
-                       markers)
-                 (and (= (forward-line) 0) (bolp)))))
+      (beginning-of-line)
+      (while (when (< (point) end)
+               (push (point-marker) markers)
+               (and (= (forward-line) 0) (bolp))))
       (setq markers (nreverse markers))
       (deactivate-mark)
       (evil-force-normal-state)
       ;; replace ^[ by escape
       (setq commands
             (vconcat
-             (mapcar #'(lambda (ch) (if (equal ch ?) 'escape ch))
-                     (append commands nil))))
+             (mapcar (lambda (ch) (if (eq ch ?) 'escape ch)) commands)))
       (dolist (marker markers)
         (goto-char marker)
-        (condition-case nil
-            (execute-kbd-macro commands)
-          (error nil))
+        (ignore-errors (execute-kbd-macro commands))
         (evil-force-normal-state)
         (set-marker marker nil)))))
 

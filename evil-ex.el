@@ -33,7 +33,7 @@
 ;; to an interactive function.  It is also possible to define key
 ;; sequences which execute a command immediately when entered:
 ;; such shortcuts go in `evil-ex-map'.
-;;
+
 ;; To provide buffer and filename completion, as well as interactive
 ;; feedback, Ex defines the concept of an argument handler, specified
 ;; with `evil-ex-define-argument-type'.  In the case of the
@@ -71,34 +71,27 @@
         #'(let ((l1 $1))
             (save-excursion
               (and l1 (string= $2 ";") (goto-line l1))
-              (evil-ex-range (or l1 (evil-ex-current-line)) $3))))
+              (evil-ex-range l1 $3))))
        (line #'evil-ex-range)
        ("`" marker-name ",`" marker-name
         #'(evil-ex-char-marker-range $2 $4)))
       (line
-       (base (\? offset) search (\? offset)
-             #'(let ((tmp (evil-ex-line $1 $2)))
-                 (save-excursion
-                   (goto-line tmp)
-                   (evil-ex-line $3 $4))))
-       ((\? base) offset search (\? offset)
+       ((\? base) (\? offset) search (\? offset)
         #'(let ((tmp (evil-ex-line $1 $2)))
             (save-excursion
               (goto-line tmp)
               (evil-ex-line $3 $4))))
        (base (\? offset) #'evil-ex-line)
-       ((\? base) offset #'evil-ex-line))
+       (nil offset #'evil-ex-line))
       (base
        number
-       marker
+       ("'" marker-name #'(evil-ex-marker $2))
        search
        ("\\^" #'(evil-ex-first-line))
        ("\\$" #'(evil-ex-last-line))
        ("\\." #'(evil-ex-current-line)))
       (offset
        (+ signed-number #'+))
-      (marker
-       ("'" marker-name #'(evil-ex-marker $2)))
       ;; TODO - handle offset & ;next-pattern search elements
       (search
        forward
@@ -107,9 +100,9 @@
        prev
        subst)
       (forward
-       ("/" "\\(?:[\\].\\|[^/]\\)+" "/\\|$" #'(evil-ex-re-fwd $2)))
+       ("/" "\\(?:\\\\.\\|[^/]\\)+" "/\\|$" #'(evil-ex-re-fwd $2)))
       (backward
-       ("\\?" "\\(?:[\\].\\|[^?]\\)+" "\\?\\|$" #'(evil-ex-re-bwd $2)))
+       ("?" "\\(?:\\\\.\\|[^?]\\)+" "?\\|$" #'(evil-ex-re-bwd $2)))
       (marker-name
        "[]\\[-a-zA-Z_<>'}{)(]")
       (next
@@ -121,11 +114,11 @@
       (signed-number
        (sign (\? number) #'evil-ex-signed-number))
       (sign
-       "\\+\\|-" #'intern)
+       "[+-]" #'intern)
       (number
        "[0-9]+" #'string-to-number)
       (sexp
-       "(.*)" #'(car-safe (read-from-string $0))))
+       "(.*)?" #'(car (read-from-string $0))))
     "Grammar for Ex.
 An association list of syntactic symbols and their definitions.
 The first entry is the start symbol.  A symbol's definition may
@@ -143,18 +136,15 @@ Given e.g. $4, return 4."
 
   (defmacro evil-parser (grammar &rest entrypoints)
     "Construct a parser for GRAMMAR with ENTRYPOINTS.
-The result is a function taking the arguments STRING, SYMBOL and
-SYNTAX, that parses STRING. SYMBOL should be one of ENTRYPOINTS.
+The result is a function taking the arguments SYMBOL and SYNTAX, that
+parses the text after point. SYMBOL should be one of ENTRYPOINTS.
 
-If the parse succeeds, the return value is a cons cell
-\(RESULT . END), where RESULT is a parse tree and END is the start of
-the remainder of STRING. Otherwise, the return value is nil.
+If parsing succeeds, point is moved to the end of the parsed text and
+a 1-tuple (RESULT) is returned. Otherwise, the return value is nil.
 
 GRAMMAR is an association list of symbols and their definitions.
 A definition is a list of production rules, which are tried in
-succession.
-
-A production rule can be one of the following:
+succession. A production rule can be one of the following:
 
     nil matches the empty string.
     A regular expression matches a substring.
@@ -203,33 +193,24 @@ The following symbols have reserved meanings within a grammar:
 `\\?', `*', `+', `&', `!', `function', `alt', `seq' and nil."
     (cl-labels
         ;; Return code for parsing PRODUCTION.
-        ;; Assumes the variable POS stores the current offset into
-        ;; STRING.
         ((compile
           (production)
           (pcase production
-            ((or 'nil "") '(cons (when syntax "") pos)) ; Epsilon
+            ('nil '(list (when syntax (point)))) ; Epsilon
             ((and (pred stringp) regexp) ; Token
-             `(when
-                  ;; Ignore leading whitespace
-                  (let ((start (string-match-p "[^ \f\t\n\r\v]\\|\\'" string pos)))
-                    (equal (string-match ,regexp string start) start))
-                (cons (if syntax (substring string pos (match-end 0))
-                        (match-string 0 string))
-                      (match-end 0))))
+             `(when (progn
+                      (skip-chars-forward " \t\n\r") ; Ignore leading whitespace
+                      (looking-at ,regexp))
+                (goto-char (match-end 0))
+                (list (if syntax (point) (match-string 0)))))
             ((and (pred symbolp) symbol) ; Symbol
-             `(let ((pair (,symbol string pos syntax)))
-                (and syntax pair
-                     (setcar
-                      pair
-                      (let ((result (car pair)))
-                        (cons ',symbol
-                              (if (listp result) result (list result))))))
-                pair))
+             `(let ((result (,symbol syntax)))
+                (and syntax result (push ',symbol (car result)))
+                result))
             (`(function ,fun) ; Function
-             `(let ((pair (funcall #',fun string pos)))
-                (and pair syntax (setcar pair (substring string pos (cdr pair))))
-                pair))
+             `(let ((result (funcall #',fun)))
+                (and syntax result (setcar result (point)))
+                result))
             ;; Positive lookahead
             (`(& . ,rule) `(when ,(compile rule) ,(compile nil)))
             ;; Negative lookahead
@@ -244,44 +225,40 @@ The following symbols have reserved meanings within a grammar:
              (let ((func (unless (eq symbol 'alt) #'list)))
                (pcase (when (> (length rules) 1) (car (last rules)))
                  (`(function ,x) (setq func x
-                                       rules (butlast (copy-sequence rules)))))
-               `(let ((pair
+                                       rules (butlast rules))))
+               `(let ((cell
                        ,(pcase symbol
                           ('+ ; One or more
                            (when (cdr rules) (error "Too many `+' rules"))
-                           `(let ((pos pos) result)
-                              (while (let ((x ,(compile (car rules))))
-                                       (when x
-                                         (push (car x) result)
-                                         (< (setq pos (cdr x)) (length string)))))
-                              (when result (cons (nreverse result) pos))))
+                           `(cl-loop for x = ,(compile (car rules))
+                                     while x collect (car x) into result until (eobp)
+                                     finally return (when result (list result))))
                           ('alt `(or ,@(mapcar #'compile rules)))
                           ('seq
                            (cl-loop
                             for rule in rules collect
-                            `(let ((x ,(compile rule)))
-                               (when x
-                                 (setq pos (cdr x))
-                                 ,(if (memq (car-safe rule) '(& !)) t
-                                    `(push (car x) result))))
+                            (macroexp-let2 nil x (compile rule)
+                              (if (memq (car-safe rule) '(& !)) x
+                                `(when ,x (push (car ,x) result))))
                             into items finally return
-                            `(let ((pos pos) result)
-                               (and ,@items (cons (nreverse result) pos))))))))
+                            `(let ((pos (point)) result)
+                               (if (and ,@items) (list (nreverse result))
+                                 (goto-char pos)
+                                 nil)))))))
                   ;; Semantic action
-                  ,(when func
-                     `(when (and pair (not syntax))
-                        (let ((result (car pair)))
-                          (ignore result) ; Suppress unused var warning
-                          (setcar
-                           pair
-                           ,(pcase func
-                              ;; Dollar expression
-                              ((or (pred evil-parser--dexp) (pred listp))
-                               (dval func))
-                              ((pred symbolp)
-                               `(,(if (eq symbol 'alt) 'list 'cons) #',func result))
-                              (_ (error "Invalid semantic action `%S'" func)))))))
-                  pair)))))
+                  (when (and ',func cell (not syntax))
+                    (setcar
+                     cell
+                     (let ((result (car cell)))
+                       (ignore result) ; Suppress unused var warning
+                       ,(pcase func
+                          ;; Dollar expression
+                          ((or (pred evil-parser--dexp) (pred listp))
+                           (dval func))
+                          ((pred symbolp)
+                           `(,(if (eq symbol 'alt) #'list #'cons) #',func result))
+                          (_ (error "Invalid semantic action `%S'" func))))))
+                  cell)))))
          ;; Substitute all dollar-sign symbols in X.
          ;; Each dollar-sign symbol is replaced with the corresponding
          ;; element in RESULT, so that $1 becomes the first element, etc.
@@ -290,46 +267,58 @@ The following symbols have reserved meanings within a grammar:
           (x)
           (if (listp x) (cons #'list (mapcar #'dval x))
             (let ((num (evil-parser--dexp x)))
-              (cond ((null num) `(quote ,x))
+              (cond ((null num) `',x)
                     ((eq num 0) 'result)
                     (t `(nth (1- ,num) result)))))))
-      `(lambda (string symbol &optional syntax)
+      `(lambda (symbol &optional syntax)
          (cl-labels
-             (,@(cl-loop
-                 for (symbol . def) in (eval grammar t) collect
-                 `(,symbol (string pos syntax) ,(compile `(alt . ,def))))
+             (,@(cl-loop for (symbol . def) in (eval grammar t) collect
+                         `(,symbol (syntax) ,(compile `(alt . ,def))))
               (evil-ex-parse-command
-               (string pos)
-               (let ((result (binding string pos nil)) command end)
-                 (when result
-                   (setq command (car result)
-                         end (cdr result))
-                   (cond
-                    ;; check whether the parsed command is followed by a slash,
-                    ;; dash or number and either the part before is NOT known to be
-                    ;; a binding, or the complete string IS known to be a binding
-                    ((and (< end (length string))
-                          (let ((ch (aref string end)))
-                            (or (memq ch '(?- ?/)) (<= ?0 ch ?9)))
-                          (or (evil-ex-binding
-                               (concat command (substring string end)) t)
-                              (not (evil-ex-binding command t))))
-                     (emacs-binding string pos nil))
-                    ;; parse a following "!" as bang only if the
-                    ;; command has the property :ex-bang t
-                    ((and (evil-ex-command-force-p command)
-                          (< end (length string))
-                          (eq (aref string end) ?!))
-                     (cons (concat command "!") (1+ end)))
-                    (t result))))))
+               ()
+               (let* ((result (binding nil))
+                      (command (car result)))
+                 (cond
+                  ((not result) nil)
+                  ;; Check whether the parsed command is followed by a slash,
+                  ;; dash or number and either the part before is NOT known to be
+                  ;; a binding, or the complete string IS known to be a binding.
+                  ((and (let ((ch (char-after)))
+                          (and ch (or (memq ch '(?- ?/)) (<= ?0 ch ?9))))
+                        (or (evil-ex-binding
+                             (concat command (buffer-substring (point) (point-max))) t)
+                            (not (evil-ex-binding command t))))
+                   (backward-char (length command))
+                   (emacs-binding nil))
+                  ;; Parse a following "!" as bang only if the command
+                  ;; has the property :ex-bang t.
+                  ((when (eq (char-after) ?!)
+                     (let ((binding (evil-ex-completed-binding command t)))
+                       (and binding (evil-get-command-property binding :ex-bang))))
+                   (forward-char)
+                   (setcar result (concat command "!"))
+                   result)
+                  (t result)))))
            (pcase symbol
-             ,@(cl-loop
-                for sym in entrypoints collect
-                `(',sym (let ((pos 0)) ,(compile sym))))
+             ,@(cl-loop for sym in entrypoints collect `(',sym ,(compile sym)))
              (_ (error "Unknown entrypoint `%s'" symbol))))))))
 
-(defvar evil-ex-echo-overlay nil
-  "Overlay used for displaying info messages during Ex.")
+(defvar evil-ex-argument-types nil
+  "Association list of argument handlers.")
+
+(defvar evil-ex-reverse-range nil
+  "Whether the current Ex range was entered reversed.")
+
+(defvar evil--ex-expression nil
+  "The Ex evaluation tree.")
+
+(defvar evil--ex-cmd nil
+  "The current Ex command string.")
+
+(defvar evil-ex-argument-handler nil
+  "The argument handler for the current Ex command.")
+
+(define-error 'evil-ex-error "Ex syntax error")
 
 (defun evil-ex-p ()
   "Whether Ex is currently active."
@@ -337,15 +326,12 @@ The following symbols have reserved meanings within a grammar:
 
 (evil-define-command evil-ex (&optional initial-input)
   "Enter an Ex command.
-The ex command line is initialized with the value of
-INITIAL-INPUT. If the command is called interactively the initial
-input depends on the current state. If the current state is
-normal state and no count argument is given then the initial
-input is empty. If a prefix count is given the initial input is
-.,.+count. If the current state is visual state then the initial
-input is the visual region '<,'> or `<,`>. If the value of the
-global variable `evil-ex-initial-input' is non-nil, its content
-is appended to the line."
+The Ex command line is initialized with the value of INITIAL-INPUT. If
+the command is called interactively the initial input depends on the
+current state. In Normal state if a prefix count is given then the
+initial input is \".,.+count\", otherwise it is empty. In Visual state
+the initial input is the visual region '<,'> or `<,`>. The variable
+`evil-ex-initial-input', if non-nil, is appended to the line."
   :keep-visual t
   :repeat abort
   (interactive
@@ -364,47 +350,57 @@ is appended to the line."
              evil-ex-initial-input)))
      (list (unless (string= s "") s))))
   (let ((evil-ex-current-buffer (current-buffer))
-        (evil-ex-previous-command (unless initial-input
-                                    (car evil-ex-history)))
-        evil-ex-argument-handler result)
+        (previous-command (when evil-want-empty-ex-last-command
+                            (car evil-ex-history)))
+        evil--ex-expression evil--ex-cmd evil-ex-argument-handler s)
     (minibuffer-with-setup-hook
         (lambda ()
           (evil-ex-setup)
-          (when initial-input (evil-ex-update)))
-      (setq result
-            (read-from-minibuffer
-             ":"
-             (or initial-input
-                 (and evil-ex-previous-command
-                      evil-want-empty-ex-last-command
-                      (propertize evil-ex-previous-command 'face 'shadow)))
-             evil-ex-completion-map
-             nil
-             'evil-ex-history
-             (when evil-want-empty-ex-last-command evil-ex-previous-command)
-             t)))
-    (evil-ex-execute result)))
+          (if initial-input (evil--ex-update)
+            (when previous-command
+              (add-hook 'pre-command-hook #'evil-ex-remove-default nil t))))
+      (setq s (read-from-minibuffer
+               ":"
+               (or initial-input
+                   (and previous-command (propertize previous-command 'face 'shadow)))
+               evil-ex-completion-map nil 'evil-ex-history nil t)))
+    (and (string= s "") previous-command (setq s previous-command))
+    (unless (string= s "") (evil-ex-execute s))))
 
-(defun evil-ex-execute (result)
-  "Execute RESULT as an ex command on `evil-ex-current-buffer'."
-  ;; empty input means repeating the previous command
-  (when (and (zerop (length result))
-             evil-want-empty-ex-last-command)
-    (setq result evil-ex-previous-command))
-  ;; parse data
-  (evil-ex-update nil nil nil result)
-  ;; execute command
-  (unless (zerop (length result))
-    (eval (or evil-ex-expression (user-error "Ex: syntax error")))))
+(defun evil-ex-execute (string)
+  "Execute STRING as an Ex command on `evil-ex-current-buffer'."
+  (let ((evil-ex-current-buffer (or evil-ex-current-buffer (current-buffer)))
+        (expr (or evil--ex-expression (evil-ex-parse string)
+                  (signal 'evil-ex-error string))))
+    (eval expr t)))
+
+(defun evil-ex-parse (string &optional syntax entrypoint)
+  "Parse STRING as an Ex expression and return an evaluation tree.
+If STRING is nil, parse the text after point instead.  If SYNTAX is
+non-nil, return a syntax tree instead.  ENTRYPOINT is the start
+symbol, which defaults to `expression'."
+  (let ((parse
+         (lambda ()
+           (let ((result (funcall (evil-parser evil-ex-grammar expression range)
+                                  (or entrypoint 'expression) syntax)))
+             (and result
+                  ;; Disallow incomplete matches (ignore trailing WS)
+                  (not (search-forward "[^ \t\n\r]" nil t))
+                  (car result))))))
+    (if (not string) (funcall parse)
+      (with-temp-buffer
+        (insert string)
+        (goto-char (point-min))
+        (funcall parse)))))
 
 (defun evil-ex-delete-backward-char ()
   "Close the minibuffer if it is empty.
 Otherwise behaves like `delete-backward-char'."
   (interactive)
   (call-interactively
-   (if (zerop (length (minibuffer-contents-no-properties)))
-       #'abort-recursive-edit
-     #'delete-backward-char)))
+   (if (< (minibuffer-prompt-end) (point-max))
+       #'delete-backward-char
+     #'abort-recursive-edit)))
 
 (defun evil-ex-abort ()
   "Cancel Ex state when another buffer is selected."
@@ -412,36 +408,17 @@ Otherwise behaves like `delete-backward-char'."
               (memq this-command '(mouse-drag-region choose-completion)))
     (abort-recursive-edit)))
 
-(defun evil-ex-command-window-execute (config result)
-  (select-window (active-minibuffer-window) t)
-  (set-window-configuration config)
-  (delete-minibuffer-contents)
-  (insert result)
-  (exit-minibuffer))
-
-(defun evil--ex-elisp-p ()
-  "Return whether an Elisp expression is being entered on the Ex command line."
-  (string-prefix-p "(" (minibuffer-contents-no-properties)))
-
-(defun evil-ex-elisp-completion-at-point ()
-  "Complete an `evil-ex' Elisp expression."
-  (and (evil--ex-elisp-p)
-       (fboundp 'elisp-completion-at-point)
-       (elisp-completion-at-point)))
+(define-obsolete-function-alias
+  'evil-ex-elisp-completion-at-point #'elisp-completion-at-point "1.15.0")
 
 (defun evil-ex-setup ()
   "Initialize Ex minibuffer.
 This function registers hooks that are used for the interactive
 actions during Ex state."
   (add-hook 'post-command-hook #'evil-ex-abort)
-  (add-hook 'after-change-functions #'evil-ex-update nil t)
+  (add-hook 'after-change-functions #'evil--ex-update nil t)
   (add-hook 'minibuffer-exit-hook #'evil-ex-teardown nil t)
-  (when evil-ex-previous-command
-    (add-hook 'pre-command-hook #'evil-ex-remove-default nil t))
-  (set (make-local-variable 'completion-at-point-functions)
-       '(evil-ex-elisp-completion-at-point
-         evil-ex-command-completion-at-point
-         evil-ex-argument-completion-at-point)))
+  (add-hook 'completion-at-point-functions #'evil-ex-completion-at-point nil t))
 
 (defun evil-ex-teardown ()
   "Deinitialize Ex minibuffer.
@@ -450,114 +427,100 @@ Clean up everything set up by `evil-ex-setup'."
   (when evil-ex-argument-handler
     (let ((runner (evil-ex-argument-handler-runner
                    evil-ex-argument-handler)))
-      (when runner
-        (funcall runner 'stop)))))
+      (when runner (funcall runner 'stop)))))
 (put 'evil-ex-teardown 'permanent-local-hook t)
 
-(defun evil-ex-update (&optional beg _end _len string)
+(defsubst evil--ex-bang-p (command)
+  "Return non-nil if the string COMMAND has a \"!\" suffix."
+  (and (> (length command) 1) (eq (aref command (1- (length command))) ?!)))
+
+(defun evil--ex-update (&optional beg _end _len string)
   "Update Ex variables when the minibuffer changes.
 This function is usually called from `after-change-functions'
 hook. If BEG is non-nil (which is the case when called from
 `after-change-functions'), then an error description is shown
 in case of incomplete or unknown commands."
-  (let* ((prompt (minibuffer-prompt-end))
-         (string (or string (minibuffer-contents-no-properties)))
-         arg bang cmd count expr func handler range type)
-    (if (and (eq this-command #'self-insert-command)
-             (commandp (setq cmd (lookup-key evil-ex-map string))))
-        (progn
-          (setq evil-ex-expression `(call-interactively #',cmd))
-          (when (minibufferp) (exit-minibuffer)))
-      (setq cmd nil)
-      ;; store the buffer position of each character
-      ;; as the `ex-index' text property
-      (dotimes (i (length string))
-        (put-text-property i (1+ i) 'ex-index (+ i prompt) string))
+  (when (and beg (eq this-command #'self-insert-command))
+    (let ((cmd (lookup-key evil-ex-map (minibuffer-contents-no-properties))))
+      (when (commandp cmd)
+        (setq evil--ex-expression `(call-interactively #',cmd))
+        (exit-minibuffer))))
+
+  (setq evil--ex-expression (save-excursion (goto-char (minibuffer-prompt-end))
+                                            (evil-ex-parse string))
+        evil--ex-cmd nil)
+  (when (eq (car evil--ex-expression) #'evil-ex-call-command)
+    (let (current-prefix-arg func handler evil-ex-range evil-ex-bang evil-ex-argument)
       (with-current-buffer evil-ex-current-buffer
-        (setq expr (evil-ex-parse string))
-        (when (eq (car expr) #'evil-ex-call-command)
-          (setq count (eval (nth 1 expr))
-                cmd (eval (nth 2 expr))
-                arg (eval (nth 3 expr))
-                range (cond
-                       ((evil-range-p count) count)
-                       ((numberp count) (evil-ex-range count count)))
-                bang (when (string-match-p ".!$" cmd) t))))
-      (setq evil-ex-expression expr
-            evil-ex-range range
-            evil-ex-cmd cmd
-            evil-ex-bang bang
-            evil-ex-argument arg)
-      ;; test the current command
-      (when (and cmd (minibufferp))
-        (setq func (evil-ex-completed-binding cmd t))
-        (cond
-         ;; update argument-handler
-         (func
-          (when (setq type (evil-get-command-property func :ex-arg))
-            (setq handler (cdr-safe
-                           (assoc type
-                                  evil-ex-argument-types))))
-          (unless (eq handler evil-ex-argument-handler)
-            (let ((runner (and evil-ex-argument-handler
-                               (evil-ex-argument-handler-runner
-                                evil-ex-argument-handler))))
-              (when runner (funcall runner 'stop)))
-            (setq evil-ex-argument-handler handler)
-            (let ((runner (and evil-ex-argument-handler
-                               (evil-ex-argument-handler-runner
-                                evil-ex-argument-handler))))
-              (when runner (funcall runner 'start evil-ex-argument))))
-          (let ((runner (and evil-ex-argument-handler
-                             (evil-ex-argument-handler-runner
-                              evil-ex-argument-handler))))
-            (when runner (funcall runner 'update evil-ex-argument))))
-         ;; show error message only when called from `after-change-functions'
-         (beg
-          (let ((prefix (try-completion cmd (evil-ex-completion-table))))
-            (cond
-             ((stringp prefix) (evil-ex-echo "Incomplete command"))
-             ((null prefix) (evil-ex-echo "Unknown command"))))))))))
+        (let* ((range (eval (nth 1 evil--ex-expression) t))
+               (count (when (integerp range) range)))
+          (setq current-prefix-arg count
+                evil-ex-range (if count (evil-ex-range count count) range)
+                evil--ex-cmd (eval (nth 2 evil--ex-expression) t)
+                evil-ex-bang (evil--ex-bang-p evil--ex-cmd)
+                evil-ex-argument (eval (nth 3 evil--ex-expression) t))))
+      (cond
+       ((not beg))
+       ;; Test the current command when called from `after-change-functions'
+       ((setq func (evil-ex-completed-binding evil--ex-cmd t))
+        ;; Update argument handler
+        (let ((type (evil-get-command-property func :ex-arg)))
+          (when type (setq handler (cdr (assq type evil-ex-argument-types)))))
+        (if (eq handler evil-ex-argument-handler)
+            (let ((runner (evil-ex-argument-handler-runner handler)))
+              (when runner (funcall runner 'update evil-ex-argument)))
+          (let ((runner (evil-ex-argument-handler-runner
+                         evil-ex-argument-handler)))
+            (when runner (funcall runner 'stop)))
+          (setq evil-ex-argument-handler handler)
+          (let ((runner (evil-ex-argument-handler-runner handler)))
+            (when runner (funcall runner 'start evil-ex-argument)))))
+       (t (let* ((evil-ex-complete-emacs-commands 'in-turn)
+                 (prefix (try-completion evil--ex-cmd (evil-ex-completion-table))))
+            (cond ((stringp prefix) (evil-ex-echo "Incomplete command"))
+                  ((null prefix) (evil-ex-echo "Unknown command")))))))))
 
 (defun evil-ex-echo (string &rest args)
   "Display a message after the current Ex command."
-  (with-selected-window (minibuffer-window)
-    (unless (or evil-no-display (zerop (length string)))
-      (let ((string (format " [%s]" (apply #'format string args)))
-            (ov (or evil-ex-echo-overlay
-                    (setq evil-ex-echo-overlay (make-overlay (point-min) (point-max) nil t t))))
-            after-change-functions before-change-functions)
-        (put-text-property 0 (length string) 'face 'evil-ex-info string)
-        ;; The following "trick" causes point to be shown before the
-        ;; message instead of behind. It is shamelessly stolen from
-        ;; the implementation of `minibuffer-message'.
-        (put-text-property 0 1 'cursor t string)
-        (move-overlay ov (point-max) (point-max))
-        (overlay-put ov 'after-string string)
-        (add-hook 'pre-command-hook #'evil--ex-remove-echo-overlay nil t)))))
+  (unless (or evil-no-display (string= string ""))
+    (let ((message (concat " [" (apply #'format string args) "]")))
+      (add-face-text-property 1 (length message) 'evil-ex-info nil message)
+      (minibuffer-message message))))
 
-(defun evil--ex-remove-echo-overlay ()
-  "Remove echo overlay from Ex minibuffer."
-  (when evil-ex-echo-overlay
-    (delete-overlay evil-ex-echo-overlay)
-    (setq evil-ex-echo-overlay nil))
-  (remove-hook 'pre-command-hook #'evil--ex-remove-echo-overlay t))
+(define-obsolete-function-alias 'evil-ex-completion #'completion-at-point "1.15.0")
 
-(defun evil-ex-completion ()
-  "Complete the current Ex command or argument."
-  (interactive)
-  (let (after-change-functions)
-    (evil-ex-update)
-    (completion-at-point)
-    (remove-list-of-text-properties
-     (minibuffer-prompt-end) (point-max) '(face evil))))
+(cl-defun evil-ex-completion-at-point ()
+  "Function used for `completion-at-point-functions' in Ex state."
+  (cl-flet ((fix-beg (b) (min (save-excursion
+                                (+ (goto-char b) (skip-chars-forward " \t\n\r")))
+                              (point))))
+    (pcase (nreverse (evil--ex-syntactic-context))
+      ((or (and 'nil (let beg (minibuffer-prompt-end)))
+           `((expression) (command . ,beg) . ,_)
+           (and `((expression) (line) . ,_)
+                (guard (looking-at-p "[ \t\n\r]*\\'"))
+                (let beg (point))))
+       (list (fix-beg beg) (point) (evil-ex-completion-table)))
+      (`((expression) (argument . ,beg))
+       (setq beg (fix-beg beg))
+       ;; If it's an autoload, load the function; this allows external
+       ;; packages to register autoloaded Ex commands which will be
+       ;; loaded when ex argument completion is triggered.
+       (let ((binding (evil-ex-binding evil--ex-cmd t))) (autoload-do-load binding))
 
-(defun evil-ex-command-completion-at-point ()
-  (let ((beg (if evil-ex-cmd
-                 (get-text-property 0 'ex-index evil-ex-cmd)
-               (point)))
-        (end (point)))
-    (list beg end (evil-ex-completion-table) :exclusive 'no)))
+       (let* ((binding (evil-ex-completed-binding evil--ex-cmd))
+              (arg-type (evil-get-command-property binding :ex-arg))
+              (arg-handler (cdr (assq arg-type evil-ex-argument-types))))
+         (pcase (evil-ex-argument-handler-completer arg-handler)
+           (`(collection . ,table) (list beg (point-max) table))
+           (`(completion-at-point . ,completer)
+            (save-restriction (narrow-to-region beg (point-max))
+                              (funcall completer))))))
+      (`((expression) (sexp . ,_))
+       (when (fboundp 'elisp-completion-at-point) (elisp-completion-at-point))))))
+
+(define-obsolete-function-alias
+  'evil-ex-command-completion-at-point #'evil-ex-completion-at-point "1.15.0")
 
 (defun evil-ex-completion-table ()
   (let ((ex-cmds
@@ -567,19 +530,16 @@ in case of incomplete or unknown commands."
           ;; Append ! to all commands that may take a bang argument
           when (evil-get-command-property fun :ex-bang)
           collect (concat cmd "!")))
-        (emacs-cmds
-         (lambda (str pred action)
-           (completion-table-with-predicate
-            obarray #'commandp t str pred action))))
-    (when (eq evil-ex-complete-emacs-commands t)
-      (setq ex-cmds
-            (mapcar (lambda (str) (propertize str 'face 'evil-ex-commands))
-                    ex-cmds)))
+        (emacs-cmds (lambda (str pred action)
+                      (completion-table-with-predicate
+                       obarray #'commandp t str pred action))))
     (cond
      ((null evil-ex-complete-emacs-commands) ex-cmds)
      ((eq evil-ex-complete-emacs-commands 'in-turn)
       (completion-table-in-turn ex-cmds emacs-cmds))
-     (t (evil-completion-table-concat ex-cmds emacs-cmds)))))
+     (t (cl-loop for s in-ref ex-cmds do
+                 (setf s (propertize s 'face 'evil-ex-commands)))
+        (evil-completion-table-concat ex-cmds emacs-cmds)))))
 
 (defun evil-completion-table-concat (table1 table2)
   (lambda (string pred action)
@@ -605,65 +565,26 @@ in case of incomplete or unknown commands."
 
 (defun evil-ex-sort-completions (completions)
   (sort completions
-        #'(lambda (str1 str2)
-            (let ((p1 (eq 'evil-ex-commands (get-text-property 0 'face str1)))
-                  (p2 (eq 'evil-ex-commands (get-text-property 0 'face str2))))
-              (if (equal p1 p2)
-                  (string< str1 str2)
-                p1)))))
+        (lambda (str1 str2)
+          (let ((p1 (eq (get-text-property 0 'face str1) 'evil-ex-commands))
+                (p2 (eq (get-text-property 0 'face str2) 'evil-ex-commands)))
+            (if (eq p1 p2) (string< str1 str2) p1)))))
 
-(defun evil-ex-command-collection (string predicate action)
-  (declare (obsolete evil-ex-completion-table "1.15.0"))
-  (let* (evil-ex-complete-emacs-commands
-         (commands (evil-ex-completion-table)))
-    (cond
-     ((eq action nil) (try-completion string commands predicate))
-     ((eq action t) (all-completions string commands predicate))
-     ((eq action 'lambda) (test-completion string commands))
-     ((eq (car-safe action) 'boundaries)
-      `(boundaries 0 . ,(length (cdr action)))))))
-
-(defun evil-ex-argument-completion-at-point ()
-  (let ((context (evil-ex-syntactic-context)))
-    (when (memq 'argument context)
-      ;; if it's an autoload, load the function; this allows external
-      ;; packages to register autoloaded ex commands which will be
-      ;; loaded when ex argument completion is triggered
-      (let ((binding-definition (symbol-function (evil-ex-binding evil-ex-cmd))))
-        (when (autoloadp binding-definition)
-          (autoload-do-load binding-definition)))
-
-      (let* ((beg (or (and evil-ex-argument
-                           (get-text-property 0 'ex-index evil-ex-argument))
-                      (point)))
-             (end (1+ (or (and evil-ex-argument
-                               (get-text-property (1- (length evil-ex-argument))
-                                                  'ex-index evil-ex-argument))
-                          (1- (point)))))
-             (binding (evil-ex-completed-binding evil-ex-cmd))
-             (arg-type (evil-get-command-property binding :ex-arg))
-             (arg-handler (assoc arg-type evil-ex-argument-types))
-             (completer (when arg-handler
-                          (evil-ex-argument-handler-completer
-                           (cdr arg-handler)))))
-        (when completer
-          (if (eq (car completer) 'collection)
-              (list beg end (cdr completer))
-            (save-restriction
-              (narrow-to-region beg (point-max))
-              (funcall (cdr completer)))))))))
+(defalias 'evil-ex-argument-completion-at-point #'ignore)
+(make-obsolete
+ 'evil-ex-argument-completion-at-point #'evil-ex-completion-at-point "1.15.0")
 
 (defun evil-ex-define-cmd (cmd function)
   "Bind the function FUNCTION to the command CMD."
-  (if (string-match "^[^][]*\\(\\[\\(.*\\)\\]\\)[^][]*$" cmd)
-      (let ((abbrev (replace-match "" nil t cmd 1))
-            (full (replace-match "\\2" nil nil cmd 1)))
+  (if (string-match "\\[\\(.*\\)\\]" cmd)
+      (let ((abbrev (replace-match "" nil t cmd))
+            (full (replace-match "\\1" nil nil cmd)))
         (evil--add-to-alist evil-ex-commands
                             full function
                             abbrev full))
     (evil--add-to-alist evil-ex-commands cmd function)))
 
-(defun evil-ex-make-argument-handler (runner completer)
+(defsubst evil-ex-make-argument-handler (runner completer)
   (list runner completer))
 
 (defun evil-ex-argument-handler-runner (arg-handler)
@@ -674,8 +595,8 @@ in case of incomplete or unknown commands."
 
 (defmacro evil-ex-define-argument-type (arg-type doc &rest body)
   "Define a new handler for argument-type ARG-TYPE.
-DOC is the documentation string. It is followed by a list of
-keywords and function:
+DOC is the documentation string. It is followed by a list of keywords
+and function:
 
 :collection COLLECTION
 
@@ -683,25 +604,23 @@ keywords and function:
 
 :completion-at-point FUNC
 
-  Function to be called to initialize a potential
-  completion. FUNC must match the requirements as described for
-  the variable `completion-at-point-functions'. When FUNC is
-  called the minibuffer content is narrowed to exactly match the
-  argument.
+  Function to be called to initialize a potential completion. FUNC
+  must match the requirements as described for the variable
+  `completion-at-point-functions'. When FUNC is called the minibuffer
+  content is narrowed to exactly match the argument.
 
 :runner FUNC
 
-  Function to be called when the type of the current argument
-  changes or when the content of this argument changes. This
-  function should take one obligatory argument FLAG followed by
-  an optional argument ARG. FLAG is one of three symbol 'start,
-  'stop or 'update. When the argument type is recognized for the
-  first time and this handler is started the FLAG is 'start. If
-  the argument type changes to something else or ex state
-  finished the handler FLAG is 'stop. If the content of the
-  argument has changed FLAG is 'update. If FLAG is either 'start
-  or 'update then ARG is the current value of this argument. If
-  FLAG is 'stop then arg is nil."
+  Function to be called when the type of the current argument changes
+  or when the content of this argument changes. This function should
+  take one obligatory argument FLAG followed by an optional argument
+  ARG. FLAG is one of three symbol `start', `stop' or `update'. When
+  the argument type is recognized for the first time and this handler
+  is started the FLAG is `start'. If the argument type changes to
+  something else or ex state finished the handler FLAG is `stop'. If
+  the content of the argument has changed FLAG is `update'. If FLAG is
+  either `start' or `update' then ARG is the current value of this
+  argument. If FLAG is `stop' then arg is nil."
   (declare (indent defun)
            (doc-string 2)
            (debug (&define name
@@ -709,7 +628,7 @@ keywords and function:
                            [&rest [keywordp function-form]])))
   (unless (stringp doc) (push doc body))
   (let (runner completer)
-    (while (keywordp (car-safe body))
+    (while (keywordp (car body))
       (let ((key (pop body))
             (func (pop body)))
         (cond
@@ -719,9 +638,8 @@ keywords and function:
           (setq completer (cons 'collection func)))
          ((eq key :completion-at-point)
           (setq completer (cons 'completion-at-point func))))))
-    `(eval-and-compile
-       (evil--add-to-alist evil-ex-argument-types
-                           ',arg-type '(,runner ,completer)))))
+    `(evil--add-to-alist evil-ex-argument-types
+                         ',arg-type '(,runner ,completer))))
 
 (evil-ex-define-argument-type file
   "Handle a file argument."
@@ -734,22 +652,22 @@ keywords and function:
 (declare-function comint-completion-at-point "comint")
 (declare-function shell-completion-vars "shell" ())
 
+(defvar-local evil--ex-shell-argument-initialized nil
+  "This variable is set to t if shell command completion has been initialized.
+See `evil-ex-init-shell-argument-completion'.")
+
 (defun evil-ex-init-shell-argument-completion (flag &optional _arg)
   "Prepare the current minibuffer for completion of shell commands.
 This function must be called from the :runner function of some
 argument handler that requires shell completion."
   (when (and (eq flag 'start)
-             (not evil-ex-shell-argument-initialized))
-    (set (make-local-variable 'evil-ex-shell-argument-initialized) t)
+             (not evil--ex-shell-argument-initialized))
+    (setq evil--ex-shell-argument-initialized t)
     (require 'shell)
     ;; Set up Comint for Shell mode, except
     ;; `comint-completion-at-point' will be called manually.
     (let (completion-at-point-functions)
       (shell-completion-vars))))
-
-(define-obsolete-function-alias
-  'evil-ex-shell-command-completion-at-point
-  'comint-completion-at-point "1.2.13")
 
 (evil-ex-define-argument-type shell
   "Shell argument type, supports completion."
@@ -773,16 +691,14 @@ works accordingly."
 
 (defun evil-ex-binding (command &optional noerror)
   "Return the final binding of COMMAND."
-  (string-match "^\\(.+?\\)\\!?$" command)
-  (let ((binding (match-string 1 command)))
+  (let ((binding (if (evil--ex-bang-p command) (substring command 0 -1)
+                   command)))
     (while (stringp
             (setq binding (cdr (assoc binding evil-ex-commands)))))
-    (unless binding
-      (setq binding (intern-soft command)))
+    (unless binding (setq binding (intern-soft command)))
     (if (commandp binding)
         (or (command-remapping binding) binding)
-      (unless noerror
-        (user-error "Unknown command: `%s'" command)))))
+      (unless noerror (user-error "Unknown command: `%s'" command)))))
 
 (defun evil-ex-completed-binding (command &optional noerror)
   "Return the final binding of the completion of COMMAND."
@@ -791,7 +707,7 @@ works accordingly."
                        (or completion command))
                      noerror)))
 
-;;; TODO: extensions likes :p :~ <cfile> ...
+;; TODO: extensions like :p :~ <cfile> ...
 (defun evil-ex-replace-special-filenames (file-name)
   "Replace special symbols in FILE-NAME.
 Replaces % by the current file-name,
@@ -833,68 +749,46 @@ This function interprets special file names like # and %."
   (when count
     (goto-char (point-min))
     (forward-line (1- count)))
-  (let ((evil-ex-current-buffer (current-buffer))
-        (hist evil-ex-history))
-    (while hist
-      (let ((evil-ex-last-cmd (pop hist)))
-        (when evil-ex-last-cmd
-          (evil-ex-update nil nil nil evil-ex-last-cmd)
-          (let ((binding (evil-ex-binding evil-ex-cmd)))
-            (unless (eq binding #'evil-ex-repeat)
-              (setq hist nil)
-              (eval (or evil-ex-expression
-                        (user-error "Ex: syntax error"))))))))))
+  (cl-loop
+   with evil-ex-current-buffer = (current-buffer)
+   for last-cmd in evil-ex-history do
+   (evil--ex-update nil nil nil last-cmd)
+   (let ((expr (or evil--ex-expression (signal 'evil-ex-error last-cmd))))
+     (unless (eq (evil-ex-binding evil--ex-cmd) #'evil-ex-repeat)
+       (cl-return (eval expr t))))))
 
 (defun evil-ex-call-command (range command argument)
   "Execute the given command COMMAND."
-  (let* ((count (when (numberp range) range))
-         (range (when (evil-range-p range) range))
-         (bang (when (string-match-p ".!$" command) t))
-         (evil-ex-point (point))
-         (evil-ex-range
-          (or range (and count (evil-ex-range count count))))
-         (evil-ex-command (evil-ex-completed-binding command))
-         (restore-point (when (evil-get-command-property evil-ex-command :restore-point)
-                          (if (evil-visual-state-p)
-                              (min (point) (or (mark) most-positive-fixnum))
-                            (point))))
-         (evil-ex-bang bang)
-         (evil-ex-argument (copy-sequence argument))
+  (let* ((count (when (integerp range) range))
+         (evil-ex-range (if count (evil-ex-range count count) range))
+         (cmd (evil-ex-completed-binding command))
+         (evil-ex-bang (evil--ex-bang-p command))
+         (evil-ex-argument argument)
          (evil-this-type (evil-type evil-ex-range))
-         (current-prefix-arg count)
-         (prefix-arg current-prefix-arg))
-    (when (stringp evil-ex-argument)
-      (set-text-properties
-       0 (length evil-ex-argument) nil evil-ex-argument))
+         (evil-ex-point (point))
+         (restore-point
+          (and evil-ex-range
+               (evil-get-command-property cmd :restore-point)
+               (if (evil-visual-state-p) evil-visual-beginning evil-ex-point)))
+         (current-prefix-arg count))
     (when evil-ex-reverse-range
       (setq evil-ex-reverse-range nil)
       (unless (y-or-n-p "Backward range given, OK to swap? ")
         (user-error "")))
-    (let ((buf (current-buffer)))
-      (unwind-protect
-          (cond
-           ((not evil-ex-range)
-            (setq this-command evil-ex-command)
-            (evil-exit-visual-state)
-            (run-hooks 'pre-command-hook)
-            (call-interactively evil-ex-command)
-            (run-hooks 'post-command-hook))
-           (t
-            ;; set visual selection to match the region if an explicit
-            ;; range has been specified
-            (cl-destructuring-bind (beg end &rest)
-                (evil-expand-range evil-ex-range t)
-              (setq this-command evil-ex-command)
-              (run-hooks 'pre-command-hook)
-              (set-mark end)
-              (goto-char beg)
-              (activate-mark)
-              (call-interactively evil-ex-command)
-              (run-hooks 'post-command-hook)
-              (when restore-point (goto-char restore-point)))))
-        (when (buffer-live-p buf)
-          (with-current-buffer buf
-            (deactivate-mark)))))))
+
+    (evil-exit-visual-state)
+    (deactivate-mark)
+    (when evil-ex-range
+      ;; Set region if an explicit range has been specified
+      (cl-destructuring-bind (beg end &rest) (evil-expand-range evil-ex-range t)
+        (goto-char beg)
+        (set-marker (mark-marker) end)))
+    (setq this-command cmd)
+    (let ((mark-active evil-ex-range))
+      (run-hooks 'pre-command-hook)
+      (call-interactively cmd))
+    (run-hooks 'post-command-hook)
+    (when restore-point (goto-char restore-point))))
 
 (defun evil-ex-line (base &optional offset)
   "Return the line number of BASE plus OFFSET."
@@ -919,14 +813,14 @@ This function interprets special file names like # and %."
 
 (defun evil-ex-range (beg-line &optional end-line)
   "Return the first and last position of the current range."
-  (when (and end-line (< end-line beg-line))
-    (setq evil-ex-reverse-range t)
-    (evil-swap beg-line end-line))
-  (evil-range
-   (evil-line-position beg-line)
-   (evil-line-position (or end-line beg-line) -1)
-   'line
-   :expanded t))
+  (let* ((beg (if beg-line (evil-line-position beg-line)
+                (line-beginning-position)))
+         (end (if end-line (evil-line-position (1+ end-line))
+                (save-excursion (goto-char beg) (line-beginning-position 2)))))
+    (when (< end beg)
+      (setq evil-ex-reverse-range t)
+      (evil-swap beg end))
+    (evil-range beg end 'line :expanded t)))
 
 (defun evil-ex-full-range ()
   "Return a range encompassing the whole buffer."
@@ -948,13 +842,13 @@ Signal an error if MARKER is in a different buffer."
 (defun evil-ex-char-marker-range (beg end)
   (setq beg (evil-get-marker (if (stringp beg) (aref beg 0) beg))
         end (evil-get-marker (if (stringp end) (aref end 0) end)))
-  (if (and (numberp beg) (numberp end))
-      (evil-expand-range
-       (evil-range beg end
-                   (if (evil-visual-state-p)
-                       (evil-visual-type)
-                     'inclusive)))
-    (user-error "Ex does not support markers in other files")))
+  (unless (and (numberp beg) (numberp end))
+    (user-error "Ex does not support markers in other files"))
+  (evil-expand-range
+   (evil-range beg end
+               (if (evil-visual-state-p)
+                   (evil-visual-type)
+                 'inclusive))))
 
 (declare-function evil-ex-make-search-pattern "evil-search")
 
@@ -963,17 +857,17 @@ Signal an error if MARKER is in a different buffer."
 Return the line number of the match."
   (when evil-ex-search-vim-style-regexp
     (setq pattern (evil-transform-vim-style-regexp pattern)))
+  (set-text-properties 0 (length pattern) nil pattern)
   (setq evil-ex-search-pattern (evil-ex-make-search-pattern pattern)
         evil-ex-search-direction 'forward)
   (condition-case err
       (save-excursion
-        (set-text-properties 0 (length pattern) nil pattern)
-        (evil-move-end-of-line)
+        (evil-move-beginning-of-line 2)
         (when (or (re-search-forward pattern nil t)
                   (progn
                     (goto-char (point-min))
                     (re-search-forward pattern nil t)))
-          (line-number-at-pos (1- (match-end 0)))))
+          (line-number-at-pos (match-beginning 0))))
     (invalid-regexp
      (evil-ex-echo (cadr err))
      nil)))
@@ -983,11 +877,11 @@ Return the line number of the match."
 Return the line number of the match."
   (when evil-ex-search-vim-style-regexp
     (setq pattern (evil-transform-vim-style-regexp pattern)))
+  (set-text-properties 0 (length pattern) nil pattern)
   (setq evil-ex-search-pattern (evil-ex-make-search-pattern pattern)
         evil-ex-search-direction 'backward)
   (condition-case err
       (save-excursion
-        (set-text-properties 0 (length pattern) nil pattern)
         (evil-move-beginning-of-line)
         (when (or (re-search-backward pattern nil t)
                   (progn
@@ -1006,52 +900,38 @@ Return the line number of the match."
 NUMBER defaults to 1."
   (funcall sign (or number 1)))
 
-;; function `evil-ex-eval' has been superseded by `evil-ex-parse' plus `eval'
-(make-obsolete 'evil-ex-eval 'evil-ex-parse "1.2.14")
-
-(defun evil-ex-parse (string &optional syntax start)
-  "Parse STRING as an Ex expression and return an evaluation tree.
-If SYNTAX is non-nil, return a syntax tree instead.
-START is the start symbol, which defaults to `expression'."
-  (let ((result (funcall
-                 (evil-parser evil-ex-grammar expression range)
-                 string (or start 'expression) syntax)))
-    (and result
-         ;; Disallow incomplete matches (ignore trailing WS)
-         (not (string-match-p "[^ \f\t\n\r\v]" string (cdr result)))
-         (car result))))
-
 (defun evil-ex-command-force-p (command)
   "Whether COMMAND accepts the bang argument."
+  (declare (obsolete evil-get-command-property "1.15.0"))
   (let ((binding (evil-ex-completed-binding command t)))
     (when binding
       (evil-get-command-property binding :ex-bang))))
 
-(defun evil-ex-syntactic-context (&optional pos)
-  "Return the syntactical context of the character at POS.
+(cl-defun evil--ex-syntactic-context
+    (&optional (pos (point))
+               (tree (save-excursion (goto-char (minibuffer-prompt-end))
+                                     (evil-ex-parse nil t)))
+               &aux i result)
+  "Return the syntactical context in TREE of the character at POS.
 POS defaults to the current position of point."
-  (setq pos (max (- (or pos (point)) (minibuffer-prompt-end)) 0))
-  (let* ((tree (evil-ex-parse (minibuffer-contents-no-properties) t))
-         (i 0) j result)
-    ;; Iterate over syntax tree leaves (i.e. the strings), and return
-    ;; the path to the leaf containing the cursor. Or, if not found,
-    ;; e.g. because of trailing whitespace, the last leaf allowed to
-    ;; be one past the rightmost non-empty string.
-    (cl-labels
-        ((traverse
-          (tree path)
-          (when (symbolp (car tree)) (setq path (cons (pop tree) path)))
-          (dolist (child tree)
-            (if (not (stringp child))
-                (traverse child path)
-              (setq i (+ i (length child)))
-              (when (cond ((>= i pos) (throw 'done path))
-                          ((null result) (setq j i))
-                          ((>= i j) (setq j (1+ j))))
-                (setq result path))))))
-      (catch 'done
-        (traverse tree nil)
-        result))))
+  ;; Iterate over syntax tree leaves (i.e. the strings), and return
+  ;; the path to the leaf containing the cursor. Or, if not found,
+  ;; e.g. because of trailing whitespace, the leaf at most one char
+  ;; past the rightmost non-empty string.
+  (cl-labels
+      ((traverse
+        (node path)
+        (while (and (consp node) (symbolp (car node)))
+          (push (cons (pop node) i) path))
+        (if (listp node)
+            (dolist (child node) (traverse child path))
+          ;; NODE is the end position of a parsed string
+          (when (>= node pos) (cl-return-from evil--ex-syntactic-context path))
+          (when (or (null result) (> node i))
+            (setq i node
+                  result path)))))
+    (traverse tree ()))
+  result)
 
 (provide 'evil-ex)
 

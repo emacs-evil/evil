@@ -811,14 +811,13 @@ Inhibits echo area messages, mode line updates and cursor changes."
      ,@body))
 
 (defun evil-count-lines (beg end)
-  "Return absolute line-number-difference betweeen `beg` and `end`.
-This should give the same results no matter where on the line `beg`
-and `end` are."
+  "Return absolute line-number-difference betweeen BEG and END.
+This should give the same results no matter where on the line BEG
+and END are."
   (if (= beg end)
       0
-    (let* ((last (max beg end))
-           (end-at-bol (save-excursion (goto-char last)
-                                       (bolp))))
+    (let ((end-at-bol (save-excursion (goto-char (max beg end))
+                                      (bolp))))
       (if end-at-bol
           (count-lines beg end)
         (1- (count-lines beg end))))))
@@ -978,14 +977,13 @@ argument.  Movement is constrained to the current field."
   "Return the position of LINE.
 If COLUMN is specified, return its position on the line.
 A negative number means the end of the line."
-  (declare-function evil-goto-line "evil-commands")
   (save-excursion
-    (evil-goto-line line)
-    (if (numberp column)
-        (if (< column 0)
-            (beginning-of-line 2)
-          (move-to-column column))
-      (beginning-of-line))
+    (goto-char (point-min))
+    (forward-line (1- line))
+    (when (numberp column)
+      (if (< column 0)
+          (forward-line)
+        (move-to-column column)))
     (point)))
 
 (defun evil-column (&optional pos)
@@ -2007,8 +2005,7 @@ The following special registers are supported.
                         (t search-ring)))
                   (user-error "No previous regular expression")))
              ((eq register ?:)
-              (or (car-safe evil-ex-history)
-                  (user-error "No previous command line")))
+              (or (car evil-ex-history) (user-error "No previous command line")))
              ((eq register ?.)
               evil-last-insertion)
              ((eq register ?-)
