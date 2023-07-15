@@ -305,7 +305,7 @@ otherwise for the word at point."
 (defun evil--find-thing (forward thing)
   "Return a cons of THING near point as a string and its position.
 THING should be a symbol understood by `thing-at-point',
-e.g. 'symbol or 'word.  If FORWARD is nil, search backward,
+e.g. \\='symbol or \\='word.  If FORWARD is nil, search backward,
 otherwise forward.  Returns nil if nothing is found."
   (let ((move (if forward #'forward-char #'backward-char))
         (end (if forward #'eobp #'bobp))
@@ -325,7 +325,7 @@ otherwise forward.  Returns nil if nothing is found."
 (defun evil-find-thing (forward thing)
   "Return a THING near point as a string.
 THING should be a symbol understood by `thing-at-point',
-e.g. 'symbol or 'word.  If FORWARD is nil, search backward,
+e.g. \\='symbol or \\='word.  If FORWARD is nil, search backward,
 otherwise forward.  Returns nil if nothing is found."
   (car (evil--find-thing forward thing)))
 
@@ -420,7 +420,7 @@ This function respects the values of `evil-ex-search-case'."
 (defun evil-ex-make-pattern (regexp case whole-line)
   "Create a new search pattern.
 REGEXP is the regular expression to be searched for. CASE should
-be either 'sensitive, 'insensitive for case-sensitive and
+be either \\='sensitive, \\='insensitive for case-sensitive and
 case-insensitive search, respectively, or anything else.  In the
 latter case the pattern is smart-case, i.e. it is automatically
 sensitive of the pattern contains one upper case letter,
@@ -754,14 +754,14 @@ the direcion is determined by `evil-ex-search-direction'."
 (defun evil-ex-find-next (&optional pattern direction nowrap)
   "Search for the next occurrence of the PATTERN in DIRECTION.
 PATTERN must be created using `evil-ex-make-pattern', DIRECTION
-is either 'forward or 'backward. If NOWRAP is non nil, the search
-does not wrap at buffer boundaries. Furthermore this function
-only searches invisible text if `search-invisible' is t. If
-PATTERN is not specified the current global pattern
+is either \\='forward or \\='backward. If NOWRAP is non nil, the
+search does not wrap at buffer boundaries. Furthermore this
+function only searches invisible text if `search-invisible' is
+t. If PATTERN is not specified the current global pattern
 `evil-ex-search-pattern' and if DIRECTION is not specified the
 current global direction `evil-ex-search-direction' is used.
 This function returns t if the search was successful, nil if it
-was unsuccessful and 'wrapped if the search was successful but
+was unsuccessful and \\='wrapped if the search was successful but
 has been wrapped at the buffer boundaries."
   (setq pattern (or pattern evil-ex-search-pattern)
         direction (or direction evil-ex-search-direction))
@@ -877,8 +877,8 @@ Return a triple (regexp offset next-search)."
   "Search for a full search pattern PATTERN-STRING in DIRECTION.
 This function splits PATTERN-STRING into
 pattern/offset/;next-pattern parts and performs the search in
-DIRECTION which must be either 'forward or 'backward. The first
-search is repeated COUNT times. If the pattern part of
+DIRECTION which must be either \\='forward or \\='backward. The
+first search is repeated COUNT times. If the pattern part of
 PATTERN-STRING is empty, the last global pattern stored in
 `evil-ex-search-pattern' is used instead if in addition the
 offset part is nil (i.e. no pattern/offset separator), the last
@@ -888,8 +888,8 @@ successful match.  This function returns a triple (RESULT PATTERN
 OFFSET) where RESULT is
 
   t              the search has been successful without wrap
-  'wrap          the search has been successful with wrap
-  'empty-pattern the last pattern has been empty
+  \\='wrap          the search has been successful with wrap
+  \\='empty-pattern the last pattern has been empty
   nil            the search has not been successful
 
 and PATTERN and OFFSET are the last pattern and offset this
@@ -1201,16 +1201,16 @@ This handler highlights the pattern of the current substitution."
 
 (defun evil-ex-get-substitute-info (string &optional implicit-r)
   "Return the substitution info of command line STRING.
-This function returns a three-element list \(PATTERN REPLACEMENT
+This function returns a three-element list (PATTERN REPLACEMENT
 FLAGS) consisting of the substitution parts of STRING. PATTERN is
 a ex-pattern (see `evil-ex-make-pattern') and REPLACEMENT in a
 compiled replacement expression (see `evil-compile-replacement').
 The information returned is the actual substitution information
 w.r.t. to special situations like empty patterns or repetition of
 previous substitution commands. If IMPLICIT-R is non-nil, then
-the flag 'r' is assumed, i.e. in the case of an empty pattern the
-last search pattern is used. This will be used when called from
-a :substitute command with arguments."
+the flag `r' is assumed, i.e. in the case of an empty pattern the
+last search pattern is used. This will be used when called from a
+:substitute command with arguments."
   (let (pattern replacement flags)
     (cond
      ((or (null string) (string-match "^[a-zA-Z]" string))

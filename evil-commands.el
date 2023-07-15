@@ -2145,7 +2145,7 @@ the current line."
   (interactive "<c>")
   (if (and (eq 'self-insert-command last-command)
            (eq ?0 (char-before)))
-      (progn (backward-delete-char 1)
+      (progn (delete-char -1)
              (evil-delete-indentation))
     (evil-shift-left (line-beginning-position) (line-beginning-position 2) count t)))
 
@@ -3049,8 +3049,8 @@ Calls `evil-complete-previous-line-func'."
 
 (defun evil-repeat-search (flag)
   "Called to record a search command.
-FLAG is either 'pre or 'post if the function is called before resp.
-after executing the command."
+FLAG is either \\='pre or \\='post if the function is called
+before resp, after executing the command."
   (cond
    ((and (evil-operator-state-p) (eq flag 'pre))
     (evil-repeat-record (this-command-keys))
@@ -3842,8 +3842,8 @@ Change to `%s'? "
 
 (defun evil-repeat-ex-search (flag)
   "Called to record a search command.
-FLAG is either 'pre or 'post if the function is called before
-resp.  after executing the command."
+FLAG is either \\='pre or \\='post if the function is called
+before resp, after executing the command."
   (cond
    ((and (evil-operator-state-p) (eq flag 'pre))
     (evil-repeat-record (this-command-keys))
@@ -4134,6 +4134,7 @@ This is the same as \":%s//~/&\"."
   (apply #'evil-ex-substitute (point-min) (point-max)
          (evil-ex-get-substitute-info (concat "//~/&"))))
 
+(declare-function hi-lock-read-face-name "hi-lock")
 (evil-define-command evil-ex-match (args &optional bang)
   "Define a pattern to highlight in the current buffer.
 With no args, clear a highlight from the buffer

@@ -96,7 +96,7 @@ otherwise prepend it to the list.
   "Delete by side-effect all items satisfying PREDICATE in LIST.
 Stop when reaching POINTER.  If the first item satisfies PREDICATE,
 there is no way to remove it by side-effect; therefore, write
-\(setq foo (evil-filter-list 'predicate foo)) to be sure of
+(setq foo (evil-filter-list \\='predicate foo)) to be sure of
 changing the value of `foo'."
   (let ((tail list) elt head)
     (while (and tail (not (eq tail pointer)))
@@ -2675,7 +2675,7 @@ list of command properties as passed to `evil-define-command'."
 
 (defun evil-set-type (object type)
   "Set the type of OBJECT to TYPE.
-For example, (evil-set-type 'next-line 'line)
+For example, (evil-set-type \\='next-line \\='line)
 will make `line' the type of the `next-line' command."
   (cond
    ((overlayp object)
@@ -3012,10 +3012,10 @@ linewise, otherwise it is character wise."
 OP and CL are pairs of buffer positions for the opening and
 closing delimiter of a range. SELECTION-TYPE is the desired type
 of selection.  It is a symbol that determines which parts of the
-block are selected.  If it is 'inclusive or t the returned range
-is \(cons (car OP) (cdr CL)). If it is 'exclusive or nil the
-returned range is (cons (cdr OP) (car CL)).  If it is
-'exclusive-line the returned range will skip whitespace at the
+block are selected.  If it is \\='inclusive or t the returned
+range is (cons (car OP) (cdr CL)). If it is \\='exclusive or nil
+the returned range is (cons (cdr OP) (car CL)).  If it is
+\\='exclusive-line the returned range will skip whitespace at the
 end of the line of OP and at the beginning of the line of CL."
   (cond
    ((memq selection-type '(inclusive t)) (cons (car op) (cdr cl)))
@@ -3048,13 +3048,14 @@ delimited object must be given by THING-up function (see
 `evil-up-block').
 
 SELECTION-TYPE is symbol that determines which parts of the block
-are selected.  If it is 'inclusive or t OPEN and CLOSE are
-included in the range. If it is 'exclusive or nil the delimiters
-are not contained. If it is 'exclusive-line the delimiters are
-not included as well as adjacent whitespace until the beginning
-of the next line or the end of the previous line. If the
-resulting selection consists of complete lines only and visual
-state is not active, the returned selection is linewise.
+are selected.  If it is \\='inclusive or t OPEN and CLOSE are
+included in the range. If it is \\='exclusive or nil the
+delimiters are not contained. If it is \\='exclusive-line the
+delimiters are not included as well as adjacent whitespace until
+the beginning of the next line or the end of the previous
+line. If the resulting selection consists of complete lines only
+and visual state is not active, the returned selection is
+linewise.
 
 If COUNTCURRENT is non-nil an objected is counted if the current
 selection matches that object exactly.
@@ -3229,7 +3230,7 @@ is ignored."
 
 (defun evil-select-quote-thing (thing beg end _type count &optional inclusive)
   "Selection THING as if it described a quoted object.
-THING is typically either 'evil-quote or 'evil-chars. This
+THING is typically either \\='evil-quote or \\='evil-chars. This
 function is called from `evil-select-quote'."
   (save-excursion
     (let* ((count (or count 1))
@@ -3666,8 +3667,8 @@ Depending on the value of MAGIC the following characters are
 considered magic.
   t             [][{}*+?.&~$^
   nil           [][{}*+?$^
-  'very-magic   not 0-9A-Za-z_
-  'very-nomagic empty."
+  \\='very-magic   not 0-9A-Za-z_
+  \\='very-nomagic empty."
   (cond
    ((eq magic t) "[][}{*+?.&~$^]")
    ((eq magic 'very-magic) "[^0-9A-Za-z_]")
@@ -3773,10 +3774,10 @@ replacement text first."
 (defun evil-justify-lines (beg end justify position)
   "Justify all lines in a range.
 BEG and END specify the range of those lines to be
-justified. JUSTIFY is either 'left, 'right or 'center according
-to the justification type. POSITION is the maximal text width for
-right and center justification or the column at which the lines
-should be left-aligned for left justification."
+justified. JUSTIFY is either \\='left, \\='right or \\='center
+according to the justification type. POSITION is the maximal text
+width for right and center justification or the column at which
+the lines should be left-aligned for left justification."
   (let ((fill-column position)
         adaptive-fill-mode fill-prefix)
     (evil-with-restriction

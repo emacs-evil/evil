@@ -147,8 +147,8 @@ The result is a function taking the arguments STRING, SYMBOL and
 SYNTAX, that parses STRING. SYMBOL should be one of ENTRYPOINTS.
 
 If the parse succeeds, the return value is a cons cell
-\(RESULT . END), where RESULT is a parse tree and END is the start of
-the remainder of STRING. Otherwise, the return value is nil.
+(RESULT . END), where RESULT is a parse tree and END is the start
+of the remainder of STRING. Otherwise, the return value is nil.
 
 GRAMMAR is an association list of symbols and their definitions.
 A definition is a list of production rules, which are tried in
@@ -168,8 +168,8 @@ A production rule can be one of the following:
 
 Thus, a simple grammar may look like:
 
-    ((plus \"\\\\+\")       ; plus <- \"+\"
-     (minus \"-\")          ; minus <- \"-\"
+    ((plus \"\\\\+\")           ; plus <- \"+\"
+     (minus \"-\")            ; minus <- \"-\"
      (operator plus minus)) ; operator <- plus / minus
 
 All input-consuming rules have a value. A regular expression evaluates
@@ -177,18 +177,18 @@ to the text matched, while a list evaluates to a list of values.
 The value of a list may be overridden with a semantic action, which is
 specified with a #'-quoted expression at the end:
 
-    (X Y #'foo)
+    (X Y #\\='foo)
 
 The value of this rule is the result of calling foo with the values
 of X and Y as arguments. Alternatively, the function call may be
 specified explicitly:
 
-    (X Y #'(foo $1 $2))
+    (X Y #\\='(foo $1 $2))
 
 Here, $1 refers to X and $2 refers to Y. $0 refers to the whole list.
 Dollar expressions can also be used directly:
 
-    (X Y #'$1)
+    (X Y #\\='$1)
 
 This matches X followed by Y, but ignores the value of Y;
 the value of the list is the same as the value of X.
@@ -694,14 +694,14 @@ keywords and function:
   Function to be called when the type of the current argument
   changes or when the content of this argument changes. This
   function should take one obligatory argument FLAG followed by
-  an optional argument ARG. FLAG is one of three symbol 'start,
-  'stop or 'update. When the argument type is recognized for the
-  first time and this handler is started the FLAG is 'start. If
-  the argument type changes to something else or ex state
-  finished the handler FLAG is 'stop. If the content of the
-  argument has changed FLAG is 'update. If FLAG is either 'start
-  or 'update then ARG is the current value of this argument. If
-  FLAG is 'stop then arg is nil."
+  an optional argument ARG. FLAG is one of three symbol
+  \\='start, \\='stop or \\='update. When the argument type is
+  recognized for the first time and this handler is started the
+  FLAG is \\='start. If the argument type changes to something
+  else or ex state finished the handler FLAG is \\='stop. If the
+  content of the argument has changed FLAG is \\='update. If FLAG
+  is either \\='start or \\='update then ARG is the current value
+  of this argument. If FLAG is \\='stop then arg is nil."
   (declare (indent defun)
            (doc-string 2)
            (debug (&define name

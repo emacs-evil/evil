@@ -407,7 +407,7 @@ also be inhibited by setting `evil-inhibit-esc'."
 Used by `evil-esc-mode'.")
 
 (defvar evil-inhibit-esc nil
-  "If non-nil, the \\e event will never be translated to 'escape.")
+  "If non-nil, the \\e event will never be translated to \\='escape.")
 
 (defcustom evil-intercept-esc 'always
   "Whether Evil should intercept the escape key.
@@ -1252,8 +1252,8 @@ only has influence if the Evil search module is chosen in
   "If non-nil Vim-style backslash codes are supported in search patterns.
 See `evil-transform-vim-style-regexp' for the supported backslash
 codes.  Note that this only affects the search command if
-`evil-search-module' is set to 'evil-search. The isearch module
-always uses plain Emacs regular expressions."
+`evil-search-module' is set to \\='evil-search. The isearch
+module always uses plain Emacs regular expressions."
   :type 'boolean
   :group 'evil)
 
@@ -1298,7 +1298,7 @@ used."
 
 (defcustom evil-ex-search-incremental t
   "If t, use incremental search. Note that this only affects the
-search command if `evil-search-module' is set to 'evil-search."
+search command if `evil-search-module' is set to \\='evil-search."
   :type 'boolean
   :group 'evil)
 
@@ -1322,10 +1322,10 @@ the replacement is shown interactively."
 (defcustom evil-ex-substitute-global nil
   "If non-nil substitute patterns are global by default.
 Usually (if this variable is nil) a substitution works only on
-the first match of a pattern in a line unless the 'g' flag is
+the first match of a pattern in a line unless the `g' flag is
 given, in which case the substitution happens on all matches in a
 line. If this option is non-nil, this behaviour is reversed: the
-substitution works on all matches unless the 'g' pattern is
+substitution works on all matches unless the `g' pattern is
 specified, then is works only on the first match."
   :type  'boolean
   :group 'evil)
@@ -1855,7 +1855,7 @@ the format:
 MODES acts as a predicate, containing the symbols of all major or
 minor modes for which the handler should match.  For example:
 
-  '((outline-minor-mode org-mode) ...)
+  \\='((outline-minor-mode org-mode) ...)
 
 would match for either outline-minor-mode or org-mode, even though the
 former is a minor mode and the latter is a major.
@@ -1965,7 +1965,7 @@ See `evil-ex-init-shell-argument-completion'.")
   "The history for the search command.")
 
 (defvar evil-ex-search-direction nil
-  "The direction of the current search, either 'forward or 'backward.")
+  "The direction of the current search, either \\='forward or \\='backward.")
 
 (defvar evil-ex-search-count nil
   "The count of the current search.")
@@ -2086,7 +2086,7 @@ This variable must be set before evil is loaded."
 Customized via `evil-undo-system'.")
 
 (defvar evil-redo-function 'evil--redo-placeholder
-  "Function to be used by 'evil-redo'.
+  "Function to be used by `evil-redo'.
 Customized via `evil-undo-system'.")
 
 (defun evil-set-undo-system (system)
