@@ -2718,7 +2718,7 @@ lines.  This is the default behaviour for Visual-state insertion."
                                         (current-column)
                                         vcount))
           evil-insert-skip-empty-lines skip-empty-lines)
-    (evil-insert-state)))
+    (evil-insert-state 1)))
 
 (defun evil-append (count &optional vcount skip-empty-lines)
   "Switch to Insert state just after point.
@@ -2808,7 +2808,7 @@ The insertion will be repeated COUNT times."
   (unwind-protect
       (when evil-auto-indent
         (indent-according-to-mode))
-    (evil-insert-state)))
+    (evil-insert-state 1)))
 
 (evil-define-command evil-open-below (count)
   "Insert a new line below point and switch to Insert state.
@@ -2825,7 +2825,7 @@ The insertion will be repeated COUNT times."
   (unwind-protect
       (when evil-auto-indent
         (indent-according-to-mode))
-    (evil-insert-state)))
+    (evil-insert-state 1)))
 
 (defun evil--insert-line (count vcount non-blank-p)
   "Switch to insert state at the beginning of the current line.
@@ -2854,7 +2854,7 @@ in the next VCOUNT - 1 lines below the current one."
              (list (line-number-at-pos)
                    (if non-blank-p #'evil-first-non-blank #'evil-beginning-of-line)
                    vcount)))
-  (evil-insert-state))
+  (evil-insert-state 1))
 
 (defun evil-insert-line (count &optional vcount)
   "Switch to insert state at beginning of current line.
@@ -2892,7 +2892,7 @@ next VCOUNT - 1 lines below the current one."
              (list (line-number-at-pos)
                    #'end-of-line
                    vcount)))
-  (evil-insert-state))
+  (evil-insert-state 1))
 
 (evil-define-command evil-insert-digraph (count)
   "Insert COUNT digraphs."

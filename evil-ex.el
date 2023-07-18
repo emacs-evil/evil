@@ -379,19 +379,17 @@ the initial input is the visual region '<,'> or `<,`>. The variable
 If STRING is nil, parse the text after point instead.  If SYNTAX is
 non-nil, return a syntax tree instead.  ENTRYPOINT is the start
 symbol, which defaults to `expression'."
-  (let ((parse
-         (lambda ()
-           (let ((result (funcall (evil-parser evil-ex-grammar expression range)
-                                  (or entrypoint 'expression) syntax)))
-             (and result
-                  ;; Disallow incomplete matches (ignore trailing WS)
-                  (not (search-forward "[^ \t\n\r]" nil t))
-                  (car result))))))
-    (if (not string) (funcall parse)
+  (if string
       (with-temp-buffer
         (insert string)
         (goto-char (point-min))
-        (funcall parse)))))
+        (evil-ex-parse nil syntax entrypoint))
+    (let ((result (funcall (evil-parser evil-ex-grammar expression range)
+                           (or entrypoint 'expression) syntax)))
+      (and result
+           ;; Disallow incomplete matches (ignore trailing WS)
+           (not (search-forward "[^ \t\n\r]" nil t))
+           (car result)))))
 
 (defun evil-ex-delete-backward-char ()
   "Close the minibuffer if it is empty.
