@@ -478,12 +478,30 @@ in case of incomplete or unknown commands."
             (cond ((stringp prefix) (evil-ex-echo "Incomplete command"))
                   ((null prefix) (evil-ex-echo "Unknown command")))))))))
 
+(defvar-local evil--ex-echo-overlay nil
+  "Overlay for displaying info messages during Ex.")
+
 (defun evil-ex-echo (string &rest args)
   "Display a message after the current Ex command."
-  (unless (or evil-no-display (string= string ""))
-    (let ((message (concat " [" (apply #'format string args) "]")))
-      (add-face-text-property 1 (length message) 'evil-ex-info nil message)
-      (minibuffer-message message))))
+  ;; Differs from minibuffer-message, which see, in that it does not
+  ;; use sit-for, since it may be called in the middle of a command.
+  (unless (or evil-no-display (zerop (length string)))
+    (let ((string (concat " [" (apply #'format string args) "]")))
+      (put-text-property 0 1 'cursor t string) ; Place cursor before message
+      (put-text-property 1 (length string) 'face 'evil-ex-info string)
+      (with-selected-window (minibuffer-window)
+        (if evil--ex-echo-overlay
+            (move-overlay evil--ex-echo-overlay (point-max) (point-max))
+          (setq evil--ex-echo-overlay (make-overlay (point-max) (point-max) nil t t)))
+        (add-hook 'pre-command-hook #'evil--ex-remove-echo-overlay nil t)
+        (overlay-put evil--ex-echo-overlay 'after-string string)))))
+
+(defun evil--ex-remove-echo-overlay ()
+  "Remove echo overlay from Ex minibuffer."
+  (when evil--ex-echo-overlay
+    (delete-overlay evil--ex-echo-overlay)
+    (setq evil--ex-echo-overlay nil))
+  (remove-hook 'pre-command-hook #'evil--ex-remove-echo-overlay t))
 
 (define-obsolete-function-alias 'evil-ex-completion #'completion-at-point "1.15.0")
 

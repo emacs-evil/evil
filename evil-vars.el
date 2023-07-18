@@ -1455,7 +1455,7 @@ to commands that wrap or redefine it. See emacs-evil/evil#916.")
 Entries have the form (VARIABLE VALUE LOCAL), where LOCAL is
 whether the variable was previously buffer-local.")
 
-(evil-define-local-var evil-no-display nil
+(defvar evil-no-display nil
   "If non-nil, various Evil displays are inhibited.
 Use the macro `evil-without-display' to set this variable.")
 
