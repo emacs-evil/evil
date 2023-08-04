@@ -207,6 +207,7 @@ ALIST is an association list with entries of the form
 If PROP is nil, return all properties for KEY.
 If KEY is t, return an association list of keys
 and their PROP values."
+  (declare (obsolete nil "1.15.0"))
   (cond
    ((null prop)
     (cdr (assq key alist)))
@@ -225,6 +226,7 @@ and their PROP values."
   "Set PROP to VAL for KEY in ALIST-VAR.
 ALIST-VAR points to an association list with entries of the form
 \(KEY . PLIST), where PLIST is a property list storing PROP and VAL."
+  (declare (obsolete nil "1.15.0"))
   (set alist-var
        (let* ((alist (symbol-value alist-var))
               (plist (cdr (assq key alist))))
@@ -646,10 +648,10 @@ key-sequence. PREFIX and REST may be nil if they do not exist.
 If a command is bound to some keyboard macro, it is expanded
 recursively."
   (catch 'done
-    (let* ((len (length keys))
-           (beg 0)
-           (end 1)
-           (found-prefix nil))
+    (let ((len (length keys))
+          (beg 0)
+          (end 1)
+          found-prefix)
       (while (<= end len)
         (let* ((seq (substring keys beg end))
                (cmd (key-binding seq)))
@@ -1936,103 +1938,97 @@ The following special registers are supported.
   -  the last small (less than a line) delete
   _  the black hole register
   =  the expression register (read only)"
+  (unless (characterp register) (error "Invalid register `%S'" register))
   (condition-case err
-      (when (characterp register)
-        (or (cond
-             ((eq register ?\")
-              (current-kill 0))
-             ((<= ?1 register ?9)
-              (let ((reg (- register ?1)))
-                (and (< reg (length kill-ring))
-                     (current-kill reg t))))
-             ((memq register '(?* ?+))
-              (let ((what (if (eq register ?*) 'PRIMARY 'CLIPBOARD)))
-                (if (eval-when-compile (>= emacs-major-version 29))
-                    (gui--selection-value-internal what)
-                  ;; The following code is based on `x-selection-value-internal'
-                  ;; (now `gui--selection-value-internal') circa Emacs 24. We're
-                  ;; unsure why exactly it's duplicated here, and it's possible
-                  ;; it needn't be for newer versions of Emacs.
-                  (let ((request-type (or (bound-and-true-p x-select-request-type)
-                                          '(UTF8_STRING COMPOUND_TEXT STRING)))
-                        text)
-                    (unless (consp request-type)
-                      (setq request-type (list request-type)))
-                    (while (and request-type (not text))
-                      (setq text (ignore-errors
-                                   (evil-get-selection what (pop request-type)))))
-                    (when text
-                      (remove-text-properties 0 (length text) '(foreign-selection nil) text))
-                    text))))
-             ((eq register ?\C-W)
-              (unless (evil-ex-p)
-                (user-error "Register <C-w> only available in ex state"))
-              (with-current-buffer evil-ex-current-buffer
-                (thing-at-point 'evil-word)))
-             ((eq register ?\C-A)
-              (unless (evil-ex-p)
-                (user-error "Register <C-a> only available in ex state"))
-              (with-current-buffer evil-ex-current-buffer
-                (thing-at-point 'evil-WORD)))
-             ((eq register ?\C-O)
-              (unless (evil-ex-p)
-                (user-error "Register <C-o> only available in ex state"))
-              (with-current-buffer evil-ex-current-buffer
-                (thing-at-point 'evil-symbol)))
-             ((eq register ?\C-F)
-              (unless (evil-ex-p)
-                (user-error "Register <C-f> only available in ex state"))
-              (with-current-buffer evil-ex-current-buffer
-                (thing-at-point 'filename)))
-             ((eq register ?\C-L)
-              (unless (evil-ex-p)
-                (user-error "Register <C-l> only available in ex state"))
-              (with-current-buffer evil-ex-current-buffer
-                (replace-regexp-in-string "\n\\'" "" (thing-at-point 'line))))
-             ((eq register ?%)
-              (or (buffer-file-name (and (evil-ex-p)
-                                         (minibufferp)
-                                         evil-ex-current-buffer))
-                  (user-error "No file name")))
-             ((= register ?#)
-              (or (with-current-buffer (other-buffer) (buffer-file-name))
-                  (user-error "No file name")))
-             ((eq register ?/)
-              (defvar evil-search-module)
-              (or (car (cond
-                        ((eq evil-search-module 'evil-search) evil-ex-search-history)
-                        (isearch-regexp regexp-search-ring)
-                        (t search-ring)))
-                  (user-error "No previous regular expression")))
-             ((eq register ?:)
-              (or (car evil-ex-history) (user-error "No previous command line")))
-             ((eq register ?.)
-              evil-last-insertion)
-             ((eq register ?-)
-              evil-last-small-deletion)
-             ((eq register ?=)
-              (let ((enable-recursive-minibuffers t))
-                (setq evil-last-=-register-input
-                      (minibuffer-with-setup-hook
-                          (lambda ()
-                            (when evil-last-=-register-input
-                              (add-hook 'pre-command-hook #'evil-ex-remove-default nil t)))
-                        (read-from-minibuffer
-                         "="
-                         (and evil-last-=-register-input
-                              (propertize evil-last-=-register-input 'face 'shadow))
-                         evil-eval-map
-                         nil
-                         'evil-eval-history
-                         evil-last-=-register-input
-                         t)))
-                (evil--eval-expr evil-last-=-register-input)))
-             ((eq register ?_) ; the black hole register
-              "")
-             (t
-              (setq register (downcase register))
+      (or (cond
+           ((eq register ?\")
+            (current-kill 0))
+           ((<= ?1 register ?9)
+            (let ((reg (- register ?1)))
+              (and (< reg (length kill-ring))
+                   (current-kill reg t))))
+           ((memq register '(?* ?+))
+            (let ((what (if (eq register ?*) 'PRIMARY 'CLIPBOARD)))
+              (if (eval-when-compile (>= emacs-major-version 29))
+                  (gui--selection-value-internal what)
+                ;; The following code is based on `x-selection-value-internal'
+                ;; (now `gui--selection-value-internal') circa Emacs 24. We're
+                ;; unsure why exactly it's duplicated here, and it's possible
+                ;; it needn't be for newer versions of Emacs.
+                (let ((request-type (or (bound-and-true-p x-select-request-type)
+                                        '(UTF8_STRING COMPOUND_TEXT STRING)))
+                      text)
+                  (unless (consp request-type)
+                    (setq request-type (list request-type)))
+                  (while (and request-type (not text))
+                    (setq text (ignore-errors
+                                 (evil-get-selection what (pop request-type)))))
+                  (when text
+                    (remove-text-properties 0 (length text) '(foreign-selection nil) text))
+                  text))))
+           ((eq register ?\C-W)
+            (unless (evil-ex-p)
+              (user-error "Register <C-w> is only available in Ex state"))
+            (with-current-buffer evil-ex-original-buffer
+              (thing-at-point 'evil-word)))
+           ((eq register ?\C-A)
+            (unless (evil-ex-p)
+              (user-error "Register <C-a> is only available in Ex state"))
+            (with-current-buffer evil-ex-original-buffer
+              (thing-at-point 'evil-WORD)))
+           ((eq register ?\C-O)
+            (unless (evil-ex-p)
+              (user-error "Register <C-o> is only available in Ex state"))
+            (with-current-buffer evil-ex-original-buffer
+              (thing-at-point 'evil-symbol)))
+           ((eq register ?\C-F)
+            (unless (evil-ex-p)
+              (user-error "Register <C-f> is only available in Ex state"))
+            (with-current-buffer evil-ex-original-buffer
+              (thing-at-point 'filename)))
+           ((eq register ?\C-L)
+            (unless (evil-ex-p)
+              (user-error "Register <C-l> is only available in Ex state"))
+            (with-current-buffer evil-ex-original-buffer
+              (replace-regexp-in-string "\n\\'" "" (thing-at-point 'line))))
+           ((eq register ?%)
+            (or (buffer-file-name evil-ex-original-buffer)
+                (user-error "No file name")))
+           ((= register ?#)
+            (or (with-current-buffer (other-buffer) (buffer-file-name))
+                (user-error "No file name")))
+           ((eq register ?/)
+            (defvar evil-search-module)
+            (or (car (cond
+                      ((eq evil-search-module 'evil-search) evil-ex-search-history)
+                      (isearch-regexp regexp-search-ring)
+                      (t search-ring)))
+                (user-error "No previous regular expression")))
+           ((eq register ?:)
+            (or (car evil-ex-history) (user-error "No previous command line")))
+           ((eq register ?.) evil-last-insertion)
+           ((eq register ?-) evil-last-small-deletion)
+           ((eq register ?=)
+            (let ((enable-recursive-minibuffers t))
+              (setq evil-last-=-register-input
+                    (minibuffer-with-setup-hook
+                        (lambda ()
+                          (when evil-last-=-register-input
+                            (add-hook 'pre-command-hook #'evil-ex-remove-default nil t)))
+                      (read-from-minibuffer
+                       "="
+                       (and evil-last-=-register-input
+                            (propertize evil-last-=-register-input 'face 'shadow))
+                       evil-eval-map
+                       nil
+                       'evil-eval-history
+                       evil-last-=-register-input
+                       t)))
+              (evil--eval-expr evil-last-=-register-input)))
+           ((eq register ?_) "") ; the black hole register
+           (t (setq register (downcase register))
               (get-register register)))
-            (user-error "Register `%c' is empty" register)))
+          (user-error "Register `%c' is empty" register))
     (error (unless noerror (signal (car err) (cdr err))))))
 
 (defun evil-append-register (register text)
@@ -2565,16 +2561,14 @@ is negative this is a more recent kill."
 (defun evil-match-interactive-code (interactive &optional pos)
   "Match an interactive code at position POS in string INTERACTIVE.
 Return the first matching entry in `evil-interactive-alist', or nil."
-  (let ((length (length interactive))
-        (pos (or pos 0)))
-    (catch 'done
-      (dolist (entry evil-interactive-alist)
-        (let* ((string (car entry))
-               (end (+ (length string) pos)))
-          (when (and (<= end length)
-                     (string= string
-                              (substring interactive pos end)))
-            (throw 'done entry)))))))
+  (unless pos (setq pos 0))
+  (cl-loop
+   with len = (length interactive) for entry in evil-interactive-alist thereis
+   (let* ((string (car entry))
+          (end (+ pos (length string))))
+     (and (<= end len)
+          (eq (compare-strings string nil nil interactive pos end) t)
+          entry))))
 
 (defun evil-concatenate-interactive-forms (&rest forms)
   "Concatenate interactive list expressions FORMS.
@@ -2591,17 +2585,14 @@ are joined, if possible."
           (setq forms (cons (append (car forms)
                                     (cdr (cadr forms)))
                             (cdr (cdr forms)))))
-         (t
-          (push (pop forms) result))))
+         (t (push (pop forms) result))))
       (when (car forms)
         (push (pop forms) result))
       (setq result (nreverse result))
       (cond
        ((null result))
-       ((null (cdr result))
-        (car result))
-       (t
-        `(append ,@result))))))
+       ((null (cdr result)) (car result))
+       (t `(append ,@result))))))
 
 (defun evil-interactive-string (string)
   "Evaluate the interactive string STRING.
@@ -2610,27 +2601,23 @@ The return value is a cons cell (FORM . PROPERTIES),
 where FORM is a single list-expression to be passed to
 a standard `interactive' statement, and PROPERTIES is a
 list of command properties as passed to `evil-define-command'."
-  (let ((length (length string))
+  (let ((len (length string))
         (pos 0)
-        code expr forms match plist prompt properties)
-    (while (< pos length)
+        forms properties)
+    (while (< pos len)
       (if (eq (aref string pos) ?\n)
           (setq pos (1+ pos))
-        (setq match (evil-match-interactive-code string pos))
-        (if (null match)
-            (user-error "Unknown interactive code: `%s'"
-                        (substring string pos))
-          (setq code (car match)
-                expr (car (cdr match))
-                plist (cdr (cdr match))
-                pos (+ pos (length code)))
+        (cl-destructuring-bind (code expr . plist)
+            (or (evil-match-interactive-code string pos)
+                (user-error "Unknown interactive code: `%s'"
+                            (substring string pos)))
+          (setq pos (+ pos (length code)))
           (when (functionp expr)
-            (setq prompt
-                  (substring string pos
-                             (or (string-match "\n" string pos)
-                                 length))
-                  pos (+ pos (length prompt))
-                  expr `(funcall ,expr ,prompt)))
+            (let ((prompt (substring
+                           string pos
+                           (or (string-match-p "\n" string pos) len))))
+              (setq pos (+ pos (length prompt))
+                    expr `(funcall ,expr ,prompt))))
           (setq forms (append forms (list expr))
                 properties (append properties plist)))))
     (cons `(append ,@forms) properties)))

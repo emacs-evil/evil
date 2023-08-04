@@ -407,14 +407,14 @@ also be inhibited by setting `evil-inhibit-esc'."
 Used by `evil-esc-mode'.")
 
 (defvar evil-inhibit-esc nil
-  "If non-nil, the \\e event will never be translated to 'escape.")
+  "If non-nil, the \"\\e\" event will never be translated to `escape'.")
 
 (defcustom evil-intercept-esc 'always
   "Whether Evil should intercept the escape key.
 In the terminal, escape and a meta key sequence both generate the
 same event.  In order to distingush these, Evil uses
 `input-decode-map'.  It is not necessary to do this in a graphical
-Emacs session.  However, if you prefer to use `C-[' as escape (which
+Emacs session.  However, if you prefer to use \"C-[\" as escape (which
 is identical to the terminal escape key code), this interception must
 also happen in graphical Emacs sessions.  Set this variable to
 `always', t (only in the terminal) or nil (never intercept)."
@@ -1252,7 +1252,7 @@ only has influence if the Evil search module is chosen in
   "If non-nil Vim-style backslash codes are supported in search patterns.
 See `evil-transform-vim-style-regexp' for the supported backslash
 codes.  Note that this only affects the search command if
-`evil-search-module' is set to 'evil-search. The isearch module
+`evil-search-module' is set to `evil-search'.  The isearch module
 always uses plain Emacs regular expressions."
   :type 'boolean
   :group 'evil)
@@ -1298,7 +1298,7 @@ used."
 
 (defcustom evil-ex-search-incremental t
   "If t, use incremental search. Note that this only affects the
-search command if `evil-search-module' is set to 'evil-search."
+search command if `evil-search-module' is set to `evil-search'."
   :type 'boolean
   :group 'evil)
 
@@ -1321,12 +1321,10 @@ the replacement is shown interactively."
 
 (defcustom evil-ex-substitute-global nil
   "If non-nil substitute patterns are global by default.
-Usually (if this variable is nil) a substitution works only on
-the first match of a pattern in a line unless the 'g' flag is
-given, in which case the substitution happens on all matches in a
-line. If this option is non-nil, this behaviour is reversed: the
-substitution works on all matches unless the 'g' pattern is
-specified, then is works only on the first match."
+Standardly (if this variable is nil) a substitution works only on the
+first match of the pattern in a line unless the \"g\" flag is
+given, in which case the substitution happens on all matches in the
+line. If this option is non-nil, this behavior is reversed."
   :type  'boolean
   :group 'evil)
 
@@ -1910,11 +1908,16 @@ when Ex is started interactively.")
 (defvar evil-ex-history nil
   "History of Ex commands.")
 
-(defvar evil-ex-current-buffer nil
-  "The buffer from which Ex was started.")
+(define-obsolete-variable-alias
+  'evil-ex-current-buffer 'evil-ex-original-buffer "1.15.0")
+(defvar evil-ex-original-buffer nil
+  "Buffer that was current when the Evil command line was started.")
 
 (defvar evil-ex-point nil
   "The point position when the Ex command was called.")
+
+(defvar evil-called-from-ex-p nil
+  "Non-nil if a command is currently being called as an Ex command.")
 
 (defvar evil-ex-range nil
   "The current range of the Ex command.")
@@ -1940,7 +1943,7 @@ when Ex is started interactively.")
   "The history for the search command.")
 
 (defvar evil-ex-search-direction nil
-  "The direction of the current search, either 'forward or 'backward.")
+  "The direction of the current search, either `forward' or `backward'.")
 
 (defvar evil-ex-search-count nil
   "The count of the current search.")
@@ -1981,16 +1984,13 @@ Otherwise the previous command is assumed as substitute.")
 
 ;;; Command line window
 
-(defvar evil-command-window-current-buffer nil
-  "The buffer from which the command line window was called.")
-
 (evil-define-local-var evil-command-window-execute-fn nil
   "The command to execute when exiting the command line window.")
 
 (evil-define-local-var evil-command-window-cmd-key nil
   "The key for the command that opened the command line window (:, /, or ?).")
 
-;; The lazy-highlighting framework.
+;; The lazy-highlighting framework
 (evil-define-local-var evil-ex-active-highlights-alist nil
   "An alist of currently active highlights.")
 
@@ -2061,11 +2061,11 @@ This variable must be set before evil is loaded."
 Customized via `evil-undo-system'.")
 
 (defvar evil-redo-function 'evil--redo-placeholder
-  "Function to be used by 'evil-redo'.
+  "Function to be used by `evil-redo'.
 Customized via `evil-undo-system'.")
 
 (defun evil-set-undo-system (system)
-  "Set `evil-undo-function' and `evil-redo-function` by SYSTEM."
+  "Set `evil-undo-function' and `evil-redo-function' by SYSTEM."
   (cond
    ((not system)
     (setq evil-undo-function 'undo
@@ -2079,14 +2079,14 @@ Customized via `evil-undo-system'.")
    ((eq system 'undo-fu)
     (setq evil-undo-function 'undo-fu-only-undo
           evil-redo-function 'undo-fu-only-redo))
-   (t
-    (error "Unknown undo system %s" system))))
+   (t (error "Unknown undo system `%s'" system))))
 
 (defcustom evil-undo-system nil
-  "Undo system Evil should use.  If equal to `undo-tree' or
-`undo-fu', those packages must be installed.  If equal to
-`undo-tree', `undo-tree-mode' must also be activated.  If equal
-to `undo-redo', Evil uses commands natively available in Emacs 28."
+  "Undo system Evil should use.
+If equal to `undo-tree' or `undo-fu', those packages must be
+installed.  If equal to `undo-tree', `undo-tree-mode' must also be
+activated.  If equal to `undo-redo', Evil uses commands natively
+available in Emacs 28."
   :type '(choice (const :tag "Vanilla undo" nil)
                  (const undo-redo)
                  (const undo-tree)

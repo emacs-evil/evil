@@ -165,20 +165,20 @@ Thus, a simple grammar may look like:
 All input-consuming rules have a value. A regular expression evaluates
 to the text matched, while a list evaluates to a list of values.
 The value of a list may be overridden with a semantic action, which is
-specified with a #'-quoted expression at the end:
+specified with a #\\='-quoted expression at the end:
 
-    (X Y #'foo)
+    (X Y #\\='foo)
 
 The value of this rule is the result of calling foo with the values
 of X and Y as arguments. Alternatively, the function call may be
 specified explicitly:
 
-    (X Y #'(foo $1 $2))
+    (X Y #\\='(foo $1 $2))
 
 Here, $1 refers to X and $2 refers to Y. $0 refers to the whole list.
 Dollar expressions can also be used directly:
 
-    (X Y #'$1)
+    (X Y #\\='$1)
 
 This matches X followed by Y, but ignores the value of Y;
 the value of the list is the same as the value of X.
@@ -315,14 +315,14 @@ The following symbols have reserved meanings within a grammar:
 (defvar evil--ex-cmd nil
   "The current Ex command string.")
 
-(defvar evil-ex-argument-handler nil
+(defvar evil--ex-argument-handler nil
   "The argument handler for the current Ex command.")
 
 (define-error 'evil-ex-error "Ex syntax error")
 
 (defun evil-ex-p ()
-  "Whether Ex is currently active."
-  (when evil-ex-current-buffer t))
+  "Return non-nil if currently in Ex state."
+  (when evil-ex-original-buffer t))
 
 (evil-define-command evil-ex (&optional initial-input)
   "Enter an Ex command.
@@ -349,12 +349,13 @@ the initial input is the visual region '<,'> or `<,`>. The variable
                  (if (= arg 0) "." (format ".,.%+d" arg)))))
              evil-ex-initial-input)))
      (list (unless (string= s "") s))))
-  (let ((evil-ex-current-buffer (current-buffer))
+  (let ((buffer (current-buffer))
         (previous-command (when evil-want-empty-ex-last-command
                             (car evil-ex-history)))
-        evil--ex-expression evil--ex-cmd evil-ex-argument-handler s)
+        s evil--ex-expression evil--ex-cmd evil--ex-argument-handler)
     (minibuffer-with-setup-hook
         (lambda ()
+          (setq-local evil-ex-original-buffer buffer)
           (evil-ex-setup)
           (if initial-input (evil--ex-update)
             (when previous-command
@@ -364,15 +365,14 @@ the initial input is the visual region '<,'> or `<,`>. The variable
                (or initial-input
                    (and previous-command (propertize previous-command 'face 'shadow)))
                evil-ex-completion-map nil 'evil-ex-history nil t)))
-    (and (string= s "") previous-command (setq s previous-command))
-    (unless (string= s "") (evil-ex-execute s))))
+    (if evil--ex-expression
+        (eval evil--ex-expression t)
+      (when (string= s "") (setq s previous-command))
+      (unless (= (length s) 0) (evil-ex-execute s)))))
 
 (defun evil-ex-execute (string)
-  "Execute STRING as an Ex command on `evil-ex-current-buffer'."
-  (let ((evil-ex-current-buffer (or evil-ex-current-buffer (current-buffer)))
-        (expr (or evil--ex-expression (evil-ex-parse string)
-                  (signal 'evil-ex-error string))))
-    (eval expr t)))
+  "Execute STRING as an Ex command."
+  (eval (or (evil-ex-parse string) (signal 'evil-ex-error string)) t))
 
 (defun evil-ex-parse (string &optional syntax entrypoint)
   "Parse STRING as an Ex expression and return an evaluation tree.
@@ -392,19 +392,12 @@ symbol, which defaults to `expression'."
            (car result)))))
 
 (defun evil-ex-delete-backward-char ()
-  "Close the minibuffer if it is empty.
-Otherwise behaves like `delete-backward-char'."
+  "Close the minibuffer if it is empty, otherwise call `delete-backward-char'."
   (interactive)
   (call-interactively
    (if (< (minibuffer-prompt-end) (point-max))
        #'delete-backward-char
      #'abort-recursive-edit)))
-
-(defun evil-ex-abort ()
-  "Cancel Ex state when another buffer is selected."
-  (unless (or (minibufferp)
-              (memq this-command '(mouse-drag-region choose-completion)))
-    (abort-recursive-edit)))
 
 (define-obsolete-function-alias
   'evil-ex-elisp-completion-at-point #'elisp-completion-at-point "1.15.0")
@@ -413,7 +406,6 @@ Otherwise behaves like `delete-backward-char'."
   "Initialize Ex minibuffer.
 This function registers hooks that are used for the interactive
 actions during Ex state."
-  (add-hook 'post-command-hook #'evil-ex-abort)
   (add-hook 'after-change-functions #'evil--ex-update nil t)
   (add-hook 'minibuffer-exit-hook #'evil-ex-teardown nil t)
   (add-hook 'completion-at-point-functions #'evil-ex-completion-at-point nil t))
@@ -421,10 +413,9 @@ actions during Ex state."
 (defun evil-ex-teardown ()
   "Deinitialize Ex minibuffer.
 Clean up everything set up by `evil-ex-setup'."
-  (remove-hook 'post-command-hook #'evil-ex-abort)
-  (when evil-ex-argument-handler
+  (when evil--ex-argument-handler
     (let ((runner (evil-ex-argument-handler-runner
-                   evil-ex-argument-handler)))
+                   evil--ex-argument-handler)))
       (when runner (funcall runner 'stop)))))
 (put 'evil-ex-teardown 'permanent-local-hook t)
 
@@ -449,7 +440,7 @@ in case of incomplete or unknown commands."
         evil--ex-cmd nil)
   (when (eq (car evil--ex-expression) #'evil-ex-call-command)
     (let (current-prefix-arg func handler evil-ex-range evil-ex-bang evil-ex-argument)
-      (with-current-buffer evil-ex-current-buffer
+      (with-current-buffer evil-ex-original-buffer
         (let* ((range (eval (nth 1 evil--ex-expression) t))
                (count (when (integerp range) range)))
           (setq current-prefix-arg count
@@ -464,13 +455,13 @@ in case of incomplete or unknown commands."
         ;; Update argument handler
         (let ((type (evil-get-command-property func :ex-arg)))
           (when type (setq handler (cdr (assq type evil-ex-argument-types)))))
-        (if (eq handler evil-ex-argument-handler)
+        (if (eq handler evil--ex-argument-handler)
             (let ((runner (evil-ex-argument-handler-runner handler)))
               (when runner (funcall runner 'update evil-ex-argument)))
           (let ((runner (evil-ex-argument-handler-runner
-                         evil-ex-argument-handler)))
+                         evil--ex-argument-handler)))
             (when runner (funcall runner 'stop)))
-          (setq evil-ex-argument-handler handler)
+          (setq evil--ex-argument-handler handler)
           (let ((runner (evil-ex-argument-handler-runner handler)))
             (when runner (funcall runner 'start evil-ex-argument)))))
        (t (let* ((evil-ex-complete-emacs-commands 'in-turn)
@@ -766,7 +757,7 @@ This function interprets special file names like # and %."
     (goto-char (point-min))
     (forward-line (1- count)))
   (cl-loop
-   with evil-ex-current-buffer = (current-buffer)
+   with evil-ex-original-buffer = (current-buffer)
    for last-cmd in evil-ex-history do
    (evil--ex-update nil nil nil last-cmd)
    (let ((expr (or evil--ex-expression (signal 'evil-ex-error last-cmd))))
@@ -775,7 +766,12 @@ This function interprets special file names like # and %."
 
 (defun evil-ex-call-command (range command argument)
   "Execute the given command COMMAND."
+  (when evil-ex-reverse-range
+    (setq evil-ex-reverse-range nil)
+    (unless (y-or-n-p "Backward range given, OK to swap? ")
+      (user-error "")))
   (let* ((count (when (integerp range) range))
+         (current-prefix-arg count)
          (evil-ex-range (if count (evil-ex-range count count) range))
          (cmd (evil-ex-completed-binding command))
          (evil-ex-bang (evil--ex-bang-p command))
@@ -786,12 +782,7 @@ This function interprets special file names like # and %."
           (and evil-ex-range
                (evil-get-command-property cmd :restore-point)
                (if (evil-visual-state-p) evil-visual-beginning evil-ex-point)))
-         (current-prefix-arg count))
-    (when evil-ex-reverse-range
-      (setq evil-ex-reverse-range nil)
-      (unless (y-or-n-p "Backward range given, OK to swap? ")
-        (user-error "")))
-
+         (evil-called-from-ex-p t))
     (evil-exit-visual-state)
     (deactivate-mark)
     (when evil-ex-range

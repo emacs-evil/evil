@@ -249,8 +249,7 @@ If one is unspecified, the other is used with a negative argument."
             ;; go back to beginning of object
             (funcall backward 1)
           (goto-char (point-max)))))
-     (t
-      count))))
+     (t count))))
 
 (defun evil-move-end (count forward &optional backward inclusive)
   "Move to the end of the COUNT next object.
@@ -308,8 +307,7 @@ of the object; otherwise it is placed at the end of the object."
           (when (or (evil-normal-state-p)
                     (evil-motion-state-p))
             (evil-adjust-cursor)))))
-     (t
-      count))))
+     (t count))))
 
 (defun evil-text-object-make-linewise (range)
   "Turn the text object selection RANGE to linewise.
@@ -554,27 +552,25 @@ Optional keyword arguments are:
   "Read a motion from the keyboard and return its buffer positions.
 The return value is a list (BEG END), or (BEG END TYPE) if
 RETURN-TYPE is non-nil."
-  (let* ((ex-p (and (not (minibufferp)) (evil-ex-p)))
-         (motion (or evil-operator-range-motion
-                     (when ex-p 'evil-line)))
-         (type evil-operator-range-type)
-         range count)
+  (let ((motion (or evil-operator-range-motion
+                    (when evil-called-from-ex-p 'evil-line)))
+        (type evil-operator-range-type)
+        range count)
     (setq evil-this-type-modified nil)
-    (evil-save-echo-area
-      (cond
-       ;; Ex mode
-       ((and ex-p evil-ex-range)
-        (setq range evil-ex-range))
-       ;; Visual selection
-       ((and (not ex-p) (evil-visual-state-p))
-        (setq range (evil-visual-range)))
-       ;; active region
-       ((and (not ex-p) (region-active-p))
-        (setq range (evil-range (region-beginning)
-                                (region-end)
-                                (or evil-this-type 'exclusive))))
-       ;; motion
-       (t
+    (cond
+     ;; Ex command
+     ((and evil-called-from-ex-p evil-ex-range)
+      (setq range evil-ex-range))
+     ;; Visual selection
+     ((and (not evil-called-from-ex-p) (evil-visual-state-p))
+      (setq range (evil-visual-range)))
+     ;; active region
+     ((and (not evil-called-from-ex-p) (region-active-p))
+      (setq range (evil-range (region-beginning) (region-end)
+                              (or evil-this-type 'exclusive))))
+     ;; motion
+     (t
+      (evil-save-echo-area
         (evil-save-state
           (unless motion
             ;; Make linewise operator shortcuts. E.g., "d" yields the
@@ -681,8 +677,8 @@ with PROPERTIES.\n\n%s%s" type string doc)
               (let ((type ',type)
                     plist range)
                 (when (and beg end)
+                  (evil-sort beg end)
                   (save-excursion
-                    (evil-sort beg end)
                     (unless (plist-get properties :expanded)
                       (setq range (apply #'evil-expand
                                          beg end type properties)
@@ -703,13 +699,12 @@ with PROPERTIES.\n\n%s%s" sym type string doc)
               (let ((type ',type)
                     plist range)
                 (when (and beg end)
+                  (evil-sort beg end)
                   (save-excursion
-                    (evil-sort beg end)
                     (when (memq ,key '(:expand :contract))
                       (setq properties
                             (plist-put properties
-                                       :expanded
-                                       ,(eq key :expand))))
+                                       :expanded ,(eq key :expand))))
                     (setq range (or (apply #',func beg end
                                            (when ,(> (length args) 2)
                                              properties))
@@ -741,31 +736,21 @@ via KEY-VALUE pairs. BODY should evaluate to a list of values.
 
 \(fn CODE (PROMPT) [[KEY VALUE]...] BODY...)"
   (declare (indent defun))
-  (let* ((args (when (and (> (length body) 1)
-                          (listp (car-safe body)))
-                 (pop body)))
-         (doc (when (stringp (car-safe body)) (pop body)))
-         func properties)
-    (while (keywordp (car-safe body))
-      (setq properties
-            (append properties (list (pop body) (pop body)))))
-    (cond
-     (args
-      (setq func `(lambda ,args
-                    ,@(when doc `(,doc))
-                    ,@body)))
-     ((> (length body) 1)
-      (setq func `(progn ,@body)))
-     (t
-      (setq func (car body))))
+  (let* ((args (and (> (length body) 1) (listp (car body))
+                    (pop body)))
+         (doc (when (stringp (car body)) (pop body)))
+         (properties
+          (cl-loop while (keywordp (car body))
+                   collect (pop body) collect (pop body)))
+         (func (if args
+                   `(lambda ,args
+                      ,@(when doc `(,doc))
+                      ,@body)
+                 (macroexp-progn body))))
     `(eval-and-compile
-       (let* ((code ,code)
-              (entry (assoc code evil-interactive-alist))
-              (value (cons ',func ',properties)))
-         (if entry
-             (setcdr entry value)
-           (push (cons code value) evil-interactive-alist))
-         code))))
+       (evil--add-to-alist
+        evil-interactive-alist ,code (cons ',func ',properties))
+       ,code)))
 
 ;;; Highlighting
 

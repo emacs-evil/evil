@@ -2388,7 +2388,7 @@ leave the cursor just after the new text."
           (evil-normal-state)
           (when kill-ring (current-kill 1)))
         ;; Effectively memoize `evil-get-register' because it can be
-        ;; side-effecting (e.g. for the `=' register)...
+        ;; side-effecting (e.g. for the "=" register)...
         (cl-letf (((symbol-function #'evil-get-register)
                    (lambda (&rest _) text)))
           (cond
@@ -3049,7 +3049,7 @@ Calls `evil-complete-previous-line-func'."
 
 (defun evil-repeat-search (flag)
   "Called to record a search command.
-FLAG is either 'pre or 'post if the function is called before resp.
+FLAG is either `pre' or `post' if the function is called before resp.
 after executing the command."
   (cond
    ((and (evil-operator-state-p) (eq flag 'pre))
@@ -3555,7 +3555,7 @@ which is replaced with the command's output. Otherwise, the
 output is displayed in its own buffer. If PREVIOUS is non-nil,
 the previous shell command is executed instead."
   (interactive "<R><sh><!>")
-  (if (not (evil-ex-p))
+  (if (not evil-called-from-ex-p)
       (let ((current-prefix-arg
              (if (or current-prefix-arg (evil-visual-state-p))
                  current-prefix-arg
@@ -3762,7 +3762,6 @@ Supports positions in the following formats: \"path:line path(line)\",
 (evil-define-command evil-find-file-at-point-visual ()
   "Find the filename selected by the visual region.
 Signal an error if the file does not exist."
-  (require 'ffap)
   (let ((region (buffer-substring (region-beginning) (region-end))))
     (if (file-exists-p region)
         (find-file-at-point region)
@@ -3791,8 +3790,8 @@ Signal an error if the file does not exist."
 (evil-define-interactive-code "<state>"
   "A valid evil state."
   :ex-arg state
-  (list (when (and (evil-ex-p) evil-ex-argument)
-          (intern-soft evil-ex-argument))))
+  (list (and evil-called-from-ex-p evil-ex-argument
+             (intern-soft evil-ex-argument))))
 
 ;; TODO: should we merge this command with `evil-set-initial-state'?
 (evil-define-command evil-ex-set-initial-state (state)
@@ -3840,8 +3839,8 @@ Change to `%s'? "
 
 (defun evil-repeat-ex-search (flag)
   "Called to record a search command.
-FLAG is either 'pre or 'post if the function is called before
-resp.  after executing the command."
+FLAG is either `pre' or `post' if the function is called before resp.
+after executing the command."
   (cond
    ((and (evil-operator-state-p) (eq flag 'pre))
     (evil-repeat-record (this-command-keys))
@@ -3914,7 +3913,7 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
              (open (or (overlay-get ol 'reveal-toggle-invisible)
                        (get inv 'reveal-toggle-invisible)
                        (overlay-get ol 'isearch-open-invisible-temporary))))
-        (if (and (overlay-start ol) ;Check it's still live.
+        (if (and (overlay-start ol) ; Check if still live
                  open)
             (condition-case err
                 (funcall open ol t)
@@ -4132,39 +4131,40 @@ This is the same as \":%s//~/&\"."
   (apply #'evil-ex-substitute (point-min) (point-max)
          (evil-ex-get-substitute-info (concat "//~/&"))))
 
+(declare-function hi-lock-read-face-name "hi-lock")
 (evil-define-command evil-ex-match (args &optional bang)
   "Define a pattern to highlight in the current buffer.
 With no args, clear a highlight from the buffer
 With only an ! argument, clear all highlights from the buffer.
 With one arg, interpret as the pattern, and prompt for a face.
 With two args, interpret as :match {face} /{pattern}/.
-Unlike vim, multiple highlights can be set at once, so there is no need for
-`:2match' and `:3match' ex commands."
+Unlike Vim, multiple highlights can be set at once, so there is no need for
+\":2match\" and \":3match\" Ex commands."
   (interactive "<a><!>")
-  (save-match-data
-    (string-match " *\\([^ ]*\\) *\\(.*\\)" (or args ""))
-    (cl-destructuring-bind (_ _ fs fe ss se) (match-data)
-      (let* ((face (unless (= fs fe) (substring args fs fe)))
-             (search-string (unless (= ss se) (substring args ss se)))
-             (raw-patterns (evil-delimited-arguments (or search-string face "")))
-             (raw-pattern (or (car raw-patterns) ""))
-             (case-fold-search ;; ignore case if non-nil
-              (eq (evil-ex-regex-case raw-pattern evil-ex-search-case) 'insensitive))
-             (search-upper-case nil) ;; bypass isearch-no-upper-case-p
-             (pattern-no-case (evil-ex-regex-without-case raw-pattern))
-             (pattern (if evil-ex-search-vim-style-regexp
-                          (evil-transform-vim-style-regexp pattern-no-case)
-                        pattern-no-case)))
-        (cond
-         ((or (not face) (string= "none" face))
-          (if bang
-              (hi-lock-unface-buffer t)
-            (call-interactively #'hi-lock-unface-buffer)))
-         ((/= 1 (length raw-patterns))
-          (user-error "Invalid pattern argument supplied"))
-         ((not search-string)
-          (hi-lock-face-buffer pattern (hi-lock-read-face-name)))
-         (t (hi-lock-face-buffer pattern face)))))))
+  (unless args (setq args ""))
+  (string-match "\\` *\\([^ ]+\\)? *\\(.+\\)?\\'" args)
+  (let* ((face (match-string 1 args))
+         (search-string (match-string 2 args))
+         (raw-patterns (evil-delimited-arguments (or search-string face "")))
+         (raw-pattern (or (car raw-patterns) ""))
+         (case-fold-search ; ignore case if non-nil
+          (eq (evil-ex-regex-case raw-pattern evil-ex-search-case) 'insensitive))
+         search-upper-case ; bypass isearch-no-upper-case-p
+         (pattern-no-case (evil-ex-regex-without-case raw-pattern))
+         (pattern (if evil-ex-search-vim-style-regexp
+                      (evil-transform-vim-style-regexp pattern-no-case)
+                    pattern-no-case)))
+    (cond
+     ((or (not face) (string= "none" face))
+      (if bang
+          (hi-lock-unface-buffer t)
+        (call-interactively #'hi-lock-unface-buffer)))
+     ((/= 1 (length raw-patterns))
+      (user-error "Invalid pattern argument"))
+     ((not search-string)
+      (require 'hi-lock)
+      (hi-lock-face-buffer pattern (hi-lock-read-face-name)))
+     (t (hi-lock-face-buffer pattern face)))))
 
 (defun evil-keep-lines (pattern beg end)
   "Stripped down version of `keep-lines'.
@@ -4219,8 +4219,7 @@ Delete lines between BEG & END which match PATTERN.
 Use `evil-flush-lines' if INVERT is nil, or `evil-keep-lines' if not."
   (goto-char end)
   (re-search-backward pattern beg t)
-  (let ((end-marker (make-marker)))
-    (set-marker end-marker (point))
+  (let ((end-marker (point-marker)))
     (if invert
         (evil-keep-lines pattern beg end)
       (evil-flush-lines pattern beg end))
@@ -4241,47 +4240,43 @@ Use `evil-flush-lines' if INVERT is nil, or `evil-keep-lines' if not."
   ;; TODO: `evil-ex-make-substitute-pattern' should be executed so
   ;; :substitute can re-use :global's pattern depending on its `r'
   ;; flag. This isn't supported currently but should be simple to add
-  (evil-with-single-undo
-    (let* ((case-fold-search
-            (eq (evil-ex-regex-case pattern evil-ex-search-case) 'insensitive))
-           (pattern (evil-ex-regex-without-case pattern))
-           (command-form (evil-ex-parse command))
-           (ex-delete (eq 'evil-ex-delete (evil-ex-completed-binding (nth 2 command-form))))
-           (transient-mark-mode transient-mark-mode)
-           (deactivate-mark deactivate-mark)
-           match markers)
-      (when (and pattern command)
-        (when evil-ex-search-vim-style-regexp
-          (setq pattern (evil-transform-vim-style-regexp pattern)))
-        (if (and ex-delete (not (nth 3 command-form)))
-            (evil--ex-performant-global-delete beg end pattern invert)
-          (setq isearch-string pattern)
-          (isearch-update-ring pattern t)
-          (goto-char beg)
-          (evil-move-beginning-of-line)
-          (while (< (point) end)
-            (setq match (re-search-forward pattern (line-end-position) t))
-            (when (or (and match (not invert))
-                      (and invert (not match)))
+  (let* ((case-fold-search
+          (eq (evil-ex-regex-case pattern evil-ex-search-case) 'insensitive))
+         (pattern (evil-ex-regex-without-case pattern))
+         (command-form (evil-ex-parse command))
+         (ex-delete (eq 'evil-ex-delete (evil-ex-completed-binding (nth 2 command-form))))
+         (transient-mark-mode transient-mark-mode)
+         (deactivate-mark deactivate-mark)
+         markers)
+    (when (and pattern command)
+      (when evil-ex-search-vim-style-regexp
+        (setq pattern (evil-transform-vim-style-regexp pattern)))
+      (if (and ex-delete (not (nth 3 command-form)))
+          (evil--ex-performant-global-delete beg end pattern invert)
+        (setq isearch-string pattern)
+        (isearch-update-ring pattern t)
+        (goto-char beg)
+        (evil-move-beginning-of-line)
+        (while (< (point) end)
+          (let ((match (re-search-forward pattern (line-end-position) t)))
+            (when (if invert (not match) match)
               (push (move-marker (make-marker)
                                  (or (and match (match-beginning 0))
                                      (line-beginning-position)))
-                    markers))
-            (forward-line))
-          (setq markers (nreverse markers))
-          (unwind-protect
-              (progn
-                (setq evil--ex-global-active-p t)
+                    markers)))
+          (forward-line))
+        (setq markers (nreverse markers))
+        (unwind-protect
+            (evil-with-single-undo
+              (let ((evil--ex-global-active-p t))
                 (dolist (marker markers)
                   (goto-char marker)
-                  (eval command-form)))
-            (progn
-              (setq evil--ex-global-active-p nil)
-              ;; ensure that all markers are deleted afterwards,
-              ;; even in the event of failure
-              (dolist (marker markers)
-                (set-marker marker nil))
-              (run-hooks 'evil-after-global-hook))))))))
+                  (eval command-form))))
+          ;; ensure that all markers are deleted afterwards,
+          ;; even in the event of failure
+          (dolist (marker markers)
+            (set-marker marker nil))
+          (run-hooks 'evil-after-global-hook))))))
 
 (evil-define-operator evil-ex-global-inverted
   (beg end pattern command &optional invert)
@@ -4299,20 +4294,20 @@ range. The given argument is passed straight to
 `execute-kbd-macro'.  The default is the current line."
   :motion evil-line
   (interactive "<r><a>")
-  (evil-with-single-undo
-    (let (markers evil-ex-current-buffer prefix-arg current-prefix-arg)
-      (goto-char beg)
-      (beginning-of-line)
-      (while (when (< (point) end)
-               (push (point-marker) markers)
-               (and (= (forward-line) 0) (bolp))))
-      (setq markers (nreverse markers))
-      (deactivate-mark)
-      (evil-force-normal-state)
-      ;; replace ^[ by escape
-      (setq commands
-            (vconcat
-             (mapcar (lambda (ch) (if (eq ch ?) 'escape ch)) commands)))
+  ;; replace ^[ by escape
+  (setq commands
+        (vconcat (mapcar (lambda (ch) (if (eq ch ?) 'escape ch))
+                         commands)))
+  (let (markers evil-called-from-ex-p prefix-arg current-prefix-arg)
+    (goto-char beg)
+    (beginning-of-line)
+    (while (when (< (point) end)
+             (push (point-marker) markers)
+             (and (= (forward-line) 0) (bolp))))
+    (setq markers (nreverse markers))
+    (deactivate-mark)
+    (evil-force-normal-state)
+    (evil-with-single-undo
       (dolist (marker markers)
         (goto-char marker)
         (ignore-errors (execute-kbd-macro commands))
