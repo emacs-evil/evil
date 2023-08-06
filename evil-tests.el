@@ -9474,26 +9474,26 @@ parameter set."
     (evil-with-temp-file file-name ""
       (evil-test-buffer
         (vconcat "i" file-name [escape])
-        (should (not (equal file-name (buffer-file-name (current-buffer)))))
+        (should (not (equal file-name (buffer-file-name))))
         ("gf")
-        (should (equal file-name (buffer-file-name (current-buffer)))))))
+        (should (equal file-name (buffer-file-name))))))
   (ert-info ("Find file at point (visual state)")
     (evil-with-temp-file file-name ""
       (evil-test-buffer
         (vconcat "iuser@localhost:" file-name "$" [escape])
-        (should (not (equal file-name (buffer-file-name (current-buffer)))))
+        (should (not (equal file-name (buffer-file-name))))
         ("0f:lvt$gf")
-        (should (equal file-name (buffer-file-name (current-buffer)))))))
+        (should (equal file-name (buffer-file-name))))))
   (ert-info ("Find file at point with line number")
     (let* ((line-number 3)
            (file-content (make-string (* 2 line-number) ?\n)))
       (evil-with-temp-file file-name (insert file-content)
           (evil-test-buffer
             (vconcat "i" file-name (format ":%d" line-number) [escape])
-            (should (and (not (equal file-name (buffer-file-name (current-buffer))))
+            (should (and (not (equal file-name (buffer-file-name)))
                          (not (equal line-number (line-number-at-pos)))))
             ("gF")
-            (should (and (equal file-name (buffer-file-name (current-buffer)))
+            (should (and (equal file-name (buffer-file-name))
                          (equal line-number (line-number-at-pos))))))))
   (ert-info ("Find file at point with line and column numbers")
     (let* ((line-number 3)
@@ -9505,11 +9505,11 @@ parameter set."
       (evil-with-temp-file file-name (insert file-content)
         (evil-test-buffer
           (vconcat "i" file-name (format ":%d:%d" line-number column-number) [escape])
-          (should (and (not (equal file-name (buffer-file-name (current-buffer))))
+          (should (and (not (equal file-name (buffer-file-name)))
                        (not (equal line-number (line-number-at-pos)))
                        (not (equal column-number (current-column)))))
           ("gF")
-          (should (and (equal file-name (buffer-file-name (current-buffer)))
+          (should (and (equal file-name (buffer-file-name))
                        (equal line-number (line-number-at-pos))
                        (equal column-number (1+ (current-column))))))))))
 
