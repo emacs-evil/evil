@@ -1967,32 +1967,39 @@ The following special registers are supported.
                     (remove-text-properties 0 (length text) '(foreign-selection nil) text))
                   text))))
            ((eq register ?\C-W)
-            (unless (evil-ex-p)
-              (user-error "Register <C-w> is only available in Ex state"))
-            (with-current-buffer evil-ex-original-buffer
+            (with-current-buffer
+                (or evil-ex-original-buffer
+                    (let ((w (minibuffer-selected-window))) (and w (window-buffer w)))
+                    (user-error "Register <C-w> is only available in Ex state"))
               (thing-at-point 'evil-word)))
            ((eq register ?\C-A)
-            (unless (evil-ex-p)
-              (user-error "Register <C-a> is only available in Ex state"))
-            (with-current-buffer evil-ex-original-buffer
+            (with-current-buffer
+                (or evil-ex-original-buffer
+                    (let ((w (minibuffer-selected-window))) (and w (window-buffer w)))
+                    (user-error "Register <C-a> is only available in Ex state"))
               (thing-at-point 'evil-WORD)))
            ((eq register ?\C-O)
-            (unless (evil-ex-p)
-              (user-error "Register <C-o> is only available in Ex state"))
-            (with-current-buffer evil-ex-original-buffer
+            (with-current-buffer
+                (or evil-ex-original-buffer
+                    (let ((w (minibuffer-selected-window))) (and w (window-buffer w)))
+                    (user-error "Register <C-o> is only available in Ex state"))
               (thing-at-point 'evil-symbol)))
            ((eq register ?\C-F)
-            (unless (evil-ex-p)
-              (user-error "Register <C-f> is only available in Ex state"))
-            (with-current-buffer evil-ex-original-buffer
+            (with-current-buffer
+                (or evil-ex-original-buffer
+                    (let ((w (minibuffer-selected-window))) (and w (window-buffer w)))
+                    (user-error "Register <C-f> is only available in Ex state"))
               (thing-at-point 'filename)))
            ((eq register ?\C-L)
-            (unless (evil-ex-p)
-              (user-error "Register <C-l> is only available in Ex state"))
-            (with-current-buffer evil-ex-original-buffer
+            (with-current-buffer
+                (or evil-ex-original-buffer
+                    (let ((w (minibuffer-selected-window))) (and w (window-buffer w)))
+                    (user-error "Register <C-l> is only available in Ex state"))
               (replace-regexp-in-string "\n\\'" "" (thing-at-point 'line))))
            ((eq register ?%)
-            (or (buffer-file-name evil-ex-original-buffer)
+            (or (buffer-file-name
+                 (or evil-ex-original-buffer
+                     (let ((w (minibuffer-selected-window))) (and w (window-buffer w)))))
                 (user-error "No file name")))
            ((= register ?#)
             (or (with-current-buffer (other-buffer) (buffer-file-name))
