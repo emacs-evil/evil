@@ -980,18 +980,11 @@ mode, in which case `evil-define-minor-mode-key' is used."
                              ;; BEWARE: Can't work for lexically scoped vars
                              `(and (boundp ',keymap) (keymapp ,keymap))
                            `(keymapp ,keymap))
-           (after-load-functions t nil
-                                 ,(format "evil-define-key-in-%s"
-                                          (if (symbolp keymap) keymap
-                                            'keymap)))
-         ;; Sadly, the compiler doesn't understand `evil-with-delay's
-         ;; code well enough to figure out that the keymap var is
-         ;; necessarily bound since we just tested `boundp'.
-         ,(when (symbolp keymap) `(defvar ,keymap))
-         (condition-case-unless-debug err
-             (evil-define-key* ,state ,keymap ,key ,def ,@bindings)
-           (error (message "error in evil-define-key: %s"
-                           (error-message-string err))))))))
+           (after-load-functions
+            t nil ,(format "evil-define-key-in-%s"
+                           (if (symbolp keymap) keymap 'keymap)))
+         (with-demoted-errors "Error in evil-define-key: %S"
+           (evil-define-key* ,state ,keymap ,key ,def ,@bindings))))))
 (defalias 'evil-declare-key #'evil-define-key)
 
 (defun evil-define-key* (state keymap key def &rest bindings)

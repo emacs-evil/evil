@@ -47,19 +47,6 @@
 (defalias 'evil-set-selection
   (if (fboundp 'gui-set-selection) 'gui-set-selection 'x-set-selection))
 
-;; macro helper
-(defun evil--with-delay (cond-fun body-fun hook &optional append local name)
-  (if (and cond-fun (funcall cond-fun))
-      (funcall body-fun)
-    (let* ((name (or name (format "evil-delay-in-%s" hook)))
-           (fun (make-symbol name)))
-      (fset fun (lambda (&rest _)
-                  (when (or (null cond-fun) (funcall cond-fun))
-                    (remove-hook hook fun local)
-                    (funcall body-fun))))
-      (put fun 'permanent-local-hook t)
-      (add-hook hook fun append local))))
-
 (defmacro evil-with-delay (condition hook &rest body)
   "Execute BODY when CONDITION becomes true, checking with HOOK.
 HOOK can be a simple symbol or of the form (HOOK APPEND LOCAL NAME)
@@ -68,12 +55,20 @@ NAME specifies the name of the entry added to HOOK.
 If APPEND is non-nil, the entry is appended to the hook.
 If LOCAL is non-nil, the buffer-local value of HOOK is modified."
   (declare (debug (form sexp body)) (indent 2))
-  (unless (consp hook) (setq hook (list hook)))
-  ;; FIXME: Now the compiler doesn't know that `body' is only run if `condition'
-  ;; is true, so we get spurious warnings! :-(
-  `(evil--with-delay ,(when condition `(lambda () ,condition))
-                     (lambda () ,@body)
-                     ,@(mapcar #'macroexp-quote hook)))
+  (cl-destructuring-bind (hook-sym &optional append local name)
+      (mapcar #'macroexp-quote (if (consp hook) hook (list hook)))
+    (macroexp-let2* nil
+        ((fun-name `',(make-symbol
+                       (or name (format "evil-delay-in-%s" hook-sym))))
+         (fun `(lambda (&rest _)
+                 (when ,(or condition t)
+                   (remove-hook ,hook-sym ,fun-name ,local)
+                   ,@body
+                   t))))
+      `(unless ,(and condition `(funcall ,fun))
+         (progn (fset ,fun-name ,fun)
+                ,@(when local `((put ,fun-name 'permanent-local-hook t)))
+                (add-hook ,hook-sym ,fun-name ,append ,local))))))
 
 (defun evil-delay (condition form hook &optional append local name)
   "Execute FORM when CONDITION becomes true, checking with HOOK.
