@@ -1365,13 +1365,11 @@ last successful match (that caused COUNT to reach zero)."
 
 (defun evil-up-xml-tag (&optional count)
   "Move point to the end or beginning of balanced xml tags.
-OPEN and CLOSE should be characters identifying the opening and
-closing parenthesis, respectively. If COUNT is greater than zero
-point is moved forward otherwise it is moved backwards. Whenever
-an opening delimiter is found the COUNT is increased by one, if a
-closing delimiter is found the COUNT is decreased by one. The
-motion stops when COUNT reaches zero. The match-data reflects the
-last successful match (that caused COUNT to reach zero)."
+If COUNT is greater than zero point is moved forward otherwise it is moved
+backwards.  Whenever an opening delimiter is found the COUNT is increased by
+one, if a closing delimiter is found the COUNT is decreased by one.  The motion
+stops when COUNT reaches zero.  The match data reflects the last successful
+match (that caused COUNT to reach zero)."
   (let* ((dir (if (> (or count 1) 0) +1 -1))
          (count (abs (or count 1)))
          (op (if (> dir 0) 1 2))
@@ -1394,7 +1392,7 @@ last successful match (that caused COUNT to reach zero)."
                         (string= (car tags) (match-string cl)))
                    ;; in backward direction we only accept matching
                    ;; tags. If the current tag is a free opener
-                   ;; without matching closing tag, the subsequents
+                   ;; without matching closing tag, the subsequent
                    ;; test will make us ignore this tag
                    (pop tags))
                   ((and (> dir 0))
@@ -3339,8 +3337,7 @@ from the range."
    ((and (not inclusive) (= (abs (or count 1)) 1))
     (let ((rng (evil-select-block #'evil-up-xml-tag beg end type count nil t)))
       (if (or (and beg (= beg (evil-range-beginning rng))
-                   end (= end (evil-range-end rng)))
-              (= (evil-range-beginning rng) (evil-range-end rng)))
+                   end (= end (evil-range-end rng))))
           (evil-select-block #'evil-up-xml-tag beg end type count t)
         rng)))
    (t
