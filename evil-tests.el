@@ -7175,7 +7175,14 @@ test hello <a href=\"/deed.zh\">Creative Commons</a>
       :visual-end "»"
       "<button foo=\"bar\" onClick={() => fnbody()}>inner [t]ext</button>"
       ("vit")
-      "<button foo=\"bar\" onClick={() => fnbody()}>«inner tex[t]»</button>")))
+      "<button foo=\"bar\" onClick={() => fnbody()}>«inner tex[t]»</button>"))
+  (ert-info ("Inner tag is selected, even when empty")
+    (evil-test-buffer
+      :visual-start "«"
+      :visual-end "»"
+      "<p>foo<b [c]lass =\"bold\"></b>qux</p>"
+      ("cit" "bar")
+      "<p>foo<b class =\"bold\">bar</b>qux</p>")))
 
 ;;; Visual state
 
