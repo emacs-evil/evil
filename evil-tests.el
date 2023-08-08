@@ -85,22 +85,21 @@
 
 (defun evil-tests-initialize (&optional tests profiler interactive)
   (setq profiler (or profiler evil-tests-profiler))
-  (when (listp profiler)
+  (when (consp profiler)
     (setq profiler (car profiler)))
   (when profiler
     (setq evil-tests-profiler t)
     (setq profiler
-          (or (cdr (assq profiler
-                         '((call . elp-sort-by-call-count)
-                           (average . elp-sort-by-average-time)
-                           (total . elp-sort-by-total-time))))))
+          (cdr (assq profiler
+                     '((call . elp-sort-by-call-count)
+                       (average . elp-sort-by-average-time)
+                       (total . elp-sort-by-total-time)))))
     (setq elp-sort-by-function (or profiler 'elp-sort-by-call-count))
     (elp-instrument-package "evil"))
   (if interactive
       (if (y-or-n-p-with-timeout "Run tests? " 2 t)
           (evil-tests-run tests interactive)
-        (message "You can run the tests at any time \
-with `M-x evil-tests-run'"))
+        (message "You can run the tests at any time with `M-x evil-tests-run'"))
     (evil-tests-run tests)))
 
 (defun evil-tests-run (&optional tests interactive)

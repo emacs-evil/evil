@@ -44,7 +44,6 @@
 
 (require 'evil-common)
 (require 'evil-states)
-(require 'evil-types)
 
 (declare-function evil-goto-line "evil-commands")
 
@@ -77,10 +76,9 @@
         #'(evil-ex-char-marker-range $2 $4)))
       (line
        ((\? base) (\? offset) search (\? offset)
-        #'(let ((tmp (evil-ex-line $1 $2)))
-            (save-excursion
-              (goto-line tmp)
-              (evil-ex-line $3 $4))))
+        #'(save-excursion
+            (goto-line (evil-ex-line $1 $2))
+            (evil-ex-line $3 $4)))
        (base (\? offset) #'evil-ex-line)
        (nil offset #'evil-ex-line))
       (base
@@ -306,6 +304,9 @@ The following symbols have reserved meanings within a grammar:
 (defvar evil-ex-argument-types nil
   "Association list of argument handlers.")
 
+(defvar evil-ex-commands nil
+  "Association list of command bindings and functions.")
+
 (defvar evil-ex-reverse-range nil
   "Whether the current Ex range was entered reversed.")
 
@@ -399,8 +400,9 @@ symbol, which defaults to `expression'."
        #'delete-backward-char
      #'abort-recursive-edit)))
 
-(define-obsolete-function-alias
-  'evil-ex-elisp-completion-at-point #'elisp-completion-at-point "1.15.0")
+(cl-defstruct (evil-ex-argument-handler (:type list) (:constructor nil)
+                                        (:copier nil) (:predicate nil))
+  (runner nil :read-only t) (completer nil :read-only t))
 
 (defun evil-ex-setup ()
   "Initialize Ex minibuffer.
@@ -413,10 +415,9 @@ actions during Ex state."
 (defun evil-ex-teardown ()
   "Deinitialize Ex minibuffer.
 Clean up everything set up by `evil-ex-setup'."
-  (when evil--ex-argument-handler
-    (let ((runner (evil-ex-argument-handler-runner
-                   evil--ex-argument-handler)))
-      (when runner (funcall runner 'stop)))))
+  (let ((runner (evil-ex-argument-handler-runner
+                 evil--ex-argument-handler)))
+    (when runner (funcall runner 'stop))))
 (put 'evil-ex-teardown 'permanent-local-hook t)
 
 (defsubst evil--ex-bang-p (command)
@@ -489,12 +490,9 @@ in case of incomplete or unknown commands."
 
 (defun evil--ex-remove-echo-overlay ()
   "Remove echo overlay from Ex minibuffer."
-  (when evil--ex-echo-overlay
-    (delete-overlay evil--ex-echo-overlay)
-    (setq evil--ex-echo-overlay nil))
+  (delete-overlay evil--ex-echo-overlay)
+  (setq evil--ex-echo-overlay nil)
   (remove-hook 'pre-command-hook #'evil--ex-remove-echo-overlay t))
-
-(define-obsolete-function-alias 'evil-ex-completion #'completion-at-point "1.15.0")
 
 (cl-defun evil-ex-completion-at-point ()
   "Function used for `completion-at-point-functions' in Ex state."
@@ -525,9 +523,6 @@ in case of incomplete or unknown commands."
                               (funcall completer))))))
       (`((expression) (sexp . ,_))
        (when (fboundp 'elisp-completion-at-point) (elisp-completion-at-point))))))
-
-(define-obsolete-function-alias
-  'evil-ex-command-completion-at-point #'evil-ex-completion-at-point "1.15.0")
 
 (defun evil-ex-completion-table ()
   (let ((ex-cmds
@@ -577,9 +572,17 @@ in case of incomplete or unknown commands."
                 (p2 (eq (get-text-property 0 'face str2) 'evil-ex-commands)))
             (if (eq p1 p2) (string< str1 str2) p1)))))
 
+(define-obsolete-function-alias 'evil-ex-completion #'completion-at-point "1.15.0")
+
+(define-obsolete-function-alias
+  'evil-ex-command-completion-at-point #'evil-ex-completion-at-point "1.15.0")
+
 (defalias 'evil-ex-argument-completion-at-point #'ignore)
 (make-obsolete
  'evil-ex-argument-completion-at-point #'evil-ex-completion-at-point "1.15.0")
+
+(define-obsolete-function-alias
+  'evil-ex-elisp-completion-at-point #'elisp-completion-at-point "1.15.0")
 
 (defun evil-ex-define-cmd (cmd function)
   "Bind the function FUNCTION to the command CMD."
@@ -590,15 +593,6 @@ in case of incomplete or unknown commands."
                             full function
                             abbrev full))
     (evil--add-to-alist evil-ex-commands cmd function)))
-
-(defsubst evil-ex-make-argument-handler (runner completer)
-  (list runner completer))
-
-(defun evil-ex-argument-handler-runner (arg-handler)
-  (car arg-handler))
-
-(defun evil-ex-argument-handler-completer (arg-handler)
-  (cadr arg-handler))
 
 (defmacro evil-ex-define-argument-type (arg-type doc &rest body)
   "Define a new handler for argument-type ARG-TYPE.
@@ -835,7 +829,7 @@ This function interprets special file names like # and %."
 
 (defun evil-ex-last-visual-range ()
   "Return a linewise range of the last visual selection."
-  (evil-line-expand evil-visual-mark evil-visual-point))
+  (evil-range evil-visual-mark evil-visual-point 'line))
 
 (defun evil-ex-marker (marker)
   "Return MARKER's line number in the current buffer.

@@ -1903,9 +1903,6 @@ Key sequences bound in this map are immediately executed.")
 This content of this variable is appended to the Ex command line
 when Ex is started interactively.")
 
-(defvar evil-ex-commands nil
-  "Association list of command bindings and functions.")
-
 (defvar evil-ex-history nil
   "History of Ex commands.")
 

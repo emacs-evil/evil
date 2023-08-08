@@ -35,7 +35,6 @@
 (declare-function evil-visual-restore "evil-states")
 (declare-function evil-motion-state "evil-states")
 (declare-function evil-replace-state-p "evil-states")
-(declare-function evil-ex-p "evil-ex")
 (declare-function evil-set-jump "evil-jumps")
 
 ;;; Compatibility with different Emacs versions
@@ -58,8 +57,8 @@ If LOCAL is non-nil, the buffer-local value of HOOK is modified."
   (cl-destructuring-bind (hook-sym &optional append local name)
       (mapcar #'macroexp-quote (if (consp hook) hook (list hook)))
     (macroexp-let2* nil
-        ((fun-name `',(make-symbol
-                       (or name (format "evil-delay-in-%s" hook-sym))))
+        ((fun-name `(make-symbol
+                     ,(or name (format "evil-delay-in-%s" hook-sym))))
          (fun `(lambda (&rest _)
                  (when ,(or condition t)
                    (remove-hook ,hook-sym ,fun-name ,local)
@@ -762,15 +761,14 @@ cursor type is either `evil-force-cursor' or the current state."
 
 (defmacro evil-save-cursor (&rest body)
   "Save the current cursor; execute BODY; restore the cursor."
-  (declare (indent defun)
-           (debug t))
+  (declare (indent defun) (debug t) (obsolete nil "1.15.0"))
   `(let ((cursor cursor-type)
          (color (frame-parameter (selected-frame) 'cursor-color))
          (inhibit-quit t))
      (unwind-protect
          (progn ,@body)
-       (evil-set-cursor cursor)
-       (evil-set-cursor color))))
+       (setq cursor-type cursor)
+       (evil-set-cursor-color color))))
 
 (defun evil-echo (string &rest args)
   "Display an unlogged message in the echo area.
@@ -798,15 +796,12 @@ Does not restore if `evil-write-echo-area' is non-nil."
 (defmacro evil-save-echo-area (&rest body)
   "Save the echo area; execute BODY; restore the echo area.
 Intermittent messages are not logged in the *Messages* buffer."
-  (declare (indent defun)
-           (debug t))
+  (declare (indent defun) (debug t))
   `(let ((inhibit-quit t)
-         evil-echo-area-message
-         evil-write-echo-area)
+         evil-echo-area-message evil-write-echo-area)
+     (evil-echo-area-save)
      (unwind-protect
-         (progn
-           (evil-echo-area-save)
-           ,@body)
+         (progn ,@body)
        (evil-echo-area-restore))))
 
 (defmacro evil-without-display (&rest body)

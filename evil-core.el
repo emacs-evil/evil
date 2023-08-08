@@ -225,15 +225,10 @@ Restore the previous state afterwards."
        (evil-change-state ',state)
        ,@body)))
 
-(defun evil-initialize-state (&optional state buffer)
-  "Set up the initial state for BUFFER.
-BUFFER defaults to the current buffer.
-Uses STATE if specified, or calls `evil-initial-state-for-buffer'.
+(defun evil-initialize-state ()
+  "Set up the initial state for the current buffer.
 See also `evil-set-initial-state'."
-  (with-current-buffer (or buffer (current-buffer))
-    (evil-change-state
-     (or state (evil-initial-state-for-buffer buffer)))))
-(put 'evil-initialize-state 'permanent-local-hook t)
+  (evil-change-state (evil-initial-state-for-buffer)))
 
 (defun evil-initial-state-for-buffer-name (&optional name default)
   "Return the initial Evil state to use for a buffer with name NAME.
@@ -254,17 +249,12 @@ Matches the name against the regular expressions in
 
 (defun evil-initial-state-for-buffer (&optional buffer)
   "Return the initial Evil state to use for BUFFER.
-BUFFER defaults to the current buffer. Returns DEFAULT
-if no initial state is associated with BUFFER.
-See also `evil-initial-state'."
+BUFFER defaults to the current buffer. See also `evil-initial-state'."
   (with-current-buffer (or buffer (current-buffer))
     (or (evil-initial-state-for-buffer-name)
-        (catch 'done
-          (dolist (mode minor-mode-map-alist)
-            (setq mode (car mode))
-            (and (boundp mode) (symbol-value mode)
-                 (setq mode (evil-initial-state mode))
-                 (throw 'done mode))))
+        (cl-loop for (mode) in minor-mode-map-alist
+                 when (and (boundp mode) (symbol-value mode))
+                 thereis (evil-initial-state mode))
         (evil-initial-state major-mode nil t)
         evil-default-state)))
 
@@ -340,11 +330,10 @@ then this function does nothing."
 ;; otherwise, though, so advise this function to initialize Evil.
 (defadvice set-window-buffer (before evil)
   "Initialize Evil in the displayed buffer."
-  (when evil-mode
-    (when (get-buffer (ad-get-arg 1))
-      (with-current-buffer (ad-get-arg 1)
-        (unless evil-local-mode
-          (save-match-data (evil-initialize)))))))
+  (when (and evil-mode (get-buffer (ad-get-arg 1)))
+    (with-current-buffer (ad-get-arg 1)
+      (unless evil-local-mode
+        (save-match-data (evil-initialize))))))
 
 ;; Refresh cursor color.
 ;; Cursor color can only be set for each frame but not for each buffer.
@@ -452,7 +441,7 @@ This allows input methods to be used in normal-state."
   "Initialize a buffer-local value for local keymaps as necessary.
 The initial value is that of `make-sparse-keymap'."
   (dolist (entry evil-local-keymaps-alist)
-    (let ((map  (cdr entry)))
+    (let ((map (cdr entry)))
       (unless (and (keymapp (symbol-value map))
                    (local-variable-p map))
         (set map (make-sparse-keymap))))))
@@ -813,7 +802,6 @@ If AUX is nil, create a new auxiliary keymap."
                      (format "%s state" state)))))
   (define-key map (vector (intern (format "%s-state" state))) aux)
   aux)
-(put 'evil-set-auxiliary-keymap 'lisp-indent-function 'defun)
 
 (defun evil-get-auxiliary-keymap (map state &optional create ignore-parent)
   "Get the auxiliary keymap for MAP in STATE.
@@ -1284,9 +1272,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                    (deactivate-input-method)))
                (unless evil-no-display
                  (evil-refresh-cursor ',state)
-                 (evil-refresh-mode-line ',state)
-                 (when (called-interactively-p 'any)
-                   (redisplay)))
+                 (evil-refresh-mode-line ',state))
                ,@body
                (run-hooks ',entry-hook)
                (when (and evil-echo-state
@@ -1295,8 +1281,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                      (funcall ,message)
                    (evil-echo "%s" ,message))))))))
 
-       (evil-set-command-property ',toggle :keep-visual t)
-       (evil-set-command-property ',toggle :suppress-operator t)
+       (evil-add-command-properties ',toggle :keep-visual t :suppress-operator t)
 
        (evil-define-keymap ,keymap nil
          :mode ,mode
