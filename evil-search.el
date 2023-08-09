@@ -739,6 +739,7 @@ the direcion is determined by `evil-ex-search-direction'."
          ((eq res 'wrapped) (setq wrapped t)))))
     (if wrapped
         (let (message-log-max)
+          (when evil-search-wrap-ring-bell (ding))
           (message "Search wrapped")))
     (goto-char (match-beginning 0))
     (setq evil-ex-search-match-beg (match-beginning 0)
