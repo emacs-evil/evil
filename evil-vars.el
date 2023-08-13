@@ -539,41 +539,39 @@ ubiquity of prefix arguments."
   "Whether `C-w' deletes a word in Insert/Ex/Search state."
   :type 'boolean
   :group 'evil
-  :set #'(lambda (sym value)
-           (set-default sym value)
-           (when (and (boundp 'evil-insert-state-map)
-                      (boundp 'evil-replace-state-map))
-             (cond
-              ((and (not value)
-                    (eq (lookup-key evil-insert-state-map (kbd "C-w"))
-                        'evil-delete-backward-word))
-               (define-key evil-insert-state-map (kbd "C-w") 'evil-window-map)
-               (define-key evil-replace-state-map (kbd "C-w") 'evil-window-map))
-              ((and value
-                    (eq (lookup-key evil-insert-state-map (kbd "C-w"))
-                        'evil-window-map))
-               (define-key evil-insert-state-map (kbd "C-w") 'evil-delete-backward-word)
-               (define-key evil-replace-state-map (kbd "C-w") 'evil-delete-backward-word))))
-           (when (boundp 'evil-ex-search-keymap)
-             (cond
-              ((and (not value)
-                    (eq (lookup-key evil-ex-search-keymap (kbd "C-w"))
-                        #'backward-kill-word))
-               (define-key evil-ex-search-keymap (kbd "C-w") 'evil-search-yank-word))
-              ((and value
-                    (eq (lookup-key evil-ex-search-keymap (kbd "C-w"))
-                        'evil-search-yank-word))
-               (define-key evil-ex-search-keymap (kbd "C-w") #'backward-kill-word))))
-           (when (boundp 'evil-ex-completion-map)
-             (cond
-              ((and (not value)
-                    (eq (lookup-key evil-ex-completion-map (kbd "C-w"))
-                        #'backward-kill-word))
-               (define-key evil-ex-completion-map (kbd "C-w") nil))
-              ((and value
-                    (eq (lookup-key evil-ex-completion-map (kbd "C-w"))
-                        nil))
-               (define-key evil-ex-completion-map (kbd "C-w") #'backward-kill-word))))))
+  :set (lambda (sym value)
+         (set-default sym value)
+         (when (and (boundp 'evil-insert-state-map)
+                    (boundp 'evil-replace-state-map))
+           (cond
+            ((and (not value)
+                  (eq (lookup-key evil-insert-state-map (kbd "C-w"))
+                      'evil-delete-backward-word))
+             (define-key evil-insert-state-map (kbd "C-w") 'evil-window-map)
+             (define-key evil-replace-state-map (kbd "C-w") 'evil-window-map))
+            ((and value
+                  (eq (lookup-key evil-insert-state-map (kbd "C-w"))
+                      'evil-window-map))
+             (define-key evil-insert-state-map (kbd "C-w") 'evil-delete-backward-word)
+             (define-key evil-replace-state-map (kbd "C-w") 'evil-delete-backward-word))))
+         (when (boundp 'evil-command-line-map)
+           (cond
+            ((and (not value)
+                  (eq (lookup-key evil-command-line-map (kbd "C-w"))
+                      #'backward-kill-word))
+             (define-key evil-command-line-map (kbd "C-w") nil))
+            ((and value
+                  (null (lookup-key evil-command-line-map (kbd "C-w"))))
+             (define-key evil-command-line-map (kbd "C-w") #'backward-kill-word))))
+         (when (boundp 'evil-ex-search-keymap)
+           (cond
+            ((and (not value)
+                  (null (lookup-key evil-ex-search-keymap (kbd "C-w"))))
+             (define-key evil-ex-search-keymap (kbd "C-w") 'evil-search-yank-word))
+            ((and value
+                  (eq (lookup-key evil-ex-search-keymap (kbd "C-w"))
+                      'evil-search-yank-word))
+             (define-key evil-ex-search-keymap (kbd "C-w") nil))))))
 
 (defcustom evil-want-C-h-delete nil
   "Whether `C-h' deletes a char in Insert state."
@@ -1891,12 +1889,21 @@ would ignore `:close-all' actions and invoke the provided functions on
 
 ;;; Ex
 
-(defvar evil-ex-map (make-sparse-keymap)
+(define-obsolete-variable-alias 'evil-ex-map 'evil-ex-shortcut-map "1.15.0")
+(defvar evil-ex-shortcut-map (make-sparse-keymap)
   "Keymap for Ex.
 Key sequences bound in this map are immediately executed.")
 
+;; Intentionally does not inherit from `minibuffer-local-map', as users
+;; are encouraged to instead set this as the parent of that keymap.
+(defvar evil-command-line-map (make-sparse-keymap)
+  "Keymap used for the various Evil command-lines.
+Modifying this keymap corresponds to using the \":cmap\" Vim command.
+See `evil-ex-completion-map' and `evil-ex-search-keymap' which inherit
+from this keymap.")
+
 (defvar evil-ex-completion-map (make-sparse-keymap)
-  "Completion keymap for Ex.")
+  "Keymap for Ex.")
 
 (defvar evil-ex-initial-input nil
   "Additional initial content of the Ex command line.
@@ -1997,8 +2004,6 @@ Otherwise the previous command is assumed as substitute.")
 
 (defvar evil-ex-search-keymap (make-sparse-keymap)
   "Keymap used in ex-search-mode.")
-(define-key evil-ex-search-keymap [escape] #'abort-recursive-edit)
-(set-keymap-parent evil-ex-search-keymap minibuffer-local-map)
 
 (defcustom evil-want-empty-ex-last-command t
   "Whether to default to evil-ex-previous-command at empty ex prompt."

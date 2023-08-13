@@ -32,7 +32,7 @@
 ;; `evil-ex-define-cmd', which creates a binding from a string
 ;; to an interactive function.  It is also possible to define key
 ;; sequences which execute a command immediately when entered:
-;; such shortcuts go in `evil-ex-map'.
+;; such shortcuts go in `evil-ex-shortcut-map'.
 
 ;; To provide buffer and filename completion, as well as interactive
 ;; feedback, Ex defines the concept of an argument handler, specified
@@ -415,8 +415,7 @@ actions during Ex state."
 (defun evil-ex-teardown ()
   "Deinitialize Ex minibuffer.
 Clean up everything set up by `evil-ex-setup'."
-  (let ((runner (evil-ex-argument-handler-runner
-                 evil--ex-argument-handler)))
+  (let ((runner (evil-ex-argument-handler-runner evil--ex-argument-handler)))
     (when runner (funcall runner 'stop))))
 (put 'evil-ex-teardown 'permanent-local-hook t)
 
@@ -431,7 +430,7 @@ hook. If BEG is non-nil (which is the case when called from
 `after-change-functions'), then an error description is shown
 in case of incomplete or unknown commands."
   (when (and beg (eq this-command #'self-insert-command))
-    (let ((cmd (lookup-key evil-ex-map (minibuffer-contents-no-properties))))
+    (let ((cmd (lookup-key evil-ex-shortcut-map (minibuffer-contents-no-properties))))
       (when (commandp cmd)
         (setq evil--ex-expression `(call-interactively #',cmd))
         (exit-minibuffer))))
