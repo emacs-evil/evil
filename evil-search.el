@@ -389,7 +389,9 @@ letter, otherwise it will be case-insensitive."
    ((string-match "\\(?:^\\|[^\\\\]\\)\\(?:\\\\\\\\\\)*\\\\\\([cC]\\)" re)
     (if (eq (aref (match-string 1 re) 0) ?c) 'insensitive 'sensitive))
    ((eq default-case 'smart)
-    (if (isearch-no-upper-case-p re t) 'insensitive 'sensitive))
+    (if (isearch-no-upper-case-p re t)
+        'insensitive
+      'sensitive))
    (t default-case)))
 
 ;; a pattern
@@ -397,15 +399,17 @@ letter, otherwise it will be case-insensitive."
   "Create a PATTERN for substitution with FLAGS.
 This function respects the values of `evil-ex-substitute-case'
 and `evil-ex-substitute-global'."
-  (evil-ex-make-pattern
-   regexp
-   (cond ((memq ?i flags) 'insensitive)
-         ((memq ?I flags) 'sensitive)
-         ((not evil-ex-substitute-case) evil-ex-search-case)
-         (t evil-ex-substitute-case))
-   (if (memq ?g flags)
-       (not evil-ex-substitute-global)
-     evil-ex-substitute-global)))
+  (evil-ex-make-pattern regexp
+                        (cond
+                         ((memq ?i flags) 'insensitive)
+                         ((memq ?I flags) 'sensitive)
+                         ((not evil-ex-substitute-case)
+                          evil-ex-search-case)
+                         (t evil-ex-substitute-case))
+                        (or (and evil-ex-substitute-global
+                                 (not (memq ?g flags)))
+                            (and (not evil-ex-substitute-global)
+                                 (memq ?g flags)))))
 
 (defun evil-ex-make-search-pattern (regexp)
   "Create a PATTERN for search.
@@ -429,14 +433,15 @@ style regular expression and is not transformed."
     ;; possibly transform regular expression from vim-style to
     ;; Emacs-style.
     (if (and evil-ex-search-vim-style-regexp
-             (not (or (string-prefix-p "\\_<" regexp)
-                      (string-suffix-p "\\_>" regexp))))
+             (not (or (string-match-p "\\`\\\\_<" regexp)
+                      (string-match-p "\\\\_>\\'" regexp))))
         (setq re (evil-transform-vim-style-regexp re))
       ;; Even for Emacs regular expressions we translate certain
       ;; whitespace sequences
-      (setq re (evil-transform-regexp re '((?t . "\t")
-                                           (?n . "\n")
-                                           (?r . "\r")))))
+      (setq re (evil-transform-regexp re
+                                      '((?t . "\t")
+                                        (?n . "\n")
+                                        (?r . "\r")))))
     (list re ignore-case whole-line)))
 
 (defun evil-ex-pattern-regex (pattern)
@@ -711,20 +716,20 @@ This function does nothing if `evil-ex-search-interactive' or
         (evil-ex-hl-change 'evil-ex-search pattern)))))
 
 (defun evil-ex-search (&optional count)
-  "Search forward or backward COUNT times for the current Ex search pattern.
-The search pattern is determined by `evil-ex-search-pattern', and the
-direction by `evil-ex-search-direction'."
+  "Search forward or backward COUNT times for the current ex search pattern.
+The search pattern is determined by `evil-ex-search-pattern' and
+the direcion is determined by `evil-ex-search-direction'."
   (setq evil-ex-search-start-point (point)
         evil-ex-last-was-search t
         count (or count 1))
   (let ((orig (point))
         wrapped)
     (dotimes (_ (or count 1))
-      (when (and (eq evil-ex-search-direction 'forward) (not (eobp)))
-        (forward-char)
+      (when (eq evil-ex-search-direction 'forward)
+        (unless (eobp) (forward-char))
         ;; maybe skip end-of-line
-        (and (not evil-move-beyond-eol) (eolp) (not (eobp))
-             (forward-char)))
+        (when (and (not evil-move-beyond-eol) (eolp) (not (eobp)))
+          (forward-char)))
       (let ((res (evil-ex-find-next nil nil (not evil-search-wrap))))
         (cond
          ((not res)
@@ -734,7 +739,6 @@ direction by `evil-ex-search-direction'."
          ((eq res 'wrapped) (setq wrapped t)))))
     (if wrapped
         (let (message-log-max)
-          (when evil-search-wrap-ring-bell (ding))
           (message "Search wrapped")))
     (goto-char (match-beginning 0))
     (setq evil-ex-search-match-beg (match-beginning 0)
@@ -1035,11 +1039,10 @@ current search result."
               evil-ex-search-match-end (match-end 0))
         (evil-ex-search-goto-offset offset)
         (evil-push-search-history search-string (eq direction 'forward))
-        (if evil-ex-search-incremental
-            (unless evil-ex-search-persistent-highlight
-              (evil-ex-delete-hl 'evil-ex-search))
-          (when evil-ex-search-highlight-all
-            (evil-ex-search-activate-highlight pattern))))
+        (when (and (not evil-ex-search-incremental) evil-ex-search-highlight-all)
+          (evil-ex-search-activate-highlight pattern))
+        (when (and evil-ex-search-incremental (not evil-ex-search-persistent-highlight))
+          (evil-ex-delete-hl 'evil-ex-search)))
        (t
         (goto-char evil-ex-search-start-point)
         (evil-ex-delete-hl 'evil-ex-search)

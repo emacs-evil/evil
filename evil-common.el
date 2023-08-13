@@ -35,6 +35,7 @@
 (declare-function evil-visual-restore "evil-states")
 (declare-function evil-motion-state "evil-states")
 (declare-function evil-replace-state-p "evil-states")
+(declare-function evil-ex-p "evil-ex")
 (declare-function evil-set-jump "evil-jumps")
 
 ;;; Compatibility with different Emacs versions
@@ -46,38 +47,31 @@
 (defalias 'evil-set-selection
   (if (fboundp 'gui-set-selection) 'gui-set-selection 'x-set-selection))
 
-(defmacro evil-with-delay (condition hook &rest body)
-  "Execute BODY when CONDITION becomes true, checking with HOOK.
-HOOK can be a simple symbol or of the form (HOOK APPEND LOCAL NAME)
-where:
-NAME specifies the name of the entry added to HOOK.
-If APPEND is non-nil, the entry is appended to the hook.
-If LOCAL is non-nil, the buffer-local value of HOOK is modified."
-  (declare (debug (form sexp body)) (indent 2))
-  (cl-destructuring-bind (hook-sym &optional append local name)
-      (mapcar #'macroexp-quote (if (consp hook) hook (list hook)))
-    (macroexp-let2* nil
-        ((fun-name `(make-symbol
-                     ,(or name (format "evil-delay-in-%s" hook-sym))))
-         (fun `(apply-partially
-                (lambda (name &rest _)
-                  (when ,(or condition t)
-                    (remove-hook ,hook-sym name ,local)
-                    ,@body
-                    t))
-                ,fun-name)))
-      `(unless ,(and condition `(funcall ,fun))
-         (progn (fset ,fun-name ,fun)
-                ,@(when local `((put ,fun-name 'permanent-local-hook t)))
-                (add-hook ,hook-sym ,fun-name ,append ,local))))))
+;; macro helper
+(eval-and-compile
+  (defun evil-unquote (exp)
+    "Return EXP unquoted."
+    (while (eq (car-safe exp) 'quote)
+      (setq exp (cadr exp)))
+    exp))
 
 (defun evil-delay (condition form hook &optional append local name)
   "Execute FORM when CONDITION becomes true, checking with HOOK.
-NAME specifies the name of the entry added to HOOK.  If APPEND is
-non-nil, the entry is appended to the hook.  If LOCAL is non-nil,
+NAME specifies the name of the entry added to HOOK. If APPEND is
+non-nil, the entry is appended to the hook. If LOCAL is non-nil,
 the buffer-local value of HOOK is modified."
-  (declare (obsolete evil-with-delay "1.15.0") (indent 2))
-  (eval `(evil-with-delay ,condition (,hook ,append ,local ,name) ,form) t))
+  (if (and (not (booleanp condition)) (eval condition))
+      (eval form)
+    (let* ((name (or name (format "evil-delay-form-in-%s" hook)))
+           (fun (make-symbol name))
+           (condition (or condition t)))
+      (fset fun `(lambda (&rest args)
+                   (when ,condition
+                     (remove-hook ',hook #',fun ',local)
+                     ,form)))
+      (put fun 'permanent-local-hook t)
+      (add-hook hook fun append local))))
+(put 'evil-delay 'lisp-indent-function 2)
 
 ;;; List functions
 
@@ -763,14 +757,15 @@ cursor type is either `evil-force-cursor' or the current state."
 
 (defmacro evil-save-cursor (&rest body)
   "Save the current cursor; execute BODY; restore the cursor."
-  (declare (indent defun) (debug t) (obsolete nil "1.15.0"))
+  (declare (indent defun)
+           (debug t))
   `(let ((cursor cursor-type)
          (color (frame-parameter (selected-frame) 'cursor-color))
          (inhibit-quit t))
      (unwind-protect
          (progn ,@body)
-       (setq cursor-type cursor)
-       (evil-set-cursor-color color))))
+       (evil-set-cursor cursor)
+       (evil-set-cursor color))))
 
 (defun evil-echo (string &rest args)
   "Display an unlogged message in the echo area.
@@ -798,12 +793,15 @@ Does not restore if `evil-write-echo-area' is non-nil."
 (defmacro evil-save-echo-area (&rest body)
   "Save the echo area; execute BODY; restore the echo area.
 Intermittent messages are not logged in the *Messages* buffer."
-  (declare (indent defun) (debug t))
+  (declare (indent defun)
+           (debug t))
   `(let ((inhibit-quit t)
-         evil-echo-area-message evil-write-echo-area)
-     (evil-echo-area-save)
+         evil-echo-area-message
+         evil-write-echo-area)
      (unwind-protect
-         (progn ,@body)
+         (progn
+           (evil-echo-area-save)
+           ,@body)
        (evil-echo-area-restore))))
 
 (defmacro evil-without-display (&rest body)
@@ -1890,7 +1888,7 @@ If INPUT starts with a number, +, -, or . use `calc-eval' instead."
          (result (if calcable-p
                      (let ((calc-multiplication-has-precedence nil))
                        (calc-eval input))
-                   (eval (car (read-from-string input)) t))))
+                   (eval (car (read-from-string input))))))
     (cond
      ((stringp result) result)
      ((or (numberp result) (symbolp result))
@@ -2161,6 +2159,21 @@ The earlier settings of Transient Mark mode are stored in
         (if (fboundp var)
             (funcall var (if val 1 -1))
           (setq var val))))))
+
+(defun evil-save-mark ()
+  "Save the current mark, including whether it is transient.
+See also `evil-restore-mark'."
+  (unless evil-visual-previous-mark
+    (setq evil-visual-previous-mark (mark t))
+    (evil-save-transient-mark-mode)))
+
+(defun evil-restore-mark ()
+  "Restore the mark, including whether it was transient.
+See also `evil-save-mark'."
+  (when evil-visual-previous-mark
+    (evil-restore-transient-mark-mode)
+    (evil-move-mark evil-visual-previous-mark)
+    (setq evil-visual-previous-mark nil)))
 
 ;; In theory, an active region implies Transient Mark mode, and
 ;; disabling Transient Mark mode implies deactivating the region.
@@ -2521,6 +2534,9 @@ is negative this is a more recent kill."
   (unless evil-last-paste
     (user-error "Previous paste command used a register"))
   (evil-undo-pop)
+  (when (eq last-command 'evil-visual-paste)
+    (evil-swap evil-visual-previous-mark evil-visual-mark)
+    (evil-swap evil-visual-previous-point evil-visual-point))
   (goto-char (nth 2 evil-last-paste))
   (setq this-command (nth 0 evil-last-paste))
   ;; use temporary kill-ring, so the paste cannot modify it

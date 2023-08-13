@@ -44,8 +44,10 @@ file.
 
 * Evil requires any of the following for `C-r`:
   * `undo-redo` from Emacs 28
-  * The [undo-tree] package (available via GNU ELPA)
-  * The [undo-fu] package (available via MELPA and NonGNU ELPA)
+  * The [undo-tree](https://gitlab.com/tsc25/undo-tree) package
+    (available via GNU ELPA)
+  * The [undo-fu](https://gitlab.com/ideasman42/emacs-undo-fu) package
+    (available via MELPA)
 
 * For the motions `g;` `g,` and for the last-change-register `.`, Evil
   requires the [goto-chg.el](https://github.com/emacs-evil/goto-chg)
@@ -78,6 +80,3 @@ Visit us on `irc.libera.chat #evil-mode`.
 See
 [CONTRIBUTING.md](https://github.com/emacs-evil/evil/blob/master/CONTRIBUTING.md)
 for guidelines for issues and pull requests.
-
-[undo-tree]: https://gitlab.com/tsc25/undo-tree
-[undo-fu]: https://codeberg.org/ideasman42/emacs-undo-fu

@@ -1,4 +1,4 @@
-;; evil-tests.el --- unit tests for Evil -*- coding: utf-8; lexical-binding: t; -*-
+;; evil-tests.el --- unit tests for Evil -*- coding: utf-8 -*-
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
@@ -61,15 +61,11 @@
 ;;
 ;; This file is NOT part of Evil itself.
 
-;; FIXME: Merely loading an ELisp file should not change Emacs's config!
 (setq load-prefer-newer t)
 
 (require 'cl-lib)
 (require 'elp)
 (require 'ert)
-;; Load non-compiled `evil-ex'. (It defines `evil-parser' - which is
-;; needed by `evil-test-parser' - only inside an `eval-when-compile'.)
-(require 'evil-ex "evil-ex.el")
 (require 'evil)
 (require 'evil-digraphs)
 (require 'evil-test-helpers)
@@ -85,21 +81,22 @@
 
 (defun evil-tests-initialize (&optional tests profiler interactive)
   (setq profiler (or profiler evil-tests-profiler))
-  (when (consp profiler)
+  (when (listp profiler)
     (setq profiler (car profiler)))
   (when profiler
     (setq evil-tests-profiler t)
     (setq profiler
-          (cdr (assq profiler
-                     '((call . elp-sort-by-call-count)
-                       (average . elp-sort-by-average-time)
-                       (total . elp-sort-by-total-time)))))
+          (or (cdr (assq profiler
+                         '((call . elp-sort-by-call-count)
+                           (average . elp-sort-by-average-time)
+                           (total . elp-sort-by-total-time))))))
     (setq elp-sort-by-function (or profiler 'elp-sort-by-call-count))
     (elp-instrument-package "evil"))
   (if interactive
       (if (y-or-n-p-with-timeout "Run tests? " 2 t)
           (evil-tests-run tests interactive)
-        (message "You can run the tests at any time with `M-x evil-tests-run'"))
+        (message "You can run the tests at any time \
+with `M-x evil-tests-run'"))
     (evil-tests-run tests)))
 
 (defun evil-tests-run (&optional tests interactive)
@@ -204,12 +201,13 @@
 
 (defun evil-test-change-state (state)
   "Change state to STATE and check keymaps"
-  (evil-change-state state)
-  (let ((mode (evil-state-property state :mode))
-        ;; (keymap (evil-state-property state :keymap t))
-        (local-mode (evil-state-property state :local))
-        ;; (local-keymap (evil-state-property state :local-keymap t))
-        (tag (evil-state-property state :tag t)))
+  (let (mode keymap local-mode local-keymap tag)
+    (evil-change-state state)
+    (setq mode (evil-state-property state :mode)
+          keymap (evil-state-property state :keymap t)
+          local-mode (evil-state-property state :local)
+          local-keymap (evil-state-property state :local-keymap t)
+          tag (evil-state-property state :tag t))
     (when (functionp tag)
       (setq tag (funcall tag)))
     (ert-info ("Update `evil-state'")
@@ -445,16 +443,14 @@ when exiting Operator-Pending state")
 (ert-deftest evil-test-auxiliary-maps ()
   "Test auxiliary keymaps"
   :tags '(evil state)
-  ;; `evil-define-key' can't be used on a lexically-scoped keymap var.
-  (defvar evil--map)
-  (let ((evil--map (make-sparse-keymap)) aux)
+  (let ((map (make-sparse-keymap)) aux)
     (ert-info ("Create a new auxiliary keymap")
-      (evil-define-key 'normal evil--map "f" 'foo)
-      (setq aux (evil-get-auxiliary-keymap evil--map 'normal))
+      (evil-define-key 'normal map "f" 'foo)
+      (setq aux (evil-get-auxiliary-keymap map 'normal))
       (should (evil-auxiliary-keymap-p aux))
       (should (eq (lookup-key aux "f") 'foo)))
     (ert-info ("Add to auxiliary keymap")
-      (evil-define-key 'normal evil--map "b" 'bar)
+      (evil-define-key 'normal map "b" 'bar)
       (should (eq (lookup-key aux "f") 'foo))
       (should (eq (lookup-key aux "b") 'bar)))))
 
@@ -497,8 +493,10 @@ when exiting Operator-Pending state")
     (let* ((first-line 1)
            (second-line (progn
                           (forward-line)
-                          (point))))
-      (forward-line)
+                          (point)))
+           (third-line (progn
+                         (forward-line)
+                         (point))))
       (ert-info ("Return the beginning and end unchanged \
 if they are the same")
         (should (equal (evil-normalize 1 1 'exclusive)
@@ -6035,7 +6033,7 @@ Line 2"))
 (ert-deftest evil-test-text-object ()
   "Test `evil-define-text-object'"
   :tags '(evil text-object)
-  (let ((object (evil-define-text-object nil (count &optional beg end _type)
+  (let ((object (evil-define-text-object nil (count &optional beg end type)
                   (let ((sel (and beg end (evil-range beg end))))
                     (when (and sel (> count 0)) (forward-char 1))
                     (let ((range (if (< count 0)
@@ -7439,12 +7437,6 @@ charlie delta
 <echo foxtrot
 golf h[o]>tel")))
 
-(ert-deftest evil-test-visual-separate-from-operator-marks ()
-  "Test that visual selection is kept separate from the '[ and '] marks (#1744)."
-  (evil-test-buffer "x\ny"
-    ("ylvpjxgv")
-    "[x]\n"))
-
 ;;; Replace state
 
 (ert-deftest evil-test-replacement ()
@@ -8541,15 +8533,6 @@ maybe we need one line more with some text\n")
       ("vj!sort" [return])
       "line 5\n[l]ine 3\nline 4\nline 2\nline 1\n")))
 
-(defmacro evil-with-both-search-modules (&rest body)
-  `(mapc (lambda (search-module)
-           (setq evil-search-forward-history nil
-                 evil-search-backward-history nil
-                 evil-ex-search-history nil)
-           (evil-select-search-module 'evil-search-module search-module)
-           ,@body)
-         '(isearch evil-search)))
-
 (ert-deftest evil-test-global ()
   "Test `evil-ex-global'."
   :tags '(evil ex global)
@@ -8918,6 +8901,15 @@ Source
         (execute-kbd-macro "q:")
         (should (= (length (window-list)) num-windows))))))
 
+(defmacro evil-with-both-search-modules (&rest body)
+  `(mapc (lambda (search-module)
+           (setq evil-search-forward-history nil
+                 evil-search-backward-history nil
+                 evil-ex-search-history nil)
+           (evil-select-search-module 'evil-search-module search-module)
+           ,@body)
+         '(isearch evil-search)))
+
 (ert-deftest evil-test-command-window-search-history ()
   "Test command window with forward and backward search history"
   (skip-unless (not noninteractive))
@@ -9129,26 +9121,25 @@ parameter set."
 (ert-deftest evil-test-properties ()
   "Test `evil-get-property' and `evil-put-property'"
   :tags '(evil util)
-  (defvar evil--alist)
-  (let (evil--alist)
+  (let (alist)
     (ert-info ("Set properties")
-      (evil-put-property 'evil--alist 'wibble :foo t)
-      (should (equal evil--alist '((wibble . (:foo t)))))
-      (evil-put-property 'evil--alist 'wibble :bar nil)
-      (should (equal evil--alist '((wibble . (:foo t :bar nil)))))
-      (evil-put-property 'evil--alist 'wobble :foo nil :bar nil :baz t)
-      (should (equal evil--alist '((wobble . (:foo nil :bar nil :baz t))
+      (evil-put-property 'alist 'wibble :foo t)
+      (should (equal alist '((wibble . (:foo t)))))
+      (evil-put-property 'alist 'wibble :bar nil)
+      (should (equal alist '((wibble . (:foo t :bar nil)))))
+      (evil-put-property 'alist 'wobble :foo nil :bar nil :baz t)
+      (should (equal alist '((wobble . (:foo nil :bar nil :baz t))
                              (wibble . (:foo t :bar nil))))))
     (ert-info ("Get properties")
-      (should (evil-get-property evil--alist 'wibble :foo))
-      (should-not (evil-get-property evil--alist 'wibble :bar))
-      (should-not (evil-get-property evil--alist 'wobble :foo))
-      (should-not (evil-get-property evil--alist 'wibble :baz))
-      (should (equal (evil-get-property evil--alist t :foo)
+      (should (evil-get-property alist 'wibble :foo))
+      (should-not (evil-get-property alist 'wibble :bar))
+      (should-not (evil-get-property alist 'wobble :foo))
+      (should-not (evil-get-property alist 'wibble :baz))
+      (should (equal (evil-get-property alist t :foo)
                      '((wibble . t) (wobble . nil))))
-      (should (equal (evil-get-property evil--alist t :bar)
+      (should (equal (evil-get-property alist t :bar)
                      '((wibble . nil) (wobble . nil))))
-      (should (equal (evil-get-property evil--alist t :baz)
+      (should (equal (evil-get-property alist t :baz)
                      '((wobble . t)))))))
 
 (ert-deftest evil-test-filter-list ()
@@ -9483,26 +9474,26 @@ parameter set."
     (evil-with-temp-file file-name ""
       (evil-test-buffer
         (vconcat "i" file-name [escape])
-        (should (not (equal file-name (buffer-file-name))))
+        (should (not (equal file-name (buffer-file-name (current-buffer)))))
         ("gf")
-        (should (equal file-name (buffer-file-name))))))
+        (should (equal file-name (buffer-file-name (current-buffer)))))))
   (ert-info ("Find file at point (visual state)")
     (evil-with-temp-file file-name ""
       (evil-test-buffer
         (vconcat "iuser@localhost:" file-name "$" [escape])
-        (should (not (equal file-name (buffer-file-name))))
+        (should (not (equal file-name (buffer-file-name (current-buffer)))))
         ("0f:lvt$gf")
-        (should (equal file-name (buffer-file-name))))))
+        (should (equal file-name (buffer-file-name (current-buffer)))))))
   (ert-info ("Find file at point with line number")
     (let* ((line-number 3)
            (file-content (make-string (* 2 line-number) ?\n)))
       (evil-with-temp-file file-name (insert file-content)
           (evil-test-buffer
             (vconcat "i" file-name (format ":%d" line-number) [escape])
-            (should (and (not (equal file-name (buffer-file-name)))
+            (should (and (not (equal file-name (buffer-file-name (current-buffer))))
                          (not (equal line-number (line-number-at-pos)))))
             ("gF")
-            (should (and (equal file-name (buffer-file-name))
+            (should (and (equal file-name (buffer-file-name (current-buffer)))
                          (equal line-number (line-number-at-pos))))))))
   (ert-info ("Find file at point with line and column numbers")
     (let* ((line-number 3)
@@ -9514,11 +9505,11 @@ parameter set."
       (evil-with-temp-file file-name (insert file-content)
         (evil-test-buffer
           (vconcat "i" file-name (format ":%d:%d" line-number column-number) [escape])
-          (should (and (not (equal file-name (buffer-file-name)))
+          (should (and (not (equal file-name (buffer-file-name (current-buffer))))
                        (not (equal line-number (line-number-at-pos)))
                        (not (equal column-number (current-column)))))
           ("gF")
-          (should (and (equal file-name (buffer-file-name))
+          (should (and (equal file-name (buffer-file-name (current-buffer)))
                        (equal line-number (line-number-at-pos))
                        (equal column-number (1+ (current-column))))))))))
 
@@ -9699,8 +9690,6 @@ main(argc, argv) char **argv; {
 (ert-deftest evil-test-initial-state ()
   "Test `evil-initial-state'"
   :tags '(evil core)
-  ;; FIXME: These have a global effect, so better move them out and give them
-  ;; a proper namespace prefix.
   (define-derived-mode test-1-mode prog-mode "Test1")
   (define-derived-mode test-2-mode test-1-mode "Test2")
   (evil-set-initial-state 'test-1-mode 'insert)
@@ -9730,7 +9719,6 @@ main(argc, argv) char **argv; {
             ;; is sufficient for `evil-initial-state-for-buffer' to work.
             (should-error (evil-initial-state-for-buffer)))
         (put 'test-1-mode 'derived-mode-parent 'prog-mode))))
-  ;; FIXME: Same as above.
   (defalias 'test-1-alias-mode #'test-1-mode)
   (define-derived-mode test-3-mode test-1-alias-mode "Test3")
   (evil-set-initial-state 'test-1-mode 'insert)

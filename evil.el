@@ -1,4 +1,4 @@
-;;; evil.el --- Extensible vi layer  -*- lexical-binding: t; -*-
+;;; evil.el --- extensible vi layer
 
 ;; The following list of authors was kept up to date until the beginning of
 ;; 2017, when evil moved under new maintainers. For authors since then, please
@@ -114,7 +114,7 @@
 ;; Evil requires undo-redo (Emacs 28), undo-fu or undo-tree for redo
 ;; functionality.  Otherwise, Evil uses regular Emacs undo.
 ;;
-;;     https://codeberg.org/ideasman42/emacs-undo-fu
+;;     https://gitlab.com/ideasman42/emacs-undo-fu
 ;;     https://melpa.org/#/undo-fu
 ;;     https://gitlab.com/tsc25/undo-tree
 ;;     https://elpa.gnu.org/packages/undo-tree.html

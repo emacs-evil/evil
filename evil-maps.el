@@ -25,13 +25,13 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; Code:
-
 (require 'evil-states)
 (require 'evil-ex)
 (require 'evil-commands)
 (require 'evil-command-window)
 (require 'evil-common)
+
+;;; Code:
 
 ;;; Normal state
 
@@ -668,8 +668,10 @@ included in `evil-insert-state-bindings' by default."
 (define-key evil-read-key-map "\r" "\n")
 
 ;; command line window
-(evil-define-key* '(normal insert) evil-command-window-mode-map
-  (kbd "RET") 'evil-command-window-execute)
+(evil-define-key 'normal
+  evil-command-window-mode-map (kbd "RET") 'evil-command-window-execute)
+(evil-define-key 'insert
+  evil-command-window-mode-map (kbd "RET") 'evil-command-window-execute)
 
 (provide 'evil-maps)
 

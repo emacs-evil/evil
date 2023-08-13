@@ -44,7 +44,8 @@
 (define-derived-mode evil-command-window-mode fundamental-mode "Evil-cmd"
   "Major mode for the Evil command line window."
   (auto-fill-mode 0)
-  (add-hook 'after-change-functions #'evil-command-window-draw-prefix nil t))
+  (setq-local after-change-functions
+              (cons #'evil-command-window-draw-prefix after-change-functions)))
 
 (defun evil-command-window (history cmd-key execute-fn)
   "Open a command line window for HISTORY with CMD-KEY and EXECUTE-FN.
