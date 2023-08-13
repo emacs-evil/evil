@@ -59,11 +59,13 @@ If LOCAL is non-nil, the buffer-local value of HOOK is modified."
     (macroexp-let2* nil
         ((fun-name `(make-symbol
                      ,(or name (format "evil-delay-in-%s" hook-sym))))
-         (fun `(lambda (&rest _)
-                 (when ,(or condition t)
-                   (remove-hook ,hook-sym ,fun-name ,local)
-                   ,@body
-                   t))))
+         (fun `(apply-partially
+                (lambda (name &rest _)
+                  (when ,(or condition t)
+                    (remove-hook ,hook-sym name ,local)
+                    ,@body
+                    t))
+                ,fun-name)))
       `(unless ,(and condition `(funcall ,fun))
          (progn (fset ,fun-name ,fun)
                 ,@(when local `((put ,fun-name 'permanent-local-hook t)))
