@@ -112,6 +112,7 @@ commands opening a new line."
   :entry-hook (evil-start-track-last-insertion)
   :exit-hook (evil-cleanup-insert-state evil-stop-track-last-insertion)
   :input-method t
+  :keep-active-mark t
   (cond
    ((evil-insert-state-p)
     (add-hook 'post-command-hook #'evil-maybe-remove-spaces)
@@ -278,6 +279,7 @@ the selection is enabled.
   :tag 'evil-visual-tag
   :enable (motion normal)
   :message 'evil-visual-message
+  :keep-active-mark t
   (cond
    ((evil-visual-state-p)
     (evil-save-transient-mark-mode)
@@ -384,9 +386,7 @@ otherwise exit Visual state."
     (evil-delay nil
         ;; the activation may only be momentary, so re-check
         ;; in `post-command-hook' before entering Visual state
-        '(unless (or (evil-visual-state-p)
-                     (evil-insert-state-p)
-                     (evil-emacs-state-p))
+        '(unless (evil-state-property evil-state :keep-active-mark)
            (when (and (region-active-p)
                       (not deactivate-mark))
              (evil-visual-state)))
@@ -909,7 +909,8 @@ Decrement recorded position by optional offset, or 0."
   :tag " <E> "
   :message "-- EMACS --"
   :input-method t
-  :intercept-esc nil)
+  :intercept-esc nil
+  :keep-active-mark t)
 
 (provide 'evil-states)
 
