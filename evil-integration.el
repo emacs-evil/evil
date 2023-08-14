@@ -240,7 +240,8 @@
       (apply command args)))
 
   (advice-add 'elisp--preceding-sexp :around 'evil--preceding-sexp '((name . evil)))
-  (advice-add 'pp-last-sexp          :around 'evil--preceding-sexp '((name . evil)))))
+  (advice-add 'pp-last-sexp          :around 'evil--preceding-sexp '((name . evil)))
+  (advice-add 'lisp-eval-last-sexp   :around 'evil--preceding-sexp '((name . evil)))))
 
 ;; Show key
 (defadvice quail-show-key (around evil activate)
