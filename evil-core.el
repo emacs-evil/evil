@@ -1168,7 +1168,8 @@ the local keymap will be `evil-test-state-local-map', and so on.
          (modes (intern (format "%s-modes" toggle)))
          (predicate (intern (format "%s-p" toggle)))
          arg cursor-value enable entry-hook-value exit-hook-value
-         input-method key message-value suppress-keymap tag-value)
+         input-method key message-value suppress-keymap tag-value
+         keep-active-mark)
     ;; collect keywords
     (while (keywordp (car-safe body))
       (setq key (pop body)
@@ -1193,7 +1194,9 @@ the local keymap will be `evil-test-state-local-map', and so on.
        ((eq key :input-method)
         (setq input-method arg))
        ((eq key :suppress-keymap)
-        (setq suppress-keymap arg))))
+        (setq suppress-keymap arg))
+       ((eq key :keep-active-mark)
+        (setq keep-active-mark arg))))
 
     ;; macro expansion
     `(progn
@@ -1235,7 +1238,8 @@ cursor, or a list of the above." name))
                               ,(format "Modes that should come up in %s." name))
                      :input-method ',input-method
                      :predicate ',predicate
-                     :enable ',enable)))
+                     :enable ',enable
+                     :keep-active-mark ',keep-active-mark)))
        (evil--add-to-alist evil-state-properties ',state plist))
 
        ,@(when suppress-keymap
