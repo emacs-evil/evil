@@ -635,13 +635,13 @@ and function:
             (func (pop body)))
         (cond
          ((eq key :runner)
-          (setq runner func))
+          (setq runner `#',func))
          ((eq key :collection)
-          (setq completer (cons 'collection func)))
+          (setq completer `(cons 'collection #',func)))
          ((eq key :completion-at-point)
-          (setq completer (cons 'completion-at-point func))))))
+          (setq completer `(cons 'completion-at-point #',func))))))
     `(evil--add-to-alist evil-ex-argument-types
-                         ',arg-type '(,runner ,completer))))
+                         ',arg-type (list ,runner ,completer))))
 
 (evil-ex-define-argument-type file
   "Handle a file argument."
@@ -668,8 +668,8 @@ argument handler that requires shell completion."
     (require 'shell)
     ;; Set up Comint for Shell mode, except
     ;; `comint-completion-at-point' will be called manually.
-    (let (completion-at-point-functions)
-      (shell-completion-vars))))
+    (shell-completion-vars)
+    (remove-hook 'completion-at-point-functions #'comint-completion-at-point t)))
 
 (evil-ex-define-argument-type shell
   "Shell argument type, supports completion."
