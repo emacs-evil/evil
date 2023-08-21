@@ -114,4 +114,4 @@ Emacs state (``<E>``)
 .. [#vim] Vim is the most popular version of *vi*, a modal text editor
    with many implementations.  Vim also adds some functions of its
    own, like visual selection and text objects.  For more information
-   see `the official Vim website <https://vim.org>`_.
+   see `the official Vim website <https://www.vim.org>`_.
