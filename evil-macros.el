@@ -759,13 +759,13 @@ via KEY-VALUE pairs. BODY should evaluate to a list of values.
    '(("(\\(evil-\\(?:ex-\\)?define-\
 \\(?:[^ k][^ e][^ y]\\|[-[:word:]]\\{4,\\}\\)\\)\
 \\>[ \f\t\n\r\v]*\\(\\(?:\\sw\\|\\s_\\)+\\)?"
-      (1 font-lock-keyword-face)
-      (2 font-lock-function-name-face nil t))
+      (1 'font-lock-keyword-face)
+      (2 'font-lock-function-name-face nil t))
      ("(\\(evil-\\(?:delay\\|narrow\\|signal\\|save\\|with\\(?:out\\)?\\)\
 \\(?:-[-[:word:]]+\\)?\\)\\>\[ \f\t\n\r\v]+"
-      1 font-lock-keyword-face)
+      1 'font-lock-keyword-face)
      ("(\\(evil-\\(?:[-[:word:]]\\)*loop\\)\\>[ \f\t\n\r\v]+"
-      1 font-lock-keyword-face))))
+      1 'font-lock-keyword-face))))
 
 (provide 'evil-macros)
 
