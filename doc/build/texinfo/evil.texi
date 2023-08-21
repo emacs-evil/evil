@@ -120,7 +120,7 @@ features of Vim, @footnote{@w{(1)}
 Vim is the most popular version of @emph{vi}, a modal text editor
 with many implementations.  Vim also adds some functions of its
 own, like visual selection and text objects.  For more information
-see @uref{https://vim.org,the official Vim website}.
+see @uref{https://www.vim.org,the official Vim website}.
 } turning Emacs into a modal editor.  Like Emacs in
 general, Evil is extensible in Emacs Lisp.
 
