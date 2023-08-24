@@ -654,7 +654,7 @@ to the beginning of buffer if the end is reached."
     (evil--next-mark nil))
   (evil-first-non-blank))
 
-(evil-define-command evil-set-col-0-mark (beg end mark)
+(evil-define-command evil-set-col-0-mark (_beg end mark)
   "Set MARK at column 0 of line of END.
 Default is cursor line."
   (interactive "<r><a>")
@@ -813,7 +813,7 @@ To go the other way, press \
 \\<evil-motion-state-map>\\[evil-jump-backward]."
   (evil--jump-forward count))
 
-(evil-define-motion evil-jump-backward-swap (count)
+(evil-define-motion evil-jump-backward-swap (_count)
   "Go to the previous position in jump list.
 The current position is placed in the jump list."
   (let ((pnt (point)))
@@ -1236,124 +1236,124 @@ the left edge."
 ;; in the buffer, and thus exact movement to object boundaries is
 ;; required.)
 
-(evil-define-text-object evil-a-word (count &optional beg end type)
+(evil-define-text-object evil-a-word (count &optional beg end _type)
   "Select a word."
   (evil-select-a-restricted-object 'evil-word beg end type count))
 
-(evil-define-text-object evil-inner-word (count &optional beg end type)
+(evil-define-text-object evil-inner-word (count &optional beg end _type)
   "Select inner word."
   (evil-select-inner-restricted-object 'evil-word beg end type count))
 
-(evil-define-text-object evil-a-WORD (count &optional beg end type)
+(evil-define-text-object evil-a-WORD (count &optional beg end _type)
   "Select a WORD."
   (evil-select-a-restricted-object 'evil-WORD beg end type count))
 
-(evil-define-text-object evil-inner-WORD (count &optional beg end type)
+(evil-define-text-object evil-inner-WORD (count &optional beg end _type)
   "Select inner WORD."
   (evil-select-inner-restricted-object 'evil-WORD beg end type count))
 
-(evil-define-text-object evil-a-symbol (count &optional beg end type)
+(evil-define-text-object evil-a-symbol (count &optional beg end _type)
   "Select a symbol."
   (evil-select-an-object 'evil-symbol beg end type count))
 
-(evil-define-text-object evil-inner-symbol (count &optional beg end type)
+(evil-define-text-object evil-inner-symbol (count &optional beg end _type)
   "Select inner symbol."
   (evil-select-inner-object 'evil-symbol beg end type count))
 
-(evil-define-text-object evil-a-sentence (count &optional beg end type)
+(evil-define-text-object evil-a-sentence (count &optional beg end _type)
   "Select a sentence."
   (evil-select-an-object 'evil-sentence beg end type count))
 
-(evil-define-text-object evil-inner-sentence (count &optional beg end type)
+(evil-define-text-object evil-inner-sentence (count &optional beg end _type)
   "Select inner sentence."
   (evil-select-inner-object 'evil-sentence beg end type count))
 
-(evil-define-text-object evil-a-paragraph (count &optional beg end type)
+(evil-define-text-object evil-a-paragraph (count &optional beg end _type)
   "Select a paragraph."
   :type line
   (evil-select-an-object 'evil-paragraph beg end type count t))
 
-(evil-define-text-object evil-inner-paragraph (count &optional beg end type)
+(evil-define-text-object evil-inner-paragraph (count &optional beg end _type)
   "Select inner paragraph."
   :type line
   (evil-select-inner-object 'evil-paragraph beg end type count t))
 
-(evil-define-text-object evil-a-paren (count &optional beg end type)
+(evil-define-text-object evil-a-paren (count &optional beg end _type)
   "Select a parenthesis."
   :extend-selection nil
   (evil-select-paren ?\( ?\) beg end type count t))
 
-(evil-define-text-object evil-inner-paren (count &optional beg end type)
+(evil-define-text-object evil-inner-paren (count &optional beg end _type)
   "Select inner parenthesis."
   :extend-selection nil
   (evil-select-paren ?\( ?\) beg end type count))
 
-(evil-define-text-object evil-a-bracket (count &optional beg end type)
+(evil-define-text-object evil-a-bracket (count &optional beg end _type)
   "Select a square bracket."
   :extend-selection nil
   (evil-select-paren ?\[ ?\] beg end type count t))
 
-(evil-define-text-object evil-inner-bracket (count &optional beg end type)
+(evil-define-text-object evil-inner-bracket (count &optional beg end _type)
   "Select inner square bracket."
   :extend-selection nil
   (evil-select-paren ?\[ ?\] beg end type count))
 
-(evil-define-text-object evil-a-curly (count &optional beg end type)
+(evil-define-text-object evil-a-curly (count &optional beg end _type)
   "Select a curly bracket (\"brace\")."
   :extend-selection nil
   (evil-select-paren ?{ ?} beg end type count t))
 
-(evil-define-text-object evil-inner-curly (count &optional beg end type)
+(evil-define-text-object evil-inner-curly (count &optional beg end _type)
   "Select inner curly bracket (\"brace\")."
   :extend-selection nil
   (evil-select-paren ?{ ?} beg end type count))
 
-(evil-define-text-object evil-an-angle (count &optional beg end type)
+(evil-define-text-object evil-an-angle (count &optional beg end _type)
   "Select an angle bracket."
   :extend-selection nil
   (evil-select-paren ?< ?> beg end type count t))
 
-(evil-define-text-object evil-inner-angle (count &optional beg end type)
+(evil-define-text-object evil-inner-angle (count &optional beg end _type)
   "Select inner angle bracket."
   :extend-selection nil
   (evil-select-paren ?< ?> beg end type count))
 
-(evil-define-text-object evil-a-single-quote (count &optional beg end type)
+(evil-define-text-object evil-a-single-quote (count &optional beg end _type)
   "Select a single-quoted expression."
   :extend-selection t
   (evil-select-quote ?' beg end type count t))
 
-(evil-define-text-object evil-inner-single-quote (count &optional beg end type)
+(evil-define-text-object evil-inner-single-quote (count &optional beg end _type)
   "Select inner single-quoted expression."
   :extend-selection nil
   (evil-select-quote ?' beg end type count))
 
-(evil-define-text-object evil-a-double-quote (count &optional beg end type)
+(evil-define-text-object evil-a-double-quote (count &optional beg end _type)
   "Select a double-quoted expression."
   :extend-selection t
   (evil-select-quote ?\" beg end type count t))
 
-(evil-define-text-object evil-inner-double-quote (count &optional beg end type)
+(evil-define-text-object evil-inner-double-quote (count &optional beg end _type)
   "Select inner double-quoted expression."
   :extend-selection nil
   (evil-select-quote ?\" beg end type count))
 
-(evil-define-text-object evil-a-back-quote (count &optional beg end type)
+(evil-define-text-object evil-a-back-quote (count &optional beg end _type)
   "Select a back-quoted expression."
   :extend-selection t
   (evil-select-quote ?\` beg end type count t))
 
-(evil-define-text-object evil-inner-back-quote (count &optional beg end type)
+(evil-define-text-object evil-inner-back-quote (count &optional beg end _type)
   "Select inner back-quoted expression."
   :extend-selection nil
   (evil-select-quote ?\` beg end type count))
 
-(evil-define-text-object evil-a-tag (count &optional beg end type)
+(evil-define-text-object evil-a-tag (count &optional beg end _type)
   "Select a tag block."
   :extend-selection nil
   (evil-select-xml-tag beg end type count t))
 
-(evil-define-text-object evil-inner-tag (count &optional beg end type)
+(evil-define-text-object evil-inner-tag (count &optional beg end _type)
   "Select inner tag block."
   :extend-selection nil
   (evil-select-xml-tag beg end type count))
@@ -1400,12 +1400,12 @@ the left edge."
      ;; e.g. operator pending...
      (t (list evil-ex-search-match-beg evil-ex-search-match-end)))))
 
-(evil-define-text-object evil-next-match (count &optional beg end type)
+(evil-define-text-object evil-next-match (count &optional _beg _end _type)
   "Select next match."
   :extend-selection t
   (evil-match 'forward count))
 
-(evil-define-text-object evil-previous-match (count &optional beg end type)
+(evil-define-text-object evil-previous-match (count &optional _beg _end _type)
   "Select previous match."
   :extend-selection t
   (evil-match 'backward count))
@@ -1536,7 +1536,7 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (interactive "<R><x>")
   (evil-delete beg end type register))
 
-(evil-define-command evil-delete-backward-char-and-join (count)
+(evil-define-command evil-delete-backward-char-and-join (_count)
   "Delete previous character and join lines.
 If point is at the beginning of a line then the current line will
 be joined with the previous line if and only if
@@ -1604,7 +1604,7 @@ given."
   (interactive "<R><xc/><y>")
   (evil-ex-delete-or-yank nil beg end type register count yank-handler))
 
-(evil-define-command evil-ex-put (beg end ex-arg &optional force)
+(evil-define-command evil-ex-put (_beg end ex-arg &optional force)
   (interactive "<r><a><!>")
   (let* ((arg-chars (remove ?\s (string-to-list ex-arg)))
          (reg (or (car arg-chars) ?\"))
@@ -1922,7 +1922,7 @@ Surround line denoted by BORDERLINE with dashes if non-nil."
   (interactive "<r><a>")
   (evil--ex-print beg end count t))
 
-(evil-define-command evil-ex-z (beg end &optional zmarks bang)
+(evil-define-command evil-ex-z (_beg end &optional zmarks _bang)
   "Display several lines of text surrounding the line specified by range.
 BEG and END represent the range, ZMARKS represents the args in string form.
 With a count supplied in the args, display that number of lines.  Without a
@@ -2122,7 +2122,7 @@ the current line."
              (evil-delete-indentation))
     (evil-shift-left (line-beginning-position) (line-beginning-position 2) count t)))
 
-(evil-define-operator evil-align-left (beg end type &optional width)
+(evil-define-operator evil-align-left (beg end _type &optional width)
   "Left-align lines in the region at WIDTH columns.
 The default for width is the value of `fill-column'."
   :motion evil-line
@@ -2132,7 +2132,7 @@ The default for width is the value of `fill-column'."
                                         (string-to-number width)
                                       0)))
 
-(evil-define-operator evil-align-right (beg end type &optional width)
+(evil-define-operator evil-align-right (beg end _type &optional width)
   "Right-align lines in the region at WIDTH columns.
 The default for width is the value of `fill-column'."
   :motion evil-line
@@ -2142,7 +2142,7 @@ The default for width is the value of `fill-column'."
                                          (string-to-number width)
                                        fill-column)))
 
-(evil-define-operator evil-align-center (beg end type &optional width)
+(evil-define-operator evil-align-center (beg end _type &optional width)
   "Center lines in the region between WIDTH columns.
 The default for width is the value of `fill-column'."
   :motion evil-line
@@ -3246,7 +3246,7 @@ See also `evil-open-fold'."
 
 ;;; Ex
 
-(evil-define-operator evil-write (beg end type file-or-append &optional bang)
+(evil-define-operator evil-write (beg end _type file-or-append &optional bang)
   "Save the current buffer, from BEG to END, to FILE-OR-APPEND.
 If FILE-OR-APPEND is of the form \">> FILE\", append to FILE
 instead of overwriting.  The current buffer's filename is not
@@ -3470,7 +3470,7 @@ is closed."
           (set-process-query-on-exit-flag process nil))
         (kill-emacs)))))
 
-(evil-define-command evil-quit-all-with-error-code (&optional force)
+(evil-define-command evil-quit-all-with-error-code (&optional _force)
   "Exit Emacs without saving, returning an non-zero error code.
 The FORCE argument is only there for compatibility and is ignored.
 This function fails with an error if Emacs is run in server mode."
@@ -3500,7 +3500,7 @@ This function fails with an error if Emacs is run in server mode."
   (evil-quit))
 
 (evil-define-operator evil-shell-command
-  (beg end type command &optional previous)
+  (beg end _type command &optional previous)
   "Execute a shell command.
 If BEG, END and TYPE is specified, COMMAND is executed on the region,
 which is replaced with the command's output. Otherwise, the

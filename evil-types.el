@@ -311,7 +311,7 @@ directly."
   (evil-operator-range t))
 
 (evil-define-interactive-code "<v>"
-  "Typed motion range of visual range(BEG END TYPE).
+  "Typed motion range of visual range (BEG END TYPE).
 If visual state is inactive then those values are nil."
   (if (evil-visual-state-p)
       (let ((range (evil-visual-range)))

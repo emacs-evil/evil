@@ -9573,9 +9573,9 @@ parameter set."
       (let ((inner-name (make-symbol (concat "evil-inner-" name)))
             (outer-name (make-symbol (concat "evil-a-" name))))
         `(progn
-           (evil-define-text-object ,inner-name (count &optional beg end type)
+           (evil-define-text-object ,inner-name (count &optional beg end _type)
              (evil-select-paren ,start-regex ,end-regex beg end type count nil))
-           (evil-define-text-object ,outer-name (count &optional beg end type)
+           (evil-define-text-object ,outer-name (count &optional beg end _type)
              (evil-select-paren ,start-regex ,end-regex beg end type count t))
            (define-key evil-inner-text-objects-map ,key #',inner-name)
            (define-key evil-outer-text-objects-map ,key #',outer-name))))

@@ -321,7 +321,6 @@ last, sorting in between."
           `(defun ,command ,args
              ,@(when doc `(,doc))
              ,interactive
-             (ignore ,@(cl-set-difference args '(&optional &rest)))
              ,@body))
        ,(when (and command doc-form)
           `(put ',command 'function-documentation ,doc-form))
