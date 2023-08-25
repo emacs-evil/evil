@@ -599,6 +599,7 @@ included in `evil-insert-state-bindings' by default."
 (define-key evil-command-line-map "\C-b" #'move-beginning-of-line)
 (define-key evil-command-line-map "\C-c" #'abort-recursive-edit)
 (define-key evil-command-line-map "\C-d" #'completion-at-point)
+(define-key evil-command-line-map "\C-f" 'evil-command-window)
 (define-key evil-command-line-map "\C-g" #'abort-minibuffers)
 (define-key evil-command-line-map "\C-k" 'evil-insert-digraph)
 (define-key evil-command-line-map "\C-l" #'completion-at-point)
@@ -621,13 +622,11 @@ included in `evil-insert-state-bindings' by default."
 
 ;; search command line
 (set-keymap-parent evil-ex-search-keymap evil-command-line-map)
-(define-key evil-ex-search-keymap "\C-f" 'evil-ex-search-command-window)
 (unless evil-want-C-w-delete
   (define-key evil-ex-search-keymap "\C-w" 'evil-search-yank-word))
 
 ;; Ex command line
 (set-keymap-parent evil-ex-completion-map evil-command-line-map)
-(define-key evil-ex-completion-map "\C-f" 'evil-ex-command-window)
 
 ;; eval prompt (the `=' register)
 (define-key evil-eval-map "\C-b" 'move-beginning-of-line)

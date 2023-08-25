@@ -56,9 +56,16 @@
   "Open a command-line window for HISTORY with PROMPT and EXECUTE-FN.
 HISTORY should be a list of commands.  PROMPT should be the
 command-line prompt (one of \":\", \"/\" or \"?\").  EXECUTE-FN should
-be a unary function to execute on the result that the user selects."
+be a unary function to execute on the result that the user selects.
+
+If called interactively, edit this minibuffer argument."
+  (interactive
+   (list (cons (minibuffer-contents) (minibuffer-history-value))
+         (or (minibuffer-prompt) (user-error "Minibuffer is inactive"))
+         #'evil--command-window-minibuffer-execute))
   (when (derived-mode-p 'evil-command-window-mode)
     (user-error "Command-line window is already open"))
+  (when (evil-ex-p) (evil-ex-teardown))
   (let ((previous-buffer (current-buffer))
         (buffer (get-buffer-create "*Command Line*")))
     (with-current-buffer buffer
@@ -116,33 +123,28 @@ function to execute."
       (when window (select-window window)))
     (with-current-buffer original-buffer (funcall execute-fn result))))
 
-(defun evil-command-window-ex (&optional current-command execute-fn)
+(defun evil--command-window-minibuffer-execute (result)
+  "Terminate this minibuffer argument with RESULT."
+  (delete-minibuffer-contents)
+  (insert result)
+  (exit-minibuffer))
+
+(defun evil-command-window-ex (&optional current-command)
   "Open a command-line window for editing and executing Ex commands.
 If CURRENT-COMMAND is present, it will be inserted under the cursor as
-the current command to be edited.  If EXECUTE-FN is given, it will be
-used as the function to execute instead of
-`evil-command-window-ex-execute', the default."
+the current command to be edited."
   (interactive)
   (evil-command-window (cons (or current-command "") evil-ex-history)
                        ":"
-                       (or execute-fn #'evil-command-window-ex-execute)))
+                       #'evil-command-window-ex-execute))
 
-(defun evil-ex-command-window ()
-  "Start command window with Ex history and current minibuffer content."
-  (interactive)
-  (evil-ex-teardown)
-  (let ((execute-fn (apply-partially #'evil-ex-command-window-execute
-                                     (current-window-configuration))))
-    (evil-command-window-ex (minibuffer-contents) execute-fn)))
+(define-obsolete-function-alias
+  'evil-ex-command-window #'evil-command-window "1.15.0"
+  "Start command window with Ex history and current minibuffer content.")
 
-(defun evil-ex-search-command-window ()
-  "Start command window with search history and current minibuffer content."
-  (interactive)
-  (let ((execute-fn (apply-partially #'evil-ex-command-window-execute
-                                     (current-window-configuration))))
-    (evil-command-window (cons (minibuffer-contents) evil-ex-search-history)
-                         (evil-search-prompt (eq evil-ex-search-direction 'forward))
-                         execute-fn)))
+(define-obsolete-function-alias
+  'evil-ex-search-command-window #'evil-command-window "1.15.0"
+  "Start command window with search history and current minibuffer content.")
 
 (defun evil-command-window-ex-execute (result)
   "Execute RESULT as an Ex command."
@@ -150,12 +152,6 @@ used as the function to execute instead of
     (unless (equal result (car evil-ex-history))
       (push result evil-ex-history))
     (evil-ex-execute result)))
-
-(defun evil-ex-command-window-execute (config result)
-  (set-window-configuration config)
-  (delete-minibuffer-contents)
-  (insert result)
-  (exit-minibuffer))
 
 (defun evil--command-window-search (forward)
   "Open a command-line window for searches."
