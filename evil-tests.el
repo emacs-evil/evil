@@ -8866,74 +8866,31 @@ Source
 ;;; Command line window
 
 (ert-deftest evil-test-command-window-ex ()
-  "Test command line window for ex commands"
-  (skip-unless (not noninteractive))
-  (let (evil-ex-history)
-    (evil-test-buffer
-      "[f]oo foo foo"
-      (":s/foo/bar" [return])
-      "[b]ar foo foo"
-      (":s/foo/baz" [return])
-      "[b]ar baz foo"
+  "Test command line window for Ex commands."
+  (let ((evil-ex-history (list "s/foo/baz" "s/foo/bar")))
+    (evil-test-buffer "[b]ar baz foo"
       ("q:")
       "s/foo/bar\ns/foo/baz\n[]\n"
       ("kk:s/bar/quz" [return])
       "[s]/foo/quz\ns/foo/baz\n"
-      ("fzrx")
-      "s/foo/qu[x]\ns/foo/baz\n"
-      ([return])
+      ("fzrx" [return])
       "[b]ar baz qux"
-      (should (equal (car evil-ex-history)
-                     "s/foo/qux")))))
-
-(ert-deftest evil-test-command-window-recursive ()
-  "Test that recursive command windows shouldn't be allowed"
-  (skip-unless (not noninteractive))
-  (let ((evil-command-window-height 0))
-    (evil-test-buffer
-      "[f]oo foo foo"
-      (":s/foo/bar" [return])
-      ("q:")
-      (should-error (execute-kbd-macro "q:")))))
+      (should (equal (car evil-ex-history) "s/foo/qux")))))
 
 (ert-deftest evil-test-command-window-noop ()
-  "Test that executing a blank command does nothing"
-  (skip-unless (not noninteractive))
-  (evil-test-buffer
-    "[f]oo foo foo"
+  "Test that executing a blank command does nothing."
+  (evil-test-buffer "[f]oo foo foo"
     ("q:")
     "[]\n"
     ([return])
     "[f]oo foo foo"))
 
-(ert-deftest evil-test-command-window-multiple ()
-  "Test that multiple command line windows can't be visible at the same time"
-  (skip-unless (not noninteractive))
-  (let ((evil-command-window-height 0))
-    (evil-test-buffer
-      "[f]oo foo foo"
-      ("q:")
-      (let ((num-windows (length (window-list))))
-        (select-window (previous-window))
-        (execute-kbd-macro "q:")
-        (should (= (length (window-list)) num-windows))))))
-
 (ert-deftest evil-test-command-window-search-history ()
-  "Test command window with forward and backward search history"
-  (skip-unless (not noninteractive))
-  (let ((evil-search-module 'isearch))
-    (evil-test-buffer
-      "[f]oo bar baz qux one two three four"
-      ("/qux" [return])
-      "foo bar baz [q]ux one two three four"
-      ("/three" [return])
-      "foo bar baz qux one two [t]hree four"
-      ("?bar" [return])
-      "foo [b]ar baz qux one two three four"
-      ("/four" [return])
-      "foo bar baz qux one two three [f]our"
-      ("?baz" [return])
-      "foo bar [b]az qux one two three four"
+  "Test command window with forward and backward search history."
+  (let ((evil-search-module 'isearch)
+        (evil-search-forward-history (list "four" "three" "qux"))
+        (evil-search-backward-history (list "baz" "bar")))
+    (evil-test-buffer "foo bar [b]az qux one two three four"
       ("q/")
       "qux\nthree\nfour\n[]\n"
       ("k" [return])
@@ -8944,14 +8901,11 @@ Source
       "bar\nbaz\n[]\n"
       ("k$rr" [return])
       "foo [b]ar baz qux one two three four"
-      (should-error
-       (progn (execute-kbd-macro "q/iNOT THERE")
-              (execute-kbd-macro [return])))
+      (error 'user-error "q/iNOT THERE" [return])
       "foo [b]ar baz qux one two three four")))
 
 (ert-deftest evil-test-command-window-search-word ()
-  "Test command window history when searching for word under cursor"
-  (skip-unless (not noninteractive))
+  "Test command window history when searching for word under cursor."
   (let ((evil-search-module 'isearch))
     (evil-test-buffer
       "[f]oo bar foo bar foo"

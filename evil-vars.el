@@ -1351,7 +1351,7 @@ line. If this option is non-nil, this behavior is reversed."
   "Face for interactive replacement text."
   :group 'evil)
 
-(defcustom evil-command-window-height 8
+(defcustom evil-command-window-height 7
   "Height (in lines) of the command line window.
 Set to 0 to use the default height for `split-window'."
   :type 'integer
@@ -1986,14 +1986,6 @@ when Ex is started interactively.")
 (defvar evil-ex-last-was-search nil
   "Non-nil if the previous was a search.
 Otherwise the previous command is assumed as substitute.")
-
-;;; Command line window
-
-(evil-define-local-var evil-command-window-execute-fn nil
-  "The command to execute when exiting the command line window.")
-
-(evil-define-local-var evil-command-window-cmd-key nil
-  "The key for the command that opened the command line window (:, /, or ?).")
 
 ;; The lazy-highlighting framework
 (evil-define-local-var evil-ex-active-highlights-alist nil

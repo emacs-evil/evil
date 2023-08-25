@@ -1,4 +1,4 @@
-;;; evil-command-window.el --- Evil command line window implementation -*- lexical-binding: t -*-
+;;; evil-command-window.el --- Evil command-line window  -*- lexical-binding: t -*-
 ;; Author: Emanuel Evans <emanuel.evans at gmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
@@ -26,161 +26,169 @@
 
 ;;; Commentary:
 
-;; This provides an implementation of the vim command line window for
-;; editing and repeating past ex commands and searches.
+;; This provides an implementation of the Vim command-line window for
+;; editing and repeating past Ex commands and searches.
 
 ;;; Code:
 
 (require 'evil-vars)
 (require 'evil-common)
-(require 'evil-search)
 (require 'evil-ex)
+(require 'evil-search)
 
 (defvar evil-search-module)
 
 (defvar evil-command-window-current-buffer nil
-  "The buffer from which the command line window was called.")
+  "The buffer from which the command-line window was called.")
+
+(defvar evil-command-window-execute-fn nil
+  "The command to execute when exiting the command-line window.")
+
+(defvar evil--command-window-prompt nil
+  "The key for the command that opened the command-line window (:, /, or ?).")
 
 (define-derived-mode evil-command-window-mode fundamental-mode "Evil-cmd"
-  "Major mode for the Evil command line window."
-  (auto-fill-mode 0)
-  (add-hook 'after-change-functions #'evil-command-window-draw-prefix nil t))
+  "Major mode for the Evil command-line window."
+  (add-hook 'after-change-functions #'evil--command-window-draw-prefix nil t)
+  (auto-fill-mode 0))
 
-(defun evil-command-window (history cmd-key execute-fn)
-  "Open a command line window for HISTORY with CMD-KEY and EXECUTE-FN.
-HISTORY should be a list of commands.  CMD-KEY should be the string of
-the key whose history is being shown (one of \":\", \"/\" or \"?\").
-EXECUTE-FN should be a function of one argument to execute on the
-result that the user selects."
-  (when (eq major-mode 'evil-command-window-mode)
-    (user-error "Cannot recursively open command line window"))
-  (dolist (win (window-list))
-    (when (equal (buffer-name (window-buffer win)) "*Command Line*")
-      (kill-buffer (window-buffer win))
-      (delete-window win)))
-  (split-window nil
-                (unless (zerop evil-command-window-height)
-                  evil-command-window-height)
-                'above)
-  (setq evil-command-window-current-buffer (current-buffer))
-  (ignore-errors (kill-buffer "*Command Line*"))
-  (switch-to-buffer "*Command Line*")
-  (setq-local evil-command-window-execute-fn execute-fn)
-  (setq-local evil-command-window-cmd-key cmd-key)
-  (evil-command-window-mode)
-  (evil-command-window-insert-commands history))
+(defun evil-command-window (history prompt execute-fn)
+  "Open a command-line window for HISTORY with PROMPT and EXECUTE-FN.
+HISTORY should be a list of commands.  PROMPT should be the
+command-line prompt (one of \":\", \"/\" or \"?\").  EXECUTE-FN should
+be a unary function to execute on the result that the user selects."
+  (when (derived-mode-p 'evil-command-window-mode)
+    (user-error "Command-line window is already open"))
+  (let ((previous-buffer (current-buffer))
+        (buffer (get-buffer-create "*Command Line*")))
+    (with-current-buffer buffer
+      (erase-buffer)
+      (evil-command-window-mode)
+      (setq-local evil-command-window-current-buffer previous-buffer)
+      (setq-local evil-command-window-execute-fn execute-fn)
+      (setq-local evil--command-window-prompt prompt)
+      (evil--command-window-insert-commands history))
 
-(defun evil-command-window-ex (&optional current-command execute-fn)
-  "Open a command line window for editing and executing ex commands.
-If CURRENT-COMMAND is present, it will be inserted under the
-cursor as the current command to be edited. If EXECUTE-FN is given,
-it will be used as the function to execute instead of
-`evil-command-window-ex-execute', the default."
-  (interactive)
-  (evil-command-window (cons (or current-command "") evil-ex-history)
-                       ":"
-                       (or execute-fn 'evil-command-window-ex-execute)))
+    (let* ((action
+            `((display-buffer-reuse-window display-buffer-at-bottom)
+              ,@(unless (zerop evil-command-window-height)
+                  `((window-height body-lines . ,evil-command-window-height)
+                    (preserve-size nil . t)))
+              (dedicated . t)))
+           (window (display-buffer buffer action))
+           (delete-window-fun
+            (lambda (window)
+              (set-window-parameter window 'delete-window nil)
+              (delete-window window)
+              (switch-to-minibuffer))))
+      (when (minibufferp)
+        (set-window-parameter window 'delete-window delete-window-fun))
+      (select-window window)))
+  (goto-char (point-max))
+  (unless (bobp) (backward-char) (evil-adjust-cursor)))
 
-(defun evil-ex-command-window ()
-  "Start command window with ex history and current minibuffer content."
-  (interactive)
-  (let ((current (minibuffer-contents))
-        (config (current-window-configuration)))
-    (evil-ex-teardown)
-    (select-window (minibuffer-selected-window) t)
-    (evil-command-window-ex current (apply-partially 'evil-ex-command-window-execute config))))
+(defun evil--command-window-draw-prefix (beg end _old-len)
+  "Display `evil--command-window-prompt' as a prefix of the changed lines."
+  (let ((prefix (propertize evil--command-window-prompt
+                            'font-lock-face 'minibuffer-prompt)))
+    (put-text-property beg end 'line-prefix prefix)))
 
-(defun evil-ex-search-command-window ()
-  "Start command window with search history and current minibuffer content."
-  (interactive)
-  (let ((current (minibuffer-contents))
-        (config (current-window-configuration)))
-    (select-window (minibuffer-selected-window) t)
-    (evil-command-window (cons current evil-ex-search-history)
-                         (evil-search-prompt (eq evil-ex-search-direction 'forward))
-                         (apply-partially 'evil-ex-command-window-execute config))))
+(defun evil--command-window-insert-commands (history)
+  "Insert the commands in HISTORY."
+  (let ((inhibit-modification-hooks t))
+    (dolist (cmd (reverse history)) (insert cmd "\n"))
+    (evil--command-window-draw-prefix (point-min) (point-max) nil)))
 
 (defun evil-command-window-execute ()
   "Execute the command on the current line in the appropriate buffer.
 The local variable `evil-command-window-execute-fn' determines which
 function to execute."
   (interactive)
-  (let ((result (buffer-substring (line-beginning-position)
-                                  (line-end-position)))
-        (execute-fn evil-command-window-execute-fn)
-        (command-window (get-buffer-window)))
-    (select-window (previous-window))
-    (unless (equal evil-command-window-current-buffer (current-buffer))
+  (let ((result (buffer-substring-no-properties
+                 (line-beginning-position) (line-end-position)))
+        (original-buffer evil-command-window-current-buffer)
+        (execute-fn evil-command-window-execute-fn))
+    (let ((ignore-window-parameters t))
+      (ignore-errors (kill-buffer-and-window)))
+    (unless (buffer-live-p original-buffer)
       (user-error "Originating buffer is no longer active"))
-    (kill-buffer "*Command Line*")
-    (delete-window command-window)
-    (funcall execute-fn result)
-    (setq evil-command-window-current-buffer nil)))
+    (let ((window (get-buffer-window original-buffer)))
+      (when window (select-window window)))
+    (with-current-buffer original-buffer (funcall execute-fn result))))
+
+(defun evil-command-window-ex (&optional current-command execute-fn)
+  "Open a command-line window for editing and executing Ex commands.
+If CURRENT-COMMAND is present, it will be inserted under the cursor as
+the current command to be edited.  If EXECUTE-FN is given, it will be
+used as the function to execute instead of
+`evil-command-window-ex-execute', the default."
+  (interactive)
+  (evil-command-window (cons (or current-command "") evil-ex-history)
+                       ":"
+                       (or execute-fn #'evil-command-window-ex-execute)))
+
+(defun evil-ex-command-window ()
+  "Start command window with Ex history and current minibuffer content."
+  (interactive)
+  (evil-ex-teardown)
+  (let ((execute-fn (apply-partially #'evil-ex-command-window-execute
+                                     (current-window-configuration))))
+    (evil-command-window-ex (minibuffer-contents) execute-fn)))
+
+(defun evil-ex-search-command-window ()
+  "Start command window with search history and current minibuffer content."
+  (interactive)
+  (let ((execute-fn (apply-partially #'evil-ex-command-window-execute
+                                     (current-window-configuration))))
+    (evil-command-window (cons (minibuffer-contents) evil-ex-search-history)
+                         (evil-search-prompt (eq evil-ex-search-direction 'forward))
+                         execute-fn)))
 
 (defun evil-command-window-ex-execute (result)
   "Execute RESULT as an Ex command."
-  (unless (string-match-p "^ *$" result)
+  (unless (string-match-p "\\`[ \t\n\r]*\\'" result)
     (unless (equal result (car evil-ex-history))
       (push result evil-ex-history))
     (evil-ex-execute result)))
 
 (defun evil-ex-command-window-execute (config result)
-  (select-window (active-minibuffer-window) t)
   (set-window-configuration config)
   (delete-minibuffer-contents)
   (insert result)
   (exit-minibuffer))
 
-(defun evil-command-window-search-forward ()
-  "Open a command line window for forward searches."
-  (interactive)
+(defun evil--command-window-search (forward)
+  "Open a command-line window for searches."
   (evil-command-window
-   (cons "" (if (eq evil-search-module 'evil-search)
-                evil-ex-search-history
-              evil-search-forward-history))
-   "/"
-   (lambda (result) (evil-command-window-search-execute result t))))
+   (cons "" (cond ((eq evil-search-module 'evil-search)
+                   evil-ex-search-history)
+                  (forward evil-search-forward-history)
+                  (t evil-search-backward-history)))
+   (evil-search-prompt forward)
+   (lambda (result) (evil-command-window-search-execute result forward))))
+
+(defun evil-command-window-search-forward ()
+  "Open a command-line window for forward searches."
+  (interactive)
+  (evil--command-window-search t))
 
 (defun evil-command-window-search-backward ()
-  "Open a command line window for backward searches."
+  "Open a command-line window for backward searches."
   (interactive)
-  (evil-command-window
-   (cons "" (if (eq evil-search-module 'evil-search)
-                evil-ex-search-history
-              evil-search-backward-history))
-   "?"
-   (lambda (result) (evil-command-window-search-execute result nil))))
+  (evil--command-window-search nil))
 
 (defun evil-command-window-search-execute (result forward)
   "Search for RESULT using FORWARD to determine direction."
-  (unless (zerop (length result))
+  (unless (string= result "")
     (if (eq evil-search-module 'evil-search)
         (progn
           (setq evil-ex-search-pattern (evil-ex-make-search-pattern result)
                 evil-ex-search-direction (if forward 'forward 'backward))
-          (unless (equal result (car-safe evil-ex-search-history))
+          (unless (equal result (car evil-ex-search-history))
             (push result evil-ex-search-history))
           (evil-ex-search))
       (evil-push-search-history result forward)
       (evil-search result forward evil-regexp-search))))
-
-(defun evil-command-window-draw-prefix (&rest _)
-  "Display `evil-command-window-cmd-key' as a prefix of the current line."
-  (let ((prefix (propertize evil-command-window-cmd-key
-                            'font-lock-face 'minibuffer-prompt)))
-    (set-text-properties (line-beginning-position) (line-beginning-position 2)
-                         (list 'line-prefix prefix))))
-
-(defun evil-command-window-insert-commands (hist)
-  "Insert the commands in HIST."
-  (let ((inhibit-modification-hooks t))
-    (mapc (lambda (cmd) (insert cmd) (newline)) (reverse hist)))
-  (let ((prefix (propertize evil-command-window-cmd-key
-                            'font-lock-face 'minibuffer-prompt)))
-    (set-text-properties (point-min) (point-max) (list 'line-prefix prefix)))
-  (goto-char (point-max))
-  (and (bolp) (not (bobp)) (backward-char))
-  (evil-adjust-cursor))
 
 (provide 'evil-command-window)
 
