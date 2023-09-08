@@ -1123,7 +1123,7 @@ that line."
   :type 'boolean
   :group 'evil)
 (make-obsolete-variable
- evil-want-visual-char-semi-exclusive
+ 'evil-want-visual-char-semi-exclusive
  "Semi-exclusivity prevents selecting text + 1st char of next line,
 without having to introduce new niche functionality.
 Prefer to set `evil-v$-excludes-newline' to non-nil."
