@@ -1158,7 +1158,7 @@ special situations like empty patterns or repetition of previous
 substitution commands. If IMPLICIT-R is non-nil, then the \"r\" flag
 is assumed, i.e. in case of an empty pattern the last search pattern
 is used. It is meant for :substitute commands with arguments."
-  (let (pattern replacement flags)
+  (let (pattern replacement flags using-prev-pattern)
     (cond
      ((or (string= string "") (string-match-p "\\`[a-zA-Z]" string))
       ;; No pattern, since it starts with a letter which cannot be a
@@ -1191,8 +1191,10 @@ is used. It is meant for :substitute commands with arguments."
             (if (eq evil-search-module 'evil-search)
                 (if (and evil-ex-last-was-search (memq ?r flags))
                     (and evil-ex-search-pattern
+                         (setq using-prev-pattern t)
                          (evil-ex-pattern-regex evil-ex-search-pattern))
                   (and evil-ex-substitute-pattern
+                       (setq using-prev-pattern t)
                        (evil-ex-pattern-regex evil-ex-substitute-pattern)))
               (if (eq case-fold-search t)
                   isearch-string
@@ -1200,7 +1202,11 @@ is used. It is meant for :substitute commands with arguments."
             flags (remq ?r flags)))
     ;; generate pattern
     (when pattern
-      (setq pattern (evil-ex-make-substitute-pattern pattern flags)))
+      ;; Disable vim-style regexp conversion if using a previous pattern, because
+      ;; this conversion will already have been done before storing it
+      (let ((evil-ex-search-vim-style-regexp (and evil-ex-search-vim-style-regexp
+                                                  (not using-prev-pattern))))
+        (setq pattern (evil-ex-make-substitute-pattern pattern flags))))
     (list pattern replacement flags)))
 
 (defun evil-ex-nohighlight ()
