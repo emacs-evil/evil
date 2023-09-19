@@ -7997,7 +7997,20 @@ golf h[o]>tel")))
       (":s/foo/AAA/g" [return])
       "[x]xx AAA bar AAA bar AAA bar\nxxx foo bar foo bar foo bar"
       ("g&")
-      "xxx AAA bar AAA bar AAA bar\n[x]xx AAA bar AAA bar AAA bar")))
+      "xxx AAA bar AAA bar AAA bar\n[x]xx AAA bar AAA bar AAA bar"))
+  (ert-info ("Repeat magic multiple times")
+    (let ((evil-magic 'very-magic)
+          (evil-ex-search-vim-style-regexp t))
+      (evil-test-buffer
+        "[b]ravo, alpha\ndelta, charlie\nfoxtrot, echo\nhotel, golf"
+        (":s/(.*), (.*)/\\2 \\1" [return])
+        "alpha bravo\ndelta, charlie\nfoxtrot, echo\nhotel, golf"
+        ("j&")
+        "alpha bravo\ncharlie delta\nfoxtrot, echo\nhotel, golf"
+        ("j&")
+        "alpha bravo\ncharlie delta\necho foxtrot\nhotel, golf"
+        ("j&")
+        "alpha bravo\ncharlie delta\necho foxtrot\ngolf hotel"))))
 
 (ert-deftest evil-test-ex-regex-without-case ()
   "Test `evil-ex-regex-without-case'"
