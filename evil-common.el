@@ -565,6 +565,15 @@ as a command. Its main use is in the `evil-read-key-map'."
   (interactive)
   (read-quoted-char))
 
+(defvar evil-digraph-read-key-keymap
+  (let ((map (make-sparse-keymap))
+        (n ?0))
+    (while (<= n ?9)
+      (define-key map (kbd (concat "<kp-" (string n) ">")) nil)
+      (cl-incf n))
+    map)
+   "By default, used to exclude otherwise disabled fallbacks.")
+
 (declare-function evil-digraph "evil-digraphs")
 (defun evil-read-digraph-char-with-overlay (overlay)
   "Read two chars, displaying the first in OVERLAY, replacing \"?\".
@@ -572,7 +581,7 @@ Return the digraph from `evil-digraph', else return second char."
   (interactive)
   (unwind-protect
       (let ((read-key-empty-map
-             (let ((map (make-sparse-keymap)))
+             (let ((map (copy-keymap evil-digraph-read-key-keymap)))
                (set-keymap-parent map read-key-empty-map)
                ;; Disable read-key-sequence unbound fallbacks, e.g. downcasing
                (define-key map [t] 'dummy)
