@@ -569,7 +569,7 @@ as a command. Its main use is in the `evil-read-key-map'."
   (let ((map (make-sparse-keymap))
         (n ?0))
     (while (<= n ?9)
-      (define-key map (kbd (concat "<kp-" (string n) ">")) nil)
+      (define-key map (vector (intern (concat "kp-" (string n)))) nil)
       (cl-incf n))
     map)
    "By default, used to exclude otherwise disabled fallbacks.")
