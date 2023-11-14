@@ -169,9 +169,10 @@ To enable Evil globally, do (evil-mode)."
 (defalias 'evil--fundamental-mode #'fundamental-mode)
 
 ;;;###autoload (autoload 'evil-mode "evil" nil t)
-(define-globalized-minor-mode evil-mode
-  evil-local-mode evil-initialize
-  :group 'evil
+(define-globalized-minor-mode evil-mode evil-local-mode evil-initialize
+  :group 'evil)
+
+(defadvice evil-mode (after start-evil activate)
   ;; Hooks used to not run in Fundamental buffers (bug#23827), so
   ;; other measures are necessary to initialize Evil there. When Evil
   ;; is enabled globally, the default value of `major-mode' is set to
@@ -183,12 +184,12 @@ To enable Evil globally, do (evil-mode)."
              (setq-default major-mode 'evil--fundamental-mode))
         (ad-enable-regexp "^evil")
         (ad-activate-regexp "^evil")
-        (evil-esc-mode 1))
+        (with-no-warnings (evil-esc-mode 1)))
     (when (eq (default-value 'major-mode) 'evil--fundamental-mode)
       (setq-default major-mode 'fundamental-mode))
     (ad-disable-regexp "^evil")
     (ad-update-regexp "^evil")
-    (evil-esc-mode -1)))
+    (with-no-warnings (evil-esc-mode -1))))
 
 (defun evil-change-state (state &optional message)
   "Change the state to STATE.
