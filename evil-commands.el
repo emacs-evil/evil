@@ -571,11 +571,13 @@ and jump to the corresponding one."
 
 (evil-define-motion evil-previous-open-paren (count)
   "Go to COUNT previous unmatched \"(\"."
+  :jump t
   :type exclusive
   (evil-up-paren ?\( ?\) (- (or count 1))))
 
 (evil-define-motion evil-next-close-paren (count)
   "Go to COUNT next unmatched \")\"."
+  :jump t
   :type exclusive
   (forward-char)
   (evil-up-paren ?\( ?\) (or count 1))
@@ -583,11 +585,13 @@ and jump to the corresponding one."
 
 (evil-define-motion evil-previous-open-brace (count)
   "Go to COUNT previous unmatched \"{\"."
+  :jump t
   :type exclusive
   (evil-up-paren ?{ ?} (- (or count 1))))
 
 (evil-define-motion evil-next-close-brace (count)
   "Go to COUNT next unmatched \"}\"."
+  :jump t
   :type exclusive
   (forward-char)
   (evil-up-paren ?{ ?} (or count 1))
