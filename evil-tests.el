@@ -9726,6 +9726,49 @@ main(argc, argv) char **argv; {
            (should (equal evil-input-method "german-prefix"))))
       (remove-hook 'text-mode-hook #'use-german-input-method))))
 
+(ert-deftest evil-retab ()
+  "Test the :retab command"
+  :tags '(evil)
+  (ert-info ("From tabs to spaces")
+    (evil-test-buffer
+      "def foo():\n\twhile True:\n\t\treturn\n"
+      (setq indent-tabs-mode nil)
+      (setq tab-width 4)
+      (":retab" [return])
+      "def foo():\n    while True:\n        return\n"))
+  (ert-info ("From spaces to tabs")
+    (evil-test-buffer
+      "def foo():\n    while True:\n        return\n"
+      (setq indent-tabs-mode t)
+      (setq tab-width 4)
+      (":retab" [return])
+      "def foo():\n\twhile True:\n\t\treturn\n"))
+  (ert-info ("Specify tab width as an argument")
+    (evil-test-buffer
+      "def foo():\n\twhile True:\n\t\treturn\n"
+      (setq indent-tabs-mode nil)
+      (setq tab-width 4)
+      (":retab 2" [return])
+      "def foo():\n  while True:\n    return\n"))
+  (ert-info ("Invalid argument")
+    (evil-test-buffer
+      "def foo():\n\twhile True:\n\t\treturn\n"
+      (should-error (execute-kbd-macro ":retab foo" [return])))))
+
+(ert-deftest evil-retab-visual ()
+  "Test the :retab command on visual line selection.
+This test fails in the batch mode (and therefore in the GitHub CI)
+but it works fine in `M-x ert-run-tests-interactively'."
+  :tags '(evil visual)
+  (skip-unless (not noninteractive))
+  (ert-info ("Retab only selected lines")
+    (evil-test-buffer
+      "def foo():\n\twhile True:\n\t\treturn\n"
+      (setq indent-tabs-mode nil)
+      (setq tab-width 4)
+      ("Vj" ":retab" [return])
+      "def foo():\n    while True:\n\t\treturn\n")))
+
 (provide 'evil-tests)
 
 ;;; evil-tests.el ends here

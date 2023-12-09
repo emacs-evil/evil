@@ -583,6 +583,7 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "nu[mber]" 'evil-ex-numbered-print)
 (evil-ex-define-cmd "#" 'evil-ex-numbered-print)
 (evil-ex-define-cmd "z" 'evil-ex-z)
+(evil-ex-define-cmd "ret[ab]" 'evil-retab)
 
 (when (featurep 'tab-bar)
   (evil-ex-define-cmd "tabnew" 'tab-bar-new-tab)
