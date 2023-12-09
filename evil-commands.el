@@ -5172,6 +5172,23 @@ event that triggered the execution of this command."
     (push event unread-command-events)))
 (evil-declare-ignore-repeat 'evil-exit-visual-and-repeat)
 
+(evil-define-command evil-retab (tabstop)
+  "Convert all tabs to spaces or the other way around.
+Replace all sequences of white-space containing a <Tab> with new
+strings of white-space using the new TABSTOP value given.
+If you do not specify a new TABSTOP size or it is zero, Evil uses the
+current value of `tab-width'."
+  (interactive "<a>")
+  (unless (or (not tabstop) (string-match-p "^[0-9]*$" tabstop))
+    (user-error "Invalid argument: %s" tabstop))
+  (let ((beg (if (use-region-p) (region-beginning) (point-min)))
+        (end (if (use-region-p) (region-end) (point-max)))
+        (retab (if indent-tabs-mode #'tabify #'untabify))
+        (tab-width (cond ((not tabstop) tab-width)
+                         ((equal tabstop "0") tab-width)
+                         (t (string-to-number tabstop)))))
+    (funcall retab beg end)))
+
 (provide 'evil-commands)
 
 ;;; evil-commands.el ends here
