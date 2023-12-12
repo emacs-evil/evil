@@ -926,6 +926,7 @@ expression matching the buffer's name and STATE is one of `normal',
     internal-ange-ftp-mode
     haskell-interactive-mode
     prolog-inferior-mode
+    racket-repl-mode
     reb-mode
     shell-mode
     slime-repl-mode
