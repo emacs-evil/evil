@@ -5874,6 +5874,89 @@ This buffer is for notes."
       ("2])")
       "foo ( { ( bar ) baz } [)]")))
 
+(ert-deftest evil-test-paren-jump-from-string ()
+  "Test jump to next/prev paren from a string"
+  :tags '(evil motion)
+  (evil-test-buffer
+   "{
+  fun(a, \"T[]est\", test());
+}
+"
+   ("[(")
+   "{
+  fun[(]a, \"Test\", test());
+}
+"
+   ("])")
+   "{
+  fun(a, \"Test\", test()[)];
+}
+")
+  (evil-test-buffer
+   "{
+  fun(a, \"T[]est\", test());
+}
+"
+   ("])")
+   "{
+  fun(a, \"Test\", test()[)];
+}
+"
+   ("[(")
+   "{
+  fun[(]a, \"Test\", test());
+}
+")
+  (evil-test-buffer
+   "{
+  fun(a, \"T[]est\", test());
+}
+"
+   ("[{")
+   "[{]
+  fun(a, \"Test\", test());
+}
+")
+  (evil-test-buffer
+   "{
+  fun(a, \"T[]est\", test());
+}
+"
+   ("]}")
+   "{
+  fun(a, \"Test\", test());
+[}]
+"))
+
+(ert-deftest evil-test-paren-jump-inside-string-from-string ()
+  "Test jump to next/prev paren inside string from a string"
+  :tags '(evil motion)
+  (evil-test-buffer
+   "{ (\"Test with paren (inside multi (l[e]vel))\", test()); } "
+   ("[(")
+   "{ (\"Test with paren (inside multi [(]level))\", test()); } "
+   ("[(")
+   "{ (\"Test with paren [(]inside multi (level))\", test()); } ")
+  (evil-test-buffer
+   "{ (\"Test with paren (inside multi (l[e]vel))\", test()); } "
+   ("])")
+   "{ (\"Test with paren (inside multi (level[)])\", test()); } "
+   ("])")
+   "{ (\"Test with paren (inside multi (level)[)]\", test()); } ")
+  (evil-test-buffer
+   "{ (\"Test with paren {inside multi {l[e]vel}}\", test()); } "
+   ("[{")
+   "{ (\"Test with paren {inside multi [{]level}}\", test()); } "
+   ("[{")
+   "{ (\"Test with paren [{]inside multi {level}}\", test()); } ")
+  (evil-test-buffer
+   "{ (\"Test with paren {inside multi {l[e]vel}}\", test()); } "
+   ("]}")
+   "{ (\"Test with paren {inside multi {level[}]}\", test()); } "
+   ("]}")
+   "{ (\"Test with paren {inside multi {level}[}]\", test()); } "))
+
+
 (ert-deftest evil-test-next-mark ()
   "Test `evil-next-mark', `evil-previous-mark'"
   :tags '(evil motion)
