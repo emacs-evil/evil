@@ -1360,11 +1360,11 @@ last successful match (that caused COUNT to reach zero)."
                           (cond
                            ((> dir 0)
                             (while (progn
-                                     (up-list dir)
+                                     (up-list dir t)
                                      (/= (char-before) close))))
                            (t
                             (while (progn
-                                     (up-list dir)
+                                     (up-list dir t)
                                      (/= (char-after) open)))))
                         (error (goto-char pnt)))))))
         (cond
