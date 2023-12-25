@@ -3704,7 +3704,9 @@ Below some empty line"))
    ("go")
    "[W]e only need a short buffer for this test"
    (evil-goto-char 24)
-   "We only need a short bu[f]fer for this test"))
+   "We only need a short bu[f]fer for this test"
+   ("v29go")
+   "We only need a short bu<ffer [f]>or this test"))
 
 (ert-deftest evil-test-operator-0 ()
   "Test motion \"0\" with an operator."

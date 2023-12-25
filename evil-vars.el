@@ -1030,6 +1030,7 @@ intercepted."
     forward-sentence
     forward-sexp
     forward-word
+    goto-char
     goto-last-change
     ibuffer-backward-line
     ibuffer-forward-line

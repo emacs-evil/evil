@@ -4270,7 +4270,7 @@ range. The given argument is passed straight to
         (evil-force-normal-state)
         (set-marker marker nil)))))
 
-(evil-define-command evil-goto-char (position)
+(evil-define-motion evil-goto-char (position)
   "Go to POSITION in the buffer.
 Default position is the beginning of the buffer."
   :jump t
