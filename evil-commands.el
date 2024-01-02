@@ -3474,15 +3474,15 @@ is closed."
           (set-process-query-on-exit-flag process nil))
         (kill-emacs)))))
 
-(evil-define-command evil-quit-all-with-error-code (&optional _force)
+(evil-define-command evil-quit-all-with-error-code (&optional err-code _force)
   "Exit Emacs without saving, returning an non-zero error code.
 The FORCE argument is only there for compatibility and is ignored.
 This function fails with an error if Emacs is run in server mode."
   :repeat nil
-  (interactive "<!>")
+  (interactive "<N><!>")
   (if (bound-and-true-p server-buffer-clients)
-      (user-error "Cannot exit client process with error code.")
-    (kill-emacs 1)))
+      (user-error "Cannot exit client process with error code")
+    (kill-emacs (or err-code 1))))
 
 (evil-define-command evil-save-and-quit ()
   "Save all buffers and exit Emacs."
