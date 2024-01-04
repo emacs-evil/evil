@@ -3081,7 +3081,7 @@ word3[]"))
       ("yiwyywyiw^j")
       "word1a word1b word1c\n[w]ord2a word2b\nword3a word3b word3c word3d\n"
       ("Vp")
-      "word1a word1b word1c\nword1[b]word3a word3b word3c word3d\n"))
+      "word1a word1b word1c\nword1[b]\nword3a word3b word3c word3d\n"))
   (ert-info ("Visual-line paste, char paste, line pop")
     (evil-test-buffer
       "[w]ord1a word1b word1c\nword2a word2b\nword3a word3b word3c word3d\n"
@@ -3095,7 +3095,7 @@ word3[]"))
       ("yiwyywyiw^j")
       "word1a word1b word1c\n[w]ord2a word2b\nword3a word3b word3c word3d\n"
       ("Vp\C-p\C-p")
-      "word1a word1b word1c\nword1[a]word3a word3b word3c word3d\n")))
+      "word1a word1b word1c\nword1[a]\nword3a word3b word3c word3d\n")))
 
 (ert-deftest evil-test-register ()
   "Test yanking and pasting to and from register."

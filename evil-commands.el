@@ -2356,6 +2356,11 @@ leave the cursor just after the new text."
           (setq beg evil-visual-beginning
                 end evil-visual-end
                 type (evil-visual-type))
+          ;; When pasting charwise text into linewise selection, keep trailing NL
+          (when (and text end
+                     (eq 'line type)
+                     (not (eq ?\n (aref text (1- (length text))))))
+            (cl-decf end))
           (evil-visual-rotate 'upper-left)
           (evil-delete beg end type (unless evil-kill-on-visual-paste ?_))
           (when (and (eq yank-handler #'evil-yank-line-handler)
