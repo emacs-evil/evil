@@ -958,7 +958,13 @@ the following lead to identical bindings:
 The symbol `local' may also be used, which corresponds to using
 `evil-local-set-key'. If a quoted symbol is used that is not
 `global' or `local', it is assumed to be the name of a minor
-mode, in which case `evil-define-minor-mode-key' is used."
+mode, in which case `evil-define-minor-mode-key' is used.
+
+Bindings that use modifier keys such as `C' or `M' must be escaped
+with a `\\' character as this is a requirement of the `define-key'
+function. For example:
+
+    (evil-define-key \\='normal foo-map \"\\C-a\" \\='bar)"
   (declare (indent defun))
   (cond
    ((member keymap '('global 'local))
