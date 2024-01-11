@@ -960,11 +960,12 @@ The symbol `local' may also be used, which corresponds to using
 `global' or `local', it is assumed to be the name of a minor
 mode, in which case `evil-define-minor-mode-key' is used.
 
-Bindings that use modifier keys such as `C' or `M' must be escaped
-with a `\\' character as this is a requirement of the `define-key'
-function. For example:
+KEY is an internal Emacs representation of a key, as for
+`define-key'. To bind key sequences that use modifier keys such
+as \"C-a\" or \"M-a\", convert the key sequences using `kbd'.
+For example:
 
-    (evil-define-key \\='normal foo-map \"\\C-a\" \\='bar)"
+    (evil-define-key \\='normal foo-map (kbd \"C-a\") \\='bar)"
   (declare (indent defun))
   (cond
    ((member keymap '('global 'local))
