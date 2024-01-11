@@ -958,7 +958,14 @@ the following lead to identical bindings:
 The symbol `local' may also be used, which corresponds to using
 `evil-local-set-key'. If a quoted symbol is used that is not
 `global' or `local', it is assumed to be the name of a minor
-mode, in which case `evil-define-minor-mode-key' is used."
+mode, in which case `evil-define-minor-mode-key' is used.
+
+KEY is an internal Emacs representation of a key, as for
+`define-key'. To bind key sequences that use modifier keys such
+as \"C-a\" or \"M-a\", convert the key sequences using `kbd'.
+For example:
+
+    (evil-define-key \\='normal foo-map (kbd \"C-a\") \\='bar)"
   (declare (indent defun))
   (cond
    ((member keymap '('global 'local))
