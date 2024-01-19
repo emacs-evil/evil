@@ -1801,7 +1801,7 @@ closer if MOVE is non-nil."
 with regard to indentation."
   (evil-narrow-to-field
     (evil-move-beginning-of-line)
-    (insert (if use-hard-newlines hard-newline "\n"))
+    (insert-and-inherit (if use-hard-newlines hard-newline "\n"))
     (forward-line -1)
     (back-to-indentation)))
 
@@ -1810,7 +1810,7 @@ with regard to indentation."
 with regard to indentation."
   (evil-narrow-to-field
     (evil-move-end-of-line)
-    (insert (if use-hard-newlines hard-newline "\n"))
+    (insert-and-inherit (if use-hard-newlines hard-newline "\n"))
     (back-to-indentation)))
 
 ;;; Markers
