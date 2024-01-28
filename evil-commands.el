@@ -2122,7 +2122,7 @@ the current line."
   (interactive "<c>")
   (if (and (eq 'self-insert-command last-command)
            (eq ?0 (char-before)))
-      (progn (backward-delete-char 1)
+      (progn (delete-char -1)
              (evil-delete-indentation))
     (evil-shift-left (line-beginning-position) (line-beginning-position 2) count t)))
 
