@@ -1627,7 +1627,7 @@ given."
     (if force (evil-insert-newline-above) (evil-insert-newline-below))
     (evil-set-marker ?\[ (point))
     ;; `insert' rather than `insert-for-yank' as we want to ignore yank-handlers...
-    (insert (if (and (< 0 (length text))
+    (insert-and-inherit (if (and (< 0 (length text))
                      (eq ?\n (aref text (1- (length text)))))
                 (substring text 0 (1- (length text)))
               text))
@@ -1696,7 +1696,7 @@ of the block."
     (when (or (zerop len) (/= (aref txt (1- len)) ?\n))
       (setq txt (concat txt "\n")))
     (when (and (eobp) (not (bolp))) (newline)) ; incomplete last line
-    (insert txt)
+    (insert-and-inherit txt)
     (forward-line -1)))
 
 (evil-define-command evil-move (beg end address)
@@ -1721,7 +1721,7 @@ of the block."
       (when (and (eobp) (not (bolp))) (newline)) ; incomplete last line
       (when (evil-visual-state-p)
         (move-marker evil-visual-mark (point)))
-      (insert txt)
+      (insert-and-inherit txt)
       (forward-line -1)
       (when (evil-visual-state-p)
         (move-marker evil-visual-point (point))))))
@@ -1774,7 +1774,8 @@ Add (add-hook 'evil-local-mode-hook 'turn-on-undo-tree-mode) to your init file f
         (let ((char (following-char)))
           (delete-char 1)
           (insert-char
-           (if (eq (upcase char) char) (downcase char) (upcase char))))
+           (if (eq (upcase char) char) (downcase char) (upcase char))
+           1 t))
         (setq beg (1+ beg))))))
 
 (evil-define-operator evil-invert-char (beg end type)
@@ -2176,7 +2177,7 @@ The default for width is the value of `fill-column'."
                    (let ((beg (evil-move-to-column begcol nil t))
                          (end (evil-move-to-column endcol nil t)))
                      (delete-region beg end)
-                     (insert (make-string (- endcol begcol) char))))))
+                     (insert-and-inherit (make-string (- endcol begcol) char))))))
            beg end char))
       (goto-char beg)
       (cond
@@ -2190,7 +2191,7 @@ The default for width is the value of `fill-column'."
           (if (eq (char-after) ?\n)
               (forward-char)
             (delete-char 1)
-            (insert-char char 1)))
+            (insert-char char 1 t)))
         (goto-char (max beg (1- end))))))))
 
 (evil-define-command evil-paste-before
@@ -2366,7 +2367,7 @@ leave the cursor just after the new text."
           (when (and (eq yank-handler #'evil-yank-line-handler)
                      (not (memq type '(line block)))
                      (/= end (point-max)))
-            (insert "\n"))
+            (insert-and-inherit "\n"))
           (evil-normal-state)
           (when kill-ring (current-kill 1)))
         ;; Effectively memoize `evil-get-register' because it can be
@@ -2878,7 +2879,7 @@ next VCOUNT - 1 lines below the current one."
                 insert-prompt (make-overlay opoint (+ chars-to-delete opoint)))
           (evil-update-replace-alist opoint count chars-to-delete))
       (setq insert-prompt (make-overlay opoint opoint)))
-    (insert-char (evil-read-digraph-char-with-overlay insert-prompt) count)
+    (insert-char (evil-read-digraph-char-with-overlay insert-prompt) count t)
     (when chars-to-delete (delete-char chars-to-delete))))
 
 (evil-define-command evil-ex-show-digraphs ()
@@ -3349,7 +3350,7 @@ If no FILE is specified, reload the current buffer from disk."
     (when count (goto-char (point-min)))
     (when (or (not (zerop (forward-line (or count 1))))
               (not (bolp)))
-      (insert "\n"))
+      (insert-and-inherit "\n"))
     (cond
      ((/= (aref file 0) ?!)
       (when (member file '("#" "%"))
@@ -3357,11 +3358,11 @@ If no FILE is specified, reload the current buffer from disk."
       (let ((result (insert-file-contents file)))
         (save-excursion
           (forward-char (cadr result))
-          (unless (bolp) (insert "\n")))))
+          (unless (bolp) (insert-and-inherit "\n")))))
      (t
       (shell-command (evil-ex-replace-special-filenames (substring file 1)) t)
       (goto-char (mark))
-      (unless (bolp) (insert "\n"))
+      (unless (bolp) (insert-and-inherit "\n"))
       (forward-line -1)))))
 
 (evil-define-command evil-show-files ()
