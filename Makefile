@@ -25,8 +25,12 @@ compile: $(ELCFILES)
 
 -include .depend
 
+# These functions are only part of newer Emacs, but they cause byte-compilation
+# warnings on older ones. So pre-declare them to suppress these warnings
+OLDER_EMACS_DEFUNS = "(progn (defun undo-redo ()) (defun minibuffer-history-value()) (defun switch-to-minibuffer()))"
+
 $(ELCFILES): %.elc: %.el
-	$(EMACS) --batch -Q -L . -f batch-byte-compile $<
+	$(EMACS) --batch -Q -L . --eval $(OLDER_EMACS_DEFUNS) -f batch-byte-compile $<
 
 # Byte-compile all files in one batch. This is faster than
 # compiling each file in isolation, but also less stringent.
