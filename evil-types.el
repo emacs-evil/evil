@@ -93,7 +93,7 @@ If the end position is at the beginning of a line, then:
 Handling for `evil-want-visual-char-semi-exclusive' is deprecated,
 and will be removed in a future version."
   :expand (lambda (beg end)
-            (if (and evil-want-visual-char-semi-exclusive
+            (if (and (with-no-warnings evil-want-visual-char-semi-exclusive)
                      (evil-visual-state-p)
                      (< beg end)
                      (save-excursion
