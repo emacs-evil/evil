@@ -25,8 +25,13 @@ compile: $(ELCFILES)
 
 -include .depend
 
+# These functions are only part of newer Emacs, but they cause byte-compilation
+# warnings on older ones. So pre-declare them to suppress these warnings
+OLDER_EMACS_DEFUNS = "(progn (defun undo-redo ()) (defun minibuffer-history-value()) (defun switch-to-minibuffer()))"
+
 $(ELCFILES): %.elc: %.el
-	$(EMACS) --batch -Q -L . -f batch-byte-compile $<
+	$(EMACS) --batch -Q -L . --eval $(OLDER_EMACS_DEFUNS) \
+		--eval "(setq byte-compile-error-on-warn t)" -f batch-byte-compile $<
 
 # Byte-compile all files in one batch. This is faster than
 # compiling each file in isolation, but also less stringent.
@@ -55,7 +60,7 @@ clean:
 # The TAG variable may specify a test tag or a test name:
 #       make test TAG=repeat
 # This will only run tests pertaining to the repeat system.
-test:
+test: compile
 	$(EMACS) -nw -Q --batch -L . -l evil-tests.el \
 		--eval "(evil-tests-initialize '(${TAG}) '(${PROFILER}))"
 

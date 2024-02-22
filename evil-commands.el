@@ -36,6 +36,12 @@
 (require 'evil-vars)
 (require 'cl-lib)
 (require 'reveal)
+(require 'seq)
+(require 'tab-bar)
+
+;; older Emacses had some core functions declared in subr-x.
+(when (< emacs-major-version 29)
+  (require 'subr-x))
 
 (declare-function imenu--in-alist "imenu")
 
