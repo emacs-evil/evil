@@ -76,7 +76,7 @@ respectively.
 
 .. elisp:autofunction:: evil-define-text-object
 
-For eample, this is a text object which selects the next three
+For example, this is a text object which selects the next three
 characters after the current location:
 
 .. code-block:: elisp
