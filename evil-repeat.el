@@ -141,7 +141,7 @@
   (when (evil-visual-state-p)
     (let* ((range (evil-visual-range))
            (beg (evil-range-beginning range))
-           (end (1- (evil-range-end range)))
+           (end (max 1 (1- (evil-range-end range))))
            (nfwdlines (evil-count-lines beg end)))
       (evil-repeat-record
        (cond
