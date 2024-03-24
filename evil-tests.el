@@ -1310,7 +1310,12 @@ evil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul[z]
       ("10IABC" [escape])
       "ABCABCABCABCABCABCABCABCABCAB[C];; This buffer is for notes"
       ("11.")
-      "ABCABCABCABCABCABCABCABCABCABCAB[C]ABCABCABCABCABCABCABCABCABCABC;; This buffer is for notes")))
+      "ABCABCABCABCABCABCABCABCABCABCAB[C]ABCABCABCABCABCABCABCABCABCABC;; This buffer is for notes"))
+  (ert-info ("Repeat insert over empty lines")
+    (evil-test-buffer
+      ""
+      ("i" [return] [return] [return] [return] [return] [return] [escape] "gg\C-vGIX" [escape])
+      "X\nX\nX\nX\nX\nX\n")))
 
 (ert-deftest evil-test-insert-line-vcount ()
   "Test `evil-insert-line' with vertical repeating"
@@ -1370,7 +1375,12 @@ ABCABC{
       ("10AABC" [escape])
       ";; This buffer is for notes.ABCABCABCABCABCABCABCABCABCAB[C]"
       ("11.")
-      ";; This buffer is for notes.ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB[C]")))
+      ";; This buffer is for notes.ABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCABCAB[C]"))
+  (ert-info ("Repeat append over empty lines")
+    (evil-test-buffer
+      ""
+      ("i" [return] [return] [return] [return] [return] [return] [escape] "gg\C-vGAX" [escape])
+      "X\nX\nX\nX\nX\nX\n")))
 
 (ert-deftest evil-test-append-line-vcount ()
   "Test `evil-append-line' with vertical repeating"
