@@ -2227,7 +2227,7 @@ The return value is the yanked text."
             ;; no yank-handler, default
             (when (vectorp text)
               (setq text (evil-vector-to-string text)))
-            (set-text-properties 0 (length text) nil text)
+            ;; (set-text-properties 0 (length text) nil text)
             (push-mark opoint t)
             (dotimes (_ (or count 1))
               (insert-for-yank text))
@@ -2279,7 +2279,7 @@ The return value is the yanked text."
             ;; no yank-handler, default
             (when (vectorp text)
               (setq text (evil-vector-to-string text)))
-            (set-text-properties 0 (length text) nil text)
+            ;; (set-text-properties 0 (length text) nil text)
             (unless (eolp) (forward-char))
             (push-mark (point) t)
             ;; TODO: Perhaps it is better to collect a list of all
