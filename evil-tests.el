@@ -2135,7 +2135,7 @@ then enter the text in that file's own buffer."))
       ";; This <buffe[r]> is for notes,
 and for Lisp evaluation."
       ("D")
-      "[a]nd for Lisp evaluation."))
+      "and for Lisp [e]valuation."))
   (ert-info ("Act on each line of block selection")
     (evil-test-buffer
       :visual block
@@ -2217,6 +2217,14 @@ ine3 line3      line3 l\n"))
       "alpha bravo [c]harlie delta"
       ("\C-w")
       "alpha [b]ravo charlie delta")))
+
+(ert-deftest evil-test-visual-X ()
+  "Test `X' in visual state."
+  :tags '(evil)
+  (evil-test-buffer
+    "This is line one\nThis is lin[e] two\nThis is line three"
+    ("v$oX")
+    "This is line one\nThis is lin[e] three"))
 
 (ert-deftest evil-test-delete-back-to-indentation ()
   "Test `evil-delete-back-to-indentation' in insert & replace states."
