@@ -1510,7 +1510,10 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
                ;; Special exceptions to ever saving column:
                (not (memq evil-this-motion '(evil-forward-word-begin
                                              evil-forward-WORD-begin))))
-      (move-to-column evil-operator-start-col))))
+      (move-to-column (if (and (eq most-positive-fixnum temporary-goal-column)
+                               (memq last-command '(next-line previous-line)))
+                          temporary-goal-column
+                        evil-operator-start-col)))))
 
 (evil-define-operator evil-delete-line (beg end type register yank-handler)
   "Delete to end of line."
@@ -1526,7 +1529,13 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
         (let ((temporary-goal-column most-positive-fixnum)
               (last-command 'next-line))
           (evil-delete beg end 'block register yank-handler))
-      (evil-delete beg end type register yank-handler))))
+      (evil-delete beg end type register yank-handler)
+      (evil-first-non-blank)
+      (when (and (not evil-start-of-line) evil-operator-start-col)
+        (move-to-column (if (and (eq most-positive-fixnum temporary-goal-column)
+                                 (memq last-command '(next-line previous-line)))
+                            temporary-goal-column
+                          evil-operator-start-col))))))
 
 (evil-define-operator evil-delete-whole-line
   (beg end type register yank-handler)
