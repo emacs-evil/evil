@@ -2013,6 +2013,20 @@ New Tex[t]
       ("my" "G" ":'y,.y")
       "1\n2\n3\n4\n5\n6\n7\n8\n9\n[1]0")))
 
+(ert-deftest evil-test-yank-line ()
+  "Test `evil-yank-line'"
+  :tags '(evil operator)
+  (ert-info ("Yank line with eof being part of visual selection")
+    (evil-test-buffer
+      ";; This is line one
+;; This is lin[e] two
+;; This is line three"
+      ("v$Yjp")
+      ";; This is line one
+;; This is line two
+;; This is line three
+[;]; This is line two")))
+
 (ert-deftest evil-test-delete ()
   "Test `evil-delete'"
   :tags '(evil operator delete)
@@ -2144,7 +2158,15 @@ ine3 line3      line3 l\n"))
     (evil-test-buffer
      "a[a]a\nbbb\nc\n"
      ("2D")
-     "a\nc\n")))
+     "a\nc\n"))
+  (ert-info ("Delete line with eof being part of visual selection")
+    (evil-test-buffer
+      ";; This is line one
+;; This is lin[e] two
+;; This is line three"
+      ("v$D")
+      ";; This is line one
+;; This is line three")))
 
 (ert-deftest evil-test-delete-folded ()
   "Test `evil-delete' on folded lines."
@@ -2341,6 +2363,19 @@ ABCthen enter the text in that file's own buffer.")))
      new line
 []
      five")))
+
+(ert-deftest evil-test-change-line ()
+  "Test `evil-change-line'"
+  :tags '(evil operator)
+  (ert-info ("Change line with eof being part of visual selection")
+    (evil-test-buffer
+      "This is line one
+This is lin[e] two
+This is line three"
+      ("v$C")
+      "This is line one
+[]
+This is line three")))
 
 (ert-deftest evil-test-change-word ()
   "Test changing words"

@@ -1436,23 +1436,37 @@ the left edge."
       (evil-yank-characters beg end register yank-handler)
       (goto-char beg)))))
 
+(defun evil-expand-line-for-line-based-operators (beg end type)
+  "Expand to line when in visual mode possibly changing BEG, END and TYPE.
+Avoids double expansion for line based commands like 'V' or 'D'."
+  (when (evil-visual-state-p)
+    (unless (memq type '(line block screen-line))
+      ;; Subtract 1 from end to avoid expanding to the next line
+      ;; when \n is part of the visually selected region.
+      ;; If removed (evil-expand beg end 'line)
+      ;; will expand to the end of the next line instead of the current
+      ;; line which will cause line expanding commands like 'Y' to
+      ;; misbehave when used in visual state.
+      (when (eq ?\n (char-before end))
+        (cl-decf end))
+      (let ((range (evil-expand beg end (if (and evil-respect-visual-line-mode
+                                                 visual-line-mode)
+                                            'screen-line
+                                          'line))))
+        (setq beg (evil-range-beginning range)
+              end (evil-range-end range)
+              type (evil-type range))))
+    (evil-exit-visual-state))
+  (list beg end type))
+
 (evil-define-operator evil-yank-line (beg end type register)
   "Save whole lines into the kill-ring."
   :motion evil-line-or-visual-line
   :move-point nil
   (interactive "<R><x>")
-  (when (evil-visual-state-p)
-    (unless (memq type '(line block screen-line))
-      (let ((range (evil-expand beg end
-                                (if (and evil-respect-visual-line-mode
-                                         visual-line-mode)
-                                    'screen-line
-                                  'line))))
-        (setq beg (evil-range-beginning range)
-              end (evil-range-end range)
-              type (evil-type range))))
-    (evil-exit-visual-state))
-  (evil-yank beg end type register))
+  (cl-destructuring-bind
+      (beg end type) (evil-expand-line-for-line-based-operators beg end type)
+    (evil-yank beg end type register)))
 
 (evil-define-operator evil-delete (beg end type register yank-handler)
   "Delete text from BEG to END with TYPE.
@@ -1502,24 +1516,17 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   "Delete to end of line."
   :motion evil-end-of-line-or-visual-line
   (interactive "<R><x>")
-  ;; Act linewise in Visual state
-  (when (and (evil-visual-state-p) (eq type 'inclusive))
-    (let ((range (evil-expand
-                  beg end
-                  (if (and evil-respect-visual-line-mode visual-line-mode)
-                      'screen-line 'line))))
-      (setq beg (car range)
-            end (cadr range)
-            type (evil-type range))))
-  (if (eq type 'block)
-      ;; Equivalent to $d, i.e., we use the block-to-eol selection and
-      ;; call `evil-delete'. In this case we fake the call to
-      ;; `evil-end-of-line' by setting `temporary-goal-column' and
-      ;; `last-command' appropriately as `evil-end-of-line' would do.
-      (let ((temporary-goal-column most-positive-fixnum)
-            (last-command 'next-line))
-        (evil-delete beg end 'block register yank-handler))
-    (evil-delete beg end type register yank-handler)))
+  (cl-destructuring-bind
+      (beg end type) (evil-expand-line-for-line-based-operators beg end type)
+    (if (eq type 'block)
+        ;; Equivalent to $d, i.e., we use the block-to-eol selection and
+        ;; call `evil-delete'. In this case we fake the call to
+        ;; `evil-end-of-line' by setting `temporary-goal-column' and
+        ;; `last-command' appropriately as `evil-end-of-line' would do.
+        (let ((temporary-goal-column most-positive-fixnum)
+              (last-command 'next-line))
+          (evil-delete beg end 'block register yank-handler))
+      (evil-delete beg end type register yank-handler))))
 
 (evil-define-operator evil-delete-whole-line
   (beg end type register yank-handler)
@@ -1672,7 +1679,8 @@ of the block."
   :motion evil-end-of-line-or-visual-line
   (interactive "<R><x><y>")
   (if (and (evil-visual-state-p) (eq type 'inclusive))
-      (cl-destructuring-bind (beg end &rest) (evil-line-expand beg end)
+      (cl-destructuring-bind
+          (beg end _type) (evil-expand-line-for-line-based-operators beg end type)
         (evil-change-whole-line beg end register yank-handler))
     (evil-change beg end type register yank-handler #'evil-delete-line)))
 
