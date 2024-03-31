@@ -4251,7 +4251,7 @@ Use `evil-flush-lines' if INVERT is nil, or `evil-keep-lines' if not."
                  (eq flag 'update))
         (condition-case err
             (let ((pattern (car (evil-ex-parse-global (or arg "")))))
-              (when (length> pattern 0)
+              (when (> (length pattern) 0)
                 (evil-ex-hl-change 'evil-ex-global
                                    (evil-ex-make-pattern pattern evil-ex-search-case nil))))
           (user-error (evil-ex-echo (error-message-string err))))))))
