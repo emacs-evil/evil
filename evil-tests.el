@@ -1315,7 +1315,7 @@ evil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul[z]
     (evil-test-buffer
       ""
       ("i" [return] [return] [return] [return] [return] [return] [escape] "gg\C-vGIX" [escape])
-      "X\nX\nX\nX\nX\nX\n")))
+      "X\nX\nX\nX\nX\nX\nX")))
 
 (ert-deftest evil-test-insert-line-vcount ()
   "Test `evil-insert-line' with vertical repeating"

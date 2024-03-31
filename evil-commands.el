@@ -2676,17 +2676,22 @@ If SKIP-EMPTY-LINES is non-nil, the insertion will not be performed
 on lines on which the insertion point would be after the end of the
 lines.  This is the default behaviour for Visual-state insertion."
   (interactive
-   (list (prefix-numeric-value current-prefix-arg)
-         (and (evil-visual-state-p)
-              (memq (evil-visual-type) '(line block))
-              (save-excursion
-                (let ((m (mark)))
-                  ;; go to upper-left corner temporarily so
-                  ;; `count-lines' yields accurate results
-                  (evil-visual-rotate 'upper-left)
-                  (prog1 (count-lines evil-visual-beginning evil-visual-end)
-                    (set-mark m)))))
-         (evil-visual-state-p)))
+   (let ((lines+ 0))
+     (list (prefix-numeric-value current-prefix-arg)
+           (and (evil-visual-state-p)
+                (memq (evil-visual-type) '(line block))
+                (save-excursion
+                  (let ((m (mark)))
+                    (evil-visual-rotate 'lower-right)
+                    ;; count-lines misses an empty final line, so correct that
+                    (and (bolp) (eolp) (setq lines+ 1))
+                    ;; go to upper-left corner temporarily so
+                    ;; `count-lines' yields accurate results
+                    (evil-visual-rotate 'upper-left)
+                    (prog1 (+ (count-lines evil-visual-beginning evil-visual-end)
+                              lines+)
+                      (set-mark m)))))
+           (evil-visual-state-p))))
   (if (and (called-interactively-p 'any)
            (evil-visual-state-p))
       (cond
