@@ -1254,7 +1254,10 @@ Signals an error at buffer boundaries unless NOERROR is non-nil."
                       (car-safe temporary-goal-column)
                       temporary-goal-column)))
          (line-move-finish col opoint (< count 0)))
-       (or noerror (/= (point) opoint) (signal (car err) (cdr err)))))))
+       (or noerror (/= (point) opoint) (signal (car err) (cdr err))))
+      (args-out-of-range
+       (unless (eq most-positive-fixnum temporary-goal-column)
+         (signal (car err) (cdr err)))))))
 
 (defun evil-forward-syntax (syntax &optional count)
   "Move point to the end or beginning of a sequence of characters in SYNTAX.
