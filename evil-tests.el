@@ -2166,7 +2166,37 @@ ine3 line3      line3 l\n"))
 ;; This is line three"
       ("v$D")
       ";; This is line one
-;; This is line three")))
+;; This is line three"))
+  (ert-info ("Deletion in normal state leaves point in the right place")
+    (evil-test-buffer
+      "alpha b[r]avo charlie\ndelta echo foxtrot\ngolf hotel india"
+      (should (not evil-start-of-line))
+      ("D")
+      "alpha [b]\ndelta echo foxtrot\ngolf hotel india"
+      ("/echo" [return] "C" "newtext" [escape])
+      "alpha b\ndelta newtex[t]\ngolf hotel india")
+    (let ((evil-start-of-line t))
+      (evil-test-buffer
+        "alpha b[r]avo charlie\ndelta echo foxtrot\ngolf hotel india"
+        ("D")
+        "alpha [b]\ndelta echo foxtrot\ngolf hotel india"
+        ("/echo" [return] "C" "newtext" [escape])
+        "alpha b\ndelta newtex[t]\ngolf hotel india")))
+  (ert-info ("Line deletion in visual state leaves point in the right place")
+    (evil-test-buffer
+      "alpha [b]ravo charlie\ndelta echo foxtrot\ngolf hotel india"
+      (should (not evil-start-of-line))
+      ("vD")
+      "delta [e]cho foxtrot\ngolf hotel india"
+      ("vX")
+      "golf h[o]tel india")
+    (let ((evil-start-of-line t))
+      (evil-test-buffer
+        "alpha [b]ravo charlie\ndelta echo foxtrot\ngolf hotel india"
+        ("vD")
+        "[d]elta echo foxtrot\ngolf hotel india"
+        ("vX")
+        "[g]olf hotel india"))))
 
 (ert-deftest evil-test-delete-folded ()
   "Test `evil-delete' on folded lines."
