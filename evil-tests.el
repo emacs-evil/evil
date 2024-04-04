@@ -9779,6 +9779,20 @@ when an error stops the execution of the macro"
       ("uu")
       "line 1\n[l]ine 2\nline 3")))
 
+(ert-deftest evil-test-undo-jump ()
+  "Test that undo adds to the jump list."
+  :tags '(evil)
+  (let ((evil--jumps-buffer-targets "\\*\\(new\\|scratch\\|test\\)\\*"))
+    (ert-info ("Undo adds to the jump list")
+      (evil-test-buffer
+        "alpha [b]ravo charlie delta"
+        ("dw" "w")
+        "alpha charlie [d]elta"
+        ("u")
+        "alpha [b]ravo charlie delta"
+        ("``")
+        "alpha bravo charlie [d]elta"))))
+
 (ert-deftest evil-test-visual-update-x-selection ()
   "Test `evil-visual-update-x-selection'."
   :tags '(evil)

@@ -1753,6 +1753,7 @@ Add (add-hook 'evil-local-mode-hook 'turn-on-undo-tree-mode) to your init file f
 (evil-define-command evil-undo (count)
   "Undo COUNT changes in buffer using `evil-undo-function'."
   :repeat abort
+  :jump t
   (interactive "*p")
   (evil--check-undo-system)
   (funcall evil-undo-function count))
