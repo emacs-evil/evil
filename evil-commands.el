@@ -4249,11 +4249,14 @@ Use `evil-flush-lines' if INVERT is nil, or `evil-keep-lines' if not."
 
       (when (and evil-ex-global-command-interactive-highlight
                  (eq flag 'update))
+        (when evil-ex-range
+          (cl-destructuring-bind (beg end &rest)
+              (evil-expand-range evil-ex-range t)
+            (evil-ex-hl-set-region 'evil-ex-global beg end)))
         (condition-case err
-            (let ((pattern (car (evil-ex-parse-global (or arg "")))))
-              (when (> (length pattern) 0)
-                (evil-ex-hl-change 'evil-ex-global
-                                   (evil-ex-make-pattern pattern evil-ex-search-case nil))))
+            (when-let ((pattern (car (evil-ex-parse-global (or arg "")))))
+              (evil-ex-hl-change 'evil-ex-global
+                                 (evil-ex-make-pattern pattern evil-ex-search-case nil)))
           (user-error (evil-ex-echo (error-message-string err))))))))
 
 (evil-define-operator evil-ex-global
