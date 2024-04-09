@@ -20,7 +20,7 @@ jobs:
       with:
         version: ${{ matrix.emacs_version }}
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Print emacs version
       run: |
