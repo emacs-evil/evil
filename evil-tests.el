@@ -9187,8 +9187,8 @@ parameter set."
                        '((signed-number (sign . 1) (number . 2))))))
       (ert-info ("Lookahead")
         (should (equal (parse "foobar" 'expr) '((list "foo"))))
-        (should (equal (parse "foobaz" 'expr) nil))
-        (should (equal (parse "xxxyyy" 'expr) nil))
+        (should (null (parse "foobaz" 'expr)))
+        (should (null (parse "xxxyyy" 'expr)))
         (should (equal (parse "xxxzzz" 'expr) '((list "xxx")))))
       (ert-info ("Semantic actions")
         (should (equal (parse "1+1" 'expr)
@@ -9318,7 +9318,7 @@ parameter set."
   "Test `evil-filter-list'"
   :tags '(evil util)
   (ert-info ("Return filtered list")
-    (should (equal (evil-filter-list #'null '(nil)) nil))
+    (should (null (evil-filter-list #'null '(nil))))
     (should (equal (evil-filter-list #'null '(nil 1)) '(1)))
     (should (equal (evil-filter-list #'null '(nil 1 2 nil)) '(1 2)))
     (should (equal (evil-filter-list #'null '(nil nil 1)) '(1)))
@@ -9939,7 +9939,7 @@ main(argc, argv) char **argv; {
           (add-hook 'text-mode-hook #'use-german-input-method)
           (evil-test-buffer
            "[]"
-           (should (equal evil-input-method nil))
+           (should (null evil-input-method))
            ("a\"a" [escape])
            "\"[a]"
            (text-mode)

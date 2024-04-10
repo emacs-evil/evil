@@ -545,7 +545,7 @@ in case of incomplete or unknown commands."
 (defun evil-completion-table-concat (table1 table2)
   (lambda (string pred action)
     (cond
-     ((eq action nil)
+     ((null action)
       (let (matches)
         (dolist (table (list table1 table2) (try-completion string matches))
           (let ((x (try-completion string table pred)))
