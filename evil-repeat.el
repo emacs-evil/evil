@@ -250,7 +250,7 @@ Return non-nil if so."
       (evil-emacs-state-p)              ; ... in Emacs state
       (and (evil-mouse-events-p         ; ... mouse events
             (this-command-keys-vector))
-           (eq repeat-type nil))
+           (null repeat-type))
       (minibufferp)))                   ; ... minibuffer activated
 
 (defun evil-repeat-record (info)

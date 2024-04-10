@@ -3759,7 +3759,7 @@ Signal an error if the file does not exist."
     (let ((completions (cons '(nil) evil-state-properties)))
       (when arg
         (cond
-         ((eq flag nil)
+         ((null flag)
           (try-completion arg completions predicate))
          ((eq flag t)
           (all-completions arg completions predicate))
