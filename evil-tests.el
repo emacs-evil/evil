@@ -9602,8 +9602,8 @@ parameter set."
         ("3\C-i") ;; even after jumping forward 3 times it can't get past the 3rd z
         "z z [z] z z z z z"))
     (ert-info ("Jump across files")
-      (let ((temp-file "evil-test-"))
-        (make-temp-file temp-file)
+      (let ((temp-file (or (make-temp-file "evil-test-")
+                           "evil-test-")))
         (unwind-protect
             (evil-test-buffer
               "[z] z z z z z z"
@@ -9620,6 +9620,8 @@ parameter set."
 
 (ert-deftest evil-test-find-file ()
   :tags '(evil jumps)
+  (when (memq system-type '(cygwin windows-nt ms-dos))
+    (ert-skip "[INFO] GitHub Actions has different userprofile name."))
   (ert-info ("Find file at point (normal state)")
     (evil-with-temp-file file-name ""
       (evil-test-buffer
