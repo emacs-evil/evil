@@ -3318,7 +3318,7 @@ consectetur adipiscing elit
 sed do eiusmod tempor incididunt"
      ("\C-vje\"xy" "bye" "Vj" ":put! x" [return])
      "Lorem ipsum dolor sit amet
-dolor sit
+dolor sit 
 [a]dipiscing
 consectetur adipiscing elit
 sed do eiusmod tempor incididunt"))
@@ -7496,7 +7496,7 @@ A much
 A medium line
 Tiny ln"
      ("jj\C-v" [end] "jd")
-     "Short
+     "Short 
 A much
 A me[d]
 Tiny "))
