@@ -21,3 +21,6 @@ typescript
 /doc/build/*/
 !/doc/build/texinfo/evil.texi
 *.pyc
+
+/.eask
+/dist
