@@ -38,6 +38,10 @@ jobs:
       run: |
         emacs --version
 
+    - uses: emacs-eask/setup-eask@master
+      with:
+        version: 'snapshot'
+
     - name: Run tests
       run: |
         make test
