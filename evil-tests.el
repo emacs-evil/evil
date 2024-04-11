@@ -3318,7 +3318,7 @@ consectetur adipiscing elit
 sed do eiusmod tempor incididunt"
      ("\C-vje\"xy" "bye" "Vj" ":put! x" [return])
      "Lorem ipsum dolor sit amet
-dolor sit 
+dolor sit
 [a]dipiscing
 consectetur adipiscing elit
 sed do eiusmod tempor incididunt"))
@@ -7496,7 +7496,7 @@ A much
 A medium line
 Tiny ln"
      ("jj\C-v" [end] "jd")
-     "Short 
+     "Short
 A much
 A me[d]
 Tiny "))
@@ -9602,7 +9602,8 @@ parameter set."
         ("3\C-i") ;; even after jumping forward 3 times it can't get past the 3rd z
         "z z [z] z z z z z"))
     (ert-info ("Jump across files")
-      (let ((temp-file (make-temp-file "evil-test-")))
+      (let ((temp-file "evil-test-"))
+        (make-temp-file temp-file)
         (unwind-protect
             (evil-test-buffer
               "[z] z z z z z z"
