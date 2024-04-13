@@ -345,7 +345,7 @@ otherwise exit Visual state."
   (when (evil-visual-state-p)
     (setq command (or command this-command))
     (if (or quit-flag
-            (eq command #'keyboard-quit)
+            (memq command '(keyboard-quit keyboard-escape-quit))
             ;; Is `mark-active' nil for an unexpanded region?
             deactivate-mark
             (and (not evil-visual-region-expanded)
