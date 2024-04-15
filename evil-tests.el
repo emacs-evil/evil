@@ -9816,6 +9816,20 @@ when an error stops the execution of the macro"
         ("``")
         "alpha bravo charlie [d]elta"))))
 
+(ert-deftest evil-test-insert-state-undo ()
+  "Test that undo isn't lost when done from insert state."
+  :tags '(evil)
+  (skip-unless (version<= "28" emacs-version))
+  (let (evil-want-fine-undo)
+    (customize-set-variable 'evil-undo-system 'undo-redo)
+    (evil-test-buffer
+      "alpha [ ]delta"
+      (evil-define-key* 'insert 'local [f8] 'evil-undo)
+      ("icharlie" [f8] [escape])
+      "alpha[ ] delta"
+      ("\C-r")
+      "alpha [c]harlie delta")))
+
 (ert-deftest evil-test-visual-update-x-selection ()
   "Test `evil-visual-update-x-selection'."
   :tags '(evil)
