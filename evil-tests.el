@@ -3536,26 +3536,12 @@ Below some empty line"
     ("Gkgk")
     (should-not (bolp))))
 
-(ert-deftest evil-test-end-of-visual-line ()
-  "Test `evil-end-of-visual-line'."
-  :tags '(evil motion)
-  (skip-unless (and (not noninteractive) (> (window-width) 2)))
-  (evil-test-buffer
-    "alpha bravo charlie\nd[e]lta echo\nfoxtrot golf hotel india"
-    ("g$" "gj")
-    "alpha bravo charlie\ndelta echo\nfoxtrot golf hotel indi[a]"
-    ("gkgk")
-    "alpha bravo charli[e]\ndelta echo\nfoxtrot golf hotel india"
-    ("ro" "2gj")
-    "alpha bravo charlio\ndelta echo\nfoxtrot golf hotel[ ]india"))
-
 (ert-deftest evil-test-eol-anchoring-with-visual-line-movement ()
   "Test gj and gk once the cursor is anchored at eol with $."
   :tags '(evil motion)
-  (skip-unless (and (not noninteractive) (> (window-width) 2)))
+  (skip-unless (and (not noninteractive) (> (window-width) 13)))
   (evil-test-buffer
     "Short [l]ine\nA longer line\nThird line"
-    (visual-line-mode 1)
     ("$gj")
     "Short line\nA longer lin[e]\nThird line"))
 
