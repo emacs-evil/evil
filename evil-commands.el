@@ -108,49 +108,29 @@ of the line or the buffer; just return nil."
         (unless (or (evil-visual-state-p) (evil-operator-state-p))
           (evil-adjust-cursor))))))
 
-(defvar evil--visual-eol-anchored nil
-  "Non nil if the cursor should be anchored at the end of the visual line.
-Only reliably usable via `evil-visual-eol-anchored-p'.")
-
-(defun evil-visual-eol-anchored-p ()
-  "Return non nil if the cursor should be anchored at the end of the visual line."
-  (if (memq last-command '(next-line previous-line evil-end-of-visual-line))
-      evil--visual-eol-anchored
-    (setq evil--visual-eol-anchored nil)))
-
 (evil-define-motion evil-next-line (count)
   "Move the cursor COUNT lines down."
   :type line
   (let (line-move-visual)
-    (unless (memq last-command '(next-line previous-line evil-end-of-visual-line))
-      (setq evil--visual-eol-anchored nil))
     (evil-line-move (or count 1))))
 
 (evil-define-motion evil-previous-line (count)
   "Move the cursor COUNT lines up."
   :type line
   (let (line-move-visual)
-    (unless (memq last-command '(next-line previous-line evil-end-of-visual-line))
-      (setq evil--visual-eol-anchored nil))
     (evil-line-move (- (or count 1)))))
 
 (evil-define-motion evil-next-visual-line (count)
   "Move the cursor COUNT screen lines down."
   :type exclusive
   (let ((line-move-visual t))
-    (when (eq most-positive-fixnum temporary-goal-column)
-      (setq temporary-goal-column (current-column))) ; Fix #1876
-    (evil-line-move (or count 1))
-    (when (evil-visual-eol-anchored-p) (evil-end-of-visual-line))))
+    (evil-line-move (or count 1))))
 
 (evil-define-motion evil-previous-visual-line (count)
   "Move the cursor COUNT screen lines up."
   :type exclusive
   (let ((line-move-visual t))
-    (when (eq most-positive-fixnum temporary-goal-column)
-      (setq temporary-goal-column (current-column))) ; Fix #1876
-    (evil-line-move (- (or count 1)))
-    (when (evil-visual-eol-anchored-p) (evil-end-of-visual-line))))
+    (evil-line-move (- (or count 1)))))
 
 ;; used for repeated commands like "dd"
 (evil-define-motion evil-line (count)
@@ -188,16 +168,13 @@ If COUNT is given, move COUNT - 1 lines downward first."
   (move-end-of-line count)
   (when evil-track-eol
     (setq temporary-goal-column most-positive-fixnum
-          evil--visual-eol-anchored t
           this-command 'next-line))
-  (if (evil-visual-state-p)
-      (when evil-v$-excludes-newline
-        (let ((evil-move-beyond-eol nil))
-          (evil-adjust-cursor)))
-    (evil-adjust-cursor)
-    (when (eolp)
-      ;; prevent "c$" and "d$" from deleting blank lines
-      (setq evil-this-type 'exclusive))))
+  (let ((evil-move-beyond-eol
+         (if (evil-visual-state-p) (not evil-v$-excludes-newline)
+           evil-move-beyond-eol)))
+    (evil-adjust-cursor))
+  ;; Prevent "c$" and "d$" from deleting blank lines
+  (when (eolp) (setq evil-this-type 'exclusive)))
 
 (evil-define-motion evil-beginning-of-visual-line ()
   "Move the cursor to the first character of the current screen line."
@@ -208,7 +185,6 @@ If COUNT is given, move COUNT - 1 lines downward first."
   "Move the cursor to the last character of the current screen line.
 If COUNT is given, move COUNT - 1 screen lines downward first."
   :type inclusive
-  (setq evil--visual-eol-anchored t)
   (end-of-visual-line count))
 
 (evil-define-motion evil-end-of-line-or-visual-line (count)

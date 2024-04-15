@@ -1239,7 +1239,7 @@ If STATE is given it used a parsing state at point."
 ;; comes from simple.el, and I hope it will work in future.
 (defun evil-line-move (count &optional noerror)
   "Like `line-move' but conserves the column.
-Signals an error at buffer boundaries unless NOERROR is non-nil."
+Signal an error at buffer boundaries unless NOERROR is non-nil."
   (setq this-command (if (< count 0) 'previous-line 'next-line))
   (let ((last-command
          ;; Reset tmp goal column between visual/logical movement
@@ -1247,17 +1247,18 @@ Signals an error at buffer boundaries unless NOERROR is non-nil."
                    (eq temporary-goal-column most-positive-fixnum))
            last-command))
         (opoint (point)))
-    (condition-case err
-        (line-move count)
-      ((beginning-of-buffer end-of-buffer)
-       (let ((col (or goal-column
-                      (car-safe temporary-goal-column)
-                      temporary-goal-column)))
-         (line-move-finish col opoint (< count 0)))
-       (or noerror (/= (point) opoint) (signal (car err) (cdr err))))
-      (args-out-of-range
-       (unless (eq most-positive-fixnum temporary-goal-column)
-         (signal (car err) (cdr err)))))))
+    (if (and line-move-visual
+             (eq temporary-goal-column most-positive-fixnum)
+             (memq last-command '(next-line previous-line)))
+        (let (temporary-goal-column) (end-of-visual-line (1+ count)))
+      (condition-case err
+          (line-move count)
+        ((beginning-of-buffer end-of-buffer)
+         (let ((col (or goal-column
+                        (car-safe temporary-goal-column)
+                        temporary-goal-column)))
+           (line-move-finish col opoint (< count 0)))
+         (or noerror (/= (point) opoint) (signal (car err) (cdr err))))))))
 
 (defun evil-forward-syntax (syntax &optional count)
   "Move point to the end or beginning of a sequence of characters in SYNTAX.
