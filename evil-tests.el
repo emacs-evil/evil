@@ -2170,7 +2170,7 @@ ine3 line3      line3 l\n"))
   (ert-info ("Deletion in normal state leaves point in the right place")
     (evil-test-buffer
       "alpha b[r]avo charlie\ndelta echo foxtrot\ngolf hotel india"
-      (should (not evil-start-of-line))
+      (should-not evil-start-of-line)
       ("D")
       "alpha [b]\ndelta echo foxtrot\ngolf hotel india"
       ("/echo" [return] "C" "newtext" [escape])
@@ -2185,7 +2185,7 @@ ine3 line3      line3 l\n"))
   (ert-info ("Line deletion in visual state leaves point in the right place")
     (evil-test-buffer
       "alpha [b]ravo charlie\ndelta echo foxtrot\ngolf hotel india"
-      (should (not evil-start-of-line))
+      (should-not evil-start-of-line)
       ("vD")
       "delta [e]cho foxtrot\ngolf hotel india"
       ("vX")
@@ -3527,7 +3527,7 @@ Below some empty line"
     ("gjj")
     (should (= (current-column) 1))
     ("Gkgk")
-    (should (not (bolp)))))
+    (should-not (bolp))))
 
 (ert-deftest evil-test-end-of-visual-line ()
   "Test `evil-end-of-visual-line'."
@@ -9646,14 +9646,14 @@ parameter set."
     (evil-with-temp-file file-name ""
       (evil-test-buffer
         (vconcat "i" file-name [escape])
-        (should (not (equal file-name (buffer-file-name))))
+        (should-not (equal file-name (buffer-file-name)))
         ("gf")
         (should (equal file-name (buffer-file-name))))))
   (ert-info ("Find file at point (visual state)")
     (evil-with-temp-file file-name ""
       (evil-test-buffer
         (vconcat "iuser@localhost:" file-name "$" [escape])
-        (should (not (equal file-name (buffer-file-name))))
+        (should-not (equal file-name (buffer-file-name)))
         ("0f:lvt$gf")
         (should (equal file-name (buffer-file-name))))))
   (ert-info ("Find file at point with line number")
