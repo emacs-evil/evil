@@ -881,7 +881,7 @@ CORNER defaults to `upper-left'."
          (this-command #'evil-replace-backspace))
     (when prev
       (delete-char 1)
-      (when char (save-excursion (insert-and-inherit char))))))
+      (when char (save-excursion (insert char))))))
 
 (defun evil-update-replace-alist (opoint count chars-to-delete &optional offset)
   "Add CHARS-TO-DELETE chars to evil-replace-alist, starting at OPOINT.
