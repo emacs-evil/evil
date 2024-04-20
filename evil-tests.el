@@ -679,13 +679,20 @@ Below some empty line"
     ("aevil rulz " [escape])
     ";; Tevil rulz[ ]his buffer is for notes you don't want to save"))
 
-(ert-deftest evil-test-visual-append ()
-  "Test `evil-append' from visual state"
+(ert-deftest evil-test-visual-insert ()
+  "Test `evil-insert' in Visual state."
   :tags '(evil insert)
-  (evil-test-buffer
-    ";; [T]his buffer is for notes you don't want to save"
-    ("veA_evil rulz " [escape])
-    ";; This_evil rulz[ ] buffer is for notes you don't want to save"))
+  (ert-info ("Repeat insert over empty lines")
+    (evil-test-buffer :visual line "<\n\n[]>"
+      ("IX" [escape])
+      "X\nX\nX")))
+
+(ert-deftest evil-test-visual-append ()
+  "Test `evil-append' in Visual state."
+  :tags '(evil insert)
+  (evil-test-buffer "<fo[o]> bar"
+    ("A_evil rulz " [escape])
+    "foo_evil rulz[ ] bar"))
 
 (ert-deftest evil-test-open-above ()
   "Test `evil-open-above'"
@@ -755,10 +762,13 @@ de[f]
 (ert-deftest evil-test-insert-line ()
   "Test `evil-insert-line'"
   :tags '(evil insert)
-  (evil-test-buffer
-    ";; [T]his buffer is for notes you don't want to save"
+  (evil-test-buffer "foo [b]ar"
     ("Ievil rulz " [escape])
-    "evil rulz[ ];; This buffer is for notes you don't want to save"))
+    "evil rulz[ ]foo bar")
+  (ert-info ("With count")
+    (evil-test-buffer "foo [b]ar"
+      ("2Ievil rulz " [escape])
+      "evil rulz evil rulz[ ]foo bar")))
 
 (ert-deftest evil-test-append-line ()
   "Test `evil-append-line'"
@@ -1272,14 +1282,6 @@ evil\nrulz\nevil\nrul[z]
 evil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul[z]
 ;; and for Lisp evaluation.")))
 
-(ert-deftest evil-test-insert-line-with-count ()
-  "Test `evil-insert-line' with repeat count"
-  :tags '(evil repeat)
-  (evil-test-buffer
-    ";; [T]his buffer is for notes"
-    ("2Ievil rulz " [escape])
-    "evil rulz evil rulz[ ];; This buffer is for notes"))
-
 (ert-deftest evil-test-repeat-insert-line ()
   "Test repeating of `evil-insert-line'"
   :tags '(evil repeat)
@@ -1310,12 +1312,7 @@ evil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrulz\nevil\nrul[z]
       ("10IABC" [escape])
       "ABCABCABCABCABCABCABCABCABCAB[C];; This buffer is for notes"
       ("11.")
-      "ABCABCABCABCABCABCABCABCABCABCAB[C]ABCABCABCABCABCABCABCABCABCABC;; This buffer is for notes"))
-  (ert-info ("Repeat insert over empty lines")
-    (evil-test-buffer
-      ""
-      ("i" [return] [return] [return] [return] [return] [return] [escape] "gg\C-vGIX" [escape])
-      "X\nX\nX\nX\nX\nX\nX")))
+      "ABCABCABCABCABCABCABCABCABCABCAB[C]ABCABCABCABCABCABCABCABCABCABC;; This buffer is for notes")))
 
 (ert-deftest evil-test-insert-line-vcount ()
   "Test `evil-insert-line' with vertical repeating"

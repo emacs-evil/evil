@@ -2655,20 +2655,19 @@ corner and point in the lower left."
     (evil-visual-refresh))))
 
 (evil-define-command evil-visual-rotate (corner &optional beg end type)
-  "In Visual Block selection, put point in CORNER.
-Corner may be one of `upper-left', `upper-right', `lower-left'
-and `lower-right':
+  "Move point to CORNER of the Visual selection.
+Corner may be one of `upper-left', `upper-right', `lower-left' and
+`lower-right':
 
-        upper-left +---+ upper-right
-                   |   |
-        lower-left +---+ lower-right
+    upper-left +---+ upper-right
+               |   |
+    lower-left +---+ lower-right
 
-When called interactively, the selection is rotated blockwise."
+When called interactively, the selection is rotated clockwise."
   :keep-visual t
   (interactive
-   (let ((corners '(upper-left upper-right lower-right lower-left)))
-     (list (or (cadr (memq (evil-visual-block-corner) corners))
-               'upper-left))))
+   (let ((corners '#1=(upper-left upper-right lower-right lower-left . #1#)))
+     (list (cadr (memq (evil-visual-block-corner) corners)))))
   (let* ((beg (or beg (point)))
          (end (or end (mark t) beg))
          (type (or type evil-this-type))
@@ -2697,43 +2696,21 @@ When called interactively, the selection is rotated blockwise."
 
 (defun evil-insert (count &optional vcount skip-empty-lines)
   "Switch to Insert state just before point.
-The insertion will be repeated COUNT times and repeated once for
-the next VCOUNT - 1 lines starting at the same column.
+The insertion will be repeated COUNT times on the next VCOUNT lines,
+starting at the same column.
 If SKIP-EMPTY-LINES is non-nil, the insertion will not be performed
 on lines on which the insertion point would be after the end of the
 lines.  This is the default behaviour for Visual-state insertion."
   (interactive
-   (let ((lines+ 0))
+   (if (not (evil-visual-state-p))
+       (list (prefix-numeric-value current-prefix-arg))
+     (evil-visual-rotate 'upper-left)
      (list (prefix-numeric-value current-prefix-arg)
-           (and (evil-visual-state-p)
-                (memq (evil-visual-type) '(line block))
-                (save-excursion
-                  (let ((m (mark)))
-                    (evil-visual-rotate 'lower-right)
-                    ;; count-lines misses an empty final line, so correct that
-                    (and (bolp) (eolp) (setq lines+ 1))
-                    ;; go to upper-left corner temporarily so
-                    ;; `count-lines' yields accurate results
-                    (evil-visual-rotate 'upper-left)
-                    (prog1 (+ (count-lines evil-visual-beginning evil-visual-end)
-                              lines+)
-                      (set-mark m)))))
-           (evil-visual-state-p))))
-  (if (and (called-interactively-p 'any)
-           (evil-visual-state-p))
-      (cond
-       ((eq (evil-visual-type) 'line)
-        (evil-visual-rotate 'upper-left)
-        (evil-insert-line count vcount))
-       ((eq (evil-visual-type) 'block)
-        (let ((column (min (evil-column evil-visual-beginning)
-                           (evil-column evil-visual-end))))
-          (evil-visual-rotate 'upper-left)
-          (move-to-column column t)
-          (evil-insert count vcount skip-empty-lines)))
-       (t
-        (evil-visual-rotate 'upper-left)
-        (evil-insert count vcount skip-empty-lines)))
+           (when (memq (evil-visual-type) '(line block))
+             (1+ (evil-count-lines evil-visual-point evil-visual-mark)))
+           t)))
+  (if (and (evil-visual-state-p) (eq (evil-visual-type) 'line))
+      (evil-insert-line count vcount)
     (setq evil-insert-count count
           evil-insert-lines nil
           evil-insert-vcount (and vcount
@@ -2755,13 +2732,7 @@ the lines."
    (list (prefix-numeric-value current-prefix-arg)
          (and (evil-visual-state-p)
               (memq (evil-visual-type) '(line block))
-              (save-excursion
-                (let ((m (mark)))
-                  ;; go to upper-left corner temporarily so
-                  ;; `count-lines' yields accurate results
-                  (evil-visual-rotate 'upper-left)
-                  (prog1 (count-lines evil-visual-beginning evil-visual-end)
-                    (set-mark m)))))))
+              (1+ (evil-count-lines evil-visual-point evil-visual-mark)))))
   (if (and (called-interactively-p 'any)
            (evil-visual-state-p))
       (cond
