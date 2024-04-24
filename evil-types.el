@@ -138,8 +138,7 @@ and will be removed in a future version."
 when `evil-respect-visual-line-mode' is non-nil."
   :one-to-one nil
   :expand (lambda (beg end)
-            (if (or (not evil-respect-visual-line-mode)
-                    (not visual-line-mode))
+            (if (not (and evil-respect-visual-line-mode visual-line-mode))
                 (evil-line-expand beg end)
               (evil-range
                (progn

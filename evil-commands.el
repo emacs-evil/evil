@@ -62,7 +62,7 @@ of the line or the buffer; just return nil."
    ((not crosslines)
     ;; For efficiency, narrow the buffer to the projected
     ;; movement before determining the current line
-    (evil-with-restriction (point) (+ (point) (or count 1) 1)
+    (evil-with-restriction nil (min (+ (point) (or count 1) 1) (point-max))
       (condition-case err
           (evil-narrow-to-line (forward-char count))
         (error
@@ -75,11 +75,10 @@ of the line or the buffer; just return nil."
    (t (evil-motion-loop (nil (or count 1))
         (forward-char)
         ;; don't put the cursor on a newline
-        (and (not evil-move-beyond-eol)
-             (not (evil-visual-state-p))
-             (not (evil-operator-state-p))
-             (eolp) (not (eobp)) (not (bolp))
-             (forward-char))))))
+        (or evil-move-beyond-eol
+            (evil-visual-state-p) (evil-operator-state)
+            (not (eolp)) (bolp)
+            (forward-char))))))
 
 (evil-define-motion evil-backward-char (count &optional crosslines noerror)
   "Move cursor to the left by COUNT characters.
@@ -92,7 +91,9 @@ of the line or the buffer; just return nil."
   (cond
    ((not crosslines)
     ;; Restrict movement to the current line
-    (evil-with-restriction (- (point) (or count 1)) (1+ (point))
+    (evil-with-restriction
+        (max (- (point) (or count 1)) (point-min))
+        (min (1+ (point)) (point-max))
       (condition-case err
           (evil-narrow-to-line (backward-char count))
         (error
@@ -132,29 +133,19 @@ of the line or the buffer; just return nil."
   (let ((line-move-visual t))
     (evil-line-move (- (or count 1)))))
 
-;; used for repeated commands like "dd"
+;; Used for repeated commands like "dd"
 (evil-define-motion evil-line (count)
   "Move COUNT - 1 lines down."
   :type line
   (let (line-move-visual)
-    ;; Catch bob and eob errors. These are caused when not moving
-    ;; point starting in the first or last line, respectively. In this
-    ;; case the current line should be selected.
-    (condition-case _err
-        (evil-line-move (1- (or count 1)))
-      ((beginning-of-buffer end-of-buffer)))))
+    (evil-line-move (1- (or count 1)) t)))
 
 (evil-define-motion evil-line-or-visual-line (count)
   "Move COUNT - 1 lines down."
   :type screen-line
   (let ((line-move-visual (and evil-respect-visual-line-mode
                                visual-line-mode)))
-    ;; Catch bob and eob errors. These are caused when not moving
-    ;; point starting in the first or last line, respectively. In this
-    ;; case the current line should be selected.
-    (condition-case _err
-        (evil-line-move (1- (or count 1)))
-      ((beginning-of-buffer end-of-buffer)))))
+    (evil-line-move (1- (or count 1)) t)))
 
 (evil-define-motion evil-beginning-of-line ()
   "Move the cursor to the beginning of the current line."
@@ -3400,18 +3391,16 @@ command."
       (switch-to-buffer buffer)))))
 
 (evil-define-command evil-next-buffer (&optional count)
-  "Go to the `count'-th next buffer in the buffer list."
+  "Go to the COUNTth next buffer in the buffer list."
   :repeat nil
   (interactive "p")
-  (dotimes (_ (or count 1))
-    (next-buffer)))
+  (next-buffer count))
 
 (evil-define-command evil-prev-buffer (&optional count)
-  "Go to the `count'-th prev buffer in the buffer list."
+  "Go to the COUNTth prev buffer in the buffer list."
   :repeat nil
   (interactive "p")
-  (dotimes (_ (or count 1))
-    (previous-buffer)))
+  (previous-buffer count))
 
 (evil-define-command evil-delete-buffer (buffer &optional bang)
   "Delete a buffer.
@@ -4537,14 +4526,14 @@ of the parent of the splitted window are rebalanced."
   :repeat nil
   (interactive "p")
   (evil-window-split)
-  (evil-next-buffer count))
+  (next-buffer count))
 
 (evil-define-command evil-split-prev-buffer (&optional count)
   "Split window and go to the COUNT-th prev buffer in the buffer list."
   :repeat nil
   (interactive "p")
   (evil-window-split)
-  (evil-prev-buffer count))
+  (previous-buffer count))
 
 (evil-define-command evil-window-left (count)
   "Move the cursor to new COUNT-th window left of the current one."
