@@ -172,21 +172,18 @@ the beginning or end of the current line."
      (when (save-excursion (goto-char end) (bolp))
        (setq end (max beg (1- end))))
      ;; Do not include the newline in Normal state
-     (and (not evil-move-beyond-eol)
-          (not (evil-visual-state-p))
-          (not (evil-operator-state-p))
-          (setq end (max beg (1- end))))
+     (or evil-move-beyond-eol
+         (evil-visual-state-p) (evil-operator-state-p)
+         (setq end (max beg (1- end))))
      (evil-with-restriction beg end
        (condition-case err
            (progn ,@body)
          (beginning-of-buffer
-          (if (= (point-min) beg)
-              (signal 'beginning-of-line nil)
-            (signal (car err) (cdr err))))
+          (signal (if (= (point-min) beg) 'beginning-of-line (car err))
+                  (cdr err)))
          (end-of-buffer
-          (if (= (point-max) end)
-              (signal 'end-of-line nil)
-            (signal (car err) (cdr err))))))))
+          (signal (if (= (point-max) end) 'end-of-line (car err))
+                  (cdr err)))))))
 
 (defun evil-eobp (&optional pos)
   "Whether point is at end-of-buffer with regard to end-of-line."

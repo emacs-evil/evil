@@ -9005,7 +9005,7 @@ Source
 
 (ert-deftest evil-test-ex-sort ()
   :tags '(evil ex)
-  "Text ex command :sort `evil-ex-sort`."
+  "Text Ex command \":sort\" (`evil-ex-sort')."
   (ert-info ("Plain sort")
     (evil-test-buffer
       "[z]zyy\ntest\ntEst\ntesT\nTEST\ntest\n"
