@@ -2,15 +2,11 @@ import re
 from os import path
 import json
 
-from docutils import nodes
-from docutils.parsers.rst import Directive
-
 from sphinx import addnodes
 from sphinx.domains import Domain, ObjType, Index
 from sphinx.domains.std import StandardDomain
 from sphinx.directives import ObjectDescription
 from sphinx.roles import XRefRole
-from sphinx.util.docfields import Field
 from sphinx.util.nodes import make_refnode
 
 
