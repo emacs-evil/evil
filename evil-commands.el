@@ -2249,9 +2249,10 @@ The return value is the yanked text."
       (let ((evil-kill-on-visual-paste (not evil-kill-on-visual-paste)))
         (evil-visual-paste count register))
     (evil-with-undo
-      (let* ((text (if register
-                       (evil-get-register register)
-                     (current-kill 0)))
+      (let* ((text (copy-sequence
+                    (if register
+                        (evil-get-register register)
+                      (current-kill 0))))
              (yank-handler (or yank-handler
                                (when (stringp text)
                                  (car-safe (get-text-property
@@ -2305,9 +2306,10 @@ The return value is the yanked text."
   (if (evil-visual-state-p)
       (evil-visual-paste count register)
     (evil-with-undo
-      (let* ((text (if register
-                       (evil-get-register register)
-                     (current-kill 0)))
+      (let* ((text (copy-sequence
+                    (if register
+                        (evil-get-register register)
+                      (current-kill 0))))
              (yank-handler (or yank-handler
                                (when (stringp text)
                                  (car-safe (get-text-property
