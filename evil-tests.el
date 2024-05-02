@@ -3285,7 +3285,8 @@ word3[]"))
   (ert-info ("special register :")
     (evil-test-buffer
       "[f]oo bar\n"
-      (":noh\ni\C-r:")))
+      (":noh" [return] "i\C-r:")
+      "noh[f]oo bar"))
   (ert-info ("Paste from register during change to register")
     (evil-test-buffer
       "[a]lpha beta"
