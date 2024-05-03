@@ -76,7 +76,7 @@ of the line or the buffer; just return nil."
         (forward-char)
         ;; don't put the cursor on a newline
         (or evil-move-beyond-eol
-            (evil-visual-state-p) (evil-operator-state)
+            (evil-visual-state-p) (evil-operator-state-p)
             (not (eolp)) (bolp)
             (forward-char))))))
 
