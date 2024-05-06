@@ -8319,7 +8319,24 @@ golf h[o]>tel")))
           "alpha [b]ravo charlie delta bravo echo"
           ("/\C-w" [return])
           "alpha bravo charlie delta [b]ravo echo")
-        (custom-set-variables `(evil-want-C-w-delete ,old-val))))))
+        (custom-set-variables `(evil-want-C-w-delete ,old-val))))
+    (ert-info ("Can use backreferences with vim-style regexp")
+      (let ((evil-ex-search-vim-style-regexp t))
+        (evil-test-buffer
+          "[a]bacababcacabccadefghij"
+          ;; Very magic
+          ("/\\v(.)(.)(.)\\3\\1/e" [return])
+          "abacababcacabcc[a]defghij")
+        (evil-test-buffer
+          "[a]bacababcacabccadefghij"
+          ;; Default magic
+          ("/\\(.\\)\\(.\\)\\(.\\)\\3\\1/e" [return])
+          "abacababcacabcc[a]defghij")
+        (evil-test-buffer
+          "[a]bacababcac1abcca1defghij"
+          ;; With literal numbers
+          ("/\\(.\\)\\(.\\)\\(.\\)\\3\\11/e" [return])
+          "abacababcac1abcca[1]defghij")))))
 
 (ert-deftest evil-test-ex-search-offset ()
   "Test search offsets."
