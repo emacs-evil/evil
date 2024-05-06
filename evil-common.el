@@ -3608,7 +3608,7 @@ transformations, usually `regexp-quote' or `replace-quote'."
     (?`  . "`")            (?^  . "^")
     (?$  . "$")            (?|  . "\\|")))
 
-(defconst evil-regexp-magic "[][(){}<>_dDsSxXoOaAlLuUwWyY.*+?=^$`|nrtb]")
+(defconst evil-regexp-magic "[][(){}<>_dDsSxXoOaAlLuUwWyY.*+?=^$`|nrtb0-9]")
 
 (defun evil-transform-vim-style-regexp (regexp)
   "Transform vim-style backslash codes to Emacs regexp.
