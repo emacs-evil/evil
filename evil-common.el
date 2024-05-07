@@ -2275,7 +2275,7 @@ be passed via ARGS."
       ;; ensure the start column is the left one.
       (evil-sort startcol endcol)
       ;; maybe extend up to EOL
-      (when (and (memq last-command '(next-line previous-line))
+      (when (and (memq last-command '(next-line previous-line evil-use-register))
                  (eq temporary-goal-column most-positive-fixnum))
         (goto-char startpt)
         (while (< (point) endpt)

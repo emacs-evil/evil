@@ -643,7 +643,7 @@ Reuse overlays where possible to prevent flicker."
         (setq beg (progn (goto-char beg) (evil-move-to-column beg-col))
               end (progn (goto-char end) (evil-move-to-column end-col 1))))
       ;; maybe extend end column to EOL
-      (and (memq this-command '(next-line previous-line))
+      (and (memq this-command '(next-line previous-line evil-use-register))
            (eq temporary-goal-column most-positive-fixnum)
            (setq end-col most-positive-fixnum))
       ;; force a redisplay so we can do reliable window
