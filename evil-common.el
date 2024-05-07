@@ -2441,12 +2441,15 @@ The tracked insertion is set to `evil-last-insertion'."
 
 (defun evil-yank-block-handler (lines)
   "Insert the current text as block."
-  (let ((count (or evil-paste-count 1))
-        (col (if (eq this-command 'evil-paste-after)
-                 (1+ (current-column))
-               (current-column)))
-        (opoint (point))
-        (first t))
+  (let* ((count (or evil-paste-count 1))
+         shifted-forward
+         (col (if (and (eq this-command 'evil-paste-after)
+                       (not (and (bolp) (eolp)))
+                       (setq shifted-forward t))
+                  (1+ (current-column))
+                (current-column)))
+         (opoint (point))
+         (first t))
     (dolist (line lines)
       ;; maybe we have to insert a new line at eob
       (if first
@@ -2485,9 +2488,7 @@ The tracked insertion is set to `evil-last-insertion'."
     (if evil--cursor-after
         (backward-char)
       (goto-char opoint)
-      (when (and (eq this-command 'evil-paste-after)
-                 (not (eolp)))
-        (forward-char)))))
+      (when shifted-forward (forward-char)))))
 
 (defun evil-delete-yanked-rectangle (nrows ncols)
   "Special function to delete the block yanked by a previous paste command.
