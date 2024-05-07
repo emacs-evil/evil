@@ -3250,7 +3250,6 @@ word3[]"))
     (evil-test-buffer
       "[a]aaaaa\nbbbbb\ncccc"
       ("\C-v" "2j" "$" "\"xy" "G" "o" [escape] "\"xp")
-      ;; TODO will fail because it inserts a left col of spaces
       "aaaaaa\nbbbbb\ncccc\n[a]aaaaa\nbbbbb\ncccc")))
 
 (ert-deftest evil-test-last-insert-register ()
@@ -7528,7 +7527,26 @@ Tiny "))
 "
      ("\C-vfcjd")
      "[b]c
-")))
+"))
+  (ert-info ("Pasting visual block")
+    (evil-test-buffer
+      "alpha [b]ravo charlie
+delta echo foxtrot
+golf hotel india
+juliet kilo mike"
+      ("\C-v" "jje" "y" "$" "p")
+      "alpha bravo charlie[b]rav
+delta echo foxtrot echo
+golf hotel india   otel
+juliet kilo mike"
+      ("G" "o" [escape] "p")
+      "alpha bravo charliebrav
+delta echo foxtrot echo
+golf hotel india   otel
+juliet kilo mike
+[b]rav
+echo
+otel")))
 
 (ert-deftest evil-test-visual-restore ()
   "Test restoring a previous selection"
