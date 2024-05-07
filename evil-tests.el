@@ -3245,7 +3245,13 @@ word3[]"))
     (evil-test-buffer
       "[a]lpha bravo charlie delta"
       ("vf \"xd" "dw" ";\"xp")
-      "charlie alpha delta")))
+      "charlie alpha delta"))
+  (ert-info ("Choosing register keeps eol anchoring")
+    (evil-test-buffer
+      "[a]aaaaa\nbbbbb\ncccc"
+      ("\C-v" "2j" "$" "\"xy" "G" "o" [escape] "\"xp")
+      ;; TODO will fail because it inserts a left col of spaces
+      "aaaaaa\nbbbbb\ncccc\n[a]aaaaa\nbbbbb\ncccc")))
 
 (ert-deftest evil-test-last-insert-register ()
   "Test last insertion register."
