@@ -935,7 +935,7 @@ If nil, KEYS is used."
 
 (ert-deftest evil-test-repeat-register ()
   "Test repeating a register command."
-  :tags '(evil repeat)
+  :tags '(evil repeat registers)
   (evil-test-buffer
     "[l]ine 1\nline 2\nline 3\nline 4\n"
     ("\"addyy\"aP")
@@ -945,7 +945,7 @@ If nil, KEYS is used."
 
 (ert-deftest evil-test-repeat-numeric-register ()
   "Test repeating a command with a numeric register."
-  :tags '(evil repeat)
+  :tags '(evil repeat registers)
   (evil-test-buffer
     "[l]ine 1\nline 2\nline 3\nline 4\nline 5\n"
     ("dd...")
@@ -3189,7 +3189,7 @@ word3[]"))
 
 (ert-deftest evil-test-kill-new ()
   "Test `evil-kill-new'"
-  :tags '(evil yank paste)
+  :tags '(evil yank paste registers)
   ;; Ensure a kill is present
   (kill-new "qqqqq")
   (evil-set-register ?- "sd")
@@ -3246,7 +3246,7 @@ word3[]"))
 
 (ert-deftest evil-test-register ()
   "Test yanking and pasting to and from register."
-  :tags '(evil yank paste)
+  :tags '(evil yank paste registers)
   (ert-info ("simple lower case register")
     (evil-test-buffer
       "[f]oo\n"
@@ -3307,6 +3307,7 @@ word3[]"))
 
 (ert-deftest evil-test-last-insert-register ()
   "Test last insertion register."
+  :tags '(evil registers)
   (evil-test-buffer
     "[l]ine 1\n"
     ("GiABC" [escape])
@@ -3316,6 +3317,7 @@ word3[]"))
 
 (ert-deftest evil-test-zero-register ()
   "\"0 contains the last text that was yanked without specificying a register."
+  :tags '(evil registers)
   (evil-test-buffer
     "[l]ine 1\nline 2\n"
     ("yy\"0p")
@@ -3327,6 +3329,7 @@ word3[]"))
 
 (ert-deftest evil-test-=-register ()
   "\"= is not really a register . It inserts the result of evaluating some elisp"
+  :tags '(evil registers)
   (ert-info ("Can eval elisp, and can fetch default (last) result")
     (evil-test-buffer
      :state insert
@@ -3397,6 +3400,7 @@ sed do eiusmod tempor incididunt"))
 
 (ert-deftest evil-test-number-registers-yank ()
   "Test number register behavior after `evil-yank'"
+  :tags '(evil registers)
   (ert-info ("yanks without named register")
     (dotimes (i 3)
       (evil-set-register (+ ?0 i) ""))
@@ -3439,6 +3443,7 @@ sed do eiusmod tempor incididunt"))
 
 (ert-deftest evil-test-number-registers-delete ()
   "Test number register behavior after `evil-delete'"
+  :tags '(evil registers)
   (dotimes (i 10)
     (evil-set-register (+ ?0 i) ""))
   (ert-info ("deletions without named register")
@@ -9695,7 +9700,7 @@ parameter set."
   (evil-tests-initialize))
 
 (ert-deftest evil-test-black-hole-register ()
-  :tags '(evil)
+  :tags '(evil registers)
   (ert-info ("Test \"_ on delete word")
     (evil-test-buffer
       "[E]vil evil is awesome."
