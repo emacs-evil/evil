@@ -2371,10 +2371,15 @@ register even when REGISTER is provided."
   (prog1 text
     (unless (eq register ?_)
       (kill-new text)
-      (if register (evil-set-register register text)
-        (unless (eq this-command 'evil-delete)
-          ;; set the yank register
-          (evil-set-register ?0 text)))
+      (when register
+        (evil-set-register register text))
+      (when (or (and (null register)
+                     (not (eq this-command 'evil-delete)))
+                ;; As per Vim documentation, set the yank register
+                ;; when the unnamed register is specified.
+                (eq register ?\"))
+        ;; set the yank register
+        (evil-set-register ?0 text))
       (when (eq this-command 'evil-delete)
         (let ((special-motion (memq evil-this-motion
                                     evil-special-delete-motions))
