@@ -1482,11 +1482,6 @@ See `evil-kill-new' for more details on how text is saved."
       (setq beg (car new-range)
             end (cadr new-range)
             type 'line)))
-  (unless register
-    (let ((text (filter-buffer-substring beg end)))
-      (unless (string-match-p "\n" text)
-        ;; set the small delete register
-        (evil-set-register ?- text))))
   (let ((this-command 'evil-delete))
     (evil-yank beg end type register yank-handler))
   (cond
