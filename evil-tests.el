@@ -3087,38 +3087,35 @@ cccc         cccc"))))
     ";; This buffer is for notes you don't want to save.
 \[;]; This buffer is for notes you don't want to save.")
   (ert-info ("Visual-paste from register 3")
-    ;; This behaviour deviates from vim, which populates registers 1-9 with
-    ;; deleted text only, not yanked text. This is an aspect of `evil-yank's
-    ;; use of the emacs kill-ring, so is consistent with non-visual paste.
     (evil-test-buffer
-     "[w]ord1a word1b word1c word1d
+     "[w]ord1a\nword1b\nword1c\nword1d
 word2a word2b word2c word2d"
-     ("yiwwyiwwyiw")
-     "word1a word1b [w]ord1c word1d
+     ("dddddd")
+     "[w]ord1d
 word2a word2b word2c word2d"
      ("+viw\"3p")
-     "word1a word1b word1c word1d
-word1[a] word2b word2c word2d"))
+     "word1d
+\n[w]ord1a\n word2b word2c word2d"))
   (ert-info ("Visual-paste respects `evil-kill-on-visual-paste'")
     (evil-test-buffer
      "[w]ord1 word2 word3"
      (setq evil-kill-on-visual-paste nil)
      ("yewyew")
      "word1 word2 [w]ord3"
-     ("ve\"2p")
-     "word1 word2 word[1]"
+     ("ve\"0p")
+     "word1 word2 word[2]"
      ("o\C-r\"")
-     "word1 word2 word1
+     "word1 word2 word2
 word2[]")
     (evil-test-buffer
      "[w]ord1 word2 word3"
      (setq evil-kill-on-visual-paste t)
      ("yewyew")
      "word1 word2 [w]ord3"
-     ("ve\"2p")
-     "word1 word2 word[1]"
+     ("ve\"0p")
+     "word1 word2 word[2]"
      ("o\C-r\"")
-     "word1 word2 word1
+     "word1 word2 word2
 word3[]"))
   (ert-info ("Visual-paste from `=' register")
     (evil-test-buffer
