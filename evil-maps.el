@@ -153,6 +153,7 @@
 (define-key evil-window-map "<" 'evil-window-decrease-width)
 (define-key evil-window-map ">" 'evil-window-increase-width)
 (define-key evil-window-map "=" 'balance-windows)
+(define-key evil-window-map (kbd "C-=") 'balance-windows)
 (define-key evil-window-map "|" 'evil-window-set-width)
 (define-key evil-window-map [down] 'evil-window-down)
 (define-key evil-window-map [up] 'evil-window-up)
