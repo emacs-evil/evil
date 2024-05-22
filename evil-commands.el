@@ -4397,6 +4397,29 @@ The \"!\" argument means to sort in reverse order."
 
 ;;; Window navigation
 
+(defvar evil--window-digit nil)
+
+(defun evil--window-keep-pred ()
+  (eq 'evil-window-digit-argument this-command))
+
+(defun evil--window-reset-digit ()
+  (setq evil--window-digit nil)
+  (remove-hook 'post-command-hook #'evil--window-reset-digit))
+
+(defun evil--window-on-exit ()
+  (add-hook 'post-command-hook #'evil--window-reset-digit))
+
+(defun evil-window-digit-argument ()
+  "Like `digit-argument' but maintains the window map."
+  (interactive)
+  (unless (eq 'evil-window-digit-argument last-command)
+    (set-transient-map evil-window-map #'evil--window-keep-pred #'evil--window-on-exit))
+  (let* ((char (if (integerp last-command-event)
+                   last-command-event
+                 (get last-command-event 'ascii-character)))
+         (digit (- (logand char ?\177) ?0)))
+    (setq evil--window-digit (+ (* 10 (or evil--window-digit 0)) digit))))
+
 (defmacro evil-save-side-windows (&rest body)
   "Toggle side windows, evaluate BODY, restore side windows."
   (declare (indent defun) (debug (&rest form)))
@@ -4491,7 +4514,7 @@ when `evil-split-window-below' is non-nil. If COUNT and
 `evil-auto-balance-windows' are both non-nil then all children
 of the parent of the splitted window are rebalanced."
   :repeat nil
-  (interactive "P<f>")
+  (interactive "<wc><f>")
   (select-window
    (split-window (selected-window) (when count (- count))
                  (if evil-split-window-below 'below 'above)))
@@ -4507,7 +4530,7 @@ right when `evil-vsplit-window-right' is non-nil. If COUNT and
 `evil-auto-balance-windows'are both non-nil then all children
 of the parent of the splitted window are rebalanced."
   :repeat nil
-  (interactive "P<f>")
+  (interactive "<wc><f>")
   (select-window
    (split-window (selected-window) (when count (- count))
                  (if evil-vsplit-window-right 'right 'left)))
@@ -4540,28 +4563,28 @@ of the parent of the splitted window are rebalanced."
 (evil-define-command evil-window-left (count)
   "Move the cursor to new COUNT-th window left of the current one."
   :repeat nil
-  (interactive "p")
+  (interactive "<w>")
   (dotimes (_ count)
     (windmove-left)))
 
 (evil-define-command evil-window-right (count)
   "Move the cursor to new COUNT-th window right of the current one."
   :repeat nil
-  (interactive "p")
+  (interactive "<w>")
   (dotimes (_ count)
     (windmove-right)))
 
 (evil-define-command evil-window-up (count)
   "Move the cursor to new COUNT-th window above the current one."
   :repeat nil
-  (interactive "p")
+  (interactive "<w>")
   (dotimes (_ (or count 1))
     (windmove-up)))
 
 (evil-define-command evil-window-down (count)
   "Move the cursor to new COUNT-th window below the current one."
   :repeat nil
-  (interactive "p")
+  (interactive "<w>")
   (dotimes (_ (or count 1))
     (windmove-down)))
 
@@ -4604,7 +4627,7 @@ is different from the current one."
 With COUNT go to the count-th window in the order starting from
 top-left."
   :repeat nil
-  (interactive "<c>")
+  (interactive "<wc>")
   (if (not count)
       (other-window +1)
     (evil-window-top-left)
@@ -4615,7 +4638,7 @@ top-left."
 With COUNT go to the count-th window in the order starting from
 top-left."
   :repeat nil
-  (interactive "<c>")
+  (interactive "<wc>")
   (if (not count)
       (other-window -1)
     (evil-window-top-left)
@@ -4625,7 +4648,7 @@ top-left."
   "Split the current window horizontally
 and open a new buffer or edit a certain FILE."
   :repeat nil
-  (interactive "P<f>")
+  (interactive "<wc><f>")
   (let ((new-window (split-window (selected-window) (when count (- count))
                                   (if evil-split-window-below 'below 'above))))
     (when (and (not count) evil-auto-balance-windows)
@@ -4637,7 +4660,7 @@ and open a new buffer or edit a certain FILE."
   "Split the current window vertically
 and open a new buffer name or edit a certain FILE."
   :repeat nil
-  (interactive "P<f>")
+  (interactive "<wc><f>")
   (let ((new-window (split-window (selected-window) (when count (- count))
                                   (if evil-vsplit-window-right 'right 'left))))
     (when (and (not count) evil-auto-balance-windows)
@@ -4658,37 +4681,37 @@ and open a new buffer name or edit a certain FILE."
 (evil-define-command evil-window-increase-height (count)
   "Increase current window height by COUNT."
   :repeat nil
-  (interactive "p")
+  (interactive "<w>")
   (enlarge-window count))
 
 (evil-define-command evil-window-decrease-height (count)
   "Decrease current window height by COUNT."
   :repeat nil
-  (interactive "p")
+  (interactive "<w>")
   (enlarge-window (- count)))
 
 (evil-define-command evil-window-increase-width (count)
   "Increase current window width by COUNT."
   :repeat nil
-  (interactive "p")
+  (interactive "<w>")
   (enlarge-window count t))
 
 (evil-define-command evil-window-decrease-width (count)
   "Decrease current window width by COUNT."
   :repeat nil
-  (interactive "p")
+  (interactive "<w>")
   (enlarge-window (- count) t))
 
 (evil-define-command evil-window-set-height (count)
   "Set the height of the current window to COUNT."
   :repeat nil
-  (interactive "<c>")
+  (interactive "<wc>")
   (evil-resize-window (or count (frame-height)) nil))
 
 (evil-define-command evil-window-set-width (count)
   "Set the width of the current window to COUNT."
   :repeat nil
-  (interactive "<c>")
+  (interactive "<wc>")
   (evil-resize-window (or count (frame-width)) t))
 
 (evil-define-command evil-ex-resize (arg)
@@ -4740,10 +4763,10 @@ If ARG is empty, maximize the current window height."
               slist (cdr slist)))
       (select-window (car (window-list))))))
 
-(evil-define-command evil-window-exchange (count)
+(evil-define-command evil-window-exchange (&optional count)
   "Exchange the current window with the next, or the COUNT-th, one."
   :repeat nil
-  (interactive "<c>")
+  (interactive "<wc>")
   (let ((original-window (selected-window)))
     (evil-window-next count)
     (if (fboundp 'window-swap-states)
@@ -5085,6 +5108,7 @@ Restore the disabled repeat hooks on insert-state exit."
                                   evil-execute-in-normal-state
                                   evil-replace-state
                                   evil-use-register
+                                  evil-window-digit-argument
                                   digit-argument
                                   negative-argument
                                   universal-argument

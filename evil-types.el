@@ -277,6 +277,13 @@ the last column is excluded."
 
 ;;; Custom interactive codes
 
+(evil-define-interactive-code "<w>"
+  "Prefix argument converted to number, possibly multiplied by evil--window-digit."
+  (let ((prefix-num (prefix-numeric-value current-prefix-arg)))
+    (if evil--window-digit
+        (list (* evil--window-digit prefix-num))
+      (list prefix-num))))
+
 (evil-define-interactive-code "<c>"
   "Count."
   (list (when current-prefix-arg
@@ -293,6 +300,14 @@ directly."
   (list (when (and (evil-visual-state-p) current-prefix-arg)
           (prefix-numeric-value
            current-prefix-arg))))
+
+(evil-define-interactive-code "<wc>"
+  "Prefix argument converted to number, or nil possibly multiplied by
+evil--window-digit."
+  (let ((prefix-num (prefix-numeric-value current-prefix-arg)))
+    (list
+     (cond (evil--window-digit (* evil--window-digit prefix-num))
+           (current-prefix-arg prefix-num)))))
 
 (evil-define-interactive-code "<C>"
   "Character read through `evil-read-key'."
