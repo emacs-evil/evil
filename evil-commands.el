@@ -3434,7 +3434,7 @@ is closed."
   :repeat nil
   (interactive "<!>")
   (condition-case nil
-      (delete-window)
+      (evil-window-delete)
     (error
      (if (and (bound-and-true-p server-buffer-clients)
               (fboundp 'server-edit)
