@@ -1151,7 +1151,7 @@ the right edge."
   (let* ((window-hpos (- (current-column) (window-hscroll)))
          (dist-from-right-edge (- (window-width) window-hpos)))
     (when (< 0 hscroll-margin)
-      (message "%s: hscroll-margin = %d" this-command hscroll-margin))
+      (evil-echo "%s: hscroll-margin = %d" this-command hscroll-margin))
     (evil-scroll-column-left (- dist-from-right-edge (abs (* 2 hscroll-margin))))))
 
 (evil-define-command evil-scroll-start-column ()
@@ -1164,7 +1164,7 @@ the left edge."
   (let ((initial-column (current-column))
         (initial-hscroll (window-hscroll)))
     (when (< 0 hscroll-margin)
-      (message "%s: hscroll-margin = %d" this-command hscroll-margin))
+      (evil-echo "%s: hscroll-margin = %d" this-command hscroll-margin))
     (evil-scroll-column-right (- initial-column initial-hscroll hscroll-margin 1))))
 
 ;;; Text objects
@@ -3645,7 +3645,7 @@ Like vim, on invalid input, preceeding valid input is still parsed."
      ((and (eq ?- b) c (or (<= ?a a c ?z) (<= ?A a c ?Z) (<= ?0 a c ?9)))
       (evil--parse-delmarks (nthcdr 3 to-be-parsed)
                             (append parsed (number-sequence a c))))
-     (t (progn (message "Invalid input: %s" (apply #'string (remove nil to-be-parsed)))
+     (t (progn (evil-echo "Invalid input: %s" (apply #'string (remove nil to-be-parsed)))
                parsed)))))
 
 (evil-define-command evil-delete-marks (marks &optional force)
@@ -3655,7 +3655,7 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
   (interactive "<a><!>")
   (let ((mark-chars (remove ?\s (append marks nil))))
     (cond
-     ((and force mark-chars) (message "Invalid input"))
+     ((and force mark-chars) (evil-echo "Invalid input"))
      (mark-chars
       (let* ((delmarks (evil--parse-delmarks mark-chars))
              (delmarkp (lambda (m) (member (car m) delmarks))))
@@ -3697,9 +3697,9 @@ Supports positions in the following formats: \"path:line path(line)\",
                             (funcall get-number line-number-pattern-alt 1 nil)))
            (column-number (or (funcall get-number line-and-column-numbers-pattern 2 t)
                               (funcall get-number line-and-column-numbers-pattern-alt 2 nil))))
-      (message "%s, %s"
-               (if line-number (format "line: %s" line-number) "no line")
-               (if column-number (format "column: %s" column-number) "no column"))
+      (evil-echo "%s, %s"
+                 (if line-number (format "line: %s" line-number) "no line")
+                 (if column-number (format "column: %s" column-number) "no column"))
       (find-file-at-point fname)
       (when line-number
         (goto-char (point-min))
@@ -3879,17 +3879,17 @@ replacements made or found."
   (let ((replaced-any (< 0 nreplaced)))
     (cond
      ((and replaced-any (memq ?p flags))
-      (message "%s" (buffer-substring (line-beginning-position)
-                                      (line-end-position))))
+      (evil-echo "%s" (buffer-substring (line-beginning-position)
+                                        (line-end-position))))
      ((and replaced-any (memq ?# flags))
-      (message "%s %s" (propertize (number-to-string (line-number-at-pos))
-                                   'face 'line-number-current-line)
-                       (buffer-substring (line-beginning-position)
-                                         (line-end-position))))
-     (t (message "%s %d occurrence%s"
-                 (if (memq ?n flags) "Found" "Replaced")
-                 nreplaced
-                 (if (/= nreplaced 1) "s" ""))))))
+      (evil-echo "%s %s" (propertize (number-to-string (line-number-at-pos))
+                                     'face 'line-number-current-line)
+                         (buffer-substring (line-beginning-position)
+                                           (line-end-position))))
+     (t (evil-echo "%s %d occurrence%s"
+                   (if (memq ?n flags) "Found" "Replaced")
+                   nreplaced
+                   (if (/= nreplaced 1) "s" ""))))))
 
 (evil-define-operator evil-ex-substitute
   (beg end pattern replacement flags)
@@ -4274,7 +4274,7 @@ Default position is the beginning of the buffer."
   :motion mark-whole-buffer
   :move-point nil
   (interactive "<r>")
-  (message "%d" (count-lines (point-min) end)))
+  (evil-echo "%d" (count-lines (point-min) end)))
 
 (evil-define-command evil-show-file-info ()
   "Show basic file information."
@@ -4287,8 +4287,8 @@ Default position is the beginning of the buffer."
          (writable (and file (file-writable-p file)))
          (readonly (if (and file (not writable)) "[readonly] " "")))
     (if file
-        (message "\"%s\" %d %slines --%s--" file nlines readonly perc)
-      (message "%d lines --%s--" nlines perc))))
+        (evil-echo "\"%s\" %d %slines --%s--" file nlines readonly perc)
+      (evil-echo "%d lines --%s--" nlines perc))))
 
 (defvar sort-fold-case)
 (evil-define-operator evil-ex-sort (beg end &optional args reverse)
