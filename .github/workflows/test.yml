@@ -27,6 +27,12 @@ jobs:
         - os: macos-latest
           emacs-version: snapshot
           experimental: true
+        exclude:
+        - os: macos-latest
+          emacs-version: 26.3
+        - os: macos-latest
+          emacs-version: 27.2
+
     steps:
     - uses: jcs090218/setup-emacs@master
       with:
