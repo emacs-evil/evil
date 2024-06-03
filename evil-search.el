@@ -1200,6 +1200,9 @@ is used. It is meant for :substitute commands with arguments."
                   isearch-string
                 (concat isearch-string "\\C")))
             flags (remq ?r flags)))
+    (when (and using-prev-pattern
+               (not (evil-ex-pattern-ignore-case evil-ex-search-pattern)))
+      (setq pattern (concat pattern "\\C")))
     ;; generate pattern
     (when pattern
       ;; Disable vim-style regexp conversion if using a previous pattern, because

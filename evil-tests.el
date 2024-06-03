@@ -8206,6 +8206,14 @@ golf h[o]>tel")))
       "[x]xx AAA bar AAA bar AAA bar\nxxx foo bar foo bar foo bar"
       ("g&")
       "xxx AAA bar AAA bar AAA bar\n[x]xx AAA bar AAA bar AAA bar"))
+  (ert-info ("Substitute with last search, maintaining case sensitivty")
+    (evil-select-search-module 'evil-search-module 'evil-search)
+    (evil-test-buffer
+      "[a]lpha\nbravo\nbravo\ncharlie\nBravo\ndelta"
+      ("/\\Cbravo" [return])
+      "alpha\n[b]ravo\nbravo\ncharlie\nBravo\ndelta"
+      (":%s//zulu" [return])
+      "alpha\nzulu\n[z]ulu\ncharlie\nBravo\ndelta"))
   (ert-info ("Repeat magic multiple times")
     (let ((evil-magic 'very-magic)
           (evil-ex-search-vim-style-regexp t))
