@@ -2591,8 +2591,8 @@ COUNT is infinite."
             (null evil-visual-point)))
        (t
         (setq mark evil-visual-mark
-              point evil-visual-point)))
-      (evil-visual-make-selection mark point type t))))
+              point evil-visual-point)
+        (evil-visual-make-selection mark point type t))))))
 
 (evil-define-motion evil-visual-exchange-corners ()
   "Rearrange corners in Visual Block mode.

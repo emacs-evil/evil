@@ -7551,12 +7551,6 @@ otel")))
 (ert-deftest evil-test-visual-restore ()
   "Test restoring a previous selection"
   :tags '(evil visual)
-  (ert-info ("Start a characterwise selection \
-if no previous selection")
-    (evil-test-buffer
-      ";; [T]his buffer is for notes."
-      ("gv")
-      ";; <[T]>his buffer is for notes."))
   (ert-info ("Restore characterwise selection")
     (evil-test-buffer
       ";; <[T]his> buffer is for notes."
