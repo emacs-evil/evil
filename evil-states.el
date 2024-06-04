@@ -421,7 +421,10 @@ If LATER is non-nil, exit after the current command."
           (setq deactivate-mark t)
         (when evil-visual-region-expanded
           (evil-visual-contract-region))
-        (setq evil-this-register nil)
+        (setq evil-this-register nil
+              evil-prev-visual-selection evil-visual-selection
+              evil-prev-visual-mark (copy-marker evil-visual-mark)
+              evil-prev-visual-point (copy-marker evil-visual-point))
         (evil-change-to-previous-state)))))
 
 (defun evil-visual-tag (&optional selection)
@@ -777,7 +780,8 @@ Default to `evil-visual-make-region'."
   "Return a Visual selection for TYPE."
   (catch 'done
     (dolist (selection evil-visual-alist)
-      (when (eq (symbol-value (cdr selection)) type)
+      (when (memq (symbol-value (cdr selection))
+                  (list type (evil-visual-type type)))
         (throw 'done (car selection))))))
 
 (defun evil-visual-block-corner (&optional corner point mark)

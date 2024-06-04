@@ -7584,7 +7584,34 @@ otel")))
 echo foxtrot\ngolf hotel"
       ("2yy" "++" "Vp" "gv")
       "alpha bravo\ncharlie delta
-<alpha bravo\ncharlie delta\n>golf hotel")))
+<alpha bravo\ncharlie delta\n>golf hotel"))
+  ;; 4 repetitions appears necessary, from manual testing
+  (ert-info ("Restore previous linewise selection from linewise selection")
+    (evil-test-buffer
+      "alpha bravo\nch[a]rlie delta\necho foxtrot\ngolf hotel"
+      ("V" [escape] "jV")
+      "alpha bravo\ncharlie delta\n<ec[h]o foxtrot\n>golf hotel"
+      ("gv")
+      "alpha bravo\n<ch[a]rlie delta\n>echo foxtrot\ngolf hotel"
+      ("gv")
+      "alpha bravo\ncharlie delta\n<ec[h]o foxtrot\n>golf hotel"
+      ("gv")
+      "alpha bravo\n<ch[a]rlie delta\n>echo foxtrot\ngolf hotel"
+      ("gv")
+      "alpha bravo\ncharlie delta\n<ec[h]o foxtrot\n>golf hotel"))
+  (ert-info ("Restore between previous charwise selection and linewise selection")
+    (evil-test-buffer
+      "alpha bravo\nch[a]rlie delta\necho foxtrot\ngolf hotel"
+      ("viw" [escape] "jV")
+      "alpha bravo\ncharlie delta\n<echo f[o]xtrot\n>golf hotel"
+      ("gv")
+      "alpha bravo\n<charli[e]> delta\necho foxtrot\ngolf hotel"
+      ("gv")
+      "alpha bravo\ncharlie delta\n<echo f[o]xtrot\n>golf hotel"
+      ("gv")
+      "alpha bravo\n<charli[e]> delta\necho foxtrot\ngolf hotel"
+      ("gv")
+      "alpha bravo\ncharlie delta\n<echo f[o]xtrot\n>golf hotel")))
 
 (ert-deftest evil-test-visual-redefine ()
   "Test redefining a previous selection"

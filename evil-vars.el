@@ -1740,6 +1740,16 @@ instead of `buffer-undo-list'.")
   "The kind of Visual selection.
 This is a selection as defined by `evil-define-visual-selection'.")
 
+(evil-define-local-var evil-prev-visual-point nil
+  "The previous position of point in Visual state, a marker.")
+
+(evil-define-local-var evil-prev-visual-mark nil
+  "The previous position of mark in Visual state, a marker.")
+
+(evil-define-local-var evil-prev-visual-selection nil
+  "The previous kind of Visual selection.
+This is a selection as defined by `evil-define-visual-selection'.")
+
 ;; we could infer the direction by comparing `evil-visual-mark'
 ;; and `evil-visual-point', but destructive operations may
 ;; displace the markers
