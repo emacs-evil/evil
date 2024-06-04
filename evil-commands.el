@@ -2579,20 +2579,26 @@ COUNT is infinite."
 
 (evil-define-motion evil-visual-restore ()
   "Restore previous selection."
-  (let* ((point (point))
-         (mark (or (mark t) point))
-         (type (evil-visual-type)))
-    ;; TODO handle swapping selection in visual state...
-    (unless (evil-visual-state-p)
-      (cond
-       ;; No previous selection.
-       ((or (null evil-visual-selection)
-            (null evil-visual-mark)
-            (null evil-visual-point)))
-       (t
-        (setq mark evil-visual-mark
-              point evil-visual-point)
-        (evil-visual-make-selection mark point type t))))))
+  (cond
+   ;; Called from visual state
+   ((and (evil-visual-state-p)
+         evil-prev-visual-mark evil-prev-visual-point evil-prev-visual-selection)
+    (let ((tmp-visual-mark (marker-position evil-visual-mark))
+          (tmp-visual-point (marker-position evil-visual-point))
+          (tmp-visual-selection evil-visual-selection))
+      (evil-visual-make-selection evil-prev-visual-mark
+                                  evil-prev-visual-point
+                                  evil-prev-visual-selection
+                                  t)
+      (move-marker evil-prev-visual-mark tmp-visual-mark)
+      (move-marker evil-prev-visual-point tmp-visual-point)
+      (setq evil-prev-visual-selection tmp-visual-selection)))
+   ;; Called from other state
+   ((and evil-visual-selection evil-visual-mark evil-visual-point)
+    (evil-visual-make-selection evil-visual-mark
+                                evil-visual-point
+                                (evil-visual-type)
+                                t))))
 
 (evil-define-motion evil-visual-exchange-corners ()
   "Rearrange corners in Visual Block mode.
