@@ -1279,7 +1279,8 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                  (when deactivate-current-input-method-function
                    (deactivate-input-method)))
                (unless evil-no-display
-                 (evil-refresh-cursor ',state)
+                 (when (eq (window-buffer) (current-buffer))
+                   (evil-refresh-cursor ',state))
                  (evil-refresh-mode-line ',state))
                ,@body
                (run-hooks ',entry-hook)
