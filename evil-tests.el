@@ -931,7 +931,15 @@ If nil, KEYS is used."
       ("i(\M-f)" [escape])
       ";; (This[)] buffer is for notes you don't want to save"
       ("w.")
-      ";; (This) (buffer[)] is for notes you don't want to save")))
+      ";; (This) (buffer[)] is for notes you don't want to save"))
+  (ert-info ("Repeat search motion with offset")
+    (evil-select-search-module 'evil-search-module 'evil-search)
+    (evil-test-buffer
+      "[f]irst, second, third, fourth"
+      ("d/, /e" [return])
+      "[s]econd, third, fourth"
+      ("2.")
+      "[f]ourth")))
 
 (ert-deftest evil-test-repeat-register ()
   "Test repeating a register command."

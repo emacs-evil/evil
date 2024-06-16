@@ -3800,12 +3800,15 @@ after executing the command."
     (evil-repeat-record (this-command-keys))
     (evil-clear-command-keys))
    ((and (evil-operator-state-p) (eq flag 'post))
-    (evil-repeat-record (evil-ex-pattern-regex evil-ex-search-pattern))
+    (let ((search-separator (car (last evil-repeat-info))))
+      (evil-repeat-record (evil-ex-pattern-regex evil-ex-search-pattern))
+      (when evil-ex-search-offset
+        (evil-repeat-record (concat search-separator evil-ex-search-offset))))
     ;; If it weren't for the fact that `exit-minibuffer' throws an `exit'
     ;; tag, which bypasses the source of `this-command-keys', we'd be able
     ;; to capture the key(s) in the post-command of the operator as usual.
     ;; Fortunately however, `last-input-event' can see the key (by default, `return')
-    (when (= (length (this-command-keys)) 0)
+    (when (zerop (length (this-command-keys)))
       (evil-repeat-record (vector last-input-event))))
    (t (evil-repeat-motion flag))))
 
