@@ -462,7 +462,7 @@ and jump to the corresponding one."
    ((and (not (eolp)) (evil-looking-at-end-comment t))
     (forward-comment -1))
    ((and
-     (memq major-mode '(c-mode c++-mode))
+     (memq major-mode '(c-mode c++-mode c-ts-mode c++-ts-mode))
      (require 'hideif nil t)
      (with-no-warnings
        (let* ((hif-else-regexp (concat hif-cpp-prefix "\\(?:else\\|elif[ \t]+\\)"))
