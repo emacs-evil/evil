@@ -2684,6 +2684,7 @@ lines.  This is the default behaviour for Visual-state insertion."
            (when (memq (evil-visual-type) '(line block))
              (1+ (evil-count-lines evil-visual-point evil-visual-mark)))
            t)))
+  (and evil-want-fine-undo vcount (evil-start-undo-step))
   (if (and (evil-visual-state-p) (eq (evil-visual-type) 'line))
       (evil-insert-line count vcount)
     (setq evil-insert-count count
