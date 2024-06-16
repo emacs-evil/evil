@@ -138,6 +138,10 @@ commands opening a new line."
   (remove-hook 'pre-command-hook #'evil-insert-repeat-hook))
 (put 'evil-insert-repeat-hook 'permanent-local-hook t)
 
+(eval-when-compile
+  ;; TODO remove this once support for emacs 26 is dropped
+  (unless (fboundp 'combine-change-calls)
+    (defmacro combine-change-calls (_beg _end &rest body) `(progn ,@body))))
 (declare-function evil-execute-repeat-info "evil-repeat")
 (defun evil-cleanup-insert-state ()
   "Called when Insert or Replace state is about to be exited.
@@ -158,19 +162,25 @@ Handles the repeat-count of the insertion command."
              buffer-invisibility-spec)))
       (cl-destructuring-bind (line col vcount) evil-insert-vcount
         (save-excursion
-          (dotimes (v (1- vcount))
-            (goto-char (point-min))
-            (forward-line (+ line v))
-            (when (or (not evil-insert-skip-empty-lines)
-                      (not (integerp col))
-                      (save-excursion
-                        (evil-move-end-of-line)
-                        (>= (current-column) col)))
-              (if (integerp col)
-                  (move-to-column col t)
-                (funcall col))
-              (dotimes (_ (or evil-insert-count 1))
-                (evil-execute-repeat-info (cdr evil-insert-repeat-info))))))))))
+          (combine-change-calls ; For performance
+              (progn (goto-line line) (line-beginning-position))
+              (line-end-position vcount)
+            (let (pre-command-hook post-command-hook) ; For performance
+              (dotimes (v (1- vcount))
+                (goto-char (point-min))
+                (forward-line (+ line v))
+                (when (or (not evil-insert-skip-empty-lines)
+                          (not (integerp col))
+                          (save-excursion
+                            (evil-move-end-of-line)
+                            (>= (current-column) col)))
+                  (if (integerp col)
+                      (move-to-column col t)
+                    (funcall col))
+                  (dotimes (_ (or evil-insert-count 1))
+                    (evil-execute-repeat-info (cdr evil-insert-repeat-info))))))
+            (run-hooks 'post-command-hook))))))
+  (and evil-want-fine-undo (evil-end-undo-step)))
 
 ;;; Visual state
 
