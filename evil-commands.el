@@ -2803,7 +2803,7 @@ or the beginning of visual line.  The insertion will be repeated COUNT times.
 If VCOUNT is non nil it should be number > 0. The insertion will be repeated
 in the next VCOUNT - 1 lines below the current one."
   (push (point) buffer-undo-list)
-  (let ((move-fn (if non-blank-p #'back-to-indentation #'evil-beginning-of-line)))
+  (let ((move-fn (if non-blank-p #'evil-first-non-blank #'evil-beginning-of-line)))
     (if (and visual-line-mode
              evil-respect-visual-line-mode)
         (goto-char
@@ -2813,15 +2813,15 @@ in the next VCOUNT - 1 lines below the current one."
               (save-excursion
                 (beginning-of-visual-line)
                 (point))))
-      (funcall move-fn)))
-  (setq evil-insert-count count
-        evil-insert-lines nil
-        evil-insert-vcount
-        (and vcount
-             (> vcount 1)
-             (list (line-number-at-pos)
-                   (if non-blank-p #'evil-first-non-blank #'evil-beginning-of-line)
-                   vcount)))
+      (funcall move-fn))
+    (setq evil-insert-count count
+          evil-insert-lines nil
+          evil-insert-vcount
+          (and vcount
+               (> vcount 1)
+               (list (line-number-at-pos)
+                     move-fn
+                     vcount))))
   (evil-insert-state 1))
 
 (defun evil-insert-line (count &optional vcount)
