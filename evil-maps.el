@@ -508,6 +508,7 @@ included in `evil-insert-state-bindings' by default."
 (define-key evil-motion-state-map "!" 'evil-shell-command)
 
 (evil-ex-define-cmd "e[dit]" 'evil-edit)
+(evil-ex-define-cmd "vie[w]" 'evil-view)
 (evil-ex-define-cmd "w[rite]" 'evil-write)
 (evil-ex-define-cmd "up[date]" 'evil-update)
 (evil-ex-define-cmd "wa[ll]" 'evil-write-all)
@@ -538,6 +539,7 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "ri[ght]" 'evil-align-right)
 (evil-ex-define-cmd "ce[nter]" 'evil-align-center)
 (evil-ex-define-cmd "sp[lit]" 'evil-window-split)
+(evil-ex-define-cmd "sv[iew]" 'evil-window-split-view)
 (evil-ex-define-cmd "vs[plit]" 'evil-window-vsplit)
 (evil-ex-define-cmd "new" 'evil-window-new)
 (evil-ex-define-cmd "ene[w]" 'evil-buffer-new)

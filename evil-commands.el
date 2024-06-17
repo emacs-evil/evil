@@ -3334,7 +3334,18 @@ If no FILE is specified, reload the current buffer from disk."
   (interactive "<f><!>")
   (if file
       (find-file file)
-    (revert-buffer bang (or bang (not (buffer-modified-p))) t)))
+    (revert-buffer bang (or bang (not (buffer-modified-p))) t)
+    (read-only-mode -1)))
+
+(evil-define-command evil-view (file &optional bang)
+  "Open FILE but don't allow changes.
+If no FILE is specified, reload the current buffer from disk as read-only."
+  :repeat nil
+  (interactive "<f><!>")
+  (if file
+      (find-file-read-only file)
+    (revert-buffer bang (or bang (not (buffer-modified-p))) t)
+    (read-only-mode +1)))
 
 (evil-define-command evil-read (count file)
   "Insert the contents of FILE below the current line or line COUNT."
@@ -4517,7 +4528,7 @@ the deleted window's parent window are rebalanced."
         ;; any further children (then rebalancing is not necessary anyway)
         (ignore-errors (balance-windows p))))))
 
-(evil-define-command evil-window-split (&optional count file)
+(evil-define-command evil-window-split (&optional count file read-only)
   "Split the current window horizontally, COUNT lines height,
 editing a certain FILE. The new window will be created below
 when `evil-split-window-below' is non-nil. If COUNT and
@@ -4531,7 +4542,13 @@ of the parent of the splitted window are rebalanced."
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (when file
-    (evil-edit file)))
+    (funcall (if read-only #'evil-view #'evil-edit) file)))
+
+(evil-define-command evil-window-split-view (&optional count file)
+  "As with `evil-window-split' but the file is opened read-only."
+  :repeat nil
+  (interactive "<c><f>")
+  (evil-window-split count file t))
 
 (evil-define-command evil-window-vsplit (&optional count file)
   "Split the current window vertically, COUNT columns width,
