@@ -163,7 +163,8 @@ Handles the repeat-count of the insertion command."
       (cl-destructuring-bind (line col vcount) evil-insert-vcount
         (save-excursion
           (combine-change-calls ; For performance
-              (progn (goto-line line) (line-beginning-position))
+              (progn (goto-char (point-min))
+                     (line-beginning-position line))
               (line-end-position vcount)
             (let (pre-command-hook post-command-hook) ; For performance
               (dotimes (v (1- vcount))
