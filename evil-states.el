@@ -165,7 +165,7 @@ Handles the repeat-count of the insertion command."
           (combine-change-calls ; For performance
               (progn (goto-char (point-min))
                      (line-beginning-position line))
-              (line-end-position vcount)
+              (line-end-position (+ line vcount))
             (let (pre-command-hook post-command-hook) ; For performance
               (dotimes (v (1- vcount))
                 (goto-char (point-min))
