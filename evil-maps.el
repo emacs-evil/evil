@@ -515,6 +515,7 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "sav[eas]" 'evil-save)
 (evil-ex-define-cmd "r[ead]" 'evil-read)
 (evil-ex-define-cmd "b[uffer]" 'evil-buffer)
+(evil-ex-define-cmd "bad[d]" 'evil-buffer-add)
 (evil-ex-define-cmd "bn[ext]" 'evil-next-buffer)
 (evil-ex-define-cmd "bp[revious]" 'evil-prev-buffer)
 (evil-ex-define-cmd "bN[ext]" "bprevious")
