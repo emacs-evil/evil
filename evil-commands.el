@@ -2552,7 +2552,9 @@ when called interactively."
    (t
     (condition-case err
         (evil-with-single-undo
-          (execute-kbd-macro macro count))
+          (let (pre-command-hook post-command-hook) ; For performance
+            (combine-after-change-calls
+              (execute-kbd-macro macro count))))
       ;; enter Normal state if the macro fails
       (error
        (evil-normal-state)
