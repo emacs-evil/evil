@@ -3349,6 +3349,14 @@ If no FILE is specified, reload the current buffer from disk as read-only."
     (revert-buffer bang (or bang (not (buffer-modified-p))) t)
     (read-only-mode +1)))
 
+(evil-define-command evil-buffer-add (file)
+  "Add FILE to the buffer list, but don't visit it. "
+  :repeat nil
+  (interactive "<f>")
+  (if (or (not file) (string= "" file))
+      (user-error "No file specified")
+    (find-file-noselect file)))
+
 (evil-define-command evil-read (count file)
   "Insert the contents of FILE below the current line or line COUNT."
   :repeat nil
