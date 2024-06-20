@@ -62,7 +62,7 @@ Otherwise the jump commands act only within the current buffer."
 
 (defvar evil--jumps-jumping nil)
 
-(defvar evil--jumps-jumping-backward nil
+(defvar evil--jumps-jump-command nil
   "Set by `evil--jump-backward', used and cleared in the
 `post-command-hook' by `evil--jump-handle-buffer-crossing'")
 
@@ -242,7 +242,7 @@ POS defaults to point."
 (put 'evil-set-jump 'permanent-local-hook t)
 
 (defun evil--jump-backward (count)
-  (setq evil--jumps-jumping-backward t)
+  (setq evil--jumps-jump-command t)
   (let ((count (or count 1)))
     (evil-motion-loop (nil count)
       (let* ((struct (evil--jumps-get-current))
@@ -255,6 +255,7 @@ POS defaults to point."
         (evil--jumps-jump idx 1)))))
 
 (defun evil--jump-forward (count)
+  (setq evil--jumps-jump-command t)
   (let ((count (or count 1)))
     (evil-motion-loop (nil count)
       (let* ((struct (evil--jumps-get-current))
@@ -303,8 +304,8 @@ change the current buffer."
 (put 'evil--jump-hook 'permanent-local-hook t)
 
 (defun evil--jump-handle-buffer-crossing ()
-  (let ((jumping-backward evil--jumps-jumping-backward))
-    (setq evil--jumps-jumping-backward nil)
+  (let ((jump-command evil--jumps-jump-command))
+    (setq evil--jumps-jump-command nil)
     (dolist (frame (frame-list))
       (dolist (window (window-list frame))
         (let* ((struct (evil--jumps-get-current window))
@@ -312,13 +313,13 @@ change the current buffer."
           (when previous-pos
             (setf (evil-jumps-struct-previous-pos struct) nil)
             (if (and
-                 ;; `evil-jump-backward' (and other backward jumping
-                 ;; commands) needs to be handled specially. When
-                 ;; jumping backward multiple times, calling
-                 ;; `evil-set-jump' is always wrong: If you jump back
-                 ;; twice and we call `evil-set-jump' after the second
-                 ;; time, we clear the forward jump list and
-                 ;; `evil--jump-forward' won't work.
+                 ;; `evil-jump-backward' and 'evil-jump-forward' needs
+                 ;; to be handled specially. When jumping backward
+                 ;; multiple times, calling `evil-set-jump' is always
+                 ;; wrong: If you jump back twice and we call
+                 ;; `evil-set-jump' after the second time, we clear
+                 ;; the forward jump list and `evil--jump-forward'
+                 ;; won't work.
 
                  ;; The first time you jump backward, setting a jump
                  ;; point is sometimes correct. But we don't do it
@@ -326,7 +327,7 @@ change the current buffer."
                  ;; `evil--jump-backward' has updated our position in
                  ;; the jump list so, again, `evil-set-jump' would
                  ;; break `evil--jump-forward'.
-                 (not jumping-backward)
+                 (not jump-command)
                  (let ((previous-buffer (marker-buffer previous-pos)))
                    (and previous-buffer
                         (not (eq previous-buffer (window-buffer window))))))
