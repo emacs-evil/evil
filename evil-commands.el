@@ -3735,6 +3735,35 @@ Supports positions in the following formats: \"path:line path(line)\",
         (when column-number
           (move-to-column (1- column-number)))))))
 
+(evil-define-command evil-goto-file (file-path)
+  "Open the file under cursor and go to position if present.
+Supports both relative path and absolute path. If path is relative, then find common
+ancestor of path and current buffer file. If path is absolute path, go to the file
+directly. Otherwise, fallback to `find-file-at-point`."
+  (interactive
+   (list (thing-at-point 'filename t)))
+
+  (if (file-name-absolute-p file-path)
+      (find-file file-path)
+
+    (let* ((delimiter (if (eq system-type 'windows-nt)
+                          "\\"
+                        "/"))
+           (parts (split-string (buffer-file-name) delimiter))
+           (target-filename "")
+           (target-exists))
+
+      ;; check every combination of sub directory and file-path
+      (dolist (n (number-sequence 1 (length parts)) target-filename)
+        (let* ((new-filename (string-join (append (take n parts) (list file-path)) delimiter)))
+          (if (file-exists-p new-filename)
+              (setq target-filename new-filename
+                    target-exists t))))
+
+      (if target-exists
+          (find-file target-filename)
+        (find-file-at-point file-path)))))
+
 (evil-define-command evil-find-file-at-point-visual ()
   "Find the filename selected by the visual region.
 Signal an error if the file does not exist."
