@@ -3739,7 +3739,15 @@ Supports positions in the following formats: \"path:line path(line)\",
   "Open the file under cursor and go to position if present.
 Supports both relative path and absolute path. If path is relative, then find common
 ancestor of path and current buffer file. If path is absolute path, go to the file
-directly. Otherwise, fallback to `find-file-at-point`."
+directly. Otherwise, fallback to `find-file-at-point`.
+
+Please notice that for relative path under cursor, only the most possible searching
+approach is implemented in this version. There are many possible relative filepath
+searching approaches, for example, same directory of current buffer, project root,
+paths in system path environment. The most possible search approach would be the
+same ancestor directory of current buffer and the target path, from parent directory
+to root directory.
+"
   (interactive
    (list (thing-at-point 'filename t)))
 
@@ -3754,7 +3762,7 @@ directly. Otherwise, fallback to `find-file-at-point`."
            (target-exists))
 
       ;; check every combination of sub directory and file-path
-      (dolist (n (number-sequence 1 (length parts)) target-filename)
+      (dolist (n (number-sequence (length parts) 1 -1) target-filename)
         (let* ((new-filename (string-join (append (take n parts) (list file-path)) delimiter)))
           (if (file-exists-p new-filename)
               (setq target-filename new-filename
