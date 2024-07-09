@@ -624,7 +624,7 @@ included in `evil-insert-state-bindings' by default."
 (define-key evil-command-line-map "\C-u" 'evil-delete-whole-line)
 (define-key evil-command-line-map "\C-v" #'quoted-insert)
 (when evil-want-C-w-delete
-  (define-key evil-command-line-map "\C-w" #'backward-kill-word))
+  (define-key evil-command-line-map "\C-w" #'evil-delete-backward-word))
 (define-key evil-command-line-map [escape] #'abort-recursive-edit)
 (define-key evil-command-line-map [S-left] #'backward-word)
 (define-key evil-command-line-map [S-right] #'forward-word)
@@ -653,7 +653,7 @@ included in `evil-insert-state-bindings' by default."
 (define-key evil-eval-map "\C-n" #'next-complete-history-element)
 (define-key evil-eval-map "\C-u" 'evil-delete-whole-line)
 (define-key evil-eval-map "\C-v" #'quoted-insert)
-(define-key evil-eval-map "\C-w" 'backward-kill-word)
+(define-key evil-eval-map "\C-w" 'evil-delete-backward-word)
 (define-key evil-eval-map [escape] 'abort-recursive-edit)
 (define-key evil-eval-map [S-left] 'backward-word)
 (define-key evil-eval-map [S-right] 'forward-word)

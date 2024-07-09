@@ -2222,7 +2222,7 @@ ine3 line3      line3 l\n"))
       "line1\n\n[\n]last line\n")))
 
 (ert-deftest evil-test-delete-backward-word ()
-  "Test `evil-delete-backward-word' in insert & replace states."
+  "Test `evil-delete-backward-word' in insert & replace states, and ex command-line."
   :tags '(evil)
   (ert-info ("evil-delete-backward-word in insert state")
     (let ((evil-backspace-join-lines t))
@@ -2251,7 +2251,12 @@ ine3 line3      line3 l\n"))
       ("\C-w")
       "alpha bravo [c]harlie delta"
       ("\C-w")
-      "alpha [b]ravo charlie delta")))
+      "alpha [b]ravo charlie delta"))
+  (ert-info ("evil-delete-backward-word in ex command-line")
+    (evil-test-buffer
+      ""
+      (":normal i" "one-two" (kbd "C-w") (kbd "C-w") [return])
+      "one")))
 
 (ert-deftest evil-test-visual-X ()
   "Test `X' in visual state."
