@@ -2254,9 +2254,9 @@ ine3 line3      line3 l\n"))
       "alpha [b]ravo charlie delta"))
   (ert-info ("evil-delete-backward-word in ex command-line")
     (evil-test-buffer
-      ""
+      "[ ]"
       (":normal i" "one-two" (kbd "C-w") (kbd "C-w") [return])
-      "one")))
+      "on[e]")))
 
 (ert-deftest evil-test-visual-X ()
   "Test `X' in visual state."
