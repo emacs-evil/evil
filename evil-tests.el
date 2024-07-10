@@ -6075,6 +6075,27 @@ This buffer is for notes."
    ("]}")
    "{ (\"Test with paren {inside multi {level}[}]\", test()); } "))
 
+(ert-deftest evil-test-insert-resume ()
+  "Test `evil-insert-resume'"
+  :tags '(evil motion)
+  (ert-info ("Can move to last insert location and take a count")
+    (evil-test-buffer
+      "alpha bravo [ ]delta echo"
+      ("i" "charlie" [escape] "^")
+      "[a]lpha bravo charlie delta echo"
+      ("2gi" " zulu" [escape])
+      "alpha bravo charlie zulu zul[u] delta echo"))
+  (ert-info ("Can move to `^' marker in visual line state")
+    (evil-test-buffer
+      "alpha [b]ravo\ncharlie delta\necho foxtrot"
+      ("i" [escape] "/foxtrot" [return])
+      "alpha bravo\ncharlie delta\necho [f]oxtrot"
+      ("Vk")
+      "alpha bravo\ncharl[i]e delta\necho foxtrot"
+      ("gi")
+      "alpha [b]ravo\ncharlie delta\necho foxtrot"
+      ("vd")
+      "alpha [o]xtrot")))
 
 (ert-deftest evil-test-next-mark ()
   "Test `evil-next-mark', `evil-previous-mark'"
