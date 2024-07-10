@@ -2734,11 +2734,14 @@ the lines."
     (evil-insert count vcount skip-empty-lines)
     (add-hook 'post-command-hook #'evil-maybe-remove-spaces)))
 
-(defun evil-insert-resume (count)
+(evil-define-command evil-insert-resume (count)
   "Switch to Insert state at previous insertion point.
 The insertion will be repeated COUNT times. If called from visual
 state, only place point at the previous insertion position but do not
 switch to insert state."
+  :keep-visual t
+  :type exclusive
+  :jump t
   (interactive "p")
   (evil-goto-mark ?^ t)
   (unless (evil-visual-state-p)
