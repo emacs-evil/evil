@@ -558,11 +558,11 @@ ubiquity of prefix arguments."
            (cond
             ((and (not value)
                   (eq (lookup-key evil-command-line-map (kbd "C-w"))
-                      #'backward-kill-word))
+                      #'evil-delete-backward-word))
              (define-key evil-command-line-map (kbd "C-w") nil))
             ((and value
                   (null (lookup-key evil-command-line-map (kbd "C-w"))))
-             (define-key evil-command-line-map (kbd "C-w") #'backward-kill-word))))
+             (define-key evil-command-line-map (kbd "C-w") #'evil-delete-backward-word))))
          (when (boundp 'evil-ex-search-keymap)
            (cond
             ((and (not value)
