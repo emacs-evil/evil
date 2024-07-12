@@ -313,7 +313,7 @@ change the current buffer."
           (when previous-pos
             (setf (evil-jumps-struct-previous-pos struct) nil)
             (if (and
-                 ;; `evil-jump-backward' and 'evil-jump-forward' needs
+                 ;; `evil-jump-backward' and 'evil-jump-forward' need
                  ;; to be handled specially. When jumping backward
                  ;; multiple times, calling `evil-set-jump' is always
                  ;; wrong: If you jump back twice and we call

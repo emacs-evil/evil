@@ -9722,8 +9722,7 @@ parameter set."
         ("3\C-i") ;; even after jumping forward 3 times it can't get past the 3rd z
         "z z [z] z z z z z"))
     (ert-info ("Jump across files")
-      (let ((temp-file "evil-test-"))
-        (make-temp-file "evil-test-")
+      (let ((temp-file (make-temp-file "evil-test-")))
         (unwind-protect
             (evil-test-buffer
               "[z] z z z z z z"
@@ -9734,9 +9733,27 @@ parameter set."
               ("\C-i")
               "new buffe[r]")
           (delete-file temp-file)
-          (with-current-buffer (get-file-buffer temp-file)
-            (set-buffer-modified-p nil))
-          (kill-buffer (get-file-buffer temp-file)))))))
+          (let ((buf (file-name-nondirectory temp-file)))
+            (when (get-buffer buf) (kill-buffer buf))))))
+    (ert-info ("Jump multiple times between files")
+      (let ((a (make-temp-file "evil-aa-" nil nil "evil-bb\n\nthis is a"))
+            (b (make-temp-file "evil-bb-" nil nil "evil-cc\n\nthis is b"))
+            (c (make-temp-file "evil-cc-" nil nil "this is c")))
+        (unwind-protect
+            (evil-test-buffer
+              (find-file a)
+              ("gf" [return])
+              "evil-cc\n\nthis is b"
+              ("gf" [return])
+              "this is c"
+              ("\C-o" "\C-o")
+              "evil-bb\n\nthis is a"
+              ("\C-i" "\C-i")
+              "this is c")
+          (dolist (f (list a b c))
+            (let ((buf (file-name-nondirectory f)))
+              (when (get-buffer buf) (kill-buffer buf)))
+            (delete-file f)))))))
 
 (ert-deftest evil-test-find-file ()
   :tags '(evil jumps)
