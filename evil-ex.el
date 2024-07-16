@@ -585,13 +585,15 @@ in case of incomplete or unknown commands."
 
 (defun evil-ex-define-cmd (cmd function)
   "Bind the function FUNCTION to the command CMD."
-  (if (string-match "\\[\\(.*\\)\\]" cmd)
-      (let ((abbrev (replace-match "" nil t cmd))
-            (full (replace-match "\\1" nil nil cmd)))
+  (if (not (string-match-p "\\[" cmd))
+      (evil--add-to-alist evil-ex-commands cmd function)
+    (string-match "\\(.*\\)\\[\\(.*\\)\\]" cmd)
+    (let ((mandatory (match-string 1 cmd))
+          (optional  (match-string 2 cmd)))
+      (dotimes (n (1+ (length optional)))
         (evil--add-to-alist evil-ex-commands
-                            full function
-                            abbrev full))
-    (evil--add-to-alist evil-ex-commands cmd function)))
+                            (concat mandatory (substring optional 0 n))
+                            function)))))
 
 (defmacro evil-ex-define-argument-type (arg-type doc &rest body)
   "Define a new handler for argument-type ARG-TYPE.
