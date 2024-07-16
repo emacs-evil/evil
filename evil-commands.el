@@ -2838,14 +2838,18 @@ in the next VCOUNT - 1 lines below the current one."
   (interactive "p")
   (evil--insert-line count vcount t))
 
-(defun evil-insert-0-line (count &optional vcount)
+(evil-define-command evil-insert-0-line (count &optional vcount)
   "Switch to insert state at beginning of current line.
 Point is placed at column 0, or the beginning of the visual line.
 The insertion will be repeated COUNT times.  If VCOUNT is
 non nil it should be number > 0. The insertion will be repeated
 in the next VCOUNT - 1 lines below the current one."
+  :keep-visual t
+  :type exclusive
   (interactive "p")
-  (evil--insert-line count vcount nil))
+  (if (evil-visual-state-p)
+      (evil-beginning-of-line)
+    (evil--insert-line count vcount nil)))
 
 (defun evil-append-line (count &optional vcount)
   "Switch to Insert state at the end of the current line.
