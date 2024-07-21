@@ -1652,6 +1652,17 @@ New Tex[t]
       ((kbd "C-v") "jj$AXXX" [escape])
       "line 1line 1line 1XX[X]\nline 2XXX\nline 3line 3XXX\n")))
 
+(ert-deftest evil-visual-block-insert ()
+  "Test inserting (prepending) in visual block."
+  :tags '(evil visual insert)
+  (ert-info ("Prepend and repeat")
+    (evil-test-buffer
+      "[a]lpha\nbravo\ncharlie\ndelta\necho\nfoxtrot\ngolf"
+      ("\C-v" "jj" "I" "zulu" [escape])
+      "zul[u]alpha\nzulubravo\nzulucharlie\ndelta\necho\nfoxtrot\ngolf"
+      ("/delta" [return] ".")
+      "zulualpha\nzulubravo\nzulucharlie\nzul[u]delta\nzuluecho\nzulufoxtrot\ngolf")))
+
 (ert-deftest evil-test-repeat-digraph ()
   "Test repeat of insertion of a digraph."
   :tags '(evil digraph repeat)
@@ -9734,7 +9745,9 @@ parameter set."
               "new buffe[r]")
           (delete-file temp-file)
           (let ((buf (file-name-nondirectory temp-file)))
-            (when (get-buffer buf) (kill-buffer buf))))))
+            (when (get-buffer buf)
+              (with-current-buffer buf (set-buffer-modified-p nil))
+              (kill-buffer buf))))))
     (ert-info ("Jump multiple times between files")
       (let ((a (make-temp-file "evil-aa-" nil nil "evil-bb\n\nthis is a"))
             (b (make-temp-file "evil-bb-" nil nil "evil-cc\n\nthis is b"))
@@ -9752,7 +9765,9 @@ parameter set."
               "this is c")
           (dolist (f (list a b c))
             (let ((buf (file-name-nondirectory f)))
-              (when (get-buffer buf) (kill-buffer buf)))
+              (when (get-buffer buf)
+                (with-current-buffer buf (set-buffer-modified-p nil))
+                (kill-buffer buf)))
             (delete-file f)))))))
 
 (ert-deftest evil-test-find-file ()

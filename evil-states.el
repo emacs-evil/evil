@@ -179,8 +179,7 @@ Handles the repeat-count of the insertion command."
                       (move-to-column col t)
                     (funcall col))
                   (dotimes (_ (or evil-insert-count 1))
-                    (evil-execute-repeat-info (cdr evil-insert-repeat-info))))))
-            (run-hooks 'post-command-hook))))))
+                    (evil-execute-repeat-info (cdr evil-insert-repeat-info)))))))))))
   (and evil-want-fine-undo (evil-end-undo-step)))
 
 ;;; Visual state
