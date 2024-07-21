@@ -2510,6 +2510,14 @@ will be opened instead."
       (setq evil-macro-buffer (current-buffer)))
      (t (error "Invalid register `%s'" register)))))
 
+(defun evil-repeat-execute-macro (flag)
+  "Called to record a macro execution.
+FLAG is either `pre' or `post' if the function is called before resp.
+after executing the command."
+  (pcase flag
+    ('pre (evil-repeat-record (this-command-keys)))
+    ('post (evil-repeat-record (string evil-last-register)))))
+
 (evil-define-command evil-execute-macro (count macro)
   "Execute keyboard macro MACRO, COUNT times.
 When called with a non-numerical prefix \
@@ -2518,6 +2526,7 @@ COUNT is infinite. MACRO is read from a register
 when called interactively."
   :keep-visual t
   :suppress-operator t
+  :repeat evil-repeat-execute-macro
   (interactive
    (let (count macro register)
      (setq count (cond ((null current-prefix-arg) 1)
@@ -2554,7 +2563,8 @@ when called interactively."
         (evil-with-single-undo
           (let (pre-command-hook post-command-hook) ; For performance
             (combine-after-change-calls
-              (execute-kbd-macro macro count))))
+              (execute-kbd-macro macro count)
+              (setq this-command 'evil-execute-macro)))) ; For repeatability
       ;; enter Normal state if the macro fails
       (error
        (evil-normal-state)
