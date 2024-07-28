@@ -8865,17 +8865,39 @@ maybe we need one line more with some text\n")
 (ert-deftest evil-test-global ()
   "Test `evil-ex-global'."
   :tags '(evil ex global)
+
+  (defun evil-test-force-invoke-ex-hl-update-timer ()
+    "Force invoke ex-hl-update-timer."
+    (when evil-ex-hl-update-timer
+      (timer-event-handler evil-ex-hl-update-timer)))
+  (advice-add 'evil-ex-hl-idle-update :after
+              #'evil-test-force-invoke-ex-hl-update-timer)
+
+  (defun evil-test-save-last-ex-global-hls ()
+    "Save current 'evil-ex-global highlights to buffer-local variable."
+    (when-let* ((hl (cdr (assq 'evil-ex-global evil-ex-active-highlights-alist)))
+                (ovs (evil-ex-hl-overlays hl)))
+      (setq ovs (sort ovs (lambda (a b) (< (overlay-start a) (overlay-start b)))))
+      (setq-local evil-test-last-ex-global-hls
+                  (seq-map (lambda (ov) (buffer-substring-no-properties (overlay-start ov) (overlay-end ov)))
+                           ovs))))
+  (advice-add 'evil-ex-hl-update-highlights :after
+              #'evil-test-save-last-ex-global-hls)
+
   (ert-info ("global delete")
     (evil-test-buffer
       "[n]o 1\nno 2\nno 3\nyes 4\nno 5\nno 6\nno 7\n"
       (":g/yes/d" [return])
+      (should (equal evil-test-last-ex-global-hls '("yes")))
       "no 1\nno 2\nno 3\n[n]o 5\nno 6\nno 7\n"))
   (ert-info ("global delete, specifying case sensitivty")
     (evil-test-buffer
       "[a]lpha bravo charlie\nalpha Bravo charlie\nalpha BRAVO charlie\nalpha delta charlie"
       (":g/\\CBravo/d" [return])
+      (should (equal evil-test-last-ex-global-hls '("Bravo")))
       "alpha bravo charlie\n[a]lpha BRAVO charlie\nalpha delta charlie"
       (":g/\\cBravo/d" [return])
+      (should (equal evil-test-last-ex-global-hls '("bravo" "BRAVO")))
       "alpha delta charlie"))
   (ert-info ("global delete with arg")
     (evil-test-buffer
@@ -8908,6 +8930,7 @@ maybe we need one line more with some text\n")
       ("/yes" [return])
       "no 1\nno 2\nno 3\nyes 4\nno 5\nno 6\nno 7\n"
       (":g//d" [return])
+      (should (equal evil-test-last-ex-global-hls '("yes")))
       "no 1\nno 2\nno 3\n[n]o 5\nno 6\nno 7\n"
       (":v//d" [return])
       ""))
@@ -8918,6 +8941,7 @@ maybe we need one line more with some text\n")
       ("/isearch" [return])
       "no 1\nno 2\nno 3\nisearch 4\nno 5\nno 6\nno 7\n"
       (":g//d" [return])
+      (should (equal evil-test-last-ex-global-hls '("isearch")))
       "no 1\nno 2\nno 3\n[n]o 5\nno 6\nno 7\n"
       (":v//d" [return])
       ""))
@@ -8927,27 +8951,35 @@ maybe we need one line more with some text\n")
        (evil-test-buffer
          "this\nThis\n"
          (":g/this/d" [return])
+         (should (equal evil-test-last-ex-global-hls '("this")))
          "This\n"))
      (let ((evil-ex-search-case 'insensitive))
        (evil-test-buffer
          "this\nThis\n"
          (":g/this/d" [return])
+         (should (equal evil-test-last-ex-global-hls '("this" "This")))
          ""))
      (let ((evil-ex-search-case 'smart))
        (evil-test-buffer
          "this\nThis\n"
          (":g/this/d" [return])
+         (should (equal evil-test-last-ex-global-hls '("this" "This")))
          "")
        (evil-test-buffer
          "this\nThis\n"
          (":g/This/d" [return])
+         (should (equal evil-test-last-ex-global-hls '("This")))
          "this\n"))))
   (ert-info (":global should transform vim-style regexp when appropriate")
     (let ((evil-ex-search-vim-style-regexp t))
       (evil-test-buffer
         "a\n1\nb\n2\nc\n3\n"
         (":g/\\d/>")
-        "a\n    1\nb\n    2\nc\n    3\n"))))
+         (should (equal evil-test-last-ex-global-hls '("1" "2" "3")))
+         "a\n    1\nb\n    2\nc\n    3\n")))
+
+  (advice-remove 'evil-ex-hl-idle-update #'evil-test-force-invoke-ex-hl-update-timer)
+  (advice-remove 'evil-ex-hl-update-highlights #'evil-test-save-last-ex-global-hls))
 
 (ert-deftest evil-test-normal ()
   "Test `evil-ex-normal'."
