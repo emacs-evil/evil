@@ -970,7 +970,6 @@ Like `move-end-of-line', but retains the goal column."
 This behavior is controlled by `evil-move-beyond-eol'."
   (and (not evil-move-beyond-eol)
        (eolp)
-       (= (point) (save-excursion (evil-move-end-of-line) (point)))
        (evil-move-cursor-back t)))
 
 (defun evil-move-cursor-back (&optional force)
