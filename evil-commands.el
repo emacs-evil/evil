@@ -123,13 +123,13 @@ of the line or the buffer; just return nil."
 
 (evil-define-motion evil-next-visual-line (count)
   "Move the cursor COUNT screen lines down."
-  :type exclusive
+  :type screen-line
   (let ((line-move-visual t))
     (evil-line-move (or count 1))))
 
 (evil-define-motion evil-previous-visual-line (count)
   "Move the cursor COUNT screen lines up."
-  :type exclusive
+  :type screen-line
   (let ((line-move-visual t))
     (evil-line-move (- (or count 1)))))
 
