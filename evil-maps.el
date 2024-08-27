@@ -615,7 +615,7 @@ included in `evil-insert-state-bindings' by default."
 (define-key evil-command-line-map "\C-c" #'abort-recursive-edit)
 (define-key evil-command-line-map "\C-d" #'completion-at-point)
 (define-key evil-command-line-map "\C-f" 'evil-command-window)
-(define-key evil-command-line-map "\C-g" #'abort-minibuffers)
+(define-key evil-command-line-map "\C-g" #'abort-recursive-edit)
 (define-key evil-command-line-map "\C-k" 'evil-insert-digraph)
 (define-key evil-command-line-map "\C-l" #'completion-at-point)
 (define-key evil-command-line-map "\C-n" #'next-history-element)
