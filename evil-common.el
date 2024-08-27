@@ -1541,17 +1541,19 @@ word is a sequence of word characters matching
 \[[:word:]] (recognized by `forward-word'), a sequence of
 non-whitespace non-word characters '[^[:word:]\\n\\r\\t\\f ]', or
 an empty line matching ^$."
-  (evil-forward-nearest
-   count
-   #'(lambda (&optional cnt)
-       (let ((word-separating-categories evil-cjk-word-separating-categories)
-             (word-combining-categories evil-cjk-word-combining-categories)
-             (pnt (point)))
-         (forward-word cnt)
-         (if (= pnt (point)) cnt 0)))
-   #'(lambda (&optional cnt)
-       (evil-forward-chars "^[:word:]\n\r\t\f " cnt))
-   #'forward-evil-empty-line))
+  (if (bound-and-true-p superword-mode)
+      (forward-evil-symbol count)
+    (evil-forward-nearest
+     count
+     #'(lambda (&optional cnt)
+         (let ((word-separating-categories evil-cjk-word-separating-categories)
+               (word-combining-categories evil-cjk-word-combining-categories)
+               (pnt (point)))
+           (forward-word cnt)
+           (if (= pnt (point)) cnt 0)))
+     #'(lambda (&optional cnt)
+         (evil-forward-chars "^[:word:]\n\r\t\f " cnt))
+     #'forward-evil-empty-line)))
 
 (defun forward-evil-WORD (&optional count)
   "Move forward COUNT \"WORDS\".
