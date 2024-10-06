@@ -1427,7 +1427,7 @@ the left edge."
 
 (defun evil-expand-line-for-line-based-operators (beg end type)
   "Expand to line when in visual mode possibly changing BEG, END and TYPE.
-Avoids double expansion for line based commands like 'V' or 'D'."
+Avoids double expansion for line-based commands like \"V\" or \"D\"."
   (when (evil-visual-state-p)
     (unless (memq type '(line block screen-line))
       ;; Subtract 1 from end to avoid expanding to the next line
@@ -2653,7 +2653,7 @@ Corner may be one of `upper-left', `upper-right', `lower-left' and
 When called interactively, the selection is rotated clockwise."
   :keep-visual t
   (interactive
-   (let ((corners '#1=(upper-left upper-right lower-right lower-left . #1#)))
+   (let ((corners '(#1=upper-left upper-right lower-right lower-left #1#)))
      (list (cadr (memq (evil-visual-block-corner) corners)))))
   (let* ((beg (or beg (point)))
          (end (or end (mark t) beg))
