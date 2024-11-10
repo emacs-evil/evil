@@ -254,7 +254,14 @@ of the current screen line."
   :type line
   (evil-ensure-column
     (if (null count)
-        (goto-char (point-max))
+        (progn
+          (goto-char (point-max))
+          (when (and (eq (current-buffer) (window-buffer))
+                     (> (point) (window-end nil t)))
+            ;; If the end of the buffer is not already on the screen, scroll to
+            ;; position it near the bottom.
+            (overlay-recenter (point))
+            (recenter (and (< 100 scroll-conservatively) -1))))
       (goto-char (point-min))
       (forward-line (1- count)))))
 
