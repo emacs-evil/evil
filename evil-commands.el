@@ -254,7 +254,18 @@ of the current screen line."
   :type line
   (evil-ensure-column
     (if (null count)
-        (goto-char (point-max))
+        (progn
+          (goto-char (point-max))
+          (when (and (eq (current-buffer) (window-buffer))
+                     (> (point) (window-end nil t)))
+            ;; When the user sets `scroll-conservatively` to a value greater
+            ;; than 100, moving the cursor to `(point-max)` with
+            ;; `(evil-goto-line nil)` can result in all text being located above
+            ;; the window start, preventing the user from seeing it.
+            ;;
+            ;; The following addresses this issue:
+            (overlay-recenter (point))
+            (recenter -1)))
       (goto-char (point-min))
       (forward-line (1- count)))))
 
