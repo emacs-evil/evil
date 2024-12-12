@@ -889,7 +889,12 @@ In Insert state, insert a newline and indent."
   (evil-ensure-column
     (move-to-window-line
      (max (or count 0)
-          (if (= (point-min) (window-start)) 0 scroll-margin)))))
+          (if (or (zerop scroll-margin)
+                  (= (point-min) (window-start))
+                  (< (count-screen-lines (window-start) (point))
+                     scroll-margin))
+              0
+            scroll-margin)))))
 
 (evil-define-motion evil-window-middle ()
   "Move the cursor to the middle line in the window."
@@ -902,7 +907,13 @@ In Insert state, insert a newline and indent."
   :jump t
   :type line
   (evil-ensure-column
-    (move-to-window-line (- (max (or count 1) (1+ scroll-margin))))))
+    (move-to-window-line
+     (- (max (or count 1)
+             (if (or (zerop scroll-margin)
+                     (< (count-screen-lines (point) (window-end))
+                        scroll-margin))
+                 1
+               (1+ scroll-margin)))))))
 
 ;; scrolling
 (evil-define-command evil-scroll-line-up (count)
