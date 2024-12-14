@@ -412,13 +412,6 @@ actions during Ex state."
   (add-hook 'minibuffer-exit-hook #'evil-ex-teardown nil t)
   (add-hook 'completion-at-point-functions #'evil-ex-completion-at-point nil t))
 
-(defun evil-ex-teardown ()
-  "Deinitialize Ex minibuffer.
-Clean up everything set up by `evil-ex-setup'."
-  (let ((runner (evil-ex-argument-handler-runner evil--ex-argument-handler)))
-    (when runner (funcall runner 'stop))))
-(put 'evil-ex-teardown 'permanent-local-hook t)
-
 (defsubst evil--ex-bang-p (command)
   "Return non-nil if the string COMMAND has a \"!\" suffix."
   (and (> (length command) 1) (eq (aref command (1- (length command))) ?!)))
@@ -468,6 +461,15 @@ in case of incomplete or unknown commands."
                  (prefix (try-completion evil--ex-cmd (evil-ex-completion-table))))
             (cond ((stringp prefix) (evil-ex-echo "Incomplete command"))
                   ((null prefix) (evil-ex-echo "Unknown command")))))))))
+
+(defun evil-ex-teardown ()
+  "Deinitialize Ex minibuffer.
+Clean up everything set up by `evil-ex-setup'."
+  ;; Call ex--update one last time, in case after-change-functions are combined
+  (evil--ex-update nil nil nil (minibuffer-contents-no-properties))
+  (let ((runner (evil-ex-argument-handler-runner evil--ex-argument-handler)))
+    (when runner (funcall runner 'stop))))
+(put 'evil-ex-teardown 'permanent-local-hook t)
 
 (defvar-local evil--ex-echo-overlay nil
   "Overlay for displaying info messages during Ex.")
