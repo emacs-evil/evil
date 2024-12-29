@@ -365,7 +365,7 @@ the initial input is the visual region '<,'> or `<,`>. The variable
                ":"
                (or initial-input
                    (and previous-command (propertize previous-command 'face 'shadow)))
-               evil-ex-completion-map nil 'evil-ex-history nil t)))
+               evil-ex-completion-map nil 'evil-ex-history)))
     (if evil--ex-expression
         (eval evil--ex-expression t)
       (when (string= s "") (setq s previous-command))
@@ -466,10 +466,9 @@ in case of incomplete or unknown commands."
   "Deinitialize Ex minibuffer.
 Clean up everything set up by `evil-ex-setup'."
   ;; Call ex--update one last time, in case after-change-functions are combined
-  (evil--ex-update nil nil nil (minibuffer-contents-no-properties))
+  (evil--ex-update)
   (let ((runner (evil-ex-argument-handler-runner evil--ex-argument-handler)))
     (when runner (funcall runner 'stop))))
-(put 'evil-ex-teardown 'permanent-local-hook t)
 
 (defvar-local evil--ex-echo-overlay nil
   "Overlay for displaying info messages during Ex.")
