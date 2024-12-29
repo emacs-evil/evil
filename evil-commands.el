@@ -4903,6 +4903,11 @@ START-EVENT should be the event that started the drag."
   (evil-mouse-drag-track start-event t))
 (evil-set-command-property 'evil-mouse-drag-region :keep-visual t)
 
+;; Make sure `touch-screen-handle-touch' processes touch screen gestures by
+;; ignoring `evil-mouse-drag-region' (bound to `down-mouse-1') during mouse
+;; click emulation.
+(put 'evil-mouse-drag-region 'ignored-mouse-command t)
+
 (defun evil-mouse-drag-track (start-event &optional
                                           do-mouse-drag-region-post-process)
   "Track mouse drags by highlighting area between point and cursor.
