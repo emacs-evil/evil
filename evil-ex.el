@@ -465,8 +465,9 @@ in case of incomplete or unknown commands."
 (defun evil-ex-teardown ()
   "Deinitialize Ex minibuffer.
 Clean up everything set up by `evil-ex-setup'."
-  ;; Call ex--update one last time, in case after-change-functions are combined
-  (evil--ex-update)
+  (when (eq this-command #'exit-minibuffer)
+    ;; Call ex--update one last time, in case after-change-functions are combined
+    (evil--ex-update))
   (let ((runner (evil-ex-argument-handler-runner evil--ex-argument-handler)))
     (when runner (funcall runner 'stop))))
 
