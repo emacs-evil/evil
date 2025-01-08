@@ -175,6 +175,7 @@ The number of columns by which a line is shifted.
 This applies to the shifting operators \\[evil-shift-right] and \
 \\[evil-shift-left]."
   :type 'integer
+  :safe #'integerp
   :group 'evil)
 
 (defcustom evil-shift-round t
