@@ -1764,9 +1764,9 @@ Add (add-hook 'evil-local-mode-hook 'turn-on-undo-tree-mode) to your init file f
   (interactive "*p")
   (evil--check-undo-system)
   (let ((state-before evil-state))
-    (unless (eq 'normal state-before) (evil-normal-state))
+    (unless (memq state-before '(normal visual)) (evil-normal-state))
     (funcall evil-undo-function count)
-    (unless (eq 'normal state-before) (evil-change-state state-before))))
+    (unless (memq state-before '(normal visual)) (evil-change-state state-before))))
 
 (evil-define-command evil-redo (count)
   "Undo COUNT changes in buffer using `evil-redo-function'."
