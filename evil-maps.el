@@ -334,6 +334,10 @@
 (define-key evil-motion-state-map [?z left] 'evil-scroll-column-left)
 (define-key evil-motion-state-map "ze" 'evil-scroll-end-column)
 (define-key evil-motion-state-map "zs" 'evil-scroll-start-column)
+(define-key evil-motion-state-map "zH" 'evil-scroll-left)
+(define-key evil-motion-state-map [?z S-right] 'evil-scroll-left)
+(define-key evil-motion-state-map "zL" 'evil-scroll-right)
+(define-key evil-motion-state-map [?z S-right] 'evil-scroll-right)
 (define-key evil-motion-state-map
   (read-kbd-macro evil-toggle-key) 'evil-emacs-state)
 
