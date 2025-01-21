@@ -85,7 +85,7 @@
 
 ;;; Speedbar
 
-(evil-add-hjkl-bindings speedbar-key-map 'motion
+(evil-add-hjkl-bindings speedbar-mode-map 'motion
   "h" 'backward-char
   "j" 'speedbar-next
   "k" 'speedbar-prev
