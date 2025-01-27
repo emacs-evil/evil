@@ -1539,11 +1539,10 @@ backwards."
   "Move forward COUNT words.
 Moves point COUNT words forward or (- COUNT) words backward if
 COUNT is negative.  Point is placed after the end of the word (if
-forward) or at the first character of the word (if backward).  A
-word is a sequence of word characters matching
-\[[:word:]] (recognized by `forward-word'), a sequence of
-non-whitespace non-word characters '[^[:word:]\\n\\r\\t\\f ]', or
-an empty line matching ^$."
+forward) or at the first character of the word (if backward). A
+word is either determined by `forward-word', or is a sequence of
+characters not in the word or whitespace syntax classes, or an
+empty line matching ^$."
   (evil-forward-nearest
    count
    #'(lambda (&optional cnt)
@@ -1553,7 +1552,7 @@ an empty line matching ^$."
          (forward-word cnt)
          (if (= pnt (point)) cnt 0)))
    #'(lambda (&optional cnt)
-       (evil-forward-chars "^[:word:]\n\r\t\f " cnt))
+       (evil-forward-syntax "^w->" cnt))
    #'forward-evil-empty-line))
 
 (defun forward-evil-WORD (&optional count)
@@ -1561,11 +1560,11 @@ an empty line matching ^$."
 Moves point COUNT WORDS forward or (- COUNT) WORDS backward if
 COUNT is negative. Point is placed after the end of the WORD (if
 forward) or at the first character of the WORD (if backward). A
-WORD is a sequence of non-whitespace characters
-'[^\\n\\r\\t\\f ]', or an empty line matching ^$."
+WORD is a sequence of characters not in the whitespace syntax
+class, or an empty line matching ^$."
   (evil-forward-nearest count
                         #'(lambda (&optional cnt)
-                            (evil-forward-chars "^\n\r\t\f " cnt))
+                            (evil-forward-syntax "^-" cnt))
                         #'forward-evil-empty-line))
 
 (defun forward-evil-symbol (&optional count)
