@@ -131,7 +131,7 @@
      (evil-repeat-abort)))
 
 (defsubst evil-repeat-recording-p ()
-  "Return non-nil iff a recording is in progress."
+  "Return non-nil if a recording is in progress."
   (eq evil-recording-repeat t))
 
 (defun evil-repeat-start ()
@@ -245,7 +245,7 @@ If COMMAND doesn't have this property, return DEFAULT."
   "Whether the current command should abort the recording of repeat information.
 Return non-nil if so."
   (or (evil-repeat-different-buffer-p)  ; ... buffer changed
-      (eq repeat-type 'abort)           ; ... explicitely forced
+      (eq repeat-type 'abort)           ; ... explicitly forced
       (eq evil-recording-repeat 'abort) ; ... already aborted
       (evil-emacs-state-p)              ; ... in Emacs state
       (and (evil-mouse-events-p         ; ... mouse events
@@ -579,7 +579,7 @@ If SAVE-POINT is non-nil, do not move point."
           (evil-change-state evil--execute-normal-return-state)
         (evil-normal-state))))))
 
-;; TODO: the same issue concering disabled undos as for `evil-paste-pop'
+;; TODO: the same issue concerning disabled undos as for `evil-paste-pop'
 (evil-define-command evil-repeat-pop (count &optional save-point)
   "Replace the just repeated command with a previously executed command.
 Only allowed after `evil-repeat', `evil-repeat-pop' or
