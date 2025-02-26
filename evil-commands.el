@@ -176,7 +176,8 @@ If COUNT is given, move COUNT - 1 lines downward first."
   "Move the cursor to the last character of the current screen line.
 If COUNT is given, move COUNT - 1 screen lines downward first."
   :type inclusive
-  (end-of-visual-line count))
+  (end-of-visual-line count)
+  (evil-move-cursor-back t))
 
 (evil-define-motion evil-end-of-line-or-visual-line (count)
   "Move the cursor to the last character of the current screen

@@ -1237,6 +1237,7 @@ If STATE is given it used a parsing state at point."
 ;; further, those motions move point to the beginning resp. the end of
 ;; the line (we never want point to leave its column). The code here
 ;; comes from simple.el, and I hope it will work in future.
+(declare-function evil-end-of-visual-line "evil-commands")
 (defun evil-line-move (count &optional noerror)
   "Like `line-move' but conserves the column.
 Signal an error at buffer boundaries unless NOERROR is non-nil."
@@ -1250,7 +1251,7 @@ Signal an error at buffer boundaries unless NOERROR is non-nil."
     (if (and line-move-visual
              (eq temporary-goal-column most-positive-fixnum)
              (memq last-command '(next-line previous-line)))
-        (let (temporary-goal-column) (end-of-visual-line (1+ count)))
+        (let (temporary-goal-column) (evil-end-of-visual-line (1+ count)))
       (condition-case err
           (line-move count)
         ((beginning-of-buffer end-of-buffer)
