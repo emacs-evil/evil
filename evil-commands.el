@@ -2888,7 +2888,7 @@ next VCOUNT - 1 lines below the current one."
   (interactive "p")
   (if (and visual-line-mode
            evil-respect-visual-line-mode)
-      (evil-end-of-visual-line)
+      (end-of-visual-line)
     (evil-move-end-of-line))
   (setq evil-insert-count count
         evil-insert-lines nil
