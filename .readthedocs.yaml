@@ -9,6 +9,9 @@ build:
     pre_build:
       - scripts/evil-extract-docstrings
 
+sphinx:
+  configuration: doc/source/conf.py
+
 python:
   install:
     - requirements: doc/requirements.txt
