@@ -3878,7 +3878,7 @@ after executing the command."
   (evil-ex-start-search 'forward count))
 
 (evil-define-motion evil-ex-search-backward (count)
-  "Start a forward search."
+  "Start a backward search."
   :jump t
   :repeat evil-repeat-ex-search
   (evil-ex-start-search 'backward count))
