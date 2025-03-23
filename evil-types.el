@@ -93,7 +93,7 @@ If the end position is at the beginning of a line, then:
 Handling for `evil-want-visual-char-semi-exclusive' is deprecated,
 and will be removed in a future version."
   :expand (lambda (beg end)
-            (if (and evil-want-visual-char-semi-exclusive
+            (if (and (with-no-warnings evil-want-visual-char-semi-exclusive)
                      (evil-visual-state-p)
                      (< beg end)
                      (save-excursion
@@ -138,8 +138,7 @@ and will be removed in a future version."
 when `evil-respect-visual-line-mode' is non-nil."
   :one-to-one nil
   :expand (lambda (beg end)
-            (if (or (not evil-respect-visual-line-mode)
-                    (not visual-line-mode))
+            (if (not (and evil-respect-visual-line-mode visual-line-mode))
                 (evil-line-expand beg end)
               (evil-range
                (progn
@@ -278,6 +277,13 @@ the last column is excluded."
 
 ;;; Custom interactive codes
 
+(evil-define-interactive-code "<w>"
+  "Prefix argument converted to number, possibly multiplied by evil--window-digit."
+  (let ((prefix-num (prefix-numeric-value current-prefix-arg)))
+    (if evil--window-digit
+        (list (* evil--window-digit prefix-num))
+      (list prefix-num))))
+
 (evil-define-interactive-code "<c>"
   "Count."
   (list (when current-prefix-arg
@@ -294,6 +300,14 @@ directly."
   (list (when (and (evil-visual-state-p) current-prefix-arg)
           (prefix-numeric-value
            current-prefix-arg))))
+
+(evil-define-interactive-code "<wc>"
+  "Prefix argument converted to number, or nil possibly multiplied by
+evil--window-digit."
+  (let ((prefix-num (prefix-numeric-value current-prefix-arg)))
+    (list
+     (cond (evil--window-digit (* evil--window-digit prefix-num))
+           (current-prefix-arg prefix-num)))))
 
 (evil-define-interactive-code "<C>"
   "Character read through `evil-read-key'."

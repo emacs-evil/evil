@@ -85,7 +85,7 @@
 
 ;;; Speedbar
 
-(evil-add-hjkl-bindings speedbar-key-map 'motion
+(evil-add-hjkl-bindings speedbar-mode-map 'motion
   "h" 'backward-char
   "j" 'speedbar-next
   "k" 'speedbar-prev
@@ -115,9 +115,9 @@
 
 ;;; ELP
 
-(eval-after-load 'elp
-  '(defadvice elp-results (after evil activate)
-     (evil-motion-state)))
+(advice-add 'elp-results :after #'evil--set-motion-state)
+(defun evil--set-motion-state (&rest _)
+  (evil-motion-state))
 
 (provide 'evil-keybindings)
 

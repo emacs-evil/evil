@@ -138,6 +138,10 @@ commands opening a new line."
   (remove-hook 'pre-command-hook #'evil-insert-repeat-hook))
 (put 'evil-insert-repeat-hook 'permanent-local-hook t)
 
+(eval-when-compile
+  ;; TODO remove this once support for emacs 26 is dropped
+  (unless (fboundp 'combine-change-calls)
+    (defmacro combine-change-calls (_beg _end &rest body) `(progn ,@body))))
 (declare-function evil-execute-repeat-info "evil-repeat")
 (defun evil-cleanup-insert-state ()
   "Called when Insert or Replace state is about to be exited.
@@ -158,19 +162,25 @@ Handles the repeat-count of the insertion command."
              buffer-invisibility-spec)))
       (cl-destructuring-bind (line col vcount) evil-insert-vcount
         (save-excursion
-          (dotimes (v (1- vcount))
-            (goto-char (point-min))
-            (forward-line (+ line v))
-            (when (or (not evil-insert-skip-empty-lines)
-                      (not (integerp col))
-                      (save-excursion
-                        (evil-move-end-of-line)
-                        (>= (current-column) col)))
-              (if (integerp col)
-                  (move-to-column col t)
-                (funcall col))
-              (dotimes (_ (or evil-insert-count 1))
-                (evil-execute-repeat-info (cdr evil-insert-repeat-info))))))))))
+          (combine-change-calls ; For performance
+              (progn (goto-char (point-min))
+                     (line-beginning-position line))
+              (line-end-position (+ line vcount -1))
+            (let (pre-command-hook post-command-hook) ; For performance
+              (dotimes (v (1- vcount))
+                (goto-char (point-min))
+                (forward-line (+ line v))
+                (when (or (not evil-insert-skip-empty-lines)
+                          (not (integerp col))
+                          (save-excursion
+                            (evil-move-end-of-line)
+                            (>= (current-column) col)))
+                  (if (integerp col)
+                      (move-to-column col t)
+                    (funcall col))
+                  (dotimes (_ (or evil-insert-count 1))
+                    (evil-execute-repeat-info (cdr evil-insert-repeat-info)))))))))))
+  (and evil-want-fine-undo (evil-end-undo-step)))
 
 ;;; Visual state
 
@@ -345,7 +355,7 @@ otherwise exit Visual state."
   (when (evil-visual-state-p)
     (setq command (or command this-command))
     (if (or quit-flag
-            (eq command #'keyboard-quit)
+            (memq command '(keyboard-quit keyboard-escape-quit))
             ;; Is `mark-active' nil for an unexpanded region?
             deactivate-mark
             (and (not evil-visual-region-expanded)
@@ -421,7 +431,10 @@ If LATER is non-nil, exit after the current command."
           (setq deactivate-mark t)
         (when evil-visual-region-expanded
           (evil-visual-contract-region))
-        (setq evil-this-register nil)
+        (setq evil-this-register nil
+              evil-prev-visual-selection evil-visual-selection
+              evil-prev-visual-mark (copy-marker evil-visual-mark)
+              evil-prev-visual-point (copy-marker evil-visual-point))
         (evil-change-to-previous-state)))))
 
 (defun evil-visual-tag (&optional selection)
@@ -643,7 +656,7 @@ Reuse overlays where possible to prevent flicker."
         (setq beg (progn (goto-char beg) (evil-move-to-column beg-col))
               end (progn (goto-char end) (evil-move-to-column end-col 1))))
       ;; maybe extend end column to EOL
-      (and (memq this-command '(next-line previous-line))
+      (and (memq this-command '(next-line previous-line evil-use-register))
            (eq temporary-goal-column most-positive-fixnum)
            (setq end-col most-positive-fixnum))
       ;; force a redisplay so we can do reliable window
@@ -777,7 +790,8 @@ Default to `evil-visual-make-region'."
   "Return a Visual selection for TYPE."
   (catch 'done
     (dolist (selection evil-visual-alist)
-      (when (eq (symbol-value (cdr selection)) type)
+      (when (memq (symbol-value (cdr selection))
+                  (list type (evil-visual-type type)))
         (throw 'done (car selection))))))
 
 (defun evil-visual-block-corner (&optional corner point mark)

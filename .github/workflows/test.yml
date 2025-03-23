@@ -2,27 +2,51 @@ name: CI
 
 on: [push, pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
-        emacs_version:
-          - 25.3
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        emacs-version:
           - 26.3
-          - 27.1
-          - snapshot
-    steps:
-    - uses: purcell/setup-emacs@master
-      with:
-        version: ${{ matrix.emacs_version }}
+          - 27.2
+          - 28.2
+          - 29.4
+        experimental: [false]
+        include:
+        - os: ubuntu-latest
+          emacs-version: snapshot
+          experimental: true
+        - os: macos-latest
+          emacs-version: snapshot
+          experimental: true
+        exclude:
+        - os: macos-latest
+          emacs-version: 26.3
+        - os: macos-latest
+          emacs-version: 27.2
 
-    - uses: actions/checkout@v2
+    steps:
+    - uses: jcs090218/setup-emacs@master
+      with:
+        version: ${{ matrix.emacs-version }}
+
+    - uses: actions/checkout@v4
 
     - name: Print emacs version
       run: |
         emacs --version
+
+    - uses: emacs-eask/setup-eask@master
+      with:
+        version: 'snapshot'
 
     - name: Run tests
       run: |

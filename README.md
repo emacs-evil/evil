@@ -60,8 +60,8 @@ file.
 The latest version of the documentation is readable online
 [here](https://evil.readthedocs.io/en/latest/index.html). It is also
 available as
-[PDF](https://readthedocs.org/projects/evil/downloads/pdf/latest/) and
-as [EPUB](https://readthedocs.org/projects/evil/downloads/epub/latest/).
+[PDF](https://evil.readthedocs.io/_/downloads/en/stable/pdf/) and
+as [EPUB](https://evil.readthedocs.io/_/downloads/en/stable/epub/).
 
 # Mailing list
 

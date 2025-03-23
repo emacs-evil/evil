@@ -310,14 +310,14 @@ The following symbols have reserved meanings within a grammar:
 (defvar evil-ex-reverse-range nil
   "Whether the current Ex range was entered reversed.")
 
-(defvar evil--ex-expression nil
-  "The Ex evaluation tree.")
-
 (defvar evil--ex-cmd nil
   "The current Ex command string.")
 
 (defvar evil--ex-argument-handler nil
   "The argument handler for the current Ex command.")
+
+(defvar evil--ex-shortcut-command nil
+  "Interactive command to use instead of an Ex command.")
 
 (define-error 'evil-ex-error "Ex syntax error")
 
@@ -353,7 +353,7 @@ the initial input is the visual region '<,'> or `<,`>. The variable
   (let ((buffer (current-buffer))
         (previous-command (when evil-want-empty-ex-last-command
                             (car evil-ex-history)))
-        s evil--ex-expression evil--ex-cmd evil--ex-argument-handler)
+        s evil--ex-cmd evil--ex-argument-handler evil--ex-shortcut-command)
     (minibuffer-with-setup-hook
         (lambda ()
           (setq-local evil-ex-original-buffer buffer)
@@ -365,18 +365,18 @@ the initial input is the visual region '<,'> or `<,`>. The variable
                ":"
                (or initial-input
                    (and previous-command (propertize previous-command 'face 'shadow)))
-               evil-ex-completion-map nil 'evil-ex-history nil t)))
-    (if evil--ex-expression
-        (eval evil--ex-expression t)
+               evil-ex-completion-map nil 'evil-ex-history)))
+    (if evil--ex-shortcut-command
+        (call-interactively evil--ex-shortcut-command)
       (when (string= s "") (setq s previous-command))
-      (unless (= (length s) 0) (evil-ex-execute s)))))
+      (unless (string= s "") (evil-ex-execute s)))))
 
 (defun evil-ex-execute (string)
   "Execute STRING as an Ex command."
   (eval (or (evil-ex-parse string) (signal 'evil-ex-error string)) t))
 
-(defun evil-ex-parse (string &optional syntax entrypoint)
-  "Parse STRING as an Ex expression and return an evaluation tree.
+(defun evil-ex-parse (&optional string syntax entrypoint)
+  "Parse STRING as an Ex expression and return its evaluation tree.
 If STRING is nil, parse the text after point instead.  If SYNTAX is
 non-nil, return a syntax tree instead.  ENTRYPOINT is the start
 symbol, which defaults to `expression'."
@@ -412,18 +412,11 @@ actions during Ex state."
   (add-hook 'minibuffer-exit-hook #'evil-ex-teardown nil t)
   (add-hook 'completion-at-point-functions #'evil-ex-completion-at-point nil t))
 
-(defun evil-ex-teardown ()
-  "Deinitialize Ex minibuffer.
-Clean up everything set up by `evil-ex-setup'."
-  (let ((runner (evil-ex-argument-handler-runner evil--ex-argument-handler)))
-    (when runner (funcall runner 'stop))))
-(put 'evil-ex-teardown 'permanent-local-hook t)
-
 (defsubst evil--ex-bang-p (command)
   "Return non-nil if the string COMMAND has a \"!\" suffix."
   (and (> (length command) 1) (eq (aref command (1- (length command))) ?!)))
 
-(defun evil--ex-update (&optional beg _end _len string)
+(defun evil--ex-update (&optional beg _end _old-len)
   "Update Ex variables when the minibuffer changes.
 This function is usually called from `after-change-functions'
 hook. If BEG is non-nil (which is the case when called from
@@ -432,22 +425,22 @@ in case of incomplete or unknown commands."
   (when (and beg (eq this-command #'self-insert-command))
     (let ((cmd (lookup-key evil-ex-shortcut-map (minibuffer-contents-no-properties))))
       (when (commandp cmd)
-        (setq evil--ex-expression `(call-interactively #',cmd))
+        (setq evil--ex-shortcut-command cmd)
         (exit-minibuffer))))
 
-  (setq evil--ex-expression (save-excursion (goto-char (minibuffer-prompt-end))
-                                            (evil-ex-parse string))
-        evil--ex-cmd nil)
-  (when (eq (car evil--ex-expression) #'evil-ex-call-command)
-    (let (current-prefix-arg func handler evil-ex-range evil-ex-bang evil-ex-argument)
+  (setq evil--ex-cmd nil)
+  (let ((expr (save-excursion (goto-char (minibuffer-prompt-end))
+                              (evil-ex-parse)))
+        func handler current-prefix-arg evil-ex-range evil-ex-bang evil-ex-argument)
+    (when (eq (car expr) #'evil-ex-call-command)
       (with-current-buffer evil-ex-original-buffer
-        (let* ((range (eval (nth 1 evil--ex-expression) t))
+        (let* ((range (eval (nth 1 expr) t))
                (count (when (integerp range) range)))
           (setq current-prefix-arg count
                 evil-ex-range (if count (evil-ex-range count count) range)
-                evil--ex-cmd (eval (nth 2 evil--ex-expression) t)
+                evil--ex-cmd (eval (nth 2 expr) t)
                 evil-ex-bang (evil--ex-bang-p evil--ex-cmd)
-                evil-ex-argument (eval (nth 3 evil--ex-expression) t))))
+                evil-ex-argument (eval (nth 3 expr) t))))
       (cond
        ((not beg))
        ;; Test the current command when called from `after-change-functions'
@@ -458,8 +451,7 @@ in case of incomplete or unknown commands."
         (if (eq handler evil--ex-argument-handler)
             (let ((runner (evil-ex-argument-handler-runner handler)))
               (when runner (funcall runner 'update evil-ex-argument)))
-          (let ((runner (evil-ex-argument-handler-runner
-                         evil--ex-argument-handler)))
+          (let ((runner (evil-ex-argument-handler-runner evil--ex-argument-handler)))
             (when runner (funcall runner 'stop)))
           (setq evil--ex-argument-handler handler)
           (let ((runner (evil-ex-argument-handler-runner handler)))
@@ -468,6 +460,12 @@ in case of incomplete or unknown commands."
                  (prefix (try-completion evil--ex-cmd (evil-ex-completion-table))))
             (cond ((stringp prefix) (evil-ex-echo "Incomplete command"))
                   ((null prefix) (evil-ex-echo "Unknown command")))))))))
+
+(defun evil-ex-teardown ()
+  "Deinitialize Ex minibuffer.
+Clean up everything set up by `evil-ex-setup'."
+  (let ((runner (evil-ex-argument-handler-runner evil--ex-argument-handler)))
+    (when runner (funcall runner 'stop))))
 
 (defvar-local evil--ex-echo-overlay nil
   "Overlay for displaying info messages during Ex.")
@@ -545,7 +543,7 @@ in case of incomplete or unknown commands."
 (defun evil-completion-table-concat (table1 table2)
   (lambda (string pred action)
     (cond
-     ((eq action nil)
+     ((null action)
       (let (matches)
         (dolist (table (list table1 table2) (try-completion string matches))
           (let ((x (try-completion string table pred)))
@@ -585,13 +583,15 @@ in case of incomplete or unknown commands."
 
 (defun evil-ex-define-cmd (cmd function)
   "Bind the function FUNCTION to the command CMD."
-  (if (string-match "\\[\\(.*\\)\\]" cmd)
-      (let ((abbrev (replace-match "" nil t cmd))
-            (full (replace-match "\\1" nil nil cmd)))
+  (if (not (string-match-p "\\[" cmd))
+      (evil--add-to-alist evil-ex-commands cmd function)
+    (string-match "\\(.*\\)\\[\\(.*\\)\\]" cmd)
+    (let ((mandatory (match-string 1 cmd))
+          (optional  (match-string 2 cmd)))
+      (dotimes (n (1+ (length optional)))
         (evil--add-to-alist evil-ex-commands
-                            full function
-                            abbrev full))
-    (evil--add-to-alist evil-ex-commands cmd function)))
+                            (concat mandatory (substring optional 0 n))
+                            function)))))
 
 (defmacro evil-ex-define-argument-type (arg-type doc &rest body)
   "Define a new handler for argument-type ARG-TYPE.
@@ -633,13 +633,13 @@ and function:
             (func (pop body)))
         (cond
          ((eq key :runner)
-          (setq runner func))
+          (setq runner `#',func))
          ((eq key :collection)
-          (setq completer (cons 'collection func)))
+          (setq completer `(cons 'collection #',func)))
          ((eq key :completion-at-point)
-          (setq completer (cons 'completion-at-point func))))))
+          (setq completer `(cons 'completion-at-point #',func))))))
     `(evil--add-to-alist evil-ex-argument-types
-                         ',arg-type '(,runner ,completer))))
+                         ',arg-type (list ,runner ,completer))))
 
 (evil-ex-define-argument-type file
   "Handle a file argument."
@@ -666,8 +666,8 @@ argument handler that requires shell completion."
     (require 'shell)
     ;; Set up Comint for Shell mode, except
     ;; `comint-completion-at-point' will be called manually.
-    (let (completion-at-point-functions)
-      (shell-completion-vars))))
+    (shell-completion-vars)
+    (remove-hook 'completion-at-point-functions #'comint-completion-at-point t)))
 
 (evil-ex-define-argument-type shell
   "Shell argument type, supports completion."
@@ -743,6 +743,8 @@ This function interprets special file names like # and %."
   (unless (zerop (length evil-ex-argument))
     (evil-ex-replace-special-filenames evil-ex-argument)))
 
+(define-error 'evil-ex-no-previous-cmd "No previous command line")
+
 (defun evil-ex-repeat (&optional count)
   "Repeat the last Ex command."
   (interactive "P")
@@ -752,10 +754,10 @@ This function interprets special file names like # and %."
   (cl-loop
    with evil-ex-original-buffer = (current-buffer)
    for last-cmd in evil-ex-history do
-   (evil--ex-update nil nil nil last-cmd)
-   (let ((expr (or evil--ex-expression (signal 'evil-ex-error last-cmd))))
-     (unless (eq (evil-ex-binding evil--ex-cmd) #'evil-ex-repeat)
-       (cl-return (eval expr t))))))
+   (condition-case nil
+       (cl-return (let (evil-ex-history) (evil-ex-execute last-cmd)))
+     (evil-ex-no-previous-cmd))
+   finally (signal 'evil-ex-no-previous-cmd nil)))
 
 (defun evil-ex-call-command (range command argument)
   "Execute the given command COMMAND."
