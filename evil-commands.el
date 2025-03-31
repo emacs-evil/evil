@@ -1502,7 +1502,7 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (cond
    ((eq type 'block)
     (evil-apply-on-block #'delete-region beg end nil))
-   ((and (eq type 'line)
+   ((and (memq type '(line screen-line))
          (= end (point-max))
          (or (= beg end)
              (/= (char-before end) ?\n))
@@ -1681,7 +1681,9 @@ of the block."
       (evil-start-undo-step))
     (funcall delete-func beg end type register yank-handler)
     (cond
-     ((eq type 'line)
+     ((or (eq type 'line)
+          (and (eq type 'screen-line)
+               (> nlines 1)))
       (setq this-command 'evil-change-whole-line) ; for evil-maybe-remove-spaces
       (cond
        ((/= opoint leftmost-point) (evil-insert 1)) ; deletion didn't delete line
