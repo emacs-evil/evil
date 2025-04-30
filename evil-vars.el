@@ -591,7 +591,11 @@ ubiquity of prefix arguments."
               ((and value
                     (not (lookup-key evil-insert-state-map (kbd "C-h"))))
                (define-key evil-insert-state-map (kbd "C-h")
-                           'evil-delete-backward-char-and-join)
+                           (lambda()
+                             (interactive)
+                             (let ((del-binding (key-binding (kbd "DEL"))))
+                               (when del-binding
+                                 (funcall del-binding)))))
                (define-key evil-replace-state-map (kbd "C-h")
                            'evil-replace-backspace))))))
 
