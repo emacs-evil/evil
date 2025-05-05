@@ -1,3 +1,5 @@
+;; -*- mode: eask; lexical-binding: t -*-
+
 (package "evil"
          "1.15.0"
          "Extensible vi layer")
