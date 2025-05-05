@@ -147,12 +147,13 @@ commands opening a new line."
   "Called when Insert or Replace state is about to be exited.
 Handles the repeat-count of the insertion command."
   (when evil-insert-count
-    (dotimes (_ (1- evil-insert-count))
-      (when evil-insert-lines
-        (evil-insert-newline-below)
-        (when evil-auto-indent
-          (indent-according-to-mode)))
-      (evil-execute-repeat-info (cdr evil-insert-repeat-info))))
+    (let (pre-command-hook post-command-hook)
+      (dotimes (_ (1- evil-insert-count))
+        (when evil-insert-lines
+          (evil-insert-newline-below)
+          (when evil-auto-indent
+            (indent-according-to-mode)))
+        (evil-execute-repeat-info (cdr evil-insert-repeat-info)))))
   (when evil-insert-vcount
     (let ((buffer-invisibility-spec
            (if (listp buffer-invisibility-spec)
