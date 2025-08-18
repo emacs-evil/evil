@@ -1806,7 +1806,7 @@ closer if MOVE is non-nil."
 with regard to indentation."
   (evil-narrow-to-field
     (evil-move-beginning-of-line)
-    (insert (if use-hard-newlines hard-newline "\n"))
+    (insert-and-inherit (if use-hard-newlines hard-newline "\n"))
     (forward-line -1)
     (back-to-indentation)))
 
@@ -1815,7 +1815,7 @@ with regard to indentation."
 with regard to indentation."
   (evil-narrow-to-field
     (evil-move-end-of-line)
-    (insert (if use-hard-newlines hard-newline "\n"))
+    (insert-and-inherit (if use-hard-newlines hard-newline "\n"))
     (back-to-indentation)))
 
 ;;; Markers
@@ -2420,7 +2420,7 @@ The tracked insertion is set to `evil-last-insertion'."
      ((eq this-command 'evil-paste-before)
       (evil-move-beginning-of-line)
       (let ((beg (point)))
-        (insert text)
+        (insert-and-inherit text)
         (setq evil-last-paste
               (list 'evil-paste-before evil-paste-count opoint beg (point)))
         (evil-set-marker ?\[ beg)
@@ -2430,8 +2430,8 @@ The tracked insertion is set to `evil-last-insertion'."
      ((eq this-command 'evil-paste-after)
       (evil-move-end-of-line)
       (let ((beg (point)))
-        (insert "\n")
-        (insert text)
+        (insert-and-inherit "\n")
+        (insert-and-inherit text)
         (delete-char -1) ; delete the last newline
         (setq evil-last-paste
               (list 'evil-paste-after evil-paste-count opoint beg (point)))
@@ -2440,7 +2440,7 @@ The tracked insertion is set to `evil-last-insertion'."
         (unless evil--cursor-after
           (goto-char (1+ beg))))
       (back-to-indentation))
-     (t (insert text)))))
+     (t (insert-and-inherit text)))))
 
 (defun evil-yank-block-handler (lines)
   "Insert the current text as block."
@@ -2459,7 +2459,7 @@ The tracked insertion is set to `evil-last-insertion'."
           (setq first nil)
         (when (or (> (forward-line 1) 0)
                   (and (eobp) (not (bolp))))
-          (insert "\n")))
+          (insert-and-inherit "\n")))
       ;; concat multiple copies according to count
       (setq line (apply #'concat (make-list count line)))
       ;; trim whitespace at beginning and end
@@ -2474,12 +2474,12 @@ The tracked insertion is set to `evil-last-insertion'."
           (if (< (evil-column (line-end-position)) col)
               (move-to-column (+ col begextra) t)
             (move-to-column col t)
-            (insert (make-string begextra ?\s)))
+            (insert-and-inherit (make-string begextra ?\s)))
           (evil-remove-yank-excluded-properties text)
-          (insert text)
+          (insert-and-inherit text)
           (unless (eolp)
             ;; text follows, so we have to insert spaces
-            (insert (make-string endextra ?\s))))))
+            (insert-and-inherit (make-string endextra ?\s))))))
     (setq evil-last-paste
           (list this-command
                 evil-paste-count
