@@ -604,6 +604,7 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "ret[ab]" 'evil-retab)
 
 (when (featurep 'tab-bar)
+  (evil-ex-define-cmd "tabm[ove]" 'evil-tab-move)
   (evil-ex-define-cmd "tabnew" 'tab-bar-new-tab)
   (evil-ex-define-cmd "tabc[lose]" 'tab-bar-close-tab)
   (evil-ex-define-cmd "tabo[nly]" 'tab-bar-close-other-tabs)
