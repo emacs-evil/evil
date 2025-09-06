@@ -574,6 +574,22 @@ ubiquity of prefix arguments."
                       'evil-search-yank-word))
              (define-key evil-ex-search-keymap (kbd "C-w") nil))))))
 
+(defun evil-delete-backward-C-h ()
+  "In Evil insert state, make `C-h' behave like the `DEL' key.
+
+Correct `C-h' behavior to ensure `electric-pair' deletes adjacent pairs When
+using `electric-pair-mode', the expected behavior when pressing `C-h' near a
+pair of adjacent delimiters (e.g., () [] {}) is that both the opening and
+closing delimiters should be deleted together if they were inserted as a pair.
+This function corrects `C-h' behavior to ensure `electric-pair' deletes adjacent
+pairs.
+
+This function also prevents ElDoc help from disappearing in the minibuffer when
+pressing `C-h', since it is prefixed with `evil-delete'."
+  (interactive)
+  (when-let* ((del-binding (key-binding (kbd "DEL"))))
+    (call-interactively del-binding)))
+
 (defcustom evil-want-C-h-delete nil
   "Whether `C-h' deletes a char in Insert state."
   :type 'boolean
@@ -591,7 +607,7 @@ ubiquity of prefix arguments."
               ((and value
                     (not (lookup-key evil-insert-state-map (kbd "C-h"))))
                (define-key evil-insert-state-map (kbd "C-h")
-                           'evil-delete-backward-char-and-join)
+                           'evil-delete-backward-C-h)
                (define-key evil-replace-state-map (kbd "C-h")
                            'evil-replace-backspace))))))
 
