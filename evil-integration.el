@@ -454,8 +454,31 @@ Based on `evil-enclose-ace-jump-for-motion'."
 
 ;;; ElDoc
 (eval-after-load 'eldoc
+  ;; The following prevents ElDoc help from disappearing in the minibuffer when
+  ;; executing certain Evil commands in Emacs, such as
+  ;; `evil-delete-back-to-indentation', `evil-delete-backward-word',
+  ;; `evil-insert', `evil-insert-line', `evil-append', `evil-append-line'...
   '(when (fboundp 'eldoc-add-command-completions)
-     (eldoc-add-command-completions "evil-window-")))
+     (eldoc-add-command-completions "evil-window-")
+
+     ;; Add evil delete, substitute, and change commands
+     ;; - `evil-delete'
+     ;; - `evil-delete-backward-word' (C-w)
+     ;; - `evil-delete-back-to-indentation' (C-u)
+     ;; - `evil-delete-backward-char-and-join' (C-h)
+     ;; - And others.
+     (eldoc-add-command-completions "evil-delete")
+     (eldoc-add-command-completions "evil-substitute")
+     (eldoc-add-command-completions "evil-change")
+
+     ;; Add insert and append commands (`evil-insert', `evil-insert-resume',
+     ;; `evil-append'...) to ElDoc to display help after switching to insert
+     ;; mode.
+     (eldoc-add-command-completions "evil-insert")
+     (eldoc-add-command-completions "evil-append")
+
+     ;; Add yank commands (`evil-yank' and `evil-yank-line')
+     (eldoc-add-command-completions "evil-yank")))
 
 ;;; XRef
 (eval-after-load 'xref
