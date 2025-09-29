@@ -1842,10 +1842,62 @@ Elements have the form (NAME . FUNCTION).")
      :close-all  ,(lambda ()
                     (with-no-warnings (hide-sublevels 1)))
      :toggle     outline-toggle-children
-     :open       ,(lambda ()
-                    (with-no-warnings
-                      (show-entry)
-                      (show-children)))
+     :open
+     ,(lambda ()
+        (save-excursion
+          (let (func-invisible-p
+                func-back-to-heading
+                func-on-heading-p)
+            (cond
+             ;; `outline-mode' and `outline-minor-mode'
+             ((and (or (derived-mode-p 'outline-mode)
+                       (bound-and-true-p outline-minor-mode))
+                   (fboundp 'outline-invisible-p))
+              (setq func-on-heading-p #'outline-on-heading-p)
+              (setq func-back-to-heading #'outline-back-to-heading)
+              (setq func-invisible-p #'outline-invisible-p))
+
+             ;; `org-mode'
+             ((and (derived-mode-p 'org-mode)
+                   (fboundp 'org-invisible-p))
+              (setq func-on-heading-p #'org-on-heading-p)
+              (setq func-back-to-heading #'org-back-to-heading)
+              (setq func-invisible-p #'org-invisible-p)))
+
+            (if (not (and func-back-to-heading
+                          func-invisible-p
+                          func-on-heading-p))
+                (with-no-warnings
+                  (show-entry)
+                  (show-children))
+              ;; Repeatedly reveal children and body until the entry is no
+              ;; longer folded
+              (condition-case nil
+                  (let ((on-invisible-heading
+                         (when (funcall func-on-heading-p t)
+                           (funcall func-invisible-p (point)))))
+                    ;; Repeatedly reveal children and body until the
+                    ;; entry is no longer folded
+                    (while (save-excursion
+                             ;; Folded?
+                             (funcall func-back-to-heading)
+                             (end-of-line)
+                             (funcall func-invisible-p (point)))
+                      (save-excursion
+                        (funcall func-back-to-heading)
+                        (with-no-warnings
+                          (show-children)
+                          (show-entry))))
+
+                    ;; If the header was previously hidden, hide the subtree to
+                    ;; collapse it. Otherwise, leave the fold open. This allows
+                    ;; the user to decide whether to expand the content under
+                    ;; the cursor.
+                    (when on-invisible-heading
+                      (outline-hide-subtree)))
+                ;; Ignore the `outline-back-to-heading' error
+                (outline-before-first-heading
+                 nil))))))
      :open-rec   show-subtree
      :close      hide-subtree)
     ((origami-mode)
