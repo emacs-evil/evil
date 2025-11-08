@@ -1279,7 +1279,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                                  ',state evil-previous-state)
              (let ((evil-state ',state))
                (evil-normalize-keymaps)
-               (if ',input-method
+               (if (evil-state-property evil-state :input-method)
                    (activate-input-method evil-input-method)
                  ;; BUG #475: Deactivate the current input method only
                  ;; if there is a function to deactivate it, otherwise
