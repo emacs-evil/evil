@@ -92,6 +92,7 @@ To swap out relevant keybindings, see `evil-select-search-module' function."
            (isearch-forward regexp-p)
          (isearch-backward regexp-p))
        (evil-push-search-history isearch-string forward)
+       (setq evil-input-method current-input-method)
        (deactivate-input-method))
       (when (/= (point) point)
         ;; position the point at beginning of the match only if the call to
