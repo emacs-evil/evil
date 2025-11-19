@@ -3783,6 +3783,7 @@ should be left-aligned for left justification."
 ;;; View helper
 
 (defvar-local evil-list-view-select-action nil)
+(put 'evil-list-view-select-action 'permanent-local t)
 
 (define-derived-mode evil-list-view-mode tabulated-list-mode
   "Evil List View"
@@ -3827,8 +3828,8 @@ PROPERTIES is a property-list which supports the following properties:
        (with-current-buffer buf
          (setq tabulated-list-format ,(plist-get properties :format))
          (setq tabulated-list-entries ,(plist-get properties :entries))
-         (setq evil-list-view-select-action ,(plist-get properties :select-action))
          (evil-list-view-mode)
+         (setq evil-list-view-select-action ,(plist-get properties :select-action))
          (setq mode-name ,(plist-get properties :mode-name))
          (evil-motion-state))
        (switch-to-buffer-other-window buf))))
