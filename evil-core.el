@@ -1069,9 +1069,6 @@ its behavior more predictable."
     (dolist (map maps)
       (evil-set-keymap-prompt map (keymap-prompt map)))))
 
-(when (>= emacs-major-version 31)
-  (require 'evil-bind-keys))
-
 (defun evil-define-minor-mode-key (state mode key def &rest bindings)
   "Similar to `evil-define-key' but the bindings are associated
 with the minor-mode symbol MODE instead of a particular map.
