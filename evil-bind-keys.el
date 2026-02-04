@@ -45,11 +45,11 @@ If the first element is anything else, return nil."
              (_ (vectorp key-vec))
              (key-list (append key-vec nil))
              (first (car key-list))
-             (state-name (evil--state-pseudo-key first))
+             (state-name (evil-bind-keys--state-pseudo-key first))
              (key-rest (cdr key-list)))
     `(,state-name . ,(vconcat key-rest))))
 
-(defun evil--state-pseudo-key (key)
+(defun evil-bind-keys--state-pseudo-key (key)
   "Tests whether KEY (a symbol) is an evil state name suffixed with \"-state\".
 Returns the state name, without the \"-state\" suffix."
   (and-let* ((_ (symbolp key))
@@ -220,7 +220,7 @@ mostly for internal use."
                (cl-mapcan
                 (lambda (form)
                   (let* ((key (car form))
-                         (state-and-keys (evil--split-state-pseudo-key key))
+                         (state-and-keys (evil-bind-keys--split-state-pseudo-key key))
                          (fun (and (cdr form) (list 'function (cdr form)))))
                     (cl-flet ((bind (map filter)
                                 (pcase state-and-keys
