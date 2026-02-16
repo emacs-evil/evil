@@ -93,8 +93,8 @@ Accepts keyword arguments in ARGS:
 The rest of the arguments are conses of keybinding string and a
 function symbol (unquoted).
 
-Since `evil-bind-keys' defines drop-in replacements, passing only bindings
-without evil information acts identical to `bind-keys'."
+Since `evil-bind-keys' defines drop-in replacements, passing only
+bindings without evil information acts identical to `bind-keys'."
   (macroexp-progn (evil-bind-keys-form args nil)))
 
 ;;;###autoload
@@ -106,11 +106,11 @@ global bindings in ARGS go to `override-global-map' instead of
 `global-map'.  This is to mimic the behavior of `bind-keys*'
 vs. `bind-keys'.
 
-Since `evil' defines drop-in replacements, passing only bindings
-without evil information acts identical to `bind-keys*'.  Defining
-evil bindings in `override-global-map' is rarely needed, because they
-have high precedence by default, but this is provided in case the
-necessity arises."
+Since `evil-bind-keys' defines drop-in replacements, passing only
+bindings without evil information acts identical to `bind-keys*'.
+Defining evil bindings in `override-global-map' is rarely needed,
+because they have high precedence by default, but this is provided in
+case the necessity arises."
   (macroexp-progn (evil-bind-keys-form args override-global-map)))
 
 ;; Main function.
