@@ -225,9 +225,14 @@ mostly for internal use."
                     (cl-flet ((bind (map filter)
                                 (pcase state-and-keys
                                   (`(,state . ,key)
-                                   (when filter
-                                     (error "For evil bindings, :filter is not supported"))
-                                   `((evil-define-key ',state ,map ,key ,fun)))
+                                   (if filter
+                                       (let ((item
+                                              `(menu-item "" nil .
+                                                          (:filter
+                                                           (lambda (&optional _)
+                                                             (when ,filter ,fun))))))
+                                         `((evil-define-key ',state ,map ,key ',item)))
+                                     `((evil-define-key ',state ,map ,key ,fun))))
                                   (_ `((bind-key ,key ,fun ,map ,filter))))))
                       (if prefix-map
                           (bind prefix-map filter)
