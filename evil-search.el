@@ -274,7 +274,8 @@ one more than the current position."
       (evil-flash-search-pattern string t))))
 
 (defun evil-search-word (forward unbounded symbol)
-  "Search for word near point.
+  "Search for text in visual selection if in visual mode
+otherwise search for word near point.
 If FORWARD is nil, search backward, otherwise forward. If SYMBOL
 is non-nil then the functions searches for the symbol at point,
 otherwise for the word at point."
@@ -288,7 +289,9 @@ otherwise for the word at point."
            (not (string= string "")))
       (evil-search string forward t))
      (t
-      (setq string (evil-find-thing forward (if symbol 'symbol 'evil-word)))
+      (setq string (evil-find-thing-or-visual-selection
+                    forward
+                    (if symbol 'symbol 'evil-word)))
       (cond
        ((null string)
         (user-error "No word under point"))
@@ -327,6 +330,23 @@ THING should be a symbol understood by `thing-at-point',
 e.g. `symbol' or `word'.  If FORWARD is nil, search backward,
 otherwise forward.  Returns nil if nothing is found."
   (car (evil--find-thing forward thing)))
+
+(defun evil-find-thing-or-visual-selection (forward symbol)
+  "Return text in visual selection if in visual mode and
+if `evil-ex-search-nvim-visual-word-search' is set to t,
+otherwise return evil-find-thing with FORWARD and SYMBOL as
+parameters"
+  (let (string)
+    (if (and
+          evil-ex-search-nvim-visual-word-search
+          (evil-visual-state-p))
+        (progn
+          (setq string (substring-no-properties
+                        (buffer-substring (region-beginning)
+                                          (1+ (region-end)))))
+          (evil-exit-visual-state)
+          string)
+      (evil-find-thing forward (if symbol 'symbol 'evil-word)))))
 
 (defun evil-find-word (forward)
   "Return word near point as a string.
