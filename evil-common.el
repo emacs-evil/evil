@@ -1255,9 +1255,10 @@ Signal an error at buffer boundaries unless NOERROR is non-nil."
       (condition-case err
           (line-move count)
         ((beginning-of-buffer end-of-buffer)
-         (let ((col (or goal-column
-                        (car-safe temporary-goal-column)
-                        temporary-goal-column)))
+         (let* ((raw-col (or goal-column
+                             (car-safe temporary-goal-column)
+                             temporary-goal-column))
+                (col (if (numberp raw-col) (max 0 raw-col) 0)))
            (line-move-finish col opoint (< count 0)))
          (or noerror (/= (point) opoint) (signal (car err) (cdr err))))))))
 
