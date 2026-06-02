@@ -731,7 +731,11 @@ filename."
   "Change the cursor's apperance according to SPECS.
 SPECS may be a cursor type as per `cursor-type', a color
 string as passed to `set-cursor-color', a zero-argument
-function for changing the cursor, or a list of the above."
+function for changing the cursor, or a list of the above.
+
+If SPECS is nil, this function does not have an effect;
+pass (list nil) instead to indicate a nil `cursor-type'
+\(i.e., to disable the cursor)."
   (unless (and (not (functionp specs))
                (listp specs)
                (null (cdr-safe (last specs))))
