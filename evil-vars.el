@@ -590,8 +590,7 @@ ubiquity of prefix arguments."
                (define-key evil-replace-state-map (kbd "C-h") nil))
               ((and value
                     (not (lookup-key evil-insert-state-map (kbd "C-h"))))
-               (define-key evil-insert-state-map (kbd "C-h")
-                           'evil-delete-backward-char-and-join)
+               (define-key evil-insert-state-map (kbd "C-h") (kbd "DEL"))
                (define-key evil-replace-state-map (kbd "C-h")
                            'evil-replace-backspace))))))
 
