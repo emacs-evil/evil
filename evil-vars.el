@@ -1354,6 +1354,15 @@ line. If this option is non-nil, this behavior is reversed."
   "Face for interactive replacement text."
   :group 'evil)
 
+(defcustom evil-ex-global-command-interactive-highlight t
+  "If non-nil, pattern matches in Ex global commands are interactively highlighted."
+  :type 'boolean
+  :group 'evil)
+
+(defface evil-ex-global-command-matches '((t :inherit lazy-highlight))
+  "Face for interactive global command matches."
+  :group 'evil)
+
 (defcustom evil-command-window-height 7
   "Height (in lines) of the command line window.
 Set to 0 to use the default height for `split-window'."

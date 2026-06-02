@@ -4241,6 +4241,32 @@ Use `evil-flush-lines' if INVERT is nil, or `evil-keep-lines' if not."
     (goto-char end-marker)
     (set-marker end-marker nil)))
 
+(evil-ex-define-argument-type global
+  "This handler highlights the pattern in :g/pattern/cmd."
+  :runner
+  (lambda (flag &optional arg)
+    (with-current-buffer evil-ex-original-buffer
+      (cond
+       ((eq flag 'start)
+        (evil-ex-make-hl 'evil-ex-global
+                         :face 'evil-ex-global-command-matches
+                         :win (minibuffer-selected-window))
+        (setq flag 'update))
+       ((eq flag 'stop)
+        (evil-ex-delete-hl 'evil-ex-global)))
+
+      (when (and evil-ex-global-command-interactive-highlight
+                 (eq flag 'update))
+        (when evil-ex-range
+          (cl-destructuring-bind (beg end &rest)
+              (evil-expand-range evil-ex-range t)
+            (evil-ex-hl-set-region 'evil-ex-global beg end)))
+        (condition-case err
+            (when-let ((pattern (car (evil-ex-parse-global (or arg "")))))
+              (evil-ex-hl-change 'evil-ex-global
+                                 (evil-ex-make-pattern pattern evil-ex-search-case nil)))
+          (user-error (evil-ex-echo (error-message-string err))))))))
+
 (evil-define-operator evil-ex-global
   (beg end pattern command &optional invert)
   "The Ex global command.
