@@ -436,13 +436,18 @@ This allows input methods to be used in normal-state."
 (defun evil--refresh-input-method (orig-fun &rest args)
   "Refresh `evil-input-method'."
   (cond
+   (isearch-mode
+    (apply orig-fun args))
    ((not evil-local-mode)
     (apply orig-fun args))
    ((evil-state-property evil-state :input-method)
     (apply orig-fun args))
    (t
-    (let ((current-input-method evil-input-method))
-      (apply orig-fun args)))))
+    (evil-without-input-method-hooks
+      (activate-input-method evil-input-method)
+      (apply orig-fun args)
+      (setq evil-input-method current-input-method)
+      (deactivate-input-method)))))
 
 ;; Local keymaps are implemented using buffer-local variables.
 ;; However, unless a buffer-local value already exists,
@@ -1279,7 +1284,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                                  ',state evil-previous-state)
              (let ((evil-state ',state))
                (evil-normalize-keymaps)
-               (if ',input-method
+               (if (evil-state-property evil-state :input-method)
                    (activate-input-method evil-input-method)
                  ;; BUG #475: Deactivate the current input method only
                  ;; if there is a function to deactivate it, otherwise

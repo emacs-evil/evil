@@ -87,12 +87,13 @@ To swap out relevant keybindings, see `evil-select-search-module' function."
       (evil-without-input-method-hooks
        ;; set the input method locally rather than globally to ensure that
        ;; isearch clears the input method when it's finished
-       (setq current-input-method evil-input-method)
+       (activate-input-method evil-input-method)
        (if forward
            (isearch-forward regexp-p)
          (isearch-backward regexp-p))
        (evil-push-search-history isearch-string forward)
-       (setq current-input-method nil))
+       (setq evil-input-method current-input-method)
+       (deactivate-input-method))
       (when (/= (point) point)
         ;; position the point at beginning of the match only if the call to
         ;; `isearch' has really moved the point. `isearch' doesn't move the
