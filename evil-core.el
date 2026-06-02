@@ -1231,7 +1231,11 @@ Use the command `%s' to change this variable." name toggle))
                                ,(format "Cursor for %s.
 May be a cursor type as per `cursor-type', a color string as passed
 to `set-cursor-color', a zero-argument function for changing the
-cursor, or a list of the above." name))
+cursor, or a list of the above.
+
+If set to nil, the value of `evil-default-cursor' is used; if you
+want the nil `cursor-type' (i.e., you want to disable the cursor),
+set this variable to (list nil)." name))
                      :entry-hook (defvar ,entry-hook nil
                                    ,(format "Hooks to run when entering %s." name))
                      :exit-hook (defvar ,exit-hook nil

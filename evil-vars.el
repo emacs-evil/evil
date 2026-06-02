@@ -198,7 +198,10 @@ value of `indent-tabs-mode'."
   "The default cursor.
 May be a cursor type as per `cursor-type', a color string as passed
 to `set-cursor-color', a zero-argument function for changing the
-cursor, or a list of the above."
+cursor, or a list of the above.
+
+nil is interpreted as t; if you want the nil `cursor-type' (i.e.,
+you want to disable the cursor), set this variable to (list nil)."
   :type '(set symbol (cons symbol symbol) string function)
   :group 'evil)
 
