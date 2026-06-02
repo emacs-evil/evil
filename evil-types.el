@@ -355,6 +355,26 @@ If visual state is inactive then those values are nil."
          (evil-called-from-ex-p nil)
          (t 1))))
 
+(evil-define-interactive-code "<+N>" ()
+  "Prefix argument or ex-arg, converted to number. Allow prefixing
+the number with +/- to indicate that this should be treated as
+a relative value instead of absolute."
+  (list
+   (cond
+    (current-prefix-arg (prefix-numeric-value current-prefix-arg))
+    ((and evil-ex-argument (evil-ex-p))
+     (cond
+      ;; Required, since `string-to-number' parses these as 0.
+      ((string-equal evil-ex-argument "+") 1)
+      ((string-equal evil-ex-argument "-") -1)
+      (t (string-to-number evil-ex-argument))))
+    ((evil-ex-p) nil)
+    (t 1))
+   (cond
+    ((and evil-ex-argument (evil-ex-p))
+     (memq (string-to-char evil-ex-argument) '(?- ?+)))
+    (t nil))))
+
 (evil-define-interactive-code "<f>"
   "Ex file argument."
   :ex-arg file
