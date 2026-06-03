@@ -3180,6 +3180,11 @@ is ignored."
               (or (evil-with-restriction (car bnd) (cdr bnd)
                     (ignore-errors
                       (evil-select-block thing beg end type count inclusive)))
+                  (and (eq inclusive t)
+                       (or (null count) (= count 1))
+                       (= (char-after (car bnd)) open)
+                       (= (char-before (cdr bnd)) close)
+                       (evil-range (car bnd) (cdr bnd) type :expanded t))
                   (save-excursion
                     (setq beg (or beg (point))
                           end (or end (point)))
