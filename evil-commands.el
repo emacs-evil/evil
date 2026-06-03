@@ -1425,24 +1425,26 @@ the left edge."
 ;;; Operator commands
 
 (evil-define-operator evil-yank (beg end type register yank-handler)
-  "Save the characters in motion into the kill-ring."
+  "Save the characters in motion into the `kill-ring'.
+Save in REGISTER or in the yank register, \"0, with YANK-HANDLER.
+Also save in the `kill-ring'.
+
+See `evil-kill-new' for more details on how text is saved."
   :move-point nil
   :repeat nil
   (interactive "<R><x><y>")
-  (let ((evil-was-yanked-without-register
-         (and evil-was-yanked-without-register (not register))))
-    (cond
-     ((and (fboundp 'cua--global-mark-active)
-           (fboundp 'cua-copy-region-to-global-mark)
-           (cua--global-mark-active))
-      (cua-copy-region-to-global-mark beg end))
-     ((eq type 'block)
-      (evil-yank-rectangle beg end register yank-handler))
-     ((memq type '(line screen-line))
-      (evil-yank-lines beg end register yank-handler))
-     (t
-      (evil-yank-characters beg end register yank-handler)
-      (goto-char beg)))))
+  (cond
+   ((and (fboundp 'cua--global-mark-active)
+         (fboundp 'cua-copy-region-to-global-mark)
+         (cua--global-mark-active))
+    (cua-copy-region-to-global-mark beg end))
+   ((eq type 'block)
+    (evil-yank-rectangle beg end register yank-handler))
+   ((memq type '(line screen-line))
+    (evil-yank-lines beg end register yank-handler))
+   (t
+    (evil-yank-characters beg end register yank-handler)
+    (goto-char beg))))
 
 (defun evil-expand-line-for-line-based-operators (beg end type)
   "Expand to line when in visual mode possibly changing BEG, END and TYPE.
@@ -1478,7 +1480,14 @@ Avoids double expansion for line-based commands like \"V\" or \"D\"."
 
 (evil-define-operator evil-delete (beg end type register yank-handler)
   "Delete text from BEG to END with TYPE.
-Save in REGISTER or in the kill-ring with YANK-HANDLER."
+Save in REGISTER or in one of the delete registers with
+YANK-HANDLER.  Also save in the `kill-ring'.
+
+Saved in the first delete register, \"1, if the deleted text
+spans multiple lines or in the small delete register, \"-, if the
+deleted text is within a line.
+
+See `evil-kill-new' for more details on how text is saved."
   (interactive "<R><x><y>")
   (when (and (memq type '(inclusive exclusive))
              (not (evil-visual-state-p))
@@ -1492,12 +1501,7 @@ Save in REGISTER or in the kill-ring with YANK-HANDLER."
       (setq beg (car new-range)
             end (cadr new-range)
             type 'line)))
-  (unless register
-    (let ((text (filter-buffer-substring beg end)))
-      (unless (string-match-p "\n" text)
-        ;; set the small delete register
-        (evil-set-register ?- text))))
-  (let ((evil-was-yanked-without-register nil))
+  (let ((this-command 'evil-delete))
     (evil-yank beg end type register yank-handler))
   (cond
    ((eq type 'block)

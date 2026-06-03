@@ -943,7 +943,7 @@ If nil, KEYS is used."
 
 (ert-deftest evil-test-repeat-register ()
   "Test repeating a register command."
-  :tags '(evil repeat)
+  :tags '(evil repeat registers)
   (evil-test-buffer
     "[l]ine 1\nline 2\nline 3\nline 4\n"
     ("\"addyy\"aP")
@@ -953,7 +953,7 @@ If nil, KEYS is used."
 
 (ert-deftest evil-test-repeat-numeric-register ()
   "Test repeating a command with a numeric register."
-  :tags '(evil repeat)
+  :tags '(evil repeat registers)
   (evil-test-buffer
     "[l]ine 1\nline 2\nline 3\nline 4\nline 5\n"
     ("dd...")
@@ -3111,38 +3111,35 @@ cccc         cccc"))))
     ";; This buffer is for notes you don't want to save.
 \[;]; This buffer is for notes you don't want to save.")
   (ert-info ("Visual-paste from register 3")
-    ;; This behaviour deviates from vim, which populates registers 1-9 with
-    ;; deleted text only, not yanked text. This is an aspect of `evil-yank's
-    ;; use of the emacs kill-ring, so is consistent with non-visual paste.
     (evil-test-buffer
-     "[w]ord1a word1b word1c word1d
+     "[w]ord1a\nword1b\nword1c\nword1d
 word2a word2b word2c word2d"
-     ("yiwwyiwwyiw")
-     "word1a word1b [w]ord1c word1d
+     ("dddddd")
+     "[w]ord1d
 word2a word2b word2c word2d"
      ("+viw\"3p")
-     "word1a word1b word1c word1d
-word1[a] word2b word2c word2d"))
+     "word1d
+\n[w]ord1a\n word2b word2c word2d"))
   (ert-info ("Visual-paste respects `evil-kill-on-visual-paste'")
     (evil-test-buffer
      "[w]ord1 word2 word3"
      (setq evil-kill-on-visual-paste nil)
      ("yewyew")
      "word1 word2 [w]ord3"
-     ("ve\"2p")
-     "word1 word2 word[1]"
+     ("ve\"0p")
+     "word1 word2 word[2]"
      ("o\C-r\"")
-     "word1 word2 word1
+     "word1 word2 word2
 word2[]")
     (evil-test-buffer
      "[w]ord1 word2 word3"
      (setq evil-kill-on-visual-paste t)
      ("yewyew")
      "word1 word2 [w]ord3"
-     ("ve\"2p")
-     "word1 word2 word[1]"
+     ("ve\"0p")
+     "word1 word2 word[2]"
      ("o\C-r\"")
-     "word1 word2 word1
+     "word1 word2 word2
 word3[]"))
   (ert-info ("Visual-paste from `=' register")
     (evil-test-buffer
@@ -3211,9 +3208,66 @@ word3[]"))
       ("Vp\C-p\C-p")
       "word1a word1b word1c\nword1[a]\nword3a word3b word3c word3d\n")))
 
+(ert-deftest evil-test-kill-new ()
+  "Test `evil-kill-new'"
+  :tags '(evil yank paste registers)
+  ;; Ensure a kill is present
+  (kill-new "qqqqq")
+  (evil-set-register ?- "sd")
+  (evil-set-register ?1 "d")
+  (evil-set-register ?0 "y")
+  (ert-info ("black hole register")
+    (let ((current (current-kill 0 t))
+          (del (evil-get-register ?1))
+          (small-del (evil-get-register ?-))
+          (yank (evil-get-register ?0)))
+      (evil-test-buffer
+        "[f]oo\n"
+        ("\"_vly")
+        (should-not (equal "fo" (evil-get-register ?_)))
+        (should (eq current (current-kill 0 t)))
+        (should (eq del (evil-get-register ?1)))
+        (should (eq small-del (evil-get-register ?-)))
+        (should (eq yank (evil-get-register ?0))))))
+  (ert-info ("yank commands")
+    (evil-test-buffer
+      "[b]ar\n"
+      ("vly")
+      (should (equal "ba" (current-kill 0 t)))
+      (should (equal "ba" (evil-get-register ?0))))
+    (evil-test-buffer
+      "[f]oo\n"
+      ("\"avly")
+      (should (equal "fo" (current-kill 0 t)))
+      (should (equal "fo" (evil-get-register ?a)))
+      (should (equal "ba" (evil-get-register ?0)))))
+  (ert-info ("delete commands")
+    (let ((del (evil-get-register ?1)))
+      (evil-test-buffer
+       ;; small delete register
+       "[x]xxx\n"
+       ("dw")
+       (should (equal "xxxx" (current-kill 0 t)))
+       (should (equal "xxxx" (evil-get-register ?-)))
+       (should (equal del (evil-get-register ?1)))))
+    (evil-test-buffer
+      "[z]zzz\n"
+      ("dd")
+      (should (equal "zzzz\n" (current-kill 0 t)))
+      (should (equal "xxxx" (evil-get-register ?-)))
+      (should (equal "zzzz\n" (evil-get-register ?1)))))
+  (ert-info ("special delete commands")
+    (evil-test-buffer
+      "[ ] aba b\n"
+      ("/a" [return] "\"adn")
+      (should (equal "ab" (current-kill 0 t)))
+      (should (equal "ab" (evil-get-register ?a)))
+      (should (equal "xxxx" (evil-get-register ?-)))
+      (should (equal "ab" (evil-get-register ?1))))))
+
 (ert-deftest evil-test-register ()
   "Test yanking and pasting to and from register."
-  :tags '(evil yank paste)
+  :tags '(evil yank paste registers)
   (ert-info ("simple lower case register")
     (evil-test-buffer
       "[f]oo\n"
@@ -3252,7 +3306,8 @@ word3[]"))
   (ert-info ("special register :")
     (evil-test-buffer
       "[f]oo bar\n"
-      (":noh\ni\C-r:")))
+      (":noh" [return] "i\C-r:")
+      "noh[f]oo bar"))
   (ert-info ("Paste from register during change to register")
     (evil-test-buffer
       "[a]lpha beta"
@@ -3278,6 +3333,7 @@ word3[]"))
 
 (ert-deftest evil-test-last-insert-register ()
   "Test last insertion register."
+  :tags '(evil registers)
   (evil-test-buffer
     "[l]ine 1\n"
     ("GiABC" [escape])
@@ -3287,6 +3343,7 @@ word3[]"))
 
 (ert-deftest evil-test-zero-register ()
   "\"0 contains the last text that was yanked without specificying a register."
+  :tags '(evil registers)
   (evil-test-buffer
     "[l]ine 1\nline 2\n"
     ("yy\"0p")
@@ -3298,6 +3355,7 @@ word3[]"))
 
 (ert-deftest evil-test-=-register ()
   "\"= is not really a register . It inserts the result of evaluating some elisp"
+  :tags '(evil registers)
   (ert-info ("Can eval elisp, and can fetch default (last) result")
     (evil-test-buffer
      :state insert
@@ -3365,6 +3423,114 @@ sed do eiusmod tempor incididunt"))
      (":put = (* 6 7)" [return])
      "Line one.
 [4]2")))
+
+(ert-deftest evil-test-number-registers-yank ()
+  "Test number register behavior after `evil-yank'"
+  :tags '(evil registers)
+  (ert-info ("yanks without named register")
+    (dotimes (i 3)
+      (evil-set-register (+ ?0 i) ""))
+    (evil-test-buffer
+      "a\n[b]\nc\nd\n"
+      ("yy" [return])
+      "a\nb\n[c]\nd\n"
+      (should (string= (evil-get-register ?\") "b\n"))
+      (should (string= (evil-get-register ?0) "b\n"))
+      (should (string= (evil-get-register ?1) ""))
+      (should (string= (evil-get-register ?2) ""))
+      ("yy" [return])
+      "a\nb\nc\n[d]\n"
+      (should (string= (evil-get-register ?\") "c\n"))
+      (should (string= (evil-get-register ?0) "c\n"))
+      (should (string= (evil-get-register ?1) ""))
+      (should (string= (evil-get-register ?2) ""))
+      ("yy")
+      (should (string= (evil-get-register ?\") "d\n"))
+      (should (string= (evil-get-register ?0) "d\n"))
+      (should (string= (evil-get-register ?1) ""))
+      (should (string= (evil-get-register ?2) ""))))
+  (ert-info ("yanks with named register")
+    (evil-set-register ?0 "")
+    (evil-test-buffer
+      "a\n[b]\nc\nd\n"
+      ("\"ayy")
+      (should (string= (evil-get-register ?\") "b\n"))
+      (should (string= (evil-get-register ?a) "b\n"))
+      (should (string= (evil-get-register ?0) ""))
+      (should (string= (evil-get-register ?1) ""))
+      (should (string= (evil-get-register ?2) ""))
+      ([return] "\"\"yy")
+      "a\nb\n[c]\nd\n"
+      (should (string= (evil-get-register ?\") "c\n"))
+      (should (string= (evil-get-register ?a) "b\n"))
+      (should (string= (evil-get-register ?0) "c\n"))
+      (should (string= (evil-get-register ?1) ""))
+      (should (string= (evil-get-register ?2) "")))))
+
+(ert-deftest evil-test-number-registers-delete ()
+  "Test number register behavior after `evil-delete'"
+  :tags '(evil registers)
+  (dotimes (i 10)
+    (evil-set-register (+ ?0 i) ""))
+  (ert-info ("deletions without named register")
+    (evil-test-buffer
+      "[a]\nb\nc\nd\n"
+      ("dd")
+      "[b]\nc\nd\n"
+      (should (string= (evil-get-register ?\") "a\n"))
+      (should (string= (evil-get-register ?0) ""))
+      (should (string= (evil-get-register ?1) "a\n"))
+      (should (string= (evil-get-register ?2) ""))
+      (should (string= (evil-get-register ?3) ""))
+      ("dd")
+      "[c]\nd\n"
+      (should (string= (evil-get-register ?\") "b\n"))
+      (should (string= (evil-get-register ?0) ""))
+      (should (string= (evil-get-register ?1) "b\n"))
+      (should (string= (evil-get-register ?2) "a\n"))
+      (should (string= (evil-get-register ?3) ""))
+      ("dd")
+      "[d]\n"
+      (should (string= (evil-get-register ?\") "c\n"))
+      (should (string= (evil-get-register ?0) ""))
+      (should (string= (evil-get-register ?1) "c\n"))
+      (should (string= (evil-get-register ?2) "b\n"))
+      (should (string= (evil-get-register ?3) "a\n"))))
+  (dotimes (i 10)
+    (evil-set-register (+ ?0 i) ""))
+  (ert-info ("deletions with named register")
+    (evil-test-buffer
+      "[a]\nb\nc\nd\n"
+      ("\"add")
+      "[b]\nc\nd\n"
+      (should (string= (evil-get-register ?\") "a\n"))
+      (should (string= (evil-get-register ?a) "a\n"))
+      (should (string= (evil-get-register ?0) ""))
+      (should (string= (evil-get-register ?1) ""))
+      (should (string= (evil-get-register ?2) ""))
+      ("dd")
+      "[c]\nd\n"
+      (should (string= (evil-get-register ?\") "b\n"))
+      (should (string= (evil-get-register ?a) "a\n"))
+      (should (string= (evil-get-register ?0) ""))
+      (should (string= (evil-get-register ?1) "b\n"))
+      (should (string= (evil-get-register ?2) "")))
+    (ert-info ("special handling of motion operators")
+      (evil-test-buffer
+        ;; Some operators still add the kill to the number registers
+        ;; in addition to the named register
+        "[c]\nd\n"
+        ("/d" [return] "k")
+        "[c]\nd\n"
+        ("\"adn")
+        "[d]\n"
+        ("dd")
+        ""
+        (should (string= (evil-get-register ?\") "d\n"))
+        (should (string= (evil-get-register ?a) "c\n"))
+        (should (string= (evil-get-register ?0) ""))
+        (should (string= (evil-get-register ?1) "d\n"))
+        (should (string= (evil-get-register ?2) "c\n"))))))
 
 (ert-deftest evil-test-align ()
   "Test `evil-align-left', `evil-align-right' and `evil-align-center'."
@@ -9629,7 +9795,7 @@ parameter set."
   (evil-tests-initialize))
 
 (ert-deftest evil-test-black-hole-register ()
-  :tags '(evil)
+  :tags '(evil registers)
   (ert-info ("Test \"_ on delete word")
     (evil-test-buffer
       "[E]vil evil is awesome."
