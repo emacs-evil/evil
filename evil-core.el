@@ -111,6 +111,11 @@
 (declare-function evil-emacs-state-p "evil-states")
 (declare-function evil-ex-p "evil-ex")
 
+(defun evil--wcf-refresh-cursor (&rest _)
+  "Wrapper around `evil-refresh-cursor' that discards its arguments.
+This function is intended for use in the `window-*-change-functions` hooks."
+  (evil-refresh-cursor))
+
 (define-minor-mode evil-local-mode
   "Minor mode for setting up Evil in a single buffer."
   :init-value nil
@@ -128,8 +133,18 @@
         (add-hook 'activate-mark-hook 'evil-visual-activate-hook nil t)
         ;; FIXME: Add these hooks buffer-locally and remove when disabling
         (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
-        (add-hook 'post-command-hook 'evil-repeat-post-hook))
+        (add-hook 'post-command-hook 'evil-repeat-post-hook)
+        ;; Cursor color can only be set for each frame but not for each buffer
+        ;; (Emacs bug#24153), so we need to refresh the cursor color whenever
+        ;; the selected window or its buffer changes.
+        ;;
+        ;; Emacs < 27 is handled further below using `select-window' advice.
+        (when (eval-when-compile (>= emacs-major-version 27))
+          (add-hook 'window-buffer-change-functions #'evil--wcf-refresh-cursor nil t)
+          (add-hook 'window-selection-change-functions #'evil--wcf-refresh-cursor nil t)))
     (evil-refresh-mode-line)
+    (remove-hook 'window-selection-change-functions #'evil--wcf-refresh-cursor t)
+    (remove-hook 'window-buffer-change-functions #'evil--wcf-refresh-cursor t)
     (remove-hook 'activate-mark-hook 'evil-visual-activate-hook t)
     (remove-hook 'input-method-activate-hook #'evil-activate-input-method t)
     (remove-hook 'input-method-deactivate-hook #'evil-deactivate-input-method t)
@@ -336,6 +351,7 @@ then this function does nothing."
 ;; run. This is appropriate since many buffers are used for throwaway
 ;; purposes. Passing the buffer to `set-window-buffer' indicates
 ;; otherwise, though, so advise this function to initialize Evil.
+;; FIXME: Use `window-buffer-change-functions' instead of advice in Emacs >= 27.
 (evil--advice-add 'set-window-buffer :before #'evil--swb-initialize)
 (defun evil--swb-initialize (_window buffer &rest _)
   "Initialize Evil in the displayed buffer."
@@ -344,13 +360,11 @@ then this function does nothing."
       (unless evil-local-mode
         (save-match-data (evil-initialize))))))
 
-;; Refresh cursor color.
-;; Cursor color can only be set for each frame but not for each buffer.
-;; FIXME: Shouldn't this belong in `evil-(local-)mode'?
-(add-hook 'window-configuration-change-hook #'evil-refresh-cursor)
-(advice-add 'select-window :after #'evil--sw-refresh-cursor)
-(defun evil--sw-refresh-cursor (&rest _)
-  (evil-refresh-cursor))
+;; We need advice to refresh the cursor color in Emacs < 27. Newer versions are
+;; handled in `evil-local-mode' above.
+(when (eval-when-compile (< emacs-major-version 27))
+  (add-hook 'window-configuration-change-hook #'evil-refresh-cursor)
+  (advice-add 'select-window :after #'evil--wcf-refresh-cursor))
 
 (defun evil-generate-mode-line-tag (&optional state)
   "Generate the evil mode-line tag for STATE."
