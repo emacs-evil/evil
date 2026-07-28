@@ -2580,7 +2580,10 @@ when called interactively."
    (t
     (condition-case err
         (evil-with-single-undo
-          (let (pre-command-hook post-command-hook) ; For performance
+          ;; For performance; but keep Evil's repeat hooks, as they record keys
+          ;; replayed by insert count.
+          (let ((pre-command-hook '(evil-repeat-pre-hook))
+                (post-command-hook '(evil-repeat-post-hook)))
             (combine-after-change-calls
               (execute-kbd-macro macro count)
               (setq this-command 'evil-execute-macro)))) ; For repeatability

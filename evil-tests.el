@@ -9903,7 +9903,12 @@ parameter set."
     (evil-test-buffer "xxx"
       (evil-set-register ?q "ryl")
       (error 'end-of-line "\C-u@q")
-      "yyy")))
+      "yyy"))
+  (ert-info ("Replay a macro containing a counted insert command")
+    (evil-test-buffer "[a]b"
+      (evil-set-register ?q [?3 ?a ?x escape])
+      ("@q")
+      "axx[x]b")))
 
 (ert-deftest evil-test-undo-kbd-macro ()
   "Test if evil can undo the changes made by a keyboard macro
