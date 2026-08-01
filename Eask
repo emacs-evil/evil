@@ -22,21 +22,30 @@
 
 (setq network-security-level 'low)  ; see https://github.com/jcs090218/setup-emacs-windows/issues/156#issuecomment-932956432
 
+;; TAG and PROFILER come from environment variables; see the Makefile.
+(defun evil-tests-env-symbols (var)
+  "Return whitespace separated environment variable VAR as a list of symbols."
+  (mapcar #'intern (split-string (or (getenv var) ""))))
+
 (eask-defcommand test
   "Basic tests."
   (require 'evil-tests)
-  (evil-tests-initialize nil nil))
+  (evil-tests-initialize (evil-tests-env-symbols "TAG")
+                         (evil-tests-env-symbols "PROFILER")))
 
 (eask-defcommand terminal
   "Load Evil in a terminal Emacs and run all tests."
   (require 'evil-tests)
-  (evil-tests-initialize nil nil t))
+  (evil-tests-initialize (evil-tests-env-symbols "TAG")
+                         (evil-tests-env-symbols "PROFILER")
+                         t))
 
 (eask-defcommand profiler
   "Run all tests with profiler."
   (require 'evil-tests)
   (evil-mode 1)
-  (evil-tests-initialize nil t))
+  (evil-tests-initialize (evil-tests-env-symbols "TAG")
+                         (or (evil-tests-env-symbols "PROFILER") t)))
 
 (eask-defcommand indent
   "Re-indent all Evil code."
