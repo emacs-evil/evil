@@ -1319,6 +1319,14 @@ highlighted."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-ex-search-nvim-visual-word-search nil
+  "If t enable neovim-style visual search when calling
+`evil-search-word' i.e. selected text in visual mode shall be
+searched instead of `thing-at-point', otherwise search for
+`thing-at-point'"
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-ex-substitute-highlight-all t
   "If t all matches for the substitute pattern are highlighted."
   :type 'boolean
