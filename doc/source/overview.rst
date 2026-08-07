@@ -109,6 +109,63 @@ Emacs state (``<E>``)
   normal state.
 
 
+Code folding
+------------
+
+Evil provides Vim-style folding commands that work with various Emacs
+folding backends.  The following keybindings are available in normal
+state:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Command
+     - Description
+   * - :kbd:`zo`
+     - ``evil-open-fold``
+     - Open the fold at point
+   * - :kbd:`zO`
+     - ``evil-open-fold-rec``
+     - Open the fold at point recursively
+   * - :kbd:`zc`
+     - ``evil-close-fold``
+     - Close the fold at point
+   * - :kbd:`za`
+     - ``evil-toggle-fold``
+     - Toggle the fold at point
+   * - :kbd:`zr`
+     - ``evil-open-folds``
+     - Open all folds in the buffer
+   * - :kbd:`zm`
+     - ``evil-close-folds``
+     - Close all folds in the buffer
+
+These commands require a folding minor mode to be active.  Evil
+supports the following backends out of the box:
+
+- ``hs-minor-mode`` — built-in, works with most programming languages
+- ``outline-minor-mode`` — built-in, heading-based folding
+- ``org-mode`` — Org heading folding
+- ``origami-mode`` — flexible folding for any language
+- ``vdiff-mode`` / ``vdiff-3way-mode`` — diff folding
+- ``hide-ifdef-mode`` — C/C++ preprocessor folding
+- ``markdown-mode`` — Markdown heading folding
+
+To enable folding in programming modes, add a hook:
+
+.. code-block:: elisp
+
+   (add-hook 'prog-mode-hook #'hs-minor-mode)
+
+The variable ``evil-fold-list`` controls which backends are used
+and can be customized to add support for additional folding
+packages.  Each entry maps one or more modes to a set of folding
+actions (``:open``, ``:close``, ``:toggle``, ``:open-all``,
+``:close-all``, ``:open-rec``).  See the docstring of
+``evil-fold-list`` for the full format.
+
+
 .. rubric:: Footnotes
 
 .. [#vim] Vim is the most popular version of *vi*, a modal text editor
