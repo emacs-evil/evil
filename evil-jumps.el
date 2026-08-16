@@ -199,7 +199,7 @@ Otherwise the jump commands act only within the current buffer."
   :repeat nil
   (evil-with-view-list
     :name "evil-jumps"
-    :mode "Evil Jump List"
+    :mode-name "Evil Jump List"
     :format [("Jump" 5 nil)
              ("Marker" 8 nil)
              ("File/text" 1000 t)]
