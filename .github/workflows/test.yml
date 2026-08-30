@@ -19,6 +19,7 @@ jobs:
           - 27.2
           - 28.2
           - 29.4
+          - 30.2
         experimental: [false]
         include:
         - os: ubuntu-latest
@@ -38,7 +39,7 @@ jobs:
       with:
         version: ${{ matrix.emacs-version }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Print emacs version
       run: |
