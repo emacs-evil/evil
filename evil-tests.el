@@ -4063,6 +4063,85 @@ Below some empty line"))
       (should-error (execute-kbd-macro "ge"))
       (should-error (execute-kbd-macro "10ge")))))
 
+(ert-deftest evil-test-superword ()
+  "Test `evil-forward-word-begin' when `superword-mode' is enabled."
+  :tags '(evil motion)
+  (ert-info ("Simple elisp")
+    (evil-test-buffer
+      "(this-is-a-symbol another-symbol another-s a-symbol x y)"
+      (superword-mode)
+      ("w")
+      "([t]his-is-a-symbol another-symbol another-s a-symbol x y)"
+      ("w")
+      "(this-is-a-symbol [a]nother-symbol another-s a-symbol x y)"
+      ("2w")
+      "(this-is-a-symbol another-symbol another-s [a]-symbol x y)"
+      ("b")
+      "(this-is-a-symbol another-symbol [a]nother-s a-symbol x y)"
+      ("e")
+      "(this-is-a-symbol another-symbol another-[s] a-symbol x y)"
+      ("2e")
+      "(this-is-a-symbol another-symbol another-s a-symbol [x] y)"
+      ("2ge")
+      "(this-is-a-symbol another-symbol another-[s] a-symbol x y)"))
+  (ert-info ("Simple python")
+    (evil-test-buffer
+      "[d]ef asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf(34.12)\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      (python-mode)
+      (superword-mode)
+      ("w")
+      "def [a]sdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf(34.12)\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf[(]):\n    asdf adf_f_f_a\n    q=asdf(34.12)\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    [a]sdf adf_f_f_a\n    q=asdf(34.12)\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf [a]df_f_f_a\n    q=asdf(34.12)\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    [q]=asdf(34.12)\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q[=]asdf(34.12)\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=[a]sdf(34.12)\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf[(]34.12)\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf([3]4.12)\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf(34[.]12)\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf(34.[1]2)\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf(34.12[)]\n    z = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf(34.12)\n    [z] = a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf(34.12)\n    z [=] a_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf(34.12)\n    z = [a]_s_d_f_ + __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf(34.12)\n    z = a_s_d_f_ [+] __asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf(34.12)\n    z = a_s_d_f_ + [_]_asdf__\n\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf(34.12)\n    z = a_s_d_f_ + __asdf__\n[]\nx = 4"
+      ("w")
+      "def asdf_jkl_asdf():\n    asdf adf_f_f_a\n    q=asdf(34.12)\n    z = a_s_d_f_ + __asdf__\n\n[x] = 4"))
+  (ert-info ("Elisp diw (emacs-evil/evil#1492)")
+    (evil-test-buffer
+      "word1 wo[r]d2-word3"
+      (lisp-interaction-mode)
+      (superword-mode)
+      ("diw")
+      "word1[ ]"))
+  (ert-info ("Elisp cw (emacs-evil/evil#728)")
+    (evil-test-buffer
+      "-[w]ord)"
+      (lisp-interaction-mode)
+      (superword-mode)
+      ("cw" [escape])
+      "[-])")))
+
 (ert-deftest evil-test-forward-word-begin-cjk ()
   "Test `evil-forward-word-begin' on CJK words"
   :tags '(evil motion cjk)
