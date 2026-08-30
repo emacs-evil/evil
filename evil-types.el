@@ -402,6 +402,7 @@ If visual state is inactive then those values are nil."
 
 (evil-define-interactive-code "<g/>"
   "Ex global argument."
+  :ex-arg global
   (when evil-called-from-ex-p
     (evil-ex-parse-global (or evil-ex-argument ""))))
 
