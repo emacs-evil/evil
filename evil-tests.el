@@ -10067,6 +10067,34 @@ main(argc, argv) char **argv; {
     (test-3-mode)
     (should (eq evil-state 'insert))))
 
+(ert-deftest evil-test-custom-initialize-pending-reset ()
+  "Test that pending initialization keeps a theme value set before
+the variable is defined, as done by use-package's :custom."
+  :tags '(evil core)
+  (let ((evil-pending-custom-initialize nil)
+        (custom--inhibit-theme-enable nil))
+    (unwind-protect
+        (progn
+          (custom-declare-theme 'evil-tests-theme nil)
+          (enable-theme 'evil-tests-theme)
+          (setq custom-enabled-themes
+                (remq 'evil-tests-theme custom-enabled-themes))
+          (custom-theme-set-variables
+           'evil-tests-theme '(evil-tests-pending-option t))
+          (custom-declare-variable
+           'evil-tests-pending-option nil "Option for testing."
+           :type 'boolean
+           :group 'evil
+           :initialize #'evil-custom-initialize-pending-reset)
+          (should-not (boundp 'evil-tests-pending-option))
+          (dolist (init evil-pending-custom-initialize)
+            (apply (car init) (cdr init)))
+          (should (eq (symbol-value 'evil-tests-pending-option) t)))
+      (makunbound 'evil-tests-pending-option)
+      (setplist 'evil-tests-pending-option nil)
+      (setq custom-known-themes (delq 'evil-tests-theme custom-known-themes))
+      (setplist 'evil-tests-theme nil))))
+
 (ert-deftest evil-test-keep-input-method ()
   "Test that the input method is preserved when changing the major mode."
   :tags '(evil core input-method)
