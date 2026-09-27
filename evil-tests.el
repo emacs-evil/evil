@@ -297,6 +297,24 @@
     (evil-test-local-mode-disabled)
     (evil-test-change-state 'normal)))
 
+(ert-deftest evil-test-minibuffer-initial-state ()
+  "Start the minibuffer in Insert state after its major mode is reset"
+  :tags '(evil state)
+  ;; Before Emacs 31, `evil-mode' re-enabled `evil-local-mode' after
+  ;; each major mode change
+  (skip-unless (version<= "31" emacs-version))
+  (let ((evil-want-minibuffer t)
+        ;; mock `evil-mode' without global state
+        (after-change-major-mode-hook '(evil-mode-enable-in-buffer)))
+    ;; force `minibufferp' to true
+    (cl-letf (((symbol-function 'minibufferp) (lambda (&rest _) t)))
+      (with-temp-buffer
+        (evil-local-mode 1)
+        ;; each use of the minibuffer re-sets its major mode
+        (minibuffer-mode)
+        (should (eq evil-state 'insert))
+        (should-not evil-echo-state)))))
+
 (ert-deftest evil-test-execute-in-normal-state ()
   "Execute Normal state command in Insert state (`evil-execute-in-normal-state')."
   :tags '(evil)
