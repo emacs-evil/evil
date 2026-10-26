@@ -3526,7 +3526,15 @@ Below some empty line"
     (evil-test-buffer
       ";; This buffer is for notes you don't want to [s]ave."
       (should-error (execute-kbd-macro "j"))
-      (should-error (execute-kbd-macro "42j")))))
+      (should-error (execute-kbd-macro "42j"))))
+  (ert-info ("With invisible text")
+    (evil-test-buffer
+      ";; foo
+;; [b]ar"
+      (add-text-properties (line-beginning-position) (point) '(invisible t))
+      (error end-of-buffer "j")
+      ";; foo
+;; [b]ar")))
 
 (ert-deftest evil-test-next+previous-preserve-column ()
   "Test `evil-previous-line' and `evil-next-line' preserve the column."
