@@ -1263,7 +1263,10 @@ Signal an error at buffer boundaries unless NOERROR is non-nil."
                              (car-safe temporary-goal-column)
                              temporary-goal-column))
                 (col (if (numberp raw-col) (max 0 raw-col) 0)))
-           (line-move-finish col opoint (< count 0)))
+           (if (let ((inhibit-field-text-motion t))
+                 (<= (line-beginning-position) opoint (line-end-position)))
+               (goto-char opoint)
+             (line-move-finish col opoint (< count 0))))
          (or noerror (/= (point) opoint) (signal (car err) (cdr err))))))))
 
 (defun evil-forward-syntax (syntax &optional count)
