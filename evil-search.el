@@ -123,8 +123,6 @@ to display in the echo area."
       (cancel-timer evil-flash-timer))
     (unless (or (null string)
                 (string= string ""))
-      (evil-echo-area-save)
-      (evil-echo "%s" string)
       (isearch-highlight (match-beginning 0) (match-end 0))
       (when all
         (setq isearch-lazy-highlight-wrapped nil
@@ -133,6 +131,12 @@ to display in the echo area."
         (isearch-lazy-highlight-new-loop)
         (unless isearch-lazy-highlight-overlays
           (isearch-lazy-highlight-update)))
+      ;; `isearch-lazy-count-current` is updated during
+      ;; `isearch-lazy-highlight-update`.
+      (let ((prefix (isearch-lazy-count-format nil))
+            (suffix (isearch-lazy-count-format t)))
+        (evil-echo-area-save)
+        (evil-echo "%s%s%s" prefix string suffix))
       (add-hook 'pre-command-hook #'evil-flash-hook nil t)
       (add-hook 'evil-operator-state-exit-hook #'evil-flash-hook nil t)
       (add-hook 'pre-command-hook #'evil-clean-isearch-overlays nil t)
@@ -259,8 +263,6 @@ one more than the current position."
          (goto-char orig)
          (user-error "\"%s\": %s not found"
                      string (if regexp-p "pattern" "string"))))
-      ;; always position point at the beginning of the match
-      (goto-char (match-beginning 0))
       ;; determine message for echo area
       (cond
        ((and forward (< (point) start))
@@ -271,7 +273,9 @@ one more than the current position."
         (setq string "Search wrapped around TOP of buffer"))
        (t
         (setq string (evil-search-message string forward))))
-      (evil-flash-search-pattern string t))))
+      (evil-flash-search-pattern string t)
+      ;; always position point at the beginning of the match
+      (goto-char (match-beginning 0)))))
 
 (defun evil-search-word (forward unbounded symbol)
   "Search for word near point.
