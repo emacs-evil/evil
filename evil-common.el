@@ -2523,7 +2523,7 @@ Supplied as the `undo' element of a yank handler."
 ;; interfere with `buffer-undo-list'.
 (defun evil-paste-pop (count)
   "Replace the just-yanked stretch of killed text with a different stretch.
-This command is allowed only immediatly after a `yank',
+This command is allowed only immediately after a `yank',
 `evil-paste-before', `evil-paste-after' or `evil-paste-pop'.
 This command uses the same paste command as before, i.e., when
 used after `evil-paste-after' the new text is also yanked using
