@@ -342,8 +342,8 @@ Expand the region to the selection unless COMMAND is a motion."
       (unless (evil-get-command-property command :keep-visual)
         (evil-visual-update-x-selection)
         (evil-visual-expand-region
-         ;; exclude final newline from linewise selection
-         ;; unless the command has real need of it
+         ;; include final newline in linewise selection
+         ;; unless the command is known to prefer no newline
          (and (eq (evil-visual-type) 'line)
               (evil-get-command-property command :exclude-newline)))))))
 
