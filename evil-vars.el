@@ -593,8 +593,15 @@ ubiquity of prefix arguments."
                (define-key evil-replace-state-map (kbd "C-h") nil))
               ((and value
                     (not (lookup-key evil-insert-state-map (kbd "C-h"))))
-               (define-key evil-insert-state-map (kbd "C-h")
-                           'evil-delete-backward-char-and-join)
+               ;; When configuring C-h to delete backward, it needs to integrate
+               ;; with any package that overrides the standard deletion behavior
+               ;; with its own functions. For example, `electric-pair-mode'
+               ;; overrides deletion to remove adjacent paired delimiters (e.g.,
+               ;; () [] {} "") together. This ensures C-h dynamically looks up
+               ;; and calls the appropriate package-specific deletion function
+               ;; (typically bound to DEL), maintaining expected behavior across
+               ;; all minor modes.
+               (define-key evil-insert-state-map (kbd "C-h") (kbd "DEL"))
                (define-key evil-replace-state-map (kbd "C-h")
                            'evil-replace-backspace))))))
 

@@ -447,7 +447,14 @@
     ,@(when evil-want-C-u-delete
         '(("\C-u" . evil-delete-back-to-indentation)))
     ,@(when evil-want-C-h-delete
-        '(("\C-h" . evil-delete-backward-char-and-join)))
+        ;; When configuring C-h to delete backward, it needs to integrate with
+        ;; any package that overrides the standard deletion behavior with its
+        ;; own functions. For example, `electric-pair-mode' overrides deletion
+        ;; to remove adjacent paired delimiters (e.g., () [] {} "") together.
+        ;; This ensures C-h dynamically looks up and calls the appropriate
+        ;; package-specific deletion function (typically bound to DEL),
+        ;; maintaining expected behavior across all minor modes:
+        `(("\C-h" . ,(kbd "DEL"))))
     ([mouse-2] . mouse-yank-primary))
   "Evil's bindings for insert & replace states.
 Used in `evil-insert-state-map' and `evil-replace-state-map',
