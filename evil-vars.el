@@ -62,8 +62,12 @@ the :initialize property of `defcustom'.")
 
 (defun evil-custom-initialize-pending-reset (var value)
   "Add a pending customization with `custom-initialize-reset'."
-  (push (list 'custom-initialize-reset var value)
-        evil-pending-custom-initialize))
+  ;; A theme value set before VAR was defined (e.g. with use-package's
+  ;; :custom) is stashed under `saved-value', which `defcustom' clears as
+  ;; soon as this function returns, so capture it now.
+  (let ((saved (get var 'saved-value)))
+    (push (list 'custom-initialize-reset var (if saved (car saved) value))
+          evil-pending-custom-initialize)))
 
 (defun evil-run-pending-custom-initialize ()
   "Execute the pending initializations.
