@@ -6,6 +6,11 @@ PROFILER =
 TAG =
 EASK ?= eask
 
+# The eask run command [names..] takes no extra arguments.
+# So, pass these as environment variables.
+export TAG
+export PROFILER
+
 ELCFILES = $(FILES:.el=.elc)
 
 .PHONY: all compile docstrings doc clean tests test emacs term terminal profiler indent elpa version
