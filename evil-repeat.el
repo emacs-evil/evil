@@ -491,7 +491,7 @@ where point should be placed after all changes."
       (dolist (change changes)
         (goto-char (+ point (nth 0 change)))
         (delete-char (nth 2 change))
-        (insert (nth 1 change)))
+        (insert-and-inherit (nth 1 change)))
       (goto-char (+ point rel-point)))))
 
 (defun evil-execute-repeat-info (repeat-info)
