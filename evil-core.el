@@ -118,9 +118,6 @@
       (progn
         (cl-pushnew 'evil-mode-map-alist emulation-mode-map-alists)
         (evil-initialize-local-keymaps)
-        (when (minibufferp)
-          (setq-local evil-default-state 'insert)
-          (setq-local evil-echo-state nil))
         (setq evil-input-method current-input-method)
         (evil-initialize-state)
         (add-hook 'input-method-activate-hook #'evil-activate-input-method t t)
@@ -236,6 +233,9 @@ Restore the previous state afterwards."
 (defun evil-initialize-state ()
   "Set up the initial state for the current buffer.
 See also `evil-set-initial-state'."
+  (when (minibufferp)
+    (setq-local evil-default-state 'insert)
+    (setq-local evil-echo-state nil))
   (evil-change-state (evil-initial-state-for-buffer)))
 
 (defun evil-initial-state-for-buffer-name (&optional name default)
